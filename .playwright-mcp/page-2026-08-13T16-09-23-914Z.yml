@@ -1,0 +1,328 @@
+- generic [ref=f3e1]:
+  - generic [ref=f3e9]:
+    - generic [ref=f3e12]:
+      - link [ref=f3e3684] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f3e25]:
+        - link [ref=f3e3686] [cursor=pointer]:
+          - /url: /
+        - link [ref=f3e3688] [cursor=pointer]:
+          - /url: /reels/
+        - link [ref=f3e3690] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f3e53]: "1"
+        - link [ref=f3e3693] [cursor=pointer]:
+          - /url: /explore/
+        - link [ref=f3e3695] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f3e3697] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f3e3699] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f3e3701] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f3e3702]
+      - generic [ref=f3e114]:
+        - link [ref=f3e3704] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f3e3706] [cursor=pointer]:
+          - /url: "#"
+    - main [ref=f3e134]:
+      - generic [ref=f3e224]:
+        - navigation [ref=f3e3708]:
+          - generic [ref=f3e226]:
+            - generic [ref=f3e227]:
+              - button [ref=f3e3709] [cursor=pointer]:
+                - heading [level=2] [ref=f3e3710]:
+                  - generic [ref=f3e231]: tdf.records.label
+              - button [ref=f3e3712] [cursor=pointer]
+            - tablist [ref=f3e244]:
+              - tab [selected] [ref=f3e3714] [cursor=pointer]:
+                - generic [ref=f3e246]: Primary
+              - tab [ref=f3e3715] [cursor=pointer]:
+                - generic [ref=f3e249]: General
+              - tab [ref=f3e3716] [cursor=pointer]:
+                - generic [ref=f3e252]: From ads
+              - tab [ref=f3e3717] [cursor=pointer]:
+                - generic [ref=f3e256]: Requests
+            - textbox [ref=f3e3719]:
+              - /placeholder: Search
+            - generic [ref=f3e267]:
+              - generic [ref=f3e269]:
+                - list [ref=f3e271]:
+                  - listitem [ref=f3e272]
+                  - listitem [ref=f3e273]:
+                    - button [ref=f3e3720] [cursor=pointer]:
+                      - generic [ref=f3e276]:
+                        - generic [ref=f3e277]: Your turn...
+                        - generic [ref=f3e283]:
+                          - link [ref=f3e285]
+                          - generic [ref=f3e286]: Your note
+                  - listitem [ref=f3e288]:
+                    - button [ref=f3e3721] [cursor=pointer]:
+                      - generic [ref=f3e292]:
+                        - generic [ref=f3e293]: a q hora perdemos la gravedad?😂para vestirme y estar redi pa volar 🫨🐦‍🔥
+                        - generic [ref=f3e300]:
+                          - link [ref=f3e3722]
+                          - generic [ref=f3e304]: Cami Mantilla
+                  - listitem [ref=f3e307]:
+                    - button [ref=f3e3724] [cursor=pointer]:
+                      - generic [ref=f3e311]:
+                        - generic [ref=f3e312]: Toca la nota Así me gustan las perritas, obedientes
+                        - generic [ref=f3e321]:
+                          - link [ref=f3e3725]
+                          - generic [ref=f3e325]: Ana Julia/ DJ JU🫧
+                  - listitem [ref=f3e328]:
+                    - button [ref=f3e3727] [cursor=pointer]:
+                      - generic [ref=f3e332]:
+                        - generic [ref=f3e333]: show en cdmx hoy 12/08
+                        - generic [ref=f3e340]:
+                          - link [ref=f3e3728]
+                          - generic [ref=f3e344]: Zoe Moff
+                  - listitem [ref=f3e347]:
+                    - button [ref=f3e3730] [cursor=pointer]:
+                      - generic [ref=f3e351]:
+                        - generic [ref=f3e357]:
+                          - generic [ref=f3e358]: Astro Moog (feat. Llama Este Pez)
+                          - generic [ref=f3e365]: Juano Ledesma
+                        - generic [ref=f3e366]:
+                          - link [ref=f3e3732]
+                          - generic [ref=f3e370]: J
+                  - listitem [ref=f3e373]:
+                    - button [ref=f3e3734] [cursor=pointer]:
+                      - generic [ref=f3e377]:
+                        - generic [ref=f3e378]: No hay nada más caro que deberle favores a 🇺🇸 e 🇮🇱
+                        - generic [ref=f3e385]:
+                          - link [ref=f3e3735]
+                          - generic [ref=f3e389]: Jofiel.arch.music
+                  - listitem [ref=f3e392]:
+                    - button [ref=f3e3737] [cursor=pointer]:
+                      - generic [ref=f3e396]:
+                        - generic [ref=f3e402]:
+                          - generic [ref=f3e403]: Sidewalks (feat. Kendrick Lamar)
+                          - generic [ref=f3e413]: The Weeknd
+                        - generic [ref=f3e414]:
+                          - link [ref=f3e3740]
+                          - generic [ref=f3e418]: JETTALESSI
+                  - listitem [ref=f3e421]:
+                    - button [ref=f3e3742] [cursor=pointer]:
+                      - generic [ref=f3e425]:
+                        - generic [ref=f3e431]:
+                          - generic [ref=f3e432]: Hacer volar la casa
+                          - generic [ref=f3e439]: Cultura Profética
+                        - generic [ref=f3e440]:
+                          - link [ref=f3e3744]
+                          - generic [ref=f3e444]: (Chevy)
+                  - listitem [ref=f3e447]:
+                    - button [ref=f3e3746] [cursor=pointer]:
+                      - generic [ref=f3e451]:
+                        - generic [ref=f3e457]:
+                          - generic [ref=f3e458]: Shape Of My Heart
+                          - generic [ref=f3e465]: Sting
+                        - generic [ref=f3e466]:
+                          - link [ref=f3e3748]
+                          - generic [ref=f3e470]: Natali Quintero
+                - button [ref=f3e3750] [cursor=pointer]
+              - generic [ref=f3e478]:
+                - button [pressed] [ref=f3e3751] [cursor=pointer]:
+                  - generic [ref=f3e3525]:
+                    - generic [ref=f3e3526]: Risk
+                    - generic [ref=f3e3532]:
+                      - generic [ref=f3e3533]: "You: Hola, Risk 👋 Vimos tu reacción en el reel de TDF y tus publicaciones de phonk vinculadas a Quito. Tu escena necesita un espacio propio: en TDF puedes seguir artistas, ver lanzamientos y explorar experiencias de la comunidad. Puedes entrar como fan aquí: https://tdf-app.pages.dev/login?signup=1&roles=Fan&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=fan_a Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f3e3535]:
+                        - generic [ref=f3e3536]: ·
+                        - generic [ref=f3e3539]: 2m
+                - button [ref=f3e3754] [cursor=pointer]:
+                  - generic [ref=f3e2221]:
+                    - generic [ref=f3e2222]: TAKIJANA
+                    - generic [ref=f3e2228]:
+                      - generic [ref=f3e2229]: "You: Hola, Takijana 👋 Vimos su interacción con TDF y las fechas recientes de la banda dentro de la escena ska de Quito. En TDF pueden reunir perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Les invitamos a crear su perfil: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f3e2231]:
+                        - generic [ref=f3e2232]: ·
+                        - generic [ref=f3e2235]: 5m
+                - button [ref=f3e3757] [cursor=pointer]:
+                  - generic [ref=f3e775]:
+                    - generic [ref=f3e776]: KIRMANA RECORDS
+                    - generic [ref=f3e782]:
+                      - generic [ref=f3e783]: "You: Hola, Kirmana Records 👋 Vimos su reacción a una historia de TDF y las fechas conectadas con Tollywood UIO y Sereno Moreno. Tu escena necesita un espacio propio: en TDF pueden explorar perfiles, lanzamientos y experiencias de la comunidad musical. Les invitamos a conocerla: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f3e785]:
+                        - generic [ref=f3e786]: ·
+                        - generic [ref=f3e789]: 9m
+                - button [ref=f3e3760] [cursor=pointer]:
+                  - generic [ref=f3e808]:
+                    - generic [ref=f3e809]: George Molina
+                    - generic [ref=f3e815]:
+                      - generic [ref=f3e816]: "You: Hola, Jorge 👋 Vimos tus interacciones con las historias de TDF y tus publicaciones como fan de Verde 70 en Quito. En TDF puedes seguir artistas, ver lanzamientos y explorar experiencias de la escena en un mismo lugar. Puedes entrar como fan aquí: https://tdf-app.pages.dev/login?signup=1&roles=Fan&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=fan_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f3e818]:
+                        - generic [ref=f3e819]: ·
+                        - generic [ref=f3e822]: 24m
+                - button [ref=f3e3763] [cursor=pointer]:
+                  - generic [ref=f3e837]:
+                    - generic [ref=f3e838]: Midiendo Calles | Medio Cultural
+                    - generic [ref=f3e844]:
+                      - generic [ref=f3e845]: "You: Hola, Midiendo Calles 👋 Vimos que empezaron a seguir a TDF y su cobertura reciente de arte, cultura y agenda de Quito. Tu escena necesita un espacio propio: en TDF pueden recorrer perfiles, lanzamientos y experiencias de la comunidad musical. Les invitamos a conocerla: https://tdf-app.pages.dev/login?signup=1&roles=Publicist&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f3e847]:
+                        - generic [ref=f3e848]: ·
+                        - generic [ref=f3e851]: 27m
+                - button [ref=f3e3766] [cursor=pointer]:
+                  - generic [ref=f3e491]:
+                    - generic [ref=f3e492]: ✨Festival Mestizónica ✨
+                    - generic [ref=f3e498]:
+                      - generic [ref=f3e499]: "You: Hola, Mestizónica 👋 Vimos que empezaron a seguir a TDF y la agenda reciente del festival de música original en Quito. Tu escena necesita un espacio propio: en TDF pueden explorar perfiles, lanzamientos y experiencias de la comunidad local. Les invitamos a conocerla: https://tdf-app.pages.dev/login?signup=1&roles=Promotor&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f3e501]:
+                        - generic [ref=f3e502]: ·
+                        - generic [ref=f3e505]: 41m
+                - button [ref=f3e3769] [cursor=pointer]:
+                  - generic [ref=f3e520]:
+                    - generic [ref=f3e521]: 69 Segundos
+                    - generic [ref=f3e527]:
+                      - generic [ref=f3e528]: "You: Hola, 69 Segundos 👋 Vimos que empezaron a seguir a TDF y su fecha reciente de hardcore melódico en Quito. Tu escena necesita un espacio propio: en TDF pueden crear el perfil de la banda, mostrar música y conectar con su gente. Les invitamos a probarlo: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f3e530]:
+                        - generic [ref=f3e531]: ·
+                        - generic [ref=f3e534]: 1h
+                - button [ref=f3e3772] [cursor=pointer]:
+                  - generic [ref=f3e549]:
+                    - generic [ref=f3e550]: Gabby Gonzalez
+                    - generic [ref=f3e556]:
+                      - generic [ref=f3e557]: "You: Hola, Gabby 👋 Vimos tu comentario sobre la fecha del 21 y tu lanzamiento de minimal/micro house con Blue Records. Tu escena necesita un espacio propio: en TDF puedes crear tu perfil y descubrir artistas, lanzamientos y experiencias de Quito. Te invitamos a probarlo: https://tdf-app.pages.dev/login?signup=1&roles=Producer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f3e559]:
+                        - generic [ref=f3e560]: ·
+                        - generic [ref=f3e563]: 1h
+                - button [ref=f3e3775] [cursor=pointer]:
+                  - generic [ref=f3e735]:
+                    - status [ref=f3e3776]
+                    - generic [ref=f3e741]:
+                      - status [ref=f3e3777]
+                      - status [ref=f3e3778]
+        - generic [ref=f3e3553]:
+          - generic [ref=f3e3557]:
+            - link [ref=f3e3779] [cursor=pointer]:
+              - /url: /theriskisdead/
+              - generic [ref=f3e3564]:
+                - heading [level=2] [ref=f3e3781]:
+                  - generic [ref=f3e3567]: Risk
+                - generic [ref=f3e3568]: theriskisdead
+            - generic [ref=f3e3572]:
+              - button [ref=f3e3782] [cursor=pointer]
+              - button [ref=f3e3784] [cursor=pointer]
+              - button [ref=f3e3786] [cursor=pointer]
+          - generic [ref=f3e3588]:
+            - generic [ref=f3e3592]:
+              - generic [ref=f3e3598]:
+                - heading [level=2] [ref=f3e3789]:
+                  - generic [ref=f3e3602]: Risk
+                - generic [ref=f3e3603]: theriskisdead · Instagram
+                - link [ref=f3e3790] [cursor=pointer]:
+                  - /url: /theriskisdead/
+                  - text: View profile
+              - generic [ref=f3e3610]:
+                - generic [ref=f3e3611]: 11:06 AM
+                - group [ref=f3e3614]:
+                  - generic [ref=f3e3619]:
+                    - generic [ref=f3e3622]:
+                      - text: "Hola, Risk Vimos tu reacción en el reel de TDF y tus publicaciones de phonk vinculadas a Quito. Tu escena necesita un espacio propio: en TDF puedes seguir artistas, ver lanzamientos y explorar experiencias de la comunidad. Puedes entrar como fan aquí:"
+                      - link [ref=f3e3792] [cursor=pointer]:
+                        - /url: https://tdf-app.pages.dev/login?signup=1&roles=Fan&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=fan_a
+                        - text: https://tdf-app.pages.dev/login?signup=1&roles=Fan&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=fan_a
+                      - text: "Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                    - link [ref=f3e3793] [cursor=pointer]:
+                      - /url: https://tdf-app.pages.dev/login?signup=1&roles=Fan&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=fan_a
+                      - generic [ref=f3e3628]: TDF Records
+            - generic [ref=f3e3641]:
+              - button [ref=f3e3794] [cursor=pointer]
+              - generic [ref=f3e3648]:
+                - textbox [ref=f3e3649]:
+                  - paragraph [ref=f3e3650]
+                - generic: Message...
+              - generic [ref=f3e3651]:
+                - button [ref=f3e3796] [cursor=pointer]
+                - button [ref=f3e3798] [cursor=pointer]
+                - button [ref=f3e3800] [cursor=pointer]
+  - dialog "New message" [ref=f3e3808]:
+    - generic [ref=f3e3810]:
+      - generic [ref=f3e3811]:
+        - heading [level=2] [ref=f3e3812]:
+          - generic "Title text for new message dialog" [ref=f3e3813]: New message
+        - button [ref=f3e3817] [cursor=pointer]:
+          - img "Close" [ref=f3e3819]
+      - generic [ref=f3e3822]:
+        - generic [ref=f3e3823]:
+          - generic [ref=f3e3824]: "To:"
+          - textbox "To:" [active] [ref=f3e3827]:
+            - /placeholder: Search...
+            - text: backroom_session
+        - separator [ref=f3e3828]
+        - listbox [ref=f3e4310]:
+          - option "User avatar BACKROOM SESSIONS backroom_session Radio selection" [ref=f3e4311] [cursor=pointer]:
+            - generic [ref=f3e4314]:
+              - img "User avatar" [ref=f3e4319]
+              - generic [ref=f3e4322]:
+                - generic [ref=f3e4323]: BACKROOM SESSIONS
+                - generic [ref=f3e4326]: backroom_session
+              - checkbox "Radio selection" [ref=f3e4332]
+          - option "User avatar BACKROOM SESSION backroom.session Radio selection" [ref=f3e4333] [cursor=pointer]:
+            - generic [ref=f3e4336]:
+              - img "User avatar" [ref=f3e4341]
+              - generic [ref=f3e4344]:
+                - generic [ref=f3e4345]: BACKROOM SESSION
+                - generic [ref=f3e4348]: backroom.session
+              - checkbox "Radio selection" [ref=f3e4354]
+          - option "User avatar BACKROOM-SESSION _backroom_session Radio selection" [ref=f3e4355] [cursor=pointer]:
+            - generic [ref=f3e4358]:
+              - img "User avatar" [ref=f3e4363]
+              - generic [ref=f3e4366]:
+                - generic [ref=f3e4367]: BACKROOM-SESSION
+                - generic [ref=f3e4370]: _backroom_session
+              - checkbox "Radio selection" [ref=f3e4376]
+          - option "User avatar Backroom Sessions backroomsessionsmia Radio selection" [ref=f3e4377] [cursor=pointer]:
+            - generic [ref=f3e4380]:
+              - img "User avatar" [ref=f3e4385]
+              - generic [ref=f3e4388]:
+                - generic [ref=f3e4389]: Backroom Sessions
+                - generic [ref=f3e4392]: backroomsessionsmia
+              - checkbox "Radio selection" [ref=f3e4398]
+          - option "User avatar Back Room Session backroomsession Radio selection" [ref=f3e4399] [cursor=pointer]:
+            - generic [ref=f3e4402]:
+              - img "User avatar" [ref=f3e4407]
+              - generic [ref=f3e4410]:
+                - generic [ref=f3e4411]: Back Room Session
+                - generic [ref=f3e4414]: backroomsession
+              - checkbox "Radio selection" [ref=f3e4420]
+          - option "User avatar BACKROOM SESSIONS thebackroomsession Radio selection" [ref=f3e4421] [cursor=pointer]:
+            - generic [ref=f3e4424]:
+              - img "User avatar" [ref=f3e4429]
+              - generic [ref=f3e4432]:
+                - generic [ref=f3e4433]: BACKROOM SESSIONS
+                - generic [ref=f3e4436]: thebackroomsession
+              - checkbox "Radio selection" [ref=f3e4442]
+          - option "User avatar BACKROOM SESSIONS backroom.sessions Radio selection" [ref=f3e4443] [cursor=pointer]:
+            - generic [ref=f3e4446]:
+              - img "User avatar" [ref=f3e4451]
+              - generic [ref=f3e4454]:
+                - generic [ref=f3e4455]: BACKROOM SESSIONS
+                - generic [ref=f3e4458]: backroom.sessions
+              - checkbox "Radio selection" [ref=f3e4464]
+          - option "User avatar Backroom Sessions backroomsessionsmusic Radio selection" [ref=f3e4465] [cursor=pointer]:
+            - generic [ref=f3e4468]:
+              - img "User avatar" [ref=f3e4473]
+              - generic [ref=f3e4476]:
+                - generic [ref=f3e4477]: Backroom Sessions
+                - generic [ref=f3e4480]: backroomsessionsmusic
+              - checkbox "Radio selection" [ref=f3e4486]
+          - option "User avatar Backroom Sessions theebackroomsessions Radio selection" [ref=f3e4487] [cursor=pointer]:
+            - generic [ref=f3e4490]:
+              - img "User avatar" [ref=f3e4495]
+              - generic [ref=f3e4498]:
+                - generic [ref=f3e4499]: Backroom Sessions
+                - generic [ref=f3e4502]: theebackroomsessions
+              - checkbox "Radio selection" [ref=f3e4508]
+          - option "User avatar Backroom Session SG backroomsessionsg Radio selection" [ref=f3e4509] [cursor=pointer]:
+            - generic [ref=f3e4512]:
+              - img "User avatar" [ref=f3e4517]
+              - generic [ref=f3e4520]:
+                - generic [ref=f3e4521]: Backroom Session SG
+                - generic [ref=f3e4524]: backroomsessionsg
+              - checkbox "Radio selection" [ref=f3e4530]
+        - separator [ref=f3e4271]
+        - generic [ref=f3e4272]:
+          - button "Chat" [disabled]

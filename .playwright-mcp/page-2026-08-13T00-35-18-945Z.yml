@@ -1,0 +1,460 @@
+- generic [ref=f32e4]:
+  - generic [ref=f32e9]:
+    - generic [ref=f32e12]:
+      - link [ref=f32e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f32e22]
+      - generic [ref=f32e25]:
+        - link [ref=f32e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f32e35]
+        - link [ref=f32e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f32e45]
+        - link [ref=f32e52] [cursor=pointer]:
+          - /url: /direct/t/121661465890075
+          - generic [ref=f32e55]:
+            - img "Messages" [ref=f32e57]
+            - generic "Direct messaging - 3 new notifications link" [ref=f32e60]: "3"
+        - link [ref=f32e66] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f32e71]
+        - link [ref=f32e389] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f32e394]
+        - link [ref=f32e89] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f32e94]
+        - link [ref=f32e99] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f32e104]
+        - link [ref=f32e111] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f32e116]:
+            - img "tdf.records.label's profile picture" [ref=f32e117]
+      - generic [ref=f32e118]:
+        - link [ref=f32e121] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f32e126]
+        - link [ref=f32e129] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f32e134]
+    - generic [ref=f32e137]:
+      - main [ref=f32e138]:
+        - generic [ref=f32e140]:
+          - generic [ref=f32e141]:
+            - generic [ref=f32e142]:
+              - button [ref=f32e147] [cursor=pointer]:
+                - link [ref=f32e149]:
+                  - img "federico__molinari_'s profile picture" [ref=f32e150]
+              - generic [ref=f32e151]:
+                - generic [ref=f32e152]:
+                  - generic [ref=f32e153]:
+                    - link [ref=f32e155] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "federico__molinari_" [level=2] [ref=f32e156]
+                    - button [ref=f32e158] [cursor=pointer]:
+                      - img "Options" [ref=f32e160]
+                  - generic [ref=f32e164]: Federico Molinari
+                  - generic [ref=f32e166]:
+                    - generic [ref=f32e168]:
+                      - generic [ref=f32e169]: "169"
+                      - text: posts
+                    - link "8,499 followers" [ref=f32e171] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f32e172]:
+                        - generic "8,499" [ref=f32e173]
+                        - text: followers
+                    - link "962 following" [ref=f32e175] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f32e176]:
+                        - generic [ref=f32e177]: "962"
+                        - text: following
+                - generic [ref=f32e178]:
+                  - generic [ref=f32e180]:
+                    - generic [ref=f32e181]:
+                      - img "Link icon" [ref=f32e183]
+                      - link "on.soundcloud.com/VmMVYu2mbLxoA7oX9" [ref=f32e187] [cursor=pointer]:
+                        - /url: https://l.instagram.com/?u=https%3A%2F%2Fon.soundcloud.com%2FVmMVYu2mbLxoA7oX9%3Futm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAcGRvZgJleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAad5uxTUlp93IhXoL7fpw3kYG5l_k1TGT3WSPdwTurRmyhU3_GrM4kVgfSK7eQ_aem_WO5lh0kPkyzLLTlN1nkWpw%26utm_id%3D97760_v0_s00_e0_tv3&e=AUC0UFw6Z4cLt0YNlHAkGcn8rpzbmCUwjs_CX2V83hxDmaFBdgk5MgTOk91Q1tIWQi2lC49Uz4Q3KhSiolZkvkSDGiF03IBmBQV0scxTl0bY0foe-siJxj1SuGj9oZdTP5WR6O6HRMkg
+                    - link "Threads federico__molinari_" [ref=f32e190] [cursor=pointer]:
+                      - /url: https://www.threads.com/@federico__molinari_?xmt=AQG0JAwPUf9jVvVIFyCGqTol0AjBWdUFnllyD14PL8a2jz4
+                      - img "Threads" [ref=f32e192]
+                      - generic [ref=f32e194]: federico__molinari_
+                  - link "Followed by julieth__thenoirkult, shonky__ + 19 more" [ref=f32e196] [cursor=pointer]:
+                    - /url: /federico__molinari_/followers/mutualOnly
+                    - generic [ref=f32e198]:
+                      - generic [ref=f32e200]:
+                        - button [ref=f32e721]:
+                          - link [ref=f32e722]
+                        - button [ref=f32e203]:
+                          - link [ref=f32e204]
+                        - button [ref=f32e723]:
+                          - link [ref=f32e724]
+                      - generic [ref=f32e207]: Followed by julieth__thenoirkult, shonky__ + 19 more
+            - generic [ref=f32e212]:
+              - button "Following Down chevron icon" [ref=f32e214] [cursor=pointer]:
+                - generic [ref=f32e215]:
+                  - generic [ref=f32e216]: Following
+                  - img "Down chevron icon" [ref=f32e219]
+              - button "Message" [ref=f32e222] [cursor=pointer]
+              - button [ref=f32e224] [cursor=pointer]:
+                - img "Similar accounts" [ref=f32e226]
+            - menu [ref=f32e230]:
+              - list [ref=f32e234]:
+                - listitem [ref=f32e235]
+                - listitem [ref=f32e236]
+                - listitem [ref=f32e237]:
+                  - link "View Parties highlight" [ref=f32e240] [cursor=pointer]:
+                    - /url: /stories/highlights/17875953392984208/
+                    - button "federico__molinari_'s highlight story picture Parties" [ref=f32e241]:
+                      - button [ref=f32e242]:
+                        - img "federico__molinari_'s highlight story picture" [ref=f32e245]
+                      - generic [ref=f32e246]: Parties
+                - listitem [ref=f32e249]:
+                  - link "View Studio highlight" [ref=f32e252] [cursor=pointer]:
+                    - /url: /stories/highlights/18001722913903518/
+                    - button "federico__molinari_'s highlight story picture Studio" [ref=f32e253]:
+                      - button [ref=f32e254]:
+                        - img "federico__molinari_'s highlight story picture" [ref=f32e257]
+                      - generic [ref=f32e258]: Studio
+                - listitem [ref=f32e261]:
+                  - link "View Bass highlight" [ref=f32e264] [cursor=pointer]:
+                    - /url: /stories/highlights/17971970030443441/
+                    - button "federico__molinari_'s highlight story picture Bass" [ref=f32e265]:
+                      - button [ref=f32e266]:
+                        - img "federico__molinari_'s highlight story picture" [ref=f32e269]
+                      - generic [ref=f32e270]: Bass
+          - generic [ref=f32e273]:
+            - tablist [ref=f32e274]:
+              - link [ref=f32e276] [cursor=pointer]:
+                - /url: /federico__molinari_/
+                - img "Posts" [ref=f32e278]
+              - link [ref=f32e289] [cursor=pointer]:
+                - /url: /federico__molinari_/reels/
+                - img "Reels" [ref=f32e291]
+              - link [ref=f32e294] [cursor=pointer]:
+                - /url: /federico__molinari_/reposts/
+                - img "Reposts" [ref=f32e296]
+              - link [ref=f32e299] [cursor=pointer]:
+                - /url: /federico__molinari_/tagged/
+                - img "Tagged" [ref=f32e301]
+            - tabpanel
+          - generic [ref=f32e404]:
+            - generic [ref=f32e405]:
+              - link [ref=f32e407] [cursor=pointer]:
+                - /url: /seedsevents_tnf/reel/DbVmDmOoKj5/
+                - 'img "22.08 🗓️ 🌴SEEDS OPEN AIR🍄 TERRAZA DE LA HAIMA DE XANADU Tercera edición de esta temporada con unos invitados muy especiales desde Berlín: @federico__molinari_ & @nekes_nekes LINE UP FEDERICO MOLINARI NEKES M.U.S.E BARTO Entradas disponibles en el link de nuestra bio" [ref=f32e410]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f32e413] [cursor=pointer]:
+                - /url: /federico__molinari_/p/DbTsOJPCTEr/
+                - img "Some clips from my set @thelotradio in Brooklyn last saturday" [ref=f32e416]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f32e419] [cursor=pointer]:
+                - /url: /belisabooking/p/DbMBGEeDfRi/
+                - img "Photo shared by Belisa on July 24, 2026 tagging @thelotradio, @federico__molinari_, @madradiomiami, and @hiddenvillage.nyc. May be a black-and-white image of the Brooklyn Bridge, the Queensboro Bridge and text that says 'FEDERICO MOLINARI USA DATES LA LAIA'." [ref=f32e422]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f32e424]:
+              - link [ref=f32e426] [cursor=pointer]:
+                - /url: /duneparkclub/reel/Da0bDw9xf-L/
+                - img "SAB 08.08 | DUNE PARK IT GUYS FEDERICO MOLINARI SAN VALENTIN Entradas disponibles x FlashPass" [ref=f32e429]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f32e432] [cursor=pointer]:
+                - /url: /belisabooking/p/DaQfh3pDRRq/
+                - 'img "• FEDERICO AT ROBERT JOHNSON • On the 4th of July, you can find @federico__molinari_ at @robertjohnsonclub Offenbach alongside @manon_et.cetera and a live set from @levat_miverablev 💛 #belisabooking #federicomolinari #holdoncatalina #robertjohnsonoffenbach #musicispassion" [ref=f32e435]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f32e438] [cursor=pointer]:
+                - /url: /goa.ultrabeat/reel/DZNEGyZsVIm/
+                - 'img "GIOVEDÌ 11.06 GOAULTRABEAT CURATED BY FRANCESCO DEL GARDA VOL. IV Volume IV opens this summer’s Curated by Francesco Del Garda series. UltraWeekly Session | @_____francescodelgarda pres. Garden: @federico__molinari_ | @marcolinoultrasuoni | @frankiee________ Bosco Parallelo: @_____francescodelgarda | @veragoesdeep Every Thursday. Born from sound. Signed Goaultrabeat. Details: Free entry | Free food | Free music 21+ | Door selection Info & reservations: +39 353 409 4744 Location: Hotel Butterfly Viale dei Gladiatori, 68 - Rome Track by Vera & Federico Molinari - It Ain’t Music [Love Letters From Oslo / 2008] Graphics: @homemade.sauce #goaultrabeat #francescodelgarda #hotelbutterfly #summerseason #2026" [ref=f32e441]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f32e443]:
+              - link [ref=f32e445] [cursor=pointer]:
+                - /url: /animalclub.mx/p/DXdYxSBDRQo/
+                - img "Photo by Animal Club MX in Animal Club with @federico__molinari_, and @cruzing.in.las.vegas." [ref=f32e448]
+              - link [ref=f32e451] [cursor=pointer]:
+                - /url: /belisabooking/p/DWrYvVYjcWm/
+                - img "Photo shared by Belisa on April 03, 2026 tagging @federico__molinari_." [ref=f32e454]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f32e457] [cursor=pointer]:
+                - /url: /interdit_____/p/DWiE2BfDye2/
+                - img "Photo shared by Interdit on March 30, 2026 tagging @julieth__thenoirkult, @its_moobi, @everaldho_, @emmanu__music, @ritualofbackwards, @planet_303, @federico__molinari_, @etheric.ec, @la_eclectica_, and @backroom_session." [ref=f32e460]
+            - generic [ref=f32e462]:
+              - link [ref=f32e464] [cursor=pointer]:
+                - /url: /belisabooking/p/DV1mRXfjZSF/
+                - img "Photo shared by Belisa on March 13, 2026 tagging @federico__molinari_." [ref=f32e467]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f32e470] [cursor=pointer]:
+                - /url: /solid____/reel/DVLCRAhjVfP/
+                - img "M.A.D. x MISSION / 28.3 / 11PM @hoppetosse.berlin . . @k70a____" [ref=f32e473]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f32e476] [cursor=pointer]:
+                - /url: /nekes_nekes/p/DUk7-ETgt_9/
+                - img "Photo by Nekes in Hoppetosse with @josefinatapiad, @belisabooking, @federico__molinari_, @johndimasmusik, @hugomartinez.musik, @hoppetosse.berlin, and @rhythm_point_." [ref=f32e479]
+            - generic [ref=f32e725]:
+              - link [ref=f32e727] [cursor=pointer]:
+                - /url: /federico__molinari_/p/DTsX6YviIPY/
+                - img "Photo by Federico Molinari on January 19, 2026." [ref=f32e730]
+              - link [ref=f32e733] [cursor=pointer]:
+                - /url: /belisabooking/p/DTdZUesDfin/
+                - img "Photo shared by Belisa on January 13, 2026 tagging @jordi.castell, @itorex, @federico__molinari_, @nekes_nekes, @jazzyclub_, and @highclubroom." [ref=f32e736]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f32e739] [cursor=pointer]:
+                - /url: /federico__molinari_/reel/DTdOTvTCCjE/
+                - img "Jamiroquai - Too Young to die ⏯️🎶" [ref=f32e742]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f32e744]:
+              - link [ref=f32e746] [cursor=pointer]:
+                - /url: /banana_box_tv/p/DSuxz5yDbQp/
+                - img "Photo shared by Banana Box Tv on December 26, 2025 tagging @bikiniwaxxrecords, @veragoesdeep, @federico__molinari_, and @luas_rhythm_contact." [ref=f32e749]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f32e752] [cursor=pointer]:
+                - /url: /nekes_nekes/p/DQHhUp7giFe/
+                - img "Photo by Nekes in Hoppetosse with @alvaro_medina, @veragoesdeep, @federico__molinari_, @dorianpaic, and @hoppetosse.berlin." [ref=f32e755]
+              - link [ref=f32e758] [cursor=pointer]:
+                - /url: /visionhouse_music/p/DPwew2LAJAT/
+                - img "Photo shared by Vision House on October 13, 2025 tagging @federico__molinari_." [ref=f32e761]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f32e763]:
+              - link [ref=f32e765] [cursor=pointer]:
+                - /url: /federico__molinari_/p/DO_fFCwCKEc/
+                - img "Some clips from last weekend at @klub_k4 Slovenia @thejointevents_" [ref=f32e768]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f32e771] [cursor=pointer]:
+                - /url: /interdit_____/reel/DOpaprljDSn/
+                - img [ref=f32e774]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f32e777] [cursor=pointer]:
+                - /url: /thejointevents_/p/DOd1Ya5CH8Q/
+                - img "Photo shared by The Joint on September 11, 2025 tagging @rozle.deu, @levji_kralj, @belisabooking, @federico__molinari_, and @dj__immortal." [ref=f32e780]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f32e782]:
+              - link [ref=f32e784] [cursor=pointer]:
+                - /url: /federico__molinari_/p/DOVs9MHiKxz/
+                - img "Photo by Federico Molinari on September 08, 2025." [ref=f32e787]
+              - link [ref=f32e790] [cursor=pointer]:
+                - /url: /valen_grondona/reel/DN9HCnRERw5/
+                - img "Una entrevista con @federico__molinari_ muy linda que me quedo en el tintero. ¿Les divierte que vuelva con estas entrevistas sobre discos? Gracias @avgrecordstore y @charitobele por recibirnos 🫶🏻" [ref=f32e793]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f32e796] [cursor=pointer]:
+                - /url: /federico__molinari_/p/DNyLKRe0Nmx/
+                - img "Some clips from my set at HÖR Berlin last Saturday Thank you @hoer.berlin i really enjoyed it." [ref=f32e799]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+      - contentinfo [ref=f32e319]:
+        - generic [ref=f32e320]:
+          - generic [ref=f32e322]:
+            - link "Meta" [ref=f32e324] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f32e327] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f32e330] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f32e333] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f32e336] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f32e339] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f32e342] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f32e345] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f32e348] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f32e351] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f32e354] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f32e357] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f32e360] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f32e363] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f32e366] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f32e368]:
+            - generic [ref=f32e369] [cursor=pointer]:
+              - generic [ref=f32e370]:
+                - generic [ref=f32e371]: English
+                - img "Down chevron icon" [ref=f32e374]
+              - combobox "Switch Display Language" [ref=f32e376]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f32e377]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f32e482] [cursor=pointer]:
+              - generic "Messages - 3 new notifications" [ref=f32e483]:
+                - generic [ref=f32e484]:
+                  - generic [ref=f32e486]:
+                    - img "Messages" [ref=f32e487]
+                    - generic "Direct messaging - 3 new notifications link" [ref=f32e490]: "3"
+                  - generic [ref=f32e493]: Messages
+                - generic [ref=f32e494]:
+                  - button "User avatar Santiii" [ref=f32e496]:
+                    - img "User avatar" [ref=f32e499]
+                  - button "User avatar Diego Saa" [ref=f32e501]:
+                    - img "User avatar" [ref=f32e504]
+                  - button "User avatar Martini 🍸" [ref=f32e506]:
+                    - img "User avatar" [ref=f32e509]
+            - generic [ref=f32e555]:
+              - generic [ref=f32e557]:
+                - generic [ref=f32e558]:
+                  - button [ref=f32e560] [cursor=pointer]:
+                    - img "Go back" [ref=f32e562]
+                  - link "Open the profile page of federico__molinari_" [ref=f32e565] [cursor=pointer]:
+                    - /url: /federico__molinari_/
+                    - generic [ref=f32e566]:
+                      - img "user-profile-picture" [ref=f32e569]
+                      - heading "Federico Molinari" [level=2] [ref=f32e573]
+                  - generic [ref=f32e575]:
+                    - button [ref=f32e576] [cursor=pointer]:
+                      - img "Expand" [ref=f32e578]
+                    - button [ref=f32e580] [cursor=pointer]:
+                      - img "Close" [ref=f32e582]
+                - separator [ref=f32e585]
+              - generic "Federico Molinari" [ref=f32e586]:
+                - generic [ref=f32e588]:
+                  - generic [ref=f32e592]:
+                    - generic [ref=f32e593]:
+                      - img "user-profile-picture" [ref=f32e597]
+                      - generic [ref=f32e598]:
+                        - heading "Federico Molinari" [level=2] [ref=f32e601]
+                        - generic [ref=f32e603]: federico__molinari_ · Instagram
+                        - link "View profile" [ref=f32e606] [cursor=pointer]:
+                          - /url: /federico__molinari_/
+                    - generic [ref=f32e803]:
+                      - generic [ref=f32e804]: 7:35 PM
+                      - group [ref=f32e807]:
+                        - generic [ref=f32e812]:
+                          - generic [ref=f32e815]:
+                            - text: Hola, Federico
+                            - img "👋" [ref=f32e817]
+                            - text: "Vimos tu fecha en Cumbayá y la conversación grupal reciente conectada con TDF. En TDF puedes reunir perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Te invitamos a recorrerlo:"
+                            - link "https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b" [ref=f32e819] [cursor=pointer]:
+                              - /url: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b
+                            - text: "Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                          - link "TDF Records" [ref=f32e820] [cursor=pointer]:
+                            - /url: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b
+                    - generic [ref=f32e825]: Seen just now
+                  - generic [ref=f32e690]:
+                    - button [ref=f32e693] [cursor=pointer]:
+                      - img "Choose an emoji" [ref=f32e695]
+                    - generic [ref=f32e697]:
+                      - textbox [active] [ref=f32e698]:
+                        - paragraph [ref=f32e827]
+                      - generic: Message...
+                    - generic [ref=f32e700]:
+                      - button [ref=f32e828] [cursor=pointer]:
+                        - img "Voice Clip" [ref=f32e830]
+                      - button [ref=f32e833] [cursor=pointer]:
+                        - img "Add Photo or Video" [ref=f32e835]
+                      - button [ref=f32e840] [cursor=pointer]:
+                        - img "Choose a GIF or sticker" [ref=f32e842]

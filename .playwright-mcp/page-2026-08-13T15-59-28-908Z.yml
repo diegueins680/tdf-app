@@ -1,0 +1,383 @@
+- generic [ref=f9e4]:
+  - generic [ref=f9e18]:
+    - generic [ref=f9e21]:
+      - link [ref=f9e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f9e31]
+      - generic [ref=f9e34]:
+        - link [ref=f9e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f9e44]
+        - link [ref=f9e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f9e54]
+        - link [ref=f9e61] [cursor=pointer]:
+          - /url: /direct/t/101899518107439
+          - img "Messages" [ref=f9e66]
+        - link [ref=f9e72] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f9e77]
+        - link [ref=f9e84] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f9e89]
+        - link [ref=f9e95] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f9e100]
+        - link [ref=f9e105] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f9e110]
+        - link [ref=f9e117] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f9e122]:
+            - img "tdf.records.label's profile picture" [ref=f9e123]
+      - generic [ref=f9e124]:
+        - link [ref=f9e127] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f9e132]
+        - link [ref=f9e135] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f9e140]
+    - generic [ref=f9e143]:
+      - main [ref=f9e144]:
+        - generic [ref=f9e146]:
+          - generic [ref=f9e147]:
+            - generic [ref=f9e148]:
+              - button [ref=f9e153] [cursor=pointer]:
+                - link [ref=f9e155]:
+                  - img "kirmanarecords's profile picture" [ref=f9e156]
+              - generic [ref=f9e157]:
+                - generic [ref=f9e158]:
+                  - generic [ref=f9e159]:
+                    - link [ref=f9e161] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "kirmanarecords" [level=2] [ref=f9e162]
+                    - button [ref=f9e164] [cursor=pointer]:
+                      - img "Options" [ref=f9e166]
+                  - generic [ref=f9e170]: KIRMANA RECORDS
+                  - generic [ref=f9e172]:
+                    - generic [ref=f9e174]:
+                      - generic [ref=f9e175]: "22"
+                      - text: posts
+                    - link "2,281 followers" [ref=f9e177] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f9e178]:
+                        - generic "2,281" [ref=f9e179]
+                        - text: followers
+                    - link "693 following" [ref=f9e181] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f9e182]:
+                        - generic [ref=f9e183]: "693"
+                        - text: following
+                - generic [ref=f9e184]:
+                  - generic [ref=f9e185]:
+                    - generic [ref=f9e186]: Record label
+                    - button "Catálogo completo disponible en bandcamp kirmana récords, música para el espíritu y rituales del futuro." [ref=f9e189] [cursor=pointer]
+                    - heading [level=1]
+                    - generic [ref=f9e190]:
+                      - generic [ref=f9e191]:
+                        - img "Link icon" [ref=f9e193]
+                        - link "linktr.ee/kirmanaRecords" [ref=f9e197] [cursor=pointer]:
+                          - /url: https://l.instagram.com/?u=https%3A%2F%2Flinktr.ee%2FkirmanaRecords%3Futm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAcGRvZgJleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAadhmw1uj-rH3iwqL5TZzUbr3DzgqXopjK9meAwBrnb0Yoo9w7RPQ5BQC6_PCQ_aem_CAehCPPCaNv3x16F7h9l-Q&e=AUCrwypGFDf2OV0f9wffuwcAEWNcFnubuyCr5WikAUNq4snjXLwPoKfm40PC6HFAFU6-3bH_93QwYZlxUvUS8XVxliKeGcztX2t0g1xNXRNHztMBGDd9DrWjCMuivuAXxQtstsnOYC3-
+                      - link "Threads kirmanarecords" [ref=f9e200] [cursor=pointer]:
+                        - /url: https://www.threads.com/@kirmanarecords?xmt=AQG0mL_vikooSusxeL6fKlAyZx7C9jfqXaHh2oOAsDei4rw
+                        - img "Threads" [ref=f9e202]
+                        - generic [ref=f9e204]: kirmanarecords
+                  - link "Followed by dokidoki_exorcista, humazapas + 5 more" [ref=f9e206] [cursor=pointer]:
+                    - /url: /kirmanarecords/followers/mutualOnly
+                    - generic [ref=f9e208]:
+                      - generic [ref=f9e210]:
+                        - button [ref=f9e211]:
+                          - link [ref=f9e212]
+                        - button [ref=f9e213]:
+                          - link [ref=f9e214]
+                        - button [ref=f9e215]:
+                          - link [ref=f9e216]
+                      - generic [ref=f9e217]: Followed by dokidoki_exorcista, humazapas + 5 more
+            - generic [ref=f9e222]:
+              - button "Following Down chevron icon" [ref=f9e224] [cursor=pointer]:
+                - generic [ref=f9e225]:
+                  - generic [ref=f9e226]: Following
+                  - img "Down chevron icon" [ref=f9e229]
+              - button "Message" [ref=f9e232] [cursor=pointer]
+              - button [ref=f9e234] [cursor=pointer]:
+                - img "Similar accounts" [ref=f9e236]
+            - generic:
+              - menu
+          - generic [ref=f9e239]:
+            - tablist [ref=f9e240]:
+              - link [ref=f9e242] [cursor=pointer]:
+                - /url: /kirmanarecords/
+                - img "Posts" [ref=f9e244]
+              - link [ref=f9e255] [cursor=pointer]:
+                - /url: /kirmanarecords/reels/
+                - img "Reels" [ref=f9e257]
+              - link [ref=f9e260] [cursor=pointer]:
+                - /url: /kirmanarecords/reposts/
+                - img "Reposts" [ref=f9e262]
+              - link [ref=f9e265] [cursor=pointer]:
+                - /url: /kirmanarecords/tagged/
+                - img "Tagged" [ref=f9e267]
+            - tabpanel
+          - generic [ref=f9e274]:
+            - generic [ref=f9e275]:
+              - link [ref=f9e277] [cursor=pointer]:
+                - /url: /kirmanarecords/p/DbnwTaQv7nK/
+                - 'img "Photo by KIRMANA RECORDS in Chachapoyas - Amazonas with @allen.fx1, @jaguar_quimbaya, @daniel.c.__, @andariega94, and @el_cartel_del_pecado. May be an image of ‎text that says ''‎CHacHATBoHue naturaleza & ritmos contemporáneos e6o باذ 08 AGOSTO HORAS CASA CAЛPO \"EL PINAR\" CHACHAPOYAS PERÚ PRESENTA: MSECO ( (HIP HOP) 2 TECHNO) LA MERFS (REGGAE AMAZÓNICO) (HARD JAGUAR QUIMBAYA ALLENFX+ DANIEL C UMAR JOS GLMAR M. .FEDEZ LOS CURAS SIN CABEZA + DJKANCHUL POB DEEP MK 2ESCENARIOS: ROCK, REGGAE,HPHOP, HOP, ELECTRONICA ESTACIONAMIENTO CAMPING FUEGOS ARTIFICIALES GASTRONOMA FERIA DE ARTE LMERCARDILLO\" MAS CeTCE Corailera +KENKOS (สรงทลงศ Rosario (ogollo UALTECC ANTONIO‎''‎." [ref=f9e280]'
+              - link [ref=f9e283] [cursor=pointer]:
+                - /url: /andariega94/p/DbHTHgkGsPd/
+                - img "Photo shared by ANDARIEGA on July 22, 2026 tagging @jaguar_quimbaya, and @kirmanarecords. May be an image of sportswear and text." [ref=f9e286]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f9e289] [cursor=pointer]:
+                - /url: /andariega94/p/DbEQUHiGkKY/
+                - img "Photo shared by ANDARIEGA on July 21, 2026 tagging @jaguar_quimbaya, and @kirmanarecords. May be an image of grocery bag and text." [ref=f9e292]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f9e294]:
+              - link [ref=f9e296] [cursor=pointer]:
+                - /url: /andariega94/p/DbEKjpjGlPI/
+                - img "Photo shared by ANDARIEGA on July 21, 2026 tagging @jaguar_quimbaya, and @kirmanarecords. May be an image of text that says 'JAGUAR'." [ref=f9e299]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f9e302] [cursor=pointer]:
+                - /url: /kirmanarecords/p/Da6ntQ1P0eS/
+                - img "Photo by KIRMANA RECORDS in Parnaso Pizzería - Café Bar with @jaguar_quimbaya, @luisaleon9450, @elparnasocafebar, @aaangelic_, and @andariega94. May be an image of harp, poster and text." [ref=f9e305]
+              - link [ref=f9e308] [cursor=pointer]:
+                - /url: /kirmanarecords/p/DatzrKtvWXz/
+                - 'img "Photo shared by KIRMANA RECORDS on July 12, 2026 tagging @fatimahostels, @jaguar_quimbaya, @aaangelic_, @elestablodepegaso, and @andariega94. May be an image of poster and text that says ''FERIA KUMBERT KIRMANA RÉCORDS DJ RUA nWИΜΒΑΥИ PROYECTOR DE UDZ ഗാ 8 PM SABADO 25 DE JULID FATIMA CRA 3 # 11-32 LA CANDELARIA BOGOTA COLOMBIA 2026 NDFO BIECD ELESTABLODEPEGASO ELESTABLOD PEGASO Fatima PATACONES 脚a KIRMANIE -2I0''." [ref=f9e311]'
+            - generic [ref=f9e313]:
+              - link [ref=f9e315] [cursor=pointer]:
+                - /url: /kirmanarecords/p/DaqbUg4PKiw/
+                - 'img "Photo by KIRMANA RECORDS in Bogotá, Colombia with @jaguar_quimbaya, @proyector_de_voz, @aaangelic_, @andariega94, and @infiniti_bar. May be an image of ‎poster and ‎text that says ''‎ESPECTRÓ لسس បទ្ុប្រយ KUMBIERO JAGUAR QUIMBAYA PANTERA SELECTOR PROYECTOR DE voz VJ ANGELIC JAM VOGUESIA VIDEOARTE SONIDO CUERPO TEXTO IMÁGEN RETROSPECTIVAS ABZA MAMI ANFIBIA DARIO SÁNCHEZ CARBALLO MILA ORDÓÑEZ MAX CRISTANCHO PREVERSE COMPILATION MAURICIO SUAREZ SUDAN LOS CRISTALES voz. MAURICIO GUAPACHA. ALEJANDRO RINCON TIVISMO EN EL PARQUE DE LA LIBERTAD ARTPARTY LUGAR: INFINITI Centro cultural CRA CRA3#12F44 3 12 F 44 BOGOTÁ 24 JULIO VIERNES 8PM COLOMBIA 2026 15K NKHANE GIECA טהממות‎''‎‎." [ref=f9e318]'
+              - link [ref=f9e321] [cursor=pointer]:
+                - /url: /kirmanarecords/p/DalwBHtveVk/
+                - img "Photo shared by KIRMANA RECORDS on July 09, 2026 tagging @jaguar_quimbaya, @aaangelic_, @djcelsito, @andariega94, and @casabierta.pei. May be an image of poster and text that says 'DAR 新フロ ER HOR KUM বাধ Angelic EIDJ Celsito สถถุนสะ Duímbaya 18ulio śábado Casabierta Η 1121#4-47 21# 4-47 8:00pm 8:00 pm 15k AIRMANN ANDAO BIECD CAS bierta'." [ref=f9e324]
+              - link [ref=f9e327] [cursor=pointer]:
+                - /url: /chachadancep/p/DaeTDYOkXD3/
+                - img "Photo shared by Chacha Dance Project on July 06, 2026 tagging @jaguar_quimbaya, and @kirmanarecords. May be an image of poster, magazine and text." [ref=f9e330]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f9e332]:
+              - link [ref=f9e334] [cursor=pointer]:
+                - /url: /kirmanarecords/p/DaOSZwFmFdv/
+                - img "Photo shared by KIRMANA RECORDS on June 30, 2026 tagging @soliscusme, @jaguar_quimbaya, and @tollywood_uio. May be an image of poster and text that says 'PALENQUE PAL CASACULTURAL CASA CULTURAL ZUIMBAYA 700 TAGLAR GTROPICOS RADIACTIVO MTTH TIIIIA SICVAMOS AMORR QUE-SEA BAILANDO JUEVES COVERLO COVAS5 $5 P19H +Dl JAGUAR PROMO TODA LA NOCHE QUIMBAYA PALOMAS Y MARGARITAS 2X1 2경'." [ref=f9e337]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f9e340] [cursor=pointer]:
+                - /url: /kirmanarecords/p/DZqzQlYFNGi/
+                - img "Photo shared by KIRMANA RECORDS on June 16, 2026 tagging @jaguar_quimbaya. May be a graphic of poster, magazine and text that says 'SERENO MORENO 10 AÑOS HIJXS DEL SOL CENTRO HISTORICO SERENO MORENO LA TOLA LORD ΕΤΗΝΣ (VEN) JAGUAR OUIMBAYA (COL) CHAMA CACHONDA DESDE LAS 16H00 HASTA LAS 20H00 ENTRADA LIBRE 20 JUNIO 2026 LA.CUADRA ISAN MARCOS PUCHO HENZO SINIESTRO DJD D MARKO GARCIA AFTER PARTY DESDE LAS 21H00 [RESERVA 5 USD [PUERTA] 8 USD SERENO ENO MORENO MUSIC UNITES PEOPLE KURO DOLA- LA CUADRA'." [ref=f9e343]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f9e346] [cursor=pointer]:
+                - /url: /kirmanarecords/p/DHbe5OwOeBT/
+                - img "Photo by KIRMANA RECORDS in En Todo El Mundo with @jaguar_quimbaya, @vudufa, @el_guadanita, and @el.srd_." [ref=f9e349]
+            - generic [ref=f9e664]:
+              - link [ref=f9e666] [cursor=pointer]:
+                - /url: /el_guadanita/p/C_T4smNRAPB/
+                - img "Photo shared by el guadañita on August 30, 2024 tagging @kirmanarecords." [ref=f9e669]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f9e672] [cursor=pointer]:
+                - /url: /kirmanarecords/p/C53oMsdL4Wz/
+                - img "Photo shared by KIRMANA RECORDS on April 17, 2024 tagging @cucumbielo, @el_guadanita, @humo.salta, and @cumbia.party." [ref=f9e675]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f9e678] [cursor=pointer]:
+                - /url: /kirmanarecords/p/C3vvHwOREKX/
+                - img "Photo by KIRMANA RECORDS in Quito, Ecudor with @mamba_system." [ref=f9e681]
+            - generic [ref=f9e683]:
+              - link [ref=f9e685] [cursor=pointer]:
+                - /url: /kirmanarecords/p/CzU9juUtsNq/
+                - img "Photo by KIRMANA RECORDS in La Paz- Boliva with @___crisol." [ref=f9e688]
+              - link [ref=f9e691] [cursor=pointer]:
+                - /url: /kirmanarecords/p/CxbhEf-R8Xz/
+                - img "Photo by KIRMANA RECORDS in Internet with @davidwidam, @lorenzorenlo, @ty_ferrari_, @alanoqa______, @eddyloverxo, @entranas_, @rokeyamusic, @cesarchunk, @mamba_system, @rostroculto, @soren__1, @el_guadanita, @7oby____, @jocapish, @redkenpanda_, @nekrocerdox, and @atarrayo." [ref=f9e694]
+              - link [ref=f9e697] [cursor=pointer]:
+                - /url: /kirmanarecords/p/CoxkIwZOhJs/
+                - img "Photo by KIRMANA RECORDS in Ayacucho - Peru with @redkenpanda_." [ref=f9e700]
+            - generic [ref=f9e702]:
+              - link [ref=f9e704] [cursor=pointer]:
+                - /url: /kirmanarecords/p/ClY1qmerwr-/
+                - img "Photo by KIRMANA RECORDS in Cusco, Ciudad Imperial with @maconemusic, @inka.nato, @elsucumbion, and @el_guadanita." [ref=f9e707]
+              - link [ref=f9e710] [cursor=pointer]:
+                - /url: /kirmanarecords/p/Che7ukyreLy/
+                - img "Photo by KIRMANA RECORDS on August 20, 2022." [ref=f9e713]
+      - contentinfo [ref=f9e351]:
+        - generic [ref=f9e352]:
+          - generic [ref=f9e354]:
+            - link "Meta" [ref=f9e356] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f9e359] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f9e362] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f9e365] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f9e368] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f9e371] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f9e374] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f9e377] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f9e380] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f9e383] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f9e386] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f9e389] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f9e392] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f9e395] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f9e398] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f9e400]:
+            - generic [ref=f9e401] [cursor=pointer]:
+              - generic [ref=f9e402]:
+                - generic [ref=f9e403]: English
+                - img "Down chevron icon" [ref=f9e406]
+              - combobox "Switch Display Language" [ref=f9e408]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f9e409]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f9e412] [cursor=pointer]:
+              - generic "Messages" [ref=f9e413]:
+                - generic [ref=f9e414]:
+                  - img "Messages" [ref=f9e417]
+                  - generic [ref=f9e420]: Messages
+                - generic [ref=f9e421]:
+                  - button "User avatar ✨Festival Mestizónica ✨" [ref=f9e423]:
+                    - img "User avatar" [ref=f9e426]
+                  - button "User avatar Midiendo Calles | Medio Cultural" [ref=f9e428]:
+                    - img "User avatar" [ref=f9e431]
+                  - button "User avatar George Molina" [ref=f9e433]:
+                    - img "User avatar" [ref=f9e436]
+            - generic [ref=f9e482]:
+              - generic [ref=f9e484]:
+                - generic [ref=f9e485]:
+                  - button [ref=f9e487] [cursor=pointer]:
+                    - img "Go back" [ref=f9e489]
+                  - link "Open the profile page of kirmanarecords" [ref=f9e492] [cursor=pointer]:
+                    - /url: /kirmanarecords/
+                    - generic [ref=f9e493]:
+                      - img "user-profile-picture" [ref=f9e496]
+                      - heading "KIRMANA RECORDS" [level=2] [ref=f9e500]
+                  - generic [ref=f9e502]:
+                    - button [ref=f9e503] [cursor=pointer]:
+                      - img "Expand" [ref=f9e505]
+                    - button [ref=f9e507] [cursor=pointer]:
+                      - img "Close" [ref=f9e509]
+                - separator [ref=f9e512]
+              - generic "KIRMANA RECORDS" [ref=f9e513]:
+                - generic [ref=f9e515]:
+                  - generic [ref=f9e519]:
+                    - generic [ref=f9e520]:
+                      - img "user-profile-picture" [ref=f9e524]
+                      - generic [ref=f9e525]:
+                        - heading "KIRMANA RECORDS" [level=2] [ref=f9e528]
+                        - generic [ref=f9e530]: kirmanarecords · Instagram
+                        - link "View profile" [ref=f9e533] [cursor=pointer]:
+                          - /url: /kirmanarecords/
+                    - generic [ref=f9e718]:
+                      - generic [ref=f9e719]: 10:59 AM
+                      - group [ref=f9e722]:
+                        - generic [ref=f9e727]:
+                          - generic [ref=f9e730]:
+                            - text: Hola, Kirmana Records
+                            - img "👋" [ref=f9e732]
+                            - text: "Vimos su reacción a una historia de TDF y las fechas conectadas con Tollywood UIO y Sereno Moreno. Tu escena necesita un espacio propio: en TDF pueden explorar perfiles, lanzamientos y experiencias de la comunidad musical. Les invitamos a conocerla:"
+                            - link "https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a" [ref=f9e734] [cursor=pointer]:
+                              - /url: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a
+                            - text: "Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                          - link "TDF Records" [ref=f9e735] [cursor=pointer]:
+                            - /url: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a
+                  - generic [ref=f9e628]:
+                    - button [ref=f9e631] [cursor=pointer]:
+                      - img "Choose an emoji" [ref=f9e633]
+                    - generic [ref=f9e635]:
+                      - textbox [active] [ref=f9e636]:
+                        - paragraph [ref=f9e740]
+                      - generic: Message...
+                    - generic [ref=f9e638]:
+                      - button [ref=f9e741] [cursor=pointer]:
+                        - img "Voice Clip" [ref=f9e743]
+                      - button [ref=f9e746] [cursor=pointer]:
+                        - img "Add Photo or Video" [ref=f9e748]
+                      - button [ref=f9e753] [cursor=pointer]:
+                        - img "Choose a GIF or sticker" [ref=f9e755]

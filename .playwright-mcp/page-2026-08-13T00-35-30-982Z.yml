@@ -1,0 +1,91 @@
+- generic [ref=f43e1]:
+  - generic [ref=f43e2]:
+    - generic [ref=f43e3]:
+      - link [ref=f43e1635] [cursor=pointer]:
+        - /url: "#main-content"
+        - text: Saltar al contenido principal
+      - generic [ref=f43e5]:
+        - banner [ref=f43e6]:
+          - generic [ref=f43e7]:
+            - button [ref=f43e1636] [cursor=pointer]
+            - link [ref=f43e1637] [cursor=pointer]:
+              - /url: /inicio
+            - button [ref=f43e1638] [cursor=pointer]:
+              - generic [ref=f43e17]: Buscar sección
+              - generic [ref=f43e18]: ⌘K
+            - generic [ref=f43e19]:
+              - button [ref=f43e1639] [cursor=pointer]:
+                - generic [ref=f43e24]: Crear
+              - button [ref=f43e1640] [cursor=pointer]
+              - button [ref=f43e1641] [cursor=pointer]:
+                - generic [ref=f43e31]: D
+        - status [ref=f43e32]
+        - main [ref=f43e35]:
+          - generic [ref=f43e37]:
+            - generic [ref=f43e39]:
+              - generic [ref=f43e40]:
+                - heading [level=3] [ref=f43e1642]: Contactos
+                - paragraph [ref=f43e42]: Gestiona personas, empresas y roles en un solo lugar.
+              - button [ref=f43e1643] [cursor=pointer]: Nuevo contacto
+            - generic [ref=f43e50]:
+              - generic [ref=f43e93]:
+                - textbox [ref=f43e1645]:
+                  - /placeholder: Buscar por nombre, email o Instagram
+                  - text: Federico Molinari
+                - button [ref=f43e1646] [cursor=pointer]
+                - group
+              - generic [ref=f43e1621]:
+                - generic [ref=f43e1622]:
+                  - heading [level=6] [ref=f43e1647]: 1 coincidencia para "Federico Molinari"
+                  - paragraph [ref=f43e1624]: La búsqueda dejó un solo contacto visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar contactos en la tabla.
+                - generic [ref=f43e1625]:
+                  - button [ref=f43e1648] [cursor=pointer]:
+                    - paragraph [ref=f43e1628]: Federico Molinari
+                  - paragraph [ref=f43e1629]: "Contacto: Falta correo e Instagram"
+                  - paragraph [ref=f43e1630]: Completa el correo desde Acciones antes de crear el usuario.
+                - button [ref=f43e1649] [cursor=pointer]: Completar contacto
+          - generic [ref=f43e57]:
+            - status [ref=f43e58]:
+              - generic [ref=f43e62]: "API: online"
+            - button [ref=f43e1650] [cursor=pointer]
+    - generic [ref=f43e66]:
+      - button [ref=f43e1651] [cursor=pointer]
+      - button [ref=f43e1653] [cursor=pointer]
+      - button [ref=f43e1655] [cursor=pointer]
+      - button [ref=f43e1656] [cursor=pointer]
+      - button [ref=f43e1657] [cursor=pointer]
+      - button [ref=f43e1658] [cursor=pointer]
+      - generic [ref=f43e87]:
+        - generic [ref=f43e88]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient
+  - dialog [ref=f43e1667]:
+    - heading "Editar Federico Molinari" [level=2] [ref=f43e1668]
+    - generic [ref=f43e1670]:
+      - generic [ref=f43e1671]:
+        - generic [ref=f43e1672]: Display
+        - generic [ref=f43e1673]:
+          - textbox "Display" [ref=f43e1674]: Federico Molinari
+          - group:
+            - generic: Display
+      - generic [ref=f43e1675]:
+        - generic: Email
+        - generic [ref=f43e1676]:
+          - textbox "Email" [ref=f43e1677]
+          - group:
+            - generic: Email
+        - paragraph [ref=f43e1678]: Se usa como contacto principal y para crear accesos de usuario. Guarda un correo aquí y luego aparecerá Crear usuario en Acciones.
+      - generic [ref=f43e1679]:
+        - generic: Instagram
+        - generic [ref=f43e1680]:
+          - textbox "Instagram" [ref=f43e1681]
+          - group:
+            - generic: Instagram
+      - generic [ref=f43e1682]:
+        - generic: Teléfono
+        - generic [ref=f43e1683]:
+          - textbox "Teléfono" [ref=f43e1684]
+          - group:
+            - generic: Teléfono
+    - generic [ref=f43e1685]:
+      - button "Cancelar" [ref=f43e1686] [cursor=pointer]
+      - button "Guardar" [ref=f43e1687] [cursor=pointer]

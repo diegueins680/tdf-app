@@ -1,0 +1,378 @@
+- generic [ref=f35e4]:
+  - generic [ref=f35e18]:
+    - generic [ref=f35e21]:
+      - link [ref=f35e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f35e31]
+      - generic [ref=f35e34]:
+        - link [ref=f35e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f35e44]
+        - link [ref=f35e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f35e54]
+        - link [ref=f35e61] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f35e64]:
+            - img "Messages" [ref=f35e66]
+            - generic "Direct messaging - 3 new notifications link" [ref=f35e69]: "3"
+        - link [ref=f35e75] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f35e80]
+        - link [ref=f35e87] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f35e92]
+        - link [ref=f35e98] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f35e103]
+        - link [ref=f35e108] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f35e113]
+        - link [ref=f35e120] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f35e125]:
+            - img "tdf.records.label's profile picture" [ref=f35e126]
+      - generic [ref=f35e127]:
+        - link [ref=f35e130] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f35e135]
+        - link [ref=f35e138] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f35e143]
+    - generic [ref=f35e146]:
+      - main [ref=f35e147]:
+        - generic [ref=f35e149]:
+          - generic [ref=f35e150]:
+            - generic [ref=f35e151]:
+              - button [ref=f35e156] [cursor=pointer]:
+                - link [ref=f35e158]:
+                  - img "oximoron_tu_tentaculo's profile picture" [ref=f35e159]
+              - generic [ref=f35e160]:
+                - generic [ref=f35e161]:
+                  - generic [ref=f35e162]:
+                    - link [ref=f35e164] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "oximoron_tu_tentaculo" [level=2] [ref=f35e165]
+                    - button [ref=f35e167] [cursor=pointer]:
+                      - img "Options" [ref=f35e169]
+                  - generic [ref=f35e173]: Tentáculos
+                  - generic [ref=f35e175]:
+                    - generic [ref=f35e177]:
+                      - generic [ref=f35e178]: "430"
+                      - text: posts
+                    - link "103 followers" [ref=f35e180] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f35e181]:
+                        - generic "103" [ref=f35e182]
+                        - text: followers
+                    - link "2,421 following" [ref=f35e184] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f35e185]:
+                        - generic [ref=f35e186]: 2,421
+                        - text: following
+                - generic [ref=f35e187]:
+                  - generic [ref=f35e189]:
+                    - generic [ref=f35e190]:
+                      - img "Link icon" [ref=f35e192]
+                      - link "mylnker.com/renato-gmez" [ref=f35e196] [cursor=pointer]:
+                        - /url: https://l.instagram.com/?u=https%3A%2F%2Fmylnker.com%2Frenato-gmez%3Futm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAcGRvZgJleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAacSMLjf9xc2hg9ETTnxlzh39L1YpgTZYxOsdu9d0KKhx7_7W4kqkUqKp-qFyA_aem_rg6ZmHofM6nB8ouHsqSOMg&e=AUCZdaIYjei7t1wx3EUP0sHEJRaI1oAQ-eHihoQdW8GGQIpKiIGDQ5DpfdgsBFbHap3ARQoFCoBdVkabylnDFZWUFaKwkdFqb5mq_U5tweg03ZJSYmsvI1fPoHVv0w80Ez7bnauZP2Ch
+                    - link "Threads oximoron_tu_tentaculo" [ref=f35e199] [cursor=pointer]:
+                      - /url: https://www.threads.com/@oximoron_tu_tentaculo?xmt=AQG0ROA83sEbaSgKcsg62Rdn2PnxNJYM2uuo7NriC-NuwlA
+                      - img "Threads" [ref=f35e201]
+                      - generic [ref=f35e203]: oximoron_tu_tentaculo
+                  - link "Followed by blackpalacio_music, arisha_priodl + 2 more" [ref=f35e205] [cursor=pointer]:
+                    - /url: /oximoron_tu_tentaculo/followers/mutualOnly
+                    - generic [ref=f35e207]:
+                      - generic [ref=f35e209]:
+                        - button [ref=f35e210]:
+                          - link [ref=f35e211]
+                        - button [ref=f35e212]:
+                          - link [ref=f35e213]
+                        - button [ref=f35e214]:
+                          - link [ref=f35e215]
+                      - generic [ref=f35e216]: Followed by blackpalacio_music, arisha_priodl + 2 more
+            - generic [ref=f35e221]:
+              - button "Follow Back" [ref=f35e223] [cursor=pointer]
+              - button [ref=f35e227] [cursor=pointer]:
+                - img "Similar accounts" [ref=f35e229]
+            - menu [ref=f35e233]:
+              - generic [ref=f35e235]:
+                - list [ref=f35e237]:
+                  - listitem [ref=f35e238]
+                  - listitem [ref=f35e239]
+                  - listitem [ref=f35e240]:
+                    - link "View 🌹 highlight" [ref=f35e243] [cursor=pointer]:
+                      - /url: /stories/highlights/18106944464038994/
+                      - button "oximoron_tu_tentaculo's highlight story picture 🌹" [ref=f35e244]:
+                        - button [ref=f35e245]:
+                          - img "oximoron_tu_tentaculo's highlight story picture" [ref=f35e248]
+                        - generic [ref=f35e249]: 🌹
+                  - listitem [ref=f35e252]:
+                    - link "View 🧨 highlight" [ref=f35e255] [cursor=pointer]:
+                      - /url: /stories/highlights/18208262752353504/
+                      - button "oximoron_tu_tentaculo's highlight story picture 🧨" [ref=f35e256]:
+                        - button [ref=f35e257]:
+                          - img "oximoron_tu_tentaculo's highlight story picture" [ref=f35e260]
+                        - generic [ref=f35e261]: 🧨
+                  - listitem [ref=f35e264]:
+                    - link "View 💛 highlight" [ref=f35e267] [cursor=pointer]:
+                      - /url: /stories/highlights/17987233329009738/
+                      - button "oximoron_tu_tentaculo's highlight story picture 💛" [ref=f35e268]:
+                        - button [ref=f35e269]:
+                          - img "oximoron_tu_tentaculo's highlight story picture" [ref=f35e272]
+                        - generic [ref=f35e273]: 💛
+                  - listitem [ref=f35e276]:
+                    - link "View 🎳 highlight" [ref=f35e279] [cursor=pointer]:
+                      - /url: /stories/highlights/18069874685659181/
+                      - button "oximoron_tu_tentaculo's highlight story picture 🎳" [ref=f35e280]:
+                        - button [ref=f35e281]:
+                          - img "oximoron_tu_tentaculo's highlight story picture" [ref=f35e284]
+                        - generic [ref=f35e285]: 🎳
+                  - listitem [ref=f35e288]:
+                    - link "View ✨ highlight" [ref=f35e291] [cursor=pointer]:
+                      - /url: /stories/highlights/18092183714161211/
+                      - button "oximoron_tu_tentaculo's highlight story picture ✨" [ref=f35e292]:
+                        - button [ref=f35e293]:
+                          - img "oximoron_tu_tentaculo's highlight story picture" [ref=f35e296]
+                        - generic [ref=f35e297]: ✨
+                  - listitem [ref=f35e300]:
+                    - link "View friends 💫 highlight" [ref=f35e303] [cursor=pointer]:
+                      - /url: /stories/highlights/18093231365223697/
+                      - button "oximoron_tu_tentaculo's highlight story picture friends 💫" [ref=f35e304]:
+                        - button [ref=f35e305]:
+                          - img "oximoron_tu_tentaculo's highlight story picture" [ref=f35e308]
+                        - generic [ref=f35e309]: friends 💫
+                  - listitem [ref=f35e312]:
+                    - link "View 🐇 highlight" [ref=f35e315] [cursor=pointer]:
+                      - /url: /stories/highlights/17933569485156381/
+                      - button "oximoron_tu_tentaculo's highlight story picture 🐇" [ref=f35e316]:
+                        - button [ref=f35e317]:
+                          - img "oximoron_tu_tentaculo's highlight story picture" [ref=f35e320]
+                        - generic [ref=f35e321]: 🐇
+                  - listitem [ref=f35e324]:
+                    - link "View 💙 highlight" [ref=f35e327] [cursor=pointer]:
+                      - /url: /stories/highlights/18045921017687781/
+                      - button "oximoron_tu_tentaculo's highlight story picture 💙" [ref=f35e328]:
+                        - button [ref=f35e329]:
+                          - img "oximoron_tu_tentaculo's highlight story picture" [ref=f35e332]
+                        - generic [ref=f35e333]: 💙
+                  - listitem [ref=f35e336]:
+                    - link "View beast highlight" [ref=f35e339] [cursor=pointer]:
+                      - /url: /stories/highlights/18022187381581927/
+                      - button "oximoron_tu_tentaculo's highlight story picture beast" [ref=f35e340]:
+                        - button [ref=f35e341]:
+                          - img "oximoron_tu_tentaculo's highlight story picture" [ref=f35e344]
+                        - generic [ref=f35e345]: beast
+                  - listitem [ref=f35e348]:
+                    - link "View 666 highlight" [ref=f35e351] [cursor=pointer]:
+                      - /url: /stories/highlights/18124373479466627/
+                      - button "oximoron_tu_tentaculo's highlight story picture 666" [ref=f35e352]:
+                        - button [ref=f35e353]:
+                          - img "oximoron_tu_tentaculo's highlight story picture" [ref=f35e356]
+                        - generic [ref=f35e357]: "666"
+                  - listitem [ref=f35e360]:
+                    - link "View Destacada highlight" [ref=f35e363] [cursor=pointer]:
+                      - /url: /stories/highlights/18139479676412314/
+                      - button "oximoron_tu_tentaculo's highlight story picture Destacada" [ref=f35e364]:
+                        - button [ref=f35e365]:
+                          - img "oximoron_tu_tentaculo's highlight story picture" [ref=f35e368]
+                        - generic [ref=f35e369]: Destacada
+                  - listitem [ref=f35e372]:
+                    - link "View 🍻 highlight" [ref=f35e375] [cursor=pointer]:
+                      - /url: /stories/highlights/18036958466364119/
+                      - button "oximoron_tu_tentaculo's highlight story picture 🍻" [ref=f35e376]:
+                        - button [ref=f35e377]:
+                          - img "oximoron_tu_tentaculo's highlight story picture" [ref=f35e380]
+                        - generic [ref=f35e381]: 🍻
+                  - listitem [ref=f35e384]:
+                    - link "View Destacada highlight" [ref=f35e387] [cursor=pointer]:
+                      - /url: /stories/highlights/17852623113438028/
+                      - button "oximoron_tu_tentaculo's highlight story picture Destacada" [ref=f35e388]:
+                        - button [ref=f35e389]:
+                          - img "oximoron_tu_tentaculo's highlight story picture" [ref=f35e392]
+                        - generic [ref=f35e393]: Destacada
+                  - listitem [ref=f35e396]:
+                    - link "View Destacada highlight" [ref=f35e399] [cursor=pointer]:
+                      - /url: /stories/highlights/18230471818288821/
+                      - button "oximoron_tu_tentaculo's highlight story picture Destacada" [ref=f35e400]:
+                        - button [ref=f35e401]:
+                          - img "oximoron_tu_tentaculo's highlight story picture" [ref=f35e404]
+                        - generic [ref=f35e405]: Destacada
+                - button "Next" [ref=f35e408] [cursor=pointer]
+          - generic [ref=f35e410]:
+            - tablist [ref=f35e411]:
+              - link [ref=f35e413] [cursor=pointer]:
+                - /url: /oximoron_tu_tentaculo/
+                - img "Posts" [ref=f35e415]
+              - link [ref=f35e426] [cursor=pointer]:
+                - /url: /oximoron_tu_tentaculo/reels/
+                - img "Reels" [ref=f35e428]
+              - link [ref=f35e431] [cursor=pointer]:
+                - /url: /oximoron_tu_tentaculo/reposts/
+                - img "Reposts" [ref=f35e433]
+              - link [ref=f35e436] [cursor=pointer]:
+                - /url: /oximoron_tu_tentaculo/tagged/
+                - img "Tagged" [ref=f35e438]
+            - tabpanel
+          - generic [ref=f35e445]:
+            - generic [ref=f35e446]:
+              - link [ref=f35e448] [cursor=pointer]:
+                - /url: /oximoron_tu_tentaculo/p/Dbtw2enxjNO/
+                - img "Photo by Tentáculos on August 06, 2026. May be an image of text that says '520 CLUB 520CLUB 520 CLUB MUJERES 10$NT 10$ ENTRADA GENERAL UCASFERREYRA DEEPERFECT MOOD MOODCHILD CHILD MOAN ACPRO 2BDIEGOFIERROI PRO.B20DIEGOFIERRO(CtpMoee FIERRO Movement) RICHI SUAREZ NACHO NACHOHIDALGO HIDALGO RICHISUAREZ.B2NACHOHIDALGO GO Zoire) MARIO MARIOJAVIER JAVIER ZOIRE CLAP Tapinado® FOCUS Claproom ElectronicMusic'." [ref=f35e451]
+              - link [ref=f35e454] [cursor=pointer]:
+                - /url: /oximoron_tu_tentaculo/reel/DbsOws8tSEj/
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f35e460] [cursor=pointer]:
+                - /url: /oximoron_tu_tentaculo/p/DbgL9s3xC6c/
+                - img "Photo by Tentáculos on August 01, 2026. May be an illustration of costume, poster, headdress and text." [ref=f35e463]
+            - generic [ref=f35e465]:
+              - link [ref=f35e467] [cursor=pointer]:
+                - /url: /oximoron_tu_tentaculo/p/DbQNgrIEUDe/
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f35e473] [cursor=pointer]:
+                - /url: /oximoron_tu_tentaculo/p/DbEsbpHRmwJ/
+                - img "Photo by Tentáculos on July 21, 2026. May be an image of poster and text that says 'Claproom Electronic Music VIERNES 24 JULIO 9:00PM 9:00 PM MIKE JAGUAR MIKEJAGUAR&ANDREBASS & ANDRE BASS MEI MELISSASANTAMARÍA SSA SANTA MARIA AYALA042 (GYE) ACPRO ACPROB2BDIEGOFIERRO B2B DIEGO FIERRO ABIAPARK] ENTRADAS TICKETS- PREVENTA PUERTA 2X1 EARLY POR TIEMPO IMI ADO 15$ 15$ 20$ Promo conmigo de 5 personas\" 3 15$ 2 10$ COMPRA COMPRA2ENTRADAS 2 ENTRADAS PRECIO PRECIOESPECIAL ESPECIAL YPAGA PORTIEMPOLIMITADO IEMPO LIMITADO PRECIO EN PUERTA COCTELERÍA DE PRIMERA SOU NDSYSTEM JBL PROFESIONAL 1600 W S/W SEGU SEGURIDAD DAD PRIVADA GONZÁLEZSUÁRE FRENTEAL HOTEL HOTELQUITO QUITO'." [ref=f35e476]
+              - link [ref=f35e479] [cursor=pointer]:
+                - /url: /oximoron_tu_tentaculo/p/Da-GIJeHMM2/
+                - img "Photo by Tentáculos on July 19, 2026. May be an image of ‎poster, glasses, crowd and ‎text that says '‎ZE رللا‎'‎‎." [ref=f35e482]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f35e484]:
+              - link [ref=f35e486] [cursor=pointer]:
+                - /url: /oximoron_tu_tentaculo/p/Da-FqG1HPsy/
+                - img "Photo by Tentáculos on July 19, 2026. May be a video game screenshot of text." [ref=f35e489]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f35e492] [cursor=pointer]:
+                - /url: /oximoron_tu_tentaculo/p/Da-BcAvurgU/
+                - img "Photo by Tentáculos on July 19, 2026. May be an image of text." [ref=f35e495]
+              - link [ref=f35e498] [cursor=pointer]:
+                - /url: /oximoron_tu_tentaculo/p/Da-BJ9GumOP/
+                - img "Photo by Tentáculos on July 19, 2026. May be an image of text." [ref=f35e501]
+            - generic [ref=f35e503]:
+              - link [ref=f35e505] [cursor=pointer]:
+                - /url: /oximoron_tu_tentaculo/p/Da9gvOfuY-0/
+                - img "Photo by Tentáculos on July 18, 2026. May be a video game screenshot of text." [ref=f35e508]
+              - link [ref=f35e511] [cursor=pointer]:
+                - /url: /oximoron_tu_tentaculo/p/Da9aRIYuNNA/
+                - img "Photo by Tentáculos on July 18, 2026. May be a cartoon of poster, outdoors and text." [ref=f35e514]
+              - link [ref=f35e517] [cursor=pointer]:
+                - /url: /oximoron_tu_tentaculo/p/Dat1fy6RYDk/
+                - img "Photo by Tentáculos on July 12, 2026. May be a video game screenshot of text." [ref=f35e520]
+      - contentinfo [ref=f35e522]:
+        - generic [ref=f35e523]:
+          - generic [ref=f35e525]:
+            - link "Meta" [ref=f35e527] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f35e530] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f35e533] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f35e536] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f35e539] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f35e542] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f35e545] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f35e548] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f35e551] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f35e554] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f35e557] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f35e560] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f35e563] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f35e566] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f35e569] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f35e571]:
+            - generic [ref=f35e572] [cursor=pointer]:
+              - generic [ref=f35e573]:
+                - generic [ref=f35e574]: English
+                - img "Down chevron icon" [ref=f35e577]
+              - combobox "Switch Display Language" [ref=f35e579]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f35e580]: © 2026 Instagram from Meta
+  - button [ref=f35e583] [cursor=pointer]:
+    - generic "Messages - 3 new notifications" [ref=f35e584]:
+      - generic [ref=f35e585]:
+        - generic [ref=f35e587]:
+          - img "Messages" [ref=f35e588]
+          - generic "Direct messaging - 3 new notifications link" [ref=f35e591]: "3"
+        - generic [ref=f35e594]: Messages
+      - generic [ref=f35e595]:
+        - button "User avatar Santiii" [ref=f35e597]:
+          - img "User avatar" [ref=f35e600]
+        - button "User avatar Diego Saa" [ref=f35e602]:
+          - img "User avatar" [ref=f35e605]
+        - button "User avatar Martini 🍸" [ref=f35e607]:
+          - img "User avatar" [ref=f35e610]
