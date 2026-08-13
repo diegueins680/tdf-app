@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import {
   buildDeployPlan,
@@ -93,6 +94,19 @@ test('normalizeFullSha rejects mutable tags, abbreviated SHAs, and malformed val
       /40|full|sha|commit|hex/i,
       `expected ${JSON.stringify(invalid)} to be rejected`,
     );
+  }
+});
+
+test('production migration manifest uses immutable full commit SHAs', () => {
+  const manifest = JSON.parse(readFileSync(
+    new URL('../production-migrations.json', import.meta.url),
+    'utf8',
+  ));
+
+  assert.equal(manifest.schemaVersion, 1);
+  assert.ok(Array.isArray(manifest.migrations));
+  for (const migration of manifest.migrations) {
+    assert.equal(normalizeFullSha(migration.introducedBy), migration.introducedBy);
   }
 });
 
