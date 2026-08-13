@@ -80,7 +80,10 @@ export default defineConfig({
           if (id.includes('react-router')) return 'router';
           if (id.includes('@tanstack')) return 'tanstack';
           if (id.includes('@fullcalendar/')) return 'fullcalendar';
-          if (id.includes('@mui/icons-material')) return 'mui-icons';
+          // Let Rollup place icons with their consumers. A manual shared icon
+          // chunk pulls icons used only by lazy routes into the initial graph
+          // as soon as an eagerly loaded shell component imports any icon.
+          if (id.includes('@mui/icons-material')) return;
           if (id.includes('@mui/x-date-pickers')) return 'mui-x';
           // MUI core + its Emotion styling engine + the small runtime helpers
           // MUI/Emotion pull in (clsx, popper, transition-group, etc.). Keep

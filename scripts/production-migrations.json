@@ -80,6 +80,11 @@
       "id": "2026-08-09_admin_operations_control_center",
       "path": "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
       "introducedBy": "daffea31e8e90d576fa047dda8aa5831885836ea"
+    },
+    {
+      "id": "2026-08-13_service_storefront_phase0_hardening",
+      "path": "tdf-hq/sql/2026-08-13_service_storefront_phase0_hardening.sql",
+      "introducedBy": "588fdef6ace56ffe077eb85063ad82d583130f48"
     }
   ]
 }

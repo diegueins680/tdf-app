@@ -95,8 +95,9 @@ export function CheckoutDialog({
     }
   };
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Check-out · {asset.name}</DialogTitle>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth aria-labelledby="checkout-dialog-title">
+      <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
+      <DialogTitle id="checkout-dialog-title">Check-out · {asset.name}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
           Estado: {asset.status} · Ubicación: {asset.location ?? '—'}
@@ -407,10 +408,11 @@ export function CheckoutDialog({
       <DialogActions>
         <Button onClick={() => void copySummary()}>Copiar resumen</Button>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button variant="contained" onClick={onSubmit} disabled={loading || Boolean(activeCheckout)}>
+        <Button type="submit" variant="contained" disabled={loading || Boolean(activeCheckout)}>
           {activeCheckout ? 'Pendiente de check-in' : loading ? 'Guardando…' : 'Confirmar'}
         </Button>
       </DialogActions>
+      </form>
     </Dialog>
   );
 }
@@ -438,8 +440,9 @@ export function CheckinDialog({
 }) {
   if (!asset) return null;
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Check-in · {asset.name}</DialogTitle>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth aria-labelledby="checkin-dialog-title">
+      <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
+      <DialogTitle id="checkin-dialog-title">Check-in · {asset.name}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
@@ -485,10 +488,11 @@ export function CheckinDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button variant="contained" onClick={onSubmit} disabled={loading}>
+        <Button type="submit" variant="contained" disabled={loading}>
           {loading ? 'Guardando…' : 'Confirmar'}
         </Button>
       </DialogActions>
+      </form>
     </Dialog>
   );
 }

@@ -1,0 +1,376 @@
+- generic [ref=f11e9]:
+  - generic [ref=f11e12]:
+    - link [ref=f11e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f11e22]
+    - generic [ref=f11e25]:
+      - link [ref=f11e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f11e35]
+      - link [ref=f11e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f11e45]
+      - link [ref=f11e216] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - generic [ref=f11e55]:
+          - img "Messages" [ref=f11e57]
+          - generic "Direct messaging - 4 new notifications link" [ref=f11e217]: "4"
+      - link [ref=f11e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f11e67]
+      - link [ref=f11e221] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f11e226]
+      - link [ref=f11e85] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f11e90]
+      - link [ref=f11e95] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f11e100]
+      - link [ref=f11e107] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f11e112]:
+          - img "tdf.records.label's profile picture" [ref=f11e113]
+    - generic [ref=f11e114]:
+      - link [ref=f11e117] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f11e122]
+      - link [ref=f11e125] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f11e130]
+  - main [ref=f11e134]:
+    - generic [ref=f11e234]:
+      - navigation "Thread list" [ref=f11e235]:
+        - generic [ref=f11e236]:
+          - generic [ref=f11e237]:
+            - button [ref=f11e238] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f11e240]
+              - img "Down chevron icon" [ref=f11e243]
+            - button [ref=f11e247] [cursor=pointer]:
+              - img "New message" [ref=f11e249]
+          - tablist [ref=f11e254]:
+            - tab "Primary" [selected] [ref=f11e255] [cursor=pointer]
+            - tab "General" [ref=f11e258] [cursor=pointer]
+            - tab "From ads" [ref=f11e261] [cursor=pointer]
+            - tab "Requests" [ref=f11e265] [cursor=pointer]
+          - generic [ref=f11e271]:
+            - img "Search" [ref=f11e273]
+            - textbox "Search" [ref=f11e276]
+          - generic [ref=f11e277]:
+            - generic [ref=f11e279]:
+              - list [ref=f11e281]:
+                - listitem [ref=f11e282]
+                - listitem [ref=f11e283]:
+                  - button "What's new... Your note" [ref=f11e285] [cursor=pointer]:
+                    - generic [ref=f11e286]:
+                      - generic [ref=f11e287]: What's new...
+                      - generic [ref=f11e293]:
+                        - link [ref=f11e295]
+                        - generic [ref=f11e296]: Your note
+                - listitem [ref=f11e298]:
+                  - button "a q hora perdemos la gravedad?😂para vestirme y estar redi pa volar 🫨🐦‍🔥 camymantillan's profile picture Cami Mantilla" [ref=f11e301] [cursor=pointer]:
+                    - generic [ref=f11e302]:
+                      - generic [ref=f11e303]: a q hora perdemos la gravedad?😂para vestirme y estar redi pa volar 🫨🐦‍🔥
+                      - generic [ref=f11e310]:
+                        - link [ref=f11e312]:
+                          - img "camymantillan's profile picture" [ref=f11e313]
+                        - generic [ref=f11e314]: Cami Mantilla
+                - listitem [ref=f11e317]:
+                  - button "show en cdmx hoy 12/08 zoemoff's profile picture Zoe Moff" [ref=f11e320] [cursor=pointer]:
+                    - generic [ref=f11e321]:
+                      - generic [ref=f11e322]: show en cdmx hoy 12/08
+                      - generic [ref=f11e329]:
+                        - link [ref=f11e331]:
+                          - img "zoemoff's profile picture" [ref=f11e332]
+                        - generic [ref=f11e333]: Zoe Moff
+                - listitem [ref=f11e336]:
+                  - button "si tienes una marca de ropa y quieres exponerla es ahoraaaa!!! dimeabiluuu____'s profile picture ✹ emilia ✹" [ref=f11e339] [cursor=pointer]:
+                    - generic [ref=f11e340]:
+                      - generic [ref=f11e341]: si tienes una marca de ropa y quieres exponerla es ahoraaaa!!!
+                      - generic [ref=f11e348]:
+                        - link [ref=f11e350]:
+                          - img "dimeabiluuu____'s profile picture" [ref=f11e351]
+                        - generic [ref=f11e352]: ✹ emilia ✹
+                - listitem [ref=f11e355]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Fearless Pink Floyd Reinventarse las veces que sean necesarias ✨❤️‍🔥 saraking30's profile picture Sara King" [ref=f11e358] [cursor=pointer]:
+                    - generic [ref=f11e359]:
+                      - generic [ref=f11e365]:
+                        - generic [ref=f11e366]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f11e368]
+                          - generic [ref=f11e372]: Fearless
+                        - generic [ref=f11e373]: Pink Floyd
+                        - generic [ref=f11e374]: Reinventarse las veces que sean necesarias ✨❤️‍🔥
+                      - generic [ref=f11e375]:
+                        - link [ref=f11e377]:
+                          - img "saraking30's profile picture" [ref=f11e378]
+                        - generic [ref=f11e379]: Sara King
+                - listitem [ref=f11e382]:
+                  - button "⛰️ 🔥 😔 solcordovamusic's profile picture Sol Córdova 🌞" [ref=f11e385] [cursor=pointer]:
+                    - generic [ref=f11e386]:
+                      - generic [ref=f11e387]: ⛰️ 🔥 😔
+                      - generic [ref=f11e394]:
+                        - link [ref=f11e396]:
+                          - img "solcordovamusic's profile picture" [ref=f11e397]
+                        - generic [ref=f11e398]: Sol Córdova 🌞
+                - listitem [ref=f11e401]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Si No Estás Penyair soley.fino's profile picture Soley Fino" [ref=f11e404] [cursor=pointer]:
+                    - generic [ref=f11e405]:
+                      - generic [ref=f11e411]:
+                        - generic [ref=f11e412]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f11e414]
+                          - generic [ref=f11e418]: Si No Estás
+                        - generic [ref=f11e419]: Penyair
+                      - generic [ref=f11e420]:
+                        - link [ref=f11e422]:
+                          - img "soley.fino's profile picture" [ref=f11e423]
+                        - generic [ref=f11e424]: Soley Fino
+                - listitem [ref=f11e427]:
+                  - button "Este sábado en El Arupo, Pacheco trío ivisflies's profile picture ivisflies" [ref=f11e430] [cursor=pointer]:
+                    - generic [ref=f11e431]:
+                      - generic [ref=f11e432]: Este sábado en El Arupo, Pacheco trío
+                      - generic [ref=f11e439]:
+                        - link [ref=f11e441]:
+                          - img "ivisflies's profile picture" [ref=f11e442]
+                        - generic [ref=f11e443]: ivisflies
+                - listitem [ref=f11e446]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Astro Moog (feat. Llama Este Pez) Juano Ledesma juano_music's profile picture J" [ref=f11e449] [cursor=pointer]:
+                    - generic [ref=f11e450]:
+                      - generic [ref=f11e456]:
+                        - generic [ref=f11e457]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f11e459]
+                          - generic [ref=f11e463]: Astro Moog (feat. Llama Este Pez)
+                        - generic [ref=f11e464]: Juano Ledesma
+                      - generic [ref=f11e465]:
+                        - link [ref=f11e467]:
+                          - img "juano_music's profile picture" [ref=f11e468]
+                        - generic [ref=f11e469]: J
+              - button "Next" [ref=f11e472] [cursor=pointer]
+            - generic [ref=f11e477]:
+              - button "user-profile-picture Blue Records Blue sent an attachment. 9 hours ago" [ref=f11e963] [cursor=pointer]:
+                - generic [ref=f11e483]:
+                  - img "user-profile-picture" [ref=f11e487]
+                  - generic [ref=f11e490]:
+                    - generic [ref=f11e491]: Blue Records
+                    - generic [ref=f11e497]:
+                      - generic [ref=f11e498]: Blue sent an attachment.
+                      - generic [ref=f11e500]:
+                        - generic [ref=f11e501]: ·
+                        - generic "9 hours ago" [ref=f11e506]: 9h
+              - button "user-profile-picture InmoDesarrollo - Enríquez & Arquitectos | IDEA ∴ InmoDesarrollo sent an attachment. a day ago" [ref=f11e1142] [cursor=pointer]:
+                - generic [ref=f11e512]:
+                  - img "user-profile-picture" [ref=f11e516]
+                  - generic [ref=f11e519]:
+                    - generic [ref=f11e520]: InmoDesarrollo - Enríquez & Arquitectos | IDEA ∴
+                    - generic [ref=f11e526]:
+                      - generic [ref=f11e527]: InmoDesarrollo sent an attachment.
+                      - generic [ref=f11e529]:
+                        - generic [ref=f11e530]: ·
+                        - generic "a day ago" [ref=f11e535]: 1d
+              - button "user-profile-picture Claudia Palma Graciassss 🤍🫂✨ a day ago" [ref=f11e1389] [cursor=pointer]:
+                - generic [ref=f11e541]:
+                  - img "user-profile-picture" [ref=f11e545]
+                  - generic [ref=f11e548]:
+                    - generic [ref=f11e549]: Claudia Palma
+                    - generic [ref=f11e555]:
+                      - generic [ref=f11e556]: Graciassss 🤍🫂✨
+                      - generic [ref=f11e558]:
+                        - generic [ref=f11e559]: ·
+                        - generic "a day ago" [ref=f11e564]: 1d
+              - 'button "user-profile-picture HNO 🚨 ¡YA DISPONIBLE! 🚨 DESPERTAR – HNO ya está en todas las plataformas. 🔥 Si te gusta la música con mensaje y una vibra diferente, este tema es para ti. 🎧 Dale play, compártelo y cuéntame qué parte te llegó más. Escúchalo aquí: https://open.spotify.com/track/4fjK4Sk6g4ij1SCSIMMj0L?si=kN7qsWYhTCGx5AmV5axbaw&utm_source=copy-link #HNO #Despertar #NuevaMúsica #HipHop #BoomBap #RapEcuador #MúsicaIndependiente #Spotify #BlueRecords #Estreno a week ago" [ref=f11e1608] [cursor=pointer]':
+                - generic [ref=f11e570]:
+                  - img "user-profile-picture" [ref=f11e574]
+                  - generic [ref=f11e577]:
+                    - generic [ref=f11e578]: HNO
+                    - generic [ref=f11e584]:
+                      - generic [ref=f11e585]: "🚨 ¡YA DISPONIBLE! 🚨 DESPERTAR – HNO ya está en todas las plataformas. 🔥 Si te gusta la música con mensaje y una vibra diferente, este tema es para ti. 🎧 Dale play, compártelo y cuéntame qué parte te llegó más. Escúchalo aquí: https://open.spotify.com/track/4fjK4Sk6g4ij1SCSIMMj0L?si=kN7qsWYhTCGx5AmV5axbaw&utm_source=copy-link #HNO #Despertar #NuevaMúsica #HipHop #BoomBap #RapEcuador #MúsicaIndependiente #Spotify #BlueRecords #Estreno"
+                      - generic [ref=f11e587]:
+                        - generic [ref=f11e588]: ·
+                        - generic "a week ago" [ref=f11e593]: 1w
+              - button "user-profile-picture Llama Este Pez You sent an attachment. a week ago" [ref=f11e1825] [cursor=pointer]:
+                - generic [ref=f11e599]:
+                  - img "user-profile-picture" [ref=f11e603]
+                  - generic [ref=f11e606]:
+                    - generic [ref=f11e607]: Llama Este Pez
+                    - generic [ref=f11e613]:
+                      - generic [ref=f11e614]: You sent an attachment.
+                      - generic [ref=f11e616]:
+                        - generic [ref=f11e617]: ·
+                        - generic "a week ago" [ref=f11e622]: 1w
+              - button "user-profile-picture user-profile-picture Llama Este Pez, Fabro Alomìa Torres, Federico Molinari and Space Trip Fest 1 active today" [pressed] [ref=f11e2053] [cursor=pointer]:
+                - generic [ref=f11e628]:
+                  - generic [ref=f11e630]:
+                    - img "user-profile-picture" [ref=f11e632]
+                    - img "user-profile-picture" [ref=f11e635]
+                  - generic [ref=f11e638]:
+                    - generic [ref=f11e639]: Llama Este Pez, Fabro Alomìa Torres, Federico Molinari and Space Trip Fest
+                    - generic [ref=f11e643]: 1 active today
+              - button "user-profile-picture La T de Teez La T de Teez replied to an ad. View ad(https://www.instagram.com/p/DL57XEtgmwh/) a week ago" [ref=f11e651] [cursor=pointer]:
+                - generic [ref=f11e653]:
+                  - img "user-profile-picture" [ref=f11e657]
+                  - generic [ref=f11e660]:
+                    - generic [ref=f11e661]: La T de Teez
+                    - generic [ref=f11e667]:
+                      - generic [ref=f11e668]: La T de Teez replied to an ad. View ad(https://www.instagram.com/p/DL57XEtgmwh/)
+                      - generic [ref=f11e670]:
+                        - generic [ref=f11e671]: ·
+                        - generic "a week ago" [ref=f11e676]: 1w
+              - button "user-profile-picture el Rovlex ¿Puedo obtener más información sobre tu empresa? a week ago Unread" [ref=f11e680] [cursor=pointer]:
+                - generic [ref=f11e682]:
+                  - img "user-profile-picture" [ref=f11e686]
+                  - generic [ref=f11e689]:
+                    - generic [ref=f11e690]: el Rovlex
+                    - generic [ref=f11e696]:
+                      - generic [ref=f11e697]: ¿Puedo obtener más información sobre tu empresa?
+                      - generic [ref=f11e699]:
+                        - generic [ref=f11e700]: ·
+                        - generic "a week ago" [ref=f11e705]: 1w
+                  - generic [ref=f11e706]: Unread
+              - button [ref=f11e732] [cursor=pointer]:
+                - generic [ref=f11e734]:
+                  - status "Loading..." [ref=f11e737]
+                  - generic [ref=f11e740]:
+                    - status "Loading..." [ref=f11e742]
+                    - status "Loading..." [ref=f11e744]
+      - generic [ref=f11e1836]:
+        - generic [ref=f11e1837]:
+          - generic [ref=f11e1841]:
+            - button "Open the details pane of the chat" [ref=f11e1842] [cursor=pointer]:
+              - generic [ref=f11e1843]:
+                - generic [ref=f11e1845]:
+                  - img "user-profile-picture" [ref=f11e1847]
+                  - img "user-profile-picture" [ref=f11e1850]
+                - generic [ref=f11e1851]:
+                  - heading "Llama Este Pez, Fabro Alomìa Torres, Federico Molinari and Space Trip Fest" [level=2] [ref=f11e1853]
+                  - generic [ref=f11e1855]: 1 active today
+            - generic [ref=f11e1859]:
+              - button [ref=f11e1860] [cursor=pointer]:
+                - img "Audio call" [ref=f11e1862]
+              - button [ref=f11e1864] [cursor=pointer]:
+                - img "Video call" [ref=f11e1866]
+              - button [ref=f11e1869] [cursor=pointer]:
+                - img "Conversation information" [ref=f11e2054]
+          - generic [ref=f11e1875]:
+            - generic [ref=f11e1879]:
+              - generic [ref=f11e1880]:
+                - generic [ref=f11e1882]:
+                  - img "user-profile-picture" [ref=f11e1884]
+                  - img "user-profile-picture" [ref=f11e1887]
+                - generic [ref=f11e1888]:
+                  - heading "Llama Este Pez, Fabro Alomìa Torres, Federico Molinari and Space Trip Fest" [level=2] [ref=f11e1891]
+                  - generic [ref=f11e1893]: Space Trip Fest created this group
+              - generic [ref=f11e1895]:
+                - generic [ref=f11e1932]:
+                  - generic [ref=f11e1933]: Jul 28, 2026, 10:40 PM
+                  - group [ref=f11e1936]:
+                    - generic [ref=f11e1937]:
+                      - generic [ref=f11e1938]: Llama Este Pez
+                      - generic [ref=f11e1942]:
+                        - link "Open the profile page of jam_estepez" [ref=f11e1945] [cursor=pointer]:
+                          - /url: /jam_estepez
+                          - img "user-profile-picture" [ref=f11e1948]
+                        - generic [ref=f11e1952]:
+                          - link "raves.ecuador" [ref=f11e1956] [cursor=pointer]:
+                            - /url: /raves.ecuador/
+                          - button [ref=f11e1959] [cursor=pointer]:
+                            - img "Collage" [ref=f11e1962]
+                            - generic [ref=f11e1964]: "raves.ecuador 🐟 Llama Este Pez Analog Electronic Music / Modular Jam Band ✨ Proyecto innovador de música electrónica centrado en la síntesis modular, que fusiona creatividad y tecnología para llevar el Jam & Live a un nivel único. 🎸 Fusionando elementos de electrónica, punk y rock para crear un sonido análogo-digital disruptivo, dejando atrás la estructura para abrazar la improvisación total. 🌊 El Cardumen: Un flujo constante donde cada integrante aporta su visión para habitar un solo mundo modular. Con un criterio de música libre, cada performance es un producto espontáneo y diferente donde el crear y el sentir son el motor. 🌍 Con pasos firmes en escenarios icónicos de Europa como Club der Visionäre (Berlín), L'International (París), Asociación Freedonia (Barcelona), Festivités Annecy Festival y Vivres de L'Art (Burdeos). 🔥 Compartiendo cabina con referentes globales de la escena como Vitess, Petre Inspirescu, Dani Casarano, Felipe Valenzuela, Wareika, Andre Azara, Mihai Popoviciu y Gab Rhome. 👥 Cardumen actual: Emanuel Pilo-Phis, Diego Saa, invitados al Ethereal festival Aniversario RAVES Ecuador."
+                      - button "❤️ User avatar" [ref=f11e1970] [cursor=pointer]:
+                        - generic [ref=f11e1971]: ❤️
+                        - img "User avatar" [ref=f11e1975]
+                - generic [ref=f11e1978]:
+                  - generic [ref=f11e1979]: Aug 4, 2026, 10:55 AM
+                  - group [ref=f11e1982]:
+                    - generic [ref=f11e1983]:
+                      - generic [ref=f11e1984]: Llama Este Pez
+                      - generic [ref=f11e1988]:
+                        - link "Open the profile page of jam_estepez" [ref=f11e1991] [cursor=pointer]:
+                          - /url: /jam_estepez
+                          - img "user-profile-picture" [ref=f11e1994]
+                        - generic [ref=f11e1998]:
+                          - link "jam_estepez" [ref=f11e2002] [cursor=pointer]:
+                            - /url: /jam_estepez/
+                          - button "jam_estepez Este jueves en Las Abejas vamos a compartir un set especial en vinilos 🎶 Un recorrido por canciones, sonidos y momentos que nos han acompañado e influenciado a lo largo del camino. Música elegida con calma, desde la textura única del vinilo, para disfrutar y conectar. Nos vemos para escuchar, viajar y compartir." [ref=f11e2005] [cursor=pointer]
+              - generic [ref=f11e2011]: Seen by Fabro Alomìa Torres, Federico Molinari + 1
+            - generic [ref=f11e2022]:
+              - button [ref=f11e2025] [cursor=pointer]:
+                - img "Choose an emoji" [ref=f11e2027]
+              - generic [ref=f11e2029]:
+                - textbox [ref=f11e2030]:
+                  - paragraph [ref=f11e2031]
+                - generic: Message...
+              - generic [ref=f11e2032]:
+                - button [ref=f11e2033] [cursor=pointer]:
+                  - img "Voice Clip" [ref=f11e2035]
+                - button [ref=f11e2038] [cursor=pointer]:
+                  - img "Add Photo or Video" [ref=f11e2040]
+                - button [ref=f11e2045] [cursor=pointer]:
+                  - img "Choose a GIF or sticker" [ref=f11e2047]
+        - generic [ref=f11e2057]:
+          - generic [ref=f11e2058]: Details
+          - generic [ref=f11e2062]:
+            - generic [ref=f11e2063]:
+              - generic [ref=f11e2064]:
+                - generic [ref=f11e2065]: Change group name
+                - button "Change group name" [active] [ref=f11e2068] [cursor=pointer]: Change
+              - generic [ref=f11e2069]:
+                - img "Mute icon" [ref=f11e2071]
+                - generic [ref=f11e2073]: Mute messages
+                - switch "Mute messages" [ref=f11e2077] [cursor=pointer]
+            - generic [ref=f11e2078]:
+              - generic [ref=f11e2079]:
+                - heading "Members" [level=3] [ref=f11e2080]
+                - button "Add people" [ref=f11e2081] [cursor=pointer]
+              - generic [ref=f11e2082]:
+                - link "Profile picture for TDF Records TDF Records tdf.records.label" [ref=f11e2083] [cursor=pointer]:
+                  - /url: https://www.instagram.com/tdf.records.label/
+                  - generic [ref=f11e2086]:
+                    - img "Profile picture for TDF Records" [ref=f11e2090]
+                    - generic [ref=f11e2093]:
+                      - generic [ref=f11e2094]: TDF Records
+                      - generic [ref=f11e2096]: tdf.records.label
+                - link "Profile picture for Llama Este Pez Llama Este Pez jam_estepez Member settings" [ref=f11e2101] [cursor=pointer]:
+                  - /url: https://www.instagram.com/jam_estepez/
+                  - generic [ref=f11e2104]:
+                    - img "Profile picture for Llama Este Pez" [ref=f11e2108]
+                    - generic [ref=f11e2111]:
+                      - generic [ref=f11e2112]: Llama Este Pez
+                      - generic [ref=f11e2114]: jam_estepez
+                    - button [ref=f11e2121]:
+                      - img "Member settings" [ref=f11e2123]
+                - link "Profile picture for Fabro Alomìa Torres Fabro Alomìa Torres planet_303 Member settings" [ref=f11e2127] [cursor=pointer]:
+                  - /url: https://www.instagram.com/planet_303/
+                  - generic [ref=f11e2130]:
+                    - img "Profile picture for Fabro Alomìa Torres" [ref=f11e2134]
+                    - generic [ref=f11e2137]:
+                      - generic [ref=f11e2138]: Fabro Alomìa Torres
+                      - generic [ref=f11e2140]: planet_303
+                    - button [ref=f11e2147]:
+                      - img "Member settings" [ref=f11e2149]
+                - link "Profile picture for Federico Molinari Federico Molinari federico__molinari_ Member settings" [ref=f11e2153] [cursor=pointer]:
+                  - /url: https://www.instagram.com/federico__molinari_/
+                  - generic [ref=f11e2156]:
+                    - img "Profile picture for Federico Molinari" [ref=f11e2160]
+                    - generic [ref=f11e2163]:
+                      - generic [ref=f11e2164]: Federico Molinari
+                      - generic [ref=f11e2166]: federico__molinari_
+                    - button [ref=f11e2173]:
+                      - img "Member settings" [ref=f11e2175]
+                - link "Profile picture for Space Trip Fest Space Trip Fest Admin spacetripfest Member settings" [ref=f11e2179] [cursor=pointer]:
+                  - /url: https://www.instagram.com/spacetripfest/
+                  - generic [ref=f11e2182]:
+                    - img "Profile picture for Space Trip Fest" [ref=f11e2186]
+                    - generic [ref=f11e2189]:
+                      - generic [ref=f11e2190]: Space Trip Fest
+                      - generic [ref=f11e2194]:
+                        - generic [ref=f11e2195]: Admin
+                        - generic [ref=f11e2196]:
+                          - generic [ref=f11e2197]: ·
+                          - generic [ref=f11e2200]: spacetripfest
+                    - button [ref=f11e2203]:
+                      - img "Member settings" [ref=f11e2205]
+            - generic [ref=f11e2209]:
+              - button "Nicknames" [ref=f11e2211] [cursor=pointer]
+              - generic [ref=f11e2212]:
+                - button "Leave chat" [ref=f11e2213] [cursor=pointer]
+                - generic [ref=f11e2214]: You won't be able to send or receive messages unless someone adds you back to the chat. No one will be notified that you left the chat.
+              - button "Delete chat" [ref=f11e2215] [cursor=pointer]

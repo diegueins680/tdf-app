@@ -1,0 +1,288 @@
+- generic [ref=f81e4]:
+  - generic [ref=f81e9]:
+    - generic [ref=f81e12]:
+      - link [ref=f81e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f81e22]
+      - generic [ref=f81e25]:
+        - link [ref=f81e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f81e35]
+        - link [ref=f81e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f81e45]
+        - link [ref=f81e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f81e57]
+        - link [ref=f81e63] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f81e68]
+        - link [ref=f81e75] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f81e80]
+        - link [ref=f81e86] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f81e91]
+        - link [ref=f81e96] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f81e101]
+        - link [ref=f81e108] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f81e113]:
+            - img "tdf.records.label's profile picture" [ref=f81e114]
+      - generic [ref=f81e115]:
+        - link [ref=f81e118] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f81e123]
+        - link [ref=f81e126] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f81e131]
+    - generic [ref=f81e134]:
+      - main [ref=f81e135]:
+        - generic [ref=f81e137]:
+          - generic [ref=f81e138]:
+            - generic [ref=f81e139]:
+              - generic [ref=f81e143]:
+                - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Action League Now ASTU" [ref=f81e146] [cursor=pointer]:
+                  - generic [ref=f81e152]:
+                    - generic [ref=f81e153]:
+                      - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f81e155]
+                      - generic [ref=f81e159]: Action League Now
+                    - generic [ref=f81e160]: ASTU
+                - button [ref=f81e164] [cursor=pointer]:
+                  - link [ref=f81e166]:
+                    - img "blue_records333's profile picture" [ref=f81e167]
+              - generic [ref=f81e168]:
+                - generic [ref=f81e169]:
+                  - generic [ref=f81e170]:
+                    - link [ref=f81e172] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "blue_records333" [level=2] [ref=f81e173]
+                    - button [ref=f81e175] [cursor=pointer]:
+                      - img "Options" [ref=f81e177]
+                  - generic [ref=f81e181]: Blue Records
+                  - generic [ref=f81e183]:
+                    - generic [ref=f81e185]:
+                      - generic [ref=f81e186]: "70"
+                      - text: posts
+                    - link "397 followers" [ref=f81e188] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f81e189]:
+                        - generic "397" [ref=f81e190]
+                        - text: followers
+                    - link "1,929 following" [ref=f81e192] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f81e193]:
+                        - generic [ref=f81e194]: 1,929
+                        - text: following
+                - generic [ref=f81e195]:
+                  - generic [ref=f81e196]:
+                    - generic [ref=f81e197]: Musician/band
+                    - button [ref=f81e200] [cursor=pointer]:
+                      - generic [ref=f81e201]: Electronic Music Label QUITO ECUADOR 💙https://lnk.bio/Bluerecords333
+                    - generic [ref=f81e202]:
+                      - button "Link icon open.spotify.com/playlist/0fNlsqVWSohvMW8hkdHjcb?si=6STvkAJaQ76DXxtJYhUlxw&pi=cTc1-FsVSo26D and 4 more" [ref=f81e203] [cursor=pointer]:
+                        - generic [ref=f81e204]:
+                          - img "Link icon" [ref=f81e206]
+                          - generic [ref=f81e209]: open.spotify.com/playlist/0fNlsqVWSohvMW8hkdHjcb?si=6STvkAJaQ76DXxtJYhUlxw&pi=cTc1-FsVSo26D and 4 more
+                      - link "Threads blue_records333" [ref=f81e211] [cursor=pointer]:
+                        - /url: https://www.threads.com/@blue_records333?xmt=AQG0GkHSvF2IU8mbg9lNJTEVPjhAjgmpyvaAqagK57yght8
+                        - img "Threads" [ref=f81e213]
+                        - generic [ref=f81e215]: blue_records333
+                  - link "Followed by matre_yiu, _walkair_ + 26 more" [ref=f81e217] [cursor=pointer]:
+                    - /url: /blue_records333/followers/mutualOnly
+                    - generic [ref=f81e219]:
+                      - generic [ref=f81e221]:
+                        - button [ref=f81e222]:
+                          - link [ref=f81e223]
+                        - button [ref=f81e224]:
+                          - link [ref=f81e225]
+                        - button [ref=f81e226]:
+                          - link [ref=f81e227]
+                      - generic [ref=f81e228]: Followed by matre_yiu, _walkair_ + 26 more
+            - generic [ref=f81e233]:
+              - status "Loading..." [ref=f81e235]
+              - status "Loading..." [ref=f81e237]
+            - menu [ref=f81e239]:
+              - generic [ref=f81e241]:
+                - list [ref=f81e243]:
+                  - listitem [ref=f81e244]
+                  - listitem [ref=f81e245]
+                  - listitem [ref=f81e246]:
+                    - link "View Releases highlight" [ref=f81e249] [cursor=pointer]:
+                      - /url: /stories/highlights/18088091638969112/
+                      - button "blue_records333's highlight story picture Releases" [ref=f81e250]:
+                        - button [ref=f81e251]:
+                          - img "blue_records333's highlight story picture" [ref=f81e254]
+                        - generic [ref=f81e255]: Releases
+                  - listitem [ref=f81e258]:
+                    - link "View Historia y + highlight" [ref=f81e261] [cursor=pointer]:
+                      - /url: /stories/highlights/17927233482229975/
+                      - button "blue_records333's highlight story picture Historia y +" [ref=f81e262]:
+                        - button [ref=f81e263]:
+                          - img "blue_records333's highlight story picture" [ref=f81e266]
+                        - generic [ref=f81e267]: Historia y +
+                  - listitem [ref=f81e270]:
+                    - link "View Bands Releases highlight" [ref=f81e273] [cursor=pointer]:
+                      - /url: /stories/highlights/17919349191260410/
+                      - button "blue_records333's highlight story picture Bands Releases" [ref=f81e274]:
+                        - button [ref=f81e275]:
+                          - img "blue_records333's highlight story picture" [ref=f81e278]
+                        - generic [ref=f81e279]: Bands Releases
+                  - listitem [ref=f81e282]:
+                    - link "View In Progress highlight" [ref=f81e285] [cursor=pointer]:
+                      - /url: /stories/highlights/18091025150035715/
+                      - button "blue_records333's highlight story picture In Progress" [ref=f81e286]:
+                        - button [ref=f81e287]:
+                          - img "blue_records333's highlight story picture" [ref=f81e290]
+                        - generic [ref=f81e291]: In Progress
+                  - listitem [ref=f81e294]:
+                    - link "View Eventos UIO highlight" [ref=f81e297] [cursor=pointer]:
+                      - /url: /stories/highlights/18043184312411423/
+                      - button "blue_records333's highlight story picture Eventos UIO" [ref=f81e298]:
+                        - button [ref=f81e299]:
+                          - img "blue_records333's highlight story picture" [ref=f81e302]
+                        - generic [ref=f81e303]: Eventos UIO
+                  - listitem [ref=f81e306]:
+                    - link "View Blue Cast highlight" [ref=f81e309] [cursor=pointer]:
+                      - /url: /stories/highlights/18112921537853645/
+                      - button "blue_records333's highlight story picture Blue Cast" [ref=f81e310]:
+                        - button [ref=f81e311]:
+                          - img "blue_records333's highlight story picture" [ref=f81e314]
+                        - generic [ref=f81e315]: Blue Cast
+                  - listitem [ref=f81e318]:
+                    - link "View Playlists highlight" [ref=f81e321] [cursor=pointer]:
+                      - /url: /stories/highlights/17985881078791914/
+                      - button "blue_records333's highlight story picture Playlists" [ref=f81e322]:
+                        - button [ref=f81e323]:
+                          - img "blue_records333's highlight story picture" [ref=f81e326]
+                        - generic [ref=f81e327]: Playlists
+                  - listitem [ref=f81e330]:
+                    - link "View Clases highlight" [ref=f81e333] [cursor=pointer]:
+                      - /url: /stories/highlights/17904708714344522/
+                      - button "blue_records333's highlight story picture Clases" [ref=f81e334]:
+                        - button [ref=f81e335]:
+                          - img "blue_records333's highlight story picture" [ref=f81e338]
+                        - generic [ref=f81e339]: Clases
+                  - listitem [ref=f81e342]:
+                    - link "View Artists highlight" [ref=f81e345] [cursor=pointer]:
+                      - /url: /stories/highlights/18086958356097270/
+                      - button "blue_records333's highlight story picture Artists" [ref=f81e346]:
+                        - button [ref=f81e347]:
+                          - img "blue_records333's highlight story picture" [ref=f81e350]
+                        - generic [ref=f81e351]: Artists
+                - button "Next" [ref=f81e354] [cursor=pointer]
+          - generic [ref=f81e356]:
+            - tablist [ref=f81e357]:
+              - link [ref=f81e359] [cursor=pointer]:
+                - /url: /blue_records333/
+                - img "Posts" [ref=f81e361]
+              - link [ref=f81e372] [cursor=pointer]:
+                - /url: /blue_records333/reels/
+                - img "Reels" [ref=f81e374]
+              - link [ref=f81e377] [cursor=pointer]:
+                - /url: /blue_records333/reposts/
+                - img "Reposts" [ref=f81e379]
+              - link [ref=f81e382] [cursor=pointer]:
+                - /url: /blue_records333/tagged/
+                - img "Tagged" [ref=f81e384]
+            - tabpanel
+          - progressbar [ref=f81e388]:
+            - img "Loading..." [ref=f81e389]
+      - contentinfo [ref=f81e402]:
+        - generic [ref=f81e403]:
+          - generic [ref=f81e405]:
+            - link "Meta" [ref=f81e407] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f81e410] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f81e413] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f81e416] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f81e419] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f81e422] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f81e425] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f81e428] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f81e431] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f81e434] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f81e437] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f81e440] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f81e443] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f81e446] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f81e449] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f81e451]:
+            - generic [ref=f81e452] [cursor=pointer]:
+              - generic [ref=f81e453]:
+                - generic [ref=f81e454]: English
+                - img "Down chevron icon" [ref=f81e457]
+              - combobox "Switch Display Language" [ref=f81e459]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f81e460]: © 2026 Instagram from Meta
+  - button "Messages Messages" [ref=f81e463] [cursor=pointer]:
+    - generic [ref=f81e465]:
+      - img "Messages" [ref=f81e467]
+      - generic [ref=f81e470]: Messages

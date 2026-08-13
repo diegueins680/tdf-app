@@ -14,8 +14,8 @@ const shortcuts = [
 
 export function KeyboardShortcutsDialog({ open, onClose }: Props) {
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Atajos de teclado</DialogTitle>
+    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth aria-labelledby="keyboard-shortcuts-dialog-title">
+      <DialogTitle id="keyboard-shortcuts-dialog-title">Atajos de teclado</DialogTitle>
       <DialogContent>
         <List dense>
           {shortcuts.map(({ keys, description }) => (

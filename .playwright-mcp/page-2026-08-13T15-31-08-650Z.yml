@@ -1,0 +1,234 @@
+- generic [ref=f6e1]:
+  - generic [ref=f6e4]:
+    - generic [ref=f6e18]:
+      - generic [ref=f6e21]:
+        - link [ref=f6e26] [cursor=pointer]:
+          - /url: /
+          - img "Instagram" [ref=f6e31]
+        - generic [ref=f6e34]:
+          - link [ref=f6e39] [cursor=pointer]:
+            - /url: /
+            - img "Home" [ref=f6e44]
+          - link [ref=f6e49] [cursor=pointer]:
+            - /url: /reels/
+            - img "Reels" [ref=f6e54]
+          - link [ref=f6e61] [cursor=pointer]:
+            - /url: /direct/inbox/
+            - generic [ref=f6e64]:
+              - img "Messages" [ref=f6e66]
+              - generic "Direct messaging - 1 new notification link" [ref=f6e69]: "1"
+          - link [ref=f6e75] [cursor=pointer]:
+            - /url: /explore/
+            - img "Search" [ref=f6e80]
+          - link [ref=f6e87] [cursor=pointer]:
+            - /url: "#"
+            - img "Notifications" [ref=f6e92]
+          - link [ref=f6e98] [cursor=pointer]:
+            - /url: "#"
+            - img "New post" [ref=f6e103]
+          - link [ref=f6e108] [cursor=pointer]:
+            - /url: "#"
+            - img "Professional dashboard" [ref=f6e113]
+          - link [ref=f6e120] [cursor=pointer]:
+            - /url: /tdf.records.label/
+            - link [ref=f6e125]:
+              - img "tdf.records.label's profile picture" [ref=f6e126]
+        - generic [ref=f6e127]:
+          - link [ref=f6e130] [cursor=pointer]:
+            - /url: "#"
+            - img "Settings" [ref=f6e135]
+          - link [ref=f6e138] [cursor=pointer]:
+            - /url: "#"
+            - img "Also from Meta" [ref=f6e143]
+      - generic [ref=f6e146]:
+        - main [ref=f6e147]:
+          - generic [ref=f6e149]:
+            - generic [ref=f6e150]:
+              - generic [ref=f6e151]:
+                - button [ref=f6e156] [cursor=pointer]:
+                  - link [ref=f6e158]:
+                    - img "lasabejasclubdevinilos's profile picture" [ref=f6e159]
+                - generic [ref=f6e160]:
+                  - generic [ref=f6e161]:
+                    - generic [ref=f6e162]:
+                      - link [ref=f6e164] [cursor=pointer]:
+                        - /url: "#"
+                        - heading "lasabejasclubdevinilos" [level=2] [ref=f6e165]
+                      - button [ref=f6e167] [cursor=pointer]:
+                        - img "Options" [ref=f6e169]
+                    - generic [ref=f6e173]: Las Abejas - Club de Vinilos
+                    - generic [ref=f6e175]:
+                      - generic [ref=f6e177]:
+                        - generic [ref=f6e178]: "2"
+                        - text: posts
+                      - link "1,991 followers" [ref=f6e180] [cursor=pointer]:
+                        - /url: "#"
+                        - generic [ref=f6e181]:
+                          - generic "1,991" [ref=f6e182]
+                          - text: followers
+                      - link "808 following" [ref=f6e184] [cursor=pointer]:
+                        - /url: "#"
+                        - generic [ref=f6e185]:
+                          - generic [ref=f6e186]: "808"
+                          - text: following
+                  - generic [ref=f6e187]:
+                    - generic [ref=f6e188]:
+                      - generic [ref=f6e189]:
+                        - button [ref=f6e190] [cursor=pointer]:
+                          - generic [ref=f6e191]: Música 🔸 Bebidas 🔸 Comida 🔸 Chill y Vinilos Cockteles - Discos 🕢 miércoles a sábado 6pm📍 Vicente León N10-80 y José
+                        - generic [ref=f6e192]:
+                          - text: ...
+                          - button "more" [ref=f6e193] [cursor=pointer]
+                      - button "Link icon forms.gle/bk8GkzLsCPsDgs9m6 and 1 more" [ref=f6e196] [cursor=pointer]:
+                        - generic [ref=f6e197]:
+                          - img "Link icon" [ref=f6e199]
+                          - generic [ref=f6e202]: forms.gle/bk8GkzLsCPsDgs9m6 and 1 more
+                    - link "Followed by carlasofiabonillam, caro_jacome__ + 38 more" [ref=f6e203] [cursor=pointer]:
+                      - /url: /lasabejasclubdevinilos/followers/mutualOnly
+                      - generic [ref=f6e205]:
+                        - generic [ref=f6e207]:
+                          - button [ref=f6e208]:
+                            - link [ref=f6e209]
+                          - button [ref=f6e210]:
+                            - link [ref=f6e211]
+                          - button [ref=f6e212]:
+                            - link [ref=f6e213]
+                        - generic [ref=f6e214]: Followed by carlasofiabonillam, caro_jacome__ + 38 more
+              - generic [ref=f6e219]:
+                - button "Following Down chevron icon" [ref=f6e221] [cursor=pointer]:
+                  - generic [ref=f6e222]:
+                    - generic [ref=f6e223]: Following
+                    - img "Down chevron icon" [ref=f6e226]
+                - button "Message" [active] [ref=f6e229] [cursor=pointer]
+                - button [ref=f6e231] [cursor=pointer]:
+                  - img "Similar accounts" [ref=f6e233]
+              - generic:
+                - menu
+            - generic [ref=f6e236]:
+              - tablist [ref=f6e237]:
+                - link [ref=f6e239] [cursor=pointer]:
+                  - /url: /lasabejasclubdevinilos/
+                  - img "Posts" [ref=f6e241]
+                - link [ref=f6e252] [cursor=pointer]:
+                  - /url: /lasabejasclubdevinilos/reposts/
+                  - img "Reposts" [ref=f6e254]
+                - link [ref=f6e257] [cursor=pointer]:
+                  - /url: /lasabejasclubdevinilos/tagged/
+                  - img "Tagged" [ref=f6e259]
+              - tabpanel
+            - generic [ref=f6e267]:
+              - link [ref=f6e269] [cursor=pointer]:
+                - /url: /lasabejasclubdevinilos/p/Db9iMmAjbzT/
+                - 'img "Photo by Las Abejas - Club de Vinilos on August 12, 2026. May be an image of speaker, stereo and text that says ''EST- EST-1970 1970 AS ABEJAS Esta semana asemana en: Las Abejas MIÉRCOLESASÁBADO18H MIÉRCOLES A A SÁBADO 18 DEL 12 AL DEL1AL15DEAGOSTO FaCOSAEA 15 DE AGOSTO''." [ref=f6e272]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f6e275] [cursor=pointer]:
+                - /url: /lasabejasclubdevinilos/p/DYpXKiwAKBu/
+                - img "Photo by Las Abejas - Club de Vinilos in San Blas with @gary_galactico, @mood.shows, @urlo.ec, @latinhousemasters, @tensionflora, @plaza.belmonte, @dmt_uio, and @waka.musik.kito. May be an image of poster." [ref=f6e278]
+        - contentinfo [ref=f6e281]:
+          - generic [ref=f6e282]:
+            - generic [ref=f6e284]:
+              - link "Meta" [ref=f6e286] [cursor=pointer]:
+                - /url: https://about.meta.com/
+              - link "About" [ref=f6e289] [cursor=pointer]:
+                - /url: https://about.instagram.com/
+              - link "Blog" [ref=f6e292] [cursor=pointer]:
+                - /url: https://about.instagram.com/blog/
+              - link "Jobs" [ref=f6e295] [cursor=pointer]:
+                - /url: https://about.instagram.com/about-us/careers
+              - link "Help" [ref=f6e298] [cursor=pointer]:
+                - /url: https://help.instagram.com/
+              - link "API" [ref=f6e301] [cursor=pointer]:
+                - /url: https://developers.facebook.com/docs/instagram
+              - link "Privacy" [ref=f6e304] [cursor=pointer]:
+                - /url: /legal/privacy/
+              - link "Terms" [ref=f6e307] [cursor=pointer]:
+                - /url: /legal/terms/
+              - link "Locations" [ref=f6e310] [cursor=pointer]:
+                - /url: /explore/locations/
+              - link "Popular" [ref=f6e313] [cursor=pointer]:
+                - /url: /popular/
+              - link "Instagram Lite" [ref=f6e316] [cursor=pointer]:
+                - /url: /web/lite/
+              - link "Meta AI" [ref=f6e319] [cursor=pointer]:
+                - /url: https://www.meta.ai/?utm_source=foa_web_footer
+              - link "Threads" [ref=f6e322] [cursor=pointer]:
+                - /url: https://www.threads.com/
+              - link "Contact Uploading & Non-Users" [ref=f6e325] [cursor=pointer]:
+                - /url: https://www.facebook.com/help/instagram/261704639352628
+              - link "Meta Verified" [ref=f6e328] [cursor=pointer]:
+                - /url: /accounts/meta_verified/?entrypoint=web_footer
+            - generic [ref=f6e330]:
+              - generic [ref=f6e331] [cursor=pointer]:
+                - generic [ref=f6e332]:
+                  - generic [ref=f6e333]: English
+                  - img "Down chevron icon" [ref=f6e336]
+                - combobox "Switch Display Language" [ref=f6e338]:
+                  - option "Afrikaans"
+                  - option "العربية"
+                  - option "Čeština"
+                  - option "Dansk"
+                  - option "Deutsch"
+                  - option "Ελληνικά"
+                  - option "English" [selected]
+                  - option "English (UK)"
+                  - option "Español (España)"
+                  - option "Español"
+                  - option "فارسی"
+                  - option "Suomi"
+                  - option "Français"
+                  - option "עברית"
+                  - option "Bahasa Indonesia"
+                  - option "Italiano"
+                  - option "日本語"
+                  - option "한국어"
+                  - option "Bahasa Melayu"
+                  - option "Norsk"
+                  - option "Nederlands"
+                  - option "Polski"
+                  - option "Português (Brasil)"
+                  - option "Português (Portugal)"
+                  - option "Русский"
+                  - option "Svenska"
+                  - option "ภาษาไทย"
+                  - option "Filipino"
+                  - option "Türkçe"
+                  - option "中文(简体)"
+                  - option "中文(台灣)"
+                  - option "বাংলা"
+                  - option "ગુજરાતી"
+                  - option "हिन्दी"
+                  - option "Hrvatski"
+                  - option "Magyar"
+                  - option "ಕನ್ನಡ"
+                  - option "മലയാളം"
+                  - option "मराठी"
+                  - option "नेपाली"
+                  - option "ਪੰਜਾਬੀ"
+                  - option "සිංහල"
+                  - option "Slovenčina"
+                  - option "தமிழ்"
+                  - option "తెలుగు"
+                  - option "اردو"
+                  - option "Tiếng Việt"
+                  - option "中文(香港)"
+                  - option "Български"
+                  - option "Français (Canada)"
+                  - option "Română"
+                  - option "Српски"
+                  - option "Українська"
+              - generic [ref=f6e339]: © 2026 Instagram from Meta
+    - button [ref=f6e342] [cursor=pointer]:
+      - generic "Messages - 1 new notification" [ref=f6e343]:
+        - generic [ref=f6e344]:
+          - generic [ref=f6e346]:
+            - img "Messages" [ref=f6e347]
+            - generic "Direct messaging - 1 new notification link" [ref=f6e350]: "1"
+          - generic [ref=f6e353]: Messages
+        - button "User avatar Martini 🍸" [ref=f6e356]:
+          - img "User avatar" [ref=f6e359]
+  - generic [ref=f6e363]:
+    - paragraph [ref=f6e364]: Something went wrong. Please try again.
+    - alert [ref=f6e365]: Something went wrong. Please try again.

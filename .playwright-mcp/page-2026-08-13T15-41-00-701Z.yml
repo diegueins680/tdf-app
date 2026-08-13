@@ -1,0 +1,379 @@
+- generic [ref=f3e4]:
+  - generic [ref=f3e18]:
+    - generic [ref=f3e21]:
+      - link [ref=f3e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f3e31]
+      - generic [ref=f3e34]:
+        - link [ref=f3e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f3e44]
+        - link [ref=f3e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f3e54]
+        - link [ref=f3e61] [cursor=pointer]:
+          - /url: /direct/t/18075744230375026
+          - generic [ref=f3e64]:
+            - img "Messages" [ref=f3e66]
+            - generic "Direct messaging - 1 new notification link" [ref=f3e69]: "1"
+        - link [ref=f3e75] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f3e80]
+        - link [ref=f3e87] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f3e92]
+        - link [ref=f3e98] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f3e103]
+        - link [ref=f3e108] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f3e113]
+        - link [ref=f3e120] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f3e125]:
+            - img "tdf.records.label's profile picture" [ref=f3e126]
+      - generic [ref=f3e127]:
+        - link [ref=f3e130] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f3e135]
+        - link [ref=f3e138] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f3e143]
+    - generic [ref=f3e146]:
+      - main [ref=f3e147]:
+        - generic [ref=f3e149]:
+          - generic [ref=f3e150]:
+            - generic [ref=f3e151]:
+              - button [ref=f3e156] [cursor=pointer]:
+                - link [ref=f3e158]:
+                  - img "midiendocalles.ec's profile picture" [ref=f3e159]
+              - generic [ref=f3e160]:
+                - generic [ref=f3e161]:
+                  - generic [ref=f3e162]:
+                    - link [ref=f3e164] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "midiendocalles.ec" [level=2] [ref=f3e165]
+                    - button [ref=f3e167] [cursor=pointer]:
+                      - img "Options" [ref=f3e169]
+                  - generic [ref=f3e173]: Midiendo Calles | Medio Cultural
+                  - generic [ref=f3e175]:
+                    - generic [ref=f3e177]:
+                      - generic [ref=f3e178]: "2"
+                      - text: posts
+                    - link "41 followers" [ref=f3e180] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f3e181]:
+                        - generic "41" [ref=f3e182]
+                        - text: followers
+                    - link "154 following" [ref=f3e184] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f3e185]:
+                        - generic [ref=f3e186]: "154"
+                        - text: following
+                - generic [ref=f3e187]:
+                  - generic [ref=f3e188]:
+                    - generic [ref=f3e189]: Community
+                    - generic [ref=f3e191]:
+                      - button [ref=f3e192] [cursor=pointer]:
+                        - generic [ref=f3e193]: 🎭 Arte, cultura y ciudad en Quito🎤 Agenda cultural | entrevistas | coberturas⬇️ Prensa, eventos y colaboraciones
+                      - generic [ref=f3e194]:
+                        - text: ...
+                        - button "more" [ref=f3e195] [cursor=pointer]
+                  - link "Followed by chevymusic1 and silvestreskalon" [ref=f3e197] [cursor=pointer]:
+                    - /url: /midiendocalles.ec/followers/mutualOnly
+                    - generic [ref=f3e199]:
+                      - generic [ref=f3e201]:
+                        - button [ref=f3e202]:
+                          - link [ref=f3e203]
+                        - button [ref=f3e204]:
+                          - link [ref=f3e205]
+                      - generic [ref=f3e206]: Followed by chevymusic1 and silvestreskalon
+            - generic [ref=f3e211]:
+              - button "Following Down chevron icon" [ref=f3e353] [cursor=pointer]:
+                - generic [ref=f3e214]:
+                  - generic [ref=f3e215]: Following
+                  - img "Down chevron icon" [ref=f3e356]
+              - button "Message" [ref=f3e217] [cursor=pointer]
+              - button [ref=f3e219] [cursor=pointer]:
+                - img "Similar accounts" [ref=f3e358]
+            - generic:
+              - menu
+            - generic [ref=f3e362]:
+              - generic [ref=f3e363]:
+                - heading "Suggested for you" [level=4] [ref=f3e365]
+                - link "See all" [ref=f3e366] [cursor=pointer]:
+                  - /url: /midiendocalles.ec/
+              - generic [ref=f3e369]:
+                - list [ref=f3e371]:
+                  - listitem [ref=f3e372]
+                  - listitem [ref=f3e373]:
+                    - generic [ref=f3e375]:
+                      - button "Dismiss tadeoagama's profile picture tadeoagama Tadeo Agama" [ref=f3e376] [cursor=pointer]:
+                        - button "Dismiss" [ref=f3e378]
+                        - generic [ref=f3e381]:
+                          - link [ref=f3e383]:
+                            - /url: /tadeoagama/
+                            - img "tadeoagama's profile picture" [ref=f3e384]
+                          - link "tadeoagama" [ref=f3e388]:
+                            - /url: /tadeoagama/
+                          - generic [ref=f3e391]: Tadeo Agama
+                      - button "Follow" [ref=f3e396] [cursor=pointer]
+                  - listitem [ref=f3e397]:
+                    - generic [ref=f3e399]:
+                      - button "Dismiss sisa.at's profile picture sisa.at Sisa Aguinda" [ref=f3e400] [cursor=pointer]:
+                        - button "Dismiss" [ref=f3e402]
+                        - generic [ref=f3e405]:
+                          - link [ref=f3e407]:
+                            - /url: /sisa.at/
+                            - img "sisa.at's profile picture" [ref=f3e408]
+                          - link "sisa.at" [ref=f3e412]:
+                            - /url: /sisa.at/
+                          - generic [ref=f3e415]: Sisa Aguinda
+                      - button "Follow" [ref=f3e420] [cursor=pointer]
+                  - listitem [ref=f3e421]:
+                    - generic [ref=f3e423]:
+                      - button "Dismiss nicky_paucar's profile picture nicky_paucar ℕ𝕚𝕔𝕠𝕝𝕖 ℙ𝕒𝕦𝕔𝕒𝕣" [ref=f3e424] [cursor=pointer]:
+                        - button "Dismiss" [ref=f3e426]
+                        - generic [ref=f3e429]:
+                          - link [ref=f3e431]:
+                            - /url: /nicky_paucar/
+                            - img "nicky_paucar's profile picture" [ref=f3e432]
+                          - link "nicky_paucar" [ref=f3e436]:
+                            - /url: /nicky_paucar/
+                          - generic [ref=f3e439]: ℕ𝕚𝕔𝕠𝕝𝕖 ℙ𝕒𝕦𝕔𝕒𝕣
+                      - button "Follow" [ref=f3e444] [cursor=pointer]
+                  - listitem [ref=f3e445]:
+                    - generic [ref=f3e447]:
+                      - button "Dismiss desborde.elteatro's profile picture desborde.elteatro Desborde Teatro Ecuador" [ref=f3e448] [cursor=pointer]:
+                        - button "Dismiss" [ref=f3e450]
+                        - generic [ref=f3e453]:
+                          - link [ref=f3e455]:
+                            - /url: /desborde.elteatro/
+                            - img "desborde.elteatro's profile picture" [ref=f3e456]
+                          - link "desborde.elteatro" [ref=f3e460]:
+                            - /url: /desborde.elteatro/
+                          - generic [ref=f3e463]: Desborde Teatro Ecuador
+                      - button "Follow" [ref=f3e468] [cursor=pointer]
+                  - listitem [ref=f3e469]:
+                    - generic [ref=f3e471]:
+                      - button "Dismiss alevanne's profile picture alevanne Vanne Moscoso" [ref=f3e472] [cursor=pointer]:
+                        - button "Dismiss" [ref=f3e474]
+                        - generic [ref=f3e477]:
+                          - link [ref=f3e479]:
+                            - /url: /alevanne/
+                            - img "alevanne's profile picture" [ref=f3e480]
+                          - link "alevanne" [ref=f3e484]:
+                            - /url: /alevanne/
+                          - generic [ref=f3e487]: Vanne Moscoso
+                      - button "Follow" [ref=f3e492] [cursor=pointer]
+                  - listitem [ref=f3e493]:
+                    - generic [ref=f3e495]:
+                      - button "Dismiss gran.mapache.art's profile picture gran.mapache.art Edison Javier" [ref=f3e496] [cursor=pointer]:
+                        - button "Dismiss" [ref=f3e498]
+                        - generic [ref=f3e501]:
+                          - link [ref=f3e503]:
+                            - /url: /gran.mapache.art/
+                            - img "gran.mapache.art's profile picture" [ref=f3e504]
+                          - link "gran.mapache.art" [ref=f3e508]:
+                            - /url: /gran.mapache.art/
+                          - generic [ref=f3e511]: Edison Javier
+                      - button "Follow" [ref=f3e516] [cursor=pointer]
+                  - listitem [ref=f3e517]:
+                    - generic [ref=f3e519]:
+                      - button "Dismiss larvarye's profile picture larvarye ǝʎɹɐʌɹɐʅ" [ref=f3e520] [cursor=pointer]:
+                        - button "Dismiss" [ref=f3e522]
+                        - generic [ref=f3e525]:
+                          - link [ref=f3e527]:
+                            - /url: /larvarye/
+                            - img "larvarye's profile picture" [ref=f3e528]
+                          - link "larvarye" [ref=f3e532]:
+                            - /url: /larvarye/
+                          - generic [ref=f3e535]: ǝʎɹɐʌɹɐʅ
+                      - button "Follow" [ref=f3e540] [cursor=pointer]
+                  - listitem [ref=f3e541]:
+                    - generic [ref=f3e543]:
+                      - button "Dismiss gandhidrno's profile picture gandhidrno ＧＡＮ ＤＨＩ" [ref=f3e544] [cursor=pointer]:
+                        - button "Dismiss" [ref=f3e546]
+                        - generic [ref=f3e549]:
+                          - link [ref=f3e551]:
+                            - /url: /gandhidrno/
+                            - img "gandhidrno's profile picture" [ref=f3e552]
+                          - link "gandhidrno" [ref=f3e556]:
+                            - /url: /gandhidrno/
+                          - generic [ref=f3e559]: ＧＡＮ ＤＨＩ
+                      - button "Follow" [ref=f3e564] [cursor=pointer]
+                  - listitem [ref=f3e565]:
+                    - generic [ref=f3e567]:
+                      - button "Dismiss stefannyyolanda's profile picture stefannyyolanda YOLANDA" [ref=f3e568] [cursor=pointer]:
+                        - button "Dismiss" [ref=f3e570]
+                        - generic [ref=f3e573]:
+                          - link [ref=f3e575]:
+                            - /url: /stefannyyolanda/
+                            - img "stefannyyolanda's profile picture" [ref=f3e576]
+                          - link "stefannyyolanda" [ref=f3e580]:
+                            - /url: /stefannyyolanda/
+                          - generic [ref=f3e583]: YOLANDA
+                      - button "Follow" [ref=f3e588] [cursor=pointer]
+                - button "Next" [ref=f3e589] [cursor=pointer]
+          - generic [ref=f3e224]:
+            - tablist [ref=f3e225]:
+              - link [ref=f3e227] [cursor=pointer]:
+                - /url: /midiendocalles.ec/
+                - img "Posts" [ref=f3e229]
+              - link [ref=f3e240] [cursor=pointer]:
+                - /url: /midiendocalles.ec/reels/
+                - img "Reels" [ref=f3e242]
+              - link [ref=f3e245] [cursor=pointer]:
+                - /url: /midiendocalles.ec/reposts/
+                - img "Reposts" [ref=f3e247]
+              - link [ref=f3e250] [cursor=pointer]:
+                - /url: /midiendocalles.ec/tagged/
+                - img "Tagged" [ref=f3e252]
+            - tabpanel
+          - generic [ref=f3e260]:
+            - link [ref=f3e262] [cursor=pointer]:
+              - /url: /midiendocalles.ec/reel/Dbb8xlTOmI0/
+              - 'img "Buscando plan para este fin de semana? 👀 La ciudad se mueve entre teatro, música, arte y encuentros para descubrir. En esta primera agenda de Midiendo Calles seleccionamos 5 planes culturales para disfrutar Quito del 31 de julio al 2 de agosto. Dale play, revisa la agenda y elige tu plan. 🎭✨ @estudioactores @salsa.pal.barrio @pabellon_artes @gran.mapache.art @teatronacionalsucre @teatromexicoquito ¿A cuál irías? Cuéntanos en comentarios y guarda este reel para volver cuando llegue el finde. #MidiendoCalles #AgendaCulturalQuito #QueHacerEnQuito #EventosQuito #QuitoCultural CulturaQuito ArteQuito CulturaEcuador" [ref=f3e265]'
+              - generic:
+                - generic:
+                  - generic:
+                    - img "Clip"
+            - link [ref=f3e268] [cursor=pointer]:
+              - /url: /midiendocalles.ec/reel/DbY6g6HPDFI/
+              - 'img "¿Cuánto conocemos realmente del arte que se hace en Ecuador? 🇪🇨👀 Preguntamos por artistas ecuatorianos y aparecieron nombres como Álvaro Bermeo, Oswaldo Guayasamín, New Jerson y Julio Jaramillo. Pero esta lista recién empieza. 🎤 Ahora te toca a ti: ¿qué artista ecuatoriano merece que más gente conozca? Déjanos su nombre en comentarios. Queremos descubrirlo 👇 . . . . . #ArteEcuatoriano #CulturaEcuador #CulturaQuito #ArtistasEcuatorianos #ArteQuito QuitoCultural CulturaIndependiente MidiendoCalles" [ref=f3e271]'
+              - generic:
+                - generic:
+                  - generic:
+                    - img "Clip"
+      - contentinfo [ref=f3e274]:
+        - generic [ref=f3e275]:
+          - generic [ref=f3e277]:
+            - link "Meta" [ref=f3e279] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f3e282] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f3e285] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f3e288] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f3e291] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f3e294] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f3e297] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f3e300] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f3e303] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f3e306] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f3e309] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f3e312] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f3e315] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f3e318] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f3e321] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f3e323]:
+            - generic [ref=f3e324] [cursor=pointer]:
+              - generic [ref=f3e325]:
+                - generic [ref=f3e326]: English
+                - img "Down chevron icon" [ref=f3e329]
+              - combobox "Switch Display Language" [ref=f3e331]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f3e332]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f3e335] [cursor=pointer]:
+              - generic "Messages - 1 new notification" [ref=f3e336]:
+                - generic [ref=f3e337]:
+                  - generic [ref=f3e339]:
+                    - img "Messages" [ref=f3e340]
+                    - generic "Direct messaging - 1 new notification link" [ref=f3e343]: "1"
+                  - generic [ref=f3e346]: Messages
+                - button "User avatar Martini 🍸" [ref=f3e349]:
+                  - img "User avatar" [ref=f3e352]
+            - generic [ref=f3e591]:
+              - generic [ref=f3e592]:
+                - generic [ref=f3e593]:
+                  - generic [ref=f3e595]:
+                    - status "Loading..." [ref=f3e597]
+                    - status "Loading..." [ref=f3e599]
+                  - button [active] [ref=f3e601] [cursor=pointer]:
+                    - img "Close" [ref=f3e603]
+                - separator [ref=f3e606]
+              - generic [ref=f3e607]:
+                - generic [ref=f3e608]:
+                  - status "Loading..." [ref=f3e610]
+                  - status "Loading..." [ref=f3e612]
+                - status "Loading..." [ref=f3e615]
+                - generic [ref=f3e616]:
+                  - status "Loading..." [ref=f3e618]
+                  - status "Loading..." [ref=f3e620]
+                - generic [ref=f3e621]:
+                  - status "Loading..." [ref=f3e623]
+                  - status "Loading..." [ref=f3e625]
+                - status "Loading..." [ref=f3e628]
+                - generic [ref=f3e629]:
+                  - status "Loading..." [ref=f3e631]
+                  - status "Loading..." [ref=f3e633]
+                - status "Loading..." [ref=f3e635]

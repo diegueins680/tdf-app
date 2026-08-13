@@ -8,6 +8,8 @@ export interface ServiceStorefrontPackageDTO {
   sspDescription?: string | null;
   sspPriceUsdCents: number;
   sspCurrency: string;
+  sspMinSongCount: number;
+  sspMaxSongCount: number;
   sspTurnaroundDays: number;
   sspRevisionCount: number;
   sspDeliverables?: string[] | null;
@@ -43,6 +45,8 @@ export interface ServiceStorefrontOrderDTO {
   ssoCurrency: string;
   ssoStatus: string;
   ssoPaymentProvider?: string | null;
+  /** Returned only once, when a guest order is created. */
+  ssoLookupToken?: string | null;
   ssoPaidAt?: string | null;
   ssoGenre?: string | null;
   ssoSongCount: number;
@@ -74,6 +78,10 @@ export interface ServiceStorefrontRevisionDTO {
   ssrCompletedAt?: string | null;
 }
 
+const lookupHeaders = (lookupToken: string): HeadersInit => ({
+  'X-Order-Lookup-Token': lookupToken,
+});
+
 export const ServiceStorefront = {
   // Public endpoints
   listPackages: () =>
@@ -82,51 +90,72 @@ export const ServiceStorefront = {
   getPackage: (packageId: string) =>
     get<ServiceStorefrontPackageDTO>(`/services/storefront/${packageId}`),
 
-  createOrder: (payload: ServiceStorefrontOrderCreate) =>
-    post<ServiceStorefrontOrderDTO>('/services/storefront/order', payload),
+  createOrder: (idempotencyKey: string, payload: ServiceStorefrontOrderCreate) =>
+    post<ServiceStorefrontOrderDTO>('/services/storefront/order', payload, {
+      headers: { 'Idempotency-Key': idempotencyKey },
+    }),
 
-  getOrder: (orderId: string) =>
-    get<ServiceStorefrontOrderDTO>(`/services/storefront/order/${orderId}`),
+  getOrder: (orderId: string, lookupToken: string) =>
+    get<ServiceStorefrontOrderDTO>(`/services/storefront/order/${orderId}`, {
+      headers: lookupHeaders(lookupToken),
+    }),
 
-  createRevision: (orderId: string, payload: ServiceStorefrontRevisionCreate) =>
-    post<ServiceStorefrontRevisionDTO>(`/services/storefront/order/${orderId}/revision`, payload),
+  createRevision: (orderId: string, lookupToken: string, payload: ServiceStorefrontRevisionCreate) =>
+    post<ServiceStorefrontRevisionDTO>(`/services/storefront/order/${orderId}/revision`, payload, {
+      headers: lookupHeaders(lookupToken),
+    }),
 
   // Payment endpoints
-  createStripePaymentIntent: (orderId: string) =>
+  createStripePaymentIntent: (orderId: string, lookupToken: string) =>
     post<{ spiPaymentIntentId: string; spiClientSecret: string }>(
       `/services/storefront/order/${orderId}/stripe/payment-intent`,
       {},
+      { headers: lookupHeaders(lookupToken) },
     ),
 
-  createDatafastCheckout: (orderId: string) =>
+  createDatafastCheckout: (orderId: string, lookupToken: string) =>
     post<{
       dcOrderId: string;
       dcCheckoutId: string;
       dcWidgetUrl: string;
       dcAmount: string;
       dcCurrency: string;
-    }>(`/services/storefront/order/${orderId}/datafast/checkout`, {}),
+    }>(`/services/storefront/order/${orderId}/datafast/checkout`, {}, {
+      headers: lookupHeaders(lookupToken),
+    }),
 
-  confirmDatafastPayment: (orderId: string, resourcePath: string) => {
+  confirmDatafastPayment: (orderId: string, lookupToken: string, resourcePath: string) => {
     const qs = new URLSearchParams();
     qs.set('orderId', orderId);
     qs.set('resourcePath', resourcePath);
     return get<ServiceStorefrontOrderDTO>(
       `/services/storefront/datafast/status?${qs.toString()}`,
+      { headers: lookupHeaders(lookupToken) },
     );
   },
 
-  createPaypalOrder: (orderId: string) =>
+  createPaypalOrder: (orderId: string, lookupToken: string) =>
     post<{
       pcOrderId: string;
       pcPaypalOrderId: string;
       pcApprovalUrl?: string | null;
-    }>(`/services/storefront/order/${orderId}/paypal/create`, {}),
+    }>(`/services/storefront/order/${orderId}/paypal/create`, {}, {
+      headers: lookupHeaders(lookupToken),
+    }),
 
-  capturePaypalOrder: (paypalOrderId: string, orderId: string) =>
+  capturePaypalOrder: (paypalOrderId: string, orderId: string, lookupToken: string) =>
     post<ServiceStorefrontOrderDTO>('/services/storefront/paypal/capture', {
       pcCaptureOrderId: orderId,
       pcCapturePaypalId: paypalOrderId,
+    }, {
+      headers: lookupHeaders(lookupToken),
+    }),
+
+  selectManualPayment: (orderId: string, lookupToken: string, paymentMethod = 'bank_transfer') =>
+    post<ServiceStorefrontOrderDTO>(`/services/storefront/order/${orderId}/manual-payment`, {
+      ssmPaymentMethod: paymentMethod,
+    }, {
+      headers: lookupHeaders(lookupToken),
     }),
 
   // Admin endpoints

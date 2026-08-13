@@ -1,0 +1,234 @@
+- generic [ref=f23e4]:
+  - generic [ref=f23e18]:
+    - generic [ref=f23e21]:
+      - link [ref=f23e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f23e31]
+      - generic [ref=f23e34]:
+        - link [ref=f23e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f23e44]
+        - link [ref=f23e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f23e54]
+        - link [ref=f23e61] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f23e64]:
+            - img "Messages" [ref=f23e66]
+            - generic "Direct messaging - 3 new notifications link" [ref=f23e69]: "3"
+        - link [ref=f23e75] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f23e80]
+        - link [ref=f23e87] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f23e92]
+        - link [ref=f23e98] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f23e103]
+        - link [ref=f23e108] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f23e113]
+        - link [ref=f23e120] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f23e125]:
+            - img "tdf.records.label's profile picture" [ref=f23e126]
+      - generic [ref=f23e127]:
+        - link [ref=f23e130] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f23e135]
+        - link [ref=f23e138] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f23e143]
+    - generic [ref=f23e146]:
+      - main [ref=f23e147]:
+        - generic [ref=f23e149]:
+          - generic [ref=f23e150]:
+            - generic [ref=f23e151]:
+              - link [ref=f23e157] [cursor=pointer]:
+                - /url: /el_rovlex/
+                - img "el_rovlex's profile picture" [ref=f23e158]
+              - generic [ref=f23e159]:
+                - generic [ref=f23e160]:
+                  - generic [ref=f23e161]:
+                    - link [ref=f23e163] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "el_rovlex" [level=2] [ref=f23e164]
+                    - button [ref=f23e166] [cursor=pointer]:
+                      - img "Options" [ref=f23e168]
+                  - generic [ref=f23e172]: el Rovlex
+                  - generic [ref=f23e174]:
+                    - generic [ref=f23e176]:
+                      - generic [ref=f23e177]: "22"
+                      - text: posts
+                    - link "145 followers" [ref=f23e179] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f23e180]:
+                        - generic "145" [ref=f23e181]
+                        - text: followers
+                    - link "104 following" [ref=f23e183] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f23e184]:
+                        - generic [ref=f23e185]: "104"
+                        - text: following
+                - generic [ref=f23e187]:
+                  - button [ref=f23e189] [cursor=pointer]:
+                    - generic [ref=f23e190]:
+                      - text: "@elRovlexmiusic"
+                      - link "#trap" [ref=f23e191]:
+                        - /url: /explore/tags/trap/
+                      - link "#rap" [ref=f23e192]:
+                        - /url: /explore/tags/rap/
+                      - link "#drill" [ref=f23e193]:
+                        - /url: /explore/tags/drill/
+                  - heading [level=1]
+                  - link "Threads el_rovlex" [ref=f23e196] [cursor=pointer]:
+                    - /url: https://www.threads.com/@el_rovlex?xmt=AQG0_Yy-7tryo7vQcClpgg5AgKwmPQnSPtgomPYW0nZzhD0
+                    - img "Threads" [ref=f23e198]
+                    - generic [ref=f23e200]: el_rovlex
+            - generic [ref=f23e206]:
+              - button "Follow" [ref=f23e208] [cursor=pointer]
+              - button "Message" [ref=f23e212] [cursor=pointer]
+              - button [ref=f23e214] [cursor=pointer]:
+                - img "Similar accounts" [ref=f23e216]
+            - menu [ref=f23e220]:
+              - list [ref=f23e224]:
+                - listitem [ref=f23e225]
+                - listitem [ref=f23e226]
+                - listitem [ref=f23e227]:
+                  - link "View Pon ese 🍑pa tra highlight" [ref=f23e230] [cursor=pointer]:
+                    - /url: /stories/highlights/17888950341517160/
+                    - button "el_rovlex's highlight story picture Pon ese 🍑pa tra" [ref=f23e231]:
+                      - button [ref=f23e232]:
+                        - img "el_rovlex's highlight story picture" [ref=f23e235]
+                      - generic [ref=f23e236]: Pon ese 🍑pa tra
+                - listitem [ref=f23e239]:
+                  - link "View Rovlex highlight" [ref=f23e242] [cursor=pointer]:
+                    - /url: /stories/highlights/17857965048063608/
+                    - button "el_rovlex's highlight story picture Rovlex" [ref=f23e243]:
+                      - button [ref=f23e244]:
+                        - img "el_rovlex's highlight story picture" [ref=f23e247]
+                      - generic [ref=f23e248]: Rovlex
+          - generic [ref=f23e251]:
+            - tablist [ref=f23e252]:
+              - link [ref=f23e254] [cursor=pointer]:
+                - /url: /el_rovlex/
+                - img "Posts" [ref=f23e256]
+              - link [ref=f23e267] [cursor=pointer]:
+                - /url: /el_rovlex/reels/
+                - img "Reels" [ref=f23e269]
+              - link [ref=f23e272] [cursor=pointer]:
+                - /url: /el_rovlex/reposts/
+                - img "Reposts" [ref=f23e274]
+              - link [ref=f23e277] [cursor=pointer]:
+                - /url: /el_rovlex/tagged/
+                - img "Tagged" [ref=f23e279]
+            - tabpanel
+          - progressbar [ref=f23e283]:
+            - img "Loading..." [ref=f23e284]
+      - contentinfo [ref=f23e297]:
+        - generic [ref=f23e298]:
+          - generic [ref=f23e300]:
+            - link "Meta" [ref=f23e302] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f23e305] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f23e308] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f23e311] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f23e314] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f23e317] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f23e320] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f23e323] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f23e326] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f23e329] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f23e332] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f23e335] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f23e338] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f23e341] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f23e344] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f23e346]:
+            - generic [ref=f23e347] [cursor=pointer]:
+              - generic [ref=f23e348]:
+                - generic [ref=f23e349]: English
+                - img "Down chevron icon" [ref=f23e352]
+              - combobox "Switch Display Language" [ref=f23e354]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f23e355]: © 2026 Instagram from Meta
+  - button [ref=f23e358] [cursor=pointer]:
+    - generic "Messages - 3 new notifications" [ref=f23e359]:
+      - generic [ref=f23e360]:
+        - generic [ref=f23e362]:
+          - img "Messages" [ref=f23e363]
+          - generic "Direct messaging - 3 new notifications link" [ref=f23e366]: "3"
+        - generic [ref=f23e369]: Messages
+      - generic [ref=f23e370]:
+        - button "User avatar Santiii" [ref=f23e372]:
+          - img "User avatar" [ref=f23e375]
+        - button "User avatar Diego Saa" [ref=f23e377]:
+          - img "User avatar" [ref=f23e380]
+        - button "User avatar Martini 🍸" [ref=f23e382]:
+          - img "User avatar" [ref=f23e385]

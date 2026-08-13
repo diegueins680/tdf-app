@@ -1,0 +1,248 @@
+- generic [ref=f18e4]:
+  - generic [ref=f18e9]:
+    - generic [ref=f18e12]:
+      - link [ref=f18e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f18e22]
+      - generic [ref=f18e25]:
+        - link [ref=f18e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f18e35]
+        - link [ref=f18e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f18e45]
+        - link [ref=f18e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f18e55]:
+            - img "Messages" [ref=f18e57]
+            - generic "Direct messaging - 4 new notifications link" [ref=f18e60]: "4"
+        - link [ref=f18e66] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f18e71]
+        - link [ref=f18e78] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f18e83]
+        - link [ref=f18e91] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f18e96]
+        - link [ref=f18e101] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f18e106]
+        - link [ref=f18e113] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f18e118]:
+            - img "tdf.records.label's profile picture" [ref=f18e119]
+      - generic [ref=f18e120]:
+        - link [ref=f18e123] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f18e128]
+        - link [ref=f18e131] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f18e136]
+    - generic [ref=f18e139]:
+      - main [ref=f18e140]:
+        - generic [ref=f18e142]:
+          - generic [ref=f18e143]:
+            - generic [ref=f18e144]:
+              - link [ref=f18e150] [cursor=pointer]:
+                - /url: /spacetripfest/
+                - img "spacetripfest's profile picture" [ref=f18e151]
+              - generic [ref=f18e152]:
+                - generic [ref=f18e153]:
+                  - generic [ref=f18e154]:
+                    - link [ref=f18e156] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "spacetripfest" [level=2] [ref=f18e157]
+                    - button [ref=f18e159] [cursor=pointer]:
+                      - img "Options" [ref=f18e161]
+                  - generic [ref=f18e165]: Space Trip Fest
+                  - generic [ref=f18e167]:
+                    - generic [ref=f18e169]:
+                      - generic [ref=f18e170]: "158"
+                      - text: posts
+                    - link "3,787 followers" [ref=f18e172] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f18e173]:
+                        - generic "3,787" [ref=f18e174]
+                        - text: followers
+                    - link "600 following" [ref=f18e176] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f18e177]:
+                        - generic [ref=f18e178]: "600"
+                        - text: following
+                - generic [ref=f18e179]:
+                  - generic [ref=f18e180]:
+                    - button [ref=f18e182] [cursor=pointer]:
+                      - generic [ref=f18e183]: "Únete al viaje 🚀Produce: @tdf.records.label"
+                    - link "Threads spacetripfest" [ref=f18e186] [cursor=pointer]:
+                      - /url: https://www.threads.com/@spacetripfest?xmt=AQG0MaiP9-tRrNOrlybkmpXRwisgA-2XU42R5svnHrmbmfY
+                      - img "Threads" [ref=f18e188]
+                      - generic [ref=f18e190]: spacetripfest
+                  - link "Followed by stefanskidj, neu.beat + 97 more" [ref=f18e192] [cursor=pointer]:
+                    - /url: /spacetripfest/followers/mutualOnly
+                    - generic [ref=f18e194]:
+                      - generic [ref=f18e196]:
+                        - button [ref=f18e197]:
+                          - link [ref=f18e198]
+                        - button [ref=f18e199]:
+                          - link [ref=f18e200]
+                        - button [ref=f18e201]:
+                          - link [ref=f18e202]
+                      - generic [ref=f18e203]: Followed by stefanskidj, neu.beat + 97 more
+            - generic [ref=f18e208]:
+              - button "Following Down chevron icon" [ref=f18e210] [cursor=pointer]:
+                - generic [ref=f18e211]:
+                  - generic [ref=f18e212]: Following
+                  - img "Down chevron icon" [ref=f18e215]
+              - button "Message" [ref=f18e218] [cursor=pointer]
+              - button [ref=f18e220] [cursor=pointer]:
+                - img "Similar accounts" [ref=f18e222]
+            - menu [ref=f18e226]:
+              - list [ref=f18e230]:
+                - listitem [ref=f18e231]
+                - listitem [ref=f18e232]
+                - listitem [ref=f18e233]:
+                  - link "View Dome highlight" [ref=f18e236] [cursor=pointer]:
+                    - /url: /stories/highlights/18047867836519989/
+                    - button "spacetripfest's highlight story picture Dome" [ref=f18e237]:
+                      - button [ref=f18e238]:
+                        - img "spacetripfest's highlight story picture" [ref=f18e241]
+                      - generic [ref=f18e242]: Dome
+                - listitem [ref=f18e245]:
+                  - link "View ST003 highlight" [ref=f18e248] [cursor=pointer]:
+                    - /url: /stories/highlights/17971358681467723/
+                    - button "spacetripfest's highlight story picture ST003" [ref=f18e249]:
+                      - button [ref=f18e250]:
+                        - img "spacetripfest's highlight story picture" [ref=f18e253]
+                      - generic [ref=f18e254]: ST003
+                - listitem [ref=f18e257]:
+                  - link "View ST:SS highlight" [ref=f18e260] [cursor=pointer]:
+                    - /url: /stories/highlights/17931839189249670/
+                    - button "spacetripfest's highlight story picture ST:SS" [ref=f18e261]:
+                      - button [ref=f18e262]:
+                        - img "spacetripfest's highlight story picture" [ref=f18e265]
+                      - generic [ref=f18e266]: ST:SS
+                - listitem [ref=f18e269]:
+                  - link "View ST002 highlight" [ref=f18e272] [cursor=pointer]:
+                    - /url: /stories/highlights/17908486856144470/
+                    - button "spacetripfest's highlight story picture ST002" [ref=f18e273]:
+                      - button [ref=f18e274]:
+                        - img "spacetripfest's highlight story picture" [ref=f18e277]
+                      - generic [ref=f18e278]: ST002
+          - generic [ref=f18e281]:
+            - tablist [ref=f18e282]:
+              - link [ref=f18e284] [cursor=pointer]:
+                - /url: /spacetripfest/
+                - img "Posts" [ref=f18e286]
+              - link [ref=f18e297] [cursor=pointer]:
+                - /url: /spacetripfest/reels/
+                - img "Reels" [ref=f18e299]
+              - link [ref=f18e302] [cursor=pointer]:
+                - /url: /spacetripfest/reposts/
+                - img "Reposts" [ref=f18e304]
+              - link [ref=f18e307] [cursor=pointer]:
+                - /url: /spacetripfest/tagged/
+                - img "Tagged" [ref=f18e309]
+            - tabpanel
+          - progressbar [ref=f18e313]:
+            - img "Loading..." [ref=f18e314]
+      - contentinfo [ref=f18e327]:
+        - generic [ref=f18e328]:
+          - generic [ref=f18e330]:
+            - link "Meta" [ref=f18e332] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f18e335] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f18e338] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f18e341] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f18e344] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f18e347] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f18e350] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f18e353] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f18e356] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f18e359] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f18e362] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f18e365] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f18e368] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f18e371] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f18e374] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f18e376]:
+            - generic [ref=f18e377] [cursor=pointer]:
+              - generic [ref=f18e378]:
+                - generic [ref=f18e379]: English
+                - img "Down chevron icon" [ref=f18e382]
+              - combobox "Switch Display Language" [ref=f18e384]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f18e385]: © 2026 Instagram from Meta
+  - button [ref=f18e388] [cursor=pointer]:
+    - generic "Messages - 4 new notifications" [ref=f18e389]:
+      - generic [ref=f18e390]:
+        - generic [ref=f18e392]:
+          - img "Messages" [ref=f18e393]
+          - generic "Direct messaging - 4 new notifications link" [ref=f18e396]: "4"
+        - generic [ref=f18e399]: Messages

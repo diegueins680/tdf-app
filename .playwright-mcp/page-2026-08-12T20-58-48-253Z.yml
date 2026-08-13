@@ -1,0 +1,193 @@
+- generic [ref=f42e4]:
+  - generic [ref=f42e9]:
+    - generic [ref=f42e12]:
+      - link [ref=f42e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f42e22]
+      - generic [ref=f42e25]:
+        - link [ref=f42e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f42e35]
+        - link [ref=f42e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f42e45]
+        - link [ref=f42e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f42e55]:
+            - img "Messages" [ref=f42e57]
+            - generic "Direct messaging - 3 new notifications link" [ref=f42e60]: "3"
+        - link [ref=f42e66] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f42e71]
+        - link [ref=f42e78] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f42e83]
+        - link [ref=f42e89] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f42e94]
+        - link [ref=f42e99] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f42e104]
+        - link [ref=f42e111] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f42e116]:
+            - img "tdf.records.label's profile picture" [ref=f42e117]
+      - generic [ref=f42e118]:
+        - link [ref=f42e121] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f42e126]
+        - link [ref=f42e129] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f42e134]
+    - generic [ref=f42e137]:
+      - main [ref=f42e138]:
+        - generic [ref=f42e140]:
+          - generic [ref=f42e141]:
+            - generic [ref=f42e142]:
+              - button [ref=f42e147] [cursor=pointer]:
+                - link [ref=f42e149]:
+                  - img "theriskisdead's profile picture" [ref=f42e150]
+              - generic [ref=f42e151]:
+                - generic [ref=f42e152]:
+                  - generic [ref=f42e153]:
+                    - link [ref=f42e155] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "theriskisdead" [level=2] [ref=f42e156]
+                    - button [ref=f42e158] [cursor=pointer]:
+                      - img "Options" [ref=f42e160]
+                  - generic [ref=f42e164]: Risk
+                  - generic [ref=f42e166]:
+                    - generic [ref=f42e168]:
+                      - generic [ref=f42e169]: "26"
+                      - text: posts
+                    - link "143 followers" [ref=f42e171] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f42e172]:
+                        - generic "143" [ref=f42e173]
+                        - text: followers
+                    - link "245 following" [ref=f42e175] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f42e176]:
+                        - generic [ref=f42e177]: "245"
+                        - text: following
+                - button "espero que el templo se construya antes de mi caída" [ref=f42e181] [cursor=pointer]
+            - generic [ref=f42e186]:
+              - button "Follow" [ref=f42e188] [cursor=pointer]
+              - button [ref=f42e192] [cursor=pointer]:
+                - img "Similar accounts" [ref=f42e194]
+            - generic:
+              - menu
+          - generic [ref=f42e197]:
+            - tablist [ref=f42e198]:
+              - link [ref=f42e200] [cursor=pointer]:
+                - /url: /theriskisdead/
+                - img "Posts" [ref=f42e202]
+              - link [ref=f42e213] [cursor=pointer]:
+                - /url: /theriskisdead/reels/
+                - img "Reels" [ref=f42e215]
+              - link [ref=f42e218] [cursor=pointer]:
+                - /url: /theriskisdead/reposts/
+                - img "Reposts" [ref=f42e220]
+              - link [ref=f42e223] [cursor=pointer]:
+                - /url: /theriskisdead/tagged/
+                - img "Tagged" [ref=f42e225]
+            - tabpanel
+          - progressbar [ref=f42e229]:
+            - img "Loading..." [ref=f42e230]
+      - contentinfo [ref=f42e243]:
+        - generic [ref=f42e244]:
+          - generic [ref=f42e246]:
+            - link "Meta" [ref=f42e248] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f42e251] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f42e254] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f42e257] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f42e260] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f42e263] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f42e266] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f42e269] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f42e272] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f42e275] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f42e278] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f42e281] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f42e284] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f42e287] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f42e290] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f42e292]:
+            - generic [ref=f42e293] [cursor=pointer]:
+              - generic [ref=f42e294]:
+                - generic [ref=f42e295]: English
+                - img "Down chevron icon" [ref=f42e298]
+              - combobox "Switch Display Language" [ref=f42e300]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f42e301]: © 2026 Instagram from Meta
+  - button "Messages Messages" [ref=f42e304] [cursor=pointer]:
+    - generic [ref=f42e306]:
+      - img "Messages" [ref=f42e308]
+      - generic [ref=f42e311]: Messages

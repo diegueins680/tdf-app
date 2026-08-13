@@ -893,6 +893,8 @@ ServiceStorefrontPackage
     description      Text Maybe
     priceUsdCents    Int
     currency         Text default='USD'
+    minSongCount     Int default=1
+    maxSongCount     Int default=1
     turnaroundDays   Int default=7
     revisionCount    Int default=2
     deliverables     Text Maybe
@@ -923,7 +925,11 @@ ServiceStorefrontOrder
     datafastResourcePath  Text Maybe
     datafastPaymentId     Text Maybe
     paypalOrderId         Text Maybe
+    paypalCaptureId       Text Maybe
     paypalPayerEmail      Text Maybe
+    lookupTokenHash       Text Maybe
+    createIdempotencyKey  Text Maybe
+    createRequestSha256   Text Maybe
     paidAt                UTCTime Maybe
     genre                 Text Maybe
     songCount             Int default=1
@@ -937,6 +943,11 @@ ServiceStorefrontOrder
     updatedAt             UTCTime default=now()
     UniqueServiceStorefrontOrderNumber orderNumber
     UniqueServiceStorefrontOrderStripePI stripePaymentIntentId !force
+    UniqueServiceStorefrontOrderDatafastCheckout datafastCheckoutId !force
+    UniqueServiceStorefrontOrderDatafastPayment datafastPaymentId !force
+    UniqueServiceStorefrontOrderPaypal paypalOrderId !force
+    UniqueServiceStorefrontOrderPaypalCapture paypalCaptureId !force
+    UniqueServiceStorefrontOrderCreateIdempotency createIdempotencyKey !force
     deriving Show Generic
 
 ServiceStorefrontOrderStatusChange
