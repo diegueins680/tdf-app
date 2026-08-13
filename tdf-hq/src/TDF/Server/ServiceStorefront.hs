@@ -5,29 +5,37 @@
 module TDF.Server.ServiceStorefront
   ( serviceStorefrontPublicServer
   , serviceStorefrontAdminServer
+  , validatePackageOrder
+  , validateDatafastOrderResourcePath
+  , validateIdempotencyKey
   ) where
 
 import           Control.Monad (when, unless)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask)
-import           Data.Aeson (eitherDecode, FromJSON(..), Value(..), (.=), object)
+import           Crypto.Hash (Digest, SHA256, hash)
+import           Data.Aeson (eitherDecode, FromJSON(..), Value(..), (.=), (.:), (.:?), object, withObject)
 import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as KM
+import           Data.ByteArray (constEq)
+import qualified Data.ByteArray.Encoding as BAE
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
-import           Data.Maybe (fromMaybe, catMaybes)
+import           Data.Char (isAsciiLower, isAsciiUpper, isDigit)
+import           Data.Maybe (fromMaybe)
 import           Control.Applicative ((<|>))
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import           Data.Time (getCurrentTime, UTCTime)
+import           Data.Time (getCurrentTime)
 import           Data.UUID (UUID, toText)
 import           Data.UUID.V4 (nextRandom)
-import           Database.Persist (selectList, get, insert, getBy, replace, update, Entity(..), (==.), (=.), SelectOpt(..))
-import           Database.Persist.Sql (runSqlPool, SqlBackend)
+import           Database.Persist (selectList, get, insert, insertUnique, getBy, replace, update, Entity(..), (==.), (=.), SelectOpt(..))
+import           Database.Persist.Sql (runSqlPool)
 import           Network.HTTP.Client (httpLbs, parseRequest, responseBody, responseStatus, method, requestBody, requestHeaders, Request(..), RequestBody(..), Manager)
-import           Network.HTTP.Client.TLS (tlsManagerSettings, newTlsManager)
+import           Network.HTTP.Client.TLS (newTlsManager)
 import           Network.HTTP.Types (statusCode)
 import           Servant
 import           System.Environment (lookupEnv)
@@ -35,7 +43,7 @@ import           Web.PathPieces (fromPathPiece, toPathPiece)
 
 import           TDF.API.ServiceStorefront (ServiceStorefrontPublicAPI, ServiceStorefrontAdminAPI)
 import           TDF.API.ServiceStorefrontTypes
-import           TDF.API.Types (DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..))
+import           TDF.API.Types (DatafastCheckoutDTO(..), PaypalCreateDTO(..))
 import           TDF.Config (defaultCurrency, defaultLocale, supportedCurrencies)
 import           TDF.DB (Env(..))
 import           TDF.Internationalization (formatMinorUnitsDecimal, formatMoney, normalizeCurrencyCode)
@@ -56,6 +64,7 @@ serviceStorefrontPublicServer =
   :<|> confirmDatafastStatusHandler
   :<|> createPaypalOrderHandler
   :<|> capturePaypalHandler
+  :<|> selectManualPaymentHandler
   :<|> createRevisionHandler
 
 -- | Admin server for the service storefront.
@@ -86,105 +95,134 @@ getPackageHandler packageIdText = do
   mPackage <- liftIO $ flip runSqlPool envPool $ get packageId
   case mPackage of
     Nothing -> throwError err404 { errBody = "Package not found" }
-    Just pkg -> pure (packageEntityToDTO (Entity packageId pkg))
+    Just pkg
+      | ME.serviceStorefrontPackageActive pkg -> pure (packageEntityToDTO (Entity packageId pkg))
+      | otherwise -> throwError err404 { errBody = "Package not found" }
 
-createOrderHandler :: ServiceStorefrontOrderCreate -> AppM ServiceStorefrontOrderDTO
-createOrderHandler ServiceStorefrontOrderCreate{..} = do
+createOrderHandler :: Maybe Text -> ServiceStorefrontOrderCreate -> AppM ServiceStorefrontOrderDTO
+createOrderHandler mIdempotencyKey request@ServiceStorefrontOrderCreate{..} = do
   Env{..} <- ask
   now <- liftIO getCurrentTime
-  
-  -- Validate required fields
-  let buyerName = T.strip ssocBuyerName
-  let buyerEmail = T.strip ssocBuyerEmail
-  when (T.null buyerName) $
-    throwError err400 { errBody = "Buyer name is required" }
-  when (T.null buyerEmail) $
-    throwError err400 { errBody = "Buyer email is required" }
-  when (T.length buyerName > 200) $
-    throwError err400 { errBody = "Buyer name too long (max 200 characters)" }
-  when (T.length buyerEmail > 200) $
-    throwError err400 { errBody = "Buyer email too long (max 200 characters)" }
-  
-  -- Parse package ID
-  packageId <- parsePackageId ssocPackageId
-  
-  -- Load package
-  mPackage <- liftIO $ flip runSqlPool envPool $ get packageId
-  case mPackage of
-    Nothing -> throwError err404 { errBody = "Package not found" }
-    Just pkg -> do
-      -- Generate order number
-      orderId <- liftIO nextRandom
-      let orderNumber = generateOrderNumber orderId
-      
-      -- Insert order
-      let order = ME.ServiceStorefrontOrder
-            { ME.serviceStorefrontOrderOrderNumber = orderNumber
-            , ME.serviceStorefrontOrderBuyerName = buyerName
-            , ME.serviceStorefrontOrderBuyerEmail = buyerEmail
-            , ME.serviceStorefrontOrderBuyerPhone = fmap T.strip ssocBuyerPhone
-            , ME.serviceStorefrontOrderArtistName = fmap T.strip ssocArtistName
-            , ME.serviceStorefrontOrderPackageId = packageId
-            , ME.serviceStorefrontOrderServiceKind = ME.serviceStorefrontPackageServiceKind pkg
-            , ME.serviceStorefrontOrderTier = ME.serviceStorefrontPackageTier pkg
-            , ME.serviceStorefrontOrderPriceUsdCents = ME.serviceStorefrontPackagePriceUsdCents pkg
-            , ME.serviceStorefrontOrderCurrency = ME.serviceStorefrontPackageCurrency pkg
-            , ME.serviceStorefrontOrderStatus = "pending_payment"
-            , ME.serviceStorefrontOrderPaymentProvider = Nothing
-            , ME.serviceStorefrontOrderStripePaymentIntentId = Nothing
-            , ME.serviceStorefrontOrderStripeIdempotencyKey = Nothing
-            , ME.serviceStorefrontOrderDatafastCheckoutId = Nothing
-            , ME.serviceStorefrontOrderDatafastResourcePath = Nothing
-            , ME.serviceStorefrontOrderDatafastPaymentId = Nothing
-            , ME.serviceStorefrontOrderPaypalOrderId = Nothing
-            , ME.serviceStorefrontOrderPaypalPayerEmail = Nothing
-            , ME.serviceStorefrontOrderPaidAt = Nothing
-            , ME.serviceStorefrontOrderGenre = fmap T.strip ssocGenre
-            , ME.serviceStorefrontOrderSongCount = fromMaybe 1 ssocSongCount
-            , ME.serviceStorefrontOrderNotes = fmap T.strip ssocNotes
-            , ME.serviceStorefrontOrderReferenceTrackUrl = fmap T.strip ssocReferenceTrackUrl
-            , ME.serviceStorefrontOrderDeadline = Nothing
-            , ME.serviceStorefrontOrderSourceFilesUrl = Nothing
-            , ME.serviceStorefrontOrderDeliverablesUrl = Nothing
-            , ME.serviceStorefrontOrderPipelineCardId = Nothing
-            , ME.serviceStorefrontOrderCreatedAt = now
-            , ME.serviceStorefrontOrderUpdatedAt = now
-            }
-      
-      orderIdKey <- liftIO $ flip runSqlPool envPool $ insert order
-      
-      -- Insert status change
-      let statusChange = ME.ServiceStorefrontOrderStatusChange
-            { ME.serviceStorefrontOrderStatusChangeOrderId = orderIdKey
-            , ME.serviceStorefrontOrderStatusChangeStatus = "pending_payment"
-            , ME.serviceStorefrontOrderStatusChangeNotes = Just "Order created"
-            , ME.serviceStorefrontOrderStatusChangeChangedBy = Just "system"
-            , ME.serviceStorefrontOrderStatusChangeCreatedAt = now
-            }
-      _ <- liftIO $ flip runSqlPool envPool $ insert statusChange
-      
-      -- Return order DTO
-      pure (orderToDTO orderIdKey order)
+  idempotencyKey <- either (throwError . badRequestText) pure $
+    validateIdempotencyKey mIdempotencyKey
+  let requestHash = hashBytes (BL.toStrict (Aeson.encode request))
+  mExisting <- liftIO $ flip runSqlPool envPool $
+    getBy (ME.UniqueServiceStorefrontOrderCreateIdempotency (Just idempotencyKey))
+  case mExisting of
+    Just existing -> replayExistingOrder requestHash existing
+    Nothing -> createNewOrder now idempotencyKey requestHash
+  where
+    createNewOrder now idempotencyKey requestHash = do
+      Env{..} <- ask
+      let buyerName = T.strip ssocBuyerName
+          buyerEmail = T.toLower (T.strip ssocBuyerEmail)
+      when (T.null buyerName) $
+        throwError err400 { errBody = "Buyer name is required" }
+      when (T.length buyerName > 200) $
+        throwError err400 { errBody = "Buyer name too long (max 200 characters)" }
+      unless (isPlausibleEmail buyerEmail) $
+        throwError err400 { errBody = "Buyer email is invalid" }
 
-getOrderHandler :: Text -> AppM ServiceStorefrontOrderDTO
-getOrderHandler orderIdText = do
+      packageId <- parsePackageId ssocPackageId
+      mPackage <- liftIO $ flip runSqlPool envPool $ get packageId
+      case mPackage of
+        Nothing -> throwError err404 { errBody = "Package not found" }
+        Just pkg -> do
+          unless (ME.serviceStorefrontPackageActive pkg) $
+            throwError err404 { errBody = "Package not found" }
+          songCount <- either (throwError . badRequestText) pure $
+            validatePackageOrder
+              (ME.serviceStorefrontPackagePriceUsdCents pkg)
+              (ME.serviceStorefrontPackageCurrency pkg)
+              (ME.serviceStorefrontPackageMinSongCount pkg)
+              (ME.serviceStorefrontPackageMaxSongCount pkg)
+              (fromMaybe 1 ssocSongCount)
+          orderId <- liftIO nextRandom
+          tokenPartA <- liftIO nextRandom
+          tokenPartB <- liftIO nextRandom
+          let orderNumber = generateOrderNumber orderId
+              lookupToken = T.replace "-" "" (toText tokenPartA <> toText tokenPartB)
+              order = ME.ServiceStorefrontOrder
+                { ME.serviceStorefrontOrderOrderNumber = orderNumber
+                , ME.serviceStorefrontOrderBuyerName = buyerName
+                , ME.serviceStorefrontOrderBuyerEmail = buyerEmail
+                , ME.serviceStorefrontOrderBuyerPhone = fmap T.strip ssocBuyerPhone
+                , ME.serviceStorefrontOrderArtistName = fmap T.strip ssocArtistName
+                , ME.serviceStorefrontOrderPackageId = packageId
+                , ME.serviceStorefrontOrderServiceKind = ME.serviceStorefrontPackageServiceKind pkg
+                , ME.serviceStorefrontOrderTier = ME.serviceStorefrontPackageTier pkg
+                , ME.serviceStorefrontOrderPriceUsdCents = ME.serviceStorefrontPackagePriceUsdCents pkg
+                , ME.serviceStorefrontOrderCurrency = ME.serviceStorefrontPackageCurrency pkg
+                , ME.serviceStorefrontOrderStatus = "awaiting_payment"
+                , ME.serviceStorefrontOrderPaymentProvider = Nothing
+                , ME.serviceStorefrontOrderStripePaymentIntentId = Nothing
+                , ME.serviceStorefrontOrderStripeIdempotencyKey = Nothing
+                , ME.serviceStorefrontOrderDatafastCheckoutId = Nothing
+                , ME.serviceStorefrontOrderDatafastResourcePath = Nothing
+                , ME.serviceStorefrontOrderDatafastPaymentId = Nothing
+                , ME.serviceStorefrontOrderPaypalOrderId = Nothing
+                , ME.serviceStorefrontOrderPaypalCaptureId = Nothing
+                , ME.serviceStorefrontOrderPaypalPayerEmail = Nothing
+                , ME.serviceStorefrontOrderLookupTokenHash = Just (hashLookupToken lookupToken)
+                , ME.serviceStorefrontOrderCreateIdempotencyKey = Just idempotencyKey
+                , ME.serviceStorefrontOrderCreateRequestSha256 = Just requestHash
+                , ME.serviceStorefrontOrderPaidAt = Nothing
+                , ME.serviceStorefrontOrderGenre = fmap T.strip ssocGenre
+                , ME.serviceStorefrontOrderSongCount = songCount
+                , ME.serviceStorefrontOrderNotes = fmap T.strip ssocNotes
+                , ME.serviceStorefrontOrderReferenceTrackUrl = fmap T.strip ssocReferenceTrackUrl
+                , ME.serviceStorefrontOrderDeadline = Nothing
+                , ME.serviceStorefrontOrderSourceFilesUrl = Nothing
+                , ME.serviceStorefrontOrderDeliverablesUrl = Nothing
+                , ME.serviceStorefrontOrderPipelineCardId = Nothing
+                , ME.serviceStorefrontOrderCreatedAt = now
+                , ME.serviceStorefrontOrderUpdatedAt = now
+                }
+
+          mOrderIdKey <- liftIO $ flip runSqlPool envPool $ insertUnique order
+          case mOrderIdKey of
+            Nothing -> do
+              raced <- liftIO $ flip runSqlPool envPool $
+                getBy (ME.UniqueServiceStorefrontOrderCreateIdempotency (Just idempotencyKey))
+              maybe (throwError err409 { errBody = "Order creation conflicted; retry with the same idempotency key" })
+                (replayExistingOrder requestHash) raced
+            Just orderIdKey -> do
+              _ <- liftIO $ flip runSqlPool envPool $ insert ME.ServiceStorefrontOrderStatusChange
+                { ME.serviceStorefrontOrderStatusChangeOrderId = orderIdKey
+                , ME.serviceStorefrontOrderStatusChangeStatus = "awaiting_payment"
+                , ME.serviceStorefrontOrderStatusChangeNotes = Just "Order created"
+                , ME.serviceStorefrontOrderStatusChangeChangedBy = Just "system"
+                , ME.serviceStorefrontOrderStatusChangeCreatedAt = now
+                }
+              pure (orderToDTOWithLookupToken (Just lookupToken) orderIdKey order)
+
+    replayExistingOrder requestHash (Entity oid existing)
+      | ME.serviceStorefrontOrderCreateRequestSha256 existing == Just requestHash =
+          pure (orderToDTO oid existing)
+      | otherwise =
+          throwError err409 { errBody = "Idempotency key was already used for a different order request" }
+
+getOrderHandler :: Text -> Maybe Text -> AppM ServiceStorefrontOrderDTO
+getOrderHandler orderIdText mLookupToken = do
   Env{..} <- ask
   -- Try by order number first (more user-friendly)
   mOrder <- liftIO $ flip runSqlPool envPool $
     getBy (ME.UniqueServiceStorefrontOrderNumber orderIdText)
   case mOrder of
-    Just (Entity oid order) -> pure (orderToDTO oid order)
+    Just (Entity oid order) -> do
+      requireOrderLookupToken mLookupToken order
+      pure (orderToDTO oid order)
     Nothing -> throwError err404 { errBody = "Order not found" }
 
 -- Payment handlers (stubs - need provider credentials)
 
-createStripePaymentIntentHandler :: Text -> AppM StripePaymentIntentDTO
-createStripePaymentIntentHandler _ =
-  throwError err501
+createStripePaymentIntentHandler :: Text -> Maybe Text -> AppM StripePaymentIntentDTO
+createStripePaymentIntentHandler _ _ =
+  throwError err503
     { errBody = "Stripe checkout is not configured for the service storefront. Use an enabled payment provider." }
 
-createDatafastCheckoutHandler :: Text -> AppM DatafastCheckoutDTO
-createDatafastCheckoutHandler orderIdText = do
+createDatafastCheckoutHandler :: Text -> Maybe Text -> AppM DatafastCheckoutDTO
+createDatafastCheckoutHandler orderIdText mLookupToken = do
   Env{..} <- ask
   now <- liftIO getCurrentTime
   
@@ -194,9 +232,10 @@ createDatafastCheckoutHandler orderIdText = do
   case mEntity of
     Nothing -> throwError err404 { errBody = "Order not found" }
     Just (Entity oid order) -> do
+      requireOrderLookupToken mLookupToken order
       -- Verify order is in a payable state
       let status = ME.serviceStorefrontOrderStatus order
-      when (status `notElem` ["pending_payment", "payment_failed"]) $
+      when (status `notElem` ["awaiting_payment", "pending_payment", "payment_failed"]) $
         throwError err400 { errBody = "Order is not in a payable state" }
       
       let totalCents = ME.serviceStorefrontOrderPriceUsdCents order
@@ -205,9 +244,13 @@ createDatafastCheckoutHandler orderIdText = do
           buyerEmail = ME.serviceStorefrontOrderBuyerEmail order
           buyerPhone = ME.serviceStorefrontOrderBuyerPhone order
       
-      -- Request Datafast checkout
-      (checkoutId, widgetUrl) <- requestDatafastCheckoutForService
-        (toPathPiece oid) totalCents currency buyerName buyerEmail buyerPhone
+      (checkoutId, widgetUrl) <- case (status, ME.serviceStorefrontOrderDatafastCheckoutId order) of
+        ("datafast_pending", Just existingCheckoutId) -> do
+          dfEnv <- loadServiceDatafastEnv
+          let baseUrlClean = stripTrailingSlash (sdfBaseUrl dfEnv)
+          pure (existingCheckoutId, baseUrlClean ++ "/v1/paymentWidgets.js?checkoutId=" ++ T.unpack existingCheckoutId)
+        _ -> requestDatafastCheckoutForService
+          (toPathPiece oid) totalCents currency buyerName buyerEmail buyerPhone
       
       -- Update order with Datafast info
       liftIO $ flip runSqlPool envPool $ update oid
@@ -218,15 +261,15 @@ createDatafastCheckoutHandler orderIdText = do
         ]
       
       pure DatafastCheckoutDTO
-        { dcOrderId    = toPathPiece oid
+        { dcOrderId    = ME.serviceStorefrontOrderOrderNumber order
         , dcCheckoutId = checkoutId
         , dcWidgetUrl  = T.pack widgetUrl
         , dcAmount     = formatMoney (defaultLocale envConfig) currency (fromIntegral totalCents)
         , dcCurrency   = currency
         }
 
-confirmDatafastStatusHandler :: Maybe Text -> Maybe Text -> AppM ServiceStorefrontOrderDTO
-confirmDatafastStatusHandler mOrderId mResourcePath = do
+confirmDatafastStatusHandler :: Maybe Text -> Maybe Text -> Maybe Text -> AppM ServiceStorefrontOrderDTO
+confirmDatafastStatusHandler mOrderId mResourcePath mLookupToken = do
   Env{..} <- ask
   orderIdText <- maybe (throwError err400 { errBody = "orderId requerido" }) pure mOrderId
   resourcePathTxt <- maybe (throwError err400 { errBody = "resourcePath requerido" }) pure mResourcePath
@@ -237,42 +280,58 @@ confirmDatafastStatusHandler mOrderId mResourcePath = do
   case mEntity of
     Nothing -> throwError err404 { errBody = "Order not found" }
     Just (Entity oid order) -> do
-      -- Check payment status with Datafast
-      paymentStatus <- checkDatafastPaymentStatus resourcePathTxt
-      
+      requireOrderLookupToken mLookupToken order
+      resourcePath <- either (throwError . badRequestText) pure $
+        validateDatafastOrderResourcePath
+          (ME.serviceStorefrontOrderDatafastCheckoutId order)
+          resourcePathTxt
+      paymentStatus <- checkDatafastPaymentStatus resourcePath
       now <- liftIO getCurrentTime
-      let (newStatus, paidAt) = case paymentStatus of
-            "completed" -> ("paid", Just now)
-            "pending"   -> ("datafast_pending", Nothing)
-            _           -> ("payment_failed", Nothing)
-      
-      -- Update order
+      let resultCode = sdfpsResultCode paymentStatus
+          providerSuccess = isDatafastPaymentSuccess resultCode
+          providerPending = resultCode == "000.200.000"
+      when providerSuccess $
+        either (throwError . providerValidationError) pure $
+          validateDatafastSuccessfulPayment
+            (toPathPiece oid)
+            (ME.serviceStorefrontOrderPriceUsdCents order)
+            (ME.serviceStorefrontOrderCurrency order)
+            paymentStatus
+      let alreadyPaid = ME.serviceStorefrontOrderStatus order == "paid"
+          newStatus
+            | alreadyPaid = "paid"
+            | providerSuccess = "paid"
+            | providerPending = "datafast_pending"
+            | otherwise = "payment_failed"
+          paidAt
+            | alreadyPaid = ME.serviceStorefrontOrderPaidAt order
+            | providerSuccess = Just now
+            | otherwise = Nothing
+          providerPaymentId = sdfpsPaymentId paymentStatus
       liftIO $ flip runSqlPool envPool $ update oid
         [ ME.ServiceStorefrontOrderStatus =. newStatus
-        , ME.ServiceStorefrontOrderDatafastResourcePath =. Just resourcePathTxt
-        , ME.ServiceStorefrontOrderDatafastPaymentId =. Just resourcePathTxt
+        , ME.ServiceStorefrontOrderDatafastResourcePath =. Just resourcePath
+        , ME.ServiceStorefrontOrderDatafastPaymentId =. (providerPaymentId <|> ME.serviceStorefrontOrderDatafastPaymentId order)
         , ME.ServiceStorefrontOrderPaidAt =. paidAt
         , ME.ServiceStorefrontOrderUpdatedAt =. now
         ]
-      
-      -- Insert status change
-      let statusChange = ME.ServiceStorefrontOrderStatusChange
-            { ME.serviceStorefrontOrderStatusChangeOrderId = oid
-            , ME.serviceStorefrontOrderStatusChangeStatus = newStatus
-            , ME.serviceStorefrontOrderStatusChangeNotes = Just $ "Datafast payment status: " <> paymentStatus
-            , ME.serviceStorefrontOrderStatusChangeChangedBy = Just "datafast_webhook"
-            , ME.serviceStorefrontOrderStatusChangeCreatedAt = now
-            }
-      _ <- liftIO $ flip runSqlPool envPool $ insert statusChange
-      
-      -- Return updated order
+      when (newStatus /= ME.serviceStorefrontOrderStatus order) $ do
+        let statusChange = ME.ServiceStorefrontOrderStatusChange
+              { ME.serviceStorefrontOrderStatusChangeOrderId = oid
+              , ME.serviceStorefrontOrderStatusChangeStatus = newStatus
+              , ME.serviceStorefrontOrderStatusChangeNotes = Just $ "Datafast server verification result: " <> resultCode
+              , ME.serviceStorefrontOrderStatusChangeChangedBy = Just "datafast_server_verification"
+              , ME.serviceStorefrontOrderStatusChangeCreatedAt = now
+              }
+        _ <- liftIO $ flip runSqlPool envPool $ insert statusChange
+        pure ()
       mUpdated <- liftIO $ flip runSqlPool envPool $ get oid
       case mUpdated of
         Nothing -> throwError err500 { errBody = "Failed to load updated order" }
         Just updated -> pure (orderToDTO oid updated)
 
-createPaypalOrderHandler :: Text -> AppM PaypalCreateDTO
-createPaypalOrderHandler orderIdText = do
+createPaypalOrderHandler :: Text -> Maybe Text -> AppM PaypalCreateDTO
+createPaypalOrderHandler orderIdText mLookupToken = do
   Env{..} <- ask
   now <- liftIO getCurrentTime
   
@@ -282,9 +341,10 @@ createPaypalOrderHandler orderIdText = do
   case mEntity of
     Nothing -> throwError err404 { errBody = "Order not found" }
     Just (Entity oid order) -> do
+      requireOrderLookupToken mLookupToken order
       -- Verify order is in a payable state
       let status = ME.serviceStorefrontOrderStatus order
-      when (status `notElem` ["pending_payment", "payment_failed"]) $
+      when (status `notElem` ["awaiting_payment", "pending_payment", "payment_failed"]) $
         throwError err400 { errBody = "Order is not in a payable state" }
       
       let totalCents = ME.serviceStorefrontOrderPriceUsdCents order
@@ -292,13 +352,13 @@ createPaypalOrderHandler orderIdText = do
           buyerName = ME.serviceStorefrontOrderBuyerName order
           buyerEmail = ME.serviceStorefrontOrderBuyerEmail order
       
-      -- Load PayPal env
-      (cid, sec, baseUrl) <- loadPaypalEnvForService
-      manager <- liftIO newTlsManager
-      
-      -- Create PayPal order remotely
-      (ppOrderId, approvalUrl) <- createPaypalOrderRemoteForService
-        manager cid sec baseUrl totalCents currency buyerName buyerEmail
+      (ppOrderId, approvalUrl) <- case (status, ME.serviceStorefrontOrderPaypalOrderId order) of
+        ("paypal_pending", Just existingOrderId) -> pure (existingOrderId, Nothing)
+        _ -> do
+          (cid, sec, baseUrl) <- loadPaypalEnvForService
+          manager <- liftIO newTlsManager
+          createPaypalOrderRemoteForService
+            manager cid sec baseUrl (toPathPiece oid) totalCents currency buyerName buyerEmail
       
       -- Update order with PayPal info
       liftIO $ flip runSqlPool envPool $ update oid
@@ -309,13 +369,13 @@ createPaypalOrderHandler orderIdText = do
         ]
       
       pure PaypalCreateDTO
-        { pcOrderId = toPathPiece oid
+        { pcOrderId = ME.serviceStorefrontOrderOrderNumber order
         , pcPaypalOrderId = ppOrderId
         , pcApprovalUrl = approvalUrl
         }
 
-capturePaypalHandler :: PaypalCaptureReq -> AppM ServiceStorefrontOrderDTO
-capturePaypalHandler PaypalCaptureReq{..} = do
+capturePaypalHandler :: Maybe Text -> ServiceStorefrontPaypalCaptureReq -> AppM ServiceStorefrontOrderDTO
+capturePaypalHandler mLookupToken ServiceStorefrontPaypalCaptureReq{..} = do
   Env{..} <- ask
   now <- liftIO getCurrentTime
   
@@ -325,55 +385,138 @@ capturePaypalHandler PaypalCaptureReq{..} = do
   case mEntity of
     Nothing -> throwError err404 { errBody = "Order not found" }
     Just (Entity oid order) -> do
+      requireOrderLookupToken mLookupToken order
       -- Verify PayPal order ID matches
       case ME.serviceStorefrontOrderPaypalOrderId order of
         Nothing -> throwError err400 { errBody = "Order has no PayPal order" }
         Just storedPpOrderId | storedPpOrderId /= pcCapturePaypalId ->
           throwError err400 { errBody = "PayPal order ID mismatch" }
         _ -> pure ()
+      if ME.serviceStorefrontOrderStatus order == "paid"
+        then pure (orderToDTO oid order)
+        else do
       
-      -- Load PayPal env
-      (cid, sec, baseUrl) <- loadPaypalEnvForService
-      manager <- liftIO newTlsManager
+          (cid, sec, baseUrl) <- loadPaypalEnvForService
+          manager <- liftIO newTlsManager
       
       -- Capture PayPal order
-      (captureStatus, payerEmail) <- capturePaypalOrderRemoteForService
-        manager cid sec baseUrl pcCapturePaypalId
+          captureOutcome <- capturePaypalOrderRemoteForService
+            manager cid sec baseUrl pcCapturePaypalId
+          when (spcoStatus captureOutcome == "COMPLETED") $
+            either (throwError . providerValidationError) pure $
+              validatePaypalSuccessfulCapture
+                (toPathPiece oid)
+                (ME.serviceStorefrontOrderPriceUsdCents order)
+                (ME.serviceStorefrontOrderCurrency order)
+                captureOutcome
+          let nextStatus
+                | spcoStatus captureOutcome == "COMPLETED" = "paid"
+                | spcoStatus captureOutcome `elem` ["APPROVED", "PENDING"] = "paypal_pending"
+                | otherwise = "payment_failed"
+              paidAt
+                | nextStatus == "paid" = Just now
+                | otherwise = Nothing
       
-      -- Determine next status
-      let nextStatus = case captureStatus of
-            "COMPLETED" -> "paid"
-            "APPROVED"  -> "paypal_pending"
-            _           -> "payment_failed"
-          paidAt = if nextStatus == "paid" then Just now else Nothing
+          liftIO $ flip runSqlPool envPool $ update oid
+            [ ME.ServiceStorefrontOrderStatus =. nextStatus
+            , ME.ServiceStorefrontOrderPaypalCaptureId =. (spcoCaptureId captureOutcome <|> ME.serviceStorefrontOrderPaypalCaptureId order)
+            , ME.ServiceStorefrontOrderPaypalPayerEmail =. (spcoPayerEmail captureOutcome <|> ME.serviceStorefrontOrderPaypalPayerEmail order)
+            , ME.ServiceStorefrontOrderPaidAt =. paidAt
+            , ME.ServiceStorefrontOrderUpdatedAt =. now
+            ]
       
-      -- Update order
-      liftIO $ flip runSqlPool envPool $ update oid
-        [ ME.ServiceStorefrontOrderStatus =. nextStatus
-        , ME.ServiceStorefrontOrderPaypalPayerEmail =. (payerEmail <|> ME.serviceStorefrontOrderPaypalPayerEmail order)
-        , ME.ServiceStorefrontOrderPaidAt =. paidAt
-        , ME.ServiceStorefrontOrderUpdatedAt =. now
-        ]
-      
-      -- Insert status change
-      let statusChange = ME.ServiceStorefrontOrderStatusChange
-            { ME.serviceStorefrontOrderStatusChangeOrderId = oid
-            , ME.serviceStorefrontOrderStatusChangeStatus = nextStatus
-            , ME.serviceStorefrontOrderStatusChangeNotes = Just $ "PayPal capture: " <> captureStatus
-            , ME.serviceStorefrontOrderStatusChangeChangedBy = Just "paypal_capture"
-            , ME.serviceStorefrontOrderStatusChangeCreatedAt = now
-            }
-      _ <- liftIO $ flip runSqlPool envPool $ insert statusChange
-      
-      -- Return updated order
-      mUpdated <- liftIO $ flip runSqlPool envPool $ get oid
-      case mUpdated of
-        Nothing -> throwError err500 { errBody = "Failed to load updated order" }
-        Just updated -> pure (orderToDTO oid updated)
+          when (nextStatus /= ME.serviceStorefrontOrderStatus order) $ do
+            let statusChange = ME.ServiceStorefrontOrderStatusChange
+                  { ME.serviceStorefrontOrderStatusChangeOrderId = oid
+                  , ME.serviceStorefrontOrderStatusChangeStatus = nextStatus
+                  , ME.serviceStorefrontOrderStatusChangeNotes = Just $ "PayPal server capture: " <> spcoStatus captureOutcome
+                  , ME.serviceStorefrontOrderStatusChangeChangedBy = Just "paypal_server_capture"
+                  , ME.serviceStorefrontOrderStatusChangeCreatedAt = now
+                  }
+            _ <- liftIO $ flip runSqlPool envPool $ insert statusChange
+            pure ()
+          mUpdated <- liftIO $ flip runSqlPool envPool $ get oid
+          case mUpdated of
+            Nothing -> throwError err500 { errBody = "Failed to load updated order" }
+            Just updated -> pure (orderToDTO oid updated)
 
-createRevisionHandler :: Text -> ServiceStorefrontRevisionCreate -> AppM ServiceStorefrontRevisionDTO
-createRevisionHandler _ _ =
-  throwError err501 { errBody = "Revision system not yet implemented." }
+selectManualPaymentHandler
+  :: Text
+  -> Maybe Text
+  -> ServiceStorefrontManualPaymentCreate
+  -> AppM ServiceStorefrontOrderDTO
+selectManualPaymentHandler orderIdText mLookupToken ServiceStorefrontManualPaymentCreate{..} = do
+  Env{..} <- ask
+  now <- liftIO getCurrentTime
+  let methodName = T.toLower (T.strip ssmPaymentMethod)
+  unless (methodName `elem` ["bank_transfer", "cash", "pos"]) $
+    throwError err400 { errBody = "Unsupported manual payment method" }
+  mEntity <- liftIO $ flip runSqlPool envPool $
+    getBy (ME.UniqueServiceStorefrontOrderNumber orderIdText)
+  case mEntity of
+    Nothing -> throwError err404 { errBody = "Order not found" }
+    Just (Entity oid order) -> do
+      requireOrderLookupToken mLookupToken order
+      when (ME.serviceStorefrontOrderStatus order `notElem`
+              ["awaiting_payment", "pending_payment", "payment_failed", "awaiting_manual_confirmation"]) $
+        throwError err409 { errBody = "Order is not awaiting payment" }
+      liftIO $ flip runSqlPool envPool $ do
+        update oid
+          [ ME.ServiceStorefrontOrderStatus =. "awaiting_manual_confirmation"
+          , ME.ServiceStorefrontOrderPaymentProvider =. Just methodName
+          , ME.ServiceStorefrontOrderUpdatedAt =. now
+          ]
+        _ <- insert ME.ServiceStorefrontOrderStatusChange
+          { ME.serviceStorefrontOrderStatusChangeOrderId = oid
+          , ME.serviceStorefrontOrderStatusChangeStatus = "awaiting_manual_confirmation"
+          , ME.serviceStorefrontOrderStatusChangeNotes = Just ("Customer selected " <> methodName <> "; staff verification required")
+          , ME.serviceStorefrontOrderStatusChangeChangedBy = Just "customer"
+          , ME.serviceStorefrontOrderStatusChangeCreatedAt = now
+          }
+        pure ()
+      mUpdated <- liftIO $ flip runSqlPool envPool $ get oid
+      maybe (throwError err500 { errBody = "Failed to load updated order" })
+        (pure . orderToDTO oid) mUpdated
+
+createRevisionHandler :: Text -> Maybe Text -> ServiceStorefrontRevisionCreate -> AppM ServiceStorefrontRevisionDTO
+createRevisionHandler orderIdText mLookupToken ServiceStorefrontRevisionCreate{..} = do
+  Env{..} <- ask
+  now <- liftIO getCurrentTime
+  let feedback = T.strip ssrcFeedback
+  when (T.null feedback || T.length feedback > 5000) $
+    throwError err400 { errBody = "Revision feedback must contain 1 to 5000 characters" }
+  mEntity <- liftIO $ flip runSqlPool envPool $
+    getBy (ME.UniqueServiceStorefrontOrderNumber orderIdText)
+  case mEntity of
+    Nothing -> throwError err404 { errBody = "Order not found" }
+    Just (Entity oid order) -> do
+      requireOrderLookupToken mLookupToken order
+      unless (ME.serviceStorefrontOrderStatus order `elem` ["v1_delivered", "revisions"]) $
+        throwError err409 { errBody = "A revision cannot be requested in the current order state" }
+      revisions <- liftIO $ flip runSqlPool envPool $
+        selectList [ME.ServiceStorefrontRevisionOrderId ==. oid] [Desc ME.ServiceStorefrontRevisionRevisionNumber]
+      let revisionNumber = case revisions of
+            Entity _ revision : _ -> ME.serviceStorefrontRevisionRevisionNumber revision + 1
+            [] -> 1
+      when (revisionNumber > 50) $
+        throwError err409 { errBody = "Revision limit reached; contact support" }
+      revisionId <- liftIO $ flip runSqlPool envPool $ insert ME.ServiceStorefrontRevision
+        { ME.serviceStorefrontRevisionOrderId = oid
+        , ME.serviceStorefrontRevisionRevisionNumber = revisionNumber
+        , ME.serviceStorefrontRevisionFeedback = feedback
+        , ME.serviceStorefrontRevisionStatus = "pending"
+        , ME.serviceStorefrontRevisionCreatedAt = now
+        , ME.serviceStorefrontRevisionCompletedAt = Nothing
+        }
+      pure ServiceStorefrontRevisionDTO
+        { ssrId = toPathPiece revisionId
+        , ssrOrderId = toPathPiece oid
+        , ssrRevisionNumber = revisionNumber
+        , ssrFeedback = feedback
+        , ssrStatus = "pending"
+        , ssrCreatedAt = now
+        , ssrCompletedAt = Nothing
+        }
 
 -- ============================================================================
 -- Admin Handlers
@@ -439,6 +582,10 @@ createPackageAdminHandler ServiceStorefrontPackageCreate{..} = do
     case normalizeCurrencyCode (fromMaybe (defaultCurrency envConfig) sspcCurrency) of
       Just value | value `elem` supportedCurrencies envConfig -> pure value
       _ -> throwError err400 { errBody = "Currency is not enabled by SUPPORTED_CURRENCIES" }
+  let minSongCount = fromMaybe 1 sspcMinSongCount
+      maxSongCount = fromMaybe 1 sspcMaxSongCount
+  _ <- either (throwError . badRequestText) pure $
+    validatePackageOrder sspcPriceUsdCents currency minSongCount maxSongCount minSongCount
   let pkg = ME.ServiceStorefrontPackage
         { ME.serviceStorefrontPackageServiceKind = sspcServiceKind
         , ME.serviceStorefrontPackageTier = sspcTier
@@ -446,6 +593,8 @@ createPackageAdminHandler ServiceStorefrontPackageCreate{..} = do
         , ME.serviceStorefrontPackageDescription = sspcDescription
         , ME.serviceStorefrontPackagePriceUsdCents = sspcPriceUsdCents
         , ME.serviceStorefrontPackageCurrency = currency
+        , ME.serviceStorefrontPackageMinSongCount = minSongCount
+        , ME.serviceStorefrontPackageMaxSongCount = maxSongCount
         , ME.serviceStorefrontPackageTurnaroundDays = fromMaybe 7 sspcTurnaroundDays
         , ME.serviceStorefrontPackageRevisionCount = fromMaybe 2 sspcRevisionCount
         , ME.serviceStorefrontPackageDeliverables = Nothing -- TODO: JSON encode
@@ -470,10 +619,17 @@ updatePackageAdminHandler packageIdText ServiceStorefrontPackageUpdate{..} = do
   case mPkg of
     Nothing -> throwError err404 { errBody = "Package not found" }
     Just pkg -> do
+      let nextPrice = fromMaybe (ME.serviceStorefrontPackagePriceUsdCents pkg) sspuPriceUsdCents
+          nextMinSongs = fromMaybe (ME.serviceStorefrontPackageMinSongCount pkg) sspuMinSongCount
+          nextMaxSongs = fromMaybe (ME.serviceStorefrontPackageMaxSongCount pkg) sspuMaxSongCount
+      _ <- either (throwError . badRequestText) pure $
+        validatePackageOrder nextPrice (ME.serviceStorefrontPackageCurrency pkg) nextMinSongs nextMaxSongs nextMinSongs
       let updatedPkg = pkg
             { ME.serviceStorefrontPackageName = fromMaybe (ME.serviceStorefrontPackageName pkg) sspuName
             , ME.serviceStorefrontPackageDescription = maybe (ME.serviceStorefrontPackageDescription pkg) Just sspuDescription
-            , ME.serviceStorefrontPackagePriceUsdCents = fromMaybe (ME.serviceStorefrontPackagePriceUsdCents pkg) sspuPriceUsdCents
+            , ME.serviceStorefrontPackagePriceUsdCents = nextPrice
+            , ME.serviceStorefrontPackageMinSongCount = nextMinSongs
+            , ME.serviceStorefrontPackageMaxSongCount = nextMaxSongs
             , ME.serviceStorefrontPackageTurnaroundDays = fromMaybe (ME.serviceStorefrontPackageTurnaroundDays pkg) sspuTurnaroundDays
             , ME.serviceStorefrontPackageRevisionCount = fromMaybe (ME.serviceStorefrontPackageRevisionCount pkg) sspuRevisionCount
             , ME.serviceStorefrontPackageActive = fromMaybe (ME.serviceStorefrontPackageActive pkg) sspuActive
@@ -496,6 +652,8 @@ packageEntityToDTO (Entity pid pkg) = ServiceStorefrontPackageDTO
   , sspDescription = ME.serviceStorefrontPackageDescription pkg
   , sspPriceUsdCents = ME.serviceStorefrontPackagePriceUsdCents pkg
   , sspCurrency = ME.serviceStorefrontPackageCurrency pkg
+  , sspMinSongCount = ME.serviceStorefrontPackageMinSongCount pkg
+  , sspMaxSongCount = ME.serviceStorefrontPackageMaxSongCount pkg
   , sspTurnaroundDays = ME.serviceStorefrontPackageTurnaroundDays pkg
   , sspRevisionCount = ME.serviceStorefrontPackageRevisionCount pkg
   , sspDeliverables = Nothing -- TODO: JSON decode
@@ -505,7 +663,10 @@ packageEntityToDTO (Entity pid pkg) = ServiceStorefrontPackageDTO
   }
 
 orderToDTO :: ME.ServiceStorefrontOrderId -> ME.ServiceStorefrontOrder -> ServiceStorefrontOrderDTO
-orderToDTO oid order = ServiceStorefrontOrderDTO
+orderToDTO = orderToDTOWithLookupToken Nothing
+
+orderToDTOWithLookupToken :: Maybe Text -> ME.ServiceStorefrontOrderId -> ME.ServiceStorefrontOrder -> ServiceStorefrontOrderDTO
+orderToDTOWithLookupToken lookupToken oid order = ServiceStorefrontOrderDTO
   { ssoId = toPathPiece oid
   , ssoOrderNumber = ME.serviceStorefrontOrderOrderNumber order
   , ssoBuyerName = ME.serviceStorefrontOrderBuyerName order
@@ -519,6 +680,7 @@ orderToDTO oid order = ServiceStorefrontOrderDTO
   , ssoCurrency = ME.serviceStorefrontOrderCurrency order
   , ssoStatus = ME.serviceStorefrontOrderStatus order
   , ssoPaymentProvider = ME.serviceStorefrontOrderPaymentProvider order
+  , ssoLookupToken = lookupToken
   , ssoPaidAt = ME.serviceStorefrontOrderPaidAt order
   , ssoGenre = ME.serviceStorefrontOrderGenre order
   , ssoSongCount = ME.serviceStorefrontOrderSongCount order
@@ -541,6 +703,75 @@ parsePackageId :: Text -> AppM ME.ServiceStorefrontPackageId
 parsePackageId txt = case fromPathPiece (T.strip txt) of
   Nothing -> throwError err400 { errBody = "Invalid package ID format" }
   Just key -> pure key
+
+badRequestText :: Text -> ServerError
+badRequestText message =
+  err400 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+-- | Server-side package snapshot invariant. The package price is fixed for the
+-- configured quantity range; clients never multiply or override it.
+validatePackageOrder :: Int -> Text -> Int -> Int -> Int -> Either Text Int
+validatePackageOrder priceCents currency minSongs maxSongs requestedSongs
+  | priceCents <= 0 = Left "Package price must be positive"
+  | T.toUpper (T.strip currency) /= "USD" = Left "Package currency is not supported"
+  | minSongs < 1 || maxSongs < minSongs = Left "Package quantity configuration is invalid"
+  | requestedSongs < minSongs || requestedSongs > maxSongs =
+      Left ("Song count must be between " <> T.pack (show minSongs) <> " and " <> T.pack (show maxSongs))
+  | otherwise = Right requestedSongs
+
+isPlausibleEmail :: Text -> Bool
+isPlausibleEmail email =
+  not (T.null email)
+    && T.length email <= 254
+    && T.count "@" email == 1
+    && case T.splitOn "@" email of
+      [localPart, domainPart] ->
+        not (T.null localPart)
+          && T.any (== '.') domainPart
+          && not (T.isPrefixOf "." domainPart)
+          && not (T.isSuffixOf "." domainPart)
+          && T.all (\c -> c > ' ' && c /= '\DEL') email
+      _ -> False
+
+hashLookupToken :: Text -> Text
+hashLookupToken = hashBytes . TE.encodeUtf8
+
+hashBytes :: ByteString -> Text
+hashBytes bytes =
+  TE.decodeUtf8 $
+    BAE.convertToBase BAE.Base16 (hash bytes :: Digest SHA256)
+
+validateIdempotencyKey :: Maybe Text -> Either Text Text
+validateIdempotencyKey mRawKey = do
+  key <- maybe (Left "Idempotency-Key header is required") (Right . T.strip) mRawKey
+  unless (T.length key >= 16 && T.length key <= 128) $
+    Left "Idempotency-Key must contain 16 to 128 characters"
+  unless (T.all (\c -> c >= '!' && c <= '~') key) $
+    Left "Idempotency-Key must contain visible ASCII characters only"
+  pure key
+
+requireOrderLookupToken :: Maybe Text -> ME.ServiceStorefrontOrder -> AppM ()
+requireOrderLookupToken mRawToken order =
+  case (ME.serviceStorefrontOrderLookupTokenHash order, T.strip <$> mRawToken) of
+    (Just expectedHash, Just rawToken)
+      | not (T.null rawToken)
+      , TE.encodeUtf8 expectedHash `constEq` TE.encodeUtf8 (hashLookupToken rawToken) -> pure ()
+    _ -> throwError err404 { errBody = "Order not found" }
+
+validateDatafastOrderResourcePath :: Maybe Text -> Text -> Either Text Text
+validateDatafastOrderResourcePath mCheckoutId rawResourcePath = do
+  checkoutId <- maybe (Left "Order does not have a Datafast checkout to confirm") Right mCheckoutId
+  let resourcePath = T.strip rawResourcePath
+      expected = "/v1/checkouts/" <> checkoutId <> "/payment"
+      validCheckoutId =
+        not (T.null checkoutId)
+          && T.length checkoutId <= 256
+          && T.all isDatafastIdChar checkoutId
+  unless validCheckoutId (Left "Stored Datafast checkout ID is invalid")
+  unless (resourcePath == expected) (Left "resourcePath does not match this order's Datafast checkout")
+  pure resourcePath
+  where
+    isDatafastIdChar c = isAsciiLower c || isAsciiUpper c || isDigit c || c `elem` ("-_." :: String)
 
 -- ============================================================================
 -- Datafast Integration
@@ -625,13 +856,33 @@ requestDatafastCheckoutForService txnId totalCents currency name email mPhone = 
           throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Datafast rejected checkout: " <> code)) }
         _ -> pure ()
       checkoutId <- maybe (throwError err502 { errBody = "No checkout ID in response" }) pure mCheckoutId
+      unless (isProviderReference checkoutId) $
+        throwError err502 { errBody = "Datafast returned an invalid checkout ID" }
       let widgetUrl = baseUrlClean ++ "/v1/paymentWidgets.js?checkoutId=" ++ T.unpack checkoutId
       pure (checkoutId, widgetUrl)
   where
     pad2 n = if n < 10 then "0" <> show n else show n
 
--- | Check Datafast payment status.
-checkDatafastPaymentStatus :: Text -> AppM Text
+data ServiceDatafastPaymentStatus = ServiceDatafastPaymentStatus
+  { sdfpsPaymentId             :: Maybe Text
+  , sdfpsAmount                :: Maybe Text
+  , sdfpsCurrency              :: Maybe Text
+  , sdfpsMerchantTransactionId :: Maybe Text
+  , sdfpsResultCode            :: Text
+  } deriving (Show)
+
+instance FromJSON ServiceDatafastPaymentStatus where
+  parseJSON = withObject "ServiceDatafastPaymentStatus" $ \o -> do
+    result <- o .: "result"
+    ServiceDatafastPaymentStatus
+      <$> o .:? "id"
+      <*> o .:? "amount"
+      <*> o .:? "currency"
+      <*> o .:? "merchantTransactionId"
+      <*> result .: "code"
+
+-- | Check Datafast payment status using the server-held merchant credentials.
+checkDatafastPaymentStatus :: Text -> AppM ServiceDatafastPaymentStatus
 checkDatafastPaymentStatus resourcePath = do
   dfEnv <- loadServiceDatafastEnv
   manager <- liftIO $ newTlsManager
@@ -650,9 +901,7 @@ checkDatafastPaymentStatus resourcePath = do
     throwError err502 { errBody = "Datafast status check failed." }
   case eitherDecode (responseBody resp) of
     Left err -> throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid Datafast status response: " <> T.pack err)) }
-    Right dfResp -> do
-      let mStatus = extractPaymentStatus dfResp
-      pure (fromMaybe "unknown" mStatus)
+    Right dfResp -> pure dfResp
 
 -- | Extract checkout ID from Datafast response.
 extractCheckoutId :: Value -> Maybe Text
@@ -670,21 +919,51 @@ extractResultCode (Object obj) = case KM.lookup "result" obj of
   _ -> Nothing
 extractResultCode _ = Nothing
 
--- | Extract payment status from Datafast status response.
-extractPaymentStatus :: Value -> Maybe Text
-extractPaymentStatus (Object obj) = case KM.lookup "payments" obj of
-  Just (Array payments) ->
-    case take 1 (foldr (:) [] payments) of
-      [Object payment] -> case KM.lookup "status" payment of
-        Just (String s) -> Just s
-        _ -> Nothing
-      _ -> Nothing
-  _ -> Nothing
-extractPaymentStatus _ = Nothing
-
 -- | Check if a Datafast result code indicates success.
 isSuccessCode :: Text -> Bool
 isSuccessCode code = code `elem` ["000.000.000", "000.100.110", "000.200.000"]
+
+isDatafastPaymentSuccess :: Text -> Bool
+isDatafastPaymentSuccess code =
+  "000.000" `T.isPrefixOf` code || "000.100" `T.isPrefixOf` code
+
+providerValidationError :: Text -> ServerError
+providerValidationError message =
+  err502 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+validateDatafastSuccessfulPayment
+  :: Text
+  -> Int
+  -> Text
+  -> ServiceDatafastPaymentStatus
+  -> Either Text ()
+validateDatafastSuccessfulPayment expectedOrderId expectedCents expectedCurrency status = do
+  paidCents <- maybe (Left "Datafast response did not include an amount") parseDatafastCents (sdfpsAmount status)
+  paidCurrency <- maybe (Left "Datafast response did not include a currency") (Right . T.toUpper . T.strip) (sdfpsCurrency status)
+  merchantReference <- maybe (Left "Datafast response did not include the merchant transaction ID") (Right . T.strip) (sdfpsMerchantTransactionId status)
+  paymentId <- maybe (Left "Datafast response did not include a payment ID") (Right . T.strip) (sdfpsPaymentId status)
+  unless (paidCents == expectedCents) (Left "Datafast amount does not match the immutable order total")
+  unless (paidCurrency == T.toUpper (T.strip expectedCurrency)) (Left "Datafast currency does not match the immutable order currency")
+  unless (merchantReference == expectedOrderId) (Left "Datafast merchant reference does not match the internal order")
+  unless (not (T.null paymentId) && T.length paymentId <= 256) (Left "Datafast payment ID is invalid")
+
+parseDatafastCents :: Text -> Either Text Int
+parseDatafastCents raw =
+  case T.splitOn "." (T.strip raw) of
+    [whole] -> parseParts whole "0"
+    [whole, fraction] | T.length fraction <= 2 -> parseParts whole fraction
+    _ -> Left "Datafast amount is invalid"
+  where
+    parseParts whole fraction
+      | T.null whole || T.null fraction = Left "Datafast amount is invalid"
+      | not (T.all isDigit whole && T.all isDigit fraction) = Left "Datafast amount is invalid"
+      | otherwise =
+          let wholeValue = read (T.unpack whole) :: Integer
+              fractionValue = read (T.unpack (T.take 2 (fraction <> "00"))) :: Integer
+              cents = wholeValue * 100 + fractionValue
+          in if cents > 0 && cents <= fromIntegral (maxBound :: Int)
+               then Right (fromIntegral cents)
+               else Left "Datafast amount is invalid"
 
 -- | Split a buyer name into (givenName, surname).
 splitBuyerName :: Text -> (Text, Text)
@@ -758,16 +1037,18 @@ paypalAccessTokenForService manager cid sec baseUrl = do
 
 -- | Create a PayPal order remotely.
 createPaypalOrderRemoteForService
-  :: Manager -> Text -> Text -> String -> Int -> Text -> Text -> Text
+  :: Manager -> Text -> Text -> String -> Text -> Int -> Text -> Text -> Text
   -> AppM (Text, Maybe Text)
-createPaypalOrderRemoteForService manager cid sec baseUrl totalCents currency buyerName buyerEmail = do
+createPaypalOrderRemoteForService manager cid sec baseUrl internalOrderId totalCents currency buyerName buyerEmail = do
   token <- paypalAccessTokenForService manager cid sec baseUrl
   let amountStr = formatMinorUnitsDecimal currency (fromIntegral totalCents)
       body = object
         [ "intent" .= ("CAPTURE" :: Text)
         , "purchase_units" .=
             [ object
-                [ "amount" .= object
+                [ "custom_id" .= internalOrderId
+                , "invoice_id" .= internalOrderId
+                , "amount" .= object
                     [ "currency_code" .= T.toUpper currency
                     , "value" .= amountStr
                     ]
@@ -787,6 +1068,7 @@ createPaypalOrderRemoteForService manager cid sec baseUrl totalCents currency bu
         , requestHeaders =
             [ ("Content-Type", "application/json")
             , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
+            , ("PayPal-Request-Id", TE.encodeUtf8 ("svc-create-" <> T.take 27 internalOrderId))
             ]
         }
   resp <- liftIO $ httpLbs req manager
@@ -798,14 +1080,25 @@ createPaypalOrderRemoteForService manager cid sec baseUrl totalCents currency bu
       ppOrderId <- case KM.lookup "id" obj of
         Just (String s) -> pure s
         _ -> throwError err502 { errBody = "No order ID in PayPal response" }
+      unless (isProviderReference ppOrderId) $
+        throwError err502 { errBody = "PayPal returned an invalid order ID" }
       approvalUrl <- extractPaypalApprovalUrl obj
       pure (ppOrderId, approvalUrl)
     _ -> throwError err502 { errBody = "Invalid PayPal response format" }
 
--- | Capture a PayPal order remotely.
+data ServicePaypalCaptureOutcome = ServicePaypalCaptureOutcome
+  { spcoStatus          :: Text
+  , spcoPayerEmail      :: Maybe Text
+  , spcoCaptureId       :: Maybe Text
+  , spcoAmount          :: Maybe Text
+  , spcoCurrency        :: Maybe Text
+  , spcoInternalOrderId :: Maybe Text
+  } deriving (Show)
+
+-- | Capture a PayPal order remotely and retain the fields required for binding.
 capturePaypalOrderRemoteForService
   :: Manager -> Text -> Text -> String -> Text
-  -> AppM (Text, Maybe Text)  -- (status, payerEmail)
+  -> AppM ServicePaypalCaptureOutcome
 capturePaypalOrderRemoteForService manager cid sec baseUrl ppOrderId = do
   token <- paypalAccessTokenForService manager cid sec baseUrl
   req0 <- liftIO $ parseRequest (baseUrl ++ "/v2/checkout/orders/" ++ T.unpack ppOrderId ++ "/capture")
@@ -815,6 +1108,7 @@ capturePaypalOrderRemoteForService manager cid sec baseUrl ppOrderId = do
         , requestHeaders =
             [ ("Content-Type", "application/json")
             , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
+            , ("PayPal-Request-Id", TE.encodeUtf8 ("service-capture-" <> ppOrderId))
             ]
         }
   resp <- liftIO $ httpLbs req manager
@@ -831,7 +1125,21 @@ capturePaypalOrderRemoteForService manager cid sec baseUrl ppOrderId = do
               Just (String e) -> Just e
               _ -> Nothing
             _ -> Nothing
-      pure (captureStatus, payerEmail)
+          purchaseUnit = firstObject "purchase_units" obj
+          captureObject = purchaseUnit >>= firstObject "payments" >>= firstObject "captures"
+          captureId = captureObject >>= lookupObjectText "id"
+          amountObject = captureObject >>= lookupObject "amount"
+          capturedValue = amountObject >>= lookupObjectText "value"
+          capturedCurrency = amountObject >>= lookupObjectText "currency_code"
+          internalOrderId = purchaseUnit >>= lookupObjectText "custom_id"
+      pure ServicePaypalCaptureOutcome
+        { spcoStatus = captureStatus
+        , spcoPayerEmail = payerEmail
+        , spcoCaptureId = captureId
+        , spcoAmount = capturedValue
+        , spcoCurrency = capturedCurrency
+        , spcoInternalOrderId = internalOrderId
+        }
     _ -> throwError err502 { errBody = "Invalid PayPal capture response format" }
 
 -- | Extract approval URL from PayPal order response.
@@ -848,6 +1156,47 @@ findApprovalUrl (Object lnk : rest) =
       | T.toLower (T.strip rel) == "approve" -> Just href
     _ -> findApprovalUrl rest
 findApprovalUrl (_ : rest) = findApprovalUrl rest
+
+lookupObject :: Text -> Aeson.Object -> Maybe Aeson.Object
+lookupObject key obj = case KM.lookup (AesonKey.fromText key) obj of
+  Just (Object value) -> Just value
+  _ -> Nothing
+
+lookupObjectText :: Text -> Aeson.Object -> Maybe Text
+lookupObjectText key obj = case KM.lookup (AesonKey.fromText key) obj of
+  Just (String value) -> Just value
+  _ -> Nothing
+
+firstObject :: Text -> Aeson.Object -> Maybe Aeson.Object
+firstObject key obj = case KM.lookup (AesonKey.fromText key) obj of
+  Just (Array values) -> case foldr (:) [] values of
+    Object value : _ -> Just value
+    _ -> Nothing
+  Just (Object value) -> Just value
+  _ -> Nothing
+
+validatePaypalSuccessfulCapture
+  :: Text
+  -> Int
+  -> Text
+  -> ServicePaypalCaptureOutcome
+  -> Either Text ()
+validatePaypalSuccessfulCapture expectedOrderId expectedCents expectedCurrency outcome = do
+  captureId <- maybe (Left "PayPal response did not include a capture ID") (Right . T.strip) (spcoCaptureId outcome)
+  capturedCents <- maybe (Left "PayPal response did not include a captured amount") parseDatafastCents (spcoAmount outcome)
+  capturedCurrency <- maybe (Left "PayPal response did not include a captured currency") (Right . T.toUpper . T.strip) (spcoCurrency outcome)
+  customId <- maybe (Left "PayPal response did not include the internal order binding") (Right . T.strip) (spcoInternalOrderId outcome)
+  unless (not (T.null captureId) && T.length captureId <= 128) (Left "PayPal capture ID is invalid")
+  unless (capturedCents == expectedCents) (Left "PayPal captured amount does not match the immutable order total")
+  unless (capturedCurrency == T.toUpper (T.strip expectedCurrency)) (Left "PayPal captured currency does not match the immutable order currency")
+  unless (customId == expectedOrderId) (Left "PayPal custom_id does not match the internal order")
+
+isProviderReference :: Text -> Bool
+isProviderReference value =
+  not (T.null value)
+    && T.length value <= 256
+    && T.any (\c -> isAsciiLower c || isAsciiUpper c || isDigit c) value
+    && T.all (\c -> isAsciiLower c || isAsciiUpper c || isDigit c || c `elem` ("-_." :: String)) value
 
 -- | Encode Basic auth header.
 encodeBasicAuth :: Text -> Text -> ByteString

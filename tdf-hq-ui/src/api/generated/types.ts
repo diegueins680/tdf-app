@@ -4,6 +4,162 @@
  */
 
 export interface paths {
+    "/services/storefront": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active mixing and mastering packages */
+        get: operations["listServiceStorefrontPackages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/{packageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get an active service package */
+        get: operations["getServiceStorefrontPackage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create an unpaid service order from an authoritative package */
+        post: operations["createServiceStorefrontOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderNumber}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a guest service order using its private lookup capability */
+        get: operations["getServiceStorefrontOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderNumber}/datafast/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or resume an idempotent Datafast checkout resource */
+        post: operations["createServiceDatafastCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/datafast/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify Datafast status server-to-server
+         * @description Browser return alone never marks an order paid. Amount, currency, checkout resource, payment ID, and merchant reference are bound on the server.
+         */
+        get: operations["verifyServiceDatafastPayment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderNumber}/paypal/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or resume a PayPal Order */
+        post: operations["createServicePayPalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/paypal/capture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Capture and bind a PayPal Order server-to-server */
+        post: operations["captureServicePayPalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderNumber}/manual-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Select a manual payment rail without confirming payment */
+        post: operations["selectServiceManualPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/version": {
         parameters: {
             query?: never;
@@ -1590,6 +1746,97 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ServiceStorefrontPackage: {
+            /** Format: uuid */
+            sspId: string;
+            /** @enum {string} */
+            sspServiceKind: "Mixing" | "Mastering" | "Bundle";
+            sspTier: string;
+            sspName: string;
+            sspDescription?: string | null;
+            sspPriceUsdCents: number;
+            /** @enum {string} */
+            sspCurrency: "USD";
+            sspMinSongCount: number;
+            sspMaxSongCount: number;
+            sspTurnaroundDays: number;
+            sspRevisionCount: number;
+            sspDeliverables?: string[] | null;
+            sspFeatures?: string[] | null;
+            sspActive: boolean;
+            sspSortOrder: number;
+        };
+        ServiceStorefrontOrderCreate: {
+            /** Format: uuid */
+            ssocPackageId: string;
+            ssocBuyerName: string;
+            /** Format: email */
+            ssocBuyerEmail: string;
+            ssocBuyerPhone?: string | null;
+            ssocArtistName?: string | null;
+            ssocGenre?: string | null;
+            ssocSongCount?: number | null;
+            ssocNotes?: string | null;
+            /** Format: uri */
+            ssocReferenceTrackUrl?: string | null;
+            /** Format: date */
+            ssocDeadline?: string | null;
+        };
+        ServiceStorefrontOrder: {
+            /** Format: uuid */
+            ssoId: string;
+            ssoOrderNumber: string;
+            ssoBuyerName: string;
+            /** Format: email */
+            ssoBuyerEmail: string;
+            ssoBuyerPhone?: string | null;
+            ssoArtistName?: string | null;
+            /** Format: uuid */
+            ssoPackageId: string;
+            ssoServiceKind: string;
+            ssoTier: string;
+            ssoPriceUsdCents: number;
+            ssoCurrency: string;
+            ssoStatus: string;
+            ssoPaymentProvider?: string | null;
+            /** @description Returned only in the create response. */
+            ssoLookupToken?: string | null;
+            /** Format: date-time */
+            ssoPaidAt?: string | null;
+            ssoGenre?: string | null;
+            ssoSongCount: number;
+            ssoNotes?: string | null;
+            ssoReferenceTrackUrl?: string | null;
+            /** Format: date */
+            ssoDeadline?: string | null;
+            ssoDeliverablesUrl?: string | null;
+            /** Format: date-time */
+            ssoCreatedAt: string;
+            /** Format: date-time */
+            ssoUpdatedAt: string;
+        };
+        DatafastCheckout: {
+            dcOrderId: string;
+            dcCheckoutId: string;
+            /** Format: uri */
+            dcWidgetUrl: string;
+            dcAmount: string;
+            dcCurrency: string;
+        };
+        PayPalOrderCreate: {
+            pcOrderId: string;
+            pcPaypalOrderId: string;
+            /** Format: uri */
+            pcApprovalUrl?: string | null;
+        };
+        PayPalCaptureRequest: {
+            pcCaptureOrderId: string;
+            pcCapturePaypalId: string;
+        };
+        ServiceManualPaymentCreate: {
+            /** @enum {string} */
+            ssmPaymentMethod: "bank_transfer" | "cash" | "pos";
+        };
         Version: {
             /** @description Application name. */
             name?: string;
@@ -2810,6 +3057,8 @@ export interface components {
     };
     responses: never;
     parameters: {
+        /** @description Opaque guest capability returned only when the order is created. */
+        OrderLookupToken: string;
         AccessRequestId: number;
         FeatureId: string;
         OperationsWorkItemId: string;
@@ -2820,6 +3069,316 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listServiceStorefrontPackages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Server-authoritative active packages */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontPackage"][];
+                };
+            };
+        };
+    };
+    getServiceStorefrontPackage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Package */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontPackage"];
+                };
+            };
+            /** @description Package is absent or inactive */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createServiceStorefrontOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Opaque retry key. Reuse with a different request is rejected. */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontOrderCreate"];
+            };
+        };
+        responses: {
+            /** @description Unpaid order. The lookup token is returned only in this response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Invalid customer or package quantity */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency key was reused with a different request */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getServiceStorefrontOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Opaque guest capability returned only when the order is created. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                orderNumber: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Customer-safe order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Order or lookup capability not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createServiceDatafastCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Opaque guest capability returned only when the order is created. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                orderNumber: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Hosted Datafast widget resource */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatafastCheckout"];
+                };
+            };
+            /** @description Order is not payable */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider request failed closed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    verifyServiceDatafastPayment: {
+        parameters: {
+            query: {
+                orderId: string;
+                resourcePath: string;
+            };
+            header: {
+                /** @description Opaque guest capability returned only when the order is created. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Verified current order state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Resource binding failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider response failed verification */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createServicePayPalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Opaque guest capability returned only when the order is created. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                orderNumber: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description PayPal order reference */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayPalOrderCreate"];
+                };
+            };
+            /** @description Provider request failed closed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    captureServicePayPalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Opaque guest capability returned only when the order is created. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayPalCaptureRequest"];
+            };
+        };
+        responses: {
+            /** @description Verified order state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description PayPal reference mismatch */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Capture response failed verification */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    selectServiceManualPayment: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Opaque guest capability returned only when the order is created. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                orderNumber: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceManualPaymentCreate"];
+            };
+        };
+        responses: {
+            /** @description Order awaiting staff verification */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Order is not awaiting payment */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getVersion: {
         parameters: {
             query?: never;

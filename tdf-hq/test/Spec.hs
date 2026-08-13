@@ -156,6 +156,7 @@ import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.Operations.ModelSpec as OperationsModelSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import qualified TDF.Server.DDEX as DDEXServer
+import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.ServerProposalsSpec as ServerProposalsSpec
 import TDF.ServerRadio
     ( StreamMetadata (..),
@@ -724,6 +725,38 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    describe "service storefront commercial invariants" $ do
+        it "accepts only server-configured package quantities" $
+            QC.property $ \(QC.Positive priceCents) (QC.Positive minSongs) (QC.NonNegative range) ->
+                let boundedRange = range `mod` 20
+                    maxSongs = minSongs + boundedRange
+                    requested = minSongs + (boundedRange `div` 2)
+                in ServiceStorefront.validatePackageOrder priceCents "USD" minSongs maxSongs requested
+                    == Right requested
+        it "rejects quantity tampering outside the package bounds" $
+            QC.property $ \(QC.Positive priceCents) (QC.Positive minSongs) (QC.NonNegative range) ->
+                let maxSongs = minSongs + (range `mod` 20)
+                in isLeft (ServiceStorefront.validatePackageOrder priceCents "USD" minSongs maxSongs (maxSongs + 1))
+        it "rejects non-positive prices even when quantity is valid" $
+            QC.property $ \nonPositivePrice ->
+                nonPositivePrice <= 0 QC.==>
+                  isLeft (ServiceStorefront.validatePackageOrder nonPositivePrice "USD" 1 1 1)
+        it "binds a Datafast resource path to the stored checkout" $ do
+            ServiceStorefront.validateDatafastOrderResourcePath
+              (Just "checkout-abc")
+              "/v1/checkouts/checkout-abc/payment"
+              `shouldBe` Right "/v1/checkouts/checkout-abc/payment"
+            ServiceStorefront.validateDatafastOrderResourcePath
+              (Just "checkout-abc")
+              "/v1/checkouts/checkout-other/payment"
+              `shouldSatisfy` isLeft
+        it "requires a bounded visible-ASCII order idempotency key" $ do
+            ServiceStorefront.validateIdempotencyKey (Just "2e7c0f84-2945-4bed-a838-28cf482c5afb")
+              `shouldBe` Right "2e7c0f84-2945-4bed-a838-28cf482c5afb"
+            ServiceStorefront.validateIdempotencyKey Nothing `shouldSatisfy` isLeft
+            ServiceStorefront.validateIdempotencyKey (Just "too-short") `shouldSatisfy` isLeft
+            ServiceStorefront.validateIdempotencyKey (Just "invalid key with spaces") `shouldSatisfy` isLeft
+
     describe "central feature registry authorization" $ do
         let modulesFor roleValues = map moduleName (Set.toList (modulesForRoles roleValues))
             registryUser roleValues = AuthedUser
