@@ -36,12 +36,9 @@ module TDF.ServerAuth
   , validatePasswordResetToken
   , validateSignupDisplayName
   , validateSignupGoogleIdToken
-  , validateRequestedSignupRoles
-  , validateSignupArtistClaimIntent
   , validateSignupArtistClaimEmail
   , validateOptionalSignupClaimArtistId
   , validateOptionalSignupPhone
-  , validateSignupInternshipFields
   , validateSignupFanArtistIds
   , validateSignupFanArtistTargets
   ) where
@@ -49,7 +46,7 @@ module TDF.ServerAuth
 import Control.Applicative ((<|>))
 import Control.Exception (SomeException, displayException, try)
 import Control.Exception.Safe (catch, throwM)
-import Control.Monad (forM_, unless, void, when)
+import Control.Monad (forM_, join, unless, void, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask, asks)
 import Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy, validatePassword)
@@ -70,12 +67,12 @@ import Data.Foldable (for_)
 import Data.Int (Int64)
 import GHC.Generics (Generic)
 import Data.List (nub)
-import Data.Maybe (catMaybes, fromMaybe, isJust, isNothing)
+import Data.Maybe (fromMaybe, isJust, isNothing)
 import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import Data.Time (Day, UTCTime, getCurrentTime)
+import Data.Time (UTCTime, getCurrentTime)
 import Data.UUID (UUID, fromText, toText)
 import Data.UUID.V4 (nextRandom)
 import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, insert, insert_, insertBy, insertUnique, selectFirst, selectList, update, upsert, (=.), (==.), (<-.))
@@ -101,19 +98,18 @@ import TDF.Auth (
     sessionCookieHeader,
   )
 import TDF.Config (AppConfig (..))
+import qualified TDF.Catalog.Models as Catalog
+import TDF.Catalog.Security (applySecurityRoleAssignmentPolicy)
 import TDF.DB (ConnectionPool, Env (..), sharedTlsManager)
 import TDF.DTO
 import TDF.Internationalization
-  ( normalizeCountryCode
-  , normalizeCurrencyCode
-  , normalizeLocaleCode
+  ( normalizeCurrencyCode
   , normalizeTimeZone
   )
 import qualified TDF.Email.Service as EmailSvc
 import qualified TDF.LogBuffer as LogBuf
 import TDF.Models
 import qualified TDF.Models as M
-import qualified TDF.ModelsExtra as ME
 import TDF.UserActivity (recordUserActivity)
 
 type AppM = ReaderT Env Handler
@@ -162,6 +158,7 @@ data SignupDbError
   = SignupEmailExists
   | SignupProfileError
   | SignupArtistUnavailable
+  | SignupSecurityPolicyError Text
   deriving (Eq, Show)
 
 data PasswordChangeError
@@ -176,49 +173,6 @@ data PasswordResetError
   | PasswordResetProfileError
   deriving (Eq, Show)
 
-signupAllowedRoles :: [RoleEnum]
-signupAllowedRoles =
-  [ Fan
-  , Customer
-  , Artist
-  , Artista
-  , Promotor
-  , Promoter
-  , Producer
-  , Songwriter
-  , DJ
-  , Publicist
-  , TourManager
-  , LabelRep
-  , StageManager
-  , RoadCrew
-  , Photographer
-  , AandR
-  , Intern
-  , Student
-  , Vendor
-  , ReadOnly
-  ]
-
-validateRequestedSignupRoles :: Maybe [RoleEnum] -> Either ServerError [RoleEnum]
-validateRequestedSignupRoles requestedRoles =
-  let requestedRoleList = fromMaybe [] requestedRoles
-      disallowedRoles =
-        nub (filter (`notElem` signupAllowedRoles) requestedRoleList)
-      duplicateRoles =
-        nub [role | role <- requestedRoleList, length (filter (== role) requestedRoleList) > 1]
-  in if not (null disallowedRoles)
-       then
-         let roleList = T.intercalate ", " (map roleToText disallowedRoles)
-             msg = "Requested signup roles are not allowed for self-signup: " <> roleList
-         in Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
-       else if not (null duplicateRoles)
-         then
-           let roleList = T.intercalate ", " (map roleToText duplicateRoles)
-               msg = "Requested signup roles must not contain duplicates: " <> roleList
-           in Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
-         else Right (nub (Customer : Fan : requestedRoleList))
-
 validateOptionalSignupClaimArtistId :: Maybe Int64 -> Either ServerError (Maybe Int64)
 validateOptionalSignupClaimArtistId Nothing = Right Nothing
 validateOptionalSignupClaimArtistId (Just rawArtistId)
@@ -226,17 +180,6 @@ validateOptionalSignupClaimArtistId (Just rawArtistId)
   | otherwise =
       Left err400
         { errBody = BL.fromStrict (TE.encodeUtf8 "claimArtistId must be a positive integer")
-        }
-
-validateSignupArtistClaimIntent :: [RoleEnum] -> Maybe Int64 -> Either ServerError ()
-validateSignupArtistClaimIntent _ Nothing = Right ()
-validateSignupArtistClaimIntent rolesVal (Just _)
-  | Artist `elem` rolesVal || Artista `elem` rolesVal = Right ()
-  | otherwise =
-      Left err400
-        { errBody =
-            BL.fromStrict
-              (TE.encodeUtf8 "claimArtistId requires requesting the Artist or Artista role")
         }
 
 validateSignupArtistClaimEmail :: Text -> Maybe Text -> Either Text ()
@@ -316,95 +259,6 @@ validateSignupFanArtistTargets artistIds =
                   { errBody = BL.fromStrict (TE.encodeUtf8 msg)
                   }
             )
-
-validateSignupInternshipFields
-  :: [RoleEnum]
-  -> Maybe Day
-  -> Maybe Day
-  -> Maybe Int
-  -> Maybe Text
-  -> Maybe Text
-  -> Either ServerError ()
-validateSignupInternshipFields rolesVal startAt endAt requiredHours skills areas
-  | null providedFields = Right ()
-  | Intern `elem` rolesVal =
-      validateSignupInternshipRequiredHours requiredHours
-        *> validateSignupInternshipDateRange startAt endAt
-        *> validateSignupInternshipTextField "internshipSkills" skills
-        *> validateSignupInternshipTextField "internshipAreas" areas
-  | otherwise =
-      let fieldList = T.intercalate ", " providedFields
-          msg = "Internship fields require requesting the Intern role: " <> fieldList
-      in Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
-  where
-    providedFields =
-      catMaybes
-        [ present "internshipStartAt" (isJust startAt)
-        , present "internshipEndAt" (isJust endAt)
-        , present "internshipRequiredHours" (isJust requiredHours)
-        , present "internshipSkills" (isJust (cleanOptional skills))
-        , present "internshipAreas" (isJust (cleanOptional areas))
-        ]
-    present fieldName isProvided =
-      if isProvided then Just fieldName else Nothing
-
-sanitizeSignupInternshipText :: Text -> Text
-sanitizeSignupInternshipText =
-  T.filter (not . isUnsafeSignupInternshipTextChar)
-
-validateSignupInternshipTextField :: Text -> Maybe Text -> Either ServerError ()
-validateSignupInternshipTextField fieldName rawValue =
-  case cleanOptional rawValue of
-    Nothing -> Right ()
-    Just cleanValue ->
-      let sanitized = sanitizeSignupInternshipText cleanValue
-      in if sanitized /= cleanValue
-        then
-          Left err400
-            { errBody =
-                BL.fromStrict
-                  ( TE.encodeUtf8
-                      (fieldName <> " must not contain control characters or hidden formatting characters")
-                  )
-            }
-        else if T.length sanitized > maxSignupInternshipTextChars
-        then
-          Left err400
-            { errBody =
-                BL.fromStrict
-                  ( TE.encodeUtf8
-                      ( fieldName
-                          <> " must be "
-                          <> T.pack (show maxSignupInternshipTextChars)
-                          <> " characters or fewer"
-                      )
-                  )
-            }
-        else Right ()
-
-maxSignupInternshipTextChars :: Int
-maxSignupInternshipTextChars = 1000
-
-isUnsafeSignupInternshipTextChar :: Char -> Bool
-isUnsafeSignupInternshipTextChar ch =
-  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
-
-validateSignupInternshipDateRange :: Maybe Day -> Maybe Day -> Either ServerError ()
-validateSignupInternshipDateRange (Just startAt) (Just endAt)
-  | endAt < startAt =
-      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "internshipEndAt must be on or after internshipStartAt") }
-validateSignupInternshipDateRange _ _ = Right ()
-
-validateSignupInternshipRequiredHours :: Maybe Int -> Either ServerError ()
-validateSignupInternshipRequiredHours Nothing = Right ()
-validateSignupInternshipRequiredHours (Just hours)
-  | hours > 0 = Right ()
-  | otherwise =
-      Left err400
-        { errBody =
-            BL.fromStrict
-              (TE.encodeUtf8 "internshipRequiredHours must be a positive integer")
-        }
 
 validateAuthPassword :: Text -> Text -> Either ServerError Text
 validateAuthPassword fieldLabel rawPassword
@@ -627,29 +481,34 @@ updateLocalePreferences
 updateLocalePreferences mAuthorizationHeader mCookieHeader LocalePreferencesUpdate{..} = do
   Env pool cfg <- ask
   user <- requireSessionUser cfg pool mAuthorizationHeader mCookieHeader
-  localeValue <-
-    either throwError pure $
-      validateConfiguredLocale (supportedLocales cfg) lpuLocale
-  currencyValue <-
-    either throwError pure $
-      validateConfiguredCurrency (supportedCurrencies cfg) lpuCurrency
   timezoneValue <- either throwError pure (validateConfiguredTimezone lpuTimezone)
-  countryValue <- traverse (either throwError pure . validateCountryCode) lpuCountryCode
+  regionalValidation <- liftIO $ flip runSqlPool pool $ do
+    localeResult <- validateActivePreferenceLocale lpuLocaleId
+    currencyResult <- validateActivePreferenceCurrency lpuCurrencyId
+    countryResult <- validateActivePreferenceCountry lpuCountryId
+    pure $ (,,) <$> localeResult <*> currencyResult <*> countryResult
+  ((localeIdValue, _), (currencyIdValue, _), countryValue) <- either throwError pure regionalValidation
   now <- liftIO getCurrentTime
   liftIO $ flip runSqlPool pool $ do
     _ <- upsert
       UserLocalePreference
         { userLocalePreferenceUserId = auPartyId user
-        , userLocalePreferenceLocale = localeValue
-        , userLocalePreferenceCurrency = currencyValue
+        , userLocalePreferenceLocale = Nothing
+        , userLocalePreferenceCurrency = Nothing
         , userLocalePreferenceTimezone = timezoneValue
-        , userLocalePreferenceCountryCode = countryValue
+        , userLocalePreferenceCountryCode = Nothing
+        , userLocalePreferenceLocaleId = Just localeIdValue
+        , userLocalePreferenceCurrencyId = Just currencyIdValue
+        , userLocalePreferenceCountryId = countryValue
         , userLocalePreferenceUpdatedAt = now
         }
-      [ UserLocalePreferenceLocale =. localeValue
-      , UserLocalePreferenceCurrency =. currencyValue
+      [ UserLocalePreferenceLocale =. Nothing
+      , UserLocalePreferenceCurrency =. Nothing
       , UserLocalePreferenceTimezone =. timezoneValue
-      , UserLocalePreferenceCountryCode =. countryValue
+      , UserLocalePreferenceCountryCode =. Nothing
+      , UserLocalePreferenceLocaleId =. Just localeIdValue
+      , UserLocalePreferenceCurrencyId =. Just currencyIdValue
+      , UserLocalePreferenceCountryId =. countryValue
       , UserLocalePreferenceUpdatedAt =. now
       ]
     loadLocalePreferences cfg (auPartyId user)
@@ -701,36 +560,57 @@ requireSessionUser cfg pool mAuthorizationHeader mCookieHeader = do
 loadLocalePreferences :: AppConfig -> PartyId -> SqlPersistT IO LocalePreferencesDTO
 loadLocalePreferences cfg partyIdValue = do
   mStored <- getBy (UniqueUserLocalePreference partyIdValue)
-  pure $
-    case mStored of
-      Nothing -> localePreferencesFromConfig cfg
-      Just (Entity _ stored) -> LocalePreferencesDTO
-        { lpLocale = userLocalePreferenceLocale stored
-        , lpCurrency = userLocalePreferenceCurrency stored
+  case mStored of
+    Nothing -> localePreferencesFromConfig cfg
+    Just (Entity _ stored) -> do
+      (localeIdValue, localeCode) <- resolveStoredLocale stored
+      (currencyIdValue, currencyCode) <- resolveStoredCurrency stored
+      mCountry <- traverse (get . Catalog.CountryReferenceKey) (userLocalePreferenceCountryId stored)
+      let canonicalCountryCode = Catalog.countryReferenceAlpha2 <$> join mCountry
+      pure LocalePreferencesDTO
+        { lpLocaleId = localeIdValue
+        , lpLocale = localeCode
+        , lpCurrencyId = currencyIdValue
+        , lpCurrency = currencyCode
         , lpTimezone = userLocalePreferenceTimezone stored
-        , lpCountryCode = userLocalePreferenceCountryCode stored
-        , lpSupportedLocales = supportedLocales cfg
-        , lpSupportedCurrencies = supportedCurrencies cfg
+        , lpCountryId = userLocalePreferenceCountryId stored
+        , lpCountryCode = canonicalCountryCode <|> userLocalePreferenceCountryCode stored
         }
+  where
+    resolveStoredLocale stored =
+      case userLocalePreferenceLocaleId stored of
+        Nothing -> invalidStored "localeId"
+        Just identifier -> do
+          mItem <- get (Catalog.LocaleReferenceKey identifier)
+          maybe (invalidStored "localeId") (\item -> pure (identifier, Catalog.localeReferenceCode item)) mItem
+    resolveStoredCurrency stored =
+      case userLocalePreferenceCurrencyId stored of
+        Nothing -> invalidStored "currencyId"
+        Just identifier -> do
+          mItem <- get (Catalog.CurrencyReferenceKey identifier)
+          maybe (invalidStored "currencyId") (\item -> pure (identifier, Catalog.currencyReferenceCode item)) mItem
+    invalidStored fieldName =
+      liftIO . ioError . userError $
+        "Stored user locale preference is missing canonical " <> fieldName
 
-localePreferencesFromConfig :: AppConfig -> LocalePreferencesDTO
-localePreferencesFromConfig cfg = LocalePreferencesDTO
-  { lpLocale = defaultLocale cfg
-  , lpCurrency = defaultCurrency cfg
-  , lpTimezone = defaultTimezone cfg
-  , lpCountryCode = Nothing
-  , lpSupportedLocales = supportedLocales cfg
-  , lpSupportedCurrencies = supportedCurrencies cfg
-  }
-
-validateConfiguredLocale :: [Text] -> Text -> Either ServerError Text
-validateConfiguredLocale supported raw =
-  case normalizeLocaleCode raw of
-    Just locale | locale `elem` supported -> Right locale
-    _ -> Left err400
-      { errBody = BL.fromStrict $ TE.encodeUtf8 $
-          "Unsupported locale. Supported locales: " <> T.intercalate ", " supported
-      }
+localePreferencesFromConfig :: AppConfig -> SqlPersistT IO LocalePreferencesDTO
+localePreferencesFromConfig cfg = do
+  localeResult <- resolveConfiguredDefaultLocale (defaultLocale cfg)
+  currencyResult <- resolveConfiguredDefaultCurrency (defaultCurrency cfg)
+  (localeIdValue, localeCode) <- either (const (invalidDefault "locale")) pure localeResult
+  (currencyIdValue, currencyCode) <- either (const (invalidDefault "currency")) pure currencyResult
+  pure LocalePreferencesDTO
+    { lpLocaleId = localeIdValue
+    , lpLocale = localeCode
+    , lpCurrencyId = currencyIdValue
+    , lpCurrency = currencyCode
+    , lpTimezone = defaultTimezone cfg
+    , lpCountryId = Nothing
+    , lpCountryCode = Nothing
+    }
+  where
+    invalidDefault kind = liftIO . ioError . userError $
+      "Configured default " <> kind <> " is not an active deployment-enabled persisted reference"
 
 validateConfiguredCurrency :: [Text] -> Text -> Either ServerError Text
 validateConfiguredCurrency supported raw =
@@ -741,6 +621,52 @@ validateConfiguredCurrency supported raw =
           "Unsupported currency. Supported currencies: " <> T.intercalate ", " supported
       }
 
+validateActivePreferenceLocale
+  :: UUID
+  -> SqlPersistT IO (Either ServerError (UUID, Text))
+validateActivePreferenceLocale localeId = do
+  mLocale <- get (Catalog.LocaleReferenceKey localeId)
+  mEnablement <- getBy (Catalog.UniqueDeploymentLocale "default" (Catalog.LocaleReferenceKey localeId))
+  pure $ case (mLocale, mEnablement) of
+    (Just locale, Just (Entity _ enablement))
+      | Catalog.localeReferenceActive locale
+      , isNothing (Catalog.localeReferenceDeprecatedAt locale)
+      , Catalog.deploymentLocaleEnablementEnabled enablement ->
+          Right (localeId, Catalog.localeReferenceCode locale)
+    _ -> Left err400 { errBody = "localeId must reference an active deployment-enabled locale" }
+
+validateActivePreferenceCurrency
+  :: UUID
+  -> SqlPersistT IO (Either ServerError (UUID, Text))
+validateActivePreferenceCurrency currencyId = do
+  mCurrency <- get (Catalog.CurrencyReferenceKey currencyId)
+  mEnablement <- getBy (Catalog.UniqueDeploymentCurrency "default" (Catalog.CurrencyReferenceKey currencyId))
+  pure $ case (mCurrency, mEnablement) of
+    (Just currency, Just (Entity _ enablement))
+      | Catalog.currencyReferenceActive currency
+      , isNothing (Catalog.currencyReferenceDeprecatedAt currency)
+      , Catalog.deploymentCurrencyEnablementEnabled enablement ->
+          Right (currencyId, Catalog.currencyReferenceCode currency)
+    _ -> Left err400 { errBody = "currencyId must reference an active deployment-enabled currency" }
+
+resolveConfiguredDefaultLocale
+  :: Text
+  -> SqlPersistT IO (Either ServerError (UUID, Text))
+resolveConfiguredDefaultLocale code = do
+  mLocale <- getBy (Catalog.UniqueLocaleReferenceCode code)
+  case mLocale of
+    Nothing -> pure (Left err500)
+    Just (Entity (Catalog.LocaleReferenceKey localeId) _) -> validateActivePreferenceLocale localeId
+
+resolveConfiguredDefaultCurrency
+  :: Text
+  -> SqlPersistT IO (Either ServerError (UUID, Text))
+resolveConfiguredDefaultCurrency code = do
+  mCurrency <- getBy (Catalog.UniqueCurrencyReferenceCode code)
+  case mCurrency of
+    Nothing -> pure (Left err500)
+    Just (Entity (Catalog.CurrencyReferenceKey currencyId) _) -> validateActivePreferenceCurrency currencyId
+
 validateConfiguredTimezone :: Text -> Either ServerError Text
 validateConfiguredTimezone raw =
   maybe
@@ -748,12 +674,17 @@ validateConfiguredTimezone raw =
     Right
     (normalizeTimeZone raw)
 
-validateCountryCode :: Text -> Either ServerError Text
-validateCountryCode raw =
-  maybe
-    (Left err400 { errBody = "countryCode must be a two-letter ISO 3166-1 code" })
-    Right
-    (normalizeCountryCode raw)
+validateActivePreferenceCountry
+  :: Maybe UUID
+  -> SqlPersistT IO (Either ServerError (Maybe UUID))
+validateActivePreferenceCountry Nothing = pure (Right Nothing)
+validateActivePreferenceCountry requested@(Just countryId) = do
+  mCountry <- get (Catalog.CountryReferenceKey countryId)
+  pure $ case mCountry of
+    Just country
+      | Catalog.countryReferenceActive country
+      , isNothing (Catalog.countryReferenceDeprecatedAt country) -> Right requested
+    _ -> Left err400 { errBody = "countryId must reference an active country" }
 
 logoutSession :: AppM (Api.SessionCookieHeaders NoContent)
 logoutSession = do
@@ -828,36 +759,18 @@ signup SignupRequest
   , phone = rawPhone
   , password = rawPassword
   , googleIdToken = rawGoogleIdToken
-  , roles = requestedRoles
   , fanArtistIds = requestedFanArtistIds
   , claimArtistId = rawClaimArtistId
-  , internshipStartAt = rawInternshipStartAt
-  , internshipEndAt = rawInternshipEndAt
-  , internshipRequiredHours = rawInternshipRequiredHours
-  , internshipSkills = rawInternshipSkills
-  , internshipAreas = rawInternshipAreas
   } = do
   let emailInput = T.strip rawEmail
-      internshipSkillsClean = cleanOptional rawInternshipSkills
-      internshipAreasClean = cleanOptional rawInternshipAreas
   when (T.null emailInput) $ throwBadRequest "Email is required"
   emailClean <- maybe (throwBadRequest "Invalid email address") pure (normalizeAuthEmailAddress emailInput)
   either throwError pure (validateSignupGoogleIdToken rawGoogleIdToken)
   passwordClean <- either throwError pure (validateAuthPassword "Password" rawPassword)
   displayNameText <- either throwError pure (validateSignupDisplayName rawFirst rawLast)
   phoneClean <- either throwError pure (validateOptionalSignupPhone rawPhone)
-  sanitizedRoles <- either throwError pure (validateRequestedSignupRoles requestedRoles)
   claimArtistIdClean <- either throwError pure (validateOptionalSignupClaimArtistId rawClaimArtistId)
-  either throwError pure (validateSignupArtistClaimIntent sanitizedRoles claimArtistIdClean)
   sanitizedFanArtists <- either throwError pure (validateSignupFanArtistIds requestedFanArtistIds)
-  either throwError pure $
-    validateSignupInternshipFields
-      sanitizedRoles
-      rawInternshipStartAt
-      rawInternshipEndAt
-      rawInternshipRequiredHours
-      rawInternshipSkills
-      rawInternshipAreas
   now <- liftIO getCurrentTime
   Env pool cfg <- ask
   validatedFanArtistIds <-
@@ -870,14 +783,8 @@ signup SignupRequest
       passwordClean
       displayNameText
       phoneClean
-      sanitizedRoles
       validatedFanArtistIds
       claimArtistIdClean
-      rawInternshipStartAt
-      rawInternshipEndAt
-      rawInternshipRequiredHours
-      internshipSkillsClean
-      internshipAreasClean
       now
   case result of
     Left SignupEmailExists ->
@@ -886,6 +793,8 @@ signup SignupRequest
       throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 "Artist profile is not available to claim") }
     Left SignupProfileError ->
       throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 "Failed to load user profile") }
+    Left (SignupSecurityPolicyError policyError) ->
+      throwError err503 { errBody = BL.fromStrict (TE.encodeUtf8 policyError) }
     Right resp -> do
       recordAuthActivity "signup" resp
       welcomeResult <-
@@ -1393,25 +1302,41 @@ completeGoogleLogin GoogleProfile{..} = do
                 , partyEmergencyContact = Nothing
                 , partyNotes = Nothing
                 , partyStripeCustomerId = Nothing
+                , partyCountryCode = Nothing
+                , partyCountryId = Nothing
                 , partyCreatedAt = now
                 }
           pid <- insert partyRecord
-          applyRoles pid [Customer, Fan]
-          ensureFanProfileIfMissing pid displayName now
-          tempPassword <- liftIO generateTemporaryPassword
-          hashed <- liftIO (hashPasswordText tempPassword)
-          _ <- insert UserCredential
-            { userCredentialPartyId = pid
-            , userCredentialUsername = gpEmail
-            , userCredentialPasswordHash = hashed
-            , userCredentialActive = True
-            }
-          sessionToken <-
-            createReusableSessionToken pid (Just ("google-login:" <> gpEmail))
-          mUser <- loadAuthedUser sessionToken
-          case mUser of
-            Nothing -> pure (Left "No pudimos cargar tu perfil.")
-            Just user -> pure (Right (toLoginResponse sessionToken user))
+          policyResult <- applySecurityRoleAssignmentPolicy
+            "account.google.customer"
+            pid
+            True
+            (Just pid)
+            "google-auth"
+            ("google-account:" <> T.pack (show (fromSqlKey pid)))
+            now
+          case policyResult of
+            Left policyError -> do
+              transactionUndo
+              pure (Left policyError)
+            Right _ -> do
+              ensureFanProfileIfMissing pid displayName now
+              tempPassword <- liftIO generateTemporaryPassword
+              hashed <- liftIO (hashPasswordText tempPassword)
+              _ <- insert UserCredential
+                { userCredentialPartyId = pid
+                , userCredentialUsername = gpEmail
+                , userCredentialPasswordHash = hashed
+                , userCredentialActive = True
+                }
+              sessionToken <-
+                createReusableSessionToken pid (Just ("google-login:" <> gpEmail))
+              mUser <- loadAuthedUser sessionToken
+              case mUser of
+                Nothing -> do
+                  transactionUndo
+                  pure (Left "No pudimos cargar tu perfil.")
+                Just user -> pure (Right (toLoginResponse sessionToken user))
 
 runLogin :: Text -> Text -> SqlPersistT IO (Either Text LoginResponse)
 runLogin identifier pwd = do
@@ -1482,17 +1407,11 @@ runSignupDb
   -> Text
   -> Text
   -> Maybe Text
-  -> [RoleEnum]
   -> [Int64]
   -> Maybe Int64
-  -> Maybe Day
-  -> Maybe Day
-  -> Maybe Int
-  -> Maybe Text
-  -> Maybe Text
   -> UTCTime
   -> SqlPersistT IO (Either SignupDbError LoginResponse)
-runSignupDb emailVal passwordVal displayNameText phoneVal rolesVal fanArtistIdsVal mClaimArtistId internStartAt internEndAt internRequiredHours internSkills internAreas nowVal = do
+runSignupDb emailVal passwordVal displayNameText phoneVal fanArtistIdsVal mClaimArtistId nowVal = do
   existing <- signupEmailExists emailVal
   if existing
     then pure (Left SignupEmailExists)
@@ -1500,67 +1419,50 @@ runSignupDb emailVal passwordVal displayNameText phoneVal rolesVal fanArtistIdsV
       partyResult <- resolveParty displayNameText mClaimArtistId emailVal phoneVal nowVal
       case partyResult of
         Left err -> pure (Left err)
-        Right (pid, partyLabel, existingRoles) -> do
-          let rolesWithArtist =
-                if isJust mClaimArtistId && Artist `notElem` rolesVal
-                  then Artist : rolesVal
-                  else rolesVal
-              rolesToApply = nub (rolesWithArtist ++ existingRoles)
-          applyRoles pid rolesToApply
-          when (Intern `elem` rolesToApply) $
-            upsertInternProfile pid internStartAt internEndAt internRequiredHours (fmap sanitizeSignupInternshipText internSkills) (fmap sanitizeSignupInternshipText internAreas) nowVal
-          forM_ fanArtistIdsVal $ \artistId -> do
-            let artistKey = toSqlKey (fromIntegral artistId) :: Key Party
-            when (artistKey /= pid) $
-              void $ insertBy (FanFollow pid artistKey nowVal)
-          hashed <- liftIO (hashPasswordText passwordVal)
-          _ <- insert UserCredential
-            { userCredentialPartyId = pid
-            , userCredentialUsername = emailVal
-            , userCredentialPasswordHash = hashed
-            , userCredentialActive = True
-            }
-          ensureFanProfileIfMissing pid partyLabel nowVal
-          sessionToken <- createSessionToken pid emailVal
-          mUser <- loadAuthedUser sessionToken
-          case mUser of
-            Nothing -> pure (Left SignupProfileError)
-            Just user -> pure (Right (toLoginResponse sessionToken user))
-  where
-    upsertInternProfile
-      :: PartyId
-      -> Maybe Day
-      -> Maybe Day
-      -> Maybe Int
-      -> Maybe Text
-      -> Maybe Text
-      -> UTCTime
-      -> SqlPersistT IO ()
-    upsertInternProfile pid startAt endAt requiredHours skills areas nowStamp = do
-      mProfile <- getBy (ME.UniqueInternProfile pid)
-      let updates = catMaybes
-            [ fmap (ME.InternProfileStartAt =.) (fmap Just startAt)
-            , fmap (ME.InternProfileEndAt =.) (fmap Just endAt)
-            , fmap (ME.InternProfileRequiredHours =.) (fmap Just requiredHours)
-            , fmap (ME.InternProfileSkills =.) (fmap Just skills)
-            , fmap (ME.InternProfileAreas =.) (fmap Just areas)
-            ]
-      case mProfile of
-        Just (Entity key _) ->
-          unless (null updates) $
-            update key (updates ++ [ME.InternProfileUpdatedAt =. nowStamp])
-        Nothing -> do
-          _ <- insert ME.InternProfile
-            { ME.internProfilePartyId = pid
-            , ME.internProfileStartAt = startAt
-            , ME.internProfileEndAt = endAt
-            , ME.internProfileRequiredHours = requiredHours
-            , ME.internProfileSkills = skills
-            , ME.internProfileAreas = areas
-            , ME.internProfileCreatedAt = nowStamp
-            , ME.internProfileUpdatedAt = nowStamp
-            }
-          pure ()
+        Right (pid, partyLabel) -> do
+          customerPolicy <- applySecurityRoleAssignmentPolicy
+            "account.signup.customer"
+            pid
+            False
+            (Just pid)
+            "signup-api"
+            ("signup:" <> T.pack (show (fromSqlKey pid)))
+            nowVal
+          artistPolicy <- case (customerPolicy, mClaimArtistId) of
+            (Right _, Just _) -> applySecurityRoleAssignmentPolicy
+              "artist.verified-claim.artist"
+              pid
+              True
+              (Just pid)
+              "signup-api"
+              ("artist-claim:" <> T.pack (show (fromSqlKey pid)))
+              nowVal
+            (Right _, Nothing) -> pure (Right Customer)
+            (Left policyError, _) -> pure (Left policyError)
+          case customerPolicy *> artistPolicy of
+            Left policyError -> do
+              transactionUndo
+              pure (Left (SignupSecurityPolicyError policyError))
+            Right _ -> do
+              forM_ fanArtistIdsVal $ \artistId -> do
+                let artistKey = toSqlKey (fromIntegral artistId) :: Key Party
+                when (artistKey /= pid) $
+                  void $ insertBy (FanFollow pid artistKey nowVal)
+              hashed <- liftIO (hashPasswordText passwordVal)
+              _ <- insert UserCredential
+                { userCredentialPartyId = pid
+                , userCredentialUsername = emailVal
+                , userCredentialPasswordHash = hashed
+                , userCredentialActive = True
+                }
+              ensureFanProfileIfMissing pid partyLabel nowVal
+              sessionToken <- createSessionToken pid emailVal
+              mUser <- loadAuthedUser sessionToken
+              case mUser of
+                Nothing -> do
+                  transactionUndo
+                  pure (Left SignupProfileError)
+                Just user -> pure (Right (toLoginResponse sessionToken user))
 
 resolveParty
   :: Text
@@ -1568,7 +1470,7 @@ resolveParty
   -> Text
   -> Maybe Text
   -> UTCTime
-  -> SqlPersistT IO (Either SignupDbError (PartyId, Text, [RoleEnum]))
+  -> SqlPersistT IO (Either SignupDbError (PartyId, Text))
 resolveParty displayNameText Nothing emailVal phoneVal nowVal = do
   let partyRecord = Party
         { partyLegalName = Nothing
@@ -1582,10 +1484,12 @@ resolveParty displayNameText Nothing emailVal phoneVal nowVal = do
         , partyEmergencyContact = Nothing
         , partyNotes = Nothing
         , partyStripeCustomerId = Nothing
+        , partyCountryCode = Nothing
+        , partyCountryId = Nothing
         , partyCreatedAt = nowVal
         }
   pid <- insert partyRecord
-  pure (Right (pid, displayNameText, []))
+  pure (Right (pid, displayNameText))
 resolveParty _ (Just artistId) emailVal phoneVal _ = do
   let artistKey = toSqlKey (fromIntegral artistId) :: Key Party
   mProfile <- getBy (UniqueArtistProfile artistKey)
@@ -1614,13 +1518,7 @@ resolveParty _ (Just artistId) emailVal phoneVal _ = do
                            ]
                   unless (null updates) $
                     update artistKey updates
-                  activeRoles <-
-                    selectList
-                      [PartyRolePartyId ==. artistKey, PartyRoleActive ==. True]
-                      []
-                  let existingRoles = map (partyRoleRole . entityVal) activeRoles
-                      label = M.partyDisplayName party
-                  pure (Right (artistKey, label, existingRoles))
+                  pure (Right (artistKey, M.partyDisplayName party))
 
 runChangePassword
   :: Text
@@ -1808,16 +1706,6 @@ cleanOptional Nothing = Nothing
 cleanOptional (Just raw) =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
-
-applyRoles :: PartyId -> [RoleEnum] -> SqlPersistT IO ()
-applyRoles partyKey rolesList = do
-  existing <- selectList [PartyRolePartyId ==. partyKey] []
-  let desired = Set.fromList rolesList
-  forM_ (Set.toList desired) $ \role ->
-    void $ upsert (PartyRole partyKey role True) [PartyRoleActive =. True]
-  forM_ existing $ \(Entity roleId record) ->
-    when (partyRoleActive record && Set.notMember (partyRoleRole record) desired) $
-      update roleId [PartyRoleActive =. False]
 
 throwBadRequest :: Text -> AppM a
 throwBadRequest msg = throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }

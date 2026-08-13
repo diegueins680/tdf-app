@@ -8,7 +8,9 @@ import Control.Applicative ((<|>))
 import Control.Monad (forM, forM_, unless, void, when)
 import Control.Monad.IO.Class (liftIO)
 import Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
+import Crypto.Hash (Digest, SHA256, hash)
 import Data.Aeson (FromJSON, Value, decode, object, withObject, (.:), (.=))
+import qualified Data.Aeson.Key as AesonKey
 import Data.Aeson.Types (parseMaybe)
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map.Strict as Map
@@ -29,12 +31,12 @@ import Database.Persist.Sql
 import GHC.Generics (Generic)
 import System.Directory (doesFileExist)
 import System.Environment (getEnvironment, lookupEnv)
-import qualified TDF.CMS.Models as CMS
+import TDF.Catalog.Security (ensureBootstrapSecurityRole, hasCanonicalPartyRole)
+import qualified TDF.Catalog.Models as Catalog
 import TDF.Config (resolveAppBase)
 import TDF.Models
 import TDF.ModelsExtra (DropdownOption (..))
 import qualified TDF.ModelsExtra as ME
-import TDF.Pipelines (canonicalStage, defaultStage)
 import qualified TDF.Trials.Models as Trials
 
 -- Seed data from Diego's YAML (normalized)
@@ -65,10 +67,7 @@ seedAll = do
             ]
     teacherPairs <- forM teachers $ \(disp, mlegal) -> do
         pid <- ensurePartyRecord now disp mlegal
-        _ <-
-            upsert
-                (PartyRole pid Teacher True)
-                [PartyRoleActive =. True]
+        void $ requireBootstrapRole now pid Teacher
         pure (disp, pid)
 
     -- Service Catalog
@@ -84,42 +83,6 @@ seedAll = do
             , ("Producción de eventos", EventProduction, Quote, Nothing, Just 1200, "USD", Nothing)
             ]
     mapM_ ensureServiceCatalog svcSeeds
-
-    -- Pipelines: seed sample cards for Mixing/Mastering
-    let pipelineSeeds =
-            [ (Mixing, "Arkabuz - Single A", Just "Arkabuz", Just "Brief", 10)
-            , (Mixing, "Quimika - EP", Just "Quimika Soul", Just "Prep", 20)
-            , (Mastering, "Skanka Fe - LP", Just "Skanka Fe", Just "v1", 10)
-            , (Mastering, "El Bloque - Single", Just "El Bloque", Just "Approved", 20)
-            ]
-        ensurePipelineCard ::
-            (ServiceKind, Text, Maybe Text, Maybe Text, Int) ->
-            SqlPersistT IO ()
-        ensurePipelineCard (kind, titleTxt, artistTxt, stageTxt, sortOrder) = do
-            existing <-
-                selectFirst
-                    [ ME.PipelineCardServiceKind ==. kind
-                    , ME.PipelineCardTitle ==. titleTxt
-                    ]
-                    []
-            case existing of
-                Just _ -> pure ()
-                Nothing -> do
-                    let stageValue = maybe (defaultStage kind) id (stageTxt >>= canonicalStage kind)
-                    _ <-
-                        insert
-                            ME.PipelineCard
-                                { ME.pipelineCardServiceKind = kind
-                                , ME.pipelineCardTitle = titleTxt
-                                , ME.pipelineCardArtist = artistTxt
-                                , ME.pipelineCardStage = stageValue
-                                , ME.pipelineCardSortOrder = sortOrder
-                                , ME.pipelineCardNotes = Nothing
-                                , ME.pipelineCardCreatedAt = now
-                                , ME.pipelineCardUpdatedAt = now
-                                }
-                    pure ()
-    mapM_ ensurePipelineCard pipelineSeeds
 
     -- Package Product: Guitar 24h
     _ <-
@@ -145,6 +108,53 @@ seedAll = do
             Nothing -> do
                 rid <- insert $ Resource r (slugify r) Room Nothing True
                 pure (r, rid)
+
+    -- Booking defaults are relationships, not service-name heuristics. `all`
+    -- reserves every configured room; `first-available` chooses one ordered
+    -- alternative. Missing service/resource rows are left for startup
+    -- integrity validation instead of being guessed from copied labels.
+    let serviceResourceDefaults =
+            [ ("band-recording", "Live Room", "all", 10)
+            , ("band-recording", "Control Room", "all", 20)
+            , ("voice-recording", "Booth A", "all", 10)
+            , ("voice-recording", "Control Room", "all", 20)
+            , ("recording", "Studio A", "all", 10)
+            , ("recording", "Control Room", "all", 20)
+            , ("audiovisual-live-recording", "Live Room", "all", 10)
+            , ("audiovisual-live-recording", "Control Room", "all", 20)
+            , ("podcast-recording", "Studio A", "all", 10)
+            , ("podcast-recording", "Control Room", "all", 20)
+            , ("mixing", "Control Room", "all", 10)
+            , ("mastering", "Control Room", "all", 10)
+            , ("rehearsal", "Rehearsal 1", "all", 10)
+            , ("dj-booth-practice", "Booth A", "first-available", 10)
+            , ("dj-booth-practice", "Booth B", "first-available", 20)
+            , ("dj-booth-practice", "Booth C", "first-available", 30)
+            , ("dj-booth-practice", "Booth D", "first-available", 40)
+            ]
+    forM_ serviceResourceDefaults $ \(serviceCode, roomName, selectionMode, sortOrder) -> do
+        mOffering <- getBy (Catalog.UniqueServiceOfferingCode serviceCode)
+        mSelectionMode <- getBy (Catalog.UniqueServiceResourceSelectionModeCode selectionMode)
+        case (mOffering, lookup roomName roomPairs, mSelectionMode) of
+            (Just (Entity offeringId _), Just roomId, Just (Entity selectionModeId _)) -> do
+                let defaultResource = Catalog.ServiceOfferingDefaultResource
+                        { Catalog.serviceOfferingDefaultResourceServiceOfferingId = offeringId
+                        , Catalog.serviceOfferingDefaultResourceResourceId = roomId
+                        , Catalog.serviceOfferingDefaultResourceSelectionModeId = Just selectionModeId
+                        , Catalog.serviceOfferingDefaultResourceLegacySelectionModeCode = Nothing
+                        , Catalog.serviceOfferingDefaultResourceSortOrder = sortOrder
+                        , Catalog.serviceOfferingDefaultResourceActive = True
+                        , Catalog.serviceOfferingDefaultResourceVersion = 1
+                        }
+                void $ upsertBy
+                    (Catalog.UniqueServiceOfferingDefaultResource offeringId roomId)
+                    defaultResource
+                    [ Catalog.ServiceOfferingDefaultResourceSelectionModeId =. Just selectionModeId
+                    , Catalog.ServiceOfferingDefaultResourceLegacySelectionModeCode =. Nothing
+                    , Catalog.ServiceOfferingDefaultResourceSortOrder =. sortOrder
+                    , Catalog.ServiceOfferingDefaultResourceActive =. True
+                    ]
+            _ -> pure ()
 
     -- Subjects and room availability preferences
     let subjectSeeds =
@@ -223,10 +233,7 @@ seedAll = do
         case mTdfOwnerCred of
             Just (Entity _ cred) -> do
                 let tdfPid = userCredentialPartyId cred
-                _ <- upsert (PartyRole tdfPid Manager True) [PartyRoleActive =. True]
-                _ <- upsert (PartyRole tdfPid Fan True) [PartyRoleActive =. True]
-                _ <- upsert (PartyRole tdfPid Customer True) [PartyRoleActive =. True]
-                pure ()
+                mapM_ (void . requireBootstrapRole now tdfPid) [Manager, Fan, Customer]
             Nothing -> pure ()
 
     -- Dropdown options for admin-managed metadata
@@ -246,7 +253,7 @@ seedAll = do
     seedInventoryAssets
     seedMarketplaceListings
     seedProductionCourse now
-    seedRecordsCmsContent now
+    seedRecordsCatalogDefaults now
     seedHolgerSession now
     seedAcademy now
     seedArtistProfiles now
@@ -270,7 +277,6 @@ seedVerde70FanClub now = do
                 [ ArtistProfileSlug =. Just slugVal
                 , ArtistProfileBio =. Just "Verde 70 es una banda de rock ecuatoriana icónica."
                 , ArtistProfileCity =. Just "Quito"
-                , ArtistProfileGenres =. Just "Rock"
                 , ArtistProfileUpdatedAt =. Just now
                 ]
         Nothing -> do
@@ -286,13 +292,16 @@ seedVerde70FanClub now = do
                 , artistProfileYoutubeUrl       = Nothing
                 , artistProfileWebsiteUrl       = Nothing
                 , artistProfileFeaturedVideoUrl = Nothing
-                , artistProfileGenres           = Just "Rock"
+                , artistProfileGenres           = Nothing
                 , artistProfileHighlights       = Nothing
                 , artistProfileStripeAccountId  = Nothing
+                , artistProfileCountryCode       = Just "EC"
+                , artistProfileCountryId         = Nothing
                 , artistProfileCreatedAt        = now
                 , artistProfileUpdatedAt        = Just now
                 }
             pure ()
+    seedArtistProfileGenres partyId ["rock"] now
 
     -- Ensure FanClub exists
     mExistingClub <- getBy (UniqueFanClubArtist partyId)
@@ -329,23 +338,23 @@ seedVerde70FanClub now = do
 seedArtistProfiles :: UTCTime -> SqlPersistT IO ()
 seedArtistProfiles now = do
     let artistSeeds =
-            [ ("Arkabuz", "arkabuz", "Arkabuz es una banda de rock ecuatoriana.", "Quito", "Rock",
+            [ ("Arkabuz", "arkabuz", "Arkabuz es una banda de rock ecuatoriana.", "Quito", ["rock"],
                Just "7EKiobrkUCtCwYUR1FwFsF", Just "https://open.spotify.com/artist/7EKiobrkUCtCwYUR1FwFsF",
                "https://i.scdn.co/image/ab6761610000e5eb7a769c9dd8bb01f2fe1d37aa")
-            , ("El Bloque", "el-bloque", "El Bloque es una banda de hip-hop/rap ecuatoriana.", "Quito", "Hip-Hop, Rap",
+            , ("El Bloque", "el-bloque", "El Bloque es una banda de hip-hop/rap ecuatoriana.", "Quito", ["hip-hop", "rap"],
                Just "2OXYl5DhQiIdq7ZeEULwRb", Just "https://open.spotify.com/artist/2OXYl5DhQiIdq7ZeEULwRb",
                "https://i.scdn.co/image/ab6761610000e5eb15c68c09518671450cc315f1")
-            , ("Skanka Fe", "skankafe", "Skankafe es una banda de ska/reggae ecuatoriana.", "Quito", "Ska, Reggae",
+            , ("Skanka Fe", "skankafe", "Skankafe es una banda de ska/reggae ecuatoriana.", "Quito", ["ska", "reggae"],
                Just "6348Nu8zc4gZC8vtHzPP8R", Just "https://open.spotify.com/artist/6348Nu8zc4gZC8vtHzPP8R",
                "https://i.scdn.co/image/ab6761610000e5eb172b1792c8a9096500cbceb0")
-            , ("Quimika Soul", "quimika-soul", "Quimika Soul es una banda de funk/rock ecuatoriana.", "Quito", "Funk, Rock",
+            , ("Quimika Soul", "quimika-soul", "Quimika Soul es una banda de funk/rock ecuatoriana.", "Quito", ["funk", "rock"],
                Just "2xlnbhQSBznvnZukbEFywd", Just "https://open.spotify.com/artist/2xlnbhQSBznvnZukbEFywd",
                "https://i.scdn.co/image/ab6761610000e5eb4918df2d6a21f0388e1c092e")
-            , ("Juano Ledesma", "juano-ledesma", "Juano Ledesma es un artista y productor musical ecuatoriano.", "Quito", "Hip-Hop, Rap",
+            , ("Juano Ledesma", "juano-ledesma", "Juano Ledesma es un artista y productor musical ecuatoriano.", "Quito", ["hip-hop", "rap"],
                Just "5Cg387QPuHlwM5z4Sze4JS", Just "https://open.spotify.com/artist/5Cg387QPuHlwM5z4Sze4JS",
                "https://i.scdn.co/image/ab6761610000e5eb37e1fe32d15f7741170599df")
             ]
-    forM_ artistSeeds $ \(disp, slugVal, bio, city, genres, mSpotifyId, mSpotifyUrl, imgUrl) -> do
+    forM_ artistSeeds $ \(disp, slugVal, bio, city, genreCodes, mSpotifyId, mSpotifyUrl, imgUrl) -> do
         partyId <- ensurePartyRecord now disp Nothing
         mExistingProfile <- getBy (UniqueArtistProfile partyId)
         case mExistingProfile of
@@ -354,7 +363,6 @@ seedArtistProfiles now = do
                     [ ArtistProfileSlug =. Just slugVal
                     , ArtistProfileBio =. Just bio
                     , ArtistProfileCity =. Just city
-                    , ArtistProfileGenres =. Just genres
                     , ArtistProfileHeroImageUrl =. Just imgUrl
                     , ArtistProfileSpotifyArtistId =. mSpotifyId
                     , ArtistProfileSpotifyUrl =. mSpotifyUrl
@@ -373,13 +381,16 @@ seedArtistProfiles now = do
                     , artistProfileYoutubeUrl       = Nothing
                     , artistProfileWebsiteUrl       = Nothing
                     , artistProfileFeaturedVideoUrl = Nothing
-                    , artistProfileGenres           = Just genres
+                    , artistProfileGenres           = Nothing
                     , artistProfileHighlights       = Nothing
                     , artistProfileStripeAccountId  = Nothing
+                    , artistProfileCountryCode       = Just "EC"
+                    , artistProfileCountryId         = Nothing
                     , artistProfileCreatedAt        = now
                     , artistProfileUpdatedAt        = Just now
                     }
                 pure ()
+        seedArtistProfileGenres partyId genreCodes now
     -- Update Verde 70 with Spotify image and data
     mVerde70Party <- selectFirst [PartyDisplayName ==. "Verde 70"] []
     case mVerde70Party of
@@ -396,6 +407,21 @@ seedArtistProfiles now = do
                 Nothing -> pure ()
         Nothing -> pure ()
     liftIO $ putStrLn "Seeded artist profiles for Arkabuz, El Bloque, Skankafe, Quimika Soul, Juano Ledesma, and Verde 70."
+
+seedArtistProfileGenres :: PartyId -> [Text] -> UTCTime -> SqlPersistT IO ()
+seedArtistProfileGenres partyId genreCodes now =
+    forM_ (zip [0 :: Int ..] genreCodes) $ \(position, genreCode) -> do
+        mGenre <- getBy (Catalog.UniqueGenreCode genreCode)
+        case mGenre of
+            Nothing -> liftIO $ fail ("Missing persisted genre seed: " <> T.unpack genreCode)
+            Just (Entity (Catalog.GenreKey genreId) _) -> do
+                _ <- insertUnique ArtistProfileGenreMembership
+                    { artistProfileGenreMembershipArtistPartyId = partyId
+                    , artistProfileGenreMembershipGenreId = genreId
+                    , artistProfileGenreMembershipSortOrder = position
+                    , artistProfileGenreMembershipCreatedAt = now
+                    }
+                pure ()
 
 slugify :: Text -> Text
 slugify = T.toLower . T.replace " " "-"
@@ -520,106 +546,33 @@ seedProductionCourse now = do
                 , Trials.courseSyllabusItemOrder = Just idx
                 }
 
-data CmsSeed = CmsSeed
-    { cmsSeedSlug :: Text
-    , cmsSeedLocale :: Text
-    , cmsSeedTitle :: Text
-    , cmsSeedPayload :: Value
-    }
-
-seedRecordsCmsContent :: UTCTime -> SqlPersistT IO ()
-seedRecordsCmsContent now =
-    mapM_
-        (ensurePublishedCmsSeed now)
-        [ CmsSeed
-            { cmsSeedSlug = "records-releases"
-            , cmsSeedLocale = "es"
-            , cmsSeedTitle = "RELEASES by TDF"
-            , cmsSeedPayload =
-                object
-                    [ "playlistName" .= ("RELEASES by TDF" :: Text)
-                    , "seedVersion" .= (3 :: Int)
-                    , "playlistUrl" .= recordsReleasesPlaylistUrl
-                    , "cover" .= recordsReleasesCover
-                    , "playlistCover" .= recordsReleasesCover
-                    , "tracks" .= recordsReleaseTracks
-                    ]
-            }
-        , CmsSeed
-            { cmsSeedSlug = "records-recordings"
-            , cmsSeedLocale = "es"
-            , cmsSeedTitle = "Videos recientes TDF Records"
-            , cmsSeedPayload =
-                object
-                    [ "channelName" .= ("TDF Records" :: Text)
-                    , "channelUrl" .= ("https://www.youtube.com/@tdf.records" :: Text)
-                    , "seedVersion" .= (1 :: Int)
-                    , "videos" .= recordsRecordingVideos
-                    ]
-            }
-        , CmsSeed
-            { cmsSeedSlug = "records-sessions"
-            , cmsSeedLocale = "es"
-            , cmsSeedTitle = "TDF Live Sessions"
-            , cmsSeedPayload =
-                object
-                    [ "playlistUrl" .= ("https://www.youtube.com/watch?v=9387ent0ELc&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP" :: Text)
-                    , "videos"
-                        .= [ object
-                                [ "title" .= ("Holger Quiñonez - TDF Live Sessions E05" :: Text)
-                                , "guests" .= ("Holger Quiñonez" :: Text)
-                                , "youtubeId" .= ("9387ent0ELc" :: Text)
-                                , "url" .= ("https://www.youtube.com/watch?v=9387ent0ELc&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP" :: Text)
-                                , "duration" .= ("05:56" :: Text)
-                                , "description" .= ("Sesión en vivo de Holger Quiñonez para TDF Live Sessions." :: Text)
-                                , "sortOrder" .= (1 :: Int)
-                                ]
-                           , object
-                                [ "title" .= ("Categal - TDF Live Sessions E04" :: Text)
-                                , "guests" .= ("Categal" :: Text)
-                                , "youtubeId" .= ("5SpnEELSNqw" :: Text)
-                                , "url" .= ("https://www.youtube.com/watch?v=5SpnEELSNqw&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP" :: Text)
-                                , "duration" .= ("18:47" :: Text)
-                                , "description" .= ("Sesión en vivo de Categal para TDF Live Sessions." :: Text)
-                                , "sortOrder" .= (2 :: Int)
-                                ]
-                           , object
-                                [ "title" .= ("Los Morrison - TDF Live Sessions E03" :: Text)
-                                , "guests" .= ("Los Morrison" :: Text)
-                                , "youtubeId" .= ("97PnHRn8IGs" :: Text)
-                                , "url" .= ("https://www.youtube.com/watch?v=97PnHRn8IGs&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP" :: Text)
-                                , "duration" .= ("33:19" :: Text)
-                                , "description" .= ("Sesión en vivo de Los Morrison para TDF Live Sessions." :: Text)
-                                , "sortOrder" .= (3 :: Int)
-                                ]
-                           , object
-                                [ "title" .= ("Barrelshots - TDF Live Sessions E02" :: Text)
-                                , "guests" .= ("Barrelshots" :: Text)
-                                , "youtubeId" .= ("e24-id_Ix8s" :: Text)
-                                , "url" .= ("https://www.youtube.com/watch?v=e24-id_Ix8s&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP" :: Text)
-                                , "duration" .= ("11:36" :: Text)
-                                , "description" .= ("Sesión en vivo de Barrelshots para TDF Live Sessions." :: Text)
-                                , "sortOrder" .= (4 :: Int)
-                                ]
-                           , object
-                                [ "title" .= ("Machaka - TDF Live Sessions E01" :: Text)
-                                , "guests" .= ("Machaka" :: Text)
-                                , "youtubeId" .= ("z7RpdrL4P4A" :: Text)
-                                , "url" .= ("https://www.youtube.com/watch?v=z7RpdrL4P4A&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP" :: Text)
-                                , "duration" .= ("14:58" :: Text)
-                                , "description" .= ("Sesión en vivo de Machaka para TDF Live Sessions." :: Text)
-                                , "sortOrder" .= (5 :: Int)
-                                ]
-                           ]
-                    ]
-            }
-        ]
+-- Bootstrap data is used only when SEED_DB is explicitly enabled for a new
+-- installation. Existing deployments are migrated from cms_content by the
+-- reviewed Records backfill and never refreshed from this code at startup.
+seedRecordsCatalogDefaults :: UTCTime -> SqlPersistT IO ()
+seedRecordsCatalogDefaults now = do
+    seedNormalizedRecords now recordsReleaseTracks recordsRecordingVideos recordsSessionVideos
   where
-    recordsReleasesPlaylistUrl :: Text
-    recordsReleasesPlaylistUrl = "https://open.spotify.com/playlist/4FSMAk7z9GFk4pUH9Uffbt"
+    recordsSessionVideos :: [Value]
+    recordsSessionVideos =
+        [ sessionVideo 1 "Holger Quiñonez - TDF Live Sessions E05" "Holger Quiñonez" "9387ent0ELc" "05:56"
+        , sessionVideo 2 "Categal - TDF Live Sessions E04" "Categal" "5SpnEELSNqw" "18:47"
+        , sessionVideo 3 "Los Morrison - TDF Live Sessions E03" "Los Morrison" "97PnHRn8IGs" "33:19"
+        , sessionVideo 4 "Barrelshots - TDF Live Sessions E02" "Barrelshots" "e24-id_Ix8s" "11:36"
+        , sessionVideo 5 "Machaka - TDF Live Sessions E01" "Machaka" "z7RpdrL4P4A" "14:58"
+        ]
 
-    recordsReleasesCover :: Text
-    recordsReleasesCover = "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da844452c00a761b4307854c4c9a"
+    sessionVideo :: Int -> Text -> Text -> Text -> Text -> Value
+    sessionVideo sortOrder title guests youtubeId duration =
+        object
+            [ "title" .= title
+            , "guests" .= guests
+            , "youtubeId" .= youtubeId
+            , "url" .= ("https://www.youtube.com/watch?v=" <> youtubeId <> "&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP")
+            , "duration" .= duration
+            , "description" .= ("Sesión en vivo de " <> guests <> " para TDF Live Sessions.")
+            , "sortOrder" .= sortOrder
+            ]
 
     recordsRecordingVideos :: [Value]
     recordsRecordingVideos =
@@ -719,9 +672,10 @@ seedRecordsCmsContent now =
     spotifyTrack sortOrder title artist trackId durationMs coverUrl =
         let spotifyUrl = "https://open.spotify.com/track/" <> trackId
          in object
-                [ "title" .= title
-                , "artist" .= artist
-                , "durationMs" .= durationMs
+            [ "title" .= title
+            , "artist" .= artist
+            , "trackId" .= trackId
+            , "durationMs" .= durationMs
                 , "duration" .= formatSpotifyDuration durationMs
                 , "spotifyUrl" .= spotifyUrl
                 , "url" .= spotifyUrl
@@ -770,51 +724,228 @@ seedRecordsCmsContent now =
             pad n = if n < 10 then "0" <> show n else show n
          in T.pack (show minutes <> ":" <> pad seconds)
 
-ensurePublishedCmsSeed :: UTCTime -> CmsSeed -> SqlPersistT IO ()
-ensurePublishedCmsSeed now CmsSeed{..} = do
-    mExisting <-
-        selectFirst
-            [ CMS.CmsContentSlug ==. cmsSeedSlug
-            , CMS.CmsContentLocale ==. cmsSeedLocale
-            ]
-            []
-    case mExisting of
-        Just (Entity cid existing) ->
-            when (shouldRefreshCmsSeed existing) $
-                update
-                    cid
-                    [ CMS.CmsContentStatus =. "published"
-                    , CMS.CmsContentTitle =. Just cmsSeedTitle
-                    , CMS.CmsContentPayload =. Just (CMS.AesonValue cmsSeedPayload)
-                    , CMS.CmsContentUpdatedAt =. now
-                    , CMS.CmsContentPublishedAt =. Just now
-                    ]
-        Nothing ->
-            insert_
-                CMS.CmsContent
-                    { CMS.cmsContentSlug = cmsSeedSlug
-                    , CMS.cmsContentLocale = cmsSeedLocale
-                    , CMS.cmsContentVersion = 1
-                    , CMS.cmsContentStatus = "published"
-                    , CMS.cmsContentTitle = Just cmsSeedTitle
-                    , CMS.cmsContentPayload = Just (CMS.AesonValue cmsSeedPayload)
-                    , CMS.cmsContentCreatedBy = Nothing
-                    , CMS.cmsContentCreatedAt = now
-                    , CMS.cmsContentUpdatedAt = now
-                    , CMS.cmsContentPublishedAt = Just now
-                    }
-  where
-    shouldRefreshCmsSeed existing =
-        case cmsSeedPayloadVersion cmsSeedPayload of
-            Nothing -> False
-            Just nextVersion ->
-                cmsSeedPayloadVersion
-                    (maybe (object []) CMS.unAesonValue (CMS.cmsContentPayload existing))
-                    /= Just nextVersion
+data NormalizedReleaseSeed = NormalizedReleaseSeed
+    { normalizedReleaseTitle :: Text
+    , normalizedReleaseArtist :: Text
+    , normalizedReleaseTrackId :: Text
+    , normalizedReleaseUrl :: Text
+    , normalizedReleaseDurationMs :: Int
+    , normalizedReleaseCover :: Text
+    , normalizedReleaseSortOrder :: Int
+    }
 
-cmsSeedPayloadVersion :: Value -> Maybe Int
-cmsSeedPayloadVersion =
-    parseMaybe (withObject "CmsSeedPayload" (.: "seedVersion"))
+data NormalizedVideoSeed = NormalizedVideoSeed
+    { normalizedVideoTitle :: Text
+    , normalizedVideoContributor :: Text
+    , normalizedVideoYoutubeId :: Text
+    , normalizedVideoUrl :: Text
+    , normalizedVideoDuration :: Text
+    , normalizedVideoDescription :: Text
+    , normalizedVideoSortOrder :: Int
+    }
+
+seedNormalizedRecords :: UTCTime -> [Value] -> [Value] -> [Value] -> SqlPersistT IO ()
+seedNormalizedRecords now releaseValues recordingValues sessionValues = do
+    releases <- parseSeedValues "record release" parseReleaseSeed releaseValues
+    recordings <- parseSeedValues "recording" (parseVideoSeed "artist") recordingValues
+    sessions <- parseSeedValues "recording session" (parseVideoSeed "guests") sessionValues
+    seedRecordsCollections now
+    mapM_ (seedReleaseRecord now) releases
+    mapM_ (seedVideoRecording now) recordings
+    mapM_ (seedVideoSession now) sessions
+
+parseSeedValues :: Text -> (Value -> Maybe value) -> [Value] -> SqlPersistT IO [value]
+parseSeedValues label parser values =
+    forM values $ \value ->
+        case parser value of
+            Just parsed -> pure parsed
+            Nothing -> liftIO $ ioError (userError ("Invalid persisted " <> T.unpack label <> " seed payload"))
+
+parseReleaseSeed :: Value -> Maybe NormalizedReleaseSeed
+parseReleaseSeed =
+    parseMaybe $ withObject "NormalizedReleaseSeed" $ \row ->
+        NormalizedReleaseSeed
+            <$> row .: "title"
+            <*> row .: "artist"
+            <*> row .: "trackId"
+            <*> row .: "spotifyUrl"
+            <*> row .: "durationMs"
+            <*> row .: "cover"
+            <*> row .: "sortOrder"
+
+parseVideoSeed :: Text -> Value -> Maybe NormalizedVideoSeed
+parseVideoSeed contributorField =
+    parseMaybe $ withObject "NormalizedVideoSeed" $ \row ->
+        NormalizedVideoSeed
+            <$> row .: "title"
+            <*> row .: AesonKey.fromText contributorField
+            <*> row .: "youtubeId"
+            <*> row .: "url"
+            <*> row .: "duration"
+            <*> row .: "description"
+            <*> row .: "sortOrder"
+
+seedRecordsCollections :: UTCTime -> SqlPersistT IO ()
+seedRecordsCollections now = do
+    forM_ collections $ \(code, collectionType, nameEs, nameEn, descriptionEs, descriptionEn, sortOrder) ->
+        rawExecute
+            "INSERT INTO editorial_collection (catalog_id, code, collection_type, name_es, name_en, description_es, description_en, public_route, sort_order, active, workflow_state_id, created_at, updated_at, published_revision, version) SELECT catalog.id, ?, ?, ?, ?, ?, ?, '/records', ?, TRUE, state.id, ?, ?, 1, 1 FROM catalog_definition catalog JOIN workflow_state state ON state.workflow_id=catalog.workflow_id AND state.code='published' WHERE catalog.code='editorial-collections' ON CONFLICT (code) DO NOTHING"
+            [ PersistText code, PersistText collectionType, PersistText nameEs, PersistText nameEn
+            , PersistText descriptionEs, PersistText descriptionEn, PersistInt64 (fromIntegral sortOrder)
+            , PersistUTCTime now, PersistUTCTime now
+            ]
+    seedCollectionResource now "tdf-records-releases" "spotify" "playlist" "4FSMAk7z9GFk4pUH9Uffbt" "https://open.spotify.com/playlist/4FSMAk7z9GFk4pUH9Uffbt" (Just "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da844452c00a761b4307854c4c9a") "playlist"
+    seedCollectionResource now "tdf-records-recordings" "youtube" "channel" "@tdf.records" "https://www.youtube.com/@tdf.records" Nothing "channel"
+    seedCollectionResource now "tdf-records-sessions" "youtube" "playlist" "PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP" "https://www.youtube.com/playlist?list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP" Nothing "playlist"
+  where
+    collections :: [(Text, Text, Text, Text, Text, Text, Int)]
+    collections =
+        [ ("tdf-records-releases", "release", "RELEASES by TDF", "RELEASES by TDF", "Lanzamientos oficiales del sello.", "Official label releases.", 10)
+        , ("tdf-records-recordings", "recording", "Videos recientes TDF Records", "Recent TDF Records videos", "Grabaciones publicadas por TDF Records.", "Recordings published by TDF Records.", 20)
+        , ("tdf-records-sessions", "session", "TDF Live Sessions", "TDF Live Sessions", "Sesiones en vivo publicadas por TDF.", "Live sessions published by TDF.", 30)
+        ]
+
+seedCollectionResource :: UTCTime -> Text -> Text -> Text -> Text -> Text -> Maybe Text -> Text -> SqlPersistT IO ()
+seedCollectionResource now collectionCode providerCode resourceKind externalCode canonicalUrl thumbnail relationKind = do
+    seedExternalResource now providerCode resourceKind externalCode canonicalUrl Nothing thumbnail
+    rawExecute
+        "INSERT INTO collection_external_resource (collection_id, resource_id, relation_kind, sort_order, primary_resource) SELECT collection.id, resource.id, ?, 0, TRUE FROM editorial_collection collection JOIN external_provider provider ON provider.code=? JOIN record_external_resource resource ON resource.provider_id=provider.id AND resource.resource_kind=? AND resource.external_code=? WHERE collection.code=? ON CONFLICT (collection_id, resource_id, relation_kind) DO NOTHING"
+        [PersistText relationKind, PersistText providerCode, PersistText resourceKind, PersistText externalCode, PersistText collectionCode]
+
+seedReleaseRecord :: UTCTime -> NormalizedReleaseSeed -> SqlPersistT IO ()
+seedReleaseRecord now NormalizedReleaseSeed{..} = do
+    let releaseCode = "spotify-release-" <> normalizedReleaseTrackId
+        recordingCode = "spotify-recording-" <> normalizedReleaseTrackId
+        contributorCode = recordContributorCode normalizedReleaseArtist
+    seedRecordContributor now contributorCode normalizedReleaseArtist "credited-ensemble"
+    rawExecute
+        "INSERT INTO record_release (catalog_id, code, release_type_id, title_es, title_en, current_slug, sort_order, active, workflow_state_id, created_at, updated_at, published_revision, usage_count, version) SELECT catalog.id, ?, release_type.id, ?, ?, ?, ?, TRUE, state.id, ?, ?, 1, 0, 1 FROM catalog_definition catalog JOIN workflow_state state ON state.workflow_id=catalog.workflow_id AND state.code='published' JOIN release_type_reference release_type ON release_type.code='single' AND release_type.active WHERE catalog.code='records-releases' ON CONFLICT (code) DO NOTHING"
+        [ PersistText releaseCode, PersistText normalizedReleaseTitle, PersistText normalizedReleaseTitle, PersistText releaseCode
+        , PersistInt64 (fromIntegral normalizedReleaseSortOrder), PersistUTCTime now, PersistUTCTime now
+        ]
+    rawExecute
+        "INSERT INTO recording (catalog_id, code, recording_type_id, title_es, title_en, duration_ms, current_slug, sort_order, active, workflow_state_id, created_at, updated_at, published_revision, usage_count, version) SELECT catalog.id, ?, recording_type.id, ?, ?, ?, ?, ?, TRUE, state.id, ?, ?, 1, 0, 1 FROM catalog_definition catalog JOIN workflow_state state ON state.workflow_id=catalog.workflow_id AND state.code='published' JOIN recording_type_reference recording_type ON recording_type.code='sound-recording' AND recording_type.active WHERE catalog.code='records-recordings' ON CONFLICT (code) DO NOTHING"
+        [ PersistText recordingCode, PersistText normalizedReleaseTitle, PersistText normalizedReleaseTitle
+        , PersistInt64 (fromIntegral normalizedReleaseDurationMs), PersistText recordingCode
+        , PersistInt64 (fromIntegral normalizedReleaseSortOrder), PersistUTCTime now, PersistUTCTime now
+        ]
+    seedExternalResource now "spotify" "audio-track" normalizedReleaseTrackId normalizedReleaseUrl (Just normalizedReleaseDurationMs) (Just normalizedReleaseCover)
+    rawExecute
+        "INSERT INTO release_recording (release_id, recording_id, disc_number, sort_order, primary_recording) SELECT release.id, recording.id, 1, 0, TRUE FROM record_release release JOIN recording ON recording.code=? WHERE release.code=? ON CONFLICT (release_id, recording_id) DO NOTHING"
+        [PersistText recordingCode, PersistText releaseCode]
+    seedReleaseRelations releaseCode recordingCode contributorCode "spotify" "audio-track" normalizedReleaseTrackId normalizedReleaseSortOrder
+
+seedVideoRecording :: UTCTime -> NormalizedVideoSeed -> SqlPersistT IO ()
+seedVideoRecording now NormalizedVideoSeed{..} = do
+    let recordingCode = "youtube-recording-" <> normalizedVideoYoutubeId
+        contributorCode = recordContributorCode normalizedVideoContributor
+        durationMs = durationTextToMilliseconds normalizedVideoDuration
+    seedRecordContributor now contributorCode normalizedVideoContributor "artist"
+    rawExecute
+        "INSERT INTO recording (catalog_id, code, recording_type_id, title_es, title_en, description_es, description_en, duration_ms, current_slug, sort_order, active, workflow_state_id, created_at, updated_at, published_revision, usage_count, version) SELECT catalog.id, ?, recording_type.id, ?, ?, ?, ?, ?, ?, ?, TRUE, state.id, ?, ?, 1, 0, 1 FROM catalog_definition catalog JOIN workflow_state state ON state.workflow_id=catalog.workflow_id AND state.code='published' JOIN recording_type_reference recording_type ON recording_type.code='music-video' AND recording_type.active WHERE catalog.code='records-recordings' ON CONFLICT (code) DO NOTHING"
+        [ PersistText recordingCode, PersistText normalizedVideoTitle, PersistText normalizedVideoTitle
+        , PersistText normalizedVideoDescription, PersistText normalizedVideoDescription
+        , maybe PersistNull (PersistInt64 . fromIntegral) durationMs, PersistText recordingCode
+        , PersistInt64 (fromIntegral normalizedVideoSortOrder), PersistUTCTime now, PersistUTCTime now
+        ]
+    seedExternalResource now "youtube" "video" normalizedVideoYoutubeId normalizedVideoUrl durationMs Nothing
+    seedRecordingRelations recordingCode contributorCode "youtube" "video" normalizedVideoYoutubeId
+    rawExecute
+        "INSERT INTO collection_recording (collection_id, recording_id, sort_order, featured) SELECT collection.id, recording.id, ?, FALSE FROM editorial_collection collection JOIN recording ON recording.code=? WHERE collection.code='tdf-records-recordings' ON CONFLICT (collection_id, recording_id) DO NOTHING"
+        [PersistInt64 (fromIntegral normalizedVideoSortOrder), PersistText recordingCode]
+
+seedVideoSession :: UTCTime -> NormalizedVideoSeed -> SqlPersistT IO ()
+seedVideoSession now seed@NormalizedVideoSeed{..} = do
+    let sessionCode = "youtube-session-" <> normalizedVideoYoutubeId
+        recordingCode = "youtube-session-recording-" <> normalizedVideoYoutubeId
+        contributorCode = recordContributorCode normalizedVideoContributor
+        durationMs = durationTextToMilliseconds normalizedVideoDuration
+    seedRecordContributor now contributorCode normalizedVideoContributor "guest"
+    rawExecute
+        "INSERT INTO recording_session (catalog_id, code, session_type_id, title_es, title_en, description_es, description_en, current_slug, sort_order, active, workflow_state_id, created_at, updated_at, published_revision, usage_count, version) SELECT catalog.id, ?, session_type.id, ?, ?, ?, ?, ?, ?, TRUE, state.id, ?, ?, 1, 0, 1 FROM catalog_definition catalog JOIN workflow_state state ON state.workflow_id=catalog.workflow_id AND state.code='published' JOIN recording_session_type session_type ON session_type.code='recording' AND session_type.active WHERE catalog.code='records-sessions' ON CONFLICT (code) DO NOTHING"
+        [ PersistText sessionCode, PersistText normalizedVideoTitle, PersistText normalizedVideoTitle
+        , PersistText normalizedVideoDescription, PersistText normalizedVideoDescription, PersistText sessionCode
+        , PersistInt64 (fromIntegral normalizedVideoSortOrder), PersistUTCTime now, PersistUTCTime now
+        ]
+    seedVideoRecordingRow now recordingCode seed durationMs
+    seedExternalResource now "youtube" "video" normalizedVideoYoutubeId normalizedVideoUrl durationMs Nothing
+    seedRecordingRelations recordingCode contributorCode "youtube" "video" normalizedVideoYoutubeId
+    rawExecute
+        "INSERT INTO session_recording (session_id, recording_id, sort_order, primary_recording) SELECT session.id, recording.id, 0, TRUE FROM recording_session session JOIN recording ON recording.code=? WHERE session.code=? ON CONFLICT (session_id, recording_id) DO NOTHING"
+        [PersistText recordingCode, PersistText sessionCode]
+    rawExecute
+        "INSERT INTO session_contributor (session_id, contributor_id, credit_role, sort_order, primary_credit) SELECT session.id, contributor.id, 'guest', 0, TRUE FROM recording_session session JOIN record_contributor contributor ON contributor.code=? WHERE session.code=? ON CONFLICT (session_id, contributor_id, credit_role) DO NOTHING"
+        [PersistText contributorCode, PersistText sessionCode]
+    rawExecute
+        "INSERT INTO session_external_resource (session_id, resource_id, relation_kind, sort_order, primary_resource) SELECT session.id, resource.id, 'primary-video', 0, TRUE FROM recording_session session JOIN external_provider provider ON provider.code='youtube' JOIN record_external_resource resource ON resource.provider_id=provider.id AND resource.resource_kind='video' AND resource.external_code=? WHERE session.code=? ON CONFLICT (session_id, resource_id, relation_kind) DO NOTHING"
+        [PersistText normalizedVideoYoutubeId, PersistText sessionCode]
+    rawExecute
+        "INSERT INTO collection_session (collection_id, session_id, sort_order, featured) SELECT collection.id, session.id, ?, FALSE FROM editorial_collection collection JOIN recording_session session ON session.code=? WHERE collection.code='tdf-records-sessions' ON CONFLICT (collection_id, session_id) DO NOTHING"
+        [PersistInt64 (fromIntegral normalizedVideoSortOrder), PersistText sessionCode]
+
+seedVideoRecordingRow :: UTCTime -> Text -> NormalizedVideoSeed -> Maybe Int -> SqlPersistT IO ()
+seedVideoRecordingRow now recordingCode NormalizedVideoSeed{..} durationMs =
+    rawExecute
+        "INSERT INTO recording (catalog_id, code, recording_type_id, title_es, title_en, description_es, description_en, duration_ms, current_slug, sort_order, active, workflow_state_id, created_at, updated_at, published_revision, usage_count, version) SELECT catalog.id, ?, recording_type.id, ?, ?, ?, ?, ?, ?, ?, TRUE, state.id, ?, ?, 1, 0, 1 FROM catalog_definition catalog JOIN workflow_state state ON state.workflow_id=catalog.workflow_id AND state.code='published' JOIN recording_type_reference recording_type ON recording_type.code='music-video' AND recording_type.active WHERE catalog.code='records-recordings' ON CONFLICT (code) DO NOTHING"
+        [ PersistText recordingCode, PersistText normalizedVideoTitle, PersistText normalizedVideoTitle
+        , PersistText normalizedVideoDescription, PersistText normalizedVideoDescription
+        , maybe PersistNull (PersistInt64 . fromIntegral) durationMs, PersistText recordingCode
+        , PersistInt64 (fromIntegral normalizedVideoSortOrder), PersistUTCTime now, PersistUTCTime now
+        ]
+
+seedReleaseRelations :: Text -> Text -> Text -> Text -> Text -> Text -> Int -> SqlPersistT IO ()
+seedReleaseRelations releaseCode recordingCode contributorCode providerCode resourceKind externalCode sortOrder = do
+    rawExecute
+        "INSERT INTO release_contributor (release_id, contributor_id, credit_role, sort_order, primary_credit) SELECT release.id, contributor.id, 'primary-artist', 0, TRUE FROM record_release release JOIN record_contributor contributor ON contributor.code=? WHERE release.code=? ON CONFLICT (release_id, contributor_id, credit_role) DO NOTHING"
+        [PersistText contributorCode, PersistText releaseCode]
+    seedRecordingRelations recordingCode contributorCode providerCode resourceKind externalCode
+    rawExecute
+        "INSERT INTO release_external_resource (release_id, resource_id, relation_kind, sort_order, primary_resource) SELECT release.id, resource.id, 'primary-audio', 0, TRUE FROM record_release release JOIN external_provider provider ON provider.code=? JOIN record_external_resource resource ON resource.provider_id=provider.id AND resource.resource_kind=? AND resource.external_code=? WHERE release.code=? ON CONFLICT (release_id, resource_id, relation_kind) DO NOTHING"
+        [PersistText providerCode, PersistText resourceKind, PersistText externalCode, PersistText releaseCode]
+    rawExecute
+        "INSERT INTO collection_release (collection_id, release_id, sort_order, featured) SELECT collection.id, release.id, ?, FALSE FROM editorial_collection collection JOIN record_release release ON release.code=? WHERE collection.code='tdf-records-releases' ON CONFLICT (collection_id, release_id) DO NOTHING"
+        [PersistInt64 (fromIntegral sortOrder), PersistText releaseCode]
+
+seedRecordingRelations :: Text -> Text -> Text -> Text -> Text -> SqlPersistT IO ()
+seedRecordingRelations recordingCode contributorCode providerCode resourceKind externalCode = do
+    rawExecute
+        "INSERT INTO recording_contributor (recording_id, contributor_id, credit_role, sort_order, primary_credit) SELECT recording.id, contributor.id, 'primary-artist', 0, TRUE FROM recording recording JOIN record_contributor contributor ON contributor.code=? WHERE recording.code=? ON CONFLICT (recording_id, contributor_id, credit_role) DO NOTHING"
+        [PersistText contributorCode, PersistText recordingCode]
+    rawExecute
+        "INSERT INTO recording_external_resource (recording_id, resource_id, relation_kind, sort_order, primary_resource) SELECT recording.id, resource.id, 'primary-media', 0, TRUE FROM recording recording JOIN external_provider provider ON provider.code=? JOIN record_external_resource resource ON resource.provider_id=provider.id AND resource.resource_kind=? AND resource.external_code=? WHERE recording.code=? ON CONFLICT (recording_id, resource_id, relation_kind) DO NOTHING"
+        [PersistText providerCode, PersistText resourceKind, PersistText externalCode, PersistText recordingCode]
+
+seedRecordContributor :: UTCTime -> Text -> Text -> Text -> SqlPersistT IO ()
+seedRecordContributor now code name contributorKind =
+    rawExecute
+        "INSERT INTO record_contributor (catalog_id, code, contributor_kind, name_es, name_en, sort_order, active, workflow_state_id, created_at, updated_at, version) SELECT catalog.id, ?, ?, ?, ?, 0, TRUE, state.id, ?, ?, 1 FROM catalog_definition catalog JOIN workflow_state state ON state.workflow_id=catalog.workflow_id AND state.code='published' WHERE catalog.code='record-contributors' ON CONFLICT (code) DO NOTHING"
+        [PersistText code, PersistText contributorKind, PersistText name, PersistText name, PersistUTCTime now, PersistUTCTime now]
+
+seedExternalResource :: UTCTime -> Text -> Text -> Text -> Text -> Maybe Int -> Maybe Text -> SqlPersistT IO ()
+seedExternalResource now providerCode resourceKind externalCode canonicalUrl durationMs thumbnail =
+    rawExecute
+        "INSERT INTO record_external_resource (provider_id, external_code, resource_kind, canonical_url, duration_ms, thumbnail_url, active, created_at, updated_at, version) SELECT provider.id, ?, ?, ?, ?, ?, TRUE, ?, ?, 1 FROM external_provider provider WHERE provider.code=? AND provider.active ON CONFLICT (provider_id, resource_kind, external_code) DO UPDATE SET canonical_url=EXCLUDED.canonical_url, duration_ms=EXCLUDED.duration_ms, thumbnail_url=EXCLUDED.thumbnail_url, updated_at=EXCLUDED.updated_at, version=record_external_resource.version+1 WHERE (record_external_resource.canonical_url, record_external_resource.duration_ms, record_external_resource.thumbnail_url) IS DISTINCT FROM (EXCLUDED.canonical_url, EXCLUDED.duration_ms, EXCLUDED.thumbnail_url)"
+        [ PersistText externalCode, PersistText resourceKind, PersistText canonicalUrl
+        , maybe PersistNull (PersistInt64 . fromIntegral) durationMs, maybe PersistNull PersistText thumbnail
+        , PersistUTCTime now, PersistUTCTime now, PersistText providerCode
+        ]
+
+recordContributorCode :: Text -> Text
+recordContributorCode name =
+    let digest = hash (TE.encodeUtf8 (T.toCaseFold (T.strip name))) :: Digest SHA256
+     in "legacy-credit-" <> T.take 20 (T.pack (show digest))
+
+durationTextToMilliseconds :: Text -> Maybe Int
+durationTextToMilliseconds raw =
+    case traverse readNonNegativeInt (T.splitOn ":" (T.strip raw)) of
+        Just [minutes, seconds] | seconds < 60 -> Just ((minutes * 60 + seconds) * 1000)
+        Just [hours, minutes, seconds] | minutes < 60 && seconds < 60 -> Just ((hours * 3600 + minutes * 60 + seconds) * 1000)
+        _ -> Nothing
+  where
+    readNonNegativeInt text =
+        case reads (T.unpack text) of
+            [(value, "")] | value >= (0 :: Int) -> Just value
+            _ -> Nothing
 
 seedAcademy :: UTCTime -> SqlPersistT IO ()
 seedAcademy now = do
@@ -987,7 +1118,7 @@ seedStaff allowCredentials now StaffSeed{ssName = nameVal, ssEmail = emailVal, s
     let normalizedEmail = normalizeEmail emailVal
         cleanName = T.strip nameVal
     (pid, partyChange) <- ensureStaffParty now cleanName normalizedEmail
-    newRoles <- ensureStaffRoles pid rolesVal
+    newRoles <- ensureStaffRoles now pid rolesVal
     credStatus <-
         if allowCredentials
             then ensureStaffCredential pid normalizedEmail
@@ -1032,6 +1163,8 @@ ensureStaffParty now displayName email = do
                         , partyEmergencyContact = Nothing
                         , partyNotes = Nothing
                         , partyStripeCustomerId = Nothing
+                        , partyCountryCode = Nothing
+                        , partyCountryId = Nothing
                         , partyCreatedAt = now
                         }
             pure (pid, PartyCreated)
@@ -1053,22 +1186,14 @@ ensureStaffParty now displayName email = do
     lookupPartyByName :: Text -> SqlPersistT IO (Maybe (Entity Party))
     lookupPartyByName nameTxt = selectFirst [PartyDisplayName ==. nameTxt] []
 
-ensureStaffRoles :: PartyId -> [RoleEnum] -> SqlPersistT IO [RoleEnum]
-ensureStaffRoles pid rolesList = do
-    added <- mapM (ensureRole pid) rolesList
+ensureStaffRoles :: UTCTime -> PartyId -> [RoleEnum] -> SqlPersistT IO [RoleEnum]
+ensureStaffRoles now pid rolesList = do
+    added <- mapM (ensureRole now pid) rolesList
     pure (catMaybes added)
   where
-    ensureRole partyId role = do
-        mExisting <- getBy (UniquePartyRole partyId role)
-        case mExisting of
-            Nothing -> do
-                _ <- insert (PartyRole partyId role True)
-                pure (Just role)
-            Just (Entity roleId pr)
-                | partyRoleActive pr -> pure Nothing
-                | otherwise -> do
-                    update roleId [PartyRoleActive =. True]
-                    pure (Just role)
+    ensureRole seededAt partyId role = do
+        added <- requireBootstrapRole seededAt partyId role
+        pure (if added then Just role else Nothing)
 
 ensureStaffCredential :: PartyId -> Text -> SqlPersistT IO CredentialStatus
 ensureStaffCredential pid username = do
@@ -1204,17 +1329,25 @@ ensureServiceCatalog (nameTxt, kind, pricing, rateCents, taxBps, currencyTxt, bi
 ensureStaff :: UTCTime -> Text -> Maybe Text -> RoleEnum -> Text -> Text -> Text -> SqlPersistT IO (Key Party)
 ensureStaff now name mlegal role token uname pwd = do
     pid <- ensurePartyRecord now name mlegal
-    _ <- upsert (PartyRole pid role True) [PartyRoleActive =. True]
+    void $ requireBootstrapRole now pid role
     upsertToken token pid (Just (roleLabel role))
     ensureCredential pid uname pwd
     pure pid
+
+requireBootstrapRole :: UTCTime -> PartyId -> RoleEnum -> SqlPersistT IO Bool
+requireBootstrapRole now partyId role = do
+    alreadyActive <- hasCanonicalPartyRole partyId role
+    result <- ensureBootstrapSecurityRole partyId role now
+    case result of
+        Left message -> liftIO . ioError . userError $ T.unpack message
+        Right () -> pure (not alreadyActive)
 
 ensurePartyRecord :: UTCTime -> Text -> Maybe Text -> SqlPersistT IO (Key Party)
 ensurePartyRecord now name mlegal = do
     existing <- selectFirst [PartyDisplayName ==. name] []
     case existing of
         Just (Entity pid _) -> pure pid
-        Nothing -> insert $ Party mlegal name False Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing now
+        Nothing -> insert $ Party mlegal name False Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing now
 
 upsertToken :: Text -> PartyId -> Maybe Text -> SqlPersistT IO ()
 upsertToken token pid label = do
@@ -1242,7 +1375,7 @@ hashPasswordText pwd = do
     mHash <- hashPasswordUsingPolicy slowerBcryptHashingPolicy raw
     case mHash of
         Nothing -> fail "Failed to hash password"
-        Just hash -> pure (TE.decodeUtf8 hash)
+        Just passwordHash -> pure (TE.decodeUtf8 passwordHash)
 
 roleLabel :: RoleEnum -> Text
 roleLabel = T.pack . show
@@ -1734,10 +1867,38 @@ ensureInputListVersionRecord listId now = do
 
 ensureInputRow :: ME.InputListVersionId -> InputSeed -> SqlPersistT IO ()
 ensureInputRow versionId entry = do
+    instrument <- getBy (Catalog.UniqueInstrumentCode (isInstrumentCode entry))
+    micAssets <- selectList
+        [ ME.AssetName ==. isMicAssetName entry
+        , ME.AssetStatus ==. ME.Active
+        ]
+        [LimitTo 2]
+    instrumentId <- case instrument of
+        Nothing ->
+            seedReferenceError $ "Missing canonical seed instrument: " <> isInstrumentCode entry
+        Just (Entity candidateId candidate) -> do
+            catalog <- get (Catalog.instrumentCatalogId candidate)
+            state <- get (Catalog.instrumentWorkflowStateId candidate)
+            case (catalog, state) of
+                (Just catalogRecord, Just stateRecord)
+                    | Catalog.instrumentActive candidate
+                    , Catalog.catalogDefinitionActive catalogRecord
+                    , Catalog.catalogDefinitionCode catalogRecord == "instruments"
+                    , Catalog.workflowStateActive stateRecord
+                    , Catalog.workflowStateCode stateRecord == "published" -> pure candidateId
+                _ ->
+                    seedReferenceError $
+                        "Seed instrument is not an active published member of the instruments catalog: "
+                            <> isInstrumentCode entry
+    micAssetId <- case micAssets of
+        [Entity candidateId _] -> pure candidateId
+        [] ->
+            seedReferenceError $ "Missing canonical seed microphone/DI asset: " <> isMicAssetName entry
+        _ ->
+            seedReferenceError $ "Ambiguous canonical seed microphone/DI asset: " <> isMicAssetName entry
     let notesParts =
             catMaybes
-                [ Just ("Mic/DI: " <> isMic entry)
-                , fmap ("Medusa: " <>) (isMedusa entry)
+                [ fmap ("Medusa: " <>) (isMedusa entry)
                 , fmap ("Preamp: " <>) (isPreamp entry)
                 , Just ("Interface: " <> isInterface entry)
                 , Just ("DAW Ch: " <> T.pack (show (isDawChannel entry)))
@@ -1752,8 +1913,9 @@ ensureInputRow versionId entry = do
                 { ME.inputRowVersionId = versionId
                 , ME.inputRowChannelNumber = isChannel entry
                 , ME.inputRowTrackName = Just (isSource entry)
-                , ME.inputRowInstrument = Just (isMic entry)
-                , ME.inputRowMicId = Nothing
+                , ME.inputRowInstrument = Nothing
+                , ME.inputRowInstrumentId = Just instrumentId
+                , ME.inputRowMicId = Just micAssetId
                 , ME.inputRowStandId = Nothing
                 , ME.inputRowCableId = Nothing
                 , ME.inputRowPreampId = Nothing
@@ -1766,38 +1928,42 @@ ensureInputRow versionId entry = do
                 , ME.inputRowNotes = notesText
                 }
 
+seedReferenceError :: Text -> SqlPersistT IO a
+seedReferenceError = liftIO . ioError . userError . T.unpack
+
 data InputSeed = InputSeed
     { isChannel :: Int
     , isSource :: Text
-    , isMic :: Text
     , isMedusa :: Maybe Text
     , isPreamp :: Maybe Text
     , isInterface :: Text
     , isDawChannel :: Int
     , isExtraNotes :: Maybe Text
+    , isInstrumentCode :: Text
+    , isMicAssetName :: Text
     }
 
 holgerInputSeeds :: [InputSeed]
 holgerInputSeeds =
-    [ InputSeed 1 "Kick In" "AKG D112" (Just "M1") (Just "Shelford 1") "BMB3 - 01 BAD8 1" 1 Nothing
-    , InputSeed 2 "Snare Up" "Shure SM57" (Just "M2") (Just "Shelford 2") "BMB3 - 02 BAD8 2" 2 Nothing
-    , InputSeed 3 "Snare Down" "Shure SM57" (Just "M3") (Just "Shelford 3") "BMB3 - 03 BAD8 3" 3 (Just "Flip en DAW")
-    , InputSeed 4 "Hi-Hat" "Sennheiser MKE600" (Just "M4") (Just "Avalon 737sp (suave)") "BMB3 - 04 BAD8 4" 4 Nothing
-    , InputSeed 5 "Tom 1" "Sennheiser MD421" (Just "M5") (Just "UA 2-610 L") "BMB3 - 05 BAD8 5" 5 Nothing
-    , InputSeed 6 "Tom Floor" "Sennheiser MD421" (Just "M6") (Just "UA 2-610 R") "BMB3 - 06 BAD8 6" 6 Nothing
-    , InputSeed 7 "OH L" "AKG C414 (HC)" (Just "M7") (Just "API 512v 1") "BMB3 - 07 BAD8 7" 7 Nothing
-    , InputSeed 8 "OH R" "AKG C414 (HC)" (Just "M8") (Just "API 512v 2") "BMB3 - 08 BAD8 8" 8 Nothing
-    , InputSeed 9 "Bass DI (post)" "Neve RNDI" (Just "M9") (Just "B4-1") "BMB3 - 17 B4 1 1" 9 Nothing
-    , InputSeed 10 "Bass Mic 1 (cab)" "AKG D112" (Just "M10") (Just "B4-1") "BMB3 - 18 B4 1 2" 10 Nothing
-    , InputSeed 11 "Bass Mic 2 (ataque)" "Neumann KM184" (Just "M11") (Just "B4-1") "BMB3 - 19 B4 1 3" 11 Nothing
-    , InputSeed 12 "Gtr 1" "Sennheiser e906" (Just "M12") (Just "B4-1") "BMB3 - 20 B4 1 4" 12 Nothing
-    , InputSeed 13 "Gtr 1 Ribbon" "Royer R121" (Just "M13") (Just "B4-2") "BMB3 - 25 B4 2 1" 13 Nothing
-    , InputSeed 14 "Gtr 2" "Sennheiser e906" (Just "M14") (Just "B4-2") "BMB3 - 26 B4 2 2" 14 Nothing
-    , InputSeed 15 "Gtr 2 Ribbon" "Royer R121" (Just "M15") (Just "B4-2") "BMB3 - 27 B4 2 3" 15 Nothing
-    , InputSeed 16 "Vox 1" "Electro-Voice RE20" (Just "M16") (Just "Chandler Limited REDD.47") "BMB3 - 09 BAD4 1" 25 Nothing
-    , InputSeed 17 "Vox 2" "Sennheiser e835" Nothing (Just "MP8R (Vox2)") "MP8R - Vox2" 17 Nothing
-    , InputSeed 18 "Vox 3" "Shure SM58" Nothing (Just "MP8R (Vox3)") "MP8R - Vox3" 18 Nothing
-    , InputSeed 19 "Vox 4" "Shure SM58" Nothing (Just "MP8R (Vox4)") "MP8R - Vox4" 19 Nothing
-    , InputSeed 20 "KU-100 L" "Neumann KU-100 L" Nothing (Just "MP8R (KU100L)") "MP8R - KU100L" 20 (Just "Room, frente a banda")
-    , InputSeed 21 "KU-100 R" "Neumann KU-100 R" Nothing (Just "MP8R (KU100R)") "MP8R - KU100R" 21 Nothing
+    [ InputSeed 1 "Kick In" (Just "M1") (Just "Shelford 1") "BMB3 - 01 BAD8 1" 1 Nothing "drums" "AKG D112"
+    , InputSeed 2 "Snare Up" (Just "M2") (Just "Shelford 2") "BMB3 - 02 BAD8 2" 2 Nothing "drums" "Shure SM57"
+    , InputSeed 3 "Snare Down" (Just "M3") (Just "Shelford 3") "BMB3 - 03 BAD8 3" 3 (Just "Flip en DAW") "drums" "Shure SM57"
+    , InputSeed 4 "Hi-Hat" (Just "M4") (Just "Avalon 737sp (suave)") "BMB3 - 04 BAD8 4" 4 Nothing "drums" "Sennheiser MKE600"
+    , InputSeed 5 "Tom 1" (Just "M5") (Just "UA 2-610 L") "BMB3 - 05 BAD8 5" 5 Nothing "drums" "Sennheiser MD421"
+    , InputSeed 6 "Tom Floor" (Just "M6") (Just "UA 2-610 R") "BMB3 - 06 BAD8 6" 6 Nothing "drums" "Sennheiser MD421"
+    , InputSeed 7 "OH L" (Just "M7") (Just "API 512v 1") "BMB3 - 07 BAD8 7" 7 Nothing "drums" "AKG C414"
+    , InputSeed 8 "OH R" (Just "M8") (Just "API 512v 2") "BMB3 - 08 BAD8 8" 8 Nothing "drums" "AKG C414"
+    , InputSeed 9 "Bass DI (post)" (Just "M9") (Just "B4-1") "BMB3 - 17 B4 1 1" 9 Nothing "bass-guitar" "Neve RNDI"
+    , InputSeed 10 "Bass Mic 1 (cab)" (Just "M10") (Just "B4-1") "BMB3 - 18 B4 1 2" 10 Nothing "bass-guitar" "AKG D112"
+    , InputSeed 11 "Bass Mic 2 (ataque)" (Just "M11") (Just "B4-1") "BMB3 - 19 B4 1 3" 11 Nothing "bass-guitar" "Neumann KM184"
+    , InputSeed 12 "Gtr 1" (Just "M12") (Just "B4-1") "BMB3 - 20 B4 1 4" 12 Nothing "electric-guitar" "Sennheiser e906"
+    , InputSeed 13 "Gtr 1 Ribbon" (Just "M13") (Just "B4-2") "BMB3 - 25 B4 2 1" 13 Nothing "electric-guitar" "Royer R121"
+    , InputSeed 14 "Gtr 2" (Just "M14") (Just "B4-2") "BMB3 - 26 B4 2 2" 14 Nothing "electric-guitar" "Sennheiser e906"
+    , InputSeed 15 "Gtr 2 Ribbon" (Just "M15") (Just "B4-2") "BMB3 - 27 B4 2 3" 15 Nothing "electric-guitar" "Royer R121"
+    , InputSeed 16 "Vox 1" (Just "M16") (Just "Chandler Limited REDD.47") "BMB3 - 09 BAD4 1" 25 Nothing "voice" "Electro-Voice RE20"
+    , InputSeed 17 "Vox 2" Nothing (Just "MP8R (Vox2)") "MP8R - Vox2" 17 Nothing "voice" "Sennheiser e835"
+    , InputSeed 18 "Vox 3" Nothing (Just "MP8R (Vox3)") "MP8R - Vox3" 18 Nothing "voice" "Shure SM58"
+    , InputSeed 19 "Vox 4" Nothing (Just "MP8R (Vox4)") "MP8R - Vox4" 19 Nothing "voice" "Shure SM58"
+    , InputSeed 20 "KU-100 L" Nothing (Just "MP8R (KU100L)") "MP8R - KU100L" 20 (Just "Room, frente a banda") "voice" "Neumann KU-100"
+    , InputSeed 21 "KU-100 R" Nothing (Just "MP8R (KU100R)") "MP8R - KU100R" 21 Nothing "voice" "Neumann KU-100"
     ]

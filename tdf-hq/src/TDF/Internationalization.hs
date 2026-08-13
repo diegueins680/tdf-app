@@ -10,7 +10,6 @@ module TDF.Internationalization
   , normalizeCurrencyCode
   , normalizeLocaleCode
   , normalizeTimeZone
-  , supportedLocaleCodes
   ) where
 
 import Data.Char (isAscii, isControl, isDigit, isLetter)
@@ -88,13 +87,12 @@ currencyDefinition raw = do
       ]
     threeDecimalCurrencies = ["BHD", "IQD", "JOD", "KWD", "LYD", "OMR", "TND"]
 
-supportedLocaleCodes :: [Text]
-supportedLocaleCodes = ["en", "es", "fr", "de", "pt"]
-
 normalizeLocaleCode :: Text -> Maybe Text
 normalizeLocaleCode raw =
   let base = T.toLower (T.takeWhile (\ch -> ch /= '-' && ch /= '_') (T.strip raw))
-  in if base `elem` supportedLocaleCodes then Just base else Nothing
+      validLength = T.length base >= 2 && T.length base <= 3
+      isAsciiLetter ch = isAscii ch && isLetter ch
+  in if validLength && T.all isAsciiLetter base then Just base else Nothing
 
 normalizeCountryCode :: Text -> Maybe Text
 normalizeCountryCode raw =

@@ -10,13 +10,16 @@ import           TDF.API.Types
 
 type PipelinesAPI =
   "pipelines" :>
-    Capture "pipelineType" Text :>
-      (    Get '[JSON] [PipelineCardDTO]
-       :<|> "stages" :> Get '[JSON] [Text]
-       :<|> ReqBody '[JSON] PipelineCardCreate :> PostCreated '[JSON] PipelineCardDTO
-       :<|> Capture "cardId" Text :>
-             (    Get '[JSON] PipelineCardDTO
-              :<|> ReqBody '[JSON] PipelineCardUpdate :> Patch '[JSON] PipelineCardDTO
-              :<|> DeleteNoContent
-             )
-      )
+    (    "snapshot" :> Get '[JSON] PipelineSnapshotDTO
+     :<|> "definitions" :> Get '[JSON] [PipelineDefinitionDTO]
+     :<|> Capture "workflowId" Text :>
+           (    Get '[JSON] [PipelineCardDTO]
+            :<|> "stages" :> Get '[JSON] [PipelineStageDTO]
+            :<|> ReqBody '[JSON] PipelineCardCreate :> PostCreated '[JSON] PipelineCardDTO
+            :<|> Capture "cardId" Text :>
+                  (    Get '[JSON] PipelineCardDTO
+                   :<|> ReqBody '[JSON] PipelineCardUpdate :> Patch '[JSON] PipelineCardDTO
+                   :<|> DeleteNoContent
+                  )
+           )
+    )

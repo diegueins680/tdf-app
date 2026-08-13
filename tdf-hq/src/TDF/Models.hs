@@ -220,6 +220,48 @@ roleFromText raw =
     "fan"          -> Just Fan
     "maintenance"  -> Just Maintenance
     _              -> Nothing
+
+-- Stable compile-time identifiers used only to bind exhaustive backend
+-- enforcement to the persisted security registry. Labels, ordering and grants
+-- remain database-authoritative.
+roleRegistryCode :: RoleEnum -> Text
+roleRegistryCode role = case role of
+  Admin -> "admin"
+  Manager -> "manager"
+  StudioManager -> "studio-manager"
+  Engineer -> "engineer"
+  Teacher -> "teacher"
+  Reception -> "reception"
+  Accounting -> "accounting"
+  LiveSessionsProducer -> "live-sessions-producer"
+  Intern -> "intern"
+  Artist -> "artist"
+  Artista -> "artista"
+  Webmaster -> "webmaster"
+  Promotor -> "promotor"
+  Promoter -> "promoter"
+  Producer -> "producer"
+  Agency -> "agency"
+  Songwriter -> "songwriter"
+  DJ -> "dj"
+  Publicist -> "publicist"
+  TourManager -> "tour-manager"
+  LabelRep -> "label-rep"
+  StageManager -> "stage-manager"
+  RoadCrew -> "road-crew"
+  Photographer -> "photographer"
+  AandR -> "a-and-r"
+  Student -> "student"
+  Vendor -> "vendor"
+  ReadOnly -> "read-only"
+  Customer -> "customer"
+  Fan -> "fan"
+  Maintenance -> "maintenance"
+
+roleFromRegistryCode :: Text -> Maybe RoleEnum
+roleFromRegistryCode code =
+  let normalized = T.toLower (T.strip code)
+  in lookup normalized [(roleRegistryCode role, role) | role <- [minBound .. maxBound]]
 instance ToJSON StockTxnReason
 instance FromJSON StockTxnReason
 instance ToJSON FanClubOfficerRole
@@ -254,24 +296,23 @@ Party
     emergencyContact Text Maybe
     notes            Text Maybe
     stripeCustomerId Text Maybe
+    -- Legacy import/display value. Catalog cutover backfills this into the
+    -- persisted country reference before the text column is retired.
+    countryCode      Text Maybe
+    countryId        UUID Maybe
     createdAt        UTCTime
-    deriving Show Generic
-SupportedCurrency sql=supported_currencies
-    currencyCode     Text
-    symbol           Text
-    decimalPlaces    Int
-    decimalSeparator Text
-    thousandsSeparator Text
-    enabled          Bool default=True
-    updatedAt        UTCTime
-    UniqueSupportedCurrency currencyCode
     deriving Show Generic
 UserLocalePreference sql=user_locale_preferences
     userId           PartyId
-    locale           Text
-    currency         Text
+    -- Preserved migration evidence only. Runtime reads and writes localeId
+    -- and currencyId; new writes clear these copied codes.
+    locale           Text Maybe
+    currency         Text Maybe
     timezone         Text
     countryCode      Text Maybe
+    localeId         UUID Maybe
+    currencyId       UUID Maybe
+    countryId        UUID Maybe
     updatedAt        UTCTime
     UniqueUserLocalePreference userId
     deriving Show Generic
@@ -286,17 +327,14 @@ CurrencyConversionAudit sql=currency_conversion_audit
     rateObservedAt   UTCTime
     createdAt        UTCTime
     deriving Show Generic
-PartyRole
-    partyId          PartyId
-    role             RoleEnum
-    active           Bool
-    UniquePartyRole  partyId role
-    deriving Show Generic
 ArtistProfile
     artistPartyId    PartyId
     slug             Text Maybe
     bio              Text Maybe
     city             Text Maybe
+    -- Legacy import/display value; never accepted as a canonical catalog ID.
+    countryCode      Text Maybe
+    countryId        UUID Maybe
     heroImageUrl     Text Maybe
     spotifyArtistId  Text Maybe
     spotifyUrl       Text Maybe
@@ -310,6 +348,13 @@ ArtistProfile
     createdAt        UTCTime
     updatedAt        UTCTime Maybe
     UniqueArtistProfile artistPartyId
+    deriving Show Generic
+ArtistProfileGenreMembership sql=artist_profile_genre_membership
+    artistPartyId    PartyId
+    genreId          UUID
+    sortOrder        Int default=0
+    createdAt        UTCTime default=CURRENT_TIMESTAMP
+    Primary artistPartyId genreId
     deriving Show Generic
 ArtistPromoSlot
     artistPartyId    PartyId
@@ -344,6 +389,13 @@ FanProfile
     createdAt        UTCTime
     updatedAt        UTCTime Maybe
     UniqueFanProfile fanPartyId
+    deriving Show Generic
+FanProfileGenreMembership sql=fan_profile_genre_membership
+    fanPartyId       PartyId
+    genreId          UUID
+    sortOrder        Int default=0
+    createdAt        UTCTime default=CURRENT_TIMESTAMP
+    Primary fanPartyId genreId
     deriving Show Generic
 FanFollow
     fanPartyId       PartyId
@@ -405,6 +457,7 @@ ServiceOrder
     customerId       PartyId
     artistId         PartyId Maybe
     catalogId        ServiceCatalogId
+    serviceOfferingId UUID Maybe
     serviceKind      ServiceKind
     title            Text Maybe
     description      Text Maybe
@@ -471,6 +524,9 @@ Booking
     serviceOrderId   ServiceOrderId Maybe
     partyId          PartyId Maybe
     serviceType      Text Maybe
+    serviceOfferingId UUID Maybe
+    bookingTypeId    UUID Maybe
+    workflowStateId  UUID Maybe
     engineerPartyId  PartyId Maybe
     engineerName     Text Maybe
     startsAt         UTCTime
@@ -733,12 +789,6 @@ ReferralClaim
     UniqueReferralClaim codeId email
     deriving Show Generic
 
-Country
-    code Text
-    name Text
-    UniqueCountryCode code
-    deriving Show Generic
-
 Cohort
     Id UUID default=gen_random_uuid()
     slug     Text
@@ -759,13 +809,61 @@ CohortEnrollment
 RadioStream
     streamUrl      Text
     name           Text Maybe
+    -- Preserved migration evidence only; runtime reads and writes countryId.
     country        Text Maybe
+    countryId      UUID Maybe
+    -- Preserved migration evidence and historical display fallback only.
     genre          Text Maybe
+    genreId        UUID Maybe
     isActive       Bool
     lastCheckedAt  UTCTime Maybe
     createdAt      UTCTime default=now()
     updatedAt      UTCTime default=now()
     UniqueRadioStreamUrl streamUrl
+    deriving Show Generic
+
+RadioStreamGenreObservation sql=radio_stream_genre_observation
+    streamId         RadioStreamId
+    originalValue    Text
+    normalizedValue  Text
+    genreId          UUID Maybe
+    status           Text
+    source            Text
+    firstObservedAt  UTCTime default=now()
+    lastObservedAt   UTCTime default=now()
+    observationCount Int default=1
+    UniqueRadioStreamGenreObservation streamId normalizedValue source
+    deriving Show Generic
+
+RadioStreamGenreObservationCandidate sql=radio_stream_genre_observation_candidate
+    observationId RadioStreamGenreObservationId
+    genreId       UUID
+    active        Bool default=True
+    firstMatchedAt UTCTime default=now()
+    lastMatchedAt  UTCTime default=now()
+    Primary observationId genreId
+    deriving Show Generic
+
+RadioStreamCountryObservation sql=radio_stream_country_observation
+    streamId         RadioStreamId
+    originalValue    Text
+    normalizedValue  Text
+    countryId        UUID Maybe
+    status           Text
+    source            Text
+    firstObservedAt  UTCTime default=now()
+    lastObservedAt   UTCTime default=now()
+    observationCount Int default=1
+    UniqueRadioStreamCountryObservation streamId normalizedValue source
+    deriving Show Generic
+
+RadioStreamCountryObservationCandidate sql=radio_stream_country_observation_candidate
+    observationId RadioStreamCountryObservationId
+    countryId     UUID
+    active        Bool default=True
+    firstMatchedAt UTCTime default=now()
+    lastMatchedAt  UTCTime default=now()
+    Primary observationId countryId
     deriving Show Generic
 
 FanClub

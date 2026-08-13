@@ -12,8 +12,8 @@ import Data.Text (Text, pack)
 import qualified Data.Text as T
 import Data.Time (UTCTime (..), addUTCTime, fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
-import Database.Persist (Entity (..), getBy, getJustEntity, insert, insertKey, selectList, (==.))
-import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
+import Database.Persist (Entity (..), getBy, getJustEntity, insert, insertKey, selectList, toPersistValue, (==.))
+import Database.Persist.Sql (Single (..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (NoContent, ServerError (errBody, errHTTPCode), (:<|>) ((:<|>)))
 import Servant.Server.Internal.Handler (runHandler)
@@ -115,6 +115,8 @@ spec = do
                 , Models.partyEmergencyContact = Nothing
                 , Models.partyNotes = Nothing
                 , Models.partyStripeCustomerId = Nothing
+                , Models.partyCountryCode = Nothing
+                , Models.partyCountryId = Nothing
                 , Models.partyCreatedAt = now
                 }
         _ <- insert (party "Duplicate Public Lead A")
@@ -295,6 +297,8 @@ spec = do
               , Models.partyEmergencyContact = Nothing
               , Models.partyNotes = Just "Duplicate anonymous public lead fallback."
               , Models.partyStripeCustomerId = Nothing
+              , Models.partyCountryCode = Nothing
+              , Models.partyCountryId = Nothing
               , Models.partyCreatedAt = now
               }
         _ <- insert (fallbackParty "Public Trial Interest A")
@@ -323,6 +327,8 @@ spec = do
           , Models.partyEmergencyContact = Nothing
           , Models.partyNotes = Just "Duplicate anonymous public lead fallback."
           , Models.partyStripeCustomerId = Nothing
+          , Models.partyCountryCode = Nothing
+          , Models.partyCountryId = Nothing
           , Models.partyCreatedAt = now
           }
         ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
@@ -349,6 +355,8 @@ spec = do
           , Models.partyEmergencyContact = Nothing
           , Models.partyNotes = Just "System fallback party for anonymous public trial interests."
           , Models.partyStripeCustomerId = Nothing
+          , Models.partyCountryCode = Nothing
+          , Models.partyCountryId = Nothing
           , Models.partyCreatedAt = now
           }
         ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
@@ -378,6 +386,8 @@ spec = do
             , Models.partyNotes =
                 Just "System fallback party for anonymous public trial interests."
             , Models.partyStripeCustomerId = Nothing
+            , Models.partyCountryCode = Nothing
+            , Models.partyCountryId = Nothing
             , Models.partyCreatedAt = now
             }
         ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
@@ -405,6 +415,8 @@ spec = do
           , Models.partyNotes =
               Just "System fallback party for anonymous public trial interests."
           , Models.partyStripeCustomerId = Nothing
+          , Models.partyCountryCode = Nothing
+          , Models.partyCountryId = Nothing
           , Models.partyCreatedAt = now
           }
         _ <- insert Models.ArtistProfile
@@ -422,6 +434,8 @@ spec = do
           , Models.artistProfileGenres = Nothing
           , Models.artistProfileHighlights = Nothing
           , Models.artistProfileStripeAccountId = Nothing
+          , Models.artistProfileCountryCode = Nothing
+          , Models.artistProfileCountryId = Nothing
           , Models.artistProfileCreatedAt = now
           , Models.artistProfileUpdatedAt = Nothing
           }
@@ -450,6 +464,8 @@ spec = do
           , Models.partyNotes =
               Just "System fallback party for anonymous public trial interests."
           , Models.partyStripeCustomerId = Nothing
+          , Models.partyCountryCode = Nothing
+          , Models.partyCountryId = Nothing
           , Models.partyCreatedAt = now
           }
         _ <- insert Trials.LeadInterest
@@ -487,6 +503,8 @@ spec = do
           , Models.partyNotes =
               Just "System fallback party for anonymous public trial interests."
           , Models.partyStripeCustomerId = Nothing
+          , Models.partyCountryCode = Nothing
+          , Models.partyCountryId = Nothing
           , Models.partyCreatedAt = now
           }
         _ <- insert Trials.TrialRequest
@@ -527,6 +545,8 @@ spec = do
             , Models.partyNotes =
                 Just "System fallback party for anonymous public trial interests."
             , Models.partyStripeCustomerId = Nothing
+            , Models.partyCountryCode = Nothing
+            , Models.partyCountryId = Nothing
             , Models.partyCreatedAt = now
             }
           assertRejected attach = do
@@ -543,12 +563,7 @@ spec = do
                 expectationFailure
                   ("Expected fallback party relation drift to be rejected, got " <> show partyId)
       assertRejected $ \partyId -> do
-        _ <- insert Models.PartyRole
-          { Models.partyRolePartyId = partyId
-          , Models.partyRoleRole = Models.Customer
-          , Models.partyRoleActive = True
-          }
-        pure ()
+        insertCanonicalRoleFixture partyId "customer" True
       assertRejected $ \partyId -> do
         _ <- insert Models.UserCredential
           { Models.userCredentialPartyId = partyId
@@ -2337,11 +2352,7 @@ spec = do
         let scheduleStart = addUTCTime 3600 now
             scheduleEnd = addUTCTime 7200 now
         formerTeacherPartyId <- insertPartyFixture "Former Teacher" now
-        _ <- insert Models.PartyRole
-          { Models.partyRolePartyId = formerTeacherPartyId
-          , Models.partyRoleRole = Models.Teacher
-          , Models.partyRoleActive = False
-          }
+        insertCanonicalRoleFixture formerTeacherPartyId "teacher" False
         studentPartyId <- insertPartyFixture "Student One" now
         roomResourceId <- insertRoomFixture "Sala A" "sala-a"
         subjectKey <- insert (Subject "Piano" True)
@@ -2885,6 +2896,38 @@ spec = do
         "hidden formatting characters"
       assertRejected (pack (replicate 2001 'a')) "notes must be 1-2000 characters"
 
+    it "assigns Student through the persisted automatic policy with immutable provenance" $ do
+      (roleRows, auditRows) <- runTrialsInMemory $ do
+        _ <- privateStudentCreateHandler
+          (StudentCreate "Student Policy" "student-policy@example.com" Nothing Nothing)
+        roles <-
+          ( rawSql
+              "SELECT role.code, assignment.approval_mode, policy.code FROM party_security_role assignment INNER JOIN party ON party.id=assignment.party_id INNER JOIN security_role role ON role.id=assignment.role_id INNER JOIN security_role_assignment_policy policy ON policy.id=assignment.source_policy_id WHERE party.primary_email=?"
+              [toPersistValue ("student-policy@example.com" :: Text)]
+            :: SqlPersistT IO [(Single Text, Single Text, Single Text)]
+          )
+        audits <-
+          ( rawSql
+              "SELECT event.operation, event.approval_mode, event.result FROM security_audit_event event INNER JOIN party ON party.id=event.party_id INNER JOIN security_role_assignment_policy policy ON policy.id=event.source_policy_id WHERE party.primary_email=? AND policy.code=?"
+              [ toPersistValue ("student-policy@example.com" :: Text)
+              , toPersistValue ("trial.student-created.student" :: Text)
+              ]
+            :: SqlPersistT IO [(Single Text, Single Text, Single Text)]
+          )
+        pure (roles, audits)
+      roleRows `shouldBe`
+        [ ( Single "student"
+          , Single "system-policy"
+          , Single "trial.student-created.student"
+          )
+        ]
+      auditRows `shouldBe`
+        [ ( Single "system-policy-assigned"
+          , Single "system-policy"
+          , Single "success"
+          )
+        ]
+
   describe "private student updates" $ do
     it "rejects duplicate emails instead of letting two parties claim the same contact identity" $ do
       result <- try $ runTrialsInMemory $ do
@@ -2901,6 +2944,8 @@ spec = do
           , Models.partyEmergencyContact = Nothing
           , Models.partyNotes = Nothing
           , Models.partyStripeCustomerId = Nothing
+          , Models.partyCountryCode = Nothing
+          , Models.partyCountryId = Nothing
           , Models.partyCreatedAt = now
           }
         targetStudentId <- insert Models.Party
@@ -2915,6 +2960,8 @@ spec = do
           , Models.partyEmergencyContact = Nothing
           , Models.partyNotes = Nothing
           , Models.partyStripeCustomerId = Nothing
+          , Models.partyCountryCode = Nothing
+          , Models.partyCountryId = Nothing
           , Models.partyCreatedAt = now
           }
         privateStudentUpdateHandler
@@ -3004,18 +3051,12 @@ initializePartySchema = do
     \\"emergency_contact\" VARCHAR NULL,\
     \\"notes\" VARCHAR NULL,\
     \\"stripe_customer_id\" VARCHAR NULL,\
+    \\"country_code\" VARCHAR NULL,\
+    \\"country_id\" VARCHAR NULL,\
     \\"created_at\" TIMESTAMP NOT NULL\
     \)"
     []
-  rawExecute
-    "CREATE TABLE IF NOT EXISTS \"party_role\" (\
-    \\"id\" INTEGER PRIMARY KEY,\
-    \\"party_id\" INTEGER NOT NULL,\
-    \\"role\" VARCHAR NOT NULL,\
-    \\"active\" BOOLEAN NOT NULL,\
-    \CONSTRAINT \"unique_party_role\" UNIQUE (\"party_id\", \"role\")\
-    \)"
-    []
+  initializeCanonicalSecuritySchema
   rawExecute
     "CREATE TABLE IF NOT EXISTS \"user_credential\" (\
     \\"id\" INTEGER PRIMARY KEY,\
@@ -3068,6 +3109,33 @@ initializePartySchema = do
     []
   initializeArtistProfileSchema
 
+initializeCanonicalSecuritySchema :: (MonadIO m) => SqlPersistT m ()
+initializeCanonicalSecuritySchema = do
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS security_role (id VARCHAR PRIMARY KEY, code VARCHAR NOT NULL UNIQUE, name_es VARCHAR NOT NULL, name_en VARCHAR NOT NULL, description_es VARCHAR NULL, description_en VARCHAR NULL, sort_order INTEGER NOT NULL, system_role BOOLEAN NOT NULL, emergency_administrator BOOLEAN NOT NULL, self_assignable BOOLEAN NOT NULL, automatic_assignable BOOLEAN NOT NULL, active BOOLEAN NOT NULL, workflow_state_id VARCHAR NOT NULL, created_by INTEGER NULL, updated_by INTEGER NULL, approved_by INTEGER NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL, published_revision INTEGER NOT NULL, version INTEGER NOT NULL)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS security_role_assignment_policy (id VARCHAR PRIMARY KEY, code VARCHAR NOT NULL UNIQUE, trigger_code VARCHAR NOT NULL, role_id VARCHAR NOT NULL, name_es VARCHAR NOT NULL, name_en VARCHAR NOT NULL, description_es VARCHAR NULL, description_en VARCHAR NULL, requires_verified_email BOOLEAN NOT NULL, active BOOLEAN NOT NULL, effective_from TIMESTAMP NULL, effective_to TIMESTAMP NULL, created_by INTEGER NULL, updated_by INTEGER NULL, approved_by INTEGER NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL, version INTEGER NOT NULL, UNIQUE(trigger_code,role_id))"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS party_security_role (id VARCHAR PRIMARY KEY DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-8' || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))), party_id INTEGER NOT NULL, role_id VARCHAR NOT NULL, granted_by INTEGER NULL, approved_by INTEGER NULL, approval_mode VARCHAR NOT NULL, emergency_reason VARCHAR NULL, source_revision_id VARCHAR NULL, source_policy_id VARCHAR NULL, active BOOLEAN NOT NULL, created_at TIMESTAMP NOT NULL, revoked_at TIMESTAMP NULL, version INTEGER NOT NULL, UNIQUE(party_id,role_id))"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS security_audit_event (id VARCHAR PRIMARY KEY DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-8' || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))), revision_id VARCHAR NULL, source_policy_id VARCHAR NULL, entity_kind VARCHAR NOT NULL, party_id INTEGER NULL, role_id VARCHAR NOT NULL, permission_id VARCHAR NULL, operation VARCHAR NOT NULL, previous_active BOOLEAN NULL, new_active BOOLEAN NULL, actor_id INTEGER NULL, reviewer_id INTEGER NULL, approver_id INTEGER NULL, occurred_at TIMESTAMP NOT NULL, source_platform VARCHAR NOT NULL, reason VARCHAR NULL, correlation_id VARCHAR NOT NULL, approval_mode VARCHAR NOT NULL, result VARCHAR NOT NULL)"
+    []
+  rawExecute
+    "INSERT OR IGNORE INTO security_role (id,code,name_es,name_en,sort_order,system_role,emergency_administrator,self_assignable,automatic_assignable,active,workflow_state_id,created_at,updated_at,published_revision,version) VALUES ('00000000-0000-4000-8000-000000000401','customer','Cliente','Customer',1,1,0,0,1,1,'00000000-0000-4000-8000-000000000499',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1),('00000000-0000-4000-8000-000000000402','student','Estudiante','Student',2,1,0,0,1,1,'00000000-0000-4000-8000-000000000499',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1),('00000000-0000-4000-8000-000000000403','teacher','Docente','Teacher',3,1,0,0,1,1,'00000000-0000-4000-8000-000000000499',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1),('00000000-0000-4000-8000-000000000404','artist','Artista','Artist',4,1,0,0,1,1,'00000000-0000-4000-8000-000000000499',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1)"
+    []
+  rawExecute
+    "INSERT OR IGNORE INTO security_role_assignment_policy (id,code,trigger_code,role_id,name_es,name_en,requires_verified_email,active,created_at,updated_at,version) VALUES ('00000000-0000-4000-8000-000000000304','account.generated.customer','generated-account-create','00000000-0000-4000-8000-000000000401','Cliente generado','Generated customer',0,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1),('00000000-0000-4000-8000-000000000305','course.registration.student','course-registration','00000000-0000-4000-8000-000000000402','Registro de curso','Course registration',0,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1),('00000000-0000-4000-8000-000000000306','trial.inquiry.student','trial-inquiry','00000000-0000-4000-8000-000000000402','Consulta de clase','Lesson inquiry',0,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1),('00000000-0000-4000-8000-000000000307','trial.teacher-subject.teacher','teacher-subject-configured','00000000-0000-4000-8000-000000000403','Materias de docente','Teacher subjects',0,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1),('00000000-0000-4000-8000-000000000308','trial.teacher-student.student','teacher-student-linked','00000000-0000-4000-8000-000000000402','Vínculo docente','Teacher link',0,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1),('00000000-0000-4000-8000-000000000309','trial.student-created.student','student-created','00000000-0000-4000-8000-000000000402','Estudiante creado','Student created',0,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1),('00000000-0000-4000-8000-000000000310','live-session.artist-profile.artist','artist-profile-created','00000000-0000-4000-8000-000000000404','Artista Live Session','Live Session artist',0,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1)"
+    []
+
+insertCanonicalRoleFixture :: Models.PartyId -> Text -> Bool -> SqlPersistT IO ()
+insertCanonicalRoleFixture partyId roleCode active =
+  rawExecute
+    "INSERT INTO party_security_role (party_id,role_id,granted_by,approved_by,approval_mode,emergency_reason,source_revision_id,source_policy_id,active,created_at,revoked_at,version) SELECT ?,id,NULL,NULL,'bootstrap',NULL,NULL,NULL,?,CURRENT_TIMESTAMP,CASE WHEN ? THEN NULL ELSE CURRENT_TIMESTAMP END,1 FROM security_role WHERE code=? ON CONFLICT(party_id,role_id) DO UPDATE SET active=excluded.active, revoked_at=excluded.revoked_at"
+    [toPersistValue partyId, toPersistValue active, toPersistValue active, toPersistValue roleCode]
+
 initializeArtistProfileSchema :: (MonadIO m) => SqlPersistT m ()
 initializeArtistProfileSchema =
   rawExecute
@@ -3077,6 +3145,8 @@ initializeArtistProfileSchema =
     \\"slug\" VARCHAR NULL,\
     \\"bio\" VARCHAR NULL,\
     \\"city\" VARCHAR NULL,\
+    \\"country_code\" VARCHAR NULL,\
+    \\"country_id\" VARCHAR NULL,\
     \\"hero_image_url\" VARCHAR NULL,\
     \\"spotify_artist_id\" VARCHAR NULL,\
     \\"spotify_url\" VARCHAR NULL,\
@@ -3117,18 +3187,12 @@ initializeTrialsSchema = do
     \\"emergency_contact\" VARCHAR NULL,\
     \\"notes\" VARCHAR NULL,\
     \\"stripe_customer_id\" VARCHAR NULL,\
+    \\"country_code\" VARCHAR NULL,\
+    \\"country_id\" VARCHAR NULL,\
     \\"created_at\" TIMESTAMP NOT NULL\
     \)"
     []
-  rawExecute
-    "CREATE TABLE IF NOT EXISTS \"party_role\" (\
-    \\"id\" INTEGER PRIMARY KEY,\
-    \\"party_id\" INTEGER NOT NULL,\
-    \\"role\" VARCHAR NOT NULL,\
-    \\"active\" BOOLEAN NOT NULL,\
-    \CONSTRAINT \"unique_party_role\" UNIQUE (\"party_id\", \"role\")\
-    \)"
-    []
+  initializeCanonicalSecuritySchema
   initializeArtistProfileSchema
   rawExecute
     "CREATE TABLE IF NOT EXISTS \"resource\" (\
@@ -3235,6 +3299,9 @@ initializeTrialsSchema = do
     \\"service_order_id\" INTEGER NULL,\
     \\"party_id\" INTEGER NULL,\
     \\"service_type\" VARCHAR NULL,\
+    \\"service_offering_id\" VARCHAR NULL,\
+    \\"booking_type_id\" VARCHAR NULL,\
+    \\"workflow_state_id\" VARCHAR NULL,\
     \\"engineer_party_id\" INTEGER NULL,\
     \\"engineer_name\" VARCHAR NULL,\
     \\"starts_at\" TIMESTAMP NOT NULL,\
@@ -3472,17 +3539,15 @@ insertPartyFixture displayName now =
     , Models.partyEmergencyContact = Nothing
     , Models.partyNotes = Nothing
     , Models.partyStripeCustomerId = Nothing
+    , Models.partyCountryCode = Nothing
+    , Models.partyCountryId = Nothing
     , Models.partyCreatedAt = now
     }
 
 insertTeacherFixture :: Text -> UTCTime -> SqlPersistT IO Models.PartyId
 insertTeacherFixture displayName now = do
   partyId <- insertPartyFixture displayName now
-  _ <- insert Models.PartyRole
-    { Models.partyRolePartyId = partyId
-    , Models.partyRoleRole = Models.Teacher
-    , Models.partyRoleActive = True
-    }
+  insertCanonicalRoleFixture partyId "teacher" True
   pure partyId
 
 linkTeacherSubjectFixture :: Models.PartyId -> Trials.SubjectId -> SqlPersistT IO ()

@@ -61,6 +61,7 @@ import           Data.Char              ( GeneralCategory
                                         , isSpace
                                         )
 import           Data.List              (nub)
+import qualified Data.Map.Strict        as Map
 import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing)
 import           Data.Int               (Int64)
 import qualified Data.Set               as Set
@@ -86,10 +87,11 @@ import           Database.Persist       ( (==.), (!=.), (<-.), (||.)
                                         , getEntity
                                         , getJustEntity
                                         , insert
-                                        , upsert
                                         )
 import           Database.Persist.Sql   ( SqlPersistT
+                                        , Single(..)
                                         , fromSqlKey
+                                        , rawSql
                                         , runSqlPool
                                         , toSqlKey
                                         )
@@ -120,7 +122,6 @@ import qualified TDF.Services.Stripe    as Stripe
 import           TDF.API.Types          ( DropdownOptionCreate(..)
                                         , DropdownOptionDTO(..)
                                         , DropdownOptionUpdate(..)
-                                        , RoleDetailDTO(..)
                                         , UserAccountCreate(..)
                                         , UserAccountDTO(..)
                                         , UserAccountUpdate(..)
@@ -135,9 +136,9 @@ import           TDF.Auth               ( AuthedUser
                                         , hasStrictAdminAccess
                                         , validateModuleAccess
                                         , moduleName
-                                        , modulesForRoles
                                         )
 import           TDF.DB                 (Env(..))
+import           TDF.Catalog.Security   (loadCanonicalPartyRoles)
 import           TDF.Config             ( defaultLocale
                                         , defaultTimezone
                                         , ragRefreshHours
@@ -147,6 +148,7 @@ import           TDF.Config             ( defaultLocale
                                         )
 import           TDF.Models
 import           TDF.Internationalization (normalizeCountryCode)
+import qualified TDF.Catalog.Models as Catalog
 import           TDF.ModelsExtra (DropdownOption(..))
 import qualified TDF.ModelsExtra as ME
 import           TDF.WhatsApp.History   ( OutgoingWhatsAppRecord(..)
@@ -232,7 +234,6 @@ adminServer user =
   :<|> dropdownRouter
   :<|> usersRouter
   :<|> userCommunicationsRouter
-  :<|> rolesHandler
   :<|> artistsRouter
   :<|> logsRouter
   :<|> activityHandler
@@ -267,10 +268,6 @@ adminServer user =
     userById userId =
            getUser userId
       :<|> updateUser userId
-
-    rolesHandler = do
-      ensureStrictAdmin user
-      pure (map roleDetail [minBound .. maxBound])
 
     artistsRouter =
       (listArtistProfilesAdmin :<|> upsertArtistProfileAdmin)
@@ -682,12 +679,6 @@ adminServer user =
       , bedUpdatedAt = ME.studioBrainEntryUpdatedAt entry
       }
 
-    roleDetail role = RoleDetailDTO
-      { role    = role
-      , label   = roleToText role
-      , modules = map moduleName (Set.toList (modulesForRoles [role]))
-      }
-
     listArtistProfilesAdmin = do
       ensureModule ModuleAdmin user
       withPool loadAllArtistProfilesDTO
@@ -704,7 +695,8 @@ adminServer user =
         Nothing -> throwError err404
         Just _ -> do
           now <- liftIO getCurrentTime
-          dto <- withPool $ upsertArtistProfileRecord artistKey validated now
+          result <- withPool $ upsertArtistProfileRecord artistKey validated now
+          dto <- either (throwError . artistProfileValidationError) pure result
           recordActivity "artist_profile" (T.pack (show artistId)) "upsert" $
             Just (object
               [ "artistId" .= artistId
@@ -916,12 +908,16 @@ adminServer user =
     artistPromoLocalePreferences = do
       cfg <- asks envConfig
       mStored <- withPool $ getBy (UniqueUserLocalePreference (auPartyId user))
-      pure $ case mStored of
-        Nothing -> (defaultLocale cfg, defaultTimezone cfg)
-        Just (Entity _ preferences) ->
-          ( userLocalePreferenceLocale preferences
-          , userLocalePreferenceTimezone preferences
-          )
+      case mStored of
+        Nothing -> pure (defaultLocale cfg, defaultTimezone cfg)
+        Just (Entity _ preferences) -> do
+          mLocale <- case userLocalePreferenceLocaleId preferences of
+            Nothing -> pure Nothing
+            Just localeId -> withPool $ get (Catalog.LocaleReferenceKey localeId)
+          pure
+            ( maybe (defaultLocale cfg) Catalog.localeReferenceCode mLocale
+            , userLocalePreferenceTimezone preferences
+            )
 
     resolveArtistKey rawArtistId = do
       artistId <- either throwError pure $
@@ -1078,7 +1074,6 @@ adminServer user =
         , userCredentialPasswordHash = hashed
         , userCredentialActive       = activeValue
         }
-      for_ uacRoles $ \rolesList -> withPool $ setPartyRoles partyKey rolesList
       account <- withPool $ do
         credEnt <- getJustEntity credId
         loadUserAccount credEnt
@@ -1087,7 +1082,6 @@ adminServer user =
           [ "partyId" .= uacPartyId
           , "username" .= uniqueUsername
           , "active" .= activeValue
-          , "roles" .= fmap (map roleToText) uacRoles
           ])
       welcomeResult <- liftIO $ try $
         EmailSvc.sendWelcome
@@ -1163,7 +1157,6 @@ adminServer user =
                 ]
           when (not (null updates)) $
             withPool $ update credKey updates
-          for_ uauRoles $ \rolesList -> withPool $ setPartyRoles (userCredentialPartyId cred) rolesList
           account <- withPool $ do
             fresh <- getJustEntity credKey
             loadUserAccount fresh
@@ -1173,7 +1166,6 @@ adminServer user =
                 [ ("username" :: Text) <$ usernameUpdate
                 , ("active" :: Text) <$ uauActive
                 , ("password" :: Text) <$ passwordHash
-                , ("roles" :: Text) <$ uauRoles
                 ]
               ])
           pure account
@@ -1889,12 +1881,30 @@ normalizeBrainEntryTags (Just rawTags) =
 loadUserAccount :: Entity UserCredential -> SqlPersistT IO UserAccountDTO
 loadUserAccount (Entity credId cred) = do
   party <- getJustEntity (userCredentialPartyId cred)
-  roles <- selectList
-    [ PartyRolePartyId ==. userCredentialPartyId cred
-    , PartyRoleActive ==. True
-    ]
-    [Asc PartyRoleRole]
-  let roleList = map (partyRoleRole . entityVal) roles
+  canonicalRoles <- loadCanonicalPartyRoles (userCredentialPartyId cred)
+  roleList <- either
+    (liftIO . ioError . userError . T.unpack)
+    pure
+    canonicalRoles
+  persistedDetails <- loadPersistedRoleDetails
+  let modulesByRole = Map.fromList
+        [ (roleRegistryCode persistedRole, Set.fromList persistedModuleCodes)
+        | (roleCode, _, persistedModuleCodes) <- persistedDetails
+        , Just persistedRole <- [roleFromRegistryCode roleCode]
+        ]
+      missingRoleCodes =
+        [ code
+        | assignedRole <- roleList
+        , let code = roleRegistryCode assignedRole
+        , Map.notMember code modulesByRole
+        ]
+      effectiveModuleCodes = Set.toAscList (Set.unions
+        [ Map.findWithDefault Set.empty (roleRegistryCode assignedRole) modulesByRole
+        | assignedRole <- roleList
+        ])
+  unless (null missingRoleCodes) $
+    liftIO . ioError . userError $
+      "Missing persisted security roles for assigned codes: " <> show missingRoleCodes
   pure UserAccountDTO
     { userId    = fromSqlKey credId
     , partyId   = fromSqlKey (entityKey party)
@@ -1905,8 +1915,25 @@ loadUserAccount (Entity credId cred) = do
     , whatsapp = partyWhatsapp (entityVal party)
     , active    = userCredentialActive cred
     , roles     = roleList
-    , modules   = map moduleName (Set.toList (modulesForRoles roleList))
+    , modules   = effectiveModuleCodes
     }
+
+loadPersistedRoleDetails :: SqlPersistT IO [(Text, Text, [Text])]
+loadPersistedRoleDetails = do
+  roles <- rawSql
+    "SELECT code, name_es FROM security_role WHERE active=TRUE ORDER BY sort_order, code"
+    [] :: SqlPersistT IO [(Single Text, Single Text)]
+  moduleRows <- rawSql
+    "SELECT r.code, m.code FROM security_role r JOIN role_permission rp ON rp.role_id=r.id JOIN security_permission p ON p.id=rp.permission_id JOIN security_action a ON a.id=p.action_id JOIN security_module m ON m.id=p.module_id WHERE r.active=TRUE AND rp.active=TRUE AND p.active=TRUE AND a.active=TRUE AND m.active=TRUE AND p.resource_scope='module' AND a.code='access' ORDER BY r.sort_order, r.code, m.sort_order, m.code"
+    [] :: SqlPersistT IO [(Single Text, Single Text)]
+  let modulesByRole = Map.fromListWith (flip (++))
+        [ (roleCode, [moduleCode])
+        | (Single roleCode, Single moduleCode) <- moduleRows
+        ]
+  pure
+    [ (roleCode, roleLabel, nub (Map.findWithDefault [] roleCode modulesByRole))
+    | (Single roleCode, Single roleLabel) <- roles
+    ]
 
 loadUserCommunicationContext
   :: Int64
@@ -2187,17 +2214,6 @@ loadRegisteredUserEmailRecipients includeInactive = do
             Nothing -> Nothing
             Just normalizedEmail -> Just (partyDisplayName party, normalizedEmail)
   pure (catMaybes pairs)
-
-setPartyRoles :: PartyId -> [RoleEnum] -> SqlPersistT IO ()
-setPartyRoles partyKey rolesList = do
-  existing <- selectList [PartyRolePartyId ==. partyKey] []
-  let desired = Set.fromList rolesList
-  for_ (Set.toList desired) $ \role -> do
-    _ <- upsert (PartyRole partyKey role True) [PartyRoleActive =. True]
-    pure ()
-  for_ existing $ \(Entity roleId partyRole) ->
-    when (partyRoleActive partyRole && Set.notMember (partyRoleRole partyRole) desired) $
-      update roleId [PartyRoleActive =. False]
 
 artistReleaseEntityToDTOAdmin :: Entity ArtistRelease -> ArtistReleaseDTO
 artistReleaseEntityToDTOAdmin (Entity releaseId release) =

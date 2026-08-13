@@ -541,7 +541,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
     describe "UserAccount payload FromJSON" $ do
         it "accepts canonical admin wire keys for user create and update payloads" $ do
             case decodeUserAccountCreate
-                "{\"uacPartyId\":42,\"uacUsername\":\"ada.example\",\"uacPassword\":\"TempPass123!\",\"uacActive\":true,\"uacRoles\":[\"Admin\",\"Teacher\"]}" of
+                "{\"uacPartyId\":42,\"uacUsername\":\"ada.example\",\"uacPassword\":\"TempPass123!\",\"uacActive\":true}" of
                 Left err ->
                     expectationFailure ("Expected canonical user create payload to decode, got: " <> err)
                 Right payload -> do
@@ -549,17 +549,15 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     uacUsername payload `shouldBe` Just "ada.example"
                     uacPassword payload `shouldBe` Just "TempPass123!"
                     uacActive payload `shouldBe` Just True
-                    uacRoles payload `shouldBe` Just [Admin, Teacher]
 
             case decodeUserAccountUpdate
-                "{\"uauUsername\":\"ada.ops\",\"uauPassword\":\"NextPass123!\",\"uauActive\":false,\"uauRoles\":[\"ReadOnly\"]}" of
+                "{\"uauUsername\":\"ada.ops\",\"uauPassword\":\"NextPass123!\",\"uauActive\":false}" of
                 Left err ->
                     expectationFailure ("Expected canonical user update payload to decode, got: " <> err)
                 Right payload -> do
                     uauUsername payload `shouldBe` Just "ada.ops"
                     uauPassword payload `shouldBe` Just "NextPass123!"
                     uauActive payload `shouldBe` Just False
-                    uauRoles payload `shouldBe` Just [ReadOnly]
 
         it "rejects mixed-prefix or unexpected keys so admin user writes fail explicitly" $ do
             decodeUserAccountCreate
@@ -575,22 +573,16 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 "{\"uauUsername\":\"ada.ops\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
-        it "rejects duplicate admin role assignments instead of silently deduplicating them" $ do
-            case decodeUserAccountCreate
-                "{\"uacPartyId\":42,\"uacRoles\":[\"Admin\",\"Admin\"]}" of
-                Left err ->
-                    err `shouldContain` "uacRoles must not contain duplicates"
-                Right payload ->
-                    expectationFailure
-                        ("Expected duplicate create roles to fail, got " <> show payload)
-
-            case decodeUserAccountUpdate
-                "{\"uauRoles\":[\"ReadOnly\",\"ReadOnly\"]}" of
-                Left err ->
-                    err `shouldContain` "uauRoles must not contain duplicates"
-                Right payload ->
-                    expectationFailure
-                        ("Expected duplicate update roles to fail, got " <> show payload)
+        it "rejects removed direct-role fields so assignments must use security revisions" $ do
+            decodeUserAccountCreate
+                "{\"uacPartyId\":42,\"uacRoles\":[\"Admin\"]}"
+                `shouldSatisfy` isLeft
+            decodeUserAccountUpdate
+                "{\"uauRoles\":[\"ReadOnly\"]}"
+                `shouldSatisfy` isLeft
+            decodeUserAccountUpdate
+                "{\"uauRoles\":null}"
+                `shouldSatisfy` isLeft
 
         it "rejects explicit null user fields so admin defaults and no-op patches stay intentional" $ do
             let expectRejected expectedMessage result =
@@ -608,10 +600,6 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             expectRejected
                 "uauActive must be omitted instead of null"
                 (decodeUserAccountUpdate "{\"uauActive\":null}")
-            expectRejected
-                "uauRoles must be omitted instead of null"
-                (decodeUserAccountUpdate "{\"uauRoles\":null}")
-
         it "rejects empty admin user updates instead of returning a successful no-op patch" $
             case decodeUserAccountUpdate "{}" of
                 Left err ->
@@ -1029,7 +1017,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 Left err -> do
                     errHTTPCode err `shouldBe` 403
                     BL8.unpack (errBody err)
-                        `shouldContain` "Admin role required"
+                        `shouldContain` "Missing required module access"
                 Right NoContent ->
                     expectationFailure
                         "Expected malformed Admin seed access to be rejected"
@@ -1164,7 +1152,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         , apuYoutubeUrl = Nothing
                         , apuWebsiteUrl = Nothing
                         , apuFeaturedVideoUrl = Nothing
-                        , apuGenres = Nothing
+                        , apuGenreIds = []
                         , apuHighlights = Nothing
                         }
                 invalidArtistReleasePayload =
@@ -1260,6 +1248,8 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         , partyEmergencyContact = Nothing
                         , partyNotes = Nothing
                         , partyStripeCustomerId = Nothing
+                        , partyCountryCode = Nothing
+                        , partyCountryId = Nothing
                         , partyCreatedAt = now
                         }
                 )
@@ -1286,6 +1276,8 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         , artistProfileGenres = Nothing
                         , artistProfileHighlights = Nothing
                         , artistProfileStripeAccountId = Nothing
+                        , artistProfileCountryCode = Nothing
+                        , artistProfileCountryId = Nothing
                         , artistProfileCreatedAt = now
                         , artistProfileUpdatedAt = Just now
                         }
@@ -1358,6 +1350,8 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         , partyEmergencyContact = Nothing
                         , partyNotes = Nothing
                         , partyStripeCustomerId = Nothing
+                        , partyCountryCode = Nothing
+                        , partyCountryId = Nothing
                         , partyCreatedAt = now
                         }
                 )
@@ -1383,7 +1377,6 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                             , uacUsername = Just "ada.new"
                             , uacPassword = Just "TempPass123!"
                             , uacActive = Just True
-                            , uacRoles = Nothing
                             }
                     )
             case result of
@@ -1419,6 +1412,8 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                             , partyEmergencyContact = Nothing
                             , partyNotes = Nothing
                             , partyStripeCustomerId = Nothing
+                            , partyCountryCode = Nothing
+                            , partyCountryId = Nothing
                             , partyCreatedAt = now
                             }
                     )
@@ -1433,7 +1428,6 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                             , uacUsername = Nothing
                             , uacPassword = Just "   "
                             , uacActive = Just True
-                            , uacRoles = Nothing
                             }
                     )
             case result of
@@ -1551,7 +1545,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 Left err -> do
                     errHTTPCode err `shouldBe` 403
                     BL8.unpack (errBody err)
-                        `shouldContain` "Admin role required"
+                        `shouldContain` "Missing required module access"
                 Right value ->
                     expectationFailure
                         ( "Expected malformed Admin social unhold to be rejected, got "
@@ -1754,20 +1748,18 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 Right NoContent ->
                     expectationFailure "Expected unauthorized log clearing to be rejected"
 
-        it "rejects stale Admin-module grants before listing logs" $ do
-            let staleModuleUser = (mkUser [Fan, Customer]) { auModules = modulesForRoles [Admin] }
-                listLogs :<|> _clearLogs = logsHandlersFor staleModuleUser
+        it "honors persisted Admin-module grants independently of legacy role defaults" $ do
+            let persistedModuleUser = (mkUser [Fan, Customer]) { auModules = modulesForRoles [Admin] }
+                listLogs :<|> _clearLogs = logsHandlersFor persistedModuleUser
 
             result <- runAdminTest (listLogs Nothing)
             case result of
-                Left err -> do
-                    errHTTPCode err `shouldBe` 403
-                    BL8.unpack (errBody err) `shouldContain` "Module grants must match roles"
-                Right value ->
+                Left err ->
                     expectationFailure
-                        ( "Expected stale Admin-module log listing to be rejected, got "
-                            <> show value
+                        ( "Expected persisted Admin-module log listing to be allowed, got "
+                            <> show err
                         )
+                Right _ -> pure ()
   where
     decodeEmailTest :: BL8.ByteString -> Either String EmailTestRequest
     decodeEmailTest = eitherDecode
@@ -1801,7 +1793,6 @@ seedHandlerFor user rawToken =
             :<|> _dropdowns
             :<|> _users
             :<|> _communications
-            :<|> _roles
             :<|> _artists
             :<|> _logs
             :<|> _activity
@@ -1906,6 +1897,8 @@ initializeAdminUsersSchema = do
         \\"emergency_contact\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL,\
         \\"stripe_customer_id\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
         \)"
         []
@@ -1938,6 +1931,8 @@ initializeArtistPromotionSchema = do
         \\"emergency_contact\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL,\
         \\"stripe_customer_id\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
         \)"
         []
@@ -1949,6 +1944,9 @@ initializeArtistPromotionSchema = do
         \\"currency\" VARCHAR NOT NULL,\
         \\"timezone\" VARCHAR NOT NULL,\
         \\"country_code\" VARCHAR NULL,\
+        \\"locale_id\" VARCHAR NULL,\
+        \\"currency_id\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL,\
         \FOREIGN KEY(\"user_id\") REFERENCES \"party\"(\"id\")\
         \)"
@@ -1960,6 +1958,8 @@ initializeArtistPromotionSchema = do
         \\"slug\" VARCHAR NULL,\
         \\"bio\" VARCHAR NULL,\
         \\"city\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"hero_image_url\" VARCHAR NULL,\
         \\"spotify_artist_id\" VARCHAR NULL,\
         \\"spotify_url\" VARCHAR NULL,\
@@ -2038,7 +2038,6 @@ logsHandlersFor user =
             :<|> _dropdowns
             :<|> _users
             :<|> _communications
-            :<|> _roles
             :<|> _artists
             :<|> logsRouter
             :<|> _activity
@@ -2059,7 +2058,6 @@ usersHandlersFor user =
             :<|> _dropdowns
             :<|> usersRouter
             :<|> _communications
-            :<|> _roles
             :<|> _artists
             :<|> _logs
             :<|> _activity
@@ -2081,7 +2079,6 @@ dropdownsHandlersFor category user =
             :<|> dropdownsRouter
             :<|> _users
             :<|> _communications
-            :<|> _roles
             :<|> _artists
             :<|> _logs
             :<|> _activity
@@ -2113,7 +2110,6 @@ artistsHandlersFor user =
             :<|> _dropdowns
             :<|> _users
             :<|> _communications
-            :<|> _roles
             :<|> artistsRouter
             :<|> _logs
             :<|> _activity
@@ -2135,7 +2131,6 @@ communicationsHandlersFor user =
             :<|> _dropdowns
             :<|> _users
             :<|> communicationsRouter
-            :<|> _roles
             :<|> _artists
             :<|> _logs
             :<|> _activity
@@ -2156,7 +2151,6 @@ socialHandlersFor user =
             :<|> _dropdowns
             :<|> _users
             :<|> _communications
-            :<|> _roles
             :<|> _artists
             :<|> _logs
             :<|> _activity

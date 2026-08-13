@@ -24,11 +24,6 @@ module TDF.Server.SocialEventsHandlers (
     validateDirectTicketOrderPricing,
     validateTicketPurchaseEventEligibility,
     normalizeTicketStatus,
-    normalizeEventType,
-    normalizeEventStatus,
-    parseEventTypeQueryParamEither,
-    parseEventStatusQueryParamEither,
-    validateEventCreateTypeStatus,
     validateEventMetadataUpdate,
     validateEventMetadataUrlField,
     validateBudgetLineTypeInput,
@@ -130,7 +125,7 @@ import Data.Ord (Down (..))
 import qualified Data.Set as Set
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import Data.Time (UTCTime, diffUTCTime, getCurrentTime)
+import Data.Time (UTCTime, diffUTCTime, getCurrentTime, utctDay)
 import Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
 import Data.Time.Format (defaultTimeLocale, formatTime)
 import Data.Time.Format.ISO8601 (iso8601ParseM)
@@ -159,6 +154,7 @@ import Data.Time.Clock (addUTCTime)
 import qualified System.Random as Random
 import TDF.API.SocialEventsAPI
 import TDF.Auth (AuthedUser (..), hasStrictAdminAccess)
+import qualified TDF.Catalog.Models as Catalog
 import TDF.Config (AppConfig (..), EmailConfig, assetsRootDir, resolveConfiguredAssetsBase)
 import TDF.Internationalization (normalizeCurrencyCode)
 import TDF.DB (Env (..))
@@ -229,6 +225,7 @@ import TDF.Models (EntityField (PartyStripeCustomerId), Party (..), PartyId)
 import TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueCreatedAt, venueName, venueUpdatedAt)
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.ModelsExtra as ME
+import qualified TDF.SocialEventLifecycle as EventLifecycle
 import TDF.ServerRadio (
     resolveRadioTransmissionEnvBase,
     validateRadioTransmissionIngestBase,
@@ -1151,8 +1148,6 @@ data EventMetadataDTO = EventMetadataDTO
     { emTicketUrl :: Maybe T.Text
     , emImageUrl :: Maybe T.Text
     , emIsPublic :: Maybe Bool
-    , emType :: Maybe T.Text
-    , emStatus :: Maybe T.Text
     , emCurrency :: Maybe T.Text
     , emBudgetCents :: Maybe Int
     }
@@ -1163,8 +1158,6 @@ emptyEventMetadata =
         { emTicketUrl = Nothing
         , emImageUrl = Nothing
         , emIsPublic = Nothing
-        , emType = Nothing
-        , emStatus = Nothing
         , emCurrency = Nothing
         , emBudgetCents = Nothing
         }
@@ -1175,8 +1168,6 @@ instance Aeson.ToJSON EventMetadataDTO where
             [ "ticketUrl" Aeson..= emTicketUrl
             , "imageUrl" Aeson..= emImageUrl
             , "isPublic" Aeson..= emIsPublic
-            , "eventType" Aeson..= emType
-            , "eventStatus" Aeson..= emStatus
             , "currency" Aeson..= emCurrency
             , "budgetCents" Aeson..= emBudgetCents
             ]
@@ -1188,8 +1179,6 @@ instance Aeson.FromJSON EventMetadataDTO where
             <$> o Aeson..:? "ticketUrl"
             <*> o Aeson..:? "imageUrl"
             <*> o Aeson..:? "isPublic"
-            <*> o Aeson..:? "eventType"
-            <*> o Aeson..:? "eventStatus"
             <*> o Aeson..:? "currency"
             <*> o Aeson..:? "budgetCents"
 
@@ -1210,24 +1199,15 @@ storedEventMetadataAllowedKeys =
     [ "ticketUrl"
     , "imageUrl"
     , "isPublic"
-    , "eventType"
-    , "eventStatus"
     , "currency"
     , "budgetCents"
     ]
-
-decodeEventMetadata :: Maybe T.Text -> EventMetadataDTO
-decodeEventMetadata mTxt = fromMaybe emptyEventMetadata $ do
-    txt <- mTxt
-    Aeson.decodeStrict (TE.encodeUtf8 txt)
 
 encodeEventMetadata :: EventMetadataDTO -> Maybe T.Text
 encodeEventMetadata EventMetadataDTO{..}
     | isNothing emTicketUrl
         && isNothing emImageUrl
         && isNothing emIsPublic
-        && isNothing emType
-        && isNothing emStatus
         && isNothing emCurrency
         && isNothing emBudgetCents =
         Nothing
@@ -1238,8 +1218,6 @@ encodeEventMetadata EventMetadataDTO{..}
                     { emTicketUrl = emTicketUrl
                     , emImageUrl = emImageUrl
                     , emIsPublic = emIsPublic
-                    , emType = emType
-                    , emStatus = emStatus
                     , emCurrency = emCurrency
                     , emBudgetCents = emBudgetCents
                     }
@@ -1308,16 +1286,6 @@ validateEventMetadataUpdate EventMetadataUpdateDTO{..} = do
             "eventImageUrl must be an absolute https URL"
             normalizeEventMetadataUrl
             emuImageUrl
-    normalizedType <-
-        normalizeNullableTextUpdate
-            "eventType must be one of: party, concert, festival, conference, showcase, other"
-            normalizeEventType
-            emuType
-    normalizedStatus <-
-        normalizeNullableTextUpdate
-            "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
-            normalizeEventStatus
-            emuStatus
     normalizedCurrency <-
         normalizeNullableTextUpdate
             "eventCurrency must be a 3-letter ISO code"
@@ -1328,8 +1296,6 @@ validateEventMetadataUpdate EventMetadataUpdateDTO{..} = do
             { emuTicketUrl = normalizedTicketUrl
             , emuImageUrl = normalizedImageUrl
             , emuIsPublic = emuIsPublic
-            , emuType = normalizedType
-            , emuStatus = normalizedStatus
             , emuCurrency = normalizedCurrency
             , emuBudgetCents = emuBudgetCents
             }
@@ -1372,69 +1338,12 @@ normalizeEventMetadataUrl rawValue = do
 maxEventMetadataUrlChars :: Int
 maxEventMetadataUrlChars = 2048
 
-validateCreateNormalizedTextDefault ::
-    BL.ByteString ->
-    (Maybe T.Text -> Maybe T.Text) ->
-    T.Text ->
-    Maybe T.Text ->
-    Either ServerError T.Text
-validateCreateNormalizedTextDefault invalidMessage normalizeValue fallbackValue rawValue =
-    case cleanMaybeText rawValue of
-        Nothing -> Right fallbackValue
-        Just cleaned ->
-            case normalizeValue (Just cleaned) of
-                Just normalized -> Right normalized
-                Nothing -> Left err400{errBody = invalidMessage}
-
-validateEventCreateTypeStatus :: Maybe T.Text -> Maybe T.Text -> Either ServerError (T.Text, T.Text)
-validateEventCreateTypeStatus mType mStatus = do
-    normalizedType <-
-        validateCreateNormalizedTextDefault
-            "eventType must be one of: party, concert, festival, conference, showcase, other"
-            normalizeEventType
-            "party"
-            mType
-    normalizedStatus <-
-        validateCreateNormalizedTextDefault
-            "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
-            normalizeEventStatus
-            "planning"
-            mStatus
-    pure (normalizedType, normalizedStatus)
-
-validateNormalizedQueryParamEither ::
-    BL.ByteString ->
-    (Maybe T.Text -> Maybe T.Text) ->
-    Maybe T.Text ->
-    Either ServerError (Maybe T.Text)
-validateNormalizedQueryParamEither invalidMessage normalizeValue rawValue =
-    case cleanMaybeText rawValue of
-        Nothing -> Right Nothing
-        Just cleaned ->
-            case normalizeValue (Just cleaned) of
-                Just normalized -> Right (Just normalized)
-                Nothing -> Left err400{errBody = invalidMessage}
-
-parseEventTypeQueryParamEither :: Maybe T.Text -> Either ServerError (Maybe T.Text)
-parseEventTypeQueryParamEither =
-    validateNormalizedQueryParamEither
-        "eventType must be one of: party, concert, festival, conference, showcase, other"
-        normalizeEventType
-
-parseEventStatusQueryParamEither :: Maybe T.Text -> Either ServerError (Maybe T.Text)
-parseEventStatusQueryParamEither =
-    validateNormalizedQueryParamEither
-        "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
-        normalizeEventStatus
-
 applyEventMetadataUpdate :: EventMetadataUpdateDTO -> EventMetadataDTO -> EventMetadataDTO
 applyEventMetadataUpdate EventMetadataUpdateDTO{..} existing =
     EventMetadataDTO
         { emTicketUrl = applyNullableTextUpdate emuTicketUrl (emTicketUrl existing)
         , emImageUrl = applyNullableTextUpdate emuImageUrl (emImageUrl existing)
         , emIsPublic = applyNullableBoolUpdate emuIsPublic (emIsPublic existing)
-        , emType = applyNullableNormalizedTextUpdate normalizeEventType emuType (emType existing)
-        , emStatus = applyNullableNormalizedTextUpdate normalizeEventStatus emuStatus (emStatus existing)
         , emCurrency = applyNullableNormalizedTextUpdate normalizeCurrencyMaybe emuCurrency (emCurrency existing)
         , emBudgetCents = applyNullableIntUpdate (\value -> normalizeBudgetCentsMaybe (Just value)) emuBudgetCents (emBudgetCents existing)
         }
@@ -1804,13 +1713,21 @@ socialEventsServer user =
             :<|> deleteEvent
 
     listEvents :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [EventDTO]
-    listEvents mCity mScope mStartAfter mType mStatus mArtistId mVenueId mLimit mOffset = do
+    listEvents mCity mScope mStartAfter mTypeId mWorkflowStateId mArtistId mVenueId mLimit mOffset = do
         Env{..} <- ask
         limit <- resolveLimit 200 500 mLimit
         offset <- either throwError pure (validateSocialEventsListOffset mOffset)
         scope <- either throwError pure (validateEventListScope mScope)
-        typeNeedle <- either throwError pure (parseEventTypeQueryParamEither mType)
-        statusNeedle <- either throwError pure (parseEventStatusQueryParamEither mStatus)
+        eventTypeFilter <- traverse
+            (\rawId -> liftIO (runSqlPool (loadKnownEventTypeId rawId) envPool) >>= either throwError pure)
+            (cleanMaybeText mTypeId)
+        workflowStateFilter <- traverse
+            (\rawId -> do
+                stateId <- either throwError pure (parseEventWorkflowStateId rawId)
+                resolved <- liftIO $ runSqlPool (EventLifecycle.loadActiveSocialEventState stateId) envPool
+                maybe (throwError invalidEventWorkflowStateReference) (const (pure stateId)) resolved
+            )
+            (cleanMaybeText mWorkflowStateId)
         cityFilterText <-
             either throwError pure $
                 validateSocialEventsListFilter "city" mCity
@@ -1872,24 +1789,22 @@ socialEventsServer user =
                 if null eventIds
                     then pure [SocialEventId ==. toSqlKey 0]
                     else pure [SocialEventId <-. eventIds]
-        let filters = startFilter ++ cityFilter ++ venueFilter ++ artistFilter
+        let filters =
+                startFilter
+                    ++ cityFilter
+                    ++ venueFilter
+                    ++ artistFilter
+                    ++ maybe [] (\eventTypeUuid -> [SocialEventEventTypeId ==. Just eventTypeUuid]) eventTypeFilter
+                    ++ maybe [] (\stateUuid -> [SocialEventWorkflowStateId ==. Just stateUuid]) workflowStateFilter
         let dateOrder =
                 case mStartAfter of
                     Just _ -> Asc SocialEventStartTime
                     Nothing -> Desc SocialEventStartTime
         rows <- liftIO $ runSqlPool (selectList filters [dateOrder, LimitTo limit, OffsetBy offset]) envPool
-        let matchesMeta (Entity _ eventRow) = do
-                meta <-
-                    either (throwError . storedEventMetadataServerError) pure $
-                        decodeStoredEventMetadata (socialEventMetadata eventRow)
-                let typeOk = maybe True (\t -> emType meta == Just t) typeNeedle
-                    statusOk = maybe True (\s -> emStatus meta == Just s) statusNeedle
-                pure (typeOk && statusOk)
-        filteredRows <- filterM matchesMeta rows
-        forM filteredRows $ \(Entity eid eventRow) -> do
+        forM rows $ \(Entity eid eventRow) -> do
             artists <- loadEventArtists envPool eid
             sources <- liftIO (loadExternalEventSources envPool eid)
-            dto <- either throwError pure (eventEntityToDTO (defaultCurrency envConfig) eid eventRow artists)
+            dto <- liftIO (runSqlPool (eventEntityToDTO (defaultCurrency envConfig) eid eventRow artists) envPool) >>= either throwError pure
             pure dto{eventSources = Just sources}
 
     resolveSubscribedEventIds ::
@@ -2137,6 +2052,61 @@ socialEventsServer user =
                 )
                 envPool
 
+    loadKnownEventTypeId :: T.Text -> SqlPersistT IO (Either ServerError UUID.UUID)
+    loadKnownEventTypeId rawEventTypeId =
+        case UUID.fromText (T.strip rawEventTypeId) of
+            Nothing -> pure (Left invalidEventTypeReference)
+            Just eventTypeUuid ->
+                case fromPathPiece (UUID.toText eventTypeUuid) of
+                    Nothing -> pure (Left invalidEventTypeReference)
+                    Just eventTypeKey -> do
+                        mEventType <- getEntity (eventTypeKey :: Catalog.EventTypeId)
+                        case mEventType of
+                            Nothing -> pure (Left invalidEventTypeReference)
+                            Just _ -> pure (Right eventTypeUuid)
+
+    loadSelectableEventTypeId :: UTCTime -> T.Text -> SqlPersistT IO (Either ServerError UUID.UUID)
+    loadSelectableEventTypeId now rawEventTypeId = do
+        knownResult <- loadKnownEventTypeId rawEventTypeId
+        case knownResult of
+            Left serverError -> pure (Left serverError)
+            Right eventTypeUuid ->
+                case fromPathPiece (UUID.toText eventTypeUuid) of
+                    Nothing -> pure (Left invalidEventTypeReference)
+                    Just eventTypeKey -> do
+                        eventType <- getJust (eventTypeKey :: Catalog.EventTypeId)
+                        catalog <- getJust (Catalog.eventTypeCatalogId eventType)
+                        workflowState <- getJust (Catalog.eventTypeWorkflowStateId eventType)
+                        let today = utctDay now
+                            effective =
+                                maybe True (<= today) (Catalog.eventTypeEffectiveFrom eventType)
+                                    && maybe True (>= today) (Catalog.eventTypeEffectiveUntil eventType)
+                            selectable =
+                                Catalog.eventTypeActive eventType
+                                    && Catalog.catalogDefinitionActive catalog
+                                    && Catalog.catalogDefinitionCode catalog == "event-types"
+                                    && isNothing (Catalog.eventTypeDeprecatedAt eventType)
+                                    && Catalog.workflowStateActive workflowState
+                                    && Catalog.workflowStateCode workflowState == "published"
+                                    && Catalog.workflowStateWorkflowId workflowState
+                                        == Catalog.catalogDefinitionWorkflowId catalog
+                                    && effective
+                        pure (if selectable then Right eventTypeUuid else Left invalidEventTypeReference)
+
+    invalidEventTypeReference :: ServerError
+    invalidEventTypeReference =
+        err422
+            { errBody =
+                "eventTypeId must reference an active, effective, published event type"
+            }
+
+    invalidEventWorkflowStateReference :: ServerError
+    invalidEventWorkflowStateReference =
+        err422
+            { errBody =
+                "eventWorkflowStateId must reference an active state in social-event-lifecycle"
+            }
+
     createEvent :: EventDTO -> AppM EventDTO
     createEvent dto = do
         Env{..} <- ask
@@ -2148,7 +2118,21 @@ socialEventsServer user =
                 (eventPriceCents dto)
                 (eventCapacity dto)
                 (eventBudgetCents dto)
-        (eventTypeVal, eventStatusVal) <- either throwError pure (validateEventCreateTypeStatus (eventType dto) (eventStatus dto))
+        requestedEventTypeId <-
+            maybe (throwError invalidEventTypeReference) pure (cleanMaybeText (eventTypeId dto))
+        eventTypeUuid <-
+            liftIO (runSqlPool (loadSelectableEventTypeId now requestedEventTypeId) envPool)
+                >>= either throwError pure
+        validateEventReadOnlyProjectionOmitted dto
+        initialWorkflowStateId <- liftIO $ runSqlPool EventLifecycle.resolveInitialSocialEventStateId envPool
+        workflowStateId <- case cleanMaybeText (eventWorkflowStateId dto) of
+            Nothing -> pure initialWorkflowStateId
+            Just rawId -> do
+                requestedId <- either throwError pure (parseEventWorkflowStateId rawId)
+                activeState <- liftIO $ runSqlPool (EventLifecycle.loadActiveSocialEventState requestedId) envPool
+                when (isNothing activeState || requestedId /= initialWorkflowStateId) $
+                    throwError invalidEventWorkflowStateReference
+                pure requestedId
         currencyVal <- either throwError pure (validateEventCurrencyInput (defaultCurrency envConfig) (eventCurrency dto))
         unless (currencyVal `elem` supportedCurrencies envConfig) $
             throwError err400{errBody = "Currency is not enabled by SUPPORTED_CURRENCIES"}
@@ -2165,12 +2149,9 @@ socialEventsServer user =
                         { emTicketUrl = ticketUrlVal
                         , emImageUrl = imageUrlVal
                         , emIsPublic = eventIsPublic dto <|> Just True
-                        , emType = Just eventTypeVal
-                        , emStatus = Just eventStatusVal
                         , emCurrency = Just currencyVal
                         , emBudgetCents = normalizeBudgetCentsMaybe (eventBudgetCents dto)
                         }
-            createdMetadata = decodeEventMetadata metadataVal
         mVenueKey <- case eventVenueId dto of
             Nothing -> pure Nothing
             Just txt -> Just <$> either throwError pure (parseVenueIdEither txt)
@@ -2183,9 +2164,13 @@ socialEventsServer user =
                             , socialEventTitle = titleVal
                             , socialEventDescription = eventDescription dto
                             , socialEventVenueId = mVenueKey
+                            , socialEventTimezone = Nothing
+                            , socialEventEventTypeId = Just eventTypeUuid
+                            , socialEventWorkflowStateId = Just workflowStateId
                             , socialEventStartTime = eventStart dto
                             , socialEventEndTime = eventEnd dto
                             , socialEventPriceCents = eventPriceCents dto
+                            , socialEventCurrencyId = Nothing
                             , socialEventCapacity = eventCapacity dto
                             , socialEventMetadata = metadataVal
                             , socialEventCreatedAt = now
@@ -2199,22 +2184,26 @@ socialEventsServer user =
                     insert_ (EventArtist key artistKey Nothing)
                 )
                 envPool
-        pure
-            dto
-                { eventId = Just (renderKeyText key)
-                , eventTitle = titleVal
-                , eventOrganizerPartyId = Just currentPartyId
-                , eventTicketUrl = emTicketUrl createdMetadata
-                , eventImageUrl = emImageUrl createdMetadata
-                , eventIsPublic = emIsPublic createdMetadata
-                , eventType = emType createdMetadata
-                , eventStatus = emStatus createdMetadata
-                , eventCurrency = emCurrency createdMetadata
-                , eventBudgetCents = emBudgetCents createdMetadata
-                , eventSources = Nothing
-                , eventCreatedAt = Just now
-                , eventUpdatedAt = Just now
-                }
+        let createdEvent =
+                SocialEvent
+                    { socialEventOrganizerPartyId = Just currentPartyId
+                    , socialEventTitle = titleVal
+                    , socialEventDescription = eventDescription dto
+                    , socialEventVenueId = mVenueKey
+                    , socialEventTimezone = Nothing
+                    , socialEventEventTypeId = Just eventTypeUuid
+                    , socialEventWorkflowStateId = Just workflowStateId
+                    , socialEventStartTime = eventStart dto
+                    , socialEventEndTime = eventEnd dto
+                    , socialEventPriceCents = eventPriceCents dto
+                    , socialEventCurrencyId = Nothing
+                    , socialEventCapacity = eventCapacity dto
+                    , socialEventMetadata = metadataVal
+                    , socialEventCreatedAt = now
+                    , socialEventUpdatedAt = now
+                    }
+        liftIO (runSqlPool (eventEntityToDTO (defaultCurrency envConfig) key createdEvent (eventArtists dto)) envPool)
+            >>= either throwError pure
 
     getEvent :: T.Text -> AppM EventDTO
     getEvent rawId = do
@@ -2226,7 +2215,7 @@ socialEventsServer user =
             Just eventRow -> do
                 artists <- loadEventArtists envPool eventKey
                 sources <- liftIO (loadExternalEventSources envPool eventKey)
-                dto <- either throwError pure (eventEntityToDTO (defaultCurrency envConfig) eventKey eventRow artists)
+                dto <- liftIO (runSqlPool (eventEntityToDTO (defaultCurrency envConfig) eventKey eventRow artists) envPool) >>= either throwError pure
                 pure dto{eventSources = Just sources}
 
     updateEvent :: T.Text -> EventUpdateDTO -> AppM EventDTO
@@ -2238,6 +2227,12 @@ socialEventsServer user =
         existing <- maybe (throwError err404{errBody = "Event not found"}) pure mExisting
         managedEvent <- claimOrRequireEventManager currentPartyId envPool eventKey existing
         let dto = eudEvent
+        validateEventReadOnlyProjectionOmitted dto
+        requestedEventTypeId <-
+            maybe (throwError invalidEventTypeReference) pure (cleanMaybeText (eventTypeId dto))
+        eventTypeUuid <-
+            liftIO (runSqlPool (loadSelectableEventTypeId now requestedEventTypeId) envPool)
+                >>= either throwError pure
         titleVal <- either throwError pure (validateEventTitleInput (eventTitle dto))
         when (eventStart dto >= eventEnd dto) $ throwError err400{errBody = "start time must be before end time"}
         either throwError pure $
@@ -2251,6 +2246,20 @@ socialEventsServer user =
             either (throwError . storedEventMetadataServerError) pure $
                 decodeStoredEventMetadata (socialEventMetadata managedEvent)
         let mergedMetadata = applyEventMetadataUpdate validatedMetadataUpdate existingMetadata
+        existingWorkflowStateId <-
+            maybe (throwError err500{errBody = "Event has no canonical workflow state"}) pure
+                (socialEventWorkflowStateId managedEvent)
+        workflowStateId <- case eudWorkflowStateIdUpdate of
+            FieldMissing -> pure existingWorkflowStateId
+            FieldNull -> throwError invalidEventWorkflowStateReference
+            FieldValue rawWorkflowStateId -> do
+                requestedId <- either throwError pure (parseEventWorkflowStateId rawWorkflowStateId)
+                activeState <- liftIO $ runSqlPool (EventLifecycle.loadActiveSocialEventState requestedId) envPool
+                when (isNothing activeState) $ throwError invalidEventWorkflowStateReference
+                transitionAllowed <- liftIO $ runSqlPool (EventLifecycle.socialEventTransitionAllowed existingWorkflowStateId requestedId) envPool
+                unless transitionAllowed $
+                    throwError err409{errBody = "The requested social-event workflow transition is not allowed"}
+                pure requestedId
         mVenueKey <- case eventVenueId dto of
             Nothing -> pure Nothing
             Just txt -> Just <$> either throwError pure (parseVenueIdEither txt)
@@ -2265,6 +2274,8 @@ socialEventsServer user =
                     , SocialEventEndTime =. eventEnd dto
                     , SocialEventPriceCents =. eventPriceCents dto
                     , SocialEventCapacity =. eventCapacity dto
+                    , SocialEventEventTypeId =. Just eventTypeUuid
+                    , SocialEventWorkflowStateId =. Just workflowStateId
                     , SocialEventMetadata =. encodeEventMetadata mergedMetadata
                     , SocialEventUpdatedAt =. now
                     ]
@@ -2277,23 +2288,22 @@ socialEventsServer user =
                     insert_ (EventArtist eventKey artistKey Nothing)
                 )
                 envPool
-        pure
-            ( dto
-                { eventId = Just rawId
-                , eventTitle = titleVal
-                , eventOrganizerPartyId = socialEventOrganizerPartyId managedEvent
-                , eventTicketUrl = emTicketUrl mergedMetadata
-                , eventImageUrl = emImageUrl mergedMetadata
-                , eventIsPublic = emIsPublic mergedMetadata
-                , eventType = emType mergedMetadata
-                , eventStatus = emStatus mergedMetadata
-                , eventCurrency = emCurrency mergedMetadata
-                , eventBudgetCents = emBudgetCents mergedMetadata
-                , eventSources = Nothing
-                , eventCreatedAt = Just (socialEventCreatedAt managedEvent)
-                , eventUpdatedAt = Just now
-                }
-            )
+        let updatedEvent =
+                managedEvent
+                    { socialEventTitle = titleVal
+                    , socialEventDescription = eventDescription dto
+                    , socialEventVenueId = mVenueKey
+                    , socialEventStartTime = eventStart dto
+                    , socialEventEndTime = eventEnd dto
+                    , socialEventPriceCents = eventPriceCents dto
+                    , socialEventCapacity = eventCapacity dto
+                    , socialEventEventTypeId = Just eventTypeUuid
+                    , socialEventWorkflowStateId = Just workflowStateId
+                    , socialEventMetadata = encodeEventMetadata mergedMetadata
+                    , socialEventUpdatedAt = now
+                    }
+        liftIO (runSqlPool (eventEntityToDTO (defaultCurrency envConfig) eventKey updatedEvent (eventArtists dto)) envPool)
+            >>= either throwError pure
 
     uploadEventImage :: T.Text -> EventImageUploadForm -> AppM EventImageUploadDTO
     uploadEventImage rawId rawUploadForm = do
@@ -2493,6 +2503,10 @@ socialEventsServer user =
                             , venueAddress = venueAddress dto
                             , venueCity = venueCity dto
                             , venueCountry = venueCountry dto
+                            , venueCountryCode = Nothing
+                            , venueCountryId = Nothing
+                            , venueCityId = Nothing
+                            , venueTimezone = Nothing
                             , venueLatitude = venueLat dto
                             , venueLongitude = venueLng dto
                             , venueCapacity = venueCapacity dto
@@ -2602,18 +2616,17 @@ socialEventsServer user =
             :<|> followArtist
             :<|> unfollowArtist
 
-    listArtists :: Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [ArtistDTO]
-    listArtists mNameFilter mGenreFilter mLimit mOffset = do
+    listArtists :: Maybe T.Text -> Maybe UUID.UUID -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [ArtistDTO]
+    listArtists mNameFilter mGenreIdFilter mLegacyGenreFilter mLimit mOffset = do
         Env{..} <- ask
+        when (isJust mLegacyGenreFilter) $
+            throwError err400{errBody = "genre is obsolete; use the canonical genreId UUID parameter"}
         limit <- resolveLimit 500 1000 mLimit
         offset <- either throwError pure (validateSocialEventsListOffset mOffset)
         nameFilter <-
             either throwError pure $
                 fmap T.toCaseFold <$> validateSocialEventsListFilter "name" mNameFilter
-        genreFilter <-
-            either throwError pure $
-                fmap T.toCaseFold <$> validateSocialEventsListFilter "genre" mGenreFilter
-        let hasFilter = isJust nameFilter || isJust genreFilter
+        let hasFilter = isJust nameFilter || isJust mGenreIdFilter
         rows <-
             liftIO $
                 runSqlPool
@@ -2627,16 +2640,15 @@ socialEventsServer user =
                     )
                     envPool
         artists <- forM rows $ \(Entity aid a) -> do
-            genres <- liftIO $ runSqlPool (selectList [ArtistGenreArtistId ==. aid] []) envPool
-            let genreList = artistGenresFromRowsAndFallback genres (artistProfileGenres a)
+            (genreList, genreIds) <- liftIO $ runSqlPool (loadArtistGenreSelections aid a) envPool
             let nameMatches = case nameFilter of
                     Nothing -> True
                     Just name -> T.isInfixOf name (T.toCaseFold (artistProfileName a))
-            let genreMatches = case genreFilter of
+            let genreMatches = case mGenreIdFilter of
                     Nothing -> True
-                    Just genre -> any ((== genre) . T.toCaseFold) genreList
+                    Just genreId -> genreId `elem` genreIds
             if nameMatches && genreMatches
-                then Just <$> either throwError pure (artistProfileToDTO aid a genreList)
+                then Just <$> either throwError pure (artistProfileToDTO aid a genreList genreIds)
                 else pure Nothing
         let filtered = catMaybes artists
         pure
@@ -2683,11 +2695,12 @@ socialEventsServer user =
         Env{..} <- ask
         now <- liftIO getCurrentTime
         artistNameVal <- either throwError pure (validateArtistName (artistName dto))
-        let genreList = normalizeArtistGenres (artistGenres dto)
-        key <-
-            liftIO $
-                runSqlPool
-                    ( insert
+        resolvedGenres <-
+            liftIO (runSqlPool (resolvePublishedArtistGenres (artistGenreIds dto)) envPool)
+                >>= either (throwError . invalidArtistGenreIdsError) pure
+        key <- liftIO $ runSqlPool
+            ( do
+                artistKey <- insert
                         ArtistProfile
                             { artistProfilePartyId = cleanMaybeText (artistPartyId dto)
                             , artistProfileName = artistNameVal
@@ -2697,27 +2710,29 @@ socialEventsServer user =
                               -- legacy column type is TEXT instead of TEXT[].
                               artistProfileGenres = Nothing
                             , artistProfileSocialLinks = encodeSocialLinks (artistSocialLinks dto)
+                            , artistProfileCountryCode = Nothing
+                            , artistProfileCountryId = Nothing
                             , artistProfileCreatedAt = now
                             , artistProfileUpdatedAt = now
                             }
-                    )
-                    envPool
-        liftIO $
-            runSqlPool
-                ( forM_ genreList $ \g ->
-                    insert_
-                        ArtistGenre
-                            { artistGenreArtistId = key
-                            , artistGenreGenre = g
-                            }
-                )
-                envPool
+                forM_ (zip [0 :: Int ..] resolvedGenres) $ \(position, (genreId, _)) ->
+                    insert_ ArtistGenreMembership
+                        { artistGenreMembershipArtistId = artistKey
+                        , artistGenreMembershipGenreId = genreId
+                        , artistGenreMembershipSortOrder = position
+                        , artistGenreMembershipCreatedAt = now
+                        }
+                pure artistKey
+            ) envPool
+        let genreIds = map fst resolvedGenres
+            genreList = map snd resolvedGenres
         pure
             ArtistDTO
                 { artistId = Just (renderKeyText key)
                 , artistPartyId = cleanMaybeText (artistPartyId dto)
                 , artistName = artistNameVal
                 , artistGenres = genreList
+                , artistGenreIds = genreIds
                 , artistBio = artistBio dto
                 , artistAvatarUrl = artistAvatarUrl dto
                 , artistSocialLinks = artistSocialLinks dto
@@ -2733,9 +2748,8 @@ socialEventsServer user =
         case mArtist of
             Nothing -> throwError err404{errBody = "Artist not found"}
             Just a -> do
-                genres <- liftIO $ runSqlPool (selectList [ArtistGenreArtistId ==. artistKey] []) envPool
-                let genreList = artistGenresFromRowsAndFallback genres (artistProfileGenres a)
-                either throwError pure (artistProfileToDTO artistKey a genreList)
+                (genreList, genreIds) <- liftIO $ runSqlPool (loadArtistGenreSelections artistKey a) envPool
+                either throwError pure (artistProfileToDTO artistKey a genreList genreIds)
 
     updateArtist :: T.Text -> ArtistDTO -> AppM ArtistDTO
     updateArtist idStr dto = do
@@ -2752,11 +2766,13 @@ socialEventsServer user =
                     envPool
         when (isJust importedRef) $
             throwError err403{errBody = "Imported artists are managed automatically"}
-        let genreList = normalizeArtistGenres (artistGenres dto)
+        resolvedGenres <-
+            liftIO (runSqlPool (resolvePublishedArtistGenres (artistGenreIds dto)) envPool)
+                >>= either (throwError . invalidArtistGenreIdsError) pure
         let nextPartyId = cleanMaybeText (artistPartyId dto) <|> artistProfilePartyId existing
-        liftIO $
-            runSqlPool
-                ( update
+        liftIO $ runSqlPool
+            ( do
+                update
                     artistKey
                     [ ArtistProfilePartyId =. nextPartyId
                     , ArtistProfileName =. artistNameVal
@@ -2765,24 +2781,23 @@ socialEventsServer user =
                     , ArtistProfileSocialLinks =. encodeSocialLinks (artistSocialLinks dto)
                     , ArtistProfileUpdatedAt =. now
                     ]
-                )
-                envPool
-        liftIO $ runSqlPool (deleteWhere [ArtistGenreArtistId ==. artistKey]) envPool
-        liftIO $
-            runSqlPool
-                ( forM_ genreList $ \g ->
-                    insert_
-                        ArtistGenre
-                            { artistGenreArtistId = artistKey
-                            , artistGenreGenre = g
-                            }
-                )
-                envPool
+                deleteWhere [ArtistGenreMembershipArtistId ==. artistKey]
+                forM_ (zip [0 :: Int ..] resolvedGenres) $ \(position, (genreId, _)) ->
+                    insert_ ArtistGenreMembership
+                        { artistGenreMembershipArtistId = artistKey
+                        , artistGenreMembershipGenreId = genreId
+                        , artistGenreMembershipSortOrder = position
+                        , artistGenreMembershipCreatedAt = now
+                        }
+            ) envPool
+        let genreIds = map fst resolvedGenres
+            genreList = map snd resolvedGenres
         pure
             dto
                 { artistId = Just (T.strip idStr)
                 , artistName = artistNameVal
                 , artistGenres = genreList
+                , artistGenreIds = genreIds
                 , artistPartyId = nextPartyId
                 , artistCreatedAt = Just (artistProfileCreatedAt existing)
                 , artistUpdatedAt = Just now
@@ -3414,6 +3429,7 @@ socialEventsServer user =
                             , eventTicketTierDescription = cleanMaybeText (ticketTierDescription dto)
                             , eventTicketTierPriceCents = ticketTierPriceCents dto
                             , eventTicketTierCurrency = currencyVal
+                            , eventTicketTierCurrencyId = Nothing
                             , eventTicketTierQuantityTotal = ticketTierQuantityTotal dto
                             , eventTicketTierQuantitySold = 0
                             , eventTicketTierSalesStart = salesStartVal
@@ -3575,8 +3591,9 @@ socialEventsServer user =
         tierKey <- parseKeyOr400 "ticket tier" ticketPurchaseTierId
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
+        purchaseEnabled <- liftIO $ runSqlPool (eventTicketPurchaseEnabledFor eventVal) envPool
         either throwError pure $
-            validateTicketPurchaseEventEligibility (socialEventMetadata eventVal)
+            validateTicketPurchaseEventEligibility (socialEventMetadata eventVal) purchaseEnabled
         mTier <- liftIO $ runSqlPool (get tierKey) envPool
         tier <- maybe (throwError err404{errBody = "Ticket tier not found"}) pure mTier
         when (eventTicketTierEventId tier /= eventKey) $ throwError err400{errBody = "Ticket tier does not belong to this event"}
@@ -4060,8 +4077,9 @@ socialEventsServer user =
         let eventKey = eventTicketTierEventId tier
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
+        purchaseEnabled <- liftIO $ runSqlPool (eventTicketPurchaseEnabledFor eventVal) envPool
         either throwError pure $
-            validateTicketPurchaseEventEligibility (socialEventMetadata eventVal)
+            validateTicketPurchaseEventEligibility (socialEventMetadata eventVal) purchaseEnabled
         when (ticketPurchaseQuantity <= 0) $ throwError err400{errBody = "Quantity must be > 0"}
         when (not (isTicketTierSaleOpen now tier)) $
             throwError err400{errBody = "Ticket sales are closed for this tier"}
@@ -6541,16 +6559,21 @@ validateDirectTicketOrderPricing isManager authoritativeTierPriceCents
         Left err403{errBody = "Paid ticket tiers must be purchased through Stripe"}
     | otherwise = Right ()
 
-validateTicketPurchaseEventEligibility :: Maybe T.Text -> Either ServerError ()
-validateTicketPurchaseEventEligibility rawMetadata = do
+validateTicketPurchaseEventEligibility :: Maybe T.Text -> Bool -> Either ServerError ()
+validateTicketPurchaseEventEligibility rawMetadata purchaseEnabled = do
     metadata <-
         either (Left . storedEventMetadataServerError) Right $
             decodeStoredEventMetadata rawMetadata
     when (emIsPublic metadata == Just False) $
         Left err403{errBody = "Tickets are not available for private events"}
-    let eventStatusValue = fromMaybe "planning" (emStatus metadata)
-    unless (eventStatusValue `elem` ["announced", "on_sale", "live"]) $
+    unless purchaseEnabled $
         Left err409{errBody = "Tickets are not on sale for this event"}
+
+eventTicketPurchaseEnabledFor :: SocialEvent -> SqlPersistT IO Bool
+eventTicketPurchaseEnabledFor eventRow =
+    case socialEventWorkflowStateId eventRow of
+        Nothing -> pure False
+        Just stateId -> EventLifecycle.socialEventStateHasCapability stateId "ticket-purchase"
 
 normalizeTicketStatus :: Maybe T.Text -> T.Text
 normalizeTicketStatus mStatus =
@@ -6720,33 +6743,6 @@ normalizeTicketCheckInCode rawCode = do
   where
     normalized = T.toUpper (T.strip rawCode)
     isAsciiHexDigit ch = isAscii ch && isHexDigit ch
-
-normalizeEventType :: Maybe T.Text -> Maybe T.Text
-normalizeEventType mType =
-    case fmap (T.toLower . T.strip) mType of
-        Nothing -> Nothing
-        Just "" -> Nothing
-        Just "party" -> Just "party"
-        Just "concert" -> Just "concert"
-        Just "festival" -> Just "festival"
-        Just "conference" -> Just "conference"
-        Just "showcase" -> Just "showcase"
-        Just "other" -> Just "other"
-        Just _ -> Nothing
-
-normalizeEventStatus :: Maybe T.Text -> Maybe T.Text
-normalizeEventStatus mStatus =
-    case fmap (T.toLower . T.strip) mStatus of
-        Nothing -> Nothing
-        Just "" -> Nothing
-        Just "planning" -> Just "planning"
-        Just "announced" -> Just "announced"
-        Just "on_sale" -> Just "on_sale"
-        Just "live" -> Just "live"
-        Just "completed" -> Just "completed"
-        Just "cancelled" -> Just "cancelled"
-        Just "canceled" -> Just "cancelled"
-        Just _ -> Nothing
 
 normalizeMomentMediaType :: T.Text -> Maybe T.Text
 normalizeMomentMediaType raw =
@@ -7413,6 +7409,57 @@ normalizeArtistGenres rawGenres =
                         then (seen, acc)
                         else (Set.insert dedupeKey seen, genreVal : acc)
 
+resolvePublishedArtistGenres
+    :: [UUID.UUID]
+    -> SqlPersistT IO (Either T.Text [(UUID.UUID, T.Text)])
+resolvePublishedArtistGenres rawGenreIds
+    | Set.size uniqueGenreIds /= length rawGenreIds =
+        pure (Left "artistGenreIds must not contain duplicates")
+    | otherwise = do
+        resolved <- forM rawGenreIds $ \genreId -> do
+            mGenre <- get (Catalog.GenreKey genreId)
+            case mGenre of
+                Nothing -> pure (Left ("Unknown genre id: " <> UUID.toText genreId))
+                Just genre -> do
+                    mCatalog <- get (Catalog.genreCatalogId genre)
+                    mState <- get (Catalog.genreWorkflowStateId genre)
+                    pure $
+                        if Catalog.genreActive genre
+                            && maybe False ((== "genres") . Catalog.catalogDefinitionCode) mCatalog
+                            && maybe False
+                                (\state -> Catalog.workflowStateActive state && Catalog.workflowStateCode state == "published")
+                                mState
+                            then Right (genreId, Catalog.genreNameEs genre)
+                            else Left ("Genre is not active and published: " <> UUID.toText genreId)
+        pure (sequence resolved)
+  where
+    uniqueGenreIds = Set.fromList rawGenreIds
+
+loadArtistGenreSelections
+    :: ArtistProfileId
+    -> ArtistProfile
+    -> SqlPersistT IO ([T.Text], [UUID.UUID])
+loadArtistGenreSelections artistKey artist = do
+    memberships <-
+        selectList
+            [ArtistGenreMembershipArtistId ==. artistKey]
+            [Asc ArtistGenreMembershipSortOrder]
+    if null memberships
+        then do
+            legacyRows <- selectList [ArtistGenreArtistId ==. artistKey] []
+            pure (artistGenresFromRowsAndFallback legacyRows (artistProfileGenres artist), [])
+        else do
+            resolved <- forM memberships $ \(Entity _ membership) -> do
+                let genreId = artistGenreMembershipGenreId membership
+                mGenre <- get (Catalog.GenreKey genreId)
+                pure (fmap (\genre -> (genreId, Catalog.genreNameEs genre)) mGenre)
+            let available = catMaybes resolved
+            pure (map snd available, map fst available)
+
+invalidArtistGenreIdsError :: T.Text -> ServerError
+invalidArtistGenreIdsError message =
+    err400{errBody = BL.fromStrict (TE.encodeUtf8 message)}
+
 artistGenresFromRowsAndFallback :: [Entity ArtistGenre] -> Maybe [T.Text] -> [T.Text]
 artistGenresFromRowsAndFallback genreRows fallbackGenres =
     let normalizedFromRows = normalizeArtistGenres (map (artistGenreGenre . entityVal) genreRows)
@@ -7423,8 +7470,9 @@ artistProfileToDTO ::
     ArtistProfileId ->
     ArtistProfile ->
     [T.Text] ->
+    [UUID.UUID] ->
     Either ServerError ArtistDTO
-artistProfileToDTO artistKey artist genreList = do
+artistProfileToDTO artistKey artist genreList genreIds = do
     socialLinks <-
         either (Left . storedArtistSocialLinksServerError) Right $
             decodeStoredArtistSocialLinks (artistProfileSocialLinks artist)
@@ -7434,6 +7482,7 @@ artistProfileToDTO artistKey artist genreList = do
             , artistPartyId = artistProfilePartyId artist
             , artistName = artistProfileName artist
             , artistGenres = genreList
+            , artistGenreIds = genreIds
             , artistBio = artistProfileBio artist
             , artistAvatarUrl = artistProfileAvatarUrl artist
             , artistSocialLinks = socialLinks
@@ -7487,6 +7536,27 @@ storedEventMetadataDecodeError rawError =
         _ -> "Stored event metadata is invalid JSON"
   where
     unknownFieldsPrefix = "Stored event metadata contains unknown fields:"
+
+parseEventWorkflowStateId :: T.Text -> Either ServerError UUID.UUID
+parseEventWorkflowStateId rawId =
+    maybe
+        (Left err400{errBody = "workflow_state_id must be a UUID"})
+        Right
+        (UUID.fromText (T.strip rawId))
+
+validateEventReadOnlyProjectionOmitted :: EventDTO -> AppM ()
+validateEventReadOnlyProjectionOmitted dto =
+    when
+        ( any
+            isJust
+            [ eventWorkflowStateCode dto
+            , eventWorkflowStateNameEs dto
+            , eventWorkflowStateNameEn dto
+            ]
+            || isJust (eventPublicListable dto)
+            || isJust (eventTicketPurchaseEnabled dto)
+        ) $
+        throwError err400{errBody = "Workflow labels and capabilities are read-only"}
 
 validateStoredEventFinanceMetadata :: T.Text -> SocialEvent -> Either T.Text (T.Text, Maybe Int)
 validateStoredEventFinanceMetadata configuredDefault eventRec = do
@@ -7788,6 +7858,7 @@ loadEventArtists pool eventKey = do
                                             , artistPartyId = Nothing
                                             , artistName = "(unknown)"
                                             , artistGenres = []
+                                            , artistGenreIds = []
                                             , artistBio = Nothing
                                             , artistAvatarUrl = Nothing
                                             , artistSocialLinks = Nothing
@@ -7795,9 +7866,8 @@ loadEventArtists pool eventKey = do
                                             , artistUpdatedAt = Nothing
                                             }
                             Just a -> do
-                                genres <- selectList [ArtistGenreArtistId ==. eventArtistArtistId link] []
-                                let genreList = artistGenresFromRowsAndFallback genres (artistProfileGenres a)
-                                pure (artistProfileToDTO (eventArtistArtistId link) a genreList)
+                                (genreList, genreIds) <- loadArtistGenreSelections (eventArtistArtistId link) a
+                                pure (artistProfileToDTO (eventArtistArtistId link) a genreList genreIds)
                 )
                 pool
     either throwError pure (sequence loaded)
@@ -7971,34 +8041,47 @@ loadExternalEventSources pool eventKey =
         )
         pool
 
-eventEntityToDTO :: T.Text -> SocialEventId -> SocialEvent -> [ArtistDTO] -> Either ServerError EventDTO
+eventEntityToDTO :: T.Text -> SocialEventId -> SocialEvent -> [ArtistDTO] -> SqlPersistT IO (Either ServerError EventDTO)
 eventEntityToDTO configuredDefault eid eventRow artists = do
-    metadata <-
-        either (Left . storedEventMetadataServerError) Right $
-            decodeStoredEventMetadata (socialEventMetadata eventRow)
-    Right
-        EventDTO
-            { eventId = Just (renderKeyText eid)
-            , eventOrganizerPartyId = socialEventOrganizerPartyId eventRow
-            , eventTitle = socialEventTitle eventRow
-            , eventDescription = socialEventDescription eventRow
-            , eventStart = socialEventStartTime eventRow
-            , eventEnd = socialEventEndTime eventRow
-            , eventVenueId = fmap renderKeyText (socialEventVenueId eventRow)
-            , eventPriceCents = socialEventPriceCents eventRow
-            , eventCapacity = socialEventCapacity eventRow
-            , eventTicketUrl = emTicketUrl metadata
-            , eventImageUrl = emImageUrl metadata
-            , eventIsPublic = emIsPublic metadata <|> Just True
-            , eventType = emType metadata <|> Just "party"
-            , eventStatus = emStatus metadata <|> Just "planning"
-            , eventCurrency = emCurrency metadata <|> Just configuredDefault
-            , eventBudgetCents = emBudgetCents metadata
-            , eventSources = Nothing
-            , eventCreatedAt = Just (socialEventCreatedAt eventRow)
-            , eventUpdatedAt = Just (socialEventUpdatedAt eventRow)
-            , eventArtists = artists
-            }
+    case decodeStoredEventMetadata (socialEventMetadata eventRow) of
+      Left message -> pure (Left (storedEventMetadataServerError message))
+      Right metadata -> case socialEventWorkflowStateId eventRow of
+        Nothing -> pure (Left err500{errBody = "Event has no canonical workflow state"})
+        Just workflowStateId -> do
+          workflowState <- EventLifecycle.loadActiveSocialEventState workflowStateId
+          case workflowState of
+            Nothing -> pure (Left err500{errBody = "Event references an invalid workflow state"})
+            Just (stateCode, nameEs, nameEn) -> do
+              publicListable <- EventLifecycle.socialEventStateHasCapability workflowStateId "public-listable"
+              ticketPurchaseEnabled <- EventLifecycle.socialEventStateHasCapability workflowStateId "ticket-purchase"
+              pure . Right $
+                EventDTO
+                  { eventId = Just (renderKeyText eid)
+                  , eventOrganizerPartyId = socialEventOrganizerPartyId eventRow
+                  , eventTitle = socialEventTitle eventRow
+                  , eventDescription = socialEventDescription eventRow
+                  , eventStart = socialEventStartTime eventRow
+                  , eventEnd = socialEventEndTime eventRow
+                  , eventVenueId = fmap renderKeyText (socialEventVenueId eventRow)
+                  , eventPriceCents = socialEventPriceCents eventRow
+                  , eventCapacity = socialEventCapacity eventRow
+                  , eventTicketUrl = emTicketUrl metadata
+                  , eventImageUrl = emImageUrl metadata
+                  , eventIsPublic = emIsPublic metadata <|> Just True
+                  , eventTypeId = UUID.toText <$> socialEventEventTypeId eventRow
+                  , eventWorkflowStateId = Just (UUID.toText workflowStateId)
+                  , eventWorkflowStateCode = Just stateCode
+                  , eventWorkflowStateNameEs = Just nameEs
+                  , eventWorkflowStateNameEn = Just nameEn
+                  , eventPublicListable = Just publicListable
+                  , eventTicketPurchaseEnabled = Just ticketPurchaseEnabled
+                  , eventCurrency = emCurrency metadata <|> Just configuredDefault
+                  , eventBudgetCents = emBudgetCents metadata
+                  , eventSources = Nothing
+                  , eventCreatedAt = Just (socialEventCreatedAt eventRow)
+                  , eventUpdatedAt = Just (socialEventUpdatedAt eventRow)
+                  , eventArtists = artists
+                  }
 
 ticketTierEntityToDTO :: SocialEventId -> Entity EventTicketTier -> TicketTierDTO
 ticketTierEntityToDTO eventKey (Entity tierKey tier) =

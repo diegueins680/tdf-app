@@ -14,6 +14,7 @@ import           Data.List (sort)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time (UTCTime)
+import           Data.UUID (UUID)
 import           GHC.Generics (Generic)
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
@@ -42,9 +43,8 @@ import           TDF.API.Proposals (ProposalsAPI)
 import           TDF.API.Rooms     (RoomsAPI, RoomsPublicAPI)
 import           TDF.API.Sessions  (SessionsAPI)
 import           TDF.API.Drive     (DriveAPI)
-import           TDF.API.Types     (ArtistTipRequest, ArtistTipResponse, LooseJSON, PartyRelatedDTO, RawJSON, RolePayload, UserRoleSummaryDTO, UserRoleUpdatePayload)
+import           TDF.API.Types     (ArtistTipRequest, ArtistTipResponse, PartyRelatedDTO, RawJSON, UserRoleSummaryDTO)
 import           TDF.API.Radio     (RadioAPI)
-import           TDF.Models        (RoleEnum)
 import           TDF.DTO
 import           TDF.Meta         (MetaAPI)
 import           TDF.Version      (VersionInfo)
@@ -62,7 +62,7 @@ import           TDF.API.SocialSyncAPI (SocialSyncAPI)
 import           TDF.API.SocialDiscoveryAPI (SocialDiscoveryAPI)
 import           TDF.Contracts.API (ContractsAPI)
 import           TDF.API.DDEX (DDEXAPI)
-import           TDF.API.Catalog (CatalogAPI)
+import           TDF.API.Catalog (CatalogAPI, PublicCatalogAPI, SecurityGrantRevisionDTO, SelfFanRoleRequest)
 import           TDF.API.ServiceStorefront (ServiceStorefrontPublicAPI, ServiceStorefrontAdminAPI)
 
 type InventoryItem = ME.Asset
@@ -115,7 +115,7 @@ type CmsPublicAPI =
 
 type CmsAdminAPI =
        "cms" :> "admin" :> "content" :>
-         ( QueryParam "slug" Text :> QueryParam "locale" Text :> Get '[JSON] [CmsContentDTO]
+         ( QueryParam "contentId" Text :> QueryParam "locale" Text :> Get '[JSON] [CmsContentDTO]
       :<|> ReqBody '[JSON] CmsContentIn :> Post '[JSON] CmsContentDTO
       :<|> Capture "id" Int :> "publish" :> Post '[JSON] CmsContentDTO
       :<|> Capture "id" Int :> Delete '[JSON] NoContent
@@ -127,7 +127,6 @@ type PartyAPI =
       :<|> Capture "partyId" Int64 :> (
            Get '[JSON] PartyDTO
       :<|> ReqBody '[JSON] PartyUpdate :> Put '[JSON] PartyDTO
-      :<|> "roles" :> ReqBody '[LooseJSON, PlainText, OctetStream] RolePayload :> Post '[JSON] NoContent
       :<|> "related" :> Get '[JSON] PartyRelatedDTO
       )
 
@@ -366,12 +365,7 @@ type PasswordResetConfirmAPI = ReqBody '[JSON] PasswordResetConfirmRequest :> Po
 
 type PasswordAPI = Header "Authorization" Text :> "change" :> ReqBody '[JSON] ChangePasswordRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 
-type UserRolesAPI =
-       "users" :> Get '[JSON] [UserRoleSummaryDTO]
-  :<|> "users" :> Capture "userId" Int64 :> "roles" :>
-        ( Get '[JSON] [RoleEnum]
-     :<|> ReqBody '[JSON] UserRoleUpdatePayload :> Put '[JSON] NoContent
-        )
+type UserRolesAPI = "users" :> Get '[JSON] [UserRoleSummaryDTO]
 
 type AuthV1API =
        "signup" :> SignupAPI
@@ -395,14 +389,12 @@ type FanPublicAPI =
 
 type ArtistPublicAPI =
        Get '[JSON] [ArtistProfileDTO]
-  :<|> "search" :> QueryParam "q" Text :> QueryParam "genre" Text :> Get '[JSON] [ArtistProfileDTO]
+  :<|> "search" :> QueryParam "q" Text :> QueryParam "genreId" UUID :> QueryParam "genre" Text :> Get '[JSON] [ArtistProfileDTO]
   :<|> Capture "artistRef" Text :> "public" :> Get '[JSON] ArtistProfileDTO
   :<|> Capture "artistId" Int64 :> Get '[JSON] ArtistProfileDTO
 
 type RadioPublicAPI =
        "radio" :> "presence" :> Capture "partyId" Int64 :> Get '[JSON] (Maybe RadioPresenceDTO)
-
-type CountryAPI = "countries" :> Get '[JSON] [CountryDTO]
 
 type FanSecureAPI =
        "me" :> "profile" :>
@@ -424,6 +416,9 @@ type FanSecureAPI =
       :<|> Capture "notifId" Int64 :> "read" :> Post '[JSON] NoContent
       :<|> "read-all" :> Post '[JSON] NoContent
          )
+  :<|> "me" :> "role-request"
+         :> ReqBody '[JSON] SelfFanRoleRequest
+         :> PostAccepted '[JSON] SecurityGrantRevisionDTO
   :<|> "discovery" :> QueryParam "limit" Int :> Get '[JSON] [FanClubFeedItemDTO]
   :<|> "me" :> "clubs" :> Get '[JSON] [FanClubDTO]
   :<|> "me" :> "clubs" :> Capture "artistId" Int64 :>
@@ -530,7 +525,6 @@ type ProtectedAPI =
   :<|> CmsAdminAPI
   :<|> DriveAPI
   :<|> RadioAPI
-  :<|> CountryAPI
   :<|> "stubs"    :> FutureAPI
   :<|> "ddex" :> DDEXAPI
   :<|> "catalog" :> CatalogAPI
@@ -562,6 +556,7 @@ type API =
   :<|> WhatsAppConsentPublicAPI
   :<|> InventoryPublicAPI
   :<|> FeedbackAPI
+  :<|> PublicCatalogAPI
   -- Keep the authenticated marketplace branch ahead of the public one so
   -- /marketplace/orders is not consumed by the public /marketplace/:id capture.
   :<|> AuthProtect "bearer-token" :> ProtectedAPI
@@ -590,7 +585,7 @@ data CreateBookingReq = CreateBookingReq
   , cbPartyId     :: Maybe Int64
   , cbEngineerPartyId :: Maybe Int64
   , cbEngineerName :: Maybe Text
-  , cbServiceType :: Maybe Text
+  , cbServiceOfferingId :: UUID
   , cbResourceIds :: Maybe [Text]
   } deriving (Show, Generic)
 instance FromJSON CreateBookingReq where
@@ -598,7 +593,7 @@ instance FromJSON CreateBookingReq where
 
 data UpdateBookingReq = UpdateBookingReq
   { ubTitle       :: Maybe Text
-  , ubServiceType :: Maybe Text
+  , ubServiceOfferingId :: Maybe UUID
   , ubStatus      :: Maybe Text
   , ubNotes       :: Maybe Text
   , ubStartsAt    :: Maybe UTCTime
@@ -617,7 +612,7 @@ instance FromJSON UpdateBookingReq where
 updateBookingRequestFields :: [Text]
 updateBookingRequestFields =
   [ "ubTitle"
-  , "ubServiceType"
+  , "ubServiceOfferingId"
   , "ubStatus"
   , "ubNotes"
   , "ubStartsAt"
@@ -637,7 +632,7 @@ data PublicBookingReq = PublicBookingReq
   { pbFullName         :: Text
   , pbEmail            :: Text
   , pbPhone            :: Maybe Text
-  , pbServiceType      :: Text
+  , pbServiceOfferingId :: UUID
   , pbStartsAt         :: UTCTime
   , pbDurationMinutes  :: Maybe Int
   , pbNotes            :: Maybe Text
@@ -840,7 +835,7 @@ instance ToJSON AdsInquiryOut where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
 
 data CmsContentIn = CmsContentIn
-  { cciSlug    :: Text
+  { cciContentId :: Text
   , cciLocale  :: Text
   , cciTitle   :: Maybe Text
   , cciStatus  :: Maybe Text
@@ -865,6 +860,7 @@ instance FromJSON CmsContentIn where
 
 data CmsContentDTO = CmsContentDTO
   { ccdId        :: Int
+  , ccdContentId :: Maybe Text
   , ccdSlug      :: Text
   , ccdLocale    :: Text
   , ccdVersion   :: Int

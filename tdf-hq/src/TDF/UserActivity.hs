@@ -31,6 +31,7 @@ import           Database.Persist.Sql   (SqlPersistT, fromSqlKey)
 import           Servant                (ServerError, err400, errBody)
 
 import           TDF.DTO                (UserActivityDTO(..))
+import           TDF.Catalog.Security   (loadCanonicalPartyRoles)
 import           TDF.Models
 
 recordUserActivity
@@ -94,11 +95,8 @@ resolveActor (Just partyKey) = do
     , UserCredentialActive ==. True
     ]
     [Asc UserCredentialUsername]
-  roles <- selectList
-    [ PartyRolePartyId ==. partyKey
-    , PartyRoleActive ==. True
-    ]
-    [Asc PartyRoleRole]
+  rolesResult <- loadCanonicalPartyRoles partyKey
+  roles <- either (liftIO . ioError . userError . T.unpack) pure rolesResult
   let actorName =
         case mParty of
           Nothing -> "Usuario desconocido"
@@ -109,7 +107,7 @@ resolveActor (Just partyKey) = do
       usernames =
         dedupeText (map (userCredentialUsername . entityVal) creds)
       roleLabels =
-        dedupeText (map (roleToText . partyRoleRole . entityVal) roles)
+        dedupeText (map roleToText roles)
   pure (actorName, usernames, roleLabels)
 
 cleanDisplayName :: Text -> Maybe Text

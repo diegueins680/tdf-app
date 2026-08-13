@@ -3,16 +3,20 @@
 
 module TDF.API.Services where
 
-import           Data.Int   (Int64)
 import           Servant
 
-import           TDF.API.Types (ServiceCatalogCreate, ServiceCatalogDTO, ServiceCatalogUpdate)
+import           Data.Text (Text)
+import           TDF.API.Types (ServiceCatalogEnvelopeDTO)
 
 type ServiceCatalogPublicAPI =
-       "services" :> "catalog" :> "public" :> Get '[JSON] [ServiceCatalogDTO]
+       "services" :> "catalog" :> "public"
+         :> QueryParam "locale" Text
+         :> Header "If-None-Match" Text
+         :> Get '[JSON] (Headers '[Header "ETag" Text] ServiceCatalogEnvelopeDTO)
 
 type ServiceCatalogAPI =
-       "services" :> "catalog" :> QueryParam "includeInactive" Bool :> Get '[JSON] [ServiceCatalogDTO]
-  :<|> "services" :> "catalog" :> ReqBody '[JSON] ServiceCatalogCreate :> PostCreated '[JSON] ServiceCatalogDTO
-  :<|> "services" :> "catalog" :> Capture "id" Int64 :> ReqBody '[JSON] ServiceCatalogUpdate :> Patch '[JSON] ServiceCatalogDTO
-  :<|> "services" :> "catalog" :> Capture "id" Int64 :> Delete '[JSON] NoContent
+       "services" :> "catalog"
+         :> QueryParam "includeInactive" Bool
+         :> QueryParam "locale" Text
+         :> Header "If-None-Match" Text
+         :> Get '[JSON] (Headers '[Header "ETag" Text] ServiceCatalogEnvelopeDTO)

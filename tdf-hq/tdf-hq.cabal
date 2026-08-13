@@ -75,9 +75,9 @@ executable tdf-hq-exe
     TDF.Services.InstagramMessaging
     TDF.Services.FacebookMessaging
     TDF.Services.EventDiscovery
+    TDF.SocialEventLifecycle
     TDF.Services.EventLogisticsRoutes
     TDF.Services.Stripe
-    TDF.Pipelines
     TDF.RagStore
     TDF.UserActivity
     TDF.Routes.Academy
@@ -108,6 +108,11 @@ executable tdf-hq-exe
     TDF.Trials.Server
     TDF.Calendar.Models
     TDF.CMS.Models
+      TDF.Catalog.Models
+      TDF.Catalog.CountryReferenceSeed
+      TDF.Catalog.Integrity
+      TDF.Catalog.Security
+      TDF.Catalog.Seed
     TDF.Catalog.Types
     TDF.DDEX.Types
     TDF.DDEX.Models
@@ -116,16 +121,12 @@ executable tdf-hq-exe
     TDF.DDEX.Detect
     TDF.DDEX.Security
     TDF.DDEX.Validation
-    TDF.DDEX.Jobs
     TDF.DDEX.ERN.V432.Types
     TDF.DDEX.ERN.V432.Parse
     TDF.DDEX.ERN.V432.Normalize
     TDF.DDEX.ERN.V432.BusinessRules
     TDF.DDEX.ERN.V432.Render
     TDF.DDEX.ERN.V432.Convert
-    TDF.DDEX.ImportPlan
-    TDF.DDEX.MatchEngine
-    TDF.DDEX.Partner
     TDF.DDEX.Observability
     TDF.DDEX.TestFixtures
     TDF.Version
@@ -202,7 +203,9 @@ test-suite tdf-hq-test
   other-modules:
     Paths_tdf_hq
     TDF.API
+    TDF.API.Catalog
     TDF.API.Admin
+    TDF.API.DDEX
     TDF.App.Boot
     TDF.API.Bands
     TDF.API.Facebook
@@ -218,6 +221,8 @@ test-suite tdf-hq-test
     TDF.API.Calendar
     TDF.API.Label
     TDF.API.Services
+    TDF.API.ServiceStorefront
+    TDF.API.ServiceStorefrontTypes
     TDF.Contracts.API
     TDF.Contracts.Server
     TDF.Contracts.Types
@@ -258,7 +263,15 @@ test-suite tdf-hq-test
     TDF.ModelsExtra
     TDF.Models.SocialEventsModels
     TDF.CMS.Models
-    TDF.Pipelines
+      TDF.Catalog.Models
+      TDF.Catalog.CountryReferenceSeed
+      TDF.Catalog.Integrity
+      TDF.Catalog.Security
+      TDF.Catalog.Seed
+    TDF.Catalog.SecuritySpec
+    TDF.Catalog.RecordsSpec
+    TDF.Catalog.PipelineSpec
+    TDF.Catalog.Types
     TDF.Profiles.Artist
     TDF.Profiles.ArtistSpec
     TDF.RagStore
@@ -266,6 +279,9 @@ test-suite tdf-hq-test
     TDF.Routes.Courses
     TDF.Seed
     TDF.Server
+    TDF.Server.Catalog
+    TDF.Server.DDEX
+    TDF.Server.ServiceStorefront
     TDF.ServerAuth
     TDF.ServerAuthSpec
     TDF.ServerAdmin
@@ -277,6 +293,7 @@ test-suite tdf-hq-test
     TDF.Server.SocialDiscovery
     TDF.Server.SocialSync
     TDF.Server.SocialEventsHandlers
+    TDF.SocialEventLifecycle
     TDF.ServerFuture
     TDF.ServerLiveSessions
     TDF.ServerFeedback
@@ -303,6 +320,13 @@ test-suite tdf-hq-test
     TDF.Trials.PublicLeadSpec
     TDF.DDEX.ERN.V432.ParseSpec
     TDF.DDEX.ERN.V432.BusinessRulesSpec
+    TDF.DDEX.DB
+    TDF.DDEX.Models
+    TDF.DDEX.Types
+    TDF.DDEX.ERN.V432.BusinessRules
+    TDF.DDEX.ERN.V432.Normalize
+    TDF.DDEX.ERN.V432.Parse
+    TDF.DDEX.ERN.V432.Types
     TDF.UUIDInstances
     TDF.UserActivity
     TDF.Version

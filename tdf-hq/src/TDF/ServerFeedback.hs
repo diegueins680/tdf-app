@@ -6,9 +6,6 @@
 module TDF.ServerFeedback
   ( feedbackServer
   , normalizeOptionalFeedbackText
-  , validateOptionalFeedbackMetadata
-  , validateFeedbackCategory
-  , validateFeedbackSeverity
   , validateFeedbackDescription
   , validateFeedbackTitle
   , validateFeedbackConsent
@@ -37,7 +34,7 @@ import qualified Data.Text                  as T
 import           Data.Text                  (Text)
 import qualified Data.Text.Encoding         as TE
 import           Data.Time                  (getCurrentTime)
-import           Database.Persist           (insert)
+import           Database.Persist           (get, insert)
 import           Database.Persist.Sql       (runSqlPool)
 import           Servant
 import           Servant.Multipart          (FileData(..), Tmp)
@@ -47,6 +44,7 @@ import           System.IO                  (hPutStrLn, stderr)
 import qualified Data.ByteString.Lazy       as BL
 import           Data.UUID.V4               (nextRandom)
 import           Data.UUID                  (toText)
+import           Web.PathPieces             (fromPathPiece)
 
 import           TDF.API.Feedback
 import           TDF.Auth                   ( AuthedUser(..)
@@ -55,6 +53,7 @@ import           TDF.Auth                   ( AuthedUser(..)
                                             )
 import           TDF.DB                     (Env(..))
 import           TDF.ModelsExtra            (Feedback(..))
+import qualified TDF.Catalog.Models          as Catalog
 import qualified TDF.Email.Service          as EmailSvc
 
 feedbackServer
@@ -70,8 +69,8 @@ feedbackServer authorizationHeader cookieHeader = submitFeedback
     submitFeedback FeedbackPayload{..} = do
       title <- either throwError pure (validateFeedbackTitle fpTitle)
       body <- either throwError pure (validateFeedbackDescription fpDescription)
-      category <- either throwError pure (validateFeedbackCategory fpCategory)
-      severity <- either throwError pure (validateFeedbackSeverity fpSeverity)
+      (categoryId, categoryLabel) <- resolvePublishedFeedbackCategory fpCategoryId
+      (severityId, severityLabel) <- resolvePublishedFeedbackSeverity fpSeverityId
       either throwError pure (validateFeedbackConsent fpConsent)
       contactEmail <- either throwError pure (validateOptionalFeedbackContactEmail fpContactEmail)
 
@@ -90,8 +89,10 @@ feedbackServer authorizationHeader cookieHeader = submitFeedback
         (insert Feedback
           { feedbackTitle        = title
           , feedbackDescription  = body
-          , feedbackCategory     = category
-          , feedbackSeverity     = severity
+          , feedbackCategory     = Nothing
+          , feedbackSeverity     = Nothing
+          , feedbackCategoryId   = Just categoryId
+          , feedbackSeverityId   = Just severityId
           , feedbackContactEmail = contactEmail
           , feedbackAttachment   = fmap T.pack attachmentPath
           , feedbackConsent      = fpConsent
@@ -100,9 +101,63 @@ feedbackServer authorizationHeader cookieHeader = submitFeedback
           })
         envPool
 
-      liftIO $ notify emailSvc title body category severity contactEmail attachmentPath
+      liftIO $ notify emailSvc title body (Just categoryLabel) (Just severityLabel) contactEmail attachmentPath
 
       pure NoContent
+
+    resolvePublishedFeedbackCategory :: Text -> m (Catalog.FeedbackCategoryId, Text)
+    resolvePublishedFeedbackCategory rawId = do
+      Env{envPool = pool} <- ask
+      categoryKey <- maybe
+        (throwError err400 { errBody = "categoryId must be a valid catalog UUID" })
+        pure
+        (fromPathPiece (T.strip rawId))
+      result <- liftIO $ runSqlPool (do
+        item <- get categoryKey
+        case item of
+          Nothing -> pure Nothing
+          Just category -> do
+            state <- get (Catalog.feedbackCategoryWorkflowStateId category)
+            catalog <- get (Catalog.feedbackCategoryCatalogId category)
+            pure $
+              if Catalog.feedbackCategoryActive category
+                && Catalog.feedbackCategoryDeprecatedAt category == Nothing
+                && maybe False ((== "published") . Catalog.workflowStateCode) state
+                && maybe False (\definition -> Catalog.catalogDefinitionActive definition && Catalog.catalogDefinitionCode definition == "feedback-categories") catalog
+                then Just (Catalog.feedbackCategoryNameEs category)
+                else Nothing) pool
+      label <- maybe
+        (throwError err400 { errBody = "categoryId must reference an active published feedback category" })
+        pure
+        result
+      pure (categoryKey, label)
+
+    resolvePublishedFeedbackSeverity :: Text -> m (Catalog.FeedbackSeverityId, Text)
+    resolvePublishedFeedbackSeverity rawId = do
+      Env{envPool = pool} <- ask
+      severityKey <- maybe
+        (throwError err400 { errBody = "severityId must be a valid catalog UUID" })
+        pure
+        (fromPathPiece (T.strip rawId))
+      result <- liftIO $ runSqlPool (do
+        item <- get severityKey
+        case item of
+          Nothing -> pure Nothing
+          Just severity -> do
+            state <- get (Catalog.feedbackSeverityWorkflowStateId severity)
+            catalog <- get (Catalog.feedbackSeverityCatalogId severity)
+            pure $
+              if Catalog.feedbackSeverityActive severity
+                && Catalog.feedbackSeverityDeprecatedAt severity == Nothing
+                && maybe False ((== "published") . Catalog.workflowStateCode) state
+                && maybe False (\definition -> Catalog.catalogDefinitionActive definition && Catalog.catalogDefinitionCode definition == "feedback-severities") catalog
+                then Just (Catalog.feedbackSeverityNameEs severity)
+                else Nothing) pool
+      label <- maybe
+        (throwError err400 { errBody = "severityId must reference an active published feedback severity" })
+        pure
+        result
+      pure (severityKey, label)
 
     validateAndStoreAttachment :: FileData Tmp -> m FilePath
     validateAndStoreAttachment file@FileData{..} = do
@@ -126,58 +181,6 @@ normalizeOptionalFeedbackText mVal =
   case fmap T.strip mVal of
     Just txt | T.null txt -> Nothing
     other                 -> other
-
-maxFeedbackMetadataChars :: Int
-maxFeedbackMetadataChars = 80
-
-validateOptionalFeedbackMetadata :: Text -> Maybe Text -> Either ServerError (Maybe Text)
-validateOptionalFeedbackMetadata fieldName rawValue =
-  case normalizeOptionalFeedbackText rawValue of
-    Nothing -> Right Nothing
-    Just value
-      | T.length value > maxFeedbackMetadataChars ->
-          Left (feedbackFieldError fieldName "must be 80 characters or fewer")
-      | T.any isUnsafeFeedbackSingleLineChar value ->
-          Left
-            ( feedbackFieldError
-                fieldName
-                "must not contain control characters or hidden formatting characters"
-            )
-      | otherwise ->
-          Right (Just value)
-
-validateFeedbackCategory :: Maybe Text -> Either ServerError (Maybe Text)
-validateFeedbackCategory =
-  validateFeedbackEnum "category" T.toLower allowedFeedbackCategories
-
-allowedFeedbackCategories :: [Text]
-allowedFeedbackCategories = ["bug", "idea", "ux", "datos"]
-
-validateFeedbackSeverity :: Maybe Text -> Either ServerError (Maybe Text)
-validateFeedbackSeverity =
-  validateFeedbackEnum "severity" T.toUpper allowedFeedbackSeverities
-
-allowedFeedbackSeverities :: [Text]
-allowedFeedbackSeverities = ["P1", "P2", "P3", "P4"]
-
-validateFeedbackEnum :: Text -> (Text -> Text) -> [Text] -> Maybe Text -> Either ServerError (Maybe Text)
-validateFeedbackEnum fieldName normalizeValue allowedValues rawValue =
-  case validateOptionalFeedbackMetadata fieldName rawValue of
-    Left err ->
-      Left err
-    Right Nothing ->
-      Right Nothing
-    Right (Just value) ->
-      let normalized = normalizeValue value
-      in if normalized `elem` allowedValues
-           then Right (Just normalized)
-           else Left (feedbackFieldError fieldName enumMessage)
-  where
-    enumMessage = "must be one of: " <> T.intercalate ", " allowedValues
-
-feedbackFieldError :: Text -> Text -> ServerError
-feedbackFieldError fieldName message =
-  err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " " <> message)) }
 
 validateOptionalFeedbackContactEmail :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalFeedbackContactEmail Nothing = Right Nothing

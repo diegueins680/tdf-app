@@ -39,7 +39,6 @@ import           TDF.Auth
   ( AuthedUser(..)
   , ModuleAccess(ModuleAdmin)
   , moduleName
-  , modulesForRoles
   )
 import           TDF.Models (RoleEnum(Admin, Customer, Fan), roleToText)
 
@@ -179,8 +178,6 @@ validateFutureAdminAccessWithBaselineRoles baselineRoles user
                 }
           | not (ModuleAdmin `Set.member` auModules user) ->
               Left err403 { errBody = "Admin module access required" }
-          | auModules user /= modulesForRoles (auRoles user) ->
-              Left err403 { errBody = "Admin module grants must match roles" }
           | otherwise -> Right ()
   where
     missingBaselineRoles requiredBaselineRoles =

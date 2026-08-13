@@ -28,6 +28,7 @@ module TDF.Services.EventDiscovery
 import Control.Applicative ((<|>))
 import Control.Exception (try)
 import Control.Monad (forM, forM_)
+import Control.Monad.IO.Class (liftIO)
 import Control.Concurrent (threadDelay)
 import Data.Aeson
   ( FromJSON(..)
@@ -63,6 +64,7 @@ import qualified Data.Text.Encoding as TE
 import Data.Time (UTCTime, addUTCTime, diffUTCTime, utctDay)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import Data.Time.Format.ISO8601 (iso8601ParseM, iso8601Show)
+import Data.UUID (UUID)
 import Database.Persist
   ( Entity(..)
   , SelectOpt(LimitTo)
@@ -72,6 +74,7 @@ import Database.Persist
   , insert
   , insertUnique
   , selectList
+  , toPersistValue
   , update
   , (=.)
   , (==.)
@@ -102,6 +105,7 @@ import TDF.Config
 import TDF.DB (ConnectionPool, sharedTlsManager)
 import TDF.Internationalization (currencyDecimalPlaces, currencyDefinition, normalizeCurrencyCode)
 import qualified TDF.Models.SocialEventsModels as Social
+import qualified TDF.SocialEventLifecycle as EventLifecycle
 
 providerName :: Text
 providerName = "ticketmaster"
@@ -707,7 +711,7 @@ normalizeBuenPlanEvent configuredDefault cities now endTime BuenPlanEvent{..} = 
             "Buen Plan ticket URL"
             (buenPlanWebBase <> "/event/" <> slug)
       , discoveredEventImageUrl = imageUrl
-      , discoveredEventType = "event"
+      , discoveredEventType = "other"
       , discoveredEventStatus = status
       }
 
@@ -975,7 +979,7 @@ normalizeStructuredEvent cfg sourceKey city now StructuredFeedEvent{..} = do
       , discoveredEventImageUrl =
           structuredEventImageUrl >>= normalizeHttpsUrl "Venue event image"
       , discoveredEventType =
-          fromMaybe "event" (structuredEventType >>= cleanSingleLine 80)
+          fromMaybe "other" (structuredEventType >>= cleanSingleLine 80)
       , discoveredEventStatus = status
       }
   where
@@ -1621,11 +1625,13 @@ reconcileImportedEvents pool now activeCities =
                 (\((candidateCity, _), _) -> candidateCity == cityKey)
                 (Map.toList activeCityKeys)
 
-    updateImportedLifecycle eventKey eventRow status isPublic =
+    updateImportedLifecycle eventKey eventRow status isPublic = do
+      workflowStateId <- EventLifecycle.resolveActiveSocialEventStateId status
       update
         eventKey
-        [ Social.SocialEventMetadata =.
-            updateImportedEventMetadata status isPublic (Social.socialEventMetadata eventRow)
+        [ Social.SocialEventWorkflowStateId =. Just workflowStateId
+        , Social.SocialEventMetadata =.
+            updateImportedEventMetadata isPublic (Social.socialEventMetadata eventRow)
         , Social.SocialEventUpdatedAt =. now
         ]
 
@@ -1694,22 +1700,21 @@ reconcileProviderEvents pool now provider targetCities seenExternalIds =
         )
         targetCities
 
-updateImportedEventMetadata :: Text -> Bool -> Maybe Text -> Maybe Text
-updateImportedEventMetadata status isPublic rawMetadata =
-  updateImportedEventMetadataWithTicket status isPublic Nothing rawMetadata
+updateImportedEventMetadata :: Bool -> Maybe Text -> Maybe Text
+updateImportedEventMetadata isPublic rawMetadata =
+  updateImportedEventMetadataWithTicket isPublic Nothing rawMetadata
 
 updateImportedEventMetadataWithTicket ::
-  Text ->
   Bool ->
   Maybe Text ->
   Maybe Text ->
   Maybe Text
-updateImportedEventMetadataWithTicket status isPublic replacementTicketUrl rawMetadata =
+updateImportedEventMetadataWithTicket isPublic replacementTicketUrl rawMetadata =
   Just . TE.decodeUtf8 . BL.toStrict . encode $
     Object
       ( AesonKeyMap.insert "ticketUrl" ticketUrlValue
           . AesonKeyMap.insert "isPublic" (Bool isPublic)
-          . AesonKeyMap.insert "eventStatus" (String status)
+          . AesonKeyMap.delete "eventStatus"
           $ originalObject
       )
   where
@@ -1759,11 +1764,12 @@ refreshCanonicalVisibility now eventKey = do
                   (normalizeImportedSourceStatus . Social.externalEventRefSourceStatus)
                   bestActiveRef
           ticketUrl = bestActiveRef >>= Social.externalEventRefSourceUrl
+      workflowStateId <- EventLifecycle.resolveActiveSocialEventStateId status
       update
         eventKey
-        [ Social.SocialEventMetadata =.
+        [ Social.SocialEventWorkflowStateId =. Just workflowStateId
+        , Social.SocialEventMetadata =.
             updateImportedEventMetadataWithTicket
-              status
               isPublic
               ticketUrl
               (Social.socialEventMetadata eventRow)
@@ -1796,6 +1802,8 @@ normalizeImportedSourceStatus rawStatus
 
 syncDiscoveredEventDb :: UTCTime -> DiscoveredEvent -> SqlPersistT IO DiscoverySyncStats
 syncDiscoveredEventDb now DiscoveredEvent{..} = do
+  eventTypeUuid <- resolvePublishedEventTypeId now discoveredEventType
+  workflowStateId <- EventLifecycle.resolveActiveSocialEventStateId discoveredEventStatus
   (venueKey, venueCreated) <-
     upsertDiscoveredVenue discoveredEventProvider now discoveredEventVenue
   artistResults <-
@@ -1824,6 +1832,8 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
               , Social.SocialEventStartTime =. discoveredEventStart
               , Social.SocialEventEndTime =. discoveredEventEnd
               , Social.SocialEventPriceCents =. discoveredEventPriceCents
+              , Social.SocialEventEventTypeId =. Just eventTypeUuid
+              , Social.SocialEventWorkflowStateId =. Just workflowStateId
               , Social.SocialEventMetadata =. metadata
               , Social.SocialEventUpdatedAt =. now
               ]
@@ -1857,6 +1867,8 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
                     , Social.SocialEventStartTime =. discoveredEventStart
                     , Social.SocialEventEndTime =. discoveredEventEnd
                     , Social.SocialEventPriceCents =. discoveredEventPriceCents
+                    , Social.SocialEventEventTypeId =. Just eventTypeUuid
+                    , Social.SocialEventWorkflowStateId =. Just workflowStateId
                     , Social.SocialEventMetadata =. metadata
                     , Social.SocialEventUpdatedAt =. now
                     ]
@@ -1870,9 +1882,13 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
                     , Social.socialEventTitle = discoveredEventTitle
                     , Social.socialEventDescription = discoveredEventDescription
                     , Social.socialEventVenueId = Just venueKey
+                    , Social.socialEventTimezone = Nothing
+                    , Social.socialEventEventTypeId = Just eventTypeUuid
+                    , Social.socialEventWorkflowStateId = Just workflowStateId
                     , Social.socialEventStartTime = discoveredEventStart
                     , Social.socialEventEndTime = discoveredEventEnd
                     , Social.socialEventPriceCents = discoveredEventPriceCents
+                    , Social.socialEventCurrencyId = Nothing
                     , Social.socialEventCapacity = Nothing
                     , Social.socialEventMetadata = metadata
                     , Social.socialEventCreatedAt = now
@@ -2056,6 +2072,7 @@ upsertDiscoveredVenue provider now DiscoveredVenue{..} = do
         , Social.VenueAddress =. discoveredVenueAddress
         , Social.VenueCity =. Just discoveredVenueCity
         , Social.VenueCountry =. discoveredVenueCountry
+        , Social.VenueCountryCode =. discoveredVenueCountryCode
         , Social.VenueLatitude =. discoveredVenueLatitude
         , Social.VenueLongitude =. discoveredVenueLongitude
         , Social.VenueContact =. contact
@@ -2071,6 +2088,10 @@ upsertDiscoveredVenue provider now DiscoveredVenue{..} = do
             , Social.venueAddress = discoveredVenueAddress
             , Social.venueCity = Just discoveredVenueCity
             , Social.venueCountry = discoveredVenueCountry
+            , Social.venueCountryCode = discoveredVenueCountryCode
+            , Social.venueCountryId = Nothing
+            , Social.venueCityId = Nothing
+            , Social.venueTimezone = Nothing
             , Social.venueLatitude = discoveredVenueLatitude
             , Social.venueLongitude = discoveredVenueLongitude
             , Social.venueCapacity = Nothing
@@ -2123,6 +2144,8 @@ upsertDiscoveredArtist provider now DiscoveredArtist{..} = do
               , Social.artistProfileAvatarUrl = discoveredArtistImageUrl
               , Social.artistProfileGenres = Nothing
               , Social.artistProfileSocialLinks = Nothing
+              , Social.artistProfileCountryCode = Nothing
+              , Social.artistProfileCountryId = Nothing
               , Social.artistProfileCreatedAt = now
               , Social.artistProfileUpdatedAt = now
               }
@@ -2135,9 +2158,19 @@ upsertDiscoveredArtist provider now DiscoveredArtist{..} = do
               , Social.externalArtistRefLastSeenAt = now
               }
         pure (newArtistKey, True)
-  deleteWhere [Social.ArtistGenreArtistId ==. artistKey]
-  forM_ discoveredArtistGenres $ \genre -> do
-    _ <- insertUnique (Social.ArtistGenre artistKey genre)
+  resolvedGenres <- fmap catMaybes $ forM discoveredArtistGenres $ \genre -> do
+    matches <-
+      ( rawSql
+          "SELECT item.id FROM genre item JOIN catalog_definition catalog ON catalog.id=item.catalog_id AND catalog.code='genres' AND catalog.active JOIN workflow_state state ON state.id=item.workflow_state_id AND state.code='published' AND state.active WHERE item.active AND lower(trim(?)) IN (lower(item.code), lower(item.name_es), lower(item.name_en)) ORDER BY item.id LIMIT 2"
+          [toPersistValue genre]
+          :: SqlPersistT IO [Single UUID]
+      )
+    pure $ case matches of
+      [Single genreId] -> Just genreId
+      _                -> Nothing
+  deleteWhere [Social.ArtistGenreMembershipArtistId ==. artistKey]
+  forM_ (zip [0 :: Int ..] resolvedGenres) $ \(position, genreId) -> do
+    _ <- insertUnique (Social.ArtistGenreMembership artistKey genreId position now)
     pure ()
   pure (artistKey, created)
 
@@ -2164,8 +2197,18 @@ encodeEventMetadataForImport DiscoveredEvent{..} =
           ( discoveredEventStatus
               `notElem` ["cancelled", "canceled", "completed", "missing"]
           )
-      , "eventType" .= discoveredEventType
-      , "eventStatus" .= discoveredEventStatus
       , "currency" .= discoveredEventCurrency
       , "budgetCents" .= (Nothing :: Maybe Int)
       ]
+
+resolvePublishedEventTypeId :: UTCTime -> Text -> SqlPersistT IO UUID
+resolvePublishedEventTypeId now eventTypeCode = do
+  rows <- rawSql
+    "SELECT item.id FROM event_type item JOIN catalog_definition catalog ON catalog.id=item.catalog_id AND catalog.code='event-types' AND catalog.active=TRUE JOIN workflow_state state ON state.id=item.workflow_state_id AND state.workflow_id=catalog.workflow_id AND state.code='published' AND state.active=TRUE WHERE lower(trim(?)) IN (lower(item.code), lower(item.name_es), lower(item.name_en), lower(COALESCE(item.current_slug,''))) AND item.active=TRUE AND item.deprecated_at IS NULL AND (item.effective_from IS NULL OR item.effective_from<=?) AND (item.effective_until IS NULL OR item.effective_until>=?) ORDER BY item.id LIMIT 2"
+    [toPersistValue eventTypeCode, toPersistValue (utctDay now)]
+  case rows of
+    [Single eventTypeUuid] -> pure eventTypeUuid
+    [] -> liftIO . ioError . userError $
+      "Event discovery type is not an active published catalog item: " <> T.unpack eventTypeCode
+    _ -> liftIO . ioError . userError $
+      "Event discovery type resolves to multiple catalog items: " <> T.unpack eventTypeCode

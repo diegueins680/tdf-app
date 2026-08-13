@@ -24,6 +24,7 @@ import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Int (Int64)
 import           Data.Time (UTCTime, Day)
+import           Data.UUID (UUID)
 import           Data.Char (toLower)
 import           Data.Maybe (isJust)
 
@@ -81,7 +82,10 @@ data ArtistProfileDTO = ArtistProfileDTO
   , apYoutubeUrl      :: Maybe Text
   , apWebsiteUrl      :: Maybe Text
   , apFeaturedVideoUrl :: Maybe Text
+  -- Presentation-only labels resolved from canonical genre rows. Historical
+  -- text is returned only while an existing profile remains unmapped.
   , apGenres          :: Maybe Text
+  , apGenreIds        :: [UUID]
   , apHighlights      :: Maybe Text
   , apFollowerCount   :: Int
   , apHasUserAccount  :: Bool
@@ -101,7 +105,7 @@ data ArtistProfileUpsert = ArtistProfileUpsert
   , apuYoutubeUrl      :: Maybe Text
   , apuWebsiteUrl      :: Maybe Text
   , apuFeaturedVideoUrl :: Maybe Text
-  , apuGenres          :: Maybe Text
+  , apuGenreIds        :: [UUID]
   , apuHighlights      :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON ArtistProfileUpsert where
@@ -180,37 +184,25 @@ data ArtistPromoDayReportDTO = ArtistPromoDayReportDTO
 instance ToJSON ArtistPromoDayReportDTO
 
 data FanProfileDTO = FanProfileDTO
-  { fpArtistId      :: Int64
-  , fpDisplayName   :: Maybe Text
-  , fpAvatarUrl     :: Maybe Text
-  , fpFavoriteGenres :: Maybe Text
-  , fpBio           :: Maybe Text
-  , fpCity          :: Maybe Text
+  { fpArtistId        :: Int64
+  , fpDisplayName     :: Maybe Text
+  , fpAvatarUrl       :: Maybe Text
+  , fpFavoriteGenres  :: Maybe Text
+  , fpFavoriteGenreIds :: [UUID]
+  , fpBio             :: Maybe Text
+  , fpCity            :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON FanProfileDTO
 
 data FanProfileUpdate = FanProfileUpdate
-  { fpuDisplayName   :: Maybe Text
-  , fpuAvatarUrl     :: Maybe Text
-  , fpuFavoriteGenres :: Maybe Text
-  , fpuBio           :: Maybe Text
-  , fpuCity          :: Maybe Text
+  { fpuDisplayName      :: Maybe Text
+  , fpuAvatarUrl        :: Maybe Text
+  , fpuFavoriteGenreIds :: [UUID]
+  , fpuBio              :: Maybe Text
+  , fpuCity             :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON FanProfileUpdate where
   parseJSON = genericParseJSON strictDecodeOptions
-
-data CountryDTO = CountryDTO
-  { countryCode :: Text
-  , countryName :: Text
-  } deriving (Show, Generic)
-instance ToJSON CountryDTO
-instance FromJSON CountryDTO
-
-toCountryDTO :: Entity Country -> CountryDTO
-toCountryDTO (Entity _ Country{..}) = CountryDTO
-  { countryCode = countryCode
-  , countryName = countryName
-  }
 
 data FanFollowDTO = FanFollowDTO
   { ffArtistId      :: Int64
@@ -661,7 +653,6 @@ data PartyCreate = PartyCreate
   , cInstagram        :: Maybe Text
   , cEmergencyContact :: Maybe Text
   , cNotes            :: Maybe Text
-  , cRoles            :: Maybe [RoleEnum]
   } deriving (Show, Generic)
 instance FromJSON PartyCreate where
   parseJSON = genericParseJSON strictDecodeOptions
@@ -757,6 +748,7 @@ data BookingDTO = BookingDTO
   , partyId     :: Maybe Int64
   , engineerPartyId :: Maybe Int64
   , engineerName :: Maybe Text
+  , serviceOfferingId :: Maybe UUID
   , serviceType :: Maybe Text
   , serviceOrderId    :: Maybe Int64
   , serviceOrderTitle :: Maybe Text
@@ -991,12 +983,6 @@ data SignupRequest = SignupRequest
   , password        :: Text
   , googleIdToken   :: Maybe Text
   , marketingOptIn  :: Maybe Bool
-  , internshipStartAt :: Maybe Day
-  , internshipEndAt   :: Maybe Day
-  , internshipRequiredHours :: Maybe Int
-  , internshipSkills  :: Maybe Text
-  , internshipAreas   :: Maybe Text
-  , roles           :: Maybe [RoleEnum]
   , fanArtistIds    :: Maybe [Int64]
   , claimArtistId   :: Maybe Int64
   } deriving (Show, Generic)
@@ -1005,14 +991,8 @@ instance FromJSON SignupRequest where
     rejectNullOptionalFields
       "SignupRequest"
       [ "googleIdToken"
-      , "roles"
       , "fanArtistIds"
       , "claimArtistId"
-      , "internshipStartAt"
-      , "internshipEndAt"
-      , "internshipRequiredHours"
-      , "internshipSkills"
-      , "internshipAreas"
       ]
       value
     genericParseJSON strictDecodeOptions value
@@ -1061,22 +1041,23 @@ instance ToJSON SessionResponse where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 7 }
 
 data LocalePreferencesDTO = LocalePreferencesDTO
-  { lpLocale :: Text
+  { lpLocaleId :: UUID
+  , lpLocale :: Text
+  , lpCurrencyId :: UUID
   , lpCurrency :: Text
   , lpTimezone :: Text
+  , lpCountryId :: Maybe UUID
   , lpCountryCode :: Maybe Text
-  , lpSupportedLocales :: [Text]
-  , lpSupportedCurrencies :: [Text]
   } deriving (Eq, Show, Generic)
 
 instance ToJSON LocalePreferencesDTO where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 2 }
 
 data LocalePreferencesUpdate = LocalePreferencesUpdate
-  { lpuLocale :: Text
-  , lpuCurrency :: Text
+  { lpuLocaleId :: UUID
+  , lpuCurrencyId :: UUID
   , lpuTimezone :: Text
-  , lpuCountryCode :: Maybe Text
+  , lpuCountryId :: Maybe UUID
   } deriving (Eq, Show, Generic)
 
 instance FromJSON LocalePreferencesUpdate where

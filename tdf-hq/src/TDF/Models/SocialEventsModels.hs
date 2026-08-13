@@ -17,8 +17,10 @@ module TDF.Models.SocialEventsModels where
 
 import Data.Text (Text)
 import Data.Time (Day, UTCTime)
+import Data.UUID (UUID)
 import Database.Persist.TH
 import GHC.Generics (Generic)
+import TDF.UUIDInstances ()
 
 share
     [mkPersist sqlSettings, mkMigrate "migrateSocialEvents"]
@@ -30,6 +32,8 @@ ArtistProfile sql=social_artist_profile
     avatarUrl Text Maybe
     genres [Text] Maybe sqltype=text[]
     socialLinks Text Maybe
+    countryCode Text Maybe
+    countryId UUID Maybe
     createdAt UTCTime default=now()
     updatedAt UTCTime default=now()
     deriving Show Generic
@@ -39,6 +43,10 @@ Venue
     address Text Maybe
     city Text Maybe
     country Text Maybe
+    countryCode Text Maybe
+    countryId UUID Maybe
+    cityId UUID Maybe
+    timezone Text Maybe
     latitude Double Maybe
     longitude Double Maybe
     capacity Int Maybe
@@ -52,9 +60,13 @@ SocialEvent
     title Text
     description Text Maybe
     venueId VenueId Maybe
+    eventTypeId UUID Maybe
+    workflowStateId UUID Maybe
+    timezone Text Maybe
     startTime UTCTime
     endTime UTCTime
     priceCents Int Maybe
+    currencyId UUID Maybe
     capacity Int Maybe
     metadata Text Maybe
     createdAt UTCTime default=now()
@@ -225,7 +237,18 @@ EventLiveBroadcast
 ArtistGenre
     artistId ArtistProfileId
     genre Text
+    genreId UUID Maybe
     Primary artistId genre
+    deriving Show Generic
+
+-- Canonical relationship used by all new artist-profile writes. ArtistGenre
+-- remains migration evidence only until every historical row is reviewed.
+ArtistGenreMembership sql=artist_genre_membership
+    artistId ArtistProfileId
+    genreId UUID
+    sortOrder Int default=0
+    createdAt UTCTime default=now()
+    Primary artistId genreId
     deriving Show Generic
 
 ArtistFollow
@@ -242,6 +265,7 @@ EventTicketTier
     description Text Maybe
     priceCents Int
     currency Text
+    currencyId UUID Maybe
     quantityTotal Int
     quantitySold Int
     salesStart UTCTime Maybe
