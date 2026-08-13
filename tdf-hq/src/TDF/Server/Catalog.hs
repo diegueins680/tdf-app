@@ -140,6 +140,7 @@ data CatalogTableSpec = CatalogTableSpec
   , ctsReplacementExpr :: Text
   , ctsExternalCodeExpr :: Text
   , ctsSourceVersionExpr :: Text
+  , ctsDisplaySymbolExpr :: Text
   , ctsUsageExpr :: Text
   , ctsDefaultScopeKind :: Maybe Text
   }
@@ -164,7 +165,7 @@ catalogTableSpec entityKind =
     "feedback_severity" -> Just ((flatCatalog "feedback_severity" True) { ctsDefaultScopeKind = Just "feedback-severity" })
     "content_category" -> Just (hierarchy "content_category" False)
     "tag" -> Just (flatCatalog "tag" True)
-    "reaction_type" -> Just (readOnlyCatalog "reaction_type" "NULL::uuid" False)
+    "reaction_type" -> Just ((flatCatalog "reaction_type" True) { ctsDisplaySymbolExpr = "emoji" })
     "record_release" -> Just (readOnlyRecords "record_release")
     "recording" -> Just (readOnlyRecords "recording")
     "recording_session" -> Just (readOnlyRecords "recording_session")
@@ -207,6 +208,7 @@ catalogTableSpec entityKind =
       , ctsReplacementExpr = "NULL::uuid"
       , ctsExternalCodeExpr = "NULL::text"
       , ctsSourceVersionExpr = "NULL::text"
+      , ctsDisplaySymbolExpr = "NULL::text"
       , ctsUsageExpr = "0::bigint"
       , ctsDefaultScopeKind = Nothing
       }
@@ -308,6 +310,7 @@ data RawCatalogItem = RawCatalogItem
   , riReplacementId :: Maybe Text
   , riExternalCode :: Maybe Text
   , riSourceVersion :: Maybe Text
+  , riDisplaySymbol :: Maybe Text
   , riUsageCount :: Int64
   , riVersion :: Int
   } deriving (Show, Generic)
@@ -1198,6 +1201,7 @@ rawItemDTO locale catalogKey definition raw =
     , ciReplacementId = riReplacementId raw
     , ciExternalCode = riExternalCode raw
     , ciSourceVersion = riSourceVersion raw
+    , ciDisplaySymbol = riDisplaySymbol raw
     , ciUsageCount = riUsageCount raw
     , ciVersion = riVersion raw
     }
@@ -1219,6 +1223,7 @@ catalogItemsSql spec publicOnly includeInactive =
     <> "'replacementId', " <> uuidTextExpr (itemExpr spec (ctsReplacementExpr spec)) <> ", "
     <> "'externalCode', " <> itemExpr spec (ctsExternalCodeExpr spec) <> ", "
     <> "'sourceVersion', " <> itemExpr spec (ctsSourceVersionExpr spec) <> ", "
+    <> "'displaySymbol', " <> itemExpr spec (ctsDisplaySymbolExpr spec) <> ", "
     <> "'usageCount', " <> itemExpr spec (ctsUsageExpr spec) <> ", 'version', i.version)::text "
     <> baseFromSql spec
     <> baseWhereSql spec publicOnly includeInactive
@@ -1612,10 +1617,15 @@ publishSql spec =
       "INSERT INTO " <> ctsTable spec <> " (id, catalog_id, code, name_es, name_en, description_es, description_en, sort_order, workflow_state_id, created_by, created_at, updated_at, version, active, parent_id, current_slug) "
         <> "VALUES (?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?::uuid, ?, ?, ?, ?, TRUE, ?::uuid, ?) "
         <> "ON CONFLICT (id) DO UPDATE SET code=EXCLUDED.code, name_es=EXCLUDED.name_es, name_en=EXCLUDED.name_en, description_es=EXCLUDED.description_es, description_en=EXCLUDED.description_en, sort_order=EXCLUDED.sort_order, workflow_state_id=EXCLUDED.workflow_state_id, updated_at=EXCLUDED.updated_at, version=EXCLUDED.version, parent_id=EXCLUDED.parent_id, current_slug=EXCLUDED.current_slug WHERE " <> ctsTable spec <> ".version=? RETURNING 1"
-    FlatCatalogFamily ->
-      "INSERT INTO " <> ctsTable spec <> " (id, catalog_id, code, name_es, name_en, description_es, description_en, sort_order, workflow_state_id, created_at, updated_at, version, active, current_slug) "
-        <> "VALUES (?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?::uuid, ?, ?, ?, TRUE, ?) "
-        <> "ON CONFLICT (id) DO UPDATE SET code=EXCLUDED.code, name_es=EXCLUDED.name_es, name_en=EXCLUDED.name_en, description_es=EXCLUDED.description_es, description_en=EXCLUDED.description_en, sort_order=EXCLUDED.sort_order, workflow_state_id=EXCLUDED.workflow_state_id, updated_at=EXCLUDED.updated_at, version=EXCLUDED.version, current_slug=EXCLUDED.current_slug WHERE " <> ctsTable spec <> ".version=? RETURNING 1"
+    FlatCatalogFamily
+      | ctsTable spec == "reaction_type" ->
+          "INSERT INTO reaction_type (id, catalog_id, code, name_es, name_en, description_es, description_en, sort_order, workflow_state_id, created_at, updated_at, version, active, current_slug, emoji) "
+            <> "VALUES (?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?::uuid, ?, ?, ?, TRUE, ?, ?) "
+            <> "ON CONFLICT (id) DO UPDATE SET code=EXCLUDED.code, name_es=EXCLUDED.name_es, name_en=EXCLUDED.name_en, description_es=EXCLUDED.description_es, description_en=EXCLUDED.description_en, sort_order=EXCLUDED.sort_order, workflow_state_id=EXCLUDED.workflow_state_id, updated_at=EXCLUDED.updated_at, version=EXCLUDED.version, current_slug=EXCLUDED.current_slug, emoji=EXCLUDED.emoji WHERE reaction_type.version=? RETURNING 1"
+      | otherwise ->
+          "INSERT INTO " <> ctsTable spec <> " (id, catalog_id, code, name_es, name_en, description_es, description_en, sort_order, workflow_state_id, created_at, updated_at, version, active, current_slug) "
+            <> "VALUES (?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?::uuid, ?, ?, ?, TRUE, ?) "
+            <> "ON CONFLICT (id) DO UPDATE SET code=EXCLUDED.code, name_es=EXCLUDED.name_es, name_en=EXCLUDED.name_en, description_es=EXCLUDED.description_es, description_en=EXCLUDED.description_en, sort_order=EXCLUDED.sort_order, workflow_state_id=EXCLUDED.workflow_state_id, updated_at=EXCLUDED.updated_at, version=EXCLUDED.version, current_slug=EXCLUDED.current_slug WHERE " <> ctsTable spec <> ".version=? RETURNING 1"
     ServiceOfferingFamily ->
       "INSERT INTO service_offering (id, catalog_id, code, name_es, name_en, description_es, description_en, sort_order, workflow_state_id, created_by, updated_by, approved_by, created_at, updated_at, version, category_id, current_slug, pricing_model_id, pricing_model_code, default_rate_cents, tax_rate_id, tax_rate_code, currency_id, billing_unit_es, billing_unit_en, default_duration_minutes, requires_engineer, active) "
         <> "VALUES (?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?::uuid, ?, ?, ?, ?, ?, ?, ?::uuid, ?, ?::uuid, NULL, ?, ?::uuid, NULL, ?::uuid, ?, ?, ?, ?, TRUE) "
@@ -1635,7 +1645,9 @@ publishFamilyParams spec draft parentUuid =
   case ctsFamily spec of
     FlatReferenceFamily -> [maybe PersistNull PersistText (cdrExternalCode draft), maybe PersistNull PersistText (cdrSourceVersion draft)]
     HierarchyFamily -> [maybe PersistNull (PersistText . UUID.toText) parentUuid, maybe PersistNull PersistText (cdrCurrentSlug draft)]
-    FlatCatalogFamily -> [maybe PersistNull PersistText (cdrCurrentSlug draft)]
+    FlatCatalogFamily ->
+      [maybe PersistNull PersistText (cdrCurrentSlug draft)]
+        <> [maybe PersistNull PersistText (cdrDisplaySymbol draft) | ctsTable spec == "reaction_type"]
     ServiceOfferingFamily ->
       case cdrServiceOffering draft of
         Nothing -> []
@@ -1988,6 +2000,7 @@ mergeHandler user catalogCode request = do
         , cdrServiceOffering = Nothing
         , cdrRadioAutoStop = Nothing
         , cdrAppearanceMode = Nothing
+        , cdrDisplaySymbol = ciDisplaySymbol source
         , cdrGlobalDefault = Nothing
         , cdrReason = cmReason request <> "; merge target=" <> targetId
         , cdrSourcePlatform = "admin"
@@ -2132,6 +2145,7 @@ importCsvHandler user catalogCode requestedDryRun csvBody = do
             , cdrServiceOffering = Nothing
             , cdrRadioAutoStop = Nothing
             , cdrAppearanceMode = Nothing
+            , cdrDisplaySymbol = Nothing
             , cdrGlobalDefault = Nothing
             , cdrReason = "CSV import row " <> T.pack (show rowNumber)
             , cdrSourcePlatform = "csv-import"
@@ -2247,6 +2261,8 @@ validateCatalogSpecificDraft spec draft =
         throwError err400 { errBody = "radioAutoStop fields are only valid for the radio auto-stop catalog" }
       when (isJust (cdrAppearanceMode draft)) $
         throwError err400 { errBody = "appearanceMode fields are only valid for the appearance modes catalog" }
+      when (isJust (cdrDisplaySymbol draft)) $
+        throwError err400 { errBody = "displaySymbol is only valid for reaction types" }
       when (isJust (cdrGlobalDefault draft)) $
         throwError err400 { errBody = "globalDefault is only valid for catalogs with an explicit global default scope" }
     RadioAutoStopFamily -> do
@@ -2260,6 +2276,7 @@ validateCatalogSpecificDraft spec draft =
             || isJust (cdrSourceVersion draft)
             || isJust (cdrServiceOffering draft)
             || isJust (cdrAppearanceMode draft)
+            || isJust (cdrDisplaySymbol draft)
             || isJust (cdrGlobalDefault draft)
         ) $
         throwError err400
@@ -2277,12 +2294,31 @@ validateCatalogSpecificDraft spec draft =
             || isJust (cdrSourceVersion draft)
             || isJust (cdrServiceOffering draft)
             || isJust (cdrRadioAutoStop draft)
+            || isJust (cdrDisplaySymbol draft)
             || isJust (cdrGlobalDefault draft)
         ) $
         throwError err400
           { errBody = "Appearance modes use their typed default field, not generic parent, external, service, or Radio fields" }
       unless (cdrCode draft `elem` ["system", "light", "dark"]) $
         throwError err400 { errBody = "appearance mode code is not recognized by the application renderer" }
+    FlatCatalogFamily | ctsTable spec == "reaction_type" -> do
+      symbol <- maybe
+        (throwError err400 { errBody = "displaySymbol is required for reaction types" })
+        pure
+        (cdrDisplaySymbol draft)
+      when
+        ( T.null (T.strip symbol)
+            || T.length (T.strip symbol) > 16
+            || T.any isControl symbol
+            || isJust (cdrParentId draft)
+            || isJust (cdrExternalCode draft)
+            || isJust (cdrSourceVersion draft)
+            || isJust (cdrServiceOffering draft)
+            || isJust (cdrRadioAutoStop draft)
+            || isJust (cdrAppearanceMode draft)
+            || isJust (cdrGlobalDefault draft)
+        ) $
+        throwError err400 { errBody = "Reaction types require one visible displaySymbol and no unrelated typed fields" }
     _ -> do
       when (isJust (cdrServiceOffering draft)) $
         throwError err400 { errBody = "serviceOffering fields are only valid for the services catalog" }
@@ -2290,6 +2326,8 @@ validateCatalogSpecificDraft spec draft =
         throwError err400 { errBody = "radioAutoStop fields are only valid for the radio auto-stop catalog" }
       when (isJust (cdrAppearanceMode draft)) $
         throwError err400 { errBody = "appearanceMode fields are only valid for the appearance modes catalog" }
+      when (isJust (cdrDisplaySymbol draft)) $
+        throwError err400 { errBody = "displaySymbol is only valid for catalogs with a specialized symbol adapter" }
       when (isJust (cdrGlobalDefault draft) && isNothing (ctsDefaultScopeKind spec)) $
         throwError err400 { errBody = "globalDefault is only valid for catalogs with an explicit global default scope" }
 

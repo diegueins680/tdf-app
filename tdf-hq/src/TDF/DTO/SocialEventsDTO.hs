@@ -77,6 +77,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime)
 import Data.UUID (UUID)
+import qualified Data.UUID as UUID
 import GHC.Generics (Generic)
 import Text.Read (readMaybe)
 
@@ -631,7 +632,11 @@ invitationUpdateAllowedKeys =
     ]
 
 data EventMomentReactionDTO = EventMomentReactionDTO
-    { emrReaction :: Text
+    { emrReactionTypeId :: Text
+    , emrReactionCode :: Text
+    , emrReactionNameEs :: Text
+    , emrReactionNameEn :: Text
+    , emrReactionEmoji :: Text
     , emrPartyId :: Text
     , emrCreatedAt :: Maybe UTCTime
     }
@@ -764,7 +769,7 @@ validateOptionalNonNegativeInt fieldName (Just value)
     | otherwise = fail (fieldName <> " must be greater than or equal to 0")
 
 data EventMomentReactionRequestDTO = EventMomentReactionRequestDTO
-    { emrrReaction :: Text
+    { emrrReactionTypeId :: Text
     }
     deriving (Show, Eq, Generic)
 instance ToJSON EventMomentReactionRequestDTO
@@ -772,11 +777,16 @@ instance FromJSON EventMomentReactionRequestDTO where
     parseJSON = withObject "EventMomentReactionRequestDTO" $ \o -> do
         rejectUnknownObjectFields
             "EventMomentReactionRequestDTO"
-            [ "emrrReaction"
+            [ "emrrReactionTypeId"
             ]
             o
-        EventMomentReactionRequestDTO
-            <$> o .: "emrrReaction"
+        rawReactionTypeId <- o .: "emrrReactionTypeId"
+        reactionTypeId <-
+            maybe
+                (fail "emrrReactionTypeId must be a canonical UUID")
+                (pure . UUID.toText)
+                (UUID.fromText (T.strip rawReactionTypeId))
+        pure (EventMomentReactionRequestDTO reactionTypeId)
 
 data EventMomentCommentCreateDTO = EventMomentCommentCreateDTO
     { emccAuthorName :: Maybe Text

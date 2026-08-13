@@ -725,10 +725,10 @@ seedDomainFoundation = do
   rawExecute
     "INSERT INTO catalog_scoped_default (catalog_id, entity_id, scope_kind, scope_id, locale_id, effective_from, active, created_by, version) SELECT catalog.id, item.id, 'social-event', 'global', NULL, CURRENT_TIMESTAMP, TRUE, NULL, 1 FROM catalog_definition catalog JOIN event_type item ON item.catalog_id=catalog.id AND item.code='party' AND item.active WHERE catalog.code='event-types' AND NOT EXISTS (SELECT 1 FROM catalog_scoped_default existing WHERE existing.catalog_id=catalog.id AND existing.scope_kind='social-event' AND existing.scope_id='global' AND existing.locale_id IS NULL AND existing.active)"
     []
-  forM_ (zip [0 :: Int ..] reactions) $ \(position, (code, emoji, nameEs, nameEn)) ->
+  forM_ (zip [0 :: Int ..] reactions) $ \(position, (identifier, code, emoji, nameEs, nameEn)) ->
     rawExecute
-      "INSERT INTO reaction_type (catalog_id, code, emoji, name_es, name_en, sort_order, active, workflow_state_id, version) SELECT c.id, ?, ?, ?, ?, ?, TRUE, ws.id, 1 FROM catalog_definition c JOIN workflow_state ws ON ws.workflow_id=c.workflow_id AND ws.code='published' WHERE c.code='reaction-types' ON CONFLICT (code) DO NOTHING"
-      [PersistText code, PersistText emoji, PersistText nameEs, PersistText nameEn, PersistInt64 (fromIntegral position)]
+      "INSERT INTO reaction_type (id, catalog_id, code, emoji, name_es, name_en, current_slug, sort_order, active, workflow_state_id, version) SELECT ?::uuid, c.id, ?, ?, ?, ?, ?, ?, TRUE, ws.id, 1 FROM catalog_definition c JOIN workflow_state ws ON ws.workflow_id=c.workflow_id AND ws.code='published' WHERE c.code='reaction-types' ON CONFLICT (code) DO UPDATE SET emoji=EXCLUDED.emoji, name_es=EXCLUDED.name_es, name_en=EXCLUDED.name_en WHERE reaction_type.id=EXCLUDED.id AND reaction_type.version=1"
+      [PersistText identifier, PersistText code, PersistText emoji, PersistText nameEs, PersistText nameEn, PersistText code, PersistInt64 (fromIntegral position)]
   where
     releaseTypes =
       [ ("album", "Álbum", "Album"), ("single", "Sencillo", "Single"), ("ep", "EP", "EP")
@@ -776,8 +776,9 @@ seedDomainFoundation = do
       , ("other", "Otro", "Other")
       ]
     reactions =
-      [ ("like", "👍", "Me gusta", "Like"), ("love", "❤️", "Me encanta", "Love")
-      , ("celebrate", "🎉", "Celebrar", "Celebrate"), ("insightful", "💡", "Interesante", "Insightful")
+      [ ("50800000-0000-4000-8000-000000000001", "fire", "🔥", "Fuego", "Fire")
+      , ("50800000-0000-4000-8000-000000000002", "love", "❤️", "Me encanta", "Love")
+      , ("50800000-0000-4000-8000-000000000003", "applause", "👏", "Aplauso", "Applause")
       ]
 
 -- These launch stations used to be a frontend constant. They are now
@@ -1112,6 +1113,17 @@ validateCatalogRuntimeRegistries = do
     [Single countValue] -> liftIO . ioError . userError $
       "Social events require canonical event_type_id without metadata eventType strings before cutover: " <> show countValue
     _ -> liftIO $ ioError (userError "Unable to validate canonical social-event type references")
+  invalidMomentReactionReferences <-
+    ( rawSql
+        "SELECT COUNT(*) FROM event_moment_reaction reaction LEFT JOIN reaction_type item ON item.id=reaction.reaction_type_id LEFT JOIN catalog_definition catalog ON catalog.id=item.catalog_id LEFT JOIN workflow_state state ON state.id=item.workflow_state_id WHERE reaction.reaction IS NOT NULL OR reaction.reaction_type_id IS NULL OR item.id IS NULL OR item.active IS DISTINCT FROM TRUE OR item.deprecated_at IS NOT NULL OR catalog.code IS DISTINCT FROM 'reaction-types' OR catalog.active IS DISTINCT FROM TRUE OR state.code IS DISTINCT FROM 'published' OR state.active IS DISTINCT FROM TRUE OR state.workflow_id IS DISTINCT FROM catalog.workflow_id"
+        []
+        :: SqlPersistT IO [Single Int]
+    )
+  case invalidMomentReactionReferences of
+    [Single 0] -> pure ()
+    [Single countValue] -> liftIO . ioError . userError $
+      "Event moment reactions require canonical reaction_type_id without copied reaction strings before cutover: " <> show countValue
+    _ -> liftIO $ ioError (userError "Unable to validate canonical event-moment reaction references")
   lifecycleStateRows <-
     ( rawSql
         "SELECT state.code FROM workflow_state state JOIN workflow_definition workflow ON workflow.id=state.workflow_id WHERE workflow.code='social-event-lifecycle' AND workflow.active=TRUE AND state.active=TRUE ORDER BY state.code"

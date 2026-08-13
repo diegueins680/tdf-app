@@ -61,6 +61,39 @@ paths:
                 $ref: '#/components/schemas/SocialEvent'
         '422':
           description: Event type is unknown, inactive, ineffective, deprecated, or unpublished
+  /social-events/events/{eventId}/moments/{momentId}/reactions:
+    post:
+      tags: [Social events]
+      summary: Toggle a persisted reaction type on an event moment
+      operationId: reactToSocialEventMoment
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: momentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventMomentReactionRequest'
+      responses:
+        '200':
+          description: Moment with canonical reaction references
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventMoment'
+        '422':
+          description: Reaction type UUID is unknown, inactive, deprecated, or unpublished
   /version:
     get:
       summary: Get API Version
@@ -3713,6 +3746,62 @@ components:
           description: The backend enforces the persisted transition relation.
         sortOrder: { type: integer, minimum: 0 }
         notes: { type: string, nullable: true }
+    EventMomentReactionRequest:
+      type: object
+      additionalProperties: false
+      required: [emrrReactionTypeId]
+      properties:
+        emrrReactionTypeId:
+          type: string
+          format: uuid
+          description: Canonical UUID of an active published item in the `reaction-types` catalog.
+    EventMomentReaction:
+      type: object
+      additionalProperties: false
+      required: [emrReactionTypeId, emrReactionCode, emrReactionNameEs, emrReactionNameEn, emrReactionEmoji, emrPartyId]
+      properties:
+        emrReactionTypeId: { type: string, format: uuid }
+        emrReactionCode: { type: string, readOnly: true }
+        emrReactionNameEs: { type: string, readOnly: true }
+        emrReactionNameEn: { type: string, readOnly: true }
+        emrReactionEmoji: { type: string, readOnly: true }
+        emrPartyId: { type: string }
+        emrCreatedAt: { type: string, format: date-time, nullable: true }
+    EventMomentComment:
+      type: object
+      additionalProperties: false
+      required: [emcAuthorName, emcBody]
+      properties:
+        emcId: { type: string, nullable: true }
+        emcMomentId: { type: string, nullable: true }
+        emcAuthorPartyId: { type: string, nullable: true }
+        emcAuthorName: { type: string }
+        emcBody: { type: string }
+        emcCreatedAt: { type: string, format: date-time, nullable: true }
+        emcUpdatedAt: { type: string, format: date-time, nullable: true }
+    EventMoment:
+      type: object
+      additionalProperties: false
+      required: [emAuthorName, emMediaUrl, emMediaType, emReactions, emComments]
+      properties:
+        emId: { type: string, nullable: true }
+        emEventId: { type: string, nullable: true }
+        emAuthorPartyId: { type: string, nullable: true }
+        emAuthorName: { type: string }
+        emCaption: { type: string, nullable: true }
+        emMediaUrl: { type: string }
+        emMediaType: { type: string }
+        emMediaWidth: { type: integer, nullable: true }
+        emMediaHeight: { type: integer, nullable: true }
+        emMediaDurationMs: { type: integer, nullable: true }
+        emCreatedAt: { type: string, format: date-time, nullable: true }
+        emUpdatedAt: { type: string, format: date-time, nullable: true }
+        emReactions:
+          type: array
+          items: { $ref: '#/components/schemas/EventMomentReaction' }
+        emComments:
+          type: array
+          items: { $ref: '#/components/schemas/EventMomentComment' }
     SocialEvent:
       type: object
       additionalProperties: false
@@ -4202,6 +4291,7 @@ components:
           minimum: 1
     CatalogItem:
       type: object
+      additionalProperties: false
       required: [id, catalogId, catalogCode, kind, code, name, nameEs, nameEn, searchAliases, sortOrder, active, workflowState, usageCount, version]
       properties:
         id:
@@ -4253,6 +4343,9 @@ components:
           type: string
         sourceVersion:
           type: string
+        displaySymbol:
+          type: string
+          description: Persisted short visual marker supplied only by typed catalogs such as reaction types.
         usageCount:
           type: integer
           format: int64
@@ -4588,6 +4681,10 @@ components:
           $ref: '#/components/schemas/RadioAutoStopDraft'
         appearanceMode:
           $ref: '#/components/schemas/AppearanceModeDraft'
+        displaySymbol:
+          type: string
+          maxLength: 16
+          description: Typed persisted visual marker. Currently accepted only by the reaction-types adapter.
         globalDefault:
           type: boolean
           description: >-

@@ -171,6 +171,13 @@ function classificationFor(candidate, technicalJustification) {
   if (isSocialEventCapabilityMirror(candidate)) return 'security-system-registry';
   if (technicalJustification) return 'genuine-technical-constant';
   const value = context(candidate);
+  // "reaction" contains the substring "action". Reaction choices are
+  // business catalog data unless the candidate also names an explicit
+  // security concept; do not let the broad security heuristic misclassify
+  // social reactions as grantable actions.
+  if (/reaction/i.test(value) && !/(?:capabilit|grant|module|permission|role|security)/i.test(value)) {
+    return 'dynamic-business-catalog';
+  }
   if (SECURITY_PATTERN.test(value)) return 'security-system-registry';
   if (GOVERNED_PATTERN.test(value)) return 'governed-reference-data';
   return 'dynamic-business-catalog';
@@ -190,6 +197,9 @@ function specializedModel(candidate, classification) {
   if (classification === 'genuine-technical-constant') return 'technical_constant_allowlist';
   if (/navigation|menu|feature|sidebar|public_nav/i.test(value)) {
     return 'navigation_item, navigation_item_permission';
+  }
+  if (/reaction/i.test(value) && !/(?:capabilit|grant|module|permission|role|security)/i.test(value)) {
+    return 'reaction_type, content_reaction';
   }
   if (SECURITY_PATTERN.test(value)) {
     if (/role/i.test(value)) return 'security_role, party_security_role, role_permission';

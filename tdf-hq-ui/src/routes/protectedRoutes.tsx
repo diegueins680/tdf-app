@@ -57,6 +57,7 @@ const AppearanceModeCatalogPage = lazy(() => import('../pages/AppearanceModeCata
 const PublicProfilePage = lazy(() => import('../pages/PublicProfilePage'));
 const ReportsPage = lazy(() => import('../pages/ReportsPage'));
 const RadioAutoStopCatalogPage = lazy(() => import('../pages/RadioAutoStopCatalogPage'));
+const ReactionTypesCatalogPage = lazy(() => import('../pages/ReactionTypesCatalogPage'));
 const ReservasEquipoPage = lazy(() => import('../pages/ReservasEquipoPage'));
 const RoomsPage = lazy(() => import('../pages/RoomsPage'));
 const SecurityPage = lazy(() => import('../pages/SecurityPage'));
@@ -177,6 +178,7 @@ export function renderProtectedRoutes() {
           <Route path="catalogos/radio-auto-stop" element={<RadioAutoStopCatalogPage />} />
           <Route path="catalogos/apariencia" element={<AppearanceModeCatalogPage />} />
           <Route path="catalogos/feedback" element={<FeedbackCatalogPage />} />
+          <Route path="catalogos/reacciones" element={<ReactionTypesCatalogPage />} />
           <Route path="inscripciones-curso" element={<CourseRegistrationsAdminPage />} />
           <Route path="cursos" element={<CourseBuilderPage />} />
           <Route path="usuarios-admin" element={<AdminUsersPage />} />

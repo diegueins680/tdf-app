@@ -1294,13 +1294,18 @@ ReactionType sql=reaction_type
     nameEn Text
     descriptionEs Text Maybe
     descriptionEn Text Maybe
+    currentSlug Text Maybe
     sortOrder Int default=0
     active Bool default=True
     workflowStateId WorkflowStateId
     createdAt UTCTime default=CURRENT_TIMESTAMP
     updatedAt UTCTime default=CURRENT_TIMESTAMP
+    deprecatedAt UTCTime Maybe
+    replacementId ReactionTypeId Maybe
+    usageCount Int64 default=0
     version Int default=1
     UniqueReactionTypeCode code
+    UniqueReactionTypeSlug currentSlug !force
     deriving Show Generic
 ContentType sql=content_type
     Id UUID default=gen_random_uuid()

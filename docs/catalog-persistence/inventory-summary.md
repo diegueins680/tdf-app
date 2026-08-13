@@ -4,18 +4,18 @@ Captured on 2026-08-07 from the baselines documented in `README.md`.
 
 ## Static inventory
 
-The latest reproducible pass (2026-08-12 UTC, including the candidate implementation) scanned 857
-files and produced 527 semantic candidates after coalescing repeated occurrences in the same
+The latest reproducible pass (2026-08-12 UTC, including the candidate implementation) scanned 863
+files and produced 524 semantic candidates after coalescing repeated occurrences in the same
 source. It found:
 
-- 337 likely dynamic business catalogs.
+- 335 likely dynamic business catalogs.
 - 48 likely governed reference datasets.
-- 106 likely security/system registries.
+- 105 likely security/system registries.
 - 36 likely technical constants.
-- 58 exact duplicate groups.
-- 88 normalized spelling, punctuation, case, or accent variant groups.
+- 57 exact duplicate groups.
+- 89 normalized spelling, punctuation, case, or accent variant groups.
 
-The deterministic per-candidate decision report classifies all 527 entries with an explicit
+The deterministic per-candidate decision report classifies all 524 entries with an explicit
 migration target or technical-constant justification. The difference from discovery
 recommendations comes from explicit rules for parser, rendering, test, generated-client,
 migration-history, and automation mechanics. Retained technical candidates include reviewed
@@ -149,6 +149,21 @@ Notable migration evidence includes:
   seven database negatives, and three atomic migration-abort cases. Production distinct statuses
   remain unknown and must be enumerated in the fresh dry-run. Full evidence is in
   `social-event-workflow-cutover.md`.
+
+## Candidate cutover status for event-moment reactions
+
+- `event_moment_reaction.reaction_type_id` is now the only runtime relationship. Writes accept a
+  canonical active published UUID and reject copied code, label, emoji, slug, and legacy fields.
+- `reaction_type` owns bilingual names/descriptions, visual symbol, order, publication,
+  deprecation/replacement metadata, usage, and optimistic version. Both web and mobile expose its
+  strict editor through the shared draft/review/approval workflow.
+- Mobile snapshot schema 7 batches the public catalog into its last-known-good cache. UI options
+  and offline reaction maps use persisted UUIDs; no emergency reaction values are invented.
+- The three-row fixture mapped exact `fire`, case variant `HEART`, and reviewed alias `clap` with
+  zero unresolved/ambiguous values. Apply, no-op rerun, exact rollback, reapply, evidence
+  immutability, legacy-write, invalid-ID, and referenced-deactivation checks passed. Production
+  distinct values still require a current read-only dry-run. Full evidence is in
+  `event-moment-reaction-cutover.md`.
 
 ## Candidate cutover status for DDEX references and lifecycle
 

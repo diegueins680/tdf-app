@@ -317,6 +317,7 @@ data CatalogItemDTO = CatalogItemDTO
   , ciReplacementId :: Maybe Text
   , ciExternalCode :: Maybe Text
   , ciSourceVersion :: Maybe Text
+  , ciDisplaySymbol :: Maybe Text
   , ciUsageCount :: Int64
   , ciVersion :: Int
   } deriving (Show, Eq, Generic)
@@ -451,6 +452,7 @@ data CatalogDraftRequest = CatalogDraftRequest
   , cdrServiceOffering :: Maybe ServiceOfferingDraft
   , cdrRadioAutoStop :: Maybe RadioAutoStopDraft
   , cdrAppearanceMode :: Maybe AppearanceModeDraft
+  , cdrDisplaySymbol :: Maybe Text
   , cdrGlobalDefault :: Maybe Bool
   , cdrReason :: Text
   , cdrSourcePlatform :: Text

@@ -59,6 +59,9 @@ erDiagram
   WORKFLOW_STATE ||--o{ PIPELINE_CARD : positions
   EVENT_TYPE ||--o{ SOCIAL_EVENT : classifies
   EVENT_TYPE ||--o{ CATALOG_SCOPED_DEFAULT : global_social_event_default
+  CATALOG_DEFINITION ||--o{ REACTION_TYPE : governs
+  REACTION_TYPE ||--o{ EVENT_MOMENT_REACTION : classifies
+  EVENT_MOMENT ||--o{ EVENT_MOMENT_REACTION : receives
   VENUE ||--o{ VENUE_EVENT_QUOTE_PROFILE : prices_at
   EVENT_TYPE ||--o{ VENUE_EVENT_QUOTE_PROFILE : applies_to
   SERVICE_OFFERING ||--o{ VENUE_EVENT_QUOTE_PROFILE : packages
@@ -179,6 +182,10 @@ New domain models are grouped as follows:
   `catalog_scoped_default` owns the one `social-event/global` default. Domo's outstanding pricing
   matrix requires a separate effective-dated `venue_event_quote_profile` joining venue, event type,
   service offering, and currency; global event types must not own venue-specific prices.
+  Event-moment reactions reference specialized `reaction_type` UUIDs. Persisted rows own bilingual
+  presentation, symbols, ordering, publication, replacement, and usage; the actor/moment relation
+  never stores a code, label, emoji, or slug. Fan Club content reactions remain a separately
+  inventoried consumer until its aggregate-storage contract is redesigned.
 - International reference data: country, subdivision, city, currency, locale, and language tables
   with source/version/effective/deprecation metadata and deployment enablement tables. Countries
   are generated from a dated bilingual UN M49 import plus one explicit ISO 3166/MA supplement;
@@ -254,6 +261,10 @@ standard, source, effective date, deprecation, and last synchronization time.
   `event_type_id`. Responses expose the UUID while web presentation resolves the localized label
   from the shared catalog service. Discovery imports perform the same active/effective/publication
   validation before writing and never persist their inferred code in event metadata.
+- Authenticated event-moment reaction writes accept only a published `reactionTypeId`. Responses
+  expose code, symbol, and both names as read-only presentation. Web and mobile administer the
+  specialized symbol through the normal draft/review/publication workflow; mobile snapshot schema
+  v7 synchronizes the catalog and stores offline selections keyed by UUID.
 - `/radio/auto-stop-options` returns a strict locale-aware envelope containing the catalog UUID,
   cache revision, typed option UUIDs, durations, and the single effective default. The web timer
   uses the selected UUID and never parses a code or label. Administrative writes use the common
@@ -275,9 +286,9 @@ standard, source, effective date, deprecation, and last synchronization time.
   submits emergency snapshot identities. Snapshot schema v3 added countries; schema v4 added
   appearance modes and defaults; schema v5 adds published event types plus the required
   `social-event/global` UUID default; schema v6 adds a separately versioned and ETagged public
-  workflow snapshot. Valid v2/v3/v4/v5 snapshots upgrade in memory with their ETags cleared so the
-  next successful synchronization cannot return a false 304 for a partial cache. Emergency data
-  contains no invented workflow state.
+  workflow snapshot, and schema v7 adds published reaction types. Valid older snapshots upgrade in
+  memory with their ETags cleared so the next successful synchronization cannot return a false 304
+  for a partial cache. Emergency data contains no invented workflow state or reaction type.
 - Batched public retrieval accepts catalog codes but returns a discriminated union of strict typed
   item DTOs.
 - Protected pipeline reads require the persisted `pipeline.read` capability. Creation, mutation,

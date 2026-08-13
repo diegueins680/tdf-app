@@ -198,11 +198,13 @@ EventMoment
     deriving Show Generic
 
 EventMomentReaction
+    Id UUID default=gen_random_uuid()
     momentId EventMomentId
-    reaction Text
+    reactionTypeId UUID Maybe
+    reaction Text Maybe
     reactorPartyId Text
     createdAt UTCTime default=now()
-    Primary momentId reaction reactorPartyId
+    UniqueEventMomentReaction momentId reactionTypeId reactorPartyId !force
     deriving Show Generic
 
 EventMomentComment

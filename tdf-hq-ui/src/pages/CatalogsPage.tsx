@@ -20,6 +20,7 @@ export const catalogEditorPath = (entityKind: string): string | undefined => {
     case 'appearance_mode_option': return '/configuracion/catalogos/apariencia';
     case 'feedback_category':
     case 'feedback_severity': return '/configuracion/catalogos/feedback';
+    case 'reaction_type': return '/configuracion/catalogos/reacciones';
     default: return undefined;
   }
 };

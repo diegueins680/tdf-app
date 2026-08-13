@@ -125,16 +125,17 @@ to the published default when an ID becomes inactive or disappears. Startup requ
 three code-recognized rows and one active published default, while database constraints reject
 unknown codes, competing defaults, default deactivation, and hard deletion. Web exposes a central
 `/configuracion/catalogos` index and a typed Appearance draft/review interface. Mobile snapshot
-schema v4 introduced appearance in the boot batch; schema v5 added event types. The current schema
-v6 additionally synchronizes the persisted social-event workflow, keeps a last-known-good
-snapshot, and uses a marked emergency set only while upgrading an older cache or when no valid
-cache exists. A v2/v3/v4/v5 upgrade clears its old ETags and must obtain the missing data before
-catalog-dependent writes are enabled.
+schema v4 introduced appearance in the boot batch; schema v5 added event types; schema v6 added the
+persisted social-event workflow. The current schema v7 additionally synchronizes published event
+moment reaction types, keeps a last-known-good snapshot, and uses a marked emergency set only while
+upgrading an older cache or when no valid cache exists. An older snapshot clears its ETags and must
+obtain missing data before catalog-dependent writes are enabled.
 
 The authenticated web and mobile applications now populate their central Catalogs surfaces from
 protected `catalog_definition` rows rather than treating a compiled menu as the definition list.
 They provide locale-aware discovery for every authorized definition. Strict native editors cover
-Appearance, Radio auto-stop, Feedback categories, and Feedback severities: they use canonical
+Appearance, Radio auto-stop, Feedback categories, Feedback severities, and event-moment reaction
+types: they use canonical
 item/revision UUIDs, remote item search, bilingual fields, scoped defaults, optimistic base
 versions, and the same draft/submit/approve/reject endpoints. Unsupported `entity_kind` values deny
 writes and stay read-only until a typed editor exists. Backend capabilities and distinct-approver
@@ -211,6 +212,15 @@ public workflow endpoint; mobile snapshot schema v6 stores and validates a versi
 snapshot with no invented emergency states. Full mapping, authorization, offline, rollback, and
 rehearsal evidence is in `social-event-workflow-cutover.md`.
 
+Event-moment reactions now use `event_moment_reaction.reaction_type_id` throughout backend and
+mobile writes. The specialized public catalog owns UUIDs, bilingual names/descriptions, symbols,
+order, lifecycle, and replacement metadata; the API rejects legacy strings and resolves
+presentation metadata from the referenced row. Web and mobile provide strict catalog editors,
+while mobile snapshot schema v7 keeps a last-known-good reaction page and keys offline selections
+by UUID. A three-row PostgreSQL fixture passed dry-run, apply, no-op rerun, exact rollback,
+reapply, evidence immutability, and negative integrity guards. Full contract, mapping, and rollout
+evidence is in `event-moment-reaction-cutover.md`.
+
 Operational Kanban stages now use persisted workflow and state UUIDs. Six internal workflow
 definitions own 35 bilingual stages, six initial defaults, 180 allowed direct transitions, and 11
 explicit service-offering bindings. The Haskell stage module and mobile demo boards were removed;
@@ -248,7 +258,7 @@ rerun, exact rollback, reapply, immutable evidence, and seven negative integrity
 
 Directed verification after the latest changes:
 
-- Hardcoded-list CI audit: passed across 857 files and 527 candidates with no unreviewed or stale
+- Hardcoded-list CI audit: passed across 863 files and 524 candidates with no unreviewed or stale
   decisions. The generated JSON inventory and CSV consumer matrix now both include those reviewed
   decisions rather than an intermediate unreviewed scan.
 - Records PostgreSQL forward/rerun/rollback integration: passed.
@@ -257,6 +267,12 @@ Directed verification after the latest changes:
   legacy-upgrade paths both passed, including exact tax-reference provenance and copied-code
   removal.
 - Security registry PostgreSQL integrity integration: passed.
+- Latest event-moment reaction checks: three legacy values mapped with zero unresolved or
+  ambiguous identities; dry-run/apply/no-op rerun/exact rollback/reapply plus four negative guards
+  passed on disposable PostgreSQL 16. The backend fast build and focused strict request-contract
+  example, web/mobile typechecks, regenerated clients, 3 focused web tests, and 24 focused mobile
+  tests passed. A first Hspec invocation used a hyphenated matcher and selected zero examples; the
+  corrected quoted matcher selected and passed the intended example.
 - Backend Records contract and validation tests: 5/5 passed; Haskell fast build passed.
 - Latest genre contract checks: Haskell executable and test suite compiled; 15 focused artist/fan
   examples passed. Web genre/API/editor checks passed 17 focused tests, both generated clients were

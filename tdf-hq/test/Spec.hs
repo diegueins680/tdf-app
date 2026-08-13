@@ -347,7 +347,6 @@ import TDF.Server.SocialEventsHandlers (
     normalizeMomentCaption,
     normalizeMomentCommentBody,
     normalizeMomentMediaType,
-    normalizeMomentReaction,
     normalizeLiveBroadcastTitle,
     normalizeLiveBroadcastDescription,
     normalizeLiveBroadcastQuality,
@@ -8797,12 +8796,12 @@ main = hspec $ do
                     emCreateMediaWidth parsed `shouldBe` Just 1080
 
             case eitherDecode
-                "{\"emrrReaction\":\"fire\"}"
+                "{\"emrrReactionTypeId\":\"50800000-0000-4000-8000-000000000001\"}"
                 :: Either String EventMomentReactionRequestDTO of
                 Left err ->
                     expectationFailure ("Expected canonical moment reaction payload to decode, got " <> err)
                 Right parsed ->
-                    emrrReaction parsed `shouldBe` "fire"
+                    emrrReactionTypeId parsed `shouldBe` "50800000-0000-4000-8000-000000000001"
 
             case eitherDecode
                 "{\"emccAuthorName\":\"Ada\",\"emccBody\":\"Set impecable\"}"
@@ -8822,12 +8821,20 @@ main = hspec $ do
                     expectationFailure ("Expected unexpected moment create key to be rejected, got " <> show parsed)
 
             case eitherDecode
-                "{\"emrrReaction\":\"fire\",\"reaction\":\"love\"}"
+                "{\"emrrReactionTypeId\":\"50800000-0000-4000-8000-000000000001\",\"reaction\":\"love\"}"
                 :: Either String EventMomentReactionRequestDTO of
                 Left err ->
                     err `shouldContain` "unknown fields"
                 Right parsed ->
                     expectationFailure ("Expected unexpected moment reaction key to be rejected, got " <> show parsed)
+
+            case eitherDecode
+                "{\"emrrReactionTypeId\":\"fire\"}"
+                :: Either String EventMomentReactionRequestDTO of
+                Left err ->
+                    err `shouldContain` "canonical UUID"
+                Right parsed ->
+                    expectationFailure ("Expected reaction labels to be rejected, got " <> show parsed)
 
             case eitherDecode
                 "{\"emccBody\":\"Set impecable\",\"comment\":\"typo\"}"
@@ -9435,9 +9442,6 @@ main = hspec $ do
             normalizeMomentMediaType " PHOTO " `shouldBe` Just "image"
             normalizeMomentMediaType "clip" `shouldBe` Just "video"
             normalizeMomentMediaType "audio" `shouldBe` Nothing
-            normalizeMomentReaction "heart" `shouldBe` Just "love"
-            normalizeMomentReaction "CLAP" `shouldBe` Just "applause"
-            normalizeMomentReaction "wow" `shouldBe` Nothing
 
         it "accepts blank captions as missing and rejects oversize captions" $ do
             normalizeMomentCaption (Just "   ") `shouldBe` Right Nothing

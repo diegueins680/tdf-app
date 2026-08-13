@@ -22,6 +22,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/social-events/events/{eventId}/moments/{momentId}/reactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Toggle a persisted reaction type on an event moment */
+        post: operations["reactToSocialEventMoment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/version": {
         parameters: {
             query?: never;
@@ -2612,6 +2629,53 @@ export interface components {
             sortOrder?: number;
             notes?: string | null;
         };
+        EventMomentReactionRequest: {
+            /**
+             * Format: uuid
+             * @description Canonical UUID of an active published item in the `reaction-types` catalog.
+             */
+            emrrReactionTypeId: string;
+        };
+        EventMomentReaction: {
+            /** Format: uuid */
+            emrReactionTypeId: string;
+            readonly emrReactionCode: string;
+            readonly emrReactionNameEs: string;
+            readonly emrReactionNameEn: string;
+            readonly emrReactionEmoji: string;
+            emrPartyId: string;
+            /** Format: date-time */
+            emrCreatedAt?: string | null;
+        };
+        EventMomentComment: {
+            emcId?: string | null;
+            emcMomentId?: string | null;
+            emcAuthorPartyId?: string | null;
+            emcAuthorName: string;
+            emcBody: string;
+            /** Format: date-time */
+            emcCreatedAt?: string | null;
+            /** Format: date-time */
+            emcUpdatedAt?: string | null;
+        };
+        EventMoment: {
+            emId?: string | null;
+            emEventId?: string | null;
+            emAuthorPartyId?: string | null;
+            emAuthorName: string;
+            emCaption?: string | null;
+            emMediaUrl: string;
+            emMediaType: string;
+            emMediaWidth?: number | null;
+            emMediaHeight?: number | null;
+            emMediaDurationMs?: number | null;
+            /** Format: date-time */
+            emCreatedAt?: string | null;
+            /** Format: date-time */
+            emUpdatedAt?: string | null;
+            emReactions: components["schemas"]["EventMomentReaction"][];
+            emComments: components["schemas"]["EventMomentComment"][];
+        };
         SocialEvent: {
             eventId?: string | null;
             eventOrganizerPartyId?: string | null;
@@ -2904,6 +2968,8 @@ export interface components {
             replacementId?: string;
             externalCode?: string;
             sourceVersion?: string;
+            /** @description Persisted short visual marker supplied only by typed catalogs such as reaction types. */
+            displaySymbol?: string;
             /** Format: int64 */
             usageCount: number;
             version: number;
@@ -3049,6 +3115,8 @@ export interface components {
             serviceOffering?: components["schemas"]["ServiceOfferingDraft"];
             radioAutoStop?: components["schemas"]["RadioAutoStopDraft"];
             appearanceMode?: components["schemas"]["AppearanceModeDraft"];
+            /** @description Typed persisted visual marker. Currently accepted only by the reaction-types adapter. */
+            displaySymbol?: string;
             /** @description Reassigns the explicitly scoped global default when true. Accepted only by catalogs whose typed adapter declares a global default scope. */
             globalDefault?: boolean;
             reason: string;
@@ -4077,6 +4145,40 @@ export interface operations {
                 };
             };
             /** @description Event type is unknown, inactive, ineffective, deprecated, or unpublished */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reactToSocialEventMoment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+                momentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventMomentReactionRequest"];
+            };
+        };
+        responses: {
+            /** @description Moment with canonical reaction references */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventMoment"];
+                };
+            };
+            /** @description Reaction type UUID is unknown, inactive, deprecated, or unpublished */
             422: {
                 headers: {
                     [name: string]: unknown;

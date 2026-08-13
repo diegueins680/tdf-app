@@ -41,7 +41,6 @@ module TDF.Server.SocialEventsHandlers (
     resolveUniqueRsvpRow,
     validateEventArtistIds,
     normalizeMomentMediaType,
-    normalizeMomentReaction,
     normalizeMomentCaption,
     normalizeMomentCommentBody,
     normalizeLiveBroadcastTitle,
@@ -118,9 +117,9 @@ import Data.Char (
     isHexDigit,
  )
 import Data.Int (Int64)
-import Data.List (sortOn)
+import Data.List (nub, sortOn)
 import qualified Data.Map.Strict as Map
-import Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe)
+import Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
 import Data.Ord (Down (..))
 import qualified Data.Set as Set
 import qualified Data.Text as T
@@ -3145,9 +3144,20 @@ socialEventsServer user =
         _ <- requireExistingEvent envPool eventKey
         momentKey <- parseKeyOr400 "moment" momentIdStr
         _ <- requireMomentForEvent envPool eventKey momentKey
-        reaction <- maybe (throwError err400{errBody = "Moment reaction must be fire, love, or applause"}) pure (normalizeMomentReaction emrrReaction)
-        let sameReactionKey = EventMomentReactionKey momentKey reaction currentPartyId
-        existingSameReaction <- liftIO $ runSqlPool (get sameReactionKey) envPool
+        reactionTypeId <-
+            liftIO (runSqlPool (loadSelectableMomentReactionTypeId emrrReactionTypeId) envPool)
+                >>= either throwError pure
+        existingSameReaction <-
+            liftIO $
+                runSqlPool
+                    ( selectFirst
+                        [ EventMomentReactionMomentId ==. momentKey
+                        , EventMomentReactionReactionTypeId ==. Just reactionTypeId
+                        , EventMomentReactionReactorPartyId ==. currentPartyId
+                        ]
+                        []
+                    )
+                    envPool
         liftIO $
             runSqlPool
                 ( do
@@ -3156,7 +3166,8 @@ socialEventsServer user =
                         insert_
                             EventMomentReaction
                                 { eventMomentReactionMomentId = momentKey
-                                , eventMomentReactionReaction = reaction
+                                , eventMomentReactionReactionTypeId = Just reactionTypeId
+                                , eventMomentReactionReaction = Nothing
                                 , eventMomentReactionReactorPartyId = currentPartyId
                                 , eventMomentReactionCreatedAt = now
                                 }
@@ -6754,15 +6765,29 @@ normalizeMomentMediaType raw =
         "clip" -> Just "video"
         _ -> Nothing
 
-normalizeMomentReaction :: T.Text -> Maybe T.Text
-normalizeMomentReaction raw =
-    case T.toLower (T.strip raw) of
-        "fire" -> Just "fire"
-        "love" -> Just "love"
-        "heart" -> Just "love"
-        "applause" -> Just "applause"
-        "clap" -> Just "applause"
-        _ -> Nothing
+loadSelectableMomentReactionTypeId :: T.Text -> SqlPersistT IO (Either ServerError UUID.UUID)
+loadSelectableMomentReactionTypeId rawId =
+    case UUID.fromText (T.strip rawId) of
+        Nothing -> pure (Left invalidReactionTypeReference)
+        Just reactionTypeUuid -> do
+            let reactionTypeKey = Catalog.ReactionTypeKey reactionTypeUuid
+            mReactionType <- get reactionTypeKey
+            case mReactionType of
+                Nothing -> pure (Left invalidReactionTypeReference)
+                Just reactionType -> do
+                    catalog <- getJust (Catalog.reactionTypeCatalogId reactionType)
+                    workflowState <- getJust (Catalog.reactionTypeWorkflowStateId reactionType)
+                    let selectable =
+                            Catalog.reactionTypeActive reactionType
+                                && Catalog.catalogDefinitionActive catalog
+                                && Catalog.catalogDefinitionCode catalog == "reaction-types"
+                                && Catalog.workflowStateActive workflowState
+                                && Catalog.workflowStateCode workflowState == "published"
+                                && Catalog.workflowStateWorkflowId workflowState == Catalog.catalogDefinitionWorkflowId catalog
+                    pure (if selectable then Right reactionTypeUuid else Left invalidReactionTypeReference)
+  where
+    invalidReactionTypeReference =
+        err422{errBody = "reactionTypeId must identify an active published reaction type"}
 
 normalizeMomentCaption :: Maybe T.Text -> Either ServerError (Maybe T.Text)
 normalizeMomentCaption mCaption =
@@ -7872,16 +7897,20 @@ loadEventArtists pool eventKey = do
                 pool
     either throwError pure (sequence loaded)
 
-momentReactionEntityToDTO :: Entity EventMomentReaction -> EventMomentReactionDTO
-momentReactionEntityToDTO (Entity _ reactionRow) =
-    EventMomentReactionDTO
-        { emrReaction =
-            fromMaybe
-                (eventMomentReactionReaction reactionRow)
-                (normalizeMomentReaction (eventMomentReactionReaction reactionRow))
-        , emrPartyId = eventMomentReactionReactorPartyId reactionRow
-        , emrCreatedAt = Just (eventMomentReactionCreatedAt reactionRow)
-        }
+momentReactionEntityToDTO :: Map.Map UUID.UUID Catalog.ReactionType -> Entity EventMomentReaction -> Maybe EventMomentReactionDTO
+momentReactionEntityToDTO reactionTypes (Entity _ reactionRow) = do
+    reactionTypeId <- eventMomentReactionReactionTypeId reactionRow
+    reactionType <- Map.lookup reactionTypeId reactionTypes
+    pure
+        EventMomentReactionDTO
+            { emrReactionTypeId = UUID.toText reactionTypeId
+            , emrReactionCode = Catalog.reactionTypeCode reactionType
+            , emrReactionNameEs = Catalog.reactionTypeNameEs reactionType
+            , emrReactionNameEn = Catalog.reactionTypeNameEn reactionType
+            , emrReactionEmoji = Catalog.reactionTypeEmoji reactionType
+            , emrPartyId = eventMomentReactionReactorPartyId reactionRow
+            , emrCreatedAt = Just (eventMomentReactionCreatedAt reactionRow)
+            }
 
 momentCommentEntityToDTO :: EventMomentCommentId -> EventMomentComment -> EventMomentCommentDTO
 momentCommentEntityToDTO commentKey commentRow =
@@ -7931,9 +7960,12 @@ loadMomentDTO pool momentKey =
                 Nothing -> liftIO (ioError (userError "Moment not found"))
                 Just momentRow -> do
                     reactionRows <- selectList [EventMomentReactionMomentId ==. momentKey] [Asc EventMomentReactionCreatedAt]
+                    reactionTypes <- loadMomentReactionTypes reactionRows
                     commentRows <- selectList [EventMomentCommentMomentId ==. momentKey] [Asc EventMomentCommentCreatedAt]
-                    let reactions = map momentReactionEntityToDTO reactionRows
+                    let reactions = mapMaybe (momentReactionEntityToDTO reactionTypes) reactionRows
                         comments = map (\(Entity commentKey commentRow) -> momentCommentEntityToDTO commentKey commentRow) commentRows
+                    when (length reactions /= length reactionRows) $
+                        liftIO (ioError (userError "Moment reaction is missing its canonical reaction type"))
                     pure (momentEntityToDTO momentKey momentRow reactions comments)
         )
         pool
@@ -7943,14 +7975,41 @@ loadEventMoments pool eventKey =
     runSqlPool
         ( do
             momentRows <- selectList [EventMomentEventId ==. eventKey] [Desc EventMomentCreatedAt]
-            forM momentRows $ \(Entity momentKey momentRow) -> do
-                reactionRows <- selectList [EventMomentReactionMomentId ==. momentKey] [Asc EventMomentReactionCreatedAt]
-                commentRows <- selectList [EventMomentCommentMomentId ==. momentKey] [Asc EventMomentCommentCreatedAt]
-                let reactions = map momentReactionEntityToDTO reactionRows
-                    comments = map (\(Entity commentKey commentRow) -> momentCommentEntityToDTO commentKey commentRow) commentRows
-                pure (momentEntityToDTO momentKey momentRow reactions comments)
+            let momentKeys = map entityKey momentRows
+            reactionRows <- selectList [EventMomentReactionMomentId <-. momentKeys] [Asc EventMomentReactionCreatedAt]
+            reactionTypes <- loadMomentReactionTypes reactionRows
+            commentRows <- selectList [EventMomentCommentMomentId <-. momentKeys] [Asc EventMomentCommentCreatedAt]
+            let reactionsByMoment = Map.fromListWith (<>)
+                    [ ( eventMomentReactionMomentId reactionRow
+                      , maybe [] pure (momentReactionEntityToDTO reactionTypes reactionEntity)
+                      )
+                    | reactionEntity@(Entity _ reactionRow) <- reactionRows
+                    ]
+                commentsByMoment = Map.fromListWith (<>)
+                    [ ( eventMomentCommentMomentId commentRow
+                      , [momentCommentEntityToDTO commentKey commentRow]
+                      )
+                    | Entity commentKey commentRow <- commentRows
+                    ]
+                canonicalReactionCount = sum (map length (Map.elems reactionsByMoment))
+            when (canonicalReactionCount /= length reactionRows) $
+                liftIO (ioError (userError "Moment reaction is missing its canonical reaction type"))
+            pure
+                [ momentEntityToDTO
+                    momentKey
+                    momentRow
+                    (Map.findWithDefault [] momentKey reactionsByMoment)
+                    (Map.findWithDefault [] momentKey commentsByMoment)
+                | Entity momentKey momentRow <- momentRows
+                ]
         )
         pool
+
+loadMomentReactionTypes :: [Entity EventMomentReaction] -> SqlPersistT IO (Map.Map UUID.UUID Catalog.ReactionType)
+loadMomentReactionTypes reactionRows = do
+    let reactionTypeIds = nub (catMaybes (map (eventMomentReactionReactionTypeId . entityVal) reactionRows))
+    rows <- selectList [Catalog.ReactionTypeId <-. map Catalog.ReactionTypeKey reactionTypeIds] []
+    pure (Map.fromList [(reactionTypeId, reactionType) | Entity (Catalog.ReactionTypeKey reactionTypeId) reactionType <- rows])
 
 liveBroadcastEntityToDTO ::
     ConnectionPool ->
