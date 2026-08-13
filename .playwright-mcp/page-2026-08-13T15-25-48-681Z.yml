@@ -1,0 +1,61 @@
+- generic [ref=e1192]:
+  - generic [ref=e1195]:
+    - link [ref=e1200] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=e1205]
+    - generic [ref=e1208]:
+      - link [ref=e1213] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=e1218]
+      - link [ref=e1223] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=e1228]
+      - link [ref=e1235] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - generic [ref=e1238]:
+          - img "Messages" [ref=e1240]
+          - generic "Direct messaging - 2 new notifications link" [ref=e1242]: "2"
+      - link [ref=e1248] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=e1253]
+      - link [ref=e1260] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=e1265]
+      - link [ref=e1271] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=e1276]
+      - link [ref=e1281] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=e1286]
+      - link [ref=e1293] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=e1298]:
+          - img "tdf.records.label's profile picture" [ref=e1299]
+    - generic [ref=e1300]:
+      - link [ref=e1303] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=e1308]
+      - link [ref=e1311] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=e1316]
+  - main [ref=e1320]:
+    - generic [ref=e1325]:
+      - navigation "Thread list" [ref=e1326]:
+        - generic [ref=e1327]:
+          - generic [ref=e1328]:
+            - button [ref=e1330] [cursor=pointer]:
+              - img "Back" [ref=e1333]
+            - generic [ref=e1335]: Message requests
+          - generic [ref=e1338]:
+            - button "Eye-off icon for the hidden requests Hidden Requests Chevron icon to indicate entering the hidden requests window" [ref=e1339] [cursor=pointer]:
+              - generic [ref=e1341]:
+                - img "Eye-off icon for the hidden requests" [ref=e1344]
+                - generic [ref=e1346]: Hidden Requests
+                - img "Chevron icon to indicate entering the hidden requests window" [ref=e1352]
+            - generic [ref=e1354]: Chats will appear here after you send or receive a message
+          - generic [ref=e1356]:
+            - separator [ref=e1357]
+            - button "Delete all 0" [ref=e1359] [cursor=pointer]
+      - generic [ref=e1364]:
+        - heading "Message requests" [active] [level=2] [ref=e1371]
+        - generic [ref=e1372]: These messages are from people you've restricted or don't follow. They won't know you viewed their request until you allow them to message you.

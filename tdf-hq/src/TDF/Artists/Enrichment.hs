@@ -54,6 +54,7 @@ import           Database.Persist.Sql           (SqlBackend, SqlPersistT,
 import           Text.Read                      (readMaybe)
 
 import           TDF.API.Admin
+import           TDF.Catalog.Security          (applySecurityRoleAssignmentPolicy, selectCanonicalPartyIdsByRole)
 import           TDF.Models
 import qualified TDF.Models.SocialEventsModels  as Social
 import qualified TDF.ModelsExtra                as ME
@@ -207,12 +208,10 @@ discoverArtistReferences = do
     catMaybes <$> forM rows (\(Entity rowId row) ->
       mkPartyRef "artist_profile" (intKeyText rowId) (artistProfileArtistPartyId row))
   roleRefs <- do
-    rows <- selectList
-      [ PartyRoleActive ==. True
-      , PartyRoleRole <-. [Artist, Artista]
-      ] []
-    catMaybes <$> forM rows (\(Entity rowId row) ->
-      mkPartyRef "party_role" (intKeyText rowId) (partyRolePartyId row))
+    partyIds <- Set.toList . Set.fromList . concat <$>
+      traverse selectCanonicalPartyIdsByRole [Artist, Artista]
+    catMaybes <$> forM partyIds (\partyId ->
+      mkPartyRef "party_security_role" (intKeyText partyId) partyId)
   releaseRefs <- do
     rows <- selectList ([] :: [Filter ArtistRelease]) []
     catMaybes <$> forM rows (\(Entity rowId row) ->
@@ -477,6 +476,8 @@ ensureCoreArtistProfile artistName now = do
     , partyEmergencyContact = Nothing
     , partyNotes = Just "Created by artist enrichment after two independent TDF signals."
     , partyStripeCustomerId = Nothing
+    , partyCountryCode = Nothing
+    , partyCountryId = Nothing
     , partyCreatedAt = now
     }
   ensureArtistProfileForParty partyId artistName now
@@ -484,11 +485,17 @@ ensureCoreArtistProfile artistName now = do
 
 ensureArtistProfileForParty :: PartyId -> Text -> UTCTime -> SqlPersistT IO ()
 ensureArtistProfileForParty partyId artistName now = do
-  _ <- insertUnique PartyRole
-    { partyRolePartyId = partyId
-    , partyRoleRole = Artist
-    , partyRoleActive = True
-    }
+  roleResult <- applySecurityRoleAssignmentPolicy
+    "live-session.artist-profile.artist"
+    partyId
+    False
+    Nothing
+    "artist-enrichment"
+    ("artist-enrichment:" <> intKeyText partyId)
+    now
+  case roleResult of
+    Left message -> liftIO . ioError . userError $ T.unpack message
+    Right _ -> pure ()
   slug <- uniqueSlug partyId artistName
   existing <- getBy (UniqueArtistProfile partyId)
   when (isNothing existing) $ insert_ ArtistProfile
@@ -506,6 +513,8 @@ ensureArtistProfileForParty partyId artistName now = do
       , artistProfileGenres = Nothing
       , artistProfileHighlights = Nothing
       , artistProfileStripeAccountId = Nothing
+      , artistProfileCountryCode = Nothing
+      , artistProfileCountryId = Nothing
       , artistProfileCreatedAt = now
       , artistProfileUpdatedAt = Just now
       }
@@ -1212,6 +1221,8 @@ ensureProfile partyId now = do
         , artistProfileGenres = Nothing
         , artistProfileHighlights = Nothing
         , artistProfileStripeAccountId = Nothing
+        , artistProfileCountryCode = Nothing
+        , artistProfileCountryId = Nothing
         , artistProfileCreatedAt = now
         , artistProfileUpdatedAt = Just now
         }
@@ -1230,6 +1241,8 @@ ensureProfile partyId now = do
         , artistProfileGenres = Nothing
         , artistProfileHighlights = Nothing
         , artistProfileStripeAccountId = Nothing
+        , artistProfileCountryCode = Nothing
+        , artistProfileCountryId = Nothing
         , artistProfileCreatedAt = now
         , artistProfileUpdatedAt = Just now
         })

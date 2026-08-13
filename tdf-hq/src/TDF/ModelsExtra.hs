@@ -16,6 +16,7 @@
 module TDF.ModelsExtra where
 
 import           Data.Aeson        (ToJSON(..), (.=), object)
+import           Data.Int          (Int64)
 import           Data.Text         (Text)
 import qualified Data.Text         as T
 import           Data.Time          (Day, UTCTime)
@@ -25,6 +26,14 @@ import           Database.Persist.TH
 import           GHC.Generics       (Generic)
 import           Web.PathPieces     (toPathPiece)
 
+import           TDF.Catalog.Models
+  ( FeedbackCategoryId
+  , FeedbackSeverityId
+  , GenreId
+  , InstrumentId
+  , ServiceOfferingId
+  , WorkflowStateId
+  )
 import           TDF.Models         (ArtistProfileId, InvoiceId, PartyId, ServiceKind)
 import           TDF.UUIDInstances  ()
 
@@ -386,10 +395,12 @@ AssetKitMember
 
 PipelineCard
     Id          UUID default=gen_random_uuid()
-    serviceKind ServiceKind
+    serviceKind ServiceKind Maybe
+    serviceOfferingId ServiceOfferingId Maybe
     title       Text
     artist      Text Maybe
-    stage       Text
+    stage       Text Maybe
+    workflowStateId WorkflowStateId Maybe
     sortOrder   Int default=0
     notes       Text Maybe
     createdAt   UTCTime default=now()
@@ -464,6 +475,7 @@ LiveSessionIntake
     bandName     Text
     bandDescription Text Maybe
     primaryGenre Text Maybe
+    primaryGenreId GenreId Maybe
     inputList    Text Maybe
     contactEmail Text Maybe
     contactPhone Text Maybe
@@ -483,6 +495,7 @@ LiveSessionMusician
     name        Text
     email       Text Maybe
     instrument  Text Maybe
+    instrumentId InstrumentId Maybe
     role        Text Maybe
     notes       Text Maybe
     isExisting  Bool default=False
@@ -504,6 +517,8 @@ Feedback
     description  Text
     category     Text Maybe
     severity     Text Maybe
+    categoryId   FeedbackCategoryId Maybe
+    severityId   FeedbackSeverityId Maybe
     contactEmail Text Maybe
     attachment   Text Maybe
     consent      Bool default=False
@@ -605,6 +620,7 @@ InputRow
     channelNumber     Int
     trackName         Text Maybe
     instrument        Text Maybe
+    instrumentId      InstrumentId Maybe
     micId             AssetId Maybe
     standId           AssetId Maybe
     cableId           AssetId Maybe
@@ -761,6 +777,24 @@ LabelTrack
     updatedAt   UTCTime default=now()
     deriving Show Generic
 
+-- Operational project notes are typed records, not list-shaped CMS payloads.
+-- Deletion is represented by active=False so previously shared notes remain
+-- recoverable and auditable at the database boundary.
+LabelProjectNote
+    Id          UUID default=gen_random_uuid()
+    text        Text
+    completed   Bool default=false
+    active      Bool default=true
+    createdBy   PartyId Maybe
+    updatedBy   PartyId Maybe
+    createdAt   UTCTime default=now()
+    updatedAt   UTCTime default=now()
+    version     Int default=1
+    sourceCmsContentId Int64 Maybe
+    sourceItemId Text Maybe
+    UniqueLabelProjectNoteSource sourceCmsContentId sourceItemId !force
+    deriving Show Generic
+
 InternProfile
     Id          UUID default=gen_random_uuid()
     partyId     PartyId
@@ -859,6 +893,8 @@ ServiceStorefrontPackage
     description      Text Maybe
     priceUsdCents    Int
     currency         Text default='USD'
+    minSongCount     Int default=1
+    maxSongCount     Int default=1
     turnaroundDays   Int default=7
     revisionCount    Int default=2
     deliverables     Text Maybe
@@ -889,7 +925,11 @@ ServiceStorefrontOrder
     datafastResourcePath  Text Maybe
     datafastPaymentId     Text Maybe
     paypalOrderId         Text Maybe
+    paypalCaptureId       Text Maybe
     paypalPayerEmail      Text Maybe
+    lookupTokenHash       Text Maybe
+    createIdempotencyKey  Text Maybe
+    createRequestSha256   Text Maybe
     paidAt                UTCTime Maybe
     genre                 Text Maybe
     songCount             Int default=1
@@ -903,6 +943,11 @@ ServiceStorefrontOrder
     updatedAt             UTCTime default=now()
     UniqueServiceStorefrontOrderNumber orderNumber
     UniqueServiceStorefrontOrderStripePI stripePaymentIntentId !force
+    UniqueServiceStorefrontOrderDatafastCheckout datafastCheckoutId !force
+    UniqueServiceStorefrontOrderDatafastPayment datafastPaymentId !force
+    UniqueServiceStorefrontOrderPaypal paypalOrderId !force
+    UniqueServiceStorefrontOrderPaypalCapture paypalCaptureId !force
+    UniqueServiceStorefrontOrderCreateIdempotency createIdempotencyKey !force
     deriving Show Generic
 
 ServiceStorefrontOrderStatusChange
@@ -989,7 +1034,7 @@ instance ToJSON (Entity InputRow) where
     [ "id"             .= toPathPiece key
     , "channel"        .= inputRowChannelNumber row
     , "trackName"      .= inputRowTrackName row
-    , "instrument"     .= inputRowInstrument row
+    , "instrumentId"   .= fmap toPathPiece (inputRowInstrumentId row)
     , "micId"          .= fmap toPathPiece (inputRowMicId row)
     , "standId"        .= fmap toPathPiece (inputRowStandId row)
     , "cableId"        .= fmap toPathPiece (inputRowCableId row)

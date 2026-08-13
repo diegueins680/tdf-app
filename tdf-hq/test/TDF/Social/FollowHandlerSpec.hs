@@ -394,6 +394,8 @@ spec = describe "social event handler helpers" $ do
                     , artistProfileAvatarUrl = Nothing
                     , artistProfileGenres = Nothing
                     , artistProfileSocialLinks = Just "{\"bandcamp\":\"https://artist.example\"}"
+                    , artistProfileCountryCode = Nothing
+                    , artistProfileCountryId = Nothing
                     , artistProfileCreatedAt = now
                     , artistProfileUpdatedAt = now
                     }
@@ -448,6 +450,8 @@ spec = describe "social event handler helpers" $ do
                         , partyEmergencyContact = Nothing
                         , partyNotes = Nothing
                         , partyStripeCustomerId = Nothing
+                        , partyCountryCode = Nothing
+                        , partyCountryId = Nothing
                         , partyCreatedAt = now
                         }
                 )
@@ -551,6 +555,8 @@ spec = describe "social event handler helpers" $ do
                         , artistProfileAvatarUrl = Nothing
                         , artistProfileGenres = Nothing
                         , artistProfileSocialLinks = Nothing
+                        , artistProfileCountryCode = Nothing
+                        , artistProfileCountryId = Nothing
                         , artistProfileCreatedAt = now
                         , artistProfileUpdatedAt = now
                         }
@@ -693,6 +699,10 @@ seedSocialEvent owner title now =
         , socialEventPriceCents = Nothing
         , socialEventCapacity = Nothing
         , socialEventMetadata = Nothing
+        , socialEventEventTypeId = Nothing
+        , socialEventWorkflowStateId = Nothing
+        , socialEventTimezone = Nothing
+        , socialEventCurrencyId = Nothing
         , socialEventCreatedAt = now
         , socialEventUpdatedAt = now
         }
@@ -714,8 +724,13 @@ socialEventUpdatePayload title =
                 , eventTicketUrl = Nothing
                 , eventImageUrl = Nothing
                 , eventIsPublic = Nothing
-                , eventType = Nothing
-                , eventStatus = Nothing
+                , eventTypeId = Nothing
+                , eventWorkflowStateId = Nothing
+                , eventWorkflowStateCode = Nothing
+                , eventWorkflowStateNameEs = Nothing
+                , eventWorkflowStateNameEn = Nothing
+                , eventPublicListable = Nothing
+                , eventTicketPurchaseEnabled = Nothing
                 , eventCurrency = Nothing
                 , eventBudgetCents = Nothing
                 , eventSources = Nothing
@@ -723,6 +738,7 @@ socialEventUpdatePayload title =
                 , eventUpdatedAt = Nothing
                 , eventArtists = []
                 }
+        , eudWorkflowStateIdUpdate = FieldMissing
         , eudMetadataUpdate = emptyEventMetadataUpdate
         }
 
@@ -745,8 +761,6 @@ emptyEventMetadataUpdate =
         { emuTicketUrl = FieldMissing
         , emuImageUrl = FieldMissing
         , emuIsPublic = FieldMissing
-        , emuType = FieldMissing
-        , emuStatus = FieldMissing
         , emuCurrency = FieldMissing
         , emuBudgetCents = FieldMissing
         }
@@ -768,6 +782,8 @@ initializeSocialSchema = do
         \\"emergency_contact\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL,\
         \\"stripe_customer_id\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
         \)"
         []
@@ -780,6 +796,8 @@ initializeSocialSchema = do
         \\"avatar_url\" VARCHAR NULL,\
         \\"genres\" VARCHAR NULL,\
         \\"social_links\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL\
         \)"
@@ -788,7 +806,18 @@ initializeSocialSchema = do
         "CREATE TABLE IF NOT EXISTS \"artist_genre\" (\
         \\"artist_id\" INTEGER NOT NULL,\
         \\"genre\" VARCHAR NOT NULL,\
+        \\"genre_id\" VARCHAR NULL,\
         \PRIMARY KEY (\"artist_id\", \"genre\"),\
+        \FOREIGN KEY(\"artist_id\") REFERENCES \"social_artist_profile\"(\"id\") ON DELETE CASCADE\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"artist_genre_membership\" (\
+        \\"artist_id\" INTEGER NOT NULL,\
+        \\"genre_id\" VARCHAR NOT NULL,\
+        \\"sort_order\" INTEGER NOT NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \PRIMARY KEY (\"artist_id\", \"genre_id\"),\
         \FOREIGN KEY(\"artist_id\") REFERENCES \"social_artist_profile\"(\"id\") ON DELETE CASCADE\
         \)"
         []
@@ -799,9 +828,13 @@ initializeSocialSchema = do
         \\"title\" VARCHAR NOT NULL,\
         \\"description\" VARCHAR NULL,\
         \\"venue_id\" INTEGER NULL,\
+        \\"event_type_id\" VARCHAR NULL,\
+        \\"workflow_state_id\" VARCHAR NULL,\
+        \\"timezone\" VARCHAR NULL,\
         \\"start_time\" TIMESTAMP NOT NULL,\
         \\"end_time\" TIMESTAMP NOT NULL,\
         \\"price_cents\" INTEGER NULL,\
+        \\"currency_id\" VARCHAR NULL,\
         \\"capacity\" INTEGER NULL,\
         \\"metadata\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL,\

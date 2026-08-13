@@ -5,19 +5,23 @@ module TDF.API.Radio
   ( RadioAPI
   ) where
 
-import           Data.Text     (Text)
 import           Data.Int      (Int64)
+import           Data.Text     (Text)
+import           Data.UUID     (UUID)
 import           Servant
 
-import           TDF.API.Types (RadioStreamDTO, RadioStreamUpsert, RadioPresenceDTO, RadioPresenceUpsert, RadioImportRequest,
+import           TDF.API.Types (RadioAutoStopOptionsDTO, RadioStreamDTO, RadioStreamUpsert, RadioPresenceDTO, RadioPresenceUpsert, RadioImportRequest,
                                 RadioImportResult, RadioMetadataRefreshRequest, RadioMetadataRefreshResult,
                                 RadioNowPlayingRequest, RadioNowPlayingResult, RadioTransmissionRequest, RadioTransmissionInfo)
 
 type RadioAPI =
-  "radio" :>
-    ( "streams"
-        :> QueryParam "country" Text
-        :> QueryParam "genre" Text
+   "radio" :>
+    ( "auto-stop-options"
+        :> QueryParam "locale" Text
+        :> Get '[JSON] RadioAutoStopOptionsDTO
+   :<|> "streams"
+        :> QueryParam "countryId" UUID
+        :> QueryParam "genreId" UUID
         :> Get '[JSON] [RadioStreamDTO]
    :<|> "streams"
         :> "active"

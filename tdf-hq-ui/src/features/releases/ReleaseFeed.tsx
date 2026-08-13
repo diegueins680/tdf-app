@@ -42,10 +42,10 @@ const COPY = {
     signedOut: 'Ingresa con tu cuenta para ver lanzamientos personalizados y seguir artistas.',
     renew: 'Reingresar',
     renewSession: 'Necesitamos renovar tu sesión para cargar tu feed personalizado.',
-    activatingFan: 'Activando...',
-    activateFan: 'Activar Fan',
+    activatingFan: 'Enviando...',
+    activateFan: 'Solicitar rol Fan',
     noManagerTargets: 'Tu cuenta puede gestionar lanzamientos, pero aún no hay artistas disponibles para cargar este feed.',
-    fanRoleNeeded: 'Activa tu rol Fan para recibir lanzamientos personalizados en este hub.',
+    fanRoleNeeded: 'Solicita el rol Fan para recibir lanzamientos personalizados; el cambio requiere aprobación.',
   },
   empty: {
     followedArtists: 'No hay lanzamientos recientes de los artistas que sigues. Vuelve pronto o revisa los perfiles.',
@@ -81,7 +81,7 @@ const COPY = {
   },
   focus: {
     ready: 'Feed de lanzamientos listo.',
-    fanRole: 'Activando el rol Fan.',
+    fanRole: 'Enviando la solicitud del rol Fan.',
     playing: (title: string) => `Reproduciendo ${title}.`,
     uploadOpen: (title: string) => `Formulario de audio abierto para ${title}.`,
     saveLink: 'Guardando enlace de audio.',

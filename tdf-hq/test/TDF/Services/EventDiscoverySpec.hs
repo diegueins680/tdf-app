@@ -5,13 +5,17 @@ module TDF.Services.EventDiscoverySpec (spec) where
 import Data.Aeson (eitherDecode)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Control.Monad.Logger (runNoLoggingT)
+import Data.Pool (destroyAllResources)
 import Data.Time (UTCTime(..), fromGregorian, secondsToDiffTime)
 import Database.Persist (Entity(..), Filter, count, get, getBy)
 import Database.Persist.Sql (SqlPersistT, rawExecute, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePool)
 import Test.Hspec
+import System.IO (hClose)
+import System.IO.Temp (withSystemTempFile)
 import Data.Maybe (isJust, isNothing)
 import qualified Data.Text as T
+import qualified Data.UUID as UUID
 
 import TDF.Services.EventDiscovery
   ( DiscoveredArtist(..)
@@ -222,8 +226,40 @@ spec = do
       case Social.socialEventMetadata =<< importedEventAfterReconcile of
         Nothing -> expectationFailure "Expected imported event metadata after reconciliation"
         Just metadata -> do
-          metadata `shouldSatisfy` T.isInfixOf "\"eventStatus\":\"out_of_scope\""
+          metadata `shouldSatisfy` (not . T.isInfixOf "eventStatus")
           metadata `shouldSatisfy` T.isInfixOf "\"isPublic\":false"
+      (UUID.toText <$> (Social.socialEventWorkflowStateId =<< importedEventAfterReconcile))
+        `shouldBe` Just "00000000-0000-4000-8000-000000000237"
+
+    it "rejects an unknown provider event type before writing any event graph rows" $ do
+      event <- case eitherDecode ticketmasterFixture of
+        Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"
+        Right response ->
+          case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
+            [normalized] -> pure normalized
+            other -> expectationFailure ("Expected one normalized event, got " <> show other) >> fail "invalid normalized fixture"
+      withSystemTempFile "tdf-event-discovery.sqlite" $ \databasePath handle -> do
+        hClose handle
+        pool <- runNoLoggingT $ createSqlitePool (T.pack databasePath) 1
+        runSqlPool initializeEventDiscoverySchema pool
+
+        syncDiscoveredEvent
+          pool
+          (fixtureTime 10 5)
+          event{discoveredEventType = "unknown-event-kind"}
+          `shouldThrow` anyIOException
+
+        counts <-
+          runSqlPool
+            ( (,,,)
+                <$> count ([] :: [Filter Social.Venue])
+                <*> count ([] :: [Filter Social.ArtistProfile])
+                <*> count ([] :: [Filter Social.SocialEvent])
+                <*> count ([] :: [Filter Social.ExternalEventRef])
+            )
+            pool
+        counts `shouldBe` (0, 0, 0, 0)
+        destroyAllResources pool
 
     it "claims at most one run per provider slot and permits retry after failure" $ do
       pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
@@ -292,13 +328,43 @@ ticketmasterFixtureWithStatus sourceStatus =
 initializeEventDiscoverySchema :: SqlPersistT IO ()
 initializeEventDiscoverySchema = do
   rawExecute
-    "CREATE TABLE social_artist_profile (id INTEGER PRIMARY KEY, party_id TEXT NULL, name TEXT NOT NULL, bio TEXT NULL, avatar_url TEXT NULL, genres TEXT NULL, social_links TEXT NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)"
+    "CREATE TABLE workflow_definition (id TEXT PRIMARY KEY, code TEXT NOT NULL UNIQUE, active BOOLEAN NOT NULL)"
     []
   rawExecute
-    "CREATE TABLE venue (id INTEGER PRIMARY KEY, name TEXT NOT NULL, address TEXT NULL, city TEXT NULL, country TEXT NULL, latitude REAL NULL, longitude REAL NULL, capacity INTEGER NULL, contact TEXT NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)"
+    "CREATE TABLE workflow_state (id TEXT PRIMARY KEY, workflow_id TEXT NOT NULL, code TEXT NOT NULL, name_es TEXT NOT NULL, name_en TEXT NOT NULL, active BOOLEAN NOT NULL)"
     []
   rawExecute
-    "CREATE TABLE social_event (id INTEGER PRIMARY KEY, organizer_party_id TEXT NULL, title TEXT NOT NULL, description TEXT NULL, venue_id INTEGER NULL, start_time TIMESTAMP NOT NULL, end_time TIMESTAMP NOT NULL, price_cents INTEGER NULL, capacity INTEGER NULL, metadata TEXT NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)"
+    "CREATE TABLE event_type (id TEXT PRIMARY KEY, catalog_id TEXT NOT NULL, code TEXT NOT NULL UNIQUE, name_es TEXT NOT NULL, name_en TEXT NOT NULL, current_slug TEXT NULL, active BOOLEAN NOT NULL, deprecated_at TIMESTAMP NULL, workflow_state_id TEXT NOT NULL, effective_from DATE NULL, effective_until DATE NULL)"
+    []
+  rawExecute
+    "CREATE TABLE catalog_definition (id TEXT PRIMARY KEY, code TEXT NOT NULL UNIQUE, active BOOLEAN NOT NULL, workflow_id TEXT NOT NULL)"
+    []
+  rawExecute
+    "CREATE TABLE genre (id TEXT PRIMARY KEY, catalog_id TEXT NOT NULL, code TEXT NOT NULL UNIQUE, name_es TEXT NOT NULL, name_en TEXT NOT NULL, active BOOLEAN NOT NULL, workflow_state_id TEXT NOT NULL)"
+    []
+  rawExecute
+    "INSERT INTO workflow_definition (id, code, active) VALUES ('51000000-0000-4000-8000-000000000006', 'catalog-publication', 1), ('00000000-0000-4000-8000-000000000104', 'social-event-lifecycle', 1)"
+    []
+  rawExecute
+    "INSERT INTO workflow_state (id, workflow_id, code, name_es, name_en, active) VALUES ('51000000-0000-4000-8000-000000000001', '51000000-0000-4000-8000-000000000006', 'published', 'Publicado', 'Published', 1), ('00000000-0000-4000-8000-000000000231', '00000000-0000-4000-8000-000000000104', 'planning', 'En planificación', 'Planning', 1), ('00000000-0000-4000-8000-000000000232', '00000000-0000-4000-8000-000000000104', 'announced', 'Anunciado', 'Announced', 1), ('00000000-0000-4000-8000-000000000233', '00000000-0000-4000-8000-000000000104', 'on_sale', 'En venta', 'On sale', 1), ('00000000-0000-4000-8000-000000000234', '00000000-0000-4000-8000-000000000104', 'live', 'En vivo', 'Live', 1), ('00000000-0000-4000-8000-000000000235', '00000000-0000-4000-8000-000000000104', 'postponed', 'Pospuesto', 'Postponed', 1), ('00000000-0000-4000-8000-000000000236', '00000000-0000-4000-8000-000000000104', 'unavailable', 'No disponible', 'Unavailable', 1), ('00000000-0000-4000-8000-000000000237', '00000000-0000-4000-8000-000000000104', 'out_of_scope', 'Fuera de cobertura', 'Out of scope', 1), ('00000000-0000-4000-8000-000000000238', '00000000-0000-4000-8000-000000000104', 'completed', 'Completado', 'Completed', 1), ('00000000-0000-4000-8000-000000000239', '00000000-0000-4000-8000-000000000104', 'cancelled', 'Cancelado', 'Cancelled', 1)"
+    []
+  rawExecute
+    "INSERT INTO event_type (id, catalog_id, code, name_es, name_en, current_slug, active, deprecated_at, workflow_state_id, effective_from, effective_until) VALUES ('51000000-0000-4000-8000-000000000002', '51000000-0000-4000-8000-000000000007', 'festival', 'Festival', 'Festival', 'festival', 1, NULL, '51000000-0000-4000-8000-000000000001', NULL, NULL)"
+    []
+  rawExecute
+    "INSERT INTO catalog_definition (id, code, active, workflow_id) VALUES ('51000000-0000-4000-8000-000000000003', 'genres', 1, '51000000-0000-4000-8000-000000000006'), ('51000000-0000-4000-8000-000000000007', 'event-types', 1, '51000000-0000-4000-8000-000000000006')"
+    []
+  rawExecute
+    "INSERT INTO genre (id, catalog_id, code, name_es, name_en, active, workflow_state_id) VALUES ('51000000-0000-4000-8000-000000000004', '51000000-0000-4000-8000-000000000003', 'latin', 'Latina', 'Latin', 1, '51000000-0000-4000-8000-000000000001'), ('51000000-0000-4000-8000-000000000005', '51000000-0000-4000-8000-000000000003', 'latin-pop', 'Pop latino', 'Latin Pop', 1, '51000000-0000-4000-8000-000000000001')"
+    []
+  rawExecute
+    "CREATE TABLE social_artist_profile (id INTEGER PRIMARY KEY, party_id TEXT NULL, name TEXT NOT NULL, bio TEXT NULL, avatar_url TEXT NULL, genres TEXT NULL, social_links TEXT NULL, country_code TEXT NULL, country_id TEXT NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)"
+    []
+  rawExecute
+    "CREATE TABLE venue (id INTEGER PRIMARY KEY, name TEXT NOT NULL, address TEXT NULL, city TEXT NULL, country TEXT NULL, country_code TEXT NULL, country_id TEXT NULL, city_id TEXT NULL, timezone TEXT NULL, latitude REAL NULL, longitude REAL NULL, capacity INTEGER NULL, contact TEXT NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)"
+    []
+  rawExecute
+    "CREATE TABLE social_event (id INTEGER PRIMARY KEY, organizer_party_id TEXT NULL, title TEXT NOT NULL, description TEXT NULL, venue_id INTEGER NULL, event_type_id TEXT NULL, workflow_state_id TEXT NULL, timezone TEXT NULL, start_time TIMESTAMP NOT NULL, end_time TIMESTAMP NOT NULL, price_cents INTEGER NULL, currency_id TEXT NULL, capacity INTEGER NULL, metadata TEXT NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)"
     []
   rawExecute
     "CREATE TABLE external_venue_ref (id INTEGER PRIMARY KEY, provider TEXT NOT NULL, external_id TEXT NOT NULL, venue_id INTEGER NOT NULL, last_seen_at TIMESTAMP NOT NULL, UNIQUE(provider, external_id))"
@@ -319,5 +385,8 @@ initializeEventDiscoverySchema = do
     "CREATE TABLE event_artist (event_id INTEGER NOT NULL, artist_id INTEGER NOT NULL, role TEXT NULL, PRIMARY KEY(event_id, artist_id))"
     []
   rawExecute
-    "CREATE TABLE artist_genre (artist_id INTEGER NOT NULL, genre TEXT NOT NULL, PRIMARY KEY(artist_id, genre))"
+    "CREATE TABLE artist_genre (artist_id INTEGER NOT NULL, genre TEXT NOT NULL, genre_id TEXT NULL, PRIMARY KEY(artist_id, genre))"
+    []
+  rawExecute
+    "CREATE TABLE artist_genre_membership (artist_id INTEGER NOT NULL, genre_id TEXT NOT NULL, sort_order INTEGER NOT NULL, created_at TIMESTAMP NOT NULL, PRIMARY KEY(artist_id, genre_id))"
     []

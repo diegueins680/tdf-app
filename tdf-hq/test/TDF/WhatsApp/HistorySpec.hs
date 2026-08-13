@@ -549,6 +549,8 @@ initializeWhatsAppHistorySchema = do
     \\"emergency_contact\" VARCHAR NULL,\
     \\"notes\" VARCHAR NULL,\
     \\"stripe_customer_id\" VARCHAR NULL,\
+    \\"country_code\" VARCHAR NULL,\
+    \\"country_id\" VARCHAR NULL,\
     \\"created_at\" TIMESTAMP NOT NULL\
     \)"
     []
@@ -649,5 +651,7 @@ seedParty now displayName whatsapp primaryPhone =
     , M.partyEmergencyContact = Nothing
     , M.partyNotes = Nothing
     , M.partyStripeCustomerId = Nothing
+    , M.partyCountryCode = Nothing
+    , M.partyCountryId = Nothing
     , M.partyCreatedAt = now
     }

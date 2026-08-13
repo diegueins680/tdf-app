@@ -1,17 +1,7 @@
 import type { KeyboardEvent, MouseEvent } from 'react';
 import { CircularProgress, IconButton, Stack, Typography, Tooltip } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import type { ReactionSummaryDTO } from '../api/types';
-
-const REACTIONS = [
-  { key: 'fire', emoji: '🔥', label: 'Fuego' },
-  { key: 'heart', emoji: '❤️', label: 'Me encanta' },
-  { key: 'clap', emoji: '👏', label: 'Aplauso' },
-  { key: 'mic_drop', emoji: '🎤', label: 'Mic drop' },
-  { key: 'skull', emoji: '💀', label: 'Me muero' },
-] as const;
-
-type ReactionKey = typeof REACTIONS[number]['key'];
-type ReactionDefinition = typeof REACTIONS[number];
 
 type ReactionBarContract = Readonly<{
   activeCountFontWeight: number;
@@ -27,11 +17,6 @@ export const REACTION_BAR_CONTRACTS = {
   loadingSpinnerSizePx: 4 * 4,
 } as const satisfies ReactionBarContract;
 
-const REACTION_BAR_COPY = {
-  empty: 'Sin reacciones disponibles',
-  loading: 'Guardando reacción',
-} as const;
-
 function isActivationKey(key: string): boolean {
   return key === 'Enter' || key === ' ';
 }
@@ -40,38 +25,30 @@ function focusSoon(getTarget: () => HTMLElement | null): void {
   globalThis.setTimeout(() => getTarget()?.focus(), 0);
 }
 
-function getCount(reactions: ReactionSummaryDTO, key: ReactionKey): number {
-  switch (key) {
-    case 'fire': return reactions.rsFire;
-    case 'heart': return reactions.rsHeart;
-    case 'clap': return reactions.rsClap;
-    case 'mic_drop': return reactions.rsMicDrop;
-    case 'skull': return reactions.rsSkull;
-  }
-}
-
 interface ReactionBarProps {
   reactions: ReactionSummaryDTO;
-  onReact: (reaction: string) => void;
+  onReact: (reactionTypeId: string) => void;
   disabled?: boolean;
   loading?: boolean;
 }
 
 export default function ReactionBar({ reactions, onReact, disabled, loading = false }: ReactionBarProps) {
-  const reactionOptions: readonly ReactionDefinition[] = REACTIONS;
+  const { i18n, t } = useTranslation();
+  const english = (i18n.resolvedLanguage ?? i18n.language).toLowerCase().startsWith('en');
+  const reactionOptions = reactions.rsItems;
   const isEmpty = reactionOptions.length === 0;
-  const isDisabled = Boolean(disabled || loading);
+  const isDisabled = loading ? true : (disabled ?? false);
 
-  const focusAfterReact = (target: HTMLButtonElement, reaction: ReactionKey) => {
+  const focusAfterReact = (target: HTMLButtonElement, reactionTypeId: string) => {
     if (isDisabled) return;
-    onReact(reaction);
+    onReact(reactionTypeId);
     focusSoon(() => target);
   };
 
-  const focusAfterReactKeyDown = (event: KeyboardEvent<HTMLButtonElement>, reaction: ReactionKey) => {
+  const focusAfterReactKeyDown = (event: KeyboardEvent<HTMLButtonElement>, reactionTypeId: string) => {
     if (!isActivationKey(event.key)) return;
     event.preventDefault();
-    focusAfterReact(event.currentTarget, reaction);
+    focusAfterReact(event.currentTarget, reactionTypeId);
   };
   const focus = {
     afterReact: focusAfterReact,
@@ -81,22 +58,23 @@ export default function ReactionBar({ reactions, onReact, disabled, loading = fa
   if (isEmpty) {
     return (
       <Typography variant="caption" color="text.secondary" role="status">
-        {REACTION_BAR_COPY.empty}
+        {t('fanClub.reactions.empty')}
       </Typography>
     );
   }
 
   return (
-    <Stack direction="row" spacing={0.5} alignItems="center" role="group" aria-label="Reacciones" aria-busy={loading ? true : undefined}>
-      {reactionOptions.map(({ key, emoji, label }) => {
-        const count = getCount(reactions, key);
-        const isActive = reactions.rsMyReaction === key;
+    <Stack direction="row" spacing={0.5} alignItems="center" aria-busy={loading ? true : undefined}>
+      {reactionOptions.map((option) => {
+        const count = option.rsiCount;
+        const label = english ? option.rsiNameEn : option.rsiNameEs;
+        const isActive = reactions.rsMyReactionTypeId === option.rsiReactionTypeId;
         return (
-          <Tooltip key={key} title={label}>
+          <Tooltip key={option.rsiReactionTypeId} title={label}>
             <IconButton
               size="small"
-              onClick={(event: MouseEvent<HTMLButtonElement>) => focus.afterReact(event.currentTarget, key)}
-              onKeyDown={(event) => focus.afterReactKeyDown(event, key)}
+              onClick={(event: MouseEvent<HTMLButtonElement>) => focus.afterReact(event.currentTarget, option.rsiReactionTypeId)}
+              onKeyDown={(event) => focus.afterReactKeyDown(event, option.rsiReactionTypeId)}
               disabled={isDisabled}
               aria-label={count > 0 ? `${label} (${count})` : label}
               aria-pressed={isActive}
@@ -113,7 +91,7 @@ export default function ReactionBar({ reactions, onReact, disabled, loading = fa
               }}
             >
               <Typography variant="caption" sx={{ fontSize: '1rem', lineHeight: 1 }}>
-                {emoji}
+                {option.rsiDisplaySymbol}
               </Typography>
               {count > 0 && (
                 <Typography
@@ -136,7 +114,7 @@ export default function ReactionBar({ reactions, onReact, disabled, loading = fa
       {loading && (
         <CircularProgress
           size={REACTION_BAR_CONTRACTS.loadingSpinnerSizePx}
-          aria-label={REACTION_BAR_COPY.loading}
+          aria-label={t('fanClub.reactions.loading')}
         />
       )}
     </Stack>

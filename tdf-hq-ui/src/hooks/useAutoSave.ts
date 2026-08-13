@@ -10,9 +10,10 @@ export function useAutoSave<T>(
   options: {
     enabled?: boolean;
     debounceMs?: number;
+    storageKey?: string;
   } = {}
 ) {
-  const { enabled = true, debounceMs = 1000 } = options;
+  const { enabled = true, debounceMs = 1000, storageKey = `draft:${key}` } = options;
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Save to localStorage with debounce
@@ -22,7 +23,7 @@ export function useAutoSave<T>(
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       try {
-        localStorage.setItem(`draft:${key}`, JSON.stringify(data));
+        localStorage.setItem(storageKey, JSON.stringify(data));
       } catch {
         // localStorage full or unavailable — silently ignore
       }
@@ -31,38 +32,40 @@ export function useAutoSave<T>(
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [key, data, enabled, debounceMs]);
+  }, [data, debounceMs, enabled, storageKey]);
 
   // Load draft from localStorage
   const loadDraft = useCallback((): T | null => {
     try {
-      const saved = localStorage.getItem(`draft:${key}`);
-      return saved ? JSON.parse(saved) : null;
+      const saved = localStorage.getItem(storageKey);
+      if (!saved) return null;
+      const parsed: unknown = JSON.parse(saved);
+      return parsed as T;
     } catch {
       return null;
     }
-  }, [key]);
+  }, [storageKey]);
 
   // Immediate save (no debounce)
   const saveDraft = useCallback(
     (value: T) => {
       try {
-        localStorage.setItem(`draft:${key}`, JSON.stringify(value));
+        localStorage.setItem(storageKey, JSON.stringify(value));
       } catch {
         // ignore
       }
     },
-    [key],
+    [storageKey],
   );
 
   // Clear draft
   const clearDraft = useCallback(() => {
     try {
-      localStorage.removeItem(`draft:${key}`);
+      localStorage.removeItem(storageKey);
     } catch {
       // ignore
     }
-  }, [key]);
+  }, [storageKey]);
 
   return { loadDraft, saveDraft, clearDraft };
 }

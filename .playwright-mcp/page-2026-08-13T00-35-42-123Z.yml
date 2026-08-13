@@ -1,0 +1,63 @@
+- generic [ref=f43e2]:
+  - generic [ref=f43e3]:
+    - link "Saltar al contenido principal" [ref=f43e1688] [cursor=pointer]:
+      - /url: "#main-content"
+    - generic [ref=f43e5]:
+      - banner [ref=f43e6]:
+        - generic [ref=f43e7]:
+          - button "Mostrar menú lateral" [ref=f43e1689] [cursor=pointer]
+          - link "Ir al inicio" [ref=f43e1690] [cursor=pointer]:
+            - /url: /inicio
+            - img "TDF Records logo"
+          - button "Buscar sección" [ref=f43e1691] [cursor=pointer]:
+            - generic [ref=f43e18]: ⌘K
+          - generic [ref=f43e19]:
+            - button "Creación rápida" [ref=f43e1692] [cursor=pointer]:
+              - generic [ref=f43e24]: Crear
+            - button "Notificaciones" [ref=f43e1693] [cursor=pointer]:
+              - generic [ref=f43e26]: "0"
+            - button "Abrir menú de sesión" [ref=f43e1694] [cursor=pointer]:
+              - generic [ref=f43e31]: D
+      - status [ref=f43e32]
+      - main [ref=f43e35]:
+        - generic [ref=f43e37]:
+          - generic [ref=f43e39]:
+            - generic [ref=f43e40]:
+              - heading "Contactos" [level=3] [ref=f43e1697]
+              - paragraph [ref=f43e42]: Gestiona personas, empresas y roles en un solo lugar.
+            - button [ref=f43e1698] [cursor=pointer]
+          - generic [ref=f43e50]:
+            - generic "Buscar contactos" [ref=f43e1699]:
+              - generic [ref=f43e93]:
+                - textbox "Buscar contactos" [ref=f43e1700]:
+                  - /placeholder: Buscar por nombre, email o Instagram
+                  - text: Federico Molinari
+                - button "Limpiar búsqueda" [ref=f43e1701] [cursor=pointer]
+                - group
+            - generic [ref=f43e1621]:
+              - generic [ref=f43e1622]:
+                - heading "1 coincidencia para \"Federico Molinari\"" [level=6] [ref=f43e1702]
+                - paragraph [ref=f43e1624]: La búsqueda dejó un solo contacto visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar contactos en la tabla.
+              - generic [ref=f43e1625]:
+                - button [ref=f43e1703] [cursor=pointer]:
+                  - paragraph [ref=f43e1628]: Federico Molinari
+                - paragraph [ref=f43e1629]: "Contacto: federico__molinari_"
+                - paragraph [ref=f43e1630]: Completa el correo desde Acciones antes de crear el usuario.
+              - button "Abrir acciones para Federico Molinari" [active] [ref=f43e1704] [cursor=pointer]: Completar contacto
+        - generic [ref=f43e57]:
+          - status [ref=f43e58]:
+            - generic [ref=f43e62]: "API: online"
+          - button "Abrir ChatKit" [ref=f43e1705] [cursor=pointer]
+  - generic "Control de radio":
+    - generic [ref=f43e66]:
+      - button "Reproducir radio" [ref=f43e1706] [cursor=pointer]
+      - generic "Saltar al anterior" [ref=f43e1707]:
+        - button "Saltar a la estación anterior" [ref=f43e1708] [cursor=pointer]
+      - generic "Saltar al siguiente" [ref=f43e1709]:
+        - button "Saltar a la siguiente estación" [ref=f43e1710] [cursor=pointer]
+      - button "Silenciar radio" [ref=f43e1711] [cursor=pointer]
+      - button "Ocultar barra de radio" [ref=f43e1712] [cursor=pointer]
+      - button "Expandir radio" [ref=f43e1713] [cursor=pointer]
+      - generic [ref=f43e87]:
+        - generic [ref=f43e88]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient

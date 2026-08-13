@@ -1,45 +1,3 @@
-const normalizeServiceType = (serviceType: string) => serviceType.trim().toLowerCase();
-
-interface BookingRoomOption {
-  roomId: string;
-  rName: string;
-}
-
-interface BookingRoomResource {
-  brRoomId: string;
-  brRoomName: string;
-}
-
-export const normalizeBookingRoomReference = (value: string) => value.trim().toLocaleLowerCase();
-
-const uniqueRoomReferences = (values: string[]) => {
-  const seen = new Set<string>();
-  return values.flatMap((value) => {
-    const trimmed = value.trim();
-    const normalized = normalizeBookingRoomReference(trimmed);
-    if (!normalized || seen.has(normalized)) return [];
-    seen.add(normalized);
-    return [trimmed];
-  });
-};
-
-// The studio-room catalog uses UUIDs while booking resources have their own IDs.
-// Room names are the shared, backend-supported reference between both catalogs.
-export const bookingRoomReferencesFromOptions = (rooms: BookingRoomOption[]) =>
-  uniqueRoomReferences(rooms.map((room) => room.rName));
-
-export const bookingRoomReferencesFromResources = (resources: BookingRoomResource[]) =>
-  uniqueRoomReferences(resources.map((resource) => resource.brRoomName || resource.brRoomId));
-
-export const bookingSharesAssignedRoom = (
-  assignedRoomReferences: string[],
-  resources: BookingRoomResource[],
-) => {
-  const assigned = new Set(assignedRoomReferences.map(normalizeBookingRoomReference));
-  return bookingRoomReferencesFromResources(resources)
-    .some((roomReference) => assigned.has(normalizeBookingRoomReference(roomReference)));
-};
-
 interface BookingCustomerFieldState {
   helperText: string;
   dialogTitle: string;
@@ -61,22 +19,7 @@ interface BookingCalendarStatusState {
 
 interface BookingServiceFieldState {
   helperText: string;
-  mode: 'catalog' | 'manual';
-}
-
-interface BookingServiceFallbackEntryState {
-  manualEntryToggleLabel?: string;
-  showManualEntryField: boolean;
-  showManualEntryToggle: boolean;
-  showTemplateField: boolean;
-  templatePlaceholderLabel?: string;
-  templateReturnActionLabel?: string;
-  templateHelperText: string;
-}
-
-interface BookingServiceInputVisibilityState {
-  showCatalogSelect: boolean;
-  showManualTextField: boolean;
+  mode: 'catalog';
 }
 
 interface BookingServiceEntryGateState {
@@ -102,54 +45,6 @@ interface BookingOptionalDetailsState {
   defaultExpanded: boolean;
   toggleLabel: string;
 }
-
-export const requiresEngineerForService = (serviceType: string) => {
-  const lowered = normalizeServiceType(serviceType);
-  return ['recording', 'grabacion', 'grabación', 'mezcla', 'mixing', 'master', 'mastering'].some((keyword) =>
-    lowered.includes(keyword),
-  );
-};
-
-export const defaultMinutesForService = (serviceType: string) => {
-  const lowered = normalizeServiceType(serviceType);
-  if (lowered.includes('trial') || lowered.includes('lesson') || lowered.includes('clase')) return 60;
-  if (lowered.includes('rehearsal') || lowered.includes('ensayo')) return 90;
-  if (lowered.includes('mix') || lowered.includes('master')) return 120;
-  if (lowered.includes('record') || lowered.includes('grab')) return 120;
-  return 60;
-};
-
-const suggestedRoomPreset = (serviceType: string) => {
-  const lowered = normalizeServiceType(serviceType);
-  if (!lowered) return null;
-  if (lowered.includes('audiovisual') && lowered.includes('live')) return 'Live Room + Control Room';
-  if (lowered.includes('dj')) return 'DJ Booth';
-  if (lowered.includes('band') && lowered.includes('record')) return 'Live Room + Control Room';
-  if (lowered.includes('vocal') && lowered.includes('record')) return 'Vocal Booth + Control Room';
-  if (lowered.includes('rehearsal') || lowered.includes('ensayo') || (lowered.includes('band') && lowered.includes('rehe'))) {
-    return 'Live Room';
-  }
-  if (lowered.includes('mix') || lowered.includes('master')) return 'Control Room';
-  if (lowered.includes('record')) return 'Control Room + Live Room';
-  return 'primera sala disponible';
-};
-
-export const describeServiceDefaults = (serviceType: string) => {
-  if (normalizeServiceType(serviceType) === '') {
-    return 'Elige el tipo de servicio asociado a la sesión.';
-  }
-
-  const details = [
-    `Salas sugeridas: ${suggestedRoomPreset(serviceType)}`,
-    `Duración sugerida: ${defaultMinutesForService(serviceType)} min`,
-  ];
-
-  if (requiresEngineerForService(serviceType)) {
-    details.push('Se sugerirá un ingeniero');
-  }
-
-  return details.join(' · ');
-};
 
 export const getBookingCustomerFieldState = ({
   customerCount,
@@ -270,110 +165,35 @@ export const getBookingCalendarStatusState = ({
   };
 };
 
-export const shouldShowQuickBookingTemplate = ({
-  hasServiceCatalog,
-  mode,
-  serviceCatalogReady,
-  serviceLocked,
-}: {
-  hasServiceCatalog: boolean;
-  mode: 'create' | 'edit';
-  serviceCatalogReady: boolean;
-  serviceLocked: boolean;
-}) => mode === 'create' && !serviceLocked && serviceCatalogReady && !hasServiceCatalog;
-
 export const getBookingServiceFieldState = ({
   hasServiceCatalog,
-  manualEntryRequested = false,
-  mode,
   serviceCatalogReady,
   serviceLocked,
 }: {
   hasServiceCatalog: boolean;
-  manualEntryRequested?: boolean;
-  mode: 'create' | 'edit';
   serviceCatalogReady: boolean;
   serviceLocked: boolean;
 }): BookingServiceFieldState => {
-  if (serviceLocked || hasServiceCatalog || !serviceCatalogReady) {
-    return {
-      helperText: '',
-      mode: 'catalog',
-    };
-  }
-
-  if (mode === 'create') {
-    return {
-      helperText: manualEntryRequested
-        ? 'Escribe el servicio manualmente. Si prefieres una opción común, vuelve a plantillas.'
-        : 'Todavía no hay catálogo de servicios. Usa una plantilla de respaldo o escribe el servicio manualmente.',
-      mode: 'manual',
-    };
-  }
-
   return {
-    helperText: 'Todavía no hay catálogo de servicios. Escribe el servicio manualmente para actualizar la sesión.',
-    mode: 'manual',
+    helperText: !serviceCatalogReady
+      ? 'Cargando catálogo de servicios…'
+      : hasServiceCatalog || serviceLocked
+        ? ''
+        : 'No hay servicios publicados. Publica una oferta desde Catálogos antes de guardar una sesión.',
+    mode: 'catalog',
   };
 };
-
-export const getBookingServiceFallbackEntryState = ({
-  fallbackTemplatesActive,
-  manualEntryRequested,
-}: {
-  fallbackTemplatesActive: boolean;
-  manualEntryRequested: boolean;
-}): BookingServiceFallbackEntryState => {
-  if (!fallbackTemplatesActive) {
-    return {
-      showManualEntryField: true,
-      showManualEntryToggle: false,
-      showTemplateField: false,
-      templateHelperText: '',
-    };
-  }
-
-  if (manualEntryRequested) {
-    return {
-      showManualEntryField: true,
-      showManualEntryToggle: false,
-      showTemplateField: false,
-      templateReturnActionLabel: 'Volver a plantillas',
-      templateHelperText: '',
-    };
-  }
-
-  return {
-    manualEntryToggleLabel: 'Escribir servicio manualmente',
-    showManualEntryField: false,
-    showManualEntryToggle: true,
-    showTemplateField: true,
-    templatePlaceholderLabel: 'Elige una plantilla',
-    templateHelperText: 'Usa una plantilla para precargar servicio, salas y notas. Si no aplica, abre la entrada manual.',
-  };
-};
-
-export const getBookingServiceInputVisibilityState = ({
-  serviceFallbackEntryState,
-  serviceFieldMode,
-}: {
-  serviceFallbackEntryState: Pick<BookingServiceFallbackEntryState, 'showManualEntryField'>;
-  serviceFieldMode: BookingServiceFieldState['mode'];
-}): BookingServiceInputVisibilityState => ({
-  showCatalogSelect: serviceFieldMode === 'catalog',
-  showManualTextField: serviceFieldMode === 'manual' && serviceFallbackEntryState.showManualEntryField,
-});
 
 export const getBookingServiceEntryGateState = ({
   serviceCatalogReady,
   serviceLocked,
-  serviceType,
+  serviceOfferingId,
 }: {
   serviceCatalogReady: boolean;
   serviceLocked: boolean;
-  serviceType: string;
+  serviceOfferingId: string;
 }): BookingServiceEntryGateState => {
-  if (serviceCatalogReady || serviceLocked || serviceType.trim() !== '') {
+  if (serviceCatalogReady || serviceLocked || serviceOfferingId.trim() !== '') {
     return {
       helperText: '',
       showDependentFields: true,
@@ -382,7 +202,7 @@ export const getBookingServiceEntryGateState = ({
   }
 
   return {
-    helperText: 'Cargando catálogo de servicios… En cuanto termine esta primera carga podrás elegir una plantilla o seleccionar el servicio.',
+    helperText: 'Cargando catálogo de servicios… En cuanto termine esta primera carga podrás seleccionar el servicio.',
     showDependentFields: false,
     showServiceField: false,
   };
@@ -391,15 +211,15 @@ export const getBookingServiceEntryGateState = ({
 export const getBookingEngineerFieldState = ({
   engineerCount,
   hasAssignedEngineer,
-  serviceType,
+  hasSelectedService,
+  requiresEngineer,
 }: {
   engineerCount: number;
   hasAssignedEngineer: boolean;
-  serviceType: string;
+  hasSelectedService: boolean;
+  requiresEngineer: boolean;
 }): BookingEngineerFieldState => {
-  const normalizedServiceType = serviceType.trim();
-
-  if (!hasAssignedEngineer && normalizedServiceType === '') {
+  if (!hasAssignedEngineer && !hasSelectedService) {
     return {
       helperText: 'Selecciona el servicio primero para decidir si hace falta un ingeniero.',
       label: 'Ingeniero',
@@ -408,7 +228,7 @@ export const getBookingEngineerFieldState = ({
   }
 
   if (engineerCount === 0) {
-    if (!hasAssignedEngineer && !requiresEngineerForService(normalizedServiceType)) {
+    if (!hasAssignedEngineer && !requiresEngineer) {
       return {
         helperText: '',
         label: 'Ingeniero',
@@ -425,7 +245,7 @@ export const getBookingEngineerFieldState = ({
     };
   }
 
-  if (requiresEngineerForService(normalizedServiceType)) {
+  if (requiresEngineer) {
     return {
       helperText: 'Recomendado para recording/mixing/mastering.',
       label: 'Ingeniero',
@@ -442,14 +262,14 @@ export const getBookingEngineerFieldState = ({
 
 export const getBookingRoomsFieldState = ({
   hasAssignedRooms,
+  hasSelectedService,
   roomCatalogLoading,
   roomCount,
-  serviceType,
 }: {
   hasAssignedRooms: boolean;
+  hasSelectedService: boolean;
   roomCatalogLoading: boolean;
   roomCount: number;
-  serviceType: string;
 }): BookingRoomsFieldState => {
   if (roomCatalogLoading && roomCount <= 0) {
     return {
@@ -466,14 +286,14 @@ export const getBookingRoomsFieldState = ({
     };
   }
 
-  if (!hasAssignedRooms && serviceType.trim() === '') {
+  if (!hasAssignedRooms && !hasSelectedService) {
     return {
       helperText: 'Selecciona el servicio primero para sugerir salas y ajustar la combinación si hace falta.',
       showField: false,
     };
   }
 
-  if (hasAssignedRooms && serviceType.trim() === '') {
+  if (hasAssignedRooms && !hasSelectedService) {
     return {
       helperText: 'Ajusta las salas solo si esta sesión necesita otra combinación.',
       showField: true,

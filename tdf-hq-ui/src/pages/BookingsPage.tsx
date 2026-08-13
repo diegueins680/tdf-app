@@ -33,27 +33,17 @@ import { Parties } from '../api/parties';
 import { Services } from '../api/services';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import {
-  defaultMinutesForService,
-  describeServiceDefaults,
   getBookingCalendarStatusState,
-  bookingRoomReferencesFromOptions,
-  bookingRoomReferencesFromResources,
-  bookingSharesAssignedRoom,
   getBookingConflictAlertText,
   getBookingCustomerFieldState,
   getBookingEngineerFieldState,
   getBookingOptionalDetailsState,
   getBookingRoomsFieldState,
   getBookingServiceEntryGateState,
-  getBookingServiceFallbackEntryState,
   getBookingServiceFieldState,
-  getBookingServiceInputVisibilityState,
-  requiresEngineerForService,
-  shouldShowQuickBookingTemplate,
 } from './bookingsPageLogic';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useCurrency } from '../contexts/CurrencyContext';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 // FullCalendar v6 auto-injects its styles when the modules load, so importing the
 // CSS bundles directly is unnecessary and breaks with Vite due to missing files.
@@ -66,7 +56,6 @@ const parsePositiveInt = (raw: string | null): number | null => {
 };
 
 export default function BookingsPage() {
-  useDocumentTitle('Estudio / Reservas');
   const { timezone: zone, locale } = useLocalePreferences();
   const { formatMoney } = useCurrency();
   const location = useLocation();
@@ -110,10 +99,7 @@ export default function BookingsPage() {
   });
   const qc = useQueryClient();
   const bookings = useMemo<BookingDTO[]>(() => bookingsQuery.data ?? [], [bookingsQuery.data]);
-  const rooms = useMemo<RoomDTO[]>(
-    () => (roomsQuery.data ?? []).filter((room) => room.rBookable),
-    [roomsQuery.data],
-  );
+  const rooms = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
   const parties = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
   const hasActiveBookingFilter = bookingIdFilter != null || partyIdFilter != null || engineerPartyIdFilter != null;
   const handleClearBookingFilters = useCallback(() => {
@@ -181,8 +167,7 @@ export default function BookingsPage() {
           : extractEngineerFromNotes(booking.notes);
         const isCourse =
           Boolean(booking.courseSlug) ||
-          (booking.bookingId ?? 0) < 0 ||
-          (booking.serviceType ?? '').toLowerCase().includes('curso');
+          (booking.bookingId ?? 0) < 0;
         const courseCapacity = booking.courseCapacity ?? undefined;
         const courseRemaining = booking.courseRemaining ?? undefined;
         const coursePrice = booking.coursePrice ?? undefined;
@@ -224,12 +209,12 @@ export default function BookingsPage() {
   const [startInput, setStartInput] = useState('');
   const [endInput, setEndInput] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
-  const [serviceType, setServiceType] = useState<string>('');
+  const [serviceOfferingId, setServiceOfferingId] = useState<string>('');
   const [engineerName, setEngineerName] = useState('');
   const [engineerPartyId, setEngineerPartyId] = useState<number | null>(null);
   const [customerPartyId, setCustomerPartyId] = useState<number | null>(null);
   const [customerName, setCustomerName] = useState('');
-  const [assignedRoomReferences, setAssignedRoomReferences] = useState<string[]>([]);
+  const [assignedRoomIds, setAssignedRoomIds] = useState<string[]>([]);
   const [status, setStatus] = useState<string>('Confirmed');
   const [calendarError, setCalendarError] = useState<string | null>(null);
   const [courseNotice, setCourseNotice] = useState<string | null>(null);
@@ -252,15 +237,12 @@ export default function BookingsPage() {
   const [prefillHandled, setPrefillHandled] = useState(false);
   const [prefillNotice, setPrefillNotice] = useState(false);
   const [autoAssignMessage, setAutoAssignMessage] = useState('');
-  const [template, setTemplate] = useState<string>('');
   const [serviceLocked, setServiceLocked] = useState(false);
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [duplicateStartInput, setDuplicateStartInput] = useState('');
-  const [durationManuallyAdjusted, setDurationManuallyAdjusted] = useState(false);
   const [roomsManuallyAdjusted, setRoomsManuallyAdjusted] = useState(false);
   const [showOptionalDetails, setShowOptionalDetails] = useState(false);
-  const [manualServiceFallbackOpen, setManualServiceFallbackOpen] = useState(false);
-  const defaultServiceName = serviceTypes[0]?.name ?? '';
+  const defaultService = serviceTypes[0] ?? null;
   const formatServiceLabel = useCallback(
     (svc: ServiceType) => {
       if (svc.priceCents == null) return svc.name;
@@ -275,6 +257,7 @@ export default function BookingsPage() {
     const start = DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone });
     const end = DateTime.fromFormat(endInput, "yyyy-LL-dd'T'HH:mm", { zone });
     if (!start.isValid || !end.isValid) return [];
+    const assigned = new Set(assignedRoomIds);
     const isOverlap = (aStart: string, aEnd: string) => {
       const s = DateTime.fromISO(aStart);
       const e = DateTime.fromISO(aEnd);
@@ -289,72 +272,31 @@ export default function BookingsPage() {
       if (!isActive(b.status ?? '')) return false;
       if (editingId && b.bookingId === editingId) return false;
       if (!isOverlap(b.startsAt, b.endsAt)) return false;
-      return bookingSharesAssignedRoom(assignedRoomReferences, b.resources ?? []);
+      const roomIds = (b.resources ?? []).map((r) => r.brRoomId);
+      if (roomIds.length === 0) return false;
+      return roomIds.some((rid) => assigned.has(rid));
     });
-  }, [assignedRoomReferences, bookings, editingId, endInput, startInput, zone]);
+  }, [assignedRoomIds, bookings, editingId, endInput, startInput, zone]);
 
-  const categorizeRooms = useMemo(() => {
-    const map = {
-      djBooth: [] as RoomDTO[],
-      liveRoom: [] as RoomDTO[],
-      controlRoom: [] as RoomDTO[],
-      vocalBooth: [] as RoomDTO[],
-      other: [] as RoomDTO[],
-    };
-    rooms.forEach((room) => {
-      const name = room.rName.toLowerCase();
-      if (name.includes('dj')) {
-        map.djBooth.push(room);
-      } else if (name.includes('live')) {
-        map.liveRoom.push(room);
-      } else if (name.includes('control')) {
-        map.controlRoom.push(room);
-      } else if (name.includes('vocal')) {
-        map.vocalBooth.push(room);
-      } else {
-        map.other.push(room);
-      }
-    });
-    return map;
-  }, [rooms]);
-
-  const pickFirst = (list: RoomDTO[]) => (list.length > 0 ? [list[0]!] : []);
-
-  const defaultRoomsForService = useCallback((svc: string): RoomDTO[] => {
-    const lowered = svc.toLowerCase();
-    if (lowered.includes('audiovisual') && lowered.includes('live')) {
-      return [...categorizeRooms.liveRoom.slice(0, 1), ...categorizeRooms.controlRoom.slice(0, 1)];
-    }
-    if (lowered.includes('dj')) {
-      const defaults = pickFirst(categorizeRooms.djBooth);
-      return defaults.length ? defaults : pickFirst(categorizeRooms.other);
-    }
-    if (lowered.includes('band') && lowered.includes('record')) {
-      return [...categorizeRooms.liveRoom.slice(0, 1), ...categorizeRooms.controlRoom.slice(0, 1)];
-    }
-    if (lowered.includes('vocal') && lowered.includes('record')) {
-      return [...categorizeRooms.vocalBooth.slice(0, 1), ...categorizeRooms.controlRoom.slice(0, 1)];
-    }
-    if (lowered.includes('rehearsal') || lowered.includes('ensayo') || (lowered.includes('band') && lowered.includes('rehe'))) {
-      return categorizeRooms.liveRoom.slice(0, 1);
-    }
-    if (lowered.includes('mix') || lowered.includes('master')) {
-      return categorizeRooms.controlRoom.slice(0, 1);
-    }
-    if (lowered.includes('record')) {
-      return [...categorizeRooms.controlRoom.slice(0, 1), ...categorizeRooms.liveRoom.slice(0, 1)];
-    }
-    return categorizeRooms.other.slice(0, 1);
-  }, [categorizeRooms]);
+  const selectedService = useMemo(
+    () => serviceTypes.find((service) => service.id === serviceOfferingId) ?? null,
+    [serviceOfferingId, serviceTypes],
+  );
+  const defaultRoomsForService = useCallback((offeringId: string): RoomDTO[] => {
+    const service = serviceTypes.find((candidate) => candidate.id === offeringId);
+    if (!service) return [];
+    const requiredIds = service.defaultResources
+      .filter((resource) => resource.sdrSelectionMode === 'all')
+      .map((resource) => resource.sdrResourceId);
+    const firstAvailableId = service.defaultResources
+      .find((resource) => resource.sdrSelectionMode === 'first-available')?.sdrResourceId;
+    const selectedIds = new Set(firstAvailableId ? [...requiredIds, firstAvailableId] : requiredIds);
+    return rooms.filter((room) => selectedIds.has(room.roomId));
+  }, [rooms, serviceTypes]);
 
   const assignedRooms = useMemo(
-    () => assignedRoomReferences.map((reference) =>
-      rooms.find((room) => room.rName.trim().toLocaleLowerCase() === reference.trim().toLocaleLowerCase()) ?? {
-        roomId: `booking-room:${reference}`,
-        rName: reference,
-        rBookable: true,
-      }),
-    [assignedRoomReferences, rooms],
+    () => rooms.filter((room) => assignedRoomIds.includes(room.roomId)),
+    [rooms, assignedRoomIds],
   );
 
   const engineerOptions = useMemo(
@@ -378,62 +320,44 @@ export default function BookingsPage() {
     () => getBookingServiceEntryGateState({
       serviceCatalogReady,
       serviceLocked,
-      serviceType,
+      serviceOfferingId,
     }),
-    [serviceCatalogReady, serviceLocked, serviceType],
+    [serviceCatalogReady, serviceLocked, serviceOfferingId],
   );
-  const showQuickTemplateField = shouldShowQuickBookingTemplate({
-    hasServiceCatalog: serviceTypes.length > 0,
-    mode,
-    serviceCatalogReady,
-    serviceLocked,
-  });
   const serviceFieldState = useMemo(
     () =>
       getBookingServiceFieldState({
         hasServiceCatalog: serviceTypes.length > 0,
-        manualEntryRequested: manualServiceFallbackOpen,
-        mode,
         serviceCatalogReady,
         serviceLocked,
       }),
-    [manualServiceFallbackOpen, mode, serviceCatalogReady, serviceLocked, serviceTypes.length],
+    [serviceCatalogReady, serviceLocked, serviceTypes.length],
   );
-  const serviceFallbackEntryState = useMemo(
-    () =>
-      getBookingServiceFallbackEntryState({
-        fallbackTemplatesActive: showQuickTemplateField && serviceFieldState.mode === 'manual',
-        manualEntryRequested: manualServiceFallbackOpen,
-      }),
-    [manualServiceFallbackOpen, serviceFieldState.mode, showQuickTemplateField],
-  );
-  const serviceInputVisibilityState = getBookingServiceInputVisibilityState({
-    serviceFallbackEntryState,
-    serviceFieldMode: serviceFieldState.mode,
-  });
-  const serviceFieldHelperText =
-    serviceFieldState.mode === 'manual'
-      ? serviceType.trim()
-        ? `${serviceFieldState.helperText} ${describeServiceDefaults(serviceType)}`
-        : serviceFieldState.helperText
-      : describeServiceDefaults(serviceType);
-  const showTemplateSelector = showQuickTemplateField && serviceFallbackEntryState.showTemplateField;
+  const serviceFieldHelperText = selectedService
+    ? [
+        selectedService.defaultResources.length > 0
+          ? `Recursos publicados: ${selectedService.defaultResources.map((resource) => resource.sdrResourceName).join(' · ')}`
+          : 'Sin recursos predeterminados.',
+        selectedService.requiresEngineer ? 'Requiere ingeniero.' : 'Ingeniero opcional.',
+      ].join(' ')
+    : serviceFieldState.helperText || 'Selecciona un servicio publicado.';
   const engineerFieldState = useMemo(
     () => getBookingEngineerFieldState({
       engineerCount: engineerOptions.length,
       hasAssignedEngineer: engineerPartyId != null || engineerName.trim() !== '',
-      serviceType,
+      hasSelectedService: selectedService != null,
+      requiresEngineer: selectedService?.requiresEngineer ?? false,
     }),
-    [engineerName, engineerOptions.length, engineerPartyId, serviceType],
+    [engineerName, engineerOptions.length, engineerPartyId, selectedService],
   );
   const roomsFieldState = useMemo(
     () => getBookingRoomsFieldState({
-      hasAssignedRooms: assignedRoomReferences.length > 0,
+      hasAssignedRooms: assignedRoomIds.length > 0,
+      hasSelectedService: selectedService != null,
       roomCatalogLoading: roomsQuery.isLoading && roomsQuery.data == null,
       roomCount: rooms.length,
-      serviceType,
     }),
-    [assignedRoomReferences.length, rooms.length, roomsQuery.data, roomsQuery.isLoading, serviceType],
+    [assignedRoomIds.length, rooms.length, roomsQuery.data, roomsQuery.isLoading, selectedService],
   );
   const optionalDetailsState = useMemo(
     () => getBookingOptionalDetailsState({
@@ -449,13 +373,11 @@ export default function BookingsPage() {
     [conflicts],
   );
   const missingEngineer = engineerFieldState.showField
-    && requiresEngineerForService(serviceType)
+    && Boolean(selectedService?.requiresEngineer)
     && !(engineerName.trim() || engineerPartyId);
   const handleCloseBookingDialog = useCallback(() => {
     setDialogOpen(false);
     setShowOptionalDetails(false);
-    setManualServiceFallbackOpen(false);
-    setTemplate('');
   }, []);
   const openCreateContactDialog = useCallback(() => {
     setCreateContactError(null);
@@ -475,23 +397,23 @@ export default function BookingsPage() {
   });
 
 useEffect(() => {
-  if (!serviceType || rooms.length === 0 || assignedRoomReferences.length > 0) return;
-  const defaults = defaultRoomsForService(serviceType);
+  if (!serviceOfferingId || rooms.length === 0 || assignedRoomIds.length > 0) return;
+  const defaults = defaultRoomsForService(serviceOfferingId);
   if (defaults.length) {
-    setAssignedRoomReferences(bookingRoomReferencesFromOptions(defaults));
+    setAssignedRoomIds(defaults.map((room) => room.roomId));
     setRoomsManuallyAdjusted(false);
   }
-}, [serviceType, rooms, assignedRoomReferences.length, defaultRoomsForService]);
+}, [serviceOfferingId, rooms, assignedRoomIds.length, defaultRoomsForService]);
 
 useEffect(() => {
-  if (serviceType || !defaultServiceName) return;
-  setServiceType(defaultServiceName);
-  const defaults = defaultRoomsForService(defaultServiceName);
+  if (serviceOfferingId || !defaultService) return;
+  setServiceOfferingId(defaultService.id);
+  const defaults = defaultRoomsForService(defaultService.id);
   if (defaults.length) {
-    setAssignedRoomReferences(bookingRoomReferencesFromOptions(defaults));
+    setAssignedRoomIds(defaults.map((room) => room.roomId));
     setRoomsManuallyAdjusted(false);
   }
-}, [defaultRoomsForService, defaultServiceName, serviceType]);
+}, [defaultRoomsForService, defaultService, serviceOfferingId]);
 
   const formatForInput = useCallback(
     (date: Date) => DateTime.fromJSDate(date, { zone }).toFormat("yyyy-LL-dd'T'HH:mm"),
@@ -510,9 +432,7 @@ useEffect(() => {
       if (parsed.customerName) setCustomerName(parsed.customerName);
       if (parsed.notes) setNotes(parsed.notes);
       setStatus('Tentative');
-      setTemplate('');
-      setServiceType('Trial lesson');
-      setManualServiceFallbackOpen(true);
+      setServiceOfferingId(defaultService?.id ?? '');
       setDialogOpen(true);
       setAutoAssignMessage('Datos precargados desde la última acción.');
       setPrefillNotice(true);
@@ -524,54 +444,49 @@ useEffect(() => {
     } finally {
       setPrefillHandled(true);
     }
-  }, [dialogOpen, formatForInput, prefillHandled]);
+  }, [defaultService, dialogOpen, formatForInput, prefillHandled]);
 
 const openDialogForRange = (start: Date, end: Date) => {
   setStartInput(formatForInput(start));
   setEndInput(formatForInput(end));
   setShowOptionalDetails(false);
   setDialogOpen(true);
-  setDurationManuallyAdjusted(false);
   setRoomsManuallyAdjusted(false);
 };
 
   const handleDateClick = (info: { date: Date }) => {
     const start = info.date;
-    const initialService = defaultServiceName;
-    const duration = initialService ? defaultMinutesForService(initialService) : 60;
+    const initialService = defaultService;
+    const duration = initialService?.defaultDurationMinutes ?? 60;
     const end = DateTime.fromJSDate(start).plus({ minutes: duration }).toJSDate();
     setMode('create');
     setEditingId(null);
     setTitle('Bloque de estudio');
     setNotes('');
-    setTemplate('');
-    setServiceType(initialService);
+    setServiceOfferingId(initialService?.id ?? '');
     setEngineerName('');
     setCustomerName('');
     setCustomerPartyId(null);
-    const defaults = defaultRoomsForService(initialService);
-    setAssignedRoomReferences(bookingRoomReferencesFromOptions(defaults));
+    const defaults = defaultRoomsForService(initialService?.id ?? '');
+    setAssignedRoomIds(defaults.map((room) => room.roomId));
     setStatus('Confirmed');
-    setManualServiceFallbackOpen(false);
     openDialogForRange(start, end);
   };
 
   const handleSelect = (info: { start: Date; end: Date }) => {
-    const initialService = defaultServiceName;
-    const defaultDuration = initialService ? defaultMinutesForService(initialService) : 60;
+    const initialService = defaultService;
+    const defaultDuration = initialService?.defaultDurationMinutes ?? 60;
     setMode('create');
     setEditingId(null);
     setTitle('Bloque de estudio');
     setNotes('');
-    setTemplate('');
-    setServiceType(initialService);
+    setServiceOfferingId(initialService?.id ?? '');
     setEngineerName('');
     setCustomerName('');
     setCustomerPartyId(null);
-    const defaults = defaultRoomsForService(initialService);
-    setAssignedRoomReferences(bookingRoomReferencesFromOptions(defaults));
+    const defaults = defaultRoomsForService(initialService?.id ?? '');
+    setAssignedRoomIds(defaults.map((room) => room.roomId));
     setStatus('Confirmed');
-    setManualServiceFallbackOpen(false);
     openDialogForRange(
       info.start,
       info.end ?? DateTime.fromJSDate(info.start).plus({ minutes: defaultDuration }).toJSDate(),
@@ -588,10 +503,7 @@ const openDialogForRange = (start: Date, end: Date) => {
     setEndInput('');
     setTitle('Bloque de estudio');
     setNotes('');
-    setTemplate('');
-    setServiceType('');
-    setManualServiceFallbackOpen(false);
-    setAssignedRoomReferences([]);
+    setAssignedRoomIds([]);
     setEngineerName('');
     setEngineerPartyId(null);
     setPrefillNotice(false);
@@ -644,28 +556,23 @@ const openDialogForRange = (start: Date, end: Date) => {
         cbEndsAt: toUtcIso(endInput) ?? '',
         cbStatus: status,
         cbNotes: buildCombinedNotes(),
-        cbServiceType: (() => {
-          const trimmed = serviceType.trim();
-          return trimmed === '' ? null : trimmed;
-        })(),
+        cbServiceOfferingId: serviceOfferingId,
         cbPartyId: customerPartyId,
-        cbResourceIds: assignedRoomReferences,
+        cbResourceIds: assignedRoomIds,
         cbEngineerPartyId: engineerPartyId,
         cbEngineerName: engineerName.trim() || null,
       }),
     onSuccess: () => {
       setDialogOpen(false);
       setShowOptionalDetails(false);
-      setManualServiceFallbackOpen(false);
       setFormError(null);
       setTitle('Bloque de estudio');
       setNotes('');
-      setTemplate('');
-      setServiceType('');
+      setServiceOfferingId('');
       setStatus('Confirmed');
       setEditingId(null);
       setMode('create');
-      setAssignedRoomReferences([]);
+      setAssignedRoomIds([]);
       setEngineerName('');
       setEngineerPartyId(null);
       setCustomerName('');
@@ -686,11 +593,9 @@ const openDialogForRange = (start: Date, end: Date) => {
       void qc.invalidateQueries({ queryKey: ['bookings'] });
       setDialogOpen(false);
       setShowOptionalDetails(false);
-      setManualServiceFallbackOpen(false);
       setEditingId(null);
       setMode('create');
       setFormError(null);
-      setTemplate('');
       setPrefillNotice(false);
       setAutoAssignMessage('');
     },
@@ -707,8 +612,7 @@ const openDialogForRange = (start: Date, end: Date) => {
       setFormError('Revisa las fechas seleccionadas.');
       return;
     }
-    const trimmedService = serviceType.trim();
-    if (!trimmedService) {
+    if (selectedService?.id !== serviceOfferingId) {
       setFormError('Selecciona un servicio para la sesión.');
       return;
     }
@@ -730,7 +634,7 @@ const openDialogForRange = (start: Date, end: Date) => {
       setFormError('Todavía no hay salas registradas. Abre Salas y recursos antes de guardar la sesión.');
       return;
     }
-    if (assignedRoomReferences.length === 0) {
+    if (assignedRoomIds.length === 0) {
       setFormError('Asigna al menos una sala para la sesión.');
       return;
     }
@@ -740,13 +644,11 @@ const openDialogForRange = (start: Date, end: Date) => {
         id: editingId,
         body: {
           ubTitle: title.trim(),
-          ubServiceType: trimmedService === '' ? null : trimmedService,
+          ubServiceOfferingId: serviceOfferingId,
           ubNotes: combinedNotes,
           ubStatus: status,
           ubStartsAt: startIso,
           ubEndsAt: endIso,
-          ubResourceIds: assignedRoomReferences,
-          ubPartyId: customerPartyId,
           ubEngineerPartyId: engineerPartyId,
           ubEngineerName: engineerName.trim() || null,
         },
@@ -773,19 +675,17 @@ const openDialogForRange = (start: Date, end: Date) => {
           : null);
       setEngineerPartyId(matchedEngineerId);
       setCustomerPartyId(booking.partyId ?? null);
-      const customerLabel =
-        booking.partyId && parties.find((p) => p.partyId === booking.partyId)?.displayName
-          ? parties.find((p) => p.partyId === booking.partyId)?.displayName ?? ''
-          : booking.customerName ?? booking.partyDisplayName ?? '';
+      const customerLabel = parties.find((party) => party.partyId === booking.partyId)?.displayName
+        ?? booking.customerName
+        ?? booking.partyDisplayName
+        ?? '';
       setCustomerName(customerLabel);
-      setTemplate('');
-      setServiceType(booking.serviceType ?? '');
+      setServiceOfferingId(booking.serviceOfferingId ?? '');
       setServiceLocked(Boolean(booking.courseSlug));
       setStatus(booking.status ?? 'Confirmed');
       setStartInput(formatForInput(new Date(booking.startsAt)));
       setEndInput(formatForInput(new Date(booking.endsAt)));
-      setAssignedRoomReferences(bookingRoomReferencesFromResources(booking.resources ?? []));
-      setManualServiceFallbackOpen(false);
+      setAssignedRoomIds((booking.resources ?? []).map((r) => r.brRoomId));
       const baseStart = DateTime.fromISO(booking.startsAt).setZone(zone);
       const suggestedDuplicate = baseStart.isValid ? baseStart.plus({ days: 7 }) : DateTime.now().setZone(zone);
       setDuplicateStartInput(suggestedDuplicate.toFormat("yyyy-LL-dd'T'HH:mm"));
@@ -1096,7 +996,6 @@ const openDialogForRange = (start: Date, end: Date) => {
               onChange={(e) => setCreateContactForm((prev) => ({ ...prev, email: e.target.value }))}
             />
             <TextField
-              type="tel"
               label="Teléfono"
               value={createContactForm.phone}
               onChange={(e) => setCreateContactForm((prev) => ({ ...prev, phone: e.target.value }))}
@@ -1223,7 +1122,6 @@ const openDialogForRange = (start: Date, end: Date) => {
               value={startInput}
               onChange={(e) => {
                 setStartInput(e.target.value);
-                setDurationManuallyAdjusted(true);
               }}
               fullWidth
               InputLabelProps={{ shrink: true }}
@@ -1234,134 +1132,38 @@ const openDialogForRange = (start: Date, end: Date) => {
               value={endInput}
               onChange={(e) => {
                 setEndInput(e.target.value);
-                setDurationManuallyAdjusted(true);
               }}
               fullWidth
               InputLabelProps={{ shrink: true }}
             />
             {serviceEntryGateState.showServiceField ? (
               <>
-                {showTemplateSelector && (
-                  <TextField
-                    select
-                    label="Plantilla de respaldo"
-                    value={template}
-                    onChange={(e) => {
-                      const val = String(e.target.value);
-                      setTemplate(val);
-                      if (val === '') {
-                        setAutoAssignMessage('');
-                        return;
-                      }
-                      setManualServiceFallbackOpen(false);
-                      const presetMap: Record<'rehearsal' | 'recording' | 'mix' | 'curso', { title: string; svc: string; note: string }> = {
-                        rehearsal: { title: 'Rehearsal', svc: 'Band rehearsal', note: 'Ensayo banda' },
-                        recording: { title: 'Recording', svc: 'Recording', note: 'Grabación' },
-                        mix: { title: 'Mix/Master', svc: 'Mixing', note: 'Mix/master' },
-                        curso: { title: 'Curso', svc: 'Curso', note: 'Bloque de curso' },
-                      };
-                      const preset = Object.prototype.hasOwnProperty.call(presetMap, val)
-                        ? presetMap[val as keyof typeof presetMap]
-                        : undefined;
-                      if (preset) {
-                        setTitle(preset.title);
-                        setServiceType(preset.svc);
-                        setNotes((prev) => (prev ? prev : preset.note));
-                        const defaults = defaultRoomsForService(preset.svc);
-                        if (defaults.length) {
-                          setAssignedRoomReferences(bookingRoomReferencesFromOptions(defaults));
-                          setAutoAssignMessage(`Asignamos ${defaults.map((r) => r.rName).join(' + ')}`);
-                        }
-                      }
-                    }}
-                    helperText={serviceFallbackEntryState.templateHelperText}
-                    fullWidth
-                  >
-                    <MenuItem value="" disabled>
-                      {serviceFallbackEntryState.templatePlaceholderLabel}
-                    </MenuItem>
-                    <MenuItem value="rehearsal">Ensayo (band rehearsal)</MenuItem>
-                    <MenuItem value="recording">Recording (cabina + control)</MenuItem>
-                    <MenuItem value="mix">Mix/Master (control room)</MenuItem>
-                    <MenuItem value="curso">Curso/bloque</MenuItem>
-                  </TextField>
-                )}
-                {serviceFallbackEntryState.showManualEntryToggle && (
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={() => {
-                      setTemplate('');
-                      setManualServiceFallbackOpen(true);
-                    }}
-                    sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
-                  >
-                    {serviceFallbackEntryState.manualEntryToggleLabel}
-                  </Button>
-                )}
-                {serviceFallbackEntryState.templateReturnActionLabel && (
-                  <Button
-                    variant="text"
-                    size="small"
-                    onClick={() => {
-                      setTemplate('');
-                      setServiceType('');
-                      setAutoAssignMessage('');
-                      setManualServiceFallbackOpen(false);
-                    }}
-                    sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
-                  >
-                    {serviceFallbackEntryState.templateReturnActionLabel}
-                  </Button>
-                )}
-                {serviceInputVisibilityState.showManualTextField ? (
-                  <TextField
-                    label="Servicio"
-                    value={serviceType}
-                    disabled={serviceLocked}
-                    onChange={(e) => {
-                      setServiceType(e.target.value);
-                      setAutoAssignMessage('');
-                    }}
-                    helperText={serviceFieldHelperText}
-                    placeholder="Ej. Recording, ensayo, podcast"
-                    fullWidth
-                  />
-                ) : serviceInputVisibilityState.showCatalogSelect ? (
-                  <TextField
+                <TextField
                     select
                     label="Servicio"
-                    value={serviceType}
+                    value={serviceOfferingId}
                     disabled={serviceLocked}
                     onChange={(e) => {
                       const value = e.target.value;
-                      const wasDurationManual = durationManuallyAdjusted;
+                      const service = serviceTypes.find((candidate) => candidate.id === value);
+                      if (!service) return;
                       const wasRoomsManual = roomsManuallyAdjusted;
-                      setDurationManuallyAdjusted(false);
                       setRoomsManuallyAdjusted(false);
-                      setServiceType(value);
+                      setServiceOfferingId(service.id);
                       const messageParts: string[] = [];
-                      if (!wasRoomsManual || assignedRoomReferences.length === 0) {
-                        const defaults = defaultRoomsForService(value);
+                      if (!wasRoomsManual || assignedRoomIds.length === 0) {
+                        const defaults = defaultRoomsForService(service.id);
                         if (defaults.length) {
-                          setAssignedRoomReferences(bookingRoomReferencesFromOptions(defaults));
+                          setAssignedRoomIds(defaults.map((room) => room.roomId));
                           messageParts.push(`Salas sugeridas: ${defaults.map((r) => r.rName).join(' + ')}`);
                           setRoomsManuallyAdjusted(false);
                         }
                       }
-                      if (requiresEngineerForService(value) && !engineerName && engineerOptions.length > 0) {
+                      if (service.requiresEngineer && !engineerName && engineerOptions.length > 0) {
                         const eng = engineerOptions[0]!;
                         setEngineerName(eng.displayName);
                         setEngineerPartyId(eng.partyId);
                         messageParts.push(`Ingeniero sugerido: ${eng.displayName}`);
-                      }
-                      const minutes = defaultMinutesForService(value);
-                      const startDt = DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone });
-                      if (!wasDurationManual && startDt.isValid && minutes > 0) {
-                        const endDt = startDt.plus({ minutes });
-                        setEndInput(endDt.toFormat("yyyy-LL-dd'T'HH:mm"));
-                        messageParts.push(`Duración ajustada a ${minutes} min`);
-                        setDurationManuallyAdjusted(false);
                       }
                       setAutoAssignMessage(messageParts.join(' · '));
                     }}
@@ -1369,12 +1171,11 @@ const openDialogForRange = (start: Date, end: Date) => {
                   >
                     <MenuItem value="">(Sin asignar)</MenuItem>
                     {serviceTypes.map((svc) => (
-                      <MenuItem key={svc.id} value={svc.name}>
+                      <MenuItem key={svc.id} value={svc.id}>
                         {formatServiceLabel(svc)}
                       </MenuItem>
                     ))}
-                  </TextField>
-                ) : null}
+                </TextField>
                 {serviceLocked && (
                   <Alert severity="info" variant="outlined">
                     Este servicio está sincronizado con un curso/prueba y no se puede cambiar aquí.
@@ -1493,12 +1294,9 @@ const openDialogForRange = (start: Date, end: Date) => {
                   multiple
                   options={rooms}
                   getOptionLabel={(option) => option.rName}
-                  isOptionEqualToValue={(option, value) =>
-                    option.rName.trim().toLocaleLowerCase() === value.rName.trim().toLocaleLowerCase()
-                  }
                   value={assignedRooms}
                   onChange={(_, value) => {
-                    setAssignedRoomReferences(bookingRoomReferencesFromOptions(value));
+                    setAssignedRoomIds(value.map((room) => room.roomId));
                     setRoomsManuallyAdjusted(true);
                   }}
                   renderTags={(value, getTagProps) =>

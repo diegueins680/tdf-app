@@ -14,6 +14,15 @@ const getArtistPromoDayReportMock = jest.fn<(artistId: number, day: string) => P
 const getArtistPromoPdfBlobMock = jest.fn<(artistId: number, day: string) => Promise<Blob>>();
 const listPartiesMock = jest.fn<() => Promise<PartyDTO[]>>();
 const updatePartyMock = jest.fn<(partyId: number, payload: unknown) => Promise<PartyDTO | null>>();
+const listCatalogItemsMock = jest.fn<() => Promise<{
+  items: Record<string, unknown>[];
+  page: number;
+  pageSize: number;
+  total: number;
+  revision: number;
+  locale: string;
+  catalog: Record<string, unknown>;
+}>>();
 
 jest.unstable_mockModule('../api/admin', () => ({
   Admin: {
@@ -33,6 +42,12 @@ jest.unstable_mockModule('../api/parties', () => ({
   Parties: {
     list: () => listPartiesMock(),
     update: (partyId: number, payload: unknown) => updatePartyMock(partyId, payload),
+  },
+}));
+
+jest.unstable_mockModule('../api/catalogs', () => ({
+  Catalogs: {
+    listItems: () => listCatalogItemsMock(),
   },
 }));
 
@@ -108,6 +123,7 @@ const buildArtist = (overrides: Partial<ArtistProfileDTO> = {}): ArtistProfileDT
   apWebsiteUrl: null,
   apFeaturedVideoUrl: null,
   apGenres: 'Indie',
+  apGenreIds: ['10000000-0000-4000-8000-000000000004'],
   apHighlights: null,
   apFollowerCount: 12,
   apHasUserAccount: true,
@@ -198,6 +214,7 @@ describe('LabelArtistsPage', () => {
     getArtistPromoPdfBlobMock.mockReset();
     listPartiesMock.mockReset();
     updatePartyMock.mockReset();
+    listCatalogItemsMock.mockReset();
     listArtistProfilesMock.mockResolvedValue([]);
     listPartiesMock.mockResolvedValue([]);
     upsertArtistProfileMock.mockResolvedValue(null);
@@ -208,6 +225,30 @@ describe('LabelArtistsPage', () => {
     getArtistPromoDayReportMock.mockResolvedValue(buildPromoReport({ apdEntries: [] }));
     getArtistPromoPdfBlobMock.mockResolvedValue(new Blob(['pdf']));
     updatePartyMock.mockResolvedValue(null);
+    listCatalogItemsMock.mockResolvedValue({
+      catalog: {},
+      items: [{
+        id: '10000000-0000-4000-8000-000000000004',
+        catalogId: '20000000-0000-4000-8000-000000000001',
+        catalogCode: 'genres',
+        kind: 'genre',
+        code: 'indie',
+        name: 'Indie',
+        nameEs: 'Indie',
+        nameEn: 'Indie',
+        searchAliases: [],
+        sortOrder: 0,
+        active: true,
+        workflowState: 'published',
+        usageCount: 0,
+        version: 1,
+      }],
+      page: 1,
+      pageSize: 500,
+      total: 1,
+      revision: 1,
+      locale: 'de-DE',
+    });
   });
 
   it('keeps the first artist setup free of list-only search, refresh, notes, and table chrome', async () => {
@@ -309,6 +350,45 @@ describe('LabelArtistsPage', () => {
         expect(focusedRefreshButton).not.toBeNull();
         expect(document.activeElement).toBe(focusedRefreshButton);
       });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('blocks profile writes when the canonical genre catalog cannot be loaded', async () => {
+    listArtistProfilesMock.mockResolvedValue([buildArtist()]);
+    listPartiesMock.mockResolvedValue([buildParty()]);
+    listCatalogItemsMock.mockRejectedValue(new Error('catalog unavailable'));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      let editButton: HTMLButtonElement | null = null;
+      await waitForExpectation(() => {
+        editButton = container.querySelector<HTMLButtonElement>('button[aria-label="Editar perfil de La Ruta"]');
+        expect(editButton).not.toBeNull();
+      });
+
+      await act(async () => {
+        editButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain(
+          'No se pudo cargar el catálogo de géneros. Intenta nuevamente antes de guardar.',
+        );
+        const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+        expect(dialog).not.toBeNull();
+        const saveButton = dialog
+          ? getButtonsByText(dialog, 'Guardar')[0] as HTMLButtonElement | undefined
+          : undefined;
+        expect(saveButton).toBeDefined();
+        expect(saveButton?.disabled).toBe(true);
+      });
+      expect(upsertArtistProfileMock).not.toHaveBeenCalled();
     } finally {
       await cleanup();
     }

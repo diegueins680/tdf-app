@@ -132,6 +132,7 @@ export interface EmptyStateProps {
   icon?: ReactNode;
   title: string;
   description?: string;
+  testId?: string;
   actionLabel?: string;
   actionHref?: string;
   actionOnClick?: () => void;
@@ -142,6 +143,7 @@ export function EmptyState({
   icon,
   title,
   description,
+  testId,
   actionLabel,
   actionHref,
   actionOnClick,
@@ -165,6 +167,7 @@ export function EmptyState({
 
   return (
     <Box
+      data-testid={testId}
       sx={{
         display: 'flex',
         flexDirection: 'column',
@@ -211,15 +214,38 @@ export function EmptyState({
 /* ------------------------------------------------------------------ */
 // SkeletonCards — placeholder for loading dashboards/lists
 
-export function SkeletonCards({ count = 3 }: { count?: number }) {
+export function SkeletonCards({
+  count = 3,
+  label = 'Cargando contenido…',
+}: {
+  count?: number;
+  label?: string;
+}) {
   return (
     <Stack
       spacing={3}
       role="status"
       aria-busy="true"
       aria-live="polite"
-      aria-label="Cargando contenido…"
+      aria-label={label}
     >
+      <Box
+        component="span"
+        aria-hidden="true"
+        sx={{
+          position: 'absolute',
+          width: 1,
+          height: 1,
+          p: 0,
+          m: -1,
+          overflow: 'hidden',
+          clip: 'rect(0 0 0 0)',
+          whiteSpace: 'nowrap',
+          border: 0,
+        }}
+      >
+        {label}
+      </Box>
       {Array.from({ length: count }).map((_, i) => (
         <Skeleton
           key={i}

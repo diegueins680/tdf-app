@@ -25,7 +25,8 @@ import {
   Error as InvalidIcon,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
-import { DDEX, getStatusColor } from '../../api/ddex';
+import { DDEX } from '../../api/ddex';
+import { useLocalePreferences } from '../../contexts/LocalePreferencesContext';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -42,6 +43,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
 const DdexDocumentPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { locale } = useLocalePreferences();
   const [tabValue, setTabValue] = React.useState(0);
 
   const documentId = parseInt(id || '0', 10);
@@ -52,10 +54,11 @@ const DdexDocumentPage: React.FC = () => {
     enabled: documentId > 0,
   });
 
-  const { data: validationReport } = useQuery({
+  const { data: validationReport, error: validationError } = useQuery({
     queryKey: ['ddex-validation', documentId],
     queryFn: () => DDEX.getValidationReport(documentId),
     enabled: documentId > 0,
+    retry: false,
   });
 
   if (docLoading) {
@@ -92,10 +95,7 @@ const DdexDocumentPage: React.FC = () => {
           </Button>
           <Typography variant="h4">{document.ddexDocumentFileName}</Typography>
           <Chip
-            label={document.ddexDocumentStatus}
-            color={getStatusColor(document.ddexDocumentStatus)}
-            variant="outlined"
-            sx={getStatusColor(document.ddexDocumentStatus) === 'warning' ? { color: '#7a4100', borderColor: '#9a5200' } : undefined}
+            label={document.ddexDocumentWorkflowStateNameEs}
           />
         </Stack>
       </Stack>
@@ -140,14 +140,14 @@ const DdexDocumentPage: React.FC = () => {
                   <ListItem component="div">
                     <ListItemText
                       primary="Family"
-                      secondary={document.ddexDocumentFamily}
+                      secondary={document.ddexDocumentStandardCode}
                     />
                   </ListItem>
                   <Divider />
                   <ListItem component="div">
                     <ListItemText
                       primary="Version"
-                      secondary={document.ddexDocumentVersion}
+                      secondary={document.ddexDocumentVersionCode}
                     />
                   </ListItem>
                   <Divider />
@@ -202,7 +202,11 @@ const DdexDocumentPage: React.FC = () => {
       <TabPanel value={tabValue} index={1}>
         <Card>
           <CardContent>
-            <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+            {validationError ? (
+              <Alert severity="info">
+                No existe todavía un reporte de validación publicado para este documento.
+              </Alert>
+            ) : validationReport ? <><Stack direction="row" spacing={2} alignItems="center" mb={2}>
               {validationReport?.reportIsValid ? (
                 <>
                   <ValidIcon color="success" />
@@ -228,13 +232,18 @@ const DdexDocumentPage: React.FC = () => {
                       primary={
                         <Stack direction="row" spacing={1} alignItems="center">
                           <Chip
-                            label={issue.issueSeverity}
+                            label={locale.startsWith('en')
+                              ? issue.issueSeverityNameEn
+                              : issue.issueSeverityNameEs}
                             size="small"
-                            color={issue.issueSeverity === 'Error' ? 'error' : 'warning'}
-                            variant="outlined"
-                            sx={issue.issueSeverity === 'Error' ? undefined : { color: '#7a4100', borderColor: '#9a5200' }}
                           />
-                          <Chip label={issue.issueLayer} size="small" variant="outlined" />
+                          <Chip
+                            label={locale.startsWith('en')
+                              ? issue.issueLayerNameEn
+                              : issue.issueLayerNameEs}
+                            size="small"
+                            variant="outlined"
+                          />
                           <Typography>{issue.issueMessage}</Typography>
                         </Stack>
                       }
@@ -252,10 +261,29 @@ const DdexDocumentPage: React.FC = () => {
                 No validation issues found
               </Typography>
             )}
+            </> : null}
           </CardContent>
         </Card>
       </TabPanel>
 
+      <TabPanel value={tabValue} index={2}>
+        <Alert severity="info">
+          La vista previa tipada de importación aún no está disponible en esta revisión.
+        </Alert>
+      </TabPanel>
+
+      <TabPanel value={tabValue} index={3}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Document History
+            </Typography>
+            <Typography color="text.secondary">
+              History tracking not yet implemented
+            </Typography>
+          </CardContent>
+        </Card>
+      </TabPanel>
     </Box>
   );
 };

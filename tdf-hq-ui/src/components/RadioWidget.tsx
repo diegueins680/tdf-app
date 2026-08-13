@@ -49,7 +49,7 @@ import PushPinIcon from '@mui/icons-material/PushPin';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Countries } from '../api/countries';
+import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { toLocalDateInputValue } from '../utils/dateOnly';
 import { shouldHideRadioForRoute } from '../utils/radioRouteVisibility';
 import {
@@ -82,11 +82,13 @@ interface Station {
   streamUrl: string;
   region?: string;
   stationId?: string;
+  countryId?: string;
   country?: string;
+  genreId?: string;
   genre?: string;
   mood: string;
   prompts: Prompt[];
-  source?: 'curated' | 'custom' | 'db' | 'shared' | 'torrent';
+  source?: 'custom' | 'db' | 'shared' | 'torrent';
   torrentFile?: File;
 }
 
@@ -97,62 +99,13 @@ const RADIO_STATION_ROWS_PER_PAGE_OPTIONS = [
   RADIO_STATION_INITIAL_ROWS_PER_PAGE * 4,
 ] as const satisfies readonly number[];
 
-const CURATED_STATIONS: Station[] = [
-  {
-    id: 'cosmic-cycles',
-    name: 'Cosmic Cycles',
-    mood: 'Downtempo / Ambient',
-    streamUrl: 'https://icecast.radiofrance.fr/fip-midfi.mp3', // reliable FIP stream
-    country: 'FR',
-    genre: 'Downtempo / Ambient',
-    source: 'curated',
-    prompts: [
-      { text: 'Paisajes sonoros nocturnos con sintes lentos', author: 'Agente', createdAt: '2025-12-01' },
-      { text: 'Texturas granulares inspiradas en lluvia urbana', createdAt: '2025-12-02' },
-    ],
-  },
-  {
-    id: 'kexp',
-    name: 'KEXP Seattle',
-    region: 'US / Alt',
-    mood: 'Indie / Live Sessions',
-    streamUrl: 'https://kexp-mp3-128.streamguys1.com/kexp128.mp3',
-    country: 'US',
-    genre: 'Indie / Live Sessions',
-    source: 'curated',
-    prompts: [],
-  },
-  {
-    id: 'wnyc',
-    name: 'WNYC FM',
-    region: 'US / News',
-    mood: 'News / Talk',
-    streamUrl: 'https://fm939.wnyc.org/wnycfm-web',
-    country: 'US',
-    genre: 'News / Talk',
-    source: 'curated',
-    prompts: [],
-  },
-];
-
-const RADIO_COUNTRIES = [
-  'AR',
-  'BR',
-  'CA',
-  'CL',
-  'CO',
-  'CR',
-  'DE',
-  'EC',
-  'ES',
-  'FR',
-  'MX',
-  'PE',
-  'PT',
-  'UK',
-  'US',
-  'VE',
-];
+const EMPTY_STATION: Station = {
+  id: 'radio-empty',
+  name: 'Sin emisoras disponibles',
+  mood: 'Radio',
+  streamUrl: '',
+  prompts: [],
+};
 
 function PromptList({ prompts }: { prompts: Prompt[] }) {
   if (prompts.length === 0) {
@@ -232,10 +185,10 @@ export default function RadioWidget() {
   const miniContainerRef = useRef<HTMLDivElement | null>(null);
 
   const [customStations, setCustomStations] = useState<Station[]>([]);
-  const [newStationCountry, setNewStationCountry] = useState('');
-  const [newStationGenre, setNewStationGenre] = useState('');
-  const [searchCountry, setSearchCountry] = useState('');
-  const [searchGenre, setSearchGenre] = useState('');
+  const [newStationCountryId, setNewStationCountryId] = useState('');
+  const [newStationGenreId, setNewStationGenreId] = useState('');
+  const [searchCountryId, setSearchCountryId] = useState('');
+  const [searchGenreId, setSearchGenreId] = useState('');
   const [favoriteKeys, setFavoriteKeys] = useState<string[]>([]);
   const [hiddenKeys, setHiddenKeys] = useState<string[]>([]);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -248,8 +201,8 @@ export default function RadioWidget() {
   });
   const [importing, setImporting] = useState(false);
   const [editName, setEditName] = useState('');
-  const [editCountry, setEditCountry] = useState('');
-  const [editGenre, setEditGenre] = useState('');
+  const [editCountryId, setEditCountryId] = useState('');
+  const [editGenreId, setEditGenreId] = useState('');
   const [lastUpdatedTs, setLastUpdatedTs] = useState<number | null>(null);
   const [autoSkipOnError, setAutoSkipOnError] = useState(false);
   // Start minimized by default; respect previous user choice if stored.
@@ -278,7 +231,7 @@ export default function RadioWidget() {
   const [broadcastInfo, setBroadcastInfo] = useState<RadioTransmissionInfo | null>(null);
   const [broadcastLoading, setBroadcastLoading] = useState(false);
   const [broadcastError, setBroadcastError] = useState<string | null>(null);
-  const [broadcastForm, setBroadcastForm] = useState({ name: '', genre: '', country: '' });
+  const [broadcastForm, setBroadcastForm] = useState({ name: '', genreId: '', countryId: '' });
   const [inputLevel, setInputLevel] = useState(0);
   const meterRafRef = useRef<number | null>(null);
   const meterContextRef = useRef<AudioContext | null>(null);
@@ -291,13 +244,7 @@ export default function RadioWidget() {
   const [customPreviewError, setCustomPreviewError] = useState<string | null>(null);
   const [liveStartedAt, setLiveStartedAt] = useState<number | null>(null);
   const [liveElapsedMs, setLiveElapsedMs] = useState(0);
-  const [autoStopMinutes, setAutoStopMinutes] = useState(120);
-  const autoStopOptions = [0, 30, 60, 90, 120, 180] as const;
-  const parseAutoStopMinutes = (raw: string): number => {
-    const parsed = Number(raw);
-    if (!Number.isSafeInteger(parsed)) return 120;
-    return autoStopOptions.some((opt) => opt === parsed) ? parsed : 120;
-  };
+  const [autoStopOptionId, setAutoStopOptionId] = useState('');
   const [audioInputs, setAudioInputs] = useState<MediaDeviceInfo[]>([]);
   const [selectedAudioInput, setSelectedAudioInput] = useState<string>(() => {
     if (typeof window === 'undefined') return '';
@@ -352,26 +299,15 @@ export default function RadioWidget() {
       // ignore
     }
   }, [panelSize]);
-  const defaultStation = useMemo<Station>(
-    () =>
-      CURATED_STATIONS[0] ?? {
-        id: 'fallback',
-        name: 'Radio',
-        mood: 'Live',
-        streamUrl: '',
-        prompts: [],
-      },
-    [],
-  );
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const torrentSessionRef = useRef<TorrentAudioSession | null>(null);
   const torrentAbortRef = useRef<AbortController | null>(null);
   const torrentLoadRequestRef = useRef(0);
   const [expanded, setExpanded] = useState(false);
   const [activeId, setActiveId] = useState<string>(() => {
-    if (typeof window === 'undefined') return defaultStation.id;
+    if (typeof window === 'undefined') return EMPTY_STATION.id;
     const stored = window.localStorage.getItem('radio-active-id');
-    return stored ?? defaultStation.id;
+    return stored ?? EMPTY_STATION.id;
   });
   const [isPlaying, setIsPlaying] = useState(false);
   const isPlayingRef = useRef(false);
@@ -390,23 +326,55 @@ export default function RadioWidget() {
   const [torrentProgress, setTorrentProgress] = useState<TorrentPlaybackProgress | null>(null);
   const [promptDraft, setPromptDraft] = useState('');
   const promptInputRef = useRef<HTMLInputElement | null>(null);
-  const [promptState, setPromptState] = useState<Record<string, Prompt[]>>(() =>
-    Object.fromEntries(CURATED_STATIONS.map((s) => [s.id, [...s.prompts]])),
-  );
+  const [promptState, setPromptState] = useState<Record<string, Prompt[]>>({});
   useEffect(() => {
     isPlayingRef.current = isPlaying;
   }, [isPlaying]);
   const keyFor = useCallback((station: Station) => station.streamUrl.toLowerCase(), []);
-  const countryQuery = searchCountry.trim();
-  const genreQuery = searchGenre.trim();
+  const countryIdQuery = searchCountryId.trim();
+  const genreIdQuery = searchGenreId.trim();
   const countriesQuery = useQuery({
-    queryKey: ['countries'],
-    queryFn: Countries.list,
-    staleTime: 12 * 60 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
+    queryKey: ['catalog', 'countries', 'es', 'radio'],
+    queryFn: () => Catalogs.listItems('countries', { locale: 'es', page: 1, pageSize: 500 }),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     retry: false,
     enabled: radioEnabled,
   });
+  const genresQuery = useQuery({
+    queryKey: ['catalog', 'genres', 'es', 'radio'],
+    queryFn: () => Catalogs.listItems('genres', { locale: 'es', page: 1, pageSize: 500 }),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    retry: false,
+    enabled: radioEnabled,
+  });
+  const autoStopOptionsQuery = useQuery({
+    queryKey: ['radio-auto-stop-options', 'es'],
+    queryFn: () => RadioAPI.listAutoStopOptions('es'),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    retry: false,
+    enabled: radioEnabled,
+  });
+  const autoStopOptions = useMemo(
+    () => autoStopOptionsQuery.data?.options ?? [],
+    [autoStopOptionsQuery.data?.options],
+  );
+  const selectedAutoStopOption = useMemo(
+    () => autoStopOptions.find((option) => option.id === autoStopOptionId) ?? null,
+    [autoStopOptionId, autoStopOptions],
+  );
+  const autoStopMinutes = selectedAutoStopOption?.durationMinutes ?? 0;
+  useEffect(() => {
+    if (autoStopOptions.length === 0) {
+      setAutoStopOptionId('');
+      return;
+    }
+    if (autoStopOptions.some((option) => option.id === autoStopOptionId)) return;
+    const persistedDefault = autoStopOptions.find((option) => option.defaultForBroadcast);
+    setAutoStopOptionId(persistedDefault?.id ?? '');
+  }, [autoStopOptionId, autoStopOptions]);
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -519,8 +487,8 @@ export default function RadioWidget() {
   }, [mediaDevicesSupported, refreshAudioInputs]);
 
   const radioSearch = useQuery<RadioStreamDTO[], Error>({
-    queryKey: ['radio-streams', countryQuery.toLowerCase(), genreQuery.toLowerCase()],
-    queryFn: () => RadioAPI.search({ country: countryQuery, genre: genreQuery }),
+    queryKey: ['radio-streams', countryIdQuery, genreIdQuery],
+    queryFn: () => RadioAPI.search({ countryId: countryIdQuery, genreId: genreIdQuery }),
     staleTime: 60_000,
     gcTime: 5 * 60_000,
     retry: false,
@@ -588,7 +556,9 @@ export default function RadioWidget() {
       id: `db-${dto.rsId}`,
       name: dto.rsName ?? 'Radio',
       streamUrl: dto.rsStreamUrl,
+      countryId: dto.rsCountryId ?? undefined,
       country: dto.rsCountry ?? undefined,
+      genreId: dto.rsGenreId ?? undefined,
       genre: dto.rsGenre ?? undefined,
       mood: dto.rsGenre ?? 'Live',
       prompts: [],
@@ -596,7 +566,7 @@ export default function RadioWidget() {
     }));
   }, [radioSearch.data]);
   const allStations = useMemo<Station[]>(() => {
-    const merged = [...CURATED_STATIONS, ...dbStations, ...customStations];
+    const merged = [...dbStations, ...customStations];
     const map = new Map<string, Station>();
     merged.forEach((station) => {
       const key = station.streamUrl.toLowerCase();
@@ -609,6 +579,12 @@ export default function RadioWidget() {
     });
     return Array.from(map.values());
   }, [customStations, dbStations]);
+  const defaultStation = allStations[0] ?? EMPTY_STATION;
+  useEffect(() => {
+    if (allStations.length > 0 && !allStations.some((station) => station.id === activeId)) {
+      setActiveId(allStations[0]!.id);
+    }
+  }, [activeId, allStations]);
   const availableStations = allStations;
   const visibleStations = useMemo(
     () =>
@@ -642,25 +618,31 @@ export default function RadioWidget() {
     isMagnetLink(activeStation.streamUrl) ? activeStation.streamUrl : null
   );
   const isActiveTorrent = activeTorrentSource !== null;
-  const countryOptions = useMemo(() => {
-    const fromApi = countriesQuery.data?.map((c) => c.countryName || c.countryCode).filter(Boolean) ?? [];
-    const trimmed = fromApi.map((c) => c.trim()).filter((c) => c.length > 0);
-    if (trimmed.length > 0) return trimmed;
-    return RADIO_COUNTRIES;
-  }, [countriesQuery.data]);
-  const genreOptions = useMemo(() => {
-    const opts = new Set<string>();
-    allStations.forEach((s) => {
-      if (s.genre) opts.add(s.genre);
-      else if (s.mood) opts.add(s.mood);
-    });
-    return Array.from(opts).slice(0, 16);
-  }, [allStations]);
+  const countryOptions = useMemo<CatalogItem[]>(
+    () => (countriesQuery.data?.items ?? [])
+      .filter((country) => country.active)
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, 'es')),
+    [countriesQuery.data?.items],
+  );
+  const countryLabels = useMemo(
+    () => new Map(countryOptions.map((country) => [country.id, country.name])),
+    [countryOptions],
+  );
+  const genreOptions = useMemo<CatalogItem[]>(
+    () => (genresQuery.data?.items ?? [])
+      .filter((genre) => genre.active && genre.workflowState === 'published')
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, 'es')),
+    [genresQuery.data?.items],
+  );
+  const genreLabels = useMemo(
+    () => new Map(genreOptions.map((genre) => [genre.id, genre.name])),
+    [genreOptions],
+  );
   const stationPrompts = promptState[activeStation.id] ?? activeStation.prompts;
   useEffect(() => {
     setEditName(activeStation.name);
-    setEditCountry(activeStation.country ?? '');
-    setEditGenre(activeStation.genre ?? activeStation.mood ?? '');
+    setEditCountryId(activeStation.countryId ?? '');
+    setEditGenreId(activeStation.genreId ?? '');
   }, [activeStation]);
   useEffect(() => {
     setRecentStations((prev) => {
@@ -1242,8 +1224,8 @@ export default function RadioWidget() {
     return trimmed === '' ? undefined : trimmed;
   }, []);
   const clearFilters = useCallback(() => {
-    setSearchCountry('');
-    setSearchGenre('');
+    setSearchCountryId('');
+    setSearchGenreId('');
     void refetchStreams();
   }, [refetchStreams]);
   const handleImportClick = useCallback(() => {
@@ -1271,8 +1253,8 @@ export default function RadioWidget() {
     try {
       const resp = await RadioAPI.createTransmission({
         name: broadcastForm.name || undefined,
-        genre: broadcastForm.genre || undefined,
-        country: broadcastForm.country || undefined,
+        genreId: broadcastForm.genreId || undefined,
+        countryId: broadcastForm.countryId || undefined,
       });
       setBroadcastInfo(resp);
       setApiError(null);
@@ -1285,7 +1267,7 @@ export default function RadioWidget() {
     } finally {
       setBroadcastLoading(false);
     }
-  }, [broadcastForm.country, broadcastForm.genre, broadcastForm.name]);
+  }, [broadcastForm.countryId, broadcastForm.genreId, broadcastForm.name]);
 
   const handleCreateBroadcast = useCallback(() => {
     void createBroadcast().catch(() => undefined);
@@ -1482,6 +1464,10 @@ export default function RadioWidget() {
       stopBrowserBroadcast();
       return;
     }
+    if (!selectedAutoStopOption) {
+      setBrowserBroadcastError('No se pudo validar la política de auto-stop publicada. Recarga el catálogo antes de transmitir.');
+      return;
+    }
     stopInputTest();
     setBrowserBroadcastError(null);
     setBrowserBroadcastState('starting');
@@ -1552,6 +1538,7 @@ export default function RadioWidget() {
     stopBrowserBroadcast,
     stopInputTest,
     liveStartedAt,
+    selectedAutoStopOption,
     waitForIceGathering,
   ]);
 
@@ -1601,13 +1588,15 @@ export default function RadioWidget() {
     return `${m}:${s}`;
   }, [autoStopMinutes, browserBroadcastState, liveElapsedMs, liveStartedAt]);
   const persistActiveStream = useCallback(
-    async (url: string, name?: string, country?: string, genre?: string) => {
+    async (url: string, name?: string, countryId?: string, genreId?: string) => {
       try {
         const payload = {
           rsuStreamUrl: url,
           rsuName: normalizeField(name),
-          rsuCountry: normalizeField(country),
-          rsuGenre: normalizeField(genre),
+          rsuCountryId: normalizeField(countryId),
+          rsuClearCountry: !normalizeField(countryId),
+          rsuGenreId: normalizeField(genreId),
+          rsuClearGenre: !normalizeField(genreId),
         };
         const saved = await RadioAPI.upsertActive(payload);
         void refetchStreams();
@@ -1631,13 +1620,17 @@ export default function RadioWidget() {
       return;
     }
     const id = `${torrentSource ? 'torrent' : 'custom'}-${Math.random().toString(36).slice(2, 8)}`;
-    const country = normalizeField(newStationCountry);
-    const genre = normalizeField(newStationGenre);
+    const countryId = normalizeField(newStationCountryId);
+    const country = countryId ? countryLabels.get(countryId) : undefined;
+    const genreId = normalizeField(newStationGenreId);
+    const genre = genreId ? genreLabels.get(genreId) : undefined;
     const station: Station = {
       id,
       name,
       streamUrl: url,
+      countryId,
       country,
+      genreId,
       genre,
       mood: genre ?? (torrentSource ? 'Torrent P2P' : 'Custom'),
       prompts: [],
@@ -1649,8 +1642,8 @@ export default function RadioWidget() {
     setPlaybackWarning(null);
     setNewStationName('');
     setNewStationUrl('');
-    setNewStationCountry('');
-    setNewStationGenre('');
+    setNewStationCountryId('');
+    setNewStationGenreId('');
     if (torrentSource) {
       setIsPlaying(true);
       setTestResult('Magnet agregado. Buscando peers WebRTC…');
@@ -1668,14 +1661,18 @@ export default function RadioWidget() {
     }
 
     const id = `torrent-file-${Math.random().toString(36).slice(2, 8)}`;
-    const country = normalizeField(newStationCountry);
-    const genre = normalizeField(newStationGenre);
+    const countryId = normalizeField(newStationCountryId);
+    const country = countryId ? countryLabels.get(countryId) : undefined;
+    const genreId = normalizeField(newStationGenreId);
+    const genre = genreId ? genreLabels.get(genreId) : undefined;
     const station: Station = {
       id,
       name: newStationName.trim() || file.name.replace(/\.torrent$/i, '') || 'Torrent',
       streamUrl: `torrent-file:${id}`,
       torrentFile: file,
+      countryId,
       country,
+      genreId,
       genre,
       mood: genre ?? 'Torrent P2P',
       prompts: [],
@@ -1719,7 +1716,7 @@ export default function RadioWidget() {
     try {
       const res = await fetch(url, { method: 'HEAD', signal: controller.signal });
       if (res.ok) {
-        const saved = await persistActiveStream(url, newStationName, newStationCountry, newStationGenre);
+        const saved = await persistActiveStream(url, newStationName, newStationCountryId, newStationGenreId);
         setTestResult(saved ? 'Stream disponible ✅ · guardado en catálogo' : 'Stream disponible ✅');
       } else {
         setTestResult('No pudimos validar el stream. Verifica la URL.');
@@ -2449,23 +2446,31 @@ export default function RadioWidget() {
                     </Typography>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="center">
                       <TextField
+                        select
                         size="small"
                         label="País"
-                        value={searchCountry}
-                        onChange={(e) => setSearchCountry(e.target.value)}
-                        placeholder="DE, US, MX..."
+                        value={searchCountryId}
+                        onChange={(e) => setSearchCountryId(e.target.value)}
                         fullWidth
-                        inputProps={{ list: 'radio-country-options' }}
-                      />
+                      >
+                        <MenuItem value="">Todos los países</MenuItem>
+                        {countryOptions.map((country) => (
+                          <MenuItem key={country.id} value={country.id}>{country.name}</MenuItem>
+                        ))}
+                      </TextField>
                       <TextField
+                        select
                         size="small"
                         label="Género"
-                        value={searchGenre}
-                        onChange={(e) => setSearchGenre(e.target.value)}
-                        placeholder="Ambient, Dembow, Jazz..."
+                        value={searchGenreId}
+                        onChange={(e) => setSearchGenreId(e.target.value)}
                         fullWidth
-                        inputProps={{ list: 'radio-genre-options' }}
-                      />
+                      >
+                        <MenuItem value="">Todos los géneros</MenuItem>
+                        {genreOptions.map((genre) => (
+                          <MenuItem key={genre.id} value={genre.id}>{genre.name}</MenuItem>
+                        ))}
+                      </TextField>
                       <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: { sm: 220 } }}>
                         <Button
                           variant="contained"
@@ -2478,7 +2483,7 @@ export default function RadioWidget() {
                         >
                           {streamsFetching ? 'Buscando...' : 'Buscar'}
                         </Button>
-                        {(countryQuery || genreQuery) && (
+                        {(countryIdQuery || genreIdQuery) && (
                           <Button variant="text" size="small" onClick={clearFilters} data-no-drag>
                             Limpiar
                           </Button>
@@ -2574,7 +2579,10 @@ export default function RadioWidget() {
                                     void startBrowserBroadcast();
                                   }}
                                   disabled={
-                                    !mediaDevicesSupported || browserBroadcastState === 'starting' || broadcastLoading
+                                    !mediaDevicesSupported ||
+                                    browserBroadcastState === 'starting' ||
+                                    broadcastLoading ||
+                                    !selectedAutoStopOption
                                   }
                                   startIcon={<FiberManualRecordIcon color="error" fontSize="small" />}
                                 >
@@ -2616,14 +2624,19 @@ export default function RadioWidget() {
                                 select
                                 label="Auto-stop"
                                 size="small"
-                                value={autoStopMinutes}
-                                onChange={(e) => setAutoStopMinutes(parseAutoStopMinutes(e.target.value))}
+                                value={autoStopOptionId}
+                                onChange={(e) => setAutoStopOptionId(e.target.value)}
                                 sx={{ minWidth: 140 }}
+                                disabled={autoStopOptionsQuery.isPending || autoStopOptionsQuery.isError}
+                                helperText={
+                                  autoStopOptionsQuery.isError
+                                    ? 'No se pudo cargar la política publicada.'
+                                    : undefined
+                                }
                               >
-                                <MenuItem value={0}>Sin límite</MenuItem>
-                                {autoStopOptions.filter((mins) => mins > 0).map((mins) => (
-                                  <MenuItem key={mins} value={mins}>
-                                    {mins} min
+                                {autoStopOptions.map((option) => (
+                                  <MenuItem key={option.id} value={option.id}>
+                                    {option.label}
                                   </MenuItem>
                                 ))}
                               </TextField>
@@ -2676,19 +2689,31 @@ export default function RadioWidget() {
                               size="small"
                             />
                             <TextField
+                              select
                               label="Género"
-                              value={broadcastForm.genre}
-                              onChange={(e) => setBroadcastForm((p) => ({ ...p, genre: e.target.value }))}
+                              value={broadcastForm.genreId}
+                              onChange={(e) => setBroadcastForm((p) => ({ ...p, genreId: e.target.value }))}
                               fullWidth
                               size="small"
-                            />
+                            >
+                              <MenuItem value="">Sin género</MenuItem>
+                              {genreOptions.map((genre) => (
+                                <MenuItem key={genre.id} value={genre.id}>{genre.name}</MenuItem>
+                              ))}
+                            </TextField>
                             <TextField
+                              select
                               label="País"
-                              value={broadcastForm.country}
-                              onChange={(e) => setBroadcastForm((p) => ({ ...p, country: e.target.value }))}
+                              value={broadcastForm.countryId}
+                              onChange={(e) => setBroadcastForm((p) => ({ ...p, countryId: e.target.value }))}
                               fullWidth
                               size="small"
-                            />
+                            >
+                              <MenuItem value="">Sin país</MenuItem>
+                              {countryOptions.map((country) => (
+                                <MenuItem key={country.id} value={country.id}>{country.name}</MenuItem>
+                              ))}
+                            </TextField>
                           </Stack>
                           {broadcastError && <Typography color="error">{broadcastError}</Typography>}
                           <Button
@@ -2832,38 +2857,34 @@ export default function RadioWidget() {
                           Sugerencias rápidas:
                         </Typography>
                         {countryOptions.length > 0 && (
-                          <>
-                            <datalist id="radio-country-options">
-                              {countryOptions.map((c) => (
-                                <option key={`country-opt-${c}`} value={c} />
-                              ))}
-                            </datalist>
-                            <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
-                              <Typography variant="caption" color="text.secondary">
-                                País:
-                              </Typography>
-                              {countryOptions.map((c) => (
-                                <Chip key={`country-${c}`} size="small" label={c} onClick={() => setSearchCountry(c)} />
-                              ))}
-                            </Stack>
-                          </>
+                          <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
+                            <Typography variant="caption" color="text.secondary">
+                              País:
+                            </Typography>
+                            {countryOptions.slice(0, 16).map((country) => (
+                              <Chip
+                                key={`country-${country.id}`}
+                                size="small"
+                                label={country.name}
+                                onClick={() => setSearchCountryId(country.id)}
+                              />
+                            ))}
+                          </Stack>
                         )}
                         {genreOptions.length > 0 && (
-                          <>
-                            <datalist id="radio-genre-options">
-                              {genreOptions.map((g) => (
-                                <option key={`genre-opt-${g}`} value={g} />
-                              ))}
-                            </datalist>
-                            <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
-                              <Typography variant="caption" color="text.secondary">
-                                Género:
-                              </Typography>
-                              {genreOptions.map((g) => (
-                                <Chip key={`genre-${g}`} size="small" label={g} onClick={() => setSearchGenre(g)} />
-                              ))}
-                            </Stack>
-                          </>
+                          <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
+                            <Typography variant="caption" color="text.secondary">
+                              Género:
+                            </Typography>
+                            {genreOptions.slice(0, 16).map((genre) => (
+                              <Chip
+                                key={`genre-${genre.id}`}
+                                size="small"
+                                label={genre.name}
+                                onClick={() => setSearchGenreId(genre.id)}
+                              />
+                            ))}
+                          </Stack>
                         )}
                       </Stack>
                     )}
@@ -2891,9 +2912,9 @@ export default function RadioWidget() {
                       <Typography variant="caption" color="text.secondary">
                         {streamsFetching
                           ? 'Buscando estaciones...'
-                          : `Catálogo: ${sortedVisibleStations.length} coincidencias${countryQuery || genreQuery ? ' (filtrado)' : ''}`}
+                          : `Catálogo: ${sortedVisibleStations.length} coincidencias${countryIdQuery || genreIdQuery ? ' (filtrado)' : ''}`}
                       </Typography>
-                      {(countryQuery || genreQuery) && sortedVisibleStations.length === 0 ? (
+                      {(countryIdQuery || genreIdQuery) && sortedVisibleStations.length === 0 ? (
                         <Typography variant="caption" color="text.secondary">
                           Sin resultados con estos filtros.
                         </Typography>
@@ -2919,7 +2940,7 @@ export default function RadioWidget() {
                         itemLabel: 'estaciones',
                         initialRowsPerPage: RADIO_STATION_INITIAL_ROWS_PER_PAGE,
                         rowsPerPageOptions: RADIO_STATION_ROWS_PER_PAGE_OPTIONS,
-                        resetKey: [countryQuery, genreQuery, showHidden, showFavoritesOnly].join('|'),
+                        resetKey: [countryIdQuery, genreIdQuery, showHidden, showFavoritesOnly].join('|'),
                       }}
                       renderItems={(visibleStationsPage) => (
                         <Stack direction="row" spacing={1} flexWrap="wrap">
@@ -3013,25 +3034,35 @@ export default function RadioWidget() {
                       fullWidth
                     />
                     <TextField
+                      select
                       size="small"
                       label="País"
-                      value={editCountry}
-                      onChange={(e) => setEditCountry(e.target.value)}
+                      value={editCountryId}
+                      onChange={(e) => setEditCountryId(e.target.value)}
                       fullWidth
-                      inputProps={{ list: 'radio-country-options' }}
-                    />
+                    >
+                      <MenuItem value="">Sin país</MenuItem>
+                      {countryOptions.map((country) => (
+                        <MenuItem key={country.id} value={country.id}>{country.name}</MenuItem>
+                      ))}
+                    </TextField>
                     <TextField
+                      select
                       size="small"
                       label="Género"
-                      value={editGenre}
-                      onChange={(e) => setEditGenre(e.target.value)}
+                      value={editGenreId}
+                      onChange={(e) => setEditGenreId(e.target.value)}
                       fullWidth
-                      inputProps={{ list: 'radio-genre-options' }}
-                    />
+                    >
+                      <MenuItem value="">Sin género</MenuItem>
+                      {genreOptions.map((genre) => (
+                        <MenuItem key={genre.id} value={genre.id}>{genre.name}</MenuItem>
+                      ))}
+                    </TextField>
                     <Button
                       variant="outlined"
                       onClick={() => {
-                        void persistActiveStream(activeStation.streamUrl, editName, editCountry, editGenre);
+                        void persistActiveStream(activeStation.streamUrl, editName, editCountryId, editGenreId);
                       }}
                       disabled={isActiveTorrent}
                       data-no-drag
@@ -3056,21 +3087,31 @@ export default function RadioWidget() {
                       fullWidth
                     />
                     <TextField
+                      select
                       size="small"
                       label="País"
-                      value={newStationCountry}
-                      onChange={(e) => setNewStationCountry(e.target.value)}
-                      placeholder="Alemania, México, UK..."
+                      value={newStationCountryId}
+                      onChange={(e) => setNewStationCountryId(e.target.value)}
                       fullWidth
-                    />
+                    >
+                      <MenuItem value="">Sin país</MenuItem>
+                      {countryOptions.map((country) => (
+                        <MenuItem key={country.id} value={country.id}>{country.name}</MenuItem>
+                      ))}
+                    </TextField>
                     <TextField
+                      select
                       size="small"
                       label="Género"
-                      value={newStationGenre}
-                      onChange={(e) => setNewStationGenre(e.target.value)}
-                      placeholder="Afro, Ambient, Indie..."
+                      value={newStationGenreId}
+                      onChange={(e) => setNewStationGenreId(e.target.value)}
                       fullWidth
-                    />
+                    >
+                      <MenuItem value="">Sin género</MenuItem>
+                      {genreOptions.map((genre) => (
+                        <MenuItem key={genre.id} value={genre.id}>{genre.name}</MenuItem>
+                      ))}
+                    </TextField>
                     <Stack direction={{ xs: 'row', sm: 'column' }} spacing={1} sx={{ minWidth: { sm: 160 } }}>
                       <Button
                         variant="outlined"

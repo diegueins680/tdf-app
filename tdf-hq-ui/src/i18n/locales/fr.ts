@@ -44,7 +44,7 @@ const fr = {
   preferences: {
     title: 'Langue et région', subtitle: "Choisissez l'affichage de la langue, de la monnaie, des dates et des heures.",
     language: 'Langue', currency: 'Devise', timezone: 'Fuseau horaire', country: 'Code pays',
-    countryHint: 'Code ISO facultatif à deux lettres, par exemple FR ou CA.',
+    countryHint: 'Sélectionnez un pays du catalogue officiel ou laissez ce champ vide.',
   },
   system: { title: 'État du système', subtitle: 'Version, état et métadonnées du backend.', application: 'Application', version: 'Version', status: 'État', built: 'Compilé', codebase: 'Code source' },
 } as const;

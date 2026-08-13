@@ -19,11 +19,11 @@ import Data.Either (isLeft, isRight)
 import Data.Int (Int64)
 import Data.List (isInfixOf, nub)
 import qualified Data.Map.Strict as Map
-import Data.Maybe (isNothing)
-import qualified Data.Set as Set
+import Data.Maybe (fromMaybe, isNothing)
 import Data.Text (Text)
 import qualified Data.Text
 import qualified Data.Text.Encoding as TE
+import qualified Data.UUID as UUID
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Data.Word (Word8)
@@ -46,6 +46,7 @@ import Web.PathPieces (toPathPiece)
 
 import TDF.API (CmsContentIn (..), WhatsAppConsentRequest (..), WhatsAppOptOutRequest (..))
 import TDF.API.Feedback (FeedbackPayload (..))
+import TDF.API.DDEX (DdexExportRequest, DdexPartnerCreateRequest)
 import TDF.API.Admin (AdminEmailBroadcastRequest)
 import qualified TDF.API.Calendar as CalAPI
 import qualified TDF.Calendar.Models as Cal
@@ -99,6 +100,10 @@ import TDF.CampaignAutomation
       validateCampaignAutomationDailyLimit,
       validateCampaignAutomationStatus )
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
+import qualified TDF.Catalog.CountryReferenceSeed as CountrySeed
+import qualified TDF.Catalog.RecordsSpec as CatalogRecordsSpec
+import qualified TDF.Catalog.SecuritySpec as CatalogSecuritySpec
+import qualified TDF.Catalog.PipelineSpec as CatalogPipelineSpec
 import TDF.Email (resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
@@ -166,6 +171,8 @@ import TDF.ServerRadio
       validateRadioImportLimit,
       validateRadioImportSources,
       validateRadioMetadataRefreshLimit,
+      validateRadioCountryMutation,
+      validateRadioGenreMutation,
       validateRadioOptionalMetadataField,
       validateRadioSearchFilter,
       validateRadioStreamUrl,
@@ -233,7 +240,6 @@ import TDF.ServerProposals
 import TDF.ServerFeedback
     ( normalizeOptionalFeedbackText,
       sanitizeFeedbackAttachmentFileName,
-      validateFeedbackCategory,
       validateFeedbackDescription,
       validateFeedbackAttachmentSize,
       validateFeedbackAttachmentContentType,
@@ -241,7 +247,6 @@ import TDF.ServerFeedback
       validateFeedbackAttachmentMetadata,
       validateFeedbackTitle,
       validateFeedbackConsent,
-      validateFeedbackSeverity,
       validateOptionalFeedbackContactEmail )
 import TDF.ServerInstagramOAuth
     ( FacebookAccessToken (..),
@@ -342,8 +347,6 @@ import TDF.Server.SocialSync
       validateSocialSyncMediaUrls )
 import TDF.Server.SocialEventsHandlers (
     normalizeBudgetLineType,
-    normalizeEventStatus,
-    normalizeEventType,
     normalizeFinanceDirection,
     normalizeFinanceEntryStatus,
     normalizeFinanceSource,
@@ -354,7 +357,6 @@ import TDF.Server.SocialEventsHandlers (
     normalizeMomentCaption,
     normalizeMomentCommentBody,
     normalizeMomentMediaType,
-    normalizeMomentReaction,
     normalizeLiveBroadcastTitle,
     normalizeLiveBroadcastDescription,
     normalizeLiveBroadcastQuality,
@@ -363,8 +365,6 @@ import TDF.Server.SocialEventsHandlers (
     validateMomentMediaDuration,
     validateStoredBudgetLineDimensions,
     validateStoredFinanceEntryDimensions,
-    parseEventStatusQueryParamEither,
-    parseEventTypeQueryParamEither,
     parseFollowerQueryParamEither,
     parseVenueIdEither,
     parseCheckoutSessionCourseSubscription,
@@ -422,7 +422,6 @@ import TDF.Server.SocialEventsHandlers (
     validatePromoCodeRedemptionLimit,
     validatePromoCodeTierEligibility,
     validateEventCurrencyInput,
-    validateEventCreateTypeStatus,
     validateEventMetadataUpdate,
     validateBudgetLineTypeInput,
  )
@@ -623,9 +622,13 @@ initializeTicketCheckInSchema = do
         \title VARCHAR NOT NULL,\
         \description VARCHAR NULL,\
         \venue_id INTEGER NULL,\
+        \event_type_id VARCHAR NULL,\
+        \workflow_state_id VARCHAR NULL,\
+        \timezone VARCHAR NULL,\
         \start_time TIMESTAMP NOT NULL,\
         \end_time TIMESTAMP NOT NULL,\
         \price_cents INTEGER NULL,\
+        \currency_id VARCHAR NULL,\
         \capacity INTEGER NULL,\
         \metadata VARCHAR NULL,\
         \created_at TIMESTAMP NOT NULL,\
@@ -641,6 +644,7 @@ initializeTicketCheckInSchema = do
         \description VARCHAR NULL,\
         \price_cents INTEGER NOT NULL,\
         \currency VARCHAR NOT NULL,\
+        \currency_id VARCHAR NULL,\
         \quantity_total INTEGER NOT NULL,\
         \quantity_sold INTEGER NOT NULL,\
         \sales_start TIMESTAMP NULL,\
@@ -724,83 +728,47 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
-    describe "central feature registry authorization" $ do
-        let modulesFor roleValues = map moduleName (Set.toList (modulesForRoles roleValues))
-            registryUser roleValues = AuthedUser
-                { auPartyId = toSqlKey 1
-                , auRoles = roleValues
-                , auModules = modulesForRoles roleValues
-                }
+    describe "DDEX canonical write JSON contracts" $ do
+        it "accepts export writes with only a canonical standard-version id" $ do
+            let payload = "{\"exportReleaseId\":42,\"exportPartnerId\":7,\"exportStandardVersionId\":\"40000000-0000-4000-8000-000000000001\"}"
+            isRight (eitherDecode payload :: Either String DdexExportRequest) `shouldBe` True
 
-        it "loads every embedded feature with a unique stable id" $ do
-            let featureIds = map registryFeatureId allRegistryFeatures
-            length featureIds `shouldBe` length (nub featureIds)
-            length featureIds `shouldSatisfy` (>= 99)
+        it "rejects legacy DDEX export version strings and unknown profile fields" $ do
+            let payload = "{\"exportReleaseId\":42,\"exportPartnerId\":7,\"exportStandardVersionId\":\"40000000-0000-4000-8000-000000000001\",\"ernVersion\":\"4.3.2\",\"exportProfile\":\"legacy\"}"
+            isLeft (eitherDecode payload :: Either String DdexExportRequest) `shouldBe` True
 
-        it "keeps DDEX viewing separate from DDEX importing" $ do
-            case findRegistryFeature "label.ddex.inbox" of
-                Nothing -> expectationFailure "Missing DDEX inbox feature"
-                Just feature -> do
-                    registryFeatureAllows [ReadOnly] (modulesFor [ReadOnly]) feature "view" `shouldBe` True
-                    registryFeatureAllows [ReadOnly] (modulesFor [ReadOnly]) feature "import" `shouldBe` False
-                    registryFeatureAllows [Admin, Customer, Fan] (modulesFor [Admin, Customer, Fan]) feature "import"
-                        `shouldBe` True
+        it "accepts partner policies expressed as canonical standard-version ids" $ do
+            let payload = "{\"partnerName\":\"DSP\",\"partnerDpid\":null,\"partnerAllowedStandardVersionIds\":[\"40000000-0000-4000-8000-000000000001\"]}"
+            isRight (eitherDecode payload :: Either String DdexPartnerCreateRequest) `shouldBe` True
 
-        it "does not inherit view access for an undeclared action" $ do
-            case findRegistryFeature "label.ddex.document" of
-                Nothing -> expectationFailure "Missing DDEX document feature"
-                Just feature ->
-                    registryFeatureAllows [Admin, Customer, Fan] (modulesFor [Admin, Customer, Fan]) feature "publish"
-                        `shouldBe` False
+        it "rejects legacy partner allowedVersions arrays" $ do
+            let payload = "{\"partnerName\":\"DSP\",\"partnerDpid\":null,\"partnerAllowedStandardVersionIds\":[\"40000000-0000-4000-8000-000000000001\"],\"allowedVersions\":[\"4.3.2\"]}"
+            isLeft (eitherDecode payload :: Either String DdexPartnerCreateRequest) `shouldBe` True
+    describe "governed country reference snapshot" $ do
+        it "contains one complete, bilingual identity for every ISO alpha-2 code" $ do
+            let seeds = CountrySeed.countryReferenceSeeds
+                alpha2 = map CountrySeed.countrySeedAlpha2 seeds
+                alpha3 = map CountrySeed.countrySeedAlpha3 seeds
+                numericCodes = map CountrySeed.countrySeedNumericCode seeds
+            length seeds `shouldBe` 249
+            length (nub alpha2) `shouldBe` 249
+            length (nub alpha3) `shouldBe` 249
+            length (nub numericCodes) `shouldBe` 249
+            all (not . Data.Text.null . CountrySeed.countrySeedNameEs) seeds `shouldBe` True
+            all (not . Data.Text.null . CountrySeed.countrySeedNameEn) seeds `shouldBe` True
 
-        it "rejects known DDEX endpoint actions even when a read-only user knows the URL" $ do
-            let readOnlyUser = registryUser [ReadOnly]
-            DDEXServer.validateDdexAccess "label.ddex.document" "view" readOnlyUser `shouldSatisfy` isRight
-            case DDEXServer.validateDdexAccess "label.ddex.import" "import" readOnlyUser of
-                Left serverError -> errHTTPCode serverError `shouldBe` 403
-                Right () -> expectationFailure "ReadOnly unexpectedly obtained DDEX import access"
-            case DDEXServer.validateDdexAccess "label.ddex.partners" "view" readOnlyUser of
-                Left serverError -> errHTTPCode serverError `shouldBe` 403
-                Right () -> expectationFailure "ReadOnly unexpectedly obtained DDEX partner administration"
-
-        it "never accepts technical or incomplete capabilities for access requests" $ do
-            case findRegistryFeature "technical.auth-login" of
-                Nothing -> expectationFailure "Missing technical login feature"
-                Just technical -> registryFeatureRequestable technical "view" `shouldBe` False
-
-        it "requires reviewers to already possess the exact requested action" $ do
-            case findRegistryFeature "label.ddex.inbox" of
-                Nothing -> expectationFailure "Missing DDEX inbox feature"
-                Just feature -> do
-                    registryReviewerCanDecide (registryUser [Manager]) feature "import" `shouldBe` True
-                    registryReviewerCanDecide (registryUser [StudioManager]) feature "import" `shouldBe` True
-                    registryReviewerCanDecide (registryUser [Fan]) feature "import" `shouldBe` False
-
-        it "rejects venue writes when a user knows the endpoint but lacks the action" $ do
-            let readOnlyUser = registryUser [ReadOnly, Customer, Fan]
-                producerUser = registryUser [Producer, Customer, Fan]
-            case validateSocialEventsFeatureAction "social.venue.create" "create" readOnlyUser of
-                Left serverError -> errHTTPCode serverError `shouldBe` 403
-                Right () -> expectationFailure "ReadOnly unexpectedly obtained venue creation access"
-            validateSocialEventsFeatureAction "social.venue.create" "create" producerUser
-                `shouldSatisfy` isRight
-
-        it "enforces artist profile and follower record ownership" $ do
-            let artistUser = registryUser [Artist, Customer, Fan]
-                strictAdmin = registryUser [Admin, Customer, Fan]
-                anotherParty = "2"
-            validateArtistProfileCreateParty artistUser (Just "1") `shouldBe` Right "1"
-            case validateArtistProfileCreateParty artistUser (Just "2") of
-                Left serverError -> errHTTPCode serverError `shouldBe` 403
-                Right _ -> expectationFailure "Artist unexpectedly created a profile for another party"
-            validateArtistProfileCreateParty strictAdmin (Just "2") `shouldBe` Right "2"
-            validateArtistProfileWriteAccess artistUser (Just "1") `shouldSatisfy` isRight
-            case validateArtistProfileWriteAccess artistUser (Just "2") of
-                Left serverError -> errHTTPCode serverError `shouldBe` 403
-                Right () -> expectationFailure "Artist unexpectedly edited another profile"
-            case validateAuthenticatedPartyReference artistUser anotherParty of
-                Left serverError -> errHTTPCode serverError `shouldBe` 403
-                Right () -> expectationFailure "Artist unexpectedly changed another follower identity"
+        it "retains reviewed UN/ISO provenance and the ISO-only TW identity" $ do
+            CountrySeed.countryReferenceSnapshotDate `shouldBe` "2026-08-11"
+            "UN M49" `Data.Text.isInfixOf` CountrySeed.countryReferenceSourceVersion `shouldBe` True
+            let taiwan =
+                    [ ( CountrySeed.countrySeedAlpha3 seed
+                      , CountrySeed.countrySeedNumericCode seed
+                      , CountrySeed.countrySeedNameEs seed
+                      )
+                    | seed <- CountrySeed.countryReferenceSeeds
+                    , CountrySeed.countrySeedAlpha2 seed == "TW"
+                    ]
+            taiwan `shouldBe` [("TWN", "158", "Taiwán")]
 
     describe "internationalization primitives" $ do
         it "validates ISO 4217 currency codes and currency precision" $ do
@@ -817,7 +785,8 @@ main = hspec $ do
 
         it "normalizes supported locales, countries, and IANA timezone identifiers" $ do
             normalizeLocaleCode "pt-BR" `shouldBe` Just "pt"
-            normalizeLocaleCode "ar" `shouldBe` Nothing
+            normalizeLocaleCode "ar" `shouldBe` Just "ar"
+            normalizeLocaleCode "english" `shouldBe` Nothing
             normalizeCountryCode " br " `shouldBe` Just "BR"
             normalizeCountryCode "BRA" `shouldBe` Nothing
             normalizeCountryCode "ZZ" `shouldBe` Nothing
@@ -1725,15 +1694,20 @@ main = hspec $ do
                     failsWith "pcPeriod must be in YYYY-MM format"
 
     describe "locale preference JSON contracts" $ do
-        it "accepts public API field names for preference updates" $
+        it "accepts only canonical locale, currency, and country UUIDs for preference updates" $
             case eitherDecode @DTO.LocalePreferencesUpdate
-                "{\"locale\":\"de\",\"currency\":\"EUR\",\"timezone\":\"Europe/Berlin\",\"countryCode\":\"DE\"}" of
+                "{\"localeId\":\"11111111-1111-4111-8111-111111111111\",\"currencyId\":\"33333333-3333-4333-8333-333333333333\",\"timezone\":\"Europe/Berlin\",\"countryId\":\"22222222-2222-4222-8222-222222222222\"}" of
                 Left err -> expectationFailure err
                 Right update -> do
-                    DTO.lpuLocale update `shouldBe` "de"
-                    DTO.lpuCurrency update `shouldBe` "EUR"
+                    Just (DTO.lpuLocaleId update) `shouldBe` UUID.fromString "11111111-1111-4111-8111-111111111111"
+                    Just (DTO.lpuCurrencyId update) `shouldBe` UUID.fromString "33333333-3333-4333-8333-333333333333"
                     DTO.lpuTimezone update `shouldBe` "Europe/Berlin"
-                    DTO.lpuCountryCode update `shouldBe` Just "DE"
+                    DTO.lpuCountryId update `shouldBe` UUID.fromString "22222222-2222-4222-8222-222222222222"
+
+        it "rejects legacy copied locale, currency, and country preference writes" $
+            eitherDecode @DTO.LocalePreferencesUpdate
+                "{\"locale\":\"de\",\"currency\":\"EUR\",\"timezone\":\"Europe/Berlin\",\"countryCode\":\"DE\"}"
+                `shouldSatisfy` isLeft
 
         it "decodes currency conversion audit records in minor units" $
             case eitherDecode @DTO.CurrencyConversionAuditCreate
@@ -6716,13 +6690,13 @@ main = hspec $ do
 
     describe "CMS content request JSON" $ do
         it "defaults omitted status only when clients omit it instead of sending null" $ do
-            case eitherDecode "{\"slug\":\"records-sessions\",\"locale\":\"es\",\"payload\":{}}" of
+            case eitherDecode "{\"contentId\":\"20000000-0000-4000-8000-000000000001\",\"locale\":\"es\",\"payload\":{}}" of
                 Left err ->
                     expectationFailure ("Expected CMS content payload to decode, got: " <> err)
                 Right payload ->
                     cciStatus payload `shouldBe` Nothing
 
-            case ( eitherDecode "{\"slug\":\"records-sessions\",\"locale\":\"es\",\"status\":null}"
+            case ( eitherDecode "{\"contentId\":\"20000000-0000-4000-8000-000000000001\",\"locale\":\"es\",\"status\":null}"
                     :: Either String CmsContentIn
                  ) of
                 Left err ->
@@ -6860,49 +6834,6 @@ main = hspec $ do
         it "drops explicit blank feedback metadata values instead of storing ambiguous empty strings" $ do
             normalizeOptionalFeedbackText Nothing `shouldBe` Nothing
             normalizeOptionalFeedbackText (Just "   ") `shouldBe` Nothing
-
-    describe "validateFeedbackCategory" $ do
-        it "normalizes supported categories before storage and notifications" $ do
-            validateFeedbackCategory Nothing `shouldBe` Right Nothing
-            validateFeedbackCategory (Just "   ") `shouldBe` Right Nothing
-            validateFeedbackCategory (Just "  BUG  ") `shouldBe` Right (Just "bug")
-            validateFeedbackCategory (Just " Ux ") `shouldBe` Right (Just "ux")
-
-        it "rejects unsupported or malformed feedback categories explicitly" $ do
-            let assertInvalid raw expectedMessage =
-                    case validateFeedbackCategory (Just raw) of
-                        Left err -> do
-                            errHTTPCode err `shouldBe` 400
-                            BL.unpack (errBody err) `shouldContain` expectedMessage
-                        Right value ->
-                            expectationFailure
-                                ("Expected invalid feedback category, got " <> show value)
-            assertInvalid "billing" "category must be one of: bug, idea, ux, datos"
-            assertInvalid (Data.Text.replicate 81 "x") "category must be 80 characters or fewer"
-            assertInvalid "bug\nidea" "category must not contain control characters"
-            assertInvalid
-                ("bug" <> "\x200B")
-                "category must not contain control characters or hidden formatting characters"
-
-    describe "validateFeedbackSeverity" $ do
-        it "normalizes supported priorities before storage and notifications" $ do
-            validateFeedbackSeverity Nothing `shouldBe` Right Nothing
-            validateFeedbackSeverity (Just "   ") `shouldBe` Right Nothing
-            validateFeedbackSeverity (Just " p1 ") `shouldBe` Right (Just "P1")
-            validateFeedbackSeverity (Just "P4") `shouldBe` Right (Just "P4")
-
-        it "rejects unsupported or malformed feedback priorities explicitly" $ do
-            let assertInvalid raw expectedMessage =
-                    case validateFeedbackSeverity (Just raw) of
-                        Left err -> do
-                            errHTTPCode err `shouldBe` 400
-                            BL.unpack (errBody err) `shouldContain` expectedMessage
-                        Right value ->
-                            expectationFailure
-                                ("Expected invalid feedback severity, got " <> show value)
-            assertInvalid "high" "severity must be one of: P1, P2, P3, P4"
-            assertInvalid (Data.Text.replicate 81 "x") "severity must be 80 characters or fewer"
-            assertInvalid "P1\nBcc: ops@example.com" "severity must not contain control characters"
 
     describe "validateFeedbackTitle" $ do
         it "trims valid feedback titles before storage and notification" $
@@ -7922,6 +7853,8 @@ main = hspec $ do
             case fromMultipart (mkFeedbackMultipart
                     [ ("title", "  Broken flow  ")
                     , ("description", "  Steps to reproduce  ")
+                    , ("categoryId", "11111111-1111-1111-1111-111111111111")
+                    , ("severityId", "22222222-2222-2222-2222-222222222222")
                     ]) :: Either String FeedbackPayload of
                 Left err ->
                     expectationFailure ("Expected feedback payload without consent to parse, got: " <> err)
@@ -7933,6 +7866,8 @@ main = hspec $ do
             case fromMultipart (mkFeedbackMultipart
                     [ ("title", "Broken flow")
                     , ("description", "Steps to reproduce")
+                    , ("categoryId", "11111111-1111-1111-1111-111111111111")
+                    , ("severityId", "22222222-2222-2222-2222-222222222222")
                     , ("consent", " yes ")
                     ]) :: Either String FeedbackPayload of
                 Left err ->
@@ -7940,20 +7875,36 @@ main = hspec $ do
                 Right payload ->
                     fpConsent payload `shouldBe` True
 
-        it "trims optional scalar fields and drops blank ones at the multipart boundary" $
+        it "requires and trims canonical catalog IDs while normalizing optional contact data" $
             case fromMultipart (mkFeedbackMultipart
                     [ ("title", "Broken flow")
                     , ("description", "Steps to reproduce")
-                    , ("category", " bug ")
-                    , ("severity", "   ")
+                    , ("categoryId", " 11111111-1111-1111-1111-111111111111 ")
+                    , ("severityId", " 22222222-2222-2222-2222-222222222222 ")
                     , ("contactEmail", " user@example.com ")
                     ]) :: Either String FeedbackPayload of
                 Left err ->
                     expectationFailure ("Expected optional feedback fields to parse, got: " <> err)
                 Right payload -> do
-                    fpCategory payload `shouldBe` Just "bug"
-                    fpSeverity payload `shouldBe` Nothing
+                    fpCategoryId payload `shouldBe` "11111111-1111-1111-1111-111111111111"
+                    fpSeverityId payload `shouldBe` "22222222-2222-2222-2222-222222222222"
                     fpContactEmail payload `shouldBe` Just "user@example.com"
+
+        it "rejects missing canonical IDs and obsolete string relationship fields" $ do
+            case fromMultipart (mkFeedbackMultipart
+                    [ ("title", "Broken flow")
+                    , ("description", "Steps to reproduce")
+                    ]) :: Either String FeedbackPayload of
+                Left err -> err `shouldContain` "Missing field: categoryId"
+                Right payload -> expectationFailure ("Expected missing IDs to be rejected, got: " <> show payload)
+            case fromMultipart (mkFeedbackMultipart
+                    [ ("title", "Broken flow")
+                    , ("description", "Steps to reproduce")
+                    , ("category", "bug")
+                    , ("severity", "P2")
+                    ]) :: Either String FeedbackPayload of
+                Left err -> err `shouldContain` "Unexpected field: category"
+                Right payload -> expectationFailure ("Expected legacy feedback fields to be rejected, got: " <> show payload)
 
         it "rejects malformed consent values instead of silently coercing them to false" $
             case fromMultipart (mkFeedbackMultipart
@@ -7992,6 +7943,8 @@ main = hspec $ do
             case fromMultipart (mkFeedbackMultipartWithFiles
                     [ ("title", "Broken flow")
                     , ("description", "Steps to reproduce")
+                    , ("categoryId", "11111111-1111-1111-1111-111111111111")
+                    , ("severityId", "22222222-2222-2222-2222-222222222222")
                     ]
                     [ mkFeedbackAttachment "first.png"
                     , mkFeedbackAttachment "second.png"
@@ -8884,12 +8837,12 @@ main = hspec $ do
                     emCreateMediaWidth parsed `shouldBe` Just 1080
 
             case eitherDecode
-                "{\"emrrReaction\":\"fire\"}"
+                "{\"emrrReactionTypeId\":\"50800000-0000-4000-8000-000000000001\"}"
                 :: Either String EventMomentReactionRequestDTO of
                 Left err ->
                     expectationFailure ("Expected canonical moment reaction payload to decode, got " <> err)
                 Right parsed ->
-                    emrrReaction parsed `shouldBe` "fire"
+                    emrrReactionTypeId parsed `shouldBe` "50800000-0000-4000-8000-000000000001"
 
             case eitherDecode
                 "{\"emccAuthorName\":\"Ada\",\"emccBody\":\"Set impecable\"}"
@@ -8909,12 +8862,20 @@ main = hspec $ do
                     expectationFailure ("Expected unexpected moment create key to be rejected, got " <> show parsed)
 
             case eitherDecode
-                "{\"emrrReaction\":\"fire\",\"reaction\":\"love\"}"
+                "{\"emrrReactionTypeId\":\"50800000-0000-4000-8000-000000000001\",\"reaction\":\"love\"}"
                 :: Either String EventMomentReactionRequestDTO of
                 Left err ->
                     err `shouldContain` "unknown fields"
                 Right parsed ->
                     expectationFailure ("Expected unexpected moment reaction key to be rejected, got " <> show parsed)
+
+            case eitherDecode
+                "{\"emrrReactionTypeId\":\"fire\"}"
+                :: Either String EventMomentReactionRequestDTO of
+                Left err ->
+                    err `shouldContain` "canonical UUID"
+                Right parsed ->
+                    expectationFailure ("Expected reaction labels to be rejected, got " <> show parsed)
 
             case eitherDecode
                 "{\"emccBody\":\"Set impecable\",\"comment\":\"typo\"}"
@@ -8923,6 +8884,49 @@ main = hspec $ do
                     err `shouldContain` "unknown fields"
                 Right parsed ->
                     expectationFailure ("Expected unexpected moment comment key to be rejected, got " <> show parsed)
+
+    describe "fan club content reaction request parsing" $ do
+        it "accepts only the canonical content-reaction UUID field" $ do
+            case eitherDecode
+                "{\"crrReactionTypeId\":\"50900000-0000-4000-8000-000000000004\"}"
+                :: Either String DTO.ContentReactionReq of
+                Left err ->
+                    expectationFailure ("Expected canonical content reaction payload to decode, got " <> err)
+                Right parsed ->
+                    DTO.crrReactionTypeId parsed
+                        `shouldBe` UUID.fromWords 0x50900000 0x00004000 0x80000000 0x00000004
+
+            case eitherDecode
+                "{\"crrReactionTypeId\":\"50900000-0000-4000-8000-000000000001\",\"crrReaction\":\"fire\"}"
+                :: Either String DTO.ContentReactionReq of
+                Left err -> err `shouldContain` "unknown fields"
+                Right parsed ->
+                    expectationFailure ("Expected obsolete content reaction strings to be rejected, got " <> show parsed)
+
+            (eitherDecode "{\"crrReactionTypeId\":\"fire\"}"
+                :: Either String DTO.ContentReactionReq)
+                `shouldSatisfy` isLeft
+
+    describe "fan club creator badge response contract" $ do
+        it "serializes canonical UUID identity and bilingual presentation instead of a badge string" $ do
+            let badgeId = fromMaybe UUID.nil (UUID.fromText "50a00000-0000-4000-8000-000000000003")
+                awardedAt = posixSecondsToUTCTime 0
+                payload = A.toJSON DTO.CreatorBadgeDTO
+                    { DTO.cbBadgeTypeId = badgeId
+                    , DTO.cbCode = "og"
+                    , DTO.cbNameEs = "Miembro fundador"
+                    , DTO.cbNameEn = "Founding member"
+                    , DTO.cbAwardedAt = awardedAt
+                    , DTO.cbExpiresAt = Nothing
+                    }
+            payload `shouldBe` A.object
+                [ "cbBadgeTypeId" .= badgeId
+                , "cbCode" .= ("og" :: Text)
+                , "cbNameEs" .= ("Miembro fundador" :: Text)
+                , "cbNameEn" .= ("Founding member" :: Text)
+                , "cbAwardedAt" .= awardedAt
+                , "cbExpiresAt" .= (Nothing :: Maybe UTCTime)
+                ]
 
     describe "inventory asset image upload multipart parsing" $ do
         it "rejects Unicode space lookalikes before storage filename fallbacks sanitize them" $ do
@@ -9269,27 +9273,17 @@ main = hspec $ do
                 { emuTicketUrl = FieldMissing
                 , emuImageUrl = FieldMissing
                 , emuIsPublic = FieldMissing
-                , emuType = FieldMissing
-                , emuStatus = FieldMissing
                 , emuCurrency = FieldMissing
                 , emuBudgetCents = FieldMissing
                 }
 
-        it "normalizes supported event type/status updates and keeps blank values as explicit clears" $ do
+        it "normalizes supported currency updates" $ do
             validateEventMetadataUpdate
                 baseUpdate
-                    { emuType = FieldValue " FESTIVAL "
-                    , emuStatus = FieldValue " canceled "
-                    , emuCurrency = FieldValue " usd "
-                    }
+                    { emuCurrency = FieldValue " usd " }
                 `shouldBe` Right
                     baseUpdate
-                        { emuType = FieldValue "festival"
-                        , emuStatus = FieldValue "cancelled"
-                        , emuCurrency = FieldValue "USD"
-                        }
-            validateEventMetadataUpdate baseUpdate { emuType = FieldValue "   " }
-                `shouldBe` Right baseUpdate { emuType = FieldNull }
+                        { emuCurrency = FieldValue "USD" }
             validateEventMetadataUpdate baseUpdate { emuCurrency = FieldValue "   " }
                 `shouldBe` Right baseUpdate { emuCurrency = FieldNull }
 
@@ -9302,38 +9296,8 @@ main = hspec $ do
                         Right value ->
                             expectationFailure ("Expected invalid event metadata update to be rejected, got " <> show value)
             assertInvalid
-                baseUpdate { emuType = FieldValue "warehouse" }
-                "eventType must be one of: party, concert, festival, conference, showcase, other"
-            assertInvalid
-                baseUpdate { emuStatus = FieldValue "sold_out" }
-                "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
-            assertInvalid
                 baseUpdate { emuCurrency = FieldValue "usdollars" }
                 "eventCurrency must be a 3-letter ISO code"
-
-    describe "validateEventCreateTypeStatus" $ do
-        it "defaults omitted or blank create values and normalizes supported explicit values" $ do
-            validateEventCreateTypeStatus Nothing Nothing
-                `shouldBe` Right ("party", "planning")
-            validateEventCreateTypeStatus (Just "   ") (Just " canceled ")
-                `shouldBe` Right ("party", "cancelled")
-            validateEventCreateTypeStatus (Just " FESTIVAL ") Nothing
-                `shouldBe` Right ("festival", "planning")
-
-        it "rejects invalid explicit create values instead of silently falling back" $ do
-            let assertInvalid result expected =
-                    case result of
-                        Left err -> do
-                            errHTTPCode err `shouldBe` 400
-                            BL.unpack (errBody err) `shouldContain` expected
-                        Right value ->
-                            expectationFailure ("Expected invalid event create metadata to be rejected, got " <> show value)
-            assertInvalid
-                (validateEventCreateTypeStatus (Just "warehouse") Nothing)
-                "eventType must be one of: party, concert, festival, conference, showcase, other"
-            assertInvalid
-                (validateEventCreateTypeStatus Nothing (Just "sold_out"))
-                "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
 
     describe "validateEventCurrencyInput" $ do
         it "uses the configured default for omitted values and normalizes explicit ISO codes" $ do
@@ -9453,11 +9417,15 @@ main = hspec $ do
             isImageUpload "image/svg+xml" "poster.svg" `shouldBe` False
 
     describe "ArtistDTO JSON contract" $
-        it "rejects explicit null defaults before artist payload fallbacks" $ do
-            (eitherDecode @ArtistDTO "{\"artistName\":null,\"artistGenres\":[]}")
+        it "requires canonical genre ids and rejects legacy label writes" $ do
+            (eitherDecode @ArtistDTO "{\"artistName\":null,\"artistGenreIds\":[]}")
                 `shouldSatisfy` isLeft
-            (eitherDecode @ArtistDTO "{\"artistName\":\"Los Mentores\",\"artistGenres\":null}")
+            (eitherDecode @ArtistDTO "{\"artistName\":\"Los Mentores\",\"artistGenreIds\":null}")
                 `shouldSatisfy` isLeft
+            (eitherDecode @ArtistDTO "{\"artistName\":\"Los Mentores\",\"artistGenres\":[\"Rock\"]}")
+                `shouldSatisfy` isLeft
+            (eitherDecode @ArtistDTO "{\"artistName\":\"Los Mentores\",\"artistGenreIds\":[\"11111111-1111-4111-8111-111111111111\"]}")
+                `shouldSatisfy` isRight
 
     describe "validateArtistName" $ do
         it "trims canonical artist names before persistence" $
@@ -9482,6 +9450,7 @@ main = hspec $ do
                     , artistPartyId = Nothing
                     , artistName = ""
                     , artistGenres = []
+                    , artistGenreIds = []
                     , artistBio = Nothing
                     , artistAvatarUrl = Nothing
                     , artistSocialLinks = Nothing
@@ -9557,9 +9526,6 @@ main = hspec $ do
             normalizeMomentMediaType " PHOTO " `shouldBe` Just "image"
             normalizeMomentMediaType "clip" `shouldBe` Just "video"
             normalizeMomentMediaType "audio" `shouldBe` Nothing
-            normalizeMomentReaction "heart" `shouldBe` Just "love"
-            normalizeMomentReaction "CLAP" `shouldBe` Just "applause"
-            normalizeMomentReaction "wow" `shouldBe` Nothing
 
         it "accepts blank captions as missing and rejects oversize captions" $ do
             normalizeMomentCaption (Just "   ") `shouldBe` Right Nothing
@@ -9829,21 +9795,21 @@ main = hspec $ do
 
     describe "ticket purchase event eligibility" $ do
         it "allows only public events in buyer-facing sale states" $ do
-            case validateTicketPurchaseEventEligibility (Just "{\"isPublic\":true,\"eventStatus\":\"on_sale\"}") of
+            case validateTicketPurchaseEventEligibility (Just "{\"isPublic\":true}") True of
                 Right () -> pure ()
                 Left err -> expectationFailure ("Expected on-sale public event: " <> show err)
-            case validateTicketPurchaseEventEligibility (Just "{\"isPublic\":false,\"eventStatus\":\"on_sale\"}") of
+            case validateTicketPurchaseEventEligibility (Just "{\"isPublic\":false}") True of
                 Left err -> errHTTPCode err `shouldBe` 403
                 Right () -> expectationFailure "Expected private event purchase to be rejected"
-            case validateTicketPurchaseEventEligibility (Just "{\"isPublic\":true,\"eventStatus\":\"completed\"}") of
+            case validateTicketPurchaseEventEligibility (Just "{\"isPublic\":true}") False of
                 Left err -> errHTTPCode err `shouldBe` 409
                 Right () -> expectationFailure "Expected completed event purchase to be rejected"
 
-        it "treats missing sale status as planning and rejects malformed stored metadata" $ do
-            case validateTicketPurchaseEventEligibility Nothing of
+        it "rejects disabled purchase capability and malformed stored metadata" $ do
+            case validateTicketPurchaseEventEligibility Nothing False of
                 Left err -> errHTTPCode err `shouldBe` 409
-                Right () -> expectationFailure "Expected planning event purchase to be rejected"
-            case validateTicketPurchaseEventEligibility (Just "not-json") of
+                Right () -> expectationFailure "Expected disabled purchase capability to be rejected"
+            case validateTicketPurchaseEventEligibility (Just "not-json") True of
                 Left err -> errHTTPCode err `shouldBe` 500
                 Right () -> expectationFailure "Expected malformed metadata to be rejected"
 
@@ -10191,6 +10157,10 @@ main = hspec $ do
                                 , socialEventPriceCents = Nothing
                                 , socialEventCapacity = Nothing
                                 , socialEventMetadata = Nothing
+                                , socialEventEventTypeId = Nothing
+                                , socialEventWorkflowStateId = Nothing
+                                , socialEventTimezone = Nothing
+                                , socialEventCurrencyId = Nothing
                                 , socialEventCreatedAt = now
                                 , socialEventUpdatedAt = now
                                 }
@@ -10206,6 +10176,10 @@ main = hspec $ do
                                 , socialEventPriceCents = Nothing
                                 , socialEventCapacity = Nothing
                                 , socialEventMetadata = Nothing
+                                , socialEventEventTypeId = Nothing
+                                , socialEventWorkflowStateId = Nothing
+                                , socialEventTimezone = Nothing
+                                , socialEventCurrencyId = Nothing
                                 , socialEventCreatedAt = now
                                 , socialEventUpdatedAt = now
                                 }
@@ -10226,9 +10200,10 @@ main = hspec $ do
                                 , eventTicketTierPosition = Nothing
                                 , eventTicketTierEnableWaitlist = False
                                 , eventTicketTierAllowTransfers = False
-                                , eventTicketTierRefundPolicy = "none"
-                                , eventTicketTierRefundDeadline = Nothing
-                                , eventTicketTierCreatedAt = now
+                              , eventTicketTierRefundPolicy = "none"
+                              , eventTicketTierRefundDeadline = Nothing
+                              , eventTicketTierCurrencyId = Nothing
+                              , eventTicketTierCreatedAt = now
                                 , eventTicketTierUpdatedAt = now
                                 }
                     orderId <-
@@ -10757,8 +10732,36 @@ main = hspec $ do
                     (Just (Data.Text.replicate 161 "a")))
                 "rtrName must be 160 characters or fewer"
             assertInvalid
-                (validateRadioOptionalMetadataField "rtrGenre" 120 (Just "ambient\ntechno"))
-                "rtrGenre must not contain control or hidden formatting characters"
+                (validateRadioOptionalMetadataField "icy-genre" 120 (Just "ambient\ntechno"))
+                "icy-genre must not contain control or hidden formatting characters"
+
+    describe "validateRadioGenreMutation" $
+        it "distinguishes explicit relation removal from a canonical UUID replacement" $
+            case UUID.fromString "11111111-1111-4111-8111-111111111111" of
+                Nothing -> expectationFailure "Expected valid test genre UUID"
+                Just genreId -> do
+                    validateRadioGenreMutation Nothing (Just True) `shouldSatisfy` isRight
+                    validateRadioGenreMutation (Just genreId) Nothing `shouldSatisfy` isRight
+                    case validateRadioGenreMutation (Just genreId) (Just True) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain`
+                                "rsuClearGenre cannot be combined with rsuGenreId"
+                        Right () -> expectationFailure "Expected conflicting genre mutation to be rejected"
+
+    describe "validateRadioCountryMutation" $
+        it "distinguishes explicit relation removal from a canonical UUID replacement" $
+            case UUID.fromString "22222222-2222-4222-8222-222222222222" of
+                Nothing -> expectationFailure "Expected valid test country UUID"
+                Just countryId -> do
+                    validateRadioCountryMutation Nothing (Just True) `shouldSatisfy` isRight
+                    validateRadioCountryMutation (Just countryId) Nothing `shouldSatisfy` isRight
+                    case validateRadioCountryMutation (Just countryId) (Just True) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain`
+                                "rsuClearCountry cannot be combined with rsuCountryId"
+                        Right () -> expectationFailure "Expected conflicting country mutation to be rejected"
 
     describe "validateRadioFetchedMetadata" $ do
         it "normalizes fetched ICY metadata before refresh persistence" $
@@ -10960,16 +10963,27 @@ main = hspec $ do
             case eitherDecode $
                 "{\"rsuStreamUrl\":\"https://radio.example.com/live\""
                     <> ",\"rsuName\":\"TDF Live\""
-                    <> ",\"rsuCountry\":\"EC\""
-                    <> ",\"rsuGenre\":\"ambient\"}"
+                    <> ",\"rsuCountryId\":\"22222222-2222-4222-8222-222222222222\""
+                    <> ",\"rsuGenreId\":\"11111111-1111-4111-8111-111111111111\"}"
              of
                 Left err ->
                     expectationFailure ("Expected canonical radio stream upsert payload to decode, got: " <> err)
                 Right payload -> do
                     rsuStreamUrl payload `shouldBe` "https://radio.example.com/live"
                     rsuName payload `shouldBe` Just "TDF Live"
-                    rsuCountry payload `shouldBe` Just "EC"
-                    rsuGenre payload `shouldBe` Just "ambient"
+                    rsuCountryId payload `shouldBe` UUID.fromString "22222222-2222-4222-8222-222222222222"
+                    rsuClearCountry payload `shouldBe` Nothing
+                    rsuGenreId payload `shouldBe` UUID.fromString "11111111-1111-4111-8111-111111111111"
+                    rsuClearGenre payload `shouldBe` Nothing
+
+            case eitherDecode
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuClearGenre\":true}"
+             of
+                Left err ->
+                    expectationFailure ("Expected explicit radio genre clear to decode, got: " <> err)
+                Right payload -> do
+                    rsuGenreId payload `shouldBe` Nothing
+                    rsuClearGenre payload `shouldBe` Just True
 
             case eitherDecode "{\"rnpStreamUrl\":\"https://radio.example.com/live\"}" of
                 Left err ->
@@ -10977,13 +10991,13 @@ main = hspec $ do
                 Right payload ->
                     rnpStreamUrl payload `shouldBe` "https://radio.example.com/live"
 
-            case eitherDecode "{\"rtrName\":\"TDF Live\",\"rtrGenre\":\"ambient\",\"rtrCountry\":\"EC\"}" of
+            case eitherDecode "{\"rtrName\":\"TDF Live\",\"rtrGenreId\":\"11111111-1111-4111-8111-111111111111\",\"rtrCountryId\":\"22222222-2222-4222-8222-222222222222\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical radio transmission payload to decode, got: " <> err)
                 Right payload -> do
                     rtrName payload `shouldBe` Just "TDF Live"
-                    rtrGenre payload `shouldBe` Just "ambient"
-                    rtrCountry payload `shouldBe` Just "EC"
+                    rtrGenreId payload `shouldBe` UUID.fromString "11111111-1111-4111-8111-111111111111"
+                    rtrCountryId payload `shouldBe` UUID.fromString "22222222-2222-4222-8222-222222222222"
 
             case eitherDecode $
                 "{\"rpuStreamUrl\":\"https://radio.example.com/live\""
@@ -11024,6 +11038,30 @@ main = hspec $ do
 
             ( eitherDecode
                 "{\"name\":\"TDF Live\",\"genre\":\"ambient\"}"
+                    :: Either String RadioTransmissionRequest
+                )
+                `shouldSatisfy` isLeft
+
+            ( eitherDecode
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuGenre\":\"ambient\"}"
+                    :: Either String RadioStreamUpsert
+                )
+                `shouldSatisfy` isLeft
+
+            ( eitherDecode
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuCountry\":\"EC\"}"
+                    :: Either String RadioStreamUpsert
+                )
+                `shouldSatisfy` isLeft
+
+            ( eitherDecode
+                "{\"rtrName\":\"TDF Live\",\"rtrGenre\":\"ambient\"}"
+                    :: Either String RadioTransmissionRequest
+                )
+                `shouldSatisfy` isLeft
+
+            ( eitherDecode
+                "{\"rtrName\":\"TDF Live\",\"rtrCountry\":\"EC\"}"
                     :: Either String RadioTransmissionRequest
                 )
                 `shouldSatisfy` isLeft
@@ -11087,20 +11125,26 @@ main = hspec $ do
                 "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuName\":null}"
                 ("rsuName must be omitted instead of null" :: String)
             assertStreamDecodeError
-                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuCountry\":null}"
-                ("rsuCountry must be omitted instead of null" :: String)
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuCountryId\":null}"
+                ("rsuCountryId must be omitted instead of null" :: String)
             assertStreamDecodeError
-                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuGenre\":null}"
-                ("rsuGenre must be omitted instead of null" :: String)
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuClearCountry\":null}"
+                ("rsuClearCountry must be omitted instead of null" :: String)
+            assertStreamDecodeError
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuGenreId\":null}"
+                ("rsuGenreId must be omitted instead of null" :: String)
+            assertStreamDecodeError
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuClearGenre\":null}"
+                ("rsuClearGenre must be omitted instead of null" :: String)
             assertTransmissionDecodeError
                 "{\"rtrName\":null}"
                 ("rtrName must be omitted instead of null" :: String)
             assertTransmissionDecodeError
-                "{\"rtrGenre\":null}"
-                ("rtrGenre must be omitted instead of null" :: String)
+                "{\"rtrGenreId\":null}"
+                ("rtrGenreId must be omitted instead of null" :: String)
             assertTransmissionDecodeError
-                "{\"rtrCountry\":null}"
-                ("rtrCountry must be omitted instead of null" :: String)
+                "{\"rtrCountryId\":null}"
+                ("rtrCountryId must be omitted instead of null" :: String)
             assertPresenceDecodeError
                 "{\"rpuStreamUrl\":\"https://radio.example.com/live\",\"rpuStationName\":null}"
                 ("rpuStationName must be omitted instead of null" :: String)
@@ -11129,7 +11173,8 @@ main = hspec $ do
                         , rpuStationName = Nothing
                         , rpuStationId = Nothing
                         }
-                _searchStreams
+                _autoStopOptions
+                    :<|> _searchStreams
                     :<|> _upsertActive
                     :<|> _importStreams
                     :<|> _refreshMetadata
@@ -11176,7 +11221,8 @@ main = hspec $ do
                         , rpuStationName = Just "Radio\NULUno"
                         , rpuStationId = Just (Data.Text.replicate 161 "a")
                         }
-                _searchStreams
+                _autoStopOptions
+                    :<|> _searchStreams
                     :<|> _upsertActive
                     :<|> _importStreams
                     :<|> _refreshMetadata
@@ -12148,12 +12194,6 @@ main = hspec $ do
             assertForbidden (InternTaskUpdate Nothing Nothing Nothing Nothing Nothing Nothing (Just Nothing))
 
     describe "event finance normalizers" $ do
-        it "normalizes event type and status with safe fallbacks" $ do
-            normalizeEventType (Just " FESTIVAL ") `shouldBe` Just "festival"
-            normalizeEventType (Just "unknown-type") `shouldBe` Nothing
-            normalizeEventStatus (Just "canceled") `shouldBe` Just "cancelled"
-            normalizeEventStatus (Just "not-real") `shouldBe` Nothing
-
         it "rejects invalid explicit budget line types instead of silently rewriting them to expense" $ do
             validateBudgetLineTypeInput " income " `shouldBe` Right "income"
             validateBudgetLineTypeInput "EXPENSE" `shouldBe` Right "expense"
@@ -12364,25 +12404,6 @@ main = hspec $ do
 
             (eitherDecode unexpectedPayload :: Either String EventBudgetLineDTO)
                 `shouldSatisfy` isLeft
-
-    describe "event list query validation" $ do
-        it "accepts blank filters and canonicalizes supported event type and status values" $ do
-            parseEventTypeQueryParamEither Nothing `shouldBe` Right Nothing
-            parseEventTypeQueryParamEither (Just "   ") `shouldBe` Right Nothing
-            parseEventTypeQueryParamEither (Just " FESTIVAL ") `shouldBe` Right (Just "festival")
-            parseEventStatusQueryParamEither (Just " canceled ") `shouldBe` Right (Just "cancelled")
-
-        it "rejects unsupported filters instead of silently broadening the result set" $ do
-            let assertInvalid expectedMessage result = case result of
-                    Left err -> do
-                        errHTTPCode err `shouldBe` 400
-                        BL.unpack (errBody err) `shouldContain` expectedMessage
-                    Right value ->
-                        expectationFailure ("Expected invalid event list filter error, got " <> show value)
-            assertInvalid "eventType must be one of"
-                (parseEventTypeQueryParamEither (Just "meetup"))
-            assertInvalid "eventStatus must be one of"
-                (parseEventStatusQueryParamEither (Just "paused"))
 
     describe "availabilityOverlaps" $ do
         let day = fromGregorian 2025 1 1
@@ -13428,19 +13449,26 @@ main = hspec $ do
     describe "FanProfileUpdate" $ do
         it "accepts canonical fan profile update payloads and rejects typoed keys" $ do
             case eitherDecode
-                "{\"fpuDisplayName\":\"Ada\",\"fpuCity\":\"Quito\"}" :: Either String DTO.FanProfileUpdate of
+                "{\"fpuDisplayName\":\"Ada\",\"fpuCity\":\"Quito\",\"fpuFavoriteGenreIds\":[]}" :: Either String DTO.FanProfileUpdate of
                 Left err ->
                     expectationFailure ("Expected canonical fan profile update payload to decode, got: " <> err)
                 Right payload -> do
                     DTO.fpuDisplayName payload `shouldBe` Just "Ada"
                     DTO.fpuCity payload `shouldBe` Just "Quito"
                     DTO.fpuAvatarUrl payload `shouldBe` Nothing
-                    DTO.fpuFavoriteGenres payload `shouldBe` Nothing
+                    DTO.fpuFavoriteGenreIds payload `shouldBe` []
                     DTO.fpuBio payload `shouldBe` Nothing
 
             isLeft
                 ( eitherDecode
-                    "{\"fpuDisplayName\":\"Ada\",\"fpuDisplayname\":\"Quito\"}"
+                    "{\"fpuDisplayName\":\"Ada\",\"fpuFavoriteGenreIds\":[],\"fpuDisplayname\":\"Quito\"}"
+                    :: Either String DTO.FanProfileUpdate
+                )
+                `shouldBe` True
+
+            isLeft
+                ( eitherDecode
+                    "{\"fpuFavoriteGenreIds\":[],\"fpuFavoriteGenres\":\"Soul, Indie\"}"
                     :: Either String DTO.FanProfileUpdate
                 )
                 `shouldBe` True
@@ -13632,6 +13660,8 @@ main = hspec $ do
                         , partyEmergencyContact = Nothing
                         , partyNotes = Nothing
                         , partyStripeCustomerId = Nothing
+                        , partyCountryCode = Nothing
+                        , partyCountryId = Nothing
                         , partyCreatedAt = now
                         }
                 singleParty =
@@ -13678,8 +13708,7 @@ main = hspec $ do
                     { lsmPartyId = Nothing
                     , lsmName = "Keys"
                     , lsmEmail = Just "keys@example.com"
-                    , lsmInstrument = Nothing
-                    , lsmRole = Nothing
+                    , lsmInstrumentId = Nothing
                     , lsmNotes = Nothing
                     , lsmIsExisting = False
                     }
@@ -13701,8 +13730,7 @@ main = hspec $ do
                         { lsmPartyId = partyId
                         , lsmName = "Keys"
                         , lsmEmail = email
-                        , lsmInstrument = Nothing
-                        , lsmRole = Nothing
+                        , lsmInstrumentId = Nothing
                         , lsmNotes = Nothing
                         , lsmIsExisting = maybe False (const True) partyId
                         }
@@ -13966,7 +13994,7 @@ main = hspec $ do
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
                     , ("bandDescription", "  Duo session\nwith guests  ")
-                    , ("primaryGenre", "  Jazz fusion  ")
+                    , ("primaryGenreId", "  0f8fad5b-d9cb-469f-a165-70867728950e  ")
                     , ("inputList", "  Kick\nSnare  ")
                     , ("availability", "  Weekdays after 18:00  ")
                     , ("musicians", "[]")
@@ -13975,7 +14003,7 @@ main = hspec $ do
                     expectationFailure ("Expected safe optional text to parse, got: " <> err)
                 Right payload -> do
                     lsiBandDescription payload `shouldBe` Just "Duo session\nwith guests"
-                    lsiPrimaryGenre payload `shouldBe` Just "Jazz fusion"
+                    lsiPrimaryGenreId payload `shouldBe` Just "0f8fad5b-d9cb-469f-a165-70867728950e"
                     lsiInputList payload `shouldBe` Just "Kick\nSnare"
                     lsiAvailability payload `shouldBe` Just "Weekdays after 18:00"
 
@@ -13994,9 +14022,9 @@ main = hspec $ do
                                     <> show payload
                                 )
             assertInvalid
-                "primaryGenre"
-                ("Jazz" <> Data.Text.singleton '\x202E' <> "Fusion")
-                "primaryGenre must not contain control characters or hidden formatting characters"
+                "primaryGenreId"
+                ("0f8fad5b" <> Data.Text.singleton '\x202E')
+                "primaryGenreId must not contain control characters or hidden formatting characters"
             assertInvalid
                 "availability"
                 ("Weekdays" <> Data.Text.singleton '\NUL' <> "after 18:00")
@@ -14023,8 +14051,7 @@ main = hspec $ do
                             lsmPartyId musician `shouldBe` Nothing
                             lsmName musician `shouldBe` "Keys"
                             lsmEmail musician `shouldBe` Just "player@example.com"
-                            lsmInstrument musician `shouldBe` Nothing
-                            lsmRole musician `shouldBe` Nothing
+                            lsmInstrumentId musician `shouldBe` Nothing
                             lsmNotes musician `shouldBe` Nothing
                             lsmIsExisting musician `shouldBe` False
                         musicians ->
@@ -14583,7 +14610,7 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected duplicate musician partyIds to be rejected, got: " <> show payload)
 
-        it "rejects unsafe musician instrument or role text before intake persistence" $ do
+        it "rejects legacy copied musician fields and malformed canonical IDs before intake persistence" $ do
             let assertInvalid extraFields expectedMessage =
                     case fromMultipart (mkLiveSessionMultipart
                             [ ("bandName", "The House Band")
@@ -14601,11 +14628,14 @@ main = hspec $ do
                                     <> show payload
                                 )
             assertInvalid
-                "\"lsmInstrument\":\"Synth\\u202ELead\""
-                "musician instrument must not contain control characters or hidden formatting characters"
+                "\"instrument\":\"Synth Lead\""
+                "Unexpected fields in LiveSessionMusicianPayload: instrument"
             assertInvalid
-                ("\"lsmRole\":\"" <> Data.Text.replicate 161 "A" <> "\"")
-                "musician role must be 160 characters or fewer"
+                "\"role\":\"Lead\""
+                "Unexpected fields in LiveSessionMusicianPayload: role"
+            assertInvalid
+                ("\"instrumentId\":\"" <> Data.Text.replicate 37 "a" <> "\"")
+                "musician instrumentId must be 36 characters or fewer"
 
         it "rejects duplicate scalar fields instead of silently taking the first multipart value" $ do
             case fromMultipart (mkLiveSessionMultipart
@@ -14646,6 +14676,16 @@ main = hspec $ do
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
                     , ("musicians", "[]")
+                    , ("primaryGenre", "Jazz fusion")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "Unexpected field: primaryGenre"
+                Right payload ->
+                    expectationFailure ("Expected legacy primaryGenre to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[]")
                     , ("nickname", "House")
                     ]) :: Either String LiveSessionIntakePayload of
                 Left err ->
@@ -14667,7 +14707,9 @@ main = hspec $ do
     APITypesSpec.spec
     ArtistEnrichmentSpec.spec
     ArtistPromotionSpec.spec
-    OperationsModelSpec.spec
+    CatalogRecordsSpec.spec
+    CatalogSecuritySpec.spec
+    CatalogPipelineSpec.spec
     EventDiscoverySpec.spec
     ArtistSpec.spec
     ServerAuthSpec.spec
@@ -14882,6 +14924,8 @@ seedRadioPresenceParty =
         , partyEmergencyContact = Nothing
         , partyNotes = Nothing
         , partyStripeCustomerId = Nothing
+        , partyCountryCode = Nothing
+        , partyCountryId = Nothing
         , partyCreatedAt = UTCTime (fromGregorian 2026 4 15) (secondsToDiffTime 0)
         }
 
@@ -14902,6 +14946,8 @@ initializeSocialSyncSchema = do
         \\"emergency_contact\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL,\
         \\"stripe_customer_id\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
         \)"
         []
@@ -14912,6 +14958,8 @@ initializeSocialSyncSchema = do
         \\"slug\" VARCHAR NULL,\
         \\"bio\" VARCHAR NULL,\
         \\"city\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"hero_image_url\" VARCHAR NULL,\
         \\"spotify_artist_id\" VARCHAR NULL,\
         \\"spotify_url\" VARCHAR NULL,\
@@ -15069,6 +15117,8 @@ insertSocialSyncPartyFixture keyVal displayName =
                 , partyEmergencyContact = Nothing
                 , partyNotes = Nothing
                 , partyStripeCustomerId = Nothing
+                , partyCountryCode = Nothing
+                , partyCountryId = Nothing
                 , partyCreatedAt = currentSocialSyncTestTime
                 }
         pure partyId
@@ -15094,6 +15144,8 @@ insertSocialSyncArtistProfileFixture keyVal partyId =
                 , artistProfileGenres = Nothing
                 , artistProfileHighlights = Nothing
                 , artistProfileStripeAccountId = Nothing
+                , artistProfileCountryCode = Nothing
+                , artistProfileCountryId = Nothing
                 , artistProfileCreatedAt = currentSocialSyncTestTime
                 , artistProfileUpdatedAt = Nothing
                 }
@@ -15116,6 +15168,8 @@ initializeRadioPresenceSchema = do
         \\"emergency_contact\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL,\
         \\"stripe_customer_id\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
         \)"
         []

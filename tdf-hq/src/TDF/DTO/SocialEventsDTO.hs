@@ -76,6 +76,8 @@ import Data.Int (Int64)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime)
+import Data.UUID (UUID)
+import qualified Data.UUID as UUID
 import GHC.Generics (Generic)
 import Text.Read (readMaybe)
 
@@ -153,6 +155,7 @@ data ArtistDTO = ArtistDTO
     , artistPartyId :: Maybe Text
     , artistName :: Text
     , artistGenres :: [Text]
+    , artistGenreIds :: [UUID]
     , artistBio :: Maybe Text
     , artistAvatarUrl :: Maybe Text
     , artistSocialLinks :: Maybe ArtistSocialLinksDTO
@@ -169,13 +172,13 @@ instance FromJSON ArtistDTO where
             o
         rejectNullObjectFields
             [ "artistName"
-            , "artistGenres"
+            , "artistGenreIds"
             ]
             o
         artistId <- o .:? "artistId"
         artistPartyId <- o .:? "artistPartyId"
         mName <- o .:? "artistName"
-        mGenres <- o .:? "artistGenres"
+        mGenreIds <- o .:? "artistGenreIds"
         artistBio <- o .:? "artistBio"
         artistAvatarUrl <- o .:? "artistAvatarUrl"
         artistSocialLinks <- o .:? "artistSocialLinks"
@@ -186,7 +189,8 @@ instance FromJSON ArtistDTO where
                 { artistId = artistId
                 , artistPartyId = artistPartyId
                 , artistName = maybe "" id mName
-                , artistGenres = maybe [] id mGenres
+                , artistGenres = []
+                , artistGenreIds = maybe [] id mGenreIds
                 , artistBio = artistBio
                 , artistAvatarUrl = artistAvatarUrl
                 , artistSocialLinks = artistSocialLinks
@@ -199,7 +203,7 @@ artistAllowedKeys =
     [ "artistId"
     , "artistPartyId"
     , "artistName"
-    , "artistGenres"
+    , "artistGenreIds"
     , "artistBio"
     , "artistAvatarUrl"
     , "artistSocialLinks"
@@ -462,8 +466,13 @@ data EventDTO = EventDTO
     , eventTicketUrl :: Maybe Text
     , eventImageUrl :: Maybe Text
     , eventIsPublic :: Maybe Bool
-    , eventType :: Maybe Text
-    , eventStatus :: Maybe Text
+    , eventTypeId :: Maybe Text
+    , eventWorkflowStateId :: Maybe Text
+    , eventWorkflowStateCode :: Maybe Text
+    , eventWorkflowStateNameEs :: Maybe Text
+    , eventWorkflowStateNameEn :: Maybe Text
+    , eventPublicListable :: Maybe Bool
+    , eventTicketPurchaseEnabled :: Maybe Bool
     , eventCurrency :: Maybe Text
     , eventBudgetCents :: Maybe Int
     , eventSources :: Maybe [EventSourceDTO]
@@ -484,8 +493,6 @@ data EventMetadataUpdateDTO = EventMetadataUpdateDTO
     { emuTicketUrl :: NullableFieldUpdate Text
     , emuImageUrl :: NullableFieldUpdate Text
     , emuIsPublic :: NullableFieldUpdate Bool
-    , emuType :: NullableFieldUpdate Text
-    , emuStatus :: NullableFieldUpdate Text
     , emuCurrency :: NullableFieldUpdate Text
     , emuBudgetCents :: NullableFieldUpdate Int
     }
@@ -493,6 +500,7 @@ data EventMetadataUpdateDTO = EventMetadataUpdateDTO
 
 data EventUpdateDTO = EventUpdateDTO
     { eudEvent :: EventDTO
+    , eudWorkflowStateIdUpdate :: NullableFieldUpdate Text
     , eudMetadataUpdate :: EventMetadataUpdateDTO
     }
     deriving (Show, Eq, Generic)
@@ -502,12 +510,11 @@ instance FromJSON EventUpdateDTO where
         rejectUnknownObjectFields "EventUpdateDTO" eventUpdateAllowedKeys o
         EventUpdateDTO
             <$> parseJSON value
+            <*> (nullableFieldFromParsed <$> (o .:! "eventWorkflowStateId"))
             <*> ( EventMetadataUpdateDTO
                     <$> (nullableFieldFromParsed <$> (o .:! "eventTicketUrl"))
                     <*> (nullableFieldFromParsed <$> (o .:! "eventImageUrl"))
                     <*> (nullableFieldFromParsed <$> (o .:! "eventIsPublic"))
-                    <*> (nullableFieldFromParsed <$> (o .:! "eventType"))
-                    <*> (nullableFieldFromParsed <$> (o .:! "eventStatus"))
                     <*> (nullableFieldFromParsed <$> (o .:! "eventCurrency"))
                     <*> (nullableFieldFromParsed <$> (o .:! "eventBudgetCents"))
                 )
@@ -527,8 +534,13 @@ eventUpdateAllowedKeys =
     , "eventTicketUrl"
     , "eventImageUrl"
     , "eventIsPublic"
-    , "eventType"
-    , "eventStatus"
+    , "eventTypeId"
+    , "eventWorkflowStateId"
+    , "eventWorkflowStateCode"
+    , "eventWorkflowStateNameEs"
+    , "eventWorkflowStateNameEn"
+    , "eventPublicListable"
+    , "eventTicketPurchaseEnabled"
     , "eventCurrency"
     , "eventBudgetCents"
     , "eventCreatedAt"
@@ -620,7 +632,11 @@ invitationUpdateAllowedKeys =
     ]
 
 data EventMomentReactionDTO = EventMomentReactionDTO
-    { emrReaction :: Text
+    { emrReactionTypeId :: Text
+    , emrReactionCode :: Text
+    , emrReactionNameEs :: Text
+    , emrReactionNameEn :: Text
+    , emrReactionEmoji :: Text
     , emrPartyId :: Text
     , emrCreatedAt :: Maybe UTCTime
     }
@@ -753,7 +769,7 @@ validateOptionalNonNegativeInt fieldName (Just value)
     | otherwise = fail (fieldName <> " must be greater than or equal to 0")
 
 data EventMomentReactionRequestDTO = EventMomentReactionRequestDTO
-    { emrrReaction :: Text
+    { emrrReactionTypeId :: Text
     }
     deriving (Show, Eq, Generic)
 instance ToJSON EventMomentReactionRequestDTO
@@ -761,11 +777,16 @@ instance FromJSON EventMomentReactionRequestDTO where
     parseJSON = withObject "EventMomentReactionRequestDTO" $ \o -> do
         rejectUnknownObjectFields
             "EventMomentReactionRequestDTO"
-            [ "emrrReaction"
+            [ "emrrReactionTypeId"
             ]
             o
-        EventMomentReactionRequestDTO
-            <$> o .: "emrrReaction"
+        rawReactionTypeId <- o .: "emrrReactionTypeId"
+        reactionTypeId <-
+            maybe
+                (fail "emrrReactionTypeId must be a canonical UUID")
+                (pure . UUID.toText)
+                (UUID.fromText (T.strip rawReactionTypeId))
+        pure (EventMomentReactionRequestDTO reactionTypeId)
 
 data EventMomentCommentCreateDTO = EventMomentCommentCreateDTO
     { emccAuthorName :: Maybe Text

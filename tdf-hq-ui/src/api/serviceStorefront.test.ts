@@ -14,6 +14,8 @@ describe('ServiceStorefront types', () => {
       sspDescription: 'Mezcla de hasta 24 pistas',
       sspPriceUsdCents: 15000,
       sspCurrency: 'USD',
+      sspMinSongCount: 1,
+      sspMaxSongCount: 1,
       sspTurnaroundDays: 7,
       sspRevisionCount: 2,
       sspDeliverables: ['WAV 48kHz/24-bit', 'Stems'],

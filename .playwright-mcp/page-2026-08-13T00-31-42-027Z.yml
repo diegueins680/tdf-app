@@ -1,0 +1,63 @@
+- generic [ref=f43e2]:
+  - generic [ref=f43e3]:
+    - link "Saltar al contenido principal" [ref=f43e1327] [cursor=pointer]:
+      - /url: "#main-content"
+    - generic [ref=f43e5]:
+      - banner [ref=f43e6]:
+        - generic [ref=f43e7]:
+          - button "Mostrar menú lateral" [ref=f43e1328] [cursor=pointer]
+          - link "Ir al inicio" [ref=f43e1329] [cursor=pointer]:
+            - /url: /inicio
+            - img "TDF Records logo"
+          - button "Buscar sección" [ref=f43e1330] [cursor=pointer]:
+            - generic [ref=f43e18]: ⌘K
+          - generic [ref=f43e19]:
+            - button "Creación rápida" [ref=f43e1331] [cursor=pointer]:
+              - generic [ref=f43e24]: Crear
+            - button "Notificaciones" [ref=f43e1332] [cursor=pointer]:
+              - generic [ref=f43e26]: "0"
+            - button "Abrir menú de sesión" [ref=f43e1333] [cursor=pointer]:
+              - generic [ref=f43e31]: D
+      - status [ref=f43e32]
+      - main [ref=f43e35]:
+        - generic [ref=f43e37]:
+          - generic [ref=f43e39]:
+            - generic [ref=f43e40]:
+              - heading "Contactos" [level=3] [ref=f43e1336]
+              - paragraph [ref=f43e42]: Gestiona personas, empresas y roles en un solo lugar.
+            - button [ref=f43e1337] [cursor=pointer]
+          - generic [ref=f43e50]:
+            - generic "Buscar contactos" [ref=f43e1338]:
+              - generic [ref=f43e93]:
+                - textbox "Buscar contactos" [active] [ref=f43e1339]:
+                  - /placeholder: Buscar por nombre, email o Instagram
+                  - text: Llama Este Pez
+                - button "Limpiar búsqueda" [ref=f43e1340] [cursor=pointer]
+                - group
+            - generic [ref=f43e1361]:
+              - generic [ref=f43e1362]:
+                - heading "1 coincidencia para \"Llama Este Pez\"" [level=6] [ref=f43e1363]
+                - paragraph [ref=f43e1364]: La búsqueda dejó un solo contacto visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar contactos en la tabla.
+              - generic [ref=f43e1365]:
+                - button [ref=f43e1367] [cursor=pointer]:
+                  - paragraph [ref=f43e1368]: Llama Este Pez
+                - paragraph [ref=f43e1369]: "Contacto: Falta correo e Instagram"
+                - paragraph [ref=f43e1370]: Completa el correo desde Acciones antes de crear el usuario.
+              - button "Abrir acciones para Llama Este Pez" [ref=f43e1372] [cursor=pointer]: Completar contacto
+        - generic [ref=f43e57]:
+          - status [ref=f43e58]:
+            - generic [ref=f43e62]: "API: online"
+          - button "Abrir ChatKit" [ref=f43e1344] [cursor=pointer]
+  - generic "Control de radio":
+    - generic [ref=f43e66]:
+      - button "Reproducir radio" [ref=f43e1345] [cursor=pointer]
+      - generic "Saltar al anterior" [ref=f43e1346]:
+        - button "Saltar a la estación anterior" [ref=f43e1347] [cursor=pointer]
+      - generic "Saltar al siguiente" [ref=f43e1348]:
+        - button "Saltar a la siguiente estación" [ref=f43e1349] [cursor=pointer]
+      - button "Silenciar radio" [ref=f43e1350] [cursor=pointer]
+      - button "Ocultar barra de radio" [ref=f43e1351] [cursor=pointer]
+      - button "Expandir radio" [ref=f43e1352] [cursor=pointer]
+      - generic [ref=f43e87]:
+        - generic [ref=f43e88]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient

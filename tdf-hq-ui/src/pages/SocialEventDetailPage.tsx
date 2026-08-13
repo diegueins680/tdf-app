@@ -8,6 +8,7 @@ import { Alert, Avatar, Box, Button, ButtonBase, Card, CardContent, Chip, Circul
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import PageShell, { EmptyState } from '../components/PageShell';
 import { SocialEventsAPI, type SocialEventMomentCreateDTO, type SocialTicketTierDTO } from '../api/socialEvents';
+import { Catalogs } from '../api/catalogs';
 import { useSession } from '../session/SessionContext';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { formatCurrency } from '../utils/formatters';
@@ -44,6 +45,11 @@ export default function SocialEventDetailPage() {
     queryKey: ['social-event', eventId],
     queryFn: () => SocialEventsAPI.getEvent(eventId),
     enabled: Boolean(eventId),
+  });
+  const eventTypeQuery = useQuery({
+    queryKey: ['catalog', 'event-types', eventQuery.data?.eventTypeId, locale],
+    queryFn: () => Catalogs.getItem('event-types', eventQuery.data!.eventTypeId!, locale),
+    enabled: Boolean(eventQuery.data?.eventTypeId),
   });
   const momentsQuery = useQuery({
     queryKey: ['social-event-moments', eventId],
@@ -112,7 +118,7 @@ export default function SocialEventDetailPage() {
   return (
     <PageShell
       title={event?.eventTitle ?? 'Evento'}
-      subtitle={event ? `${formatDate(event.eventStart, locale, timezone)} · ${event.eventType ?? 'Evento'}` : undefined}
+      subtitle={event ? `${formatDate(event.eventStart, locale, timezone)} · ${eventTypeQuery.data?.name ?? 'Evento'}` : undefined}
       loading={eventQuery.isLoading}
       actions={<Stack direction="row" spacing={1}>
         <Button component={RouterLink} to="/social/eventos" startIcon={<ArrowBackIcon />}>Eventos</Button>
@@ -128,7 +134,12 @@ export default function SocialEventDetailPage() {
                 {event.eventImageUrl && <Box component="img" src={event.eventImageUrl} alt={`Afiche de ${event.eventTitle}`} sx={{ width: '100%', maxHeight: 360, objectFit: 'cover', borderRadius: 2 }} />}
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   <Chip label={formatDate(event.eventStart, locale, timezone)} color="primary" />
-                  {event.eventStatus && <Chip label={event.eventStatus} variant="outlined" />}
+                  {event.eventWorkflowStateId && (
+                    <Chip
+                      label={locale.toLowerCase().startsWith('en') ? event.eventWorkflowStateNameEn : event.eventWorkflowStateNameEs}
+                      variant="outlined"
+                    />
+                  )}
                   {event.eventCapacity && <Chip label={`${event.eventCapacity} personas`} variant="outlined" />}
                 </Stack>
                 {event.eventDescription && <Typography sx={{ whiteSpace: 'pre-wrap' }}>{event.eventDescription}</Typography>}

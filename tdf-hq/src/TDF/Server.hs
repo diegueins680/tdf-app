@@ -84,7 +84,7 @@ import           Database.Persist.Postgresql ()
 import           Database.PostgreSQL.Simple (SqlError (..))
 
 import           TDF.API
-import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceCheckoutReq(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), DriveUploadDTO(..), DriveTokenExchangeRequest(..), DriveTokenRefreshRequest(..), DriveTokenResponse(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..), verifyMetaWebhookSignature)
+import           TDF.API.Types (UserRoleSummaryDTO(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceCheckoutReq(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), LabelProjectNoteDTO(..), LabelProjectNoteCreate(..), LabelProjectNoteUpdate(..), DriveUploadDTO(..), DriveTokenExchangeRequest(..), DriveTokenRefreshRequest(..), DriveTokenResponse(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..), verifyMetaWebhookSignature)
 import           TDF.API.Types (maxMarketplaceCartItemQuantity)
 import qualified TDF.API.Types as APITypes
 import           TDF.API.WhatsApp (validateHookVerifyRequest)
@@ -95,6 +95,13 @@ import           TDF.API.Drive (DriveAPI, DriveUploadForm(..))
 import           TDF.Contracts.API (ContractsAPI)
 import qualified TDF.Server.DDEX as DDEXServer
 import qualified TDF.Server.Catalog as CatalogServer
+import qualified TDF.Catalog.Models as Catalog
+import           TDF.Catalog.Security
+  ( applySecurityRoleAssignmentPolicy
+  , hasCanonicalPartyRole
+  , loadCanonicalPartyRoles
+  , selectCanonicalPartyIdsByRole
+  )
 import qualified TDF.Courses.Production as ProductionCourse
 import qualified TDF.Internationalization as Internationalization
 import           TDF.Config ( AppConfig(..)
@@ -131,6 +138,7 @@ import           TDF.Auth
   , ModuleAccess(..)
   , authContext
   , hasAiToolingAccess
+  , hasModuleAccess
   , hasOperationsAccess
   , hasSocialInboxAccess
   , moduleName
@@ -168,7 +176,7 @@ import           TDF.Server.ServiceStorefront (serviceStorefrontPublicServer, se
 import           TDF.ServerFeedback (feedbackServer)
 import qualified TDF.Contracts.Server as Contracts
 import           TDF.ServerProposals (proposalsServer)
-import           TDF.ServerFanClub (fanClubPublicGetClub, fanClubPublicGetEvents, fanClubSecureListMyClubs, fanClubSecureArtistHandlers)
+import           TDF.ServerFanClub (fanClubPublicGetClub, fanClubPublicGetEvents, fanClubSecureListMyClubs, fanClubSecureArtistHandlers, buildFanClubPostReactionSummary)
 import           TDF.Trials.API (TrialsAPI)
 import qualified TDF.Trials.Server as TrialsServer
   ( hasAmbiguousPublicUrlPath
@@ -188,6 +196,7 @@ import           TDF.Profiles.Artist ( fetchArtistProfileMap
                                      , loadArtistProfileDTO
                                      , loadOrCreateArtistProfileDTO
                                      , searchArtistProfilesDTO
+                                     , resolvePublishedGenreSelections
                                      , upsertArtistProfileRecord
                                      , validateArtistProfileUpsert
                                      )
@@ -707,6 +716,7 @@ server env =
   :<|> whatsappConsentPublicServer
   :<|> inventoryPublicServer
   :<|> feedbackServer
+  :<|> CatalogServer.publicCatalogServer
   :<|> protectedServer
   :<|> marketplacePublicServer
   :<|> radioPresencePublicServer
@@ -1170,10 +1180,12 @@ artistPublicServer =
       Env pool _ <- ask
       liftIO $ flip runSqlPool pool loadAllArtistProfilesDTO
 
-    searchArtists :: Maybe Text -> Maybe Text -> AppM [ArtistProfileDTO]
-    searchArtists mQuery mGenre = do
+    searchArtists :: Maybe Text -> Maybe UUID.UUID -> Maybe Text -> AppM [ArtistProfileDTO]
+    searchArtists mQuery mGenreId mLegacyGenre = do
+      when (mLegacyGenre /= Nothing) $
+        throwBadRequest "genre is obsolete; use the canonical genreId UUID parameter"
       Env pool _ <- ask
-      liftIO $ flip runSqlPool pool $ searchArtistProfilesDTO mQuery mGenre
+      liftIO $ flip runSqlPool pool $ searchArtistProfilesDTO mQuery mGenreId
 
     artistPublicProfile :: Text -> AppM ArtistProfileDTO
     artistPublicProfile rawRef = do
@@ -1618,8 +1630,7 @@ listEngineersPublic :: AppM [PublicEngineerDTO]
 listEngineersPublic = do
   Env pool _ <- ask
   liftIO $ flip runSqlPool pool $ do
-    engineerRoles <- selectList [PartyRoleRole ==. Engineer, PartyRoleActive ==. True] []
-    let partyIds = map (partyRolePartyId . entityVal) engineerRoles
+    partyIds <- selectCanonicalPartyIdsByRole Engineer
     parties <- selectList
       [ PartyId <-. partyIds
       , PartyPrimaryEmail !=. Nothing -- evita cuentas de sistema sin correo (p.ej. "Scheduling")
@@ -2976,6 +2987,7 @@ fanSecureServer user =
   :<|> (fanListFollows user :<|> fanFollowArtist user :<|> fanUnfollowArtist user)
   :<|> (artistGetOwnProfile user :<|> artistUpdateOwnProfile user)
   :<|> (notifList user :<|> notifCount user :<|> notifMarkRead user :<|> notifMarkAllRead user)
+  :<|> CatalogServer.createSelfFanRoleRequest user
   :<|> discoveryFeed user
   :<|> fanClubSecureListMyClubs user
   :<|> fanClubSecureArtistHandlers user
@@ -3019,18 +3031,22 @@ validateDriveAccess user
       Left err403
         { errBody = "Google Drive access requires coherent role grants"
         }
-  | hasOperationsAccess user || any (`elem` auRoles user) [Artist, Artista] =
+  | hasOperationsAccess user || hasPersistedArtistDriveAccess user =
       Right ()
   | otherwise =
       Left err403
         { errBody = "Google Drive access requires operations or artist role"
         }
 
+hasPersistedArtistDriveAccess :: AuthedUser -> Bool
+hasPersistedArtistDriveAccess user =
+  any (`elem` auRoles user) [Artist, Artista]
+    && (hasModuleAccess ModulePackages user || hasModuleAccess ModuleScheduling user)
+
 hasCoherentAuthScope :: AuthedUser -> Bool
 hasCoherentAuthScope user =
   fromSqlKey (auPartyId user) > 0
     && length (auRoles user) == length (nub (auRoles user))
-    && auModules user == modulesForRoles (auRoles user)
 
 driveUploadServer :: AuthedUser -> Maybe Text -> DriveUploadForm -> AppM DriveUploadDTO
 driveUploadServer user mAccessToken DriveUploadForm{..} = do
@@ -3677,11 +3693,6 @@ lookupEnvTextNonEmpty key = do
     Just val | not (T.null val) -> Just val
     _ -> Nothing
 
-countriesServer :: AppM [CountryDTO]
-countriesServer = do
-  countries <- runDB $ selectList [] [Asc CountryName]
-  pure (map toCountryDTO countries)
-
 protectedServer :: AuthedUser -> ServerT ProtectedAPI AppM
 protectedServer user =
        partyServer user
@@ -3727,7 +3738,6 @@ protectedServer user =
   :<|> cmsAdminServer user
   :<|> driveServer user
   :<|> radioServer user
-  :<|> countriesServer
   :<|> futureServer user
   :<|> DDEXServer.ddexServer user
   :<|> CatalogServer.catalogServer user
@@ -4178,18 +4188,12 @@ notifyEligibleFeatureReviewers
   -> UTCTime
   -> SqlPersistT IO ()
 notifyEligibleFeatureReviewers requester feature actionName requestId now = do
-  reviewerRoles <- selectList
-    [ PartyRoleActive ==. True
-    , PartyRoleRole <-. [Admin, Manager, StudioManager]
-    ] []
-  let reviewerPartyIds = Set.toList (Set.fromList (map (partyRolePartyId . entityVal) reviewerRoles))
+  reviewerPartyIds <- Set.toList . Set.fromList . concat <$>
+    traverse selectCanonicalPartyIdsByRole [Admin, Manager, StudioManager]
   forM_ reviewerPartyIds $ \reviewerPartyId -> when (reviewerPartyId /= auPartyId requester) $ do
-    roleRows <- selectList
-      [ PartyRolePartyId ==. reviewerPartyId
-      , PartyRoleActive ==. True
-      ] []
-    let roles = nub (map (partyRoleRole . entityVal) roleRows)
-        reviewer = AuthedUser reviewerPartyId roles (modulesForRoles roles)
+    rolesResult <- loadCanonicalPartyRoles reviewerPartyId
+    roles <- either (liftIO . ioError . userError . T.unpack) pure rolesResult
+    let reviewer = AuthedUser reviewerPartyId roles (modulesForRoles roles)
     when (registryReviewerCanDecide reviewer feature actionName) $
       insert_ Notification
         { notificationRecipientPartyId = reviewerPartyId
@@ -5680,10 +5684,35 @@ fetchCourseRegistration rawSlug regId = do
   (receiptCount, followUpCount) <- runDB $ loadCourseRegistrationCounts (entityKey ent)
   pure (toCourseRegistrationDTOWithCounts receiptCount followUpCount ent)
 
-ensureCourseRegistrationPartyRoles :: PartyId -> SqlPersistT IO ()
-ensureCourseRegistrationPartyRoles pid = do
-  void $ upsert (PartyRole pid Student True) [PartyRoleActive =. True]
-  void $ upsert (PartyRole pid Customer True) [PartyRoleActive =. True]
+requireAutomaticSecurityPolicyDb
+  :: Text
+  -> PartyId
+  -> Bool
+  -> Maybe PartyId
+  -> Text
+  -> Text
+  -> UTCTime
+  -> SqlPersistT IO ()
+requireAutomaticSecurityPolicyDb policyCode partyKey verifiedEmail actorId sourcePlatform correlationId now = do
+  result <- applySecurityRoleAssignmentPolicy
+    policyCode partyKey verifiedEmail actorId sourcePlatform correlationId now
+  case result of
+    Right _ -> pure ()
+    Left message ->
+      liftIO $ throwIO err503
+        { errBody = BL.fromStrict (TE.encodeUtf8 message)
+        }
+
+ensureCourseRegistrationPartyRoles :: PartyId -> UTCTime -> SqlPersistT IO ()
+ensureCourseRegistrationPartyRoles pid now =
+  requireAutomaticSecurityPolicyDb
+    "course.registration.student"
+    pid
+    False
+    Nothing
+    "course-registration"
+    ("course-registration:" <> T.pack (show (fromSqlKey pid)))
+    now
 
 ensurePartyForCourseRegistrationDb
   :: Maybe Text
@@ -5732,9 +5761,11 @@ ensurePartyForCourseRegistrationDb mName mEmail mPhone now = do
           , partyEmergencyContact = Nothing
           , partyNotes = Nothing
           , partyStripeCustomerId = Nothing
+          , partyCountryCode = Nothing
+          , partyCountryId = Nothing
           , partyCreatedAt = now
           }
-      ensureCourseRegistrationPartyRoles pid
+      ensureCourseRegistrationPartyRoles pid now
       pure pid
 
 ensureCourseRegistrationParty
@@ -5747,7 +5778,7 @@ ensureCourseRegistrationParty mName mEmail mPhone now =
   case mEmail of
     Just emailAddr -> do
       (partyId, mNewUser) <- ensurePartyWithAccount mName emailAddr mPhone
-      runDB $ ensureCourseRegistrationPartyRoles partyId
+      runDB $ ensureCourseRegistrationPartyRoles partyId now
       pure (Just partyId, mNewUser)
     Nothing -> case mPhone of
       Nothing -> pure (Nothing, Nothing)
@@ -7030,45 +7061,6 @@ validatePublicBookingFullName rawName =
       | otherwise ->
           Right nameVal
 
-validatePublicBookingServiceType :: Text -> Either ServerError Text
-validatePublicBookingServiceType rawServiceType =
-  case cleanOptional (Just rawServiceType) of
-    Nothing -> Left err400 { errBody = "serviceType requerido" }
-    Just serviceTypeVal
-      | T.length serviceTypeVal > 120 ->
-          Left err400 { errBody = "serviceType debe tener 120 caracteres o menos" }
-      | not (hasPublicBookingLabelContent serviceTypeVal) ->
-          Left err400 { errBody = "serviceType debe incluir letras o números" }
-      | T.any isAmbiguousPublicBookingSpace serviceTypeVal ->
-          Left err400 { errBody = "serviceType no debe contener espacios Unicode ambiguos" }
-      | T.any isUnsafePublicBookingLabelChar serviceTypeVal ->
-          Left err400
-            { errBody =
-                "serviceType no debe contener caracteres de control o marcas Unicode invisibles"
-            }
-      | otherwise ->
-          Right serviceTypeVal
-
-validateOptionalBookingServiceType :: Maybe Text -> Either ServerError (Maybe Text)
-validateOptionalBookingServiceType Nothing = Right Nothing
-validateOptionalBookingServiceType (Just rawServiceType) =
-  case normalizeOptionalInput (Just rawServiceType) of
-    Nothing -> Right Nothing
-    Just serviceTypeVal
-      | T.length serviceTypeVal > 120 ->
-          Left err400 { errBody = "serviceType must be 120 characters or fewer" }
-      | not (hasPublicBookingLabelContent serviceTypeVal) ->
-          Left err400 { errBody = "serviceType must include letters or numbers" }
-      | T.any isAmbiguousPublicBookingSpace serviceTypeVal ->
-          Left err400 { errBody = "serviceType must not contain Unicode separator spaces" }
-      | T.any isUnsafePublicBookingLabelChar serviceTypeVal ->
-          Left err400
-            { errBody =
-                "serviceType must not contain control characters or hidden formatting characters"
-            }
-      | otherwise ->
-          Right (Just serviceTypeVal)
-
 isUnsafePublicBookingLabelChar :: Char -> Bool
 isUnsafePublicBookingLabelChar ch =
   isControl ch
@@ -7710,6 +7702,8 @@ ensurePartyWithAccount mName emailAddr mPhone = do
           , partyEmergencyContact = Nothing
           , partyNotes = Nothing
           , partyStripeCustomerId = Nothing
+          , partyCountryCode = Nothing
+          , partyCountryId = Nothing
           , partyCreatedAt = now
           }
   partyId <- either throwError pure partyResult
@@ -7726,11 +7720,15 @@ ensurePartyWithAccount mName emailAddr mPhone = do
         , userCredentialPasswordHash = hashed
         , userCredentialActive = True
         }
-      -- Assign default roles for new customers/fans
-      runDB $ do
-        _ <- upsert (PartyRole partyId Customer True) [PartyRoleActive =. True]
-        _ <- upsert (PartyRole partyId Fan True) [PartyRoleActive =. True]
-        pure ()
+      runDB $
+        requireAutomaticSecurityPolicyDb
+          "account.generated.customer"
+          partyId
+          False
+          Nothing
+          "generated-account"
+          ("generated-account:" <> T.pack (show (fromSqlKey partyId)))
+          now
       pure (Just (username, tempPassword))
   pure (partyId, newCred)
 
@@ -7884,26 +7882,38 @@ fanUpdateProfile user rawUpdate = do
   let FanProfileUpdate{..} = validatedUpdate
   Env pool _ <- ask
   now <- liftIO getCurrentTime
-  liftIO $ flip runSqlPool pool $ do
+  result <- liftIO $ flip runSqlPool pool $ do
     let fanId = auPartyId user
-    _ <- upsert FanProfile
-      { fanProfileFanPartyId     = fanId
-      , fanProfileDisplayName    = fpuDisplayName
-      , fanProfileAvatarUrl      = fpuAvatarUrl
-      , fanProfileFavoriteGenres = fpuFavoriteGenres
-      , fanProfileBio            = fpuBio
-      , fanProfileCity           = fpuCity
-      , fanProfileCreatedAt      = now
-      , fanProfileUpdatedAt      = Just now
-      }
-      [ FanProfileDisplayName    =. fpuDisplayName
-      , FanProfileAvatarUrl      =. fpuAvatarUrl
-      , FanProfileFavoriteGenres =. fpuFavoriteGenres
-      , FanProfileBio            =. fpuBio
-      , FanProfileCity           =. fpuCity
-      , FanProfileUpdatedAt      =. Just now
-      ]
-    loadFanProfileDTO fanId
+    resolvedGenres <- resolvePublishedGenreSelections "fpuFavoriteGenreIds" fpuFavoriteGenreIds
+    case resolvedGenres of
+      Left validationError -> pure (Left validationError)
+      Right genres -> do
+        _ <- upsert FanProfile
+          { fanProfileFanPartyId     = fanId
+          , fanProfileDisplayName    = fpuDisplayName
+          , fanProfileAvatarUrl      = fpuAvatarUrl
+          , fanProfileFavoriteGenres = Nothing
+          , fanProfileBio            = fpuBio
+          , fanProfileCity           = fpuCity
+          , fanProfileCreatedAt      = now
+          , fanProfileUpdatedAt      = Just now
+          }
+          [ FanProfileDisplayName    =. fpuDisplayName
+          , FanProfileAvatarUrl      =. fpuAvatarUrl
+          , FanProfileBio            =. fpuBio
+          , FanProfileCity           =. fpuCity
+          , FanProfileUpdatedAt      =. Just now
+          ]
+        deleteWhere [FanProfileGenreMembershipFanPartyId ==. fanId]
+        forM_ (zip [0 :: Int ..] genres) $ \(position, (genreId, _)) ->
+          insert_ FanProfileGenreMembership
+            { fanProfileGenreMembershipFanPartyId = fanId
+            , fanProfileGenreMembershipGenreId = genreId
+            , fanProfileGenreMembershipSortOrder = position
+            , fanProfileGenreMembershipCreatedAt = now
+            }
+        Right <$> loadFanProfileDTO fanId
+  either throwBadRequest pure result
 
 validateFanProfileUpdate :: FanProfileUpdate -> Either ServerError FanProfileUpdate
 validateFanProfileUpdate payload@FanProfileUpdate{..} = do
@@ -8482,7 +8492,8 @@ artistUpdateOwnProfile user payload = do
   validated <- either throwBadRequest pure (validateArtistProfileUpsert sanitized)
   Env pool _ <- ask
   now <- liftIO getCurrentTime
-  liftIO $ flip runSqlPool pool $ upsertArtistProfileRecord artistKey validated now
+  result <- liftIO $ flip runSqlPool pool $ upsertArtistProfileRecord artistKey validated now
+  either throwBadRequest pure result
 
 artistUpdateOwnPhoto :: AuthedUser -> ArtistProfilePhotoUpdate -> AppM ArtistProfileDTO
 artistUpdateOwnPhoto user ArtistProfilePhotoUpdate{..} = do
@@ -8504,7 +8515,7 @@ artistUpdateOwnPhoto user ArtistProfilePhotoUpdate{..} = do
         , apuYoutubeUrl = apYoutubeUrl current
         , apuWebsiteUrl = apWebsiteUrl current
         , apuFeaturedVideoUrl = apFeaturedVideoUrl current
-        , apuGenres = apGenres current
+        , apuGenreIds = apGenreIds current
         , apuHighlights = apHighlights current
         }
   artistUpdateOwnProfile user payload
@@ -8578,7 +8589,7 @@ discoveryFeed user mLimit = do
           case mPost of
             Nothing -> pure Nothing
             Just p -> do
-              reactions <- buildReactionSummaryServer "post" (boostedContentTargetId bc) (auPartyId user)
+              reactions <- buildFanClubPostReactionSummary postKey (auPartyId user)
               mParty <- get (fanClubPostFanPartyId p)
               let authorName = maybe "Desconocido" M.partyDisplayName mParty
               pure $ Just FanClubFeedItemDTO
@@ -8598,31 +8609,6 @@ discoveryFeed user mLimit = do
                 }
         _ -> pure Nothing
     pure (catMaybes items)
-
-buildReactionSummaryServer :: Text -> Int -> PartyId -> SqlPersistT IO ReactionSummaryDTO
-buildReactionSummaryServer targetType targetId viewerPartyId = do
-  reactions <- selectList
-    [ ContentReactionTargetType ==. targetType
-    , ContentReactionTargetId ==. targetId
-    ] []
-  let countReaction t = length $ filter (\(Entity _ r) -> contentReactionReaction r == t) reactions
-      myReaction = case filter (\(Entity _ r) -> contentReactionReactorPartyId r == viewerPartyId) reactions of
-        (Entity _ r : _) -> Just (contentReactionReaction r)
-        [] -> Nothing
-      fire = countReaction "fire"
-      heart = countReaction "heart"
-      clap = countReaction "clap"
-      micDrop = countReaction "mic_drop"
-      skull = countReaction "skull"
-  pure ReactionSummaryDTO
-    { rsFire = fire
-    , rsHeart = heart
-    , rsClap = clap
-    , rsMicDrop = micDrop
-    , rsSkull = skull
-    , rsTotal = fire + heart + clap + micDrop + skull
-    , rsMyReaction = myReaction
-    }
 
 loadFanProfileDTO :: PartyId -> SqlPersistT IO FanProfileDTO
 loadFanProfileDTO fanId = do
@@ -8645,8 +8631,25 @@ loadFanProfileDTO fanId = do
       key <- insert record
       pure (Entity key record)
     Just ent -> pure ent
+  genreMemberships <- selectList
+    [FanProfileGenreMembershipFanPartyId ==. fanId]
+    [Asc FanProfileGenreMembershipSortOrder]
+  let genreIds = map (fanProfileGenreMembershipGenreId . entityVal) genreMemberships
+  genres <- if null genreIds
+    then pure []
+    else selectList [Catalog.GenreId <-. map Catalog.GenreKey genreIds] []
+  let genreMap = Map.fromList
+        [ (genreId, Catalog.genreNameEs genre)
+        | Entity (Catalog.GenreKey genreId) genre <- genres
+        ]
+      favoriteGenres = mapMaybe
+        (\(Entity _ membership) -> do
+          let genreId = fanProfileGenreMembershipGenreId membership
+          label <- Map.lookup genreId genreMap
+          pure (genreId, label))
+        genreMemberships
   let fallbackName = maybe Nothing (Just . M.partyDisplayName) party
-  pure (fanProfileToDTO fallbackName (entityVal profileEntity))
+  pure (fanProfileToDTO fallbackName favoriteGenres (entityVal profileEntity))
 
 loadSocialPartyProfilesDTO :: [Int64] -> SqlPersistT IO [SocialPartyProfileDTO]
 loadSocialPartyProfilesDTO rawIds = do
@@ -8712,14 +8715,18 @@ toArtistReleaseDTO (Entity releaseId release) =
     , arYoutubeUrl    = artistReleaseYoutubeUrl release
     }
 
-fanProfileToDTO :: Maybe Text -> FanProfile -> FanProfileDTO
-fanProfileToDTO fallback FanProfile{..} = FanProfileDTO
-  { fpArtistId      = fromSqlKey fanProfileFanPartyId
-  , fpDisplayName   = resolveFanProfileDisplayName fanProfileDisplayName fallback
-  , fpAvatarUrl     = fanProfileAvatarUrl
-  , fpFavoriteGenres = fanProfileFavoriteGenres
-  , fpBio           = fanProfileBio
-  , fpCity          = fanProfileCity
+fanProfileToDTO :: Maybe Text -> [(UUID.UUID, Text)] -> FanProfile -> FanProfileDTO
+fanProfileToDTO fallback favoriteGenres FanProfile{..} = FanProfileDTO
+  { fpArtistId        = fromSqlKey fanProfileFanPartyId
+  , fpDisplayName     = resolveFanProfileDisplayName fanProfileDisplayName fallback
+  , fpAvatarUrl       = fanProfileAvatarUrl
+  , fpFavoriteGenres  =
+      if null favoriteGenres
+        then fanProfileFavoriteGenres
+        else Just (T.intercalate ", " (map snd favoriteGenres))
+  , fpFavoriteGenreIds = map fst favoriteGenres
+  , fpBio             = fanProfileBio
+  , fpCity            = fanProfileCity
   }
 
 resolveFanProfileDisplayName :: Maybe Text -> Maybe Text -> Maybe Text
@@ -8923,7 +8930,7 @@ seedTrigger rawToken = do
 partyServer :: AuthedUser -> ServerT PartyAPI AppM
 partyServer user = listParties user :<|> createParty user :<|> partyById
   where
-    partyById pid = getParty user pid :<|> updateParty user pid :<|> addRole user pid :<|> partyRelated user pid
+    partyById pid = getParty user pid :<|> updateParty user pid :<|> partyRelated user pid
 
 listParties :: AuthedUser -> Maybe Int -> Maybe Int -> AppM [PartyDTO]
 listParties user mLimit mOffset = do
@@ -8957,12 +8964,11 @@ createParty user req = do
           , partyEmergencyContact = cEmergencyContact req
           , partyNotes = cNotes req
           , partyStripeCustomerId = Nothing
+          , partyCountryCode = Nothing
+          , partyCountryId = Nothing
           , partyCreatedAt = now
           }
   pid <- liftIO $ flip runSqlPool pool $ insert p
-  liftIO $ flip runSqlPool pool $ mapM_ (\role -> upsert
-    (PartyRole pid role True)
-    [PartyRoleActive =. True]) (fromMaybe [] (cRoles req))
   pure $ toPartyDTO False (Entity pid p)
 
 getParty :: AuthedUser -> Int64 -> AppM PartyDTO
@@ -9040,40 +9046,6 @@ isUnsafePartyDisplayNameChar :: Char -> Bool
 isUnsafePartyDisplayNameChar ch =
   isControl ch
     || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
-
-addRole :: AuthedUser -> Int64 -> RolePayload -> AppM NoContent
-addRole user pidI (RolePayload roleTxt) = do
-  requireModule user ModuleAdmin
-  role <- either throwError pure (validateRolePayload roleTxt)
-  pid <- runDB (resolvePartyRoleAssignmentTarget pidI) >>= either throwError pure
-  runDB $ void $ upsert
-    (PartyRole pid role True)
-    [ PartyRoleActive =. True ]
-  pure NoContent
-
-resolvePartyRoleAssignmentTarget :: Int64 -> SqlPersistT IO (Either ServerError PartyId)
-resolvePartyRoleAssignmentTarget rawPartyId =
-  case validatePositiveIdField "partyId" rawPartyId of
-    Left err -> pure (Left err)
-    Right partyId -> do
-      let pid = toSqlKey partyId :: PartyId
-      mParty <- get pid
-      pure $
-        case mParty of
-          Nothing -> Left err404 { errBody = "Party not found" }
-          Just _ -> Right pid
-
-validateRolePayload :: Text -> Either ServerError RoleEnum
-validateRolePayload raw =
-  case roleFromText raw of
-    Just role -> Right role
-    Nothing ->
-      Left err400
-        { errBody =
-            BL.fromStrict . TE.encodeUtf8 $
-              "role must be one of: "
-                <> T.intercalate ", " (map roleToText ([minBound .. maxBound] :: [RoleEnum]))
-        }
 
 partyRelated :: AuthedUser -> Int64 -> AppM PartyRelatedDTO
 partyRelated user pidI = do
@@ -9353,10 +9325,23 @@ createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
     catalogKind <- case validateServiceMarketplaceCatalog catalog of
       Left serverErr -> liftIO $ throwIO serverErr
       Right kind -> pure kind
+    offeringEntity <- do
+      mapped <- getBy (Catalog.UniqueServiceOfferingLegacyId (Just (fromSqlKey catalogId)))
+      maybe
+        (liftIO $ throwIO err409 { errBody = "Service ad catalog has no canonical service offering mapping" })
+        pure
+        mapped
+    offeringUuid <-
+      maybe
+        (liftIO $ throwIO err500 { errBody = "Canonical service offering key is not a UUID" })
+        pure
+        (serviceOfferingUUIDFromKey (entityKey offeringEntity))
+    _ <- loadSelectableServiceOffering now offeringUuid
     serviceOrderId <- insert ServiceOrder
       { serviceOrderCustomerId = auPartyId user
       , serviceOrderArtistId = Just providerId
       , serviceOrderCatalogId = catalogId
+      , serviceOrderServiceOfferingId = Just offeringUuid
       , serviceOrderServiceKind = catalogKind
       , serviceOrderTitle = Just orderTitle
       , serviceOrderDescription = notesVal
@@ -9371,7 +9356,10 @@ createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
       { bookingTitle = orderTitle
       , bookingServiceOrderId = Just serviceOrderId
       , bookingPartyId = Just (auPartyId user)
-      , bookingServiceType = Just (serviceAdRoleTag ad)
+      , bookingServiceType = Nothing
+      , bookingServiceOfferingId = Just offeringUuid
+      , bookingBookingTypeId = Nothing
+      , bookingWorkflowStateId = Nothing
       , bookingEngineerPartyId = Just providerId
       , bookingEngineerName = Nothing
       , bookingStartsAt = serviceAdSlotStartsAt slot
@@ -9663,6 +9651,7 @@ courseCalendarBookings = do
                , partyId            = Nothing
                , engineerPartyId    = Nothing
                , engineerName       = Nothing
+               , serviceOfferingId  = Nothing
                , serviceType        = Just "Curso"
                , serviceOrderId     = Nothing
                , serviceOrderTitle  = Nothing
@@ -9692,15 +9681,14 @@ createPublicBooking PublicBookingReq{..} = do
   startsAtClean <-
     either throwError pure $
       validatePublicBookingStartAt now pbStartsAt
-  serviceTypeValue <-
-    either throwError pure $
-      validatePublicBookingServiceType pbServiceType
-  let serviceTypeClean = Just serviceTypeValue
+  serviceOffering <- runDB $
+    loadSelectableServiceOffering now pbServiceOfferingId
+  let serviceTypeLabel = Catalog.serviceOfferingNameEs (entityVal serviceOffering)
   engineerIdClean <-
     either throwError pure $
       validateOptionalPositiveIdField "engineerPartyId" pbEngineerPartyId
   let engineerNameClean = normalizeOptionalInput pbEngineerName
-  case validateEngineer serviceTypeClean engineerIdClean engineerNameClean of
+  case validateEngineer (Catalog.serviceOfferingRequiresEngineer (entityVal serviceOffering)) engineerIdClean engineerNameClean of
     Left msg -> throwBadRequest msg
     Right () -> pure ()
   mEngineerParty <-
@@ -9712,14 +9700,17 @@ createPublicBooking PublicBookingReq{..} = do
       validatePublicBookingNotes pbNotes
   (partyId, _) <- ensurePartyWithAccount (Just fullNameClean) emailClean phoneClean
   resourceKeys <- runDB $
-    resolveResourcesForBooking serviceTypeClean (fromMaybe [] pbResourceIds) startsAtClean endsAt
+    resolveResourcesForBooking (Just serviceOffering) (fromMaybe [] pbResourceIds) startsAtClean endsAt
   let resolvedEngineerName =
         resolveBookingEngineerName engineerNameClean mEngineerParty
   let bookingRecord = Booking
-        { bookingTitle          = buildTitle serviceTypeClean fullNameClean
+        { bookingTitle          = serviceTypeLabel <> " · " <> fullNameClean
         , bookingServiceOrderId = Nothing
         , bookingPartyId        = Just partyId
-        , bookingServiceType    = serviceTypeClean
+        , bookingServiceType    = Nothing
+        , bookingServiceOfferingId = Just pbServiceOfferingId
+        , bookingBookingTypeId = Nothing
+        , bookingWorkflowStateId = Nothing
         , bookingEngineerPartyId = entityKey <$> mEngineerParty
         , bookingEngineerName    = resolvedEngineerName
         , bookingStartsAt       = startsAtClean
@@ -9744,9 +9735,6 @@ createPublicBooking PublicBookingReq{..} = do
   dto <- either throwError pure dtoResult
   notifyEngineerIfNeeded dto
   pure dto
-  where
-    buildTitle (Just svc) nameTxt = svc <> " · " <> nameTxt
-    buildTitle Nothing nameTxt    = "Reserva · " <> nameTxt
 
 createBooking :: AuthedUser -> CreateBookingReq -> AppM BookingDTO
 createBooking user req = do
@@ -9758,9 +9746,8 @@ createBooking user req = do
   status' <- either throwBadRequest pure (parseBookingStatus (cbStatus req))
   either throwError pure $
     validateBookingTimeRange (cbStartsAt req) (cbEndsAt req)
-  serviceTypeClean <-
-    either throwError pure $
-      validateOptionalBookingServiceType (cbServiceType req)
+  serviceOffering <- runDB $
+    loadSelectableServiceOffering now (cbServiceOfferingId req)
   engineerIdClean <-
     either throwError pure $
       validateOptionalPositiveIdField "engineerPartyId" (cbEngineerPartyId req)
@@ -9777,12 +9764,12 @@ createBooking user req = do
       partyKey         = entityKey <$> mParty
       requestedRooms   = fromMaybe [] (cbResourceIds req)
   notesClean <- either throwError pure (validateBookingNotes (cbNotes req))
-  case validateEngineer serviceTypeClean engineerIdClean engineerNameClean of
+  case validateEngineer (Catalog.serviceOfferingRequiresEngineer (entityVal serviceOffering)) engineerIdClean engineerNameClean of
     Left msg -> throwBadRequest msg
     Right () -> pure ()
 
   resourceKeys <- runDB $
-    resolveResourcesForBooking serviceTypeClean requestedRooms (cbStartsAt req) (cbEndsAt req)
+    resolveResourcesForBooking (Just serviceOffering) requestedRooms (cbStartsAt req) (cbEndsAt req)
   let resolvedEngineerName =
         resolveBookingEngineerName engineerNameClean mEngineerParty
 
@@ -9790,7 +9777,10 @@ createBooking user req = do
         { bookingTitle          = titleClean
         , bookingServiceOrderId = Nothing
         , bookingPartyId        = partyKey
-        , bookingServiceType    = serviceTypeClean
+        , bookingServiceType    = Nothing
+        , bookingServiceOfferingId = Just (cbServiceOfferingId req)
+        , bookingBookingTypeId = Nothing
+        , bookingWorkflowStateId = Nothing
         , bookingEngineerPartyId = entityKey <$> mEngineerParty
         , bookingEngineerName    = resolvedEngineerName
         , bookingStartsAt       = cbStartsAt req
@@ -9823,16 +9813,11 @@ updateBooking user bookingIdI req = do
   bookingIdValid <- either throwError pure (validatePositiveIdField "bookingId" bookingIdI)
   either throwError pure (validateUpdateBookingRequestHasChanges req)
   Env pool _ <- ask
+  now <- liftIO getCurrentTime
   titleUpdate <- either throwError pure (validateOptionalBookingTitleUpdate (ubTitle req))
   notesUpdate <- either throwError pure (validateBookingNotes (ubNotes req))
-  serviceTypeUpdate <-
-    case ubServiceType req of
-      Nothing -> pure Nothing
-      Just rawServiceType -> do
-        serviceTypeClean <-
-          either throwError pure $
-            validateOptionalBookingServiceType (Just rawServiceType)
-        pure (Just serviceTypeClean)
+  requestedServiceOffering <-
+    traverse (runDB . loadSelectableServiceOffering now) (ubServiceOfferingId req)
   requestedEngineerId <-
     either throwError pure $
       validateOptionalPositiveIdField "engineerPartyId" (ubEngineerPartyId req)
@@ -9842,6 +9827,10 @@ updateBooking user bookingIdI req = do
     case mBooking of
       Nothing -> pure (Left err404)
       Just (Entity _ current) -> do
+        existingServiceOffering <-
+          case bookingServiceOfferingId current >>= serviceOfferingKeyFromUUID of
+            Nothing -> pure Nothing
+            Just offeringKey -> getEntity offeringKey
         currentEngineerParty <-
           case bookingEngineerPartyId current of
             Nothing -> pure Nothing
@@ -9857,10 +9846,16 @@ updateBooking user bookingIdI req = do
                       maybe (bookingEngineerName current) (normalizeOptionalInput . Just) (ubEngineerName req)
                     effectiveEngineerParty =
                       requestedEngineerParty <|> currentEngineerParty
+                    effectiveServiceOffering =
+                      requestedServiceOffering <|> existingServiceOffering
                     updated = current
                       { bookingTitle       = fromMaybe (bookingTitle current) titleUpdate
                       , bookingServiceType =
-                          fromMaybe (bookingServiceType current) serviceTypeUpdate
+                          if isJust requestedServiceOffering
+                            then Nothing
+                            else bookingServiceType current
+                      , bookingServiceOfferingId =
+                          ubServiceOfferingId req <|> bookingServiceOfferingId current
                       , bookingNotes       =
                           if isJust (ubNotes req)
                             then notesUpdate
@@ -9879,7 +9874,7 @@ updateBooking user bookingIdI req = do
                 case validateBookingTimeRange (bookingStartsAt updated) (bookingEndsAt updated) of
                   Left bookingErr -> pure (Left bookingErr)
                   Right () ->
-                    case validateEngineer (bookingServiceType updated) (fmap fromSqlKey (bookingEngineerPartyId updated)) (bookingEngineerName updated) of
+                    case validateEngineer (maybe False (Catalog.serviceOfferingRequiresEngineer . entityVal) effectiveServiceOffering) (fmap fromSqlKey (bookingEngineerPartyId updated)) (bookingEngineerName updated) of
                       Left msg -> pure (Left err400 { errBody = BL8.fromStrict (TE.encodeUtf8 msg) })
                       Right () -> do
                         replace bookingId updated
@@ -9907,6 +9902,45 @@ resolveOptionalBookingPartyReference fieldName (Just rawId) = do
               }
           Just partyEnt -> Right (Just partyEnt)
 
+serviceOfferingKeyFromUUID :: UUID.UUID -> Maybe (Key Catalog.ServiceOffering)
+serviceOfferingKeyFromUUID = fromPathPiece . UUID.toText
+
+serviceOfferingUUIDFromKey :: Key Catalog.ServiceOffering -> Maybe UUID.UUID
+serviceOfferingUUIDFromKey = UUID.fromText . toPathPiece
+
+loadSelectableServiceOffering
+  :: UTCTime
+  -> UUID.UUID
+  -> SqlPersistT IO (Entity Catalog.ServiceOffering)
+loadSelectableServiceOffering now rawOfferingId =
+  case serviceOfferingKeyFromUUID rawOfferingId of
+    Nothing -> liftIO . throwIO $ invalidServiceOfferingReference
+    Just offeringKey -> do
+      mOffering <- getEntity offeringKey
+      case mOffering of
+        Nothing -> liftIO . throwIO $ invalidServiceOfferingReference
+        Just offeringEntity@(Entity _ offering) -> do
+          mWorkflowState <- get (Catalog.serviceOfferingWorkflowStateId offering)
+          let today = utctDay now
+              effective =
+                maybe True (<= today) (Catalog.serviceOfferingEffectiveFrom offering)
+                  && maybe True (>= today) (Catalog.serviceOfferingEffectiveUntil offering)
+              published = maybe False ((== "published") . Catalog.workflowStateCode) mWorkflowState
+              selectable =
+                Catalog.serviceOfferingActive offering
+                  && isNothing (Catalog.serviceOfferingDeprecatedAt offering)
+                  && effective
+                  && published
+          if selectable
+            then pure offeringEntity
+            else liftIO . throwIO $ invalidServiceOfferingReference
+  where
+    invalidServiceOfferingReference =
+      err422
+        { errBody =
+            "serviceOfferingId must reference an active, effective, published service offering"
+        }
+
 
 resolveOptionalBookingEngineerReference
   :: Maybe Int64
@@ -9918,17 +9952,12 @@ resolveOptionalBookingEngineerReference engineerId = do
     Left serverErr -> pure (Left serverErr)
     Right Nothing -> pure (Right Nothing)
     Right (Just partyEnt) -> do
-      activeEngineer <- selectFirst
-        [ PartyRolePartyId ==. entityKey partyEnt
-        , PartyRoleRole ==. Engineer
-        , PartyRoleActive ==. True
-        ]
-        []
+      activeEngineer <- hasCanonicalPartyRole (entityKey partyEnt) Engineer
       pure $ case activeEngineer of
-        Nothing ->
+        False ->
           Left err422
             { errBody = "engineerPartyId must reference an active engineer" }
-        Just _ ->
+        True ->
           Right (Just partyEnt)
 
 
@@ -9961,14 +9990,20 @@ buildBookingDTOs bookings = do
   let bookingIds       = map entityKey bookings
       bookingPartyIds  = catMaybes $ map (bookingPartyId . entityVal) bookings
       serviceOrderKeys = catMaybes $ map (bookingServiceOrderId . entityVal) bookings
+      serviceOfferingKeys =
+        mapMaybe (bookingServiceOfferingId . entityVal >=> serviceOfferingKeyFromUUID) bookings
   resMap <- loadBookingResourceMap bookingIds
   serviceOrderMap <- loadServiceOrderMap serviceOrderKeys
+  serviceOfferingRows <-
+    selectList [Catalog.ServiceOfferingId <-. nub serviceOfferingKeys] []
+  let serviceOfferingMap =
+        Map.fromList [(entityKey row, row) | row <- serviceOfferingRows]
   let servicePartyIds = map (M.serviceOrderCustomerId . entityVal) (Map.elems serviceOrderMap)
       partyIds = nub (bookingPartyIds ++ servicePartyIds)
   partyMap <- loadPartyDisplayMap partyIds
-  pure $ map (toDTO resMap partyMap serviceOrderMap) bookings
+  pure $ map (toDTO resMap partyMap serviceOrderMap serviceOfferingMap) bookings
   where
-    toDTO resMap partyMap soMap (Entity bid b) =
+    toDTO resMap partyMap soMap offeringMap (Entity bid b) =
       let resources = Map.findWithDefault [] bid resMap
           partyDisplay = bookingPartyId b >>= (`Map.lookup` partyMap)
           serviceOrderEnt = bookingServiceOrderId b >>= (`Map.lookup` soMap)
@@ -9977,6 +10012,11 @@ buildBookingDTOs bookings = do
             Map.lookup (M.serviceOrderCustomerId (entityVal soEnt)) partyMap
           fallbackOrderTitle = normalizeOptionalInput (Just (bookingTitle b))
           fallbackCustomer = partyDisplay
+          canonicalServiceLabel = do
+            rawOfferingId <- bookingServiceOfferingId b
+            offeringKey <- serviceOfferingKeyFromUUID rawOfferingId
+            offering <- Map.lookup offeringKey offeringMap
+            pure (Catalog.serviceOfferingNameEs (entityVal offering))
       in BookingDTO
         { bookingId   = fromSqlKey bid
         , title       = bookingTitle b
@@ -9987,7 +10027,8 @@ buildBookingDTOs bookings = do
         , partyId     = fmap fromSqlKey (bookingPartyId b)
         , engineerPartyId = fmap fromSqlKey (bookingEngineerPartyId b)
         , engineerName    = bookingEngineerName b
-        , serviceType = bookingServiceType b
+        , serviceOfferingId = bookingServiceOfferingId b
+        , serviceType = canonicalServiceLabel <|> bookingServiceType b
         , serviceOrderId    = fmap fromSqlKey (bookingServiceOrderId b)
         , serviceOrderTitle = serviceOrderTitleText <|> fallbackOrderTitle
         , customerName      = customerNameText <|> fallbackCustomer
@@ -10125,7 +10166,7 @@ validateUpdateBookingRequestHasChanges :: UpdateBookingReq -> Either ServerError
 validateUpdateBookingRequestHasChanges UpdateBookingReq{..}
   | or
       [ isJust ubTitle
-      , isJust ubServiceType
+      , isJust ubServiceOfferingId
       , isJust ubStatus
       , isJust ubNotes
       , isJust ubStartsAt
@@ -10256,6 +10297,13 @@ validateRequiredCmsSlug rawSlug =
 validateCmsContentPathId :: Int -> Either ServerError (Key CMS.CmsContent)
 validateCmsContentPathId rawId =
   toSqlKey <$> validatePositiveIdField "contentId" (fromIntegral rawId)
+
+validateOptionalCmsContentIdFilter :: Maybe Text -> Either ServerError (Maybe UUID.UUID)
+validateOptionalCmsContentIdFilter Nothing = Right Nothing
+validateOptionalCmsContentIdFilter (Just rawContentId) =
+  case UUID.fromText (T.strip rawContentId) of
+    Just contentId -> Right (Just contentId)
+    Nothing -> Left err400 { errBody = "contentId must be a canonical UUID" }
 
 validateOptionalCmsSlugFilter :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalCmsSlugFilter Nothing = Right Nothing
@@ -10881,14 +10929,8 @@ validateServiceAdSlotWindow slotMinutes startsAt endsAt = do
     then Right ()
     else Left err400 { errBody = "slot duration must match service ad slotMinutes" }
 
-requiresEngineer :: Maybe Text -> Bool
-requiresEngineer Nothing = False
-requiresEngineer (Just svc) =
-  let lowered = T.toLower (T.strip svc)
-  in any (`T.isInfixOf` lowered) ["graba", "record", "mezcl", "mix", "master"]
-
-validateEngineer :: Maybe Text -> Maybe Int64 -> Maybe Text -> Either Text ()
-validateEngineer svc mEngineerId mEngineerName
+validateEngineer :: Bool -> Maybe Int64 -> Maybe Text -> Either Text ()
+validateEngineer engineerRequired mEngineerId mEngineerName
   | Just engineerName <- mEngineerName
   , T.length (T.strip engineerName) > 160 =
       Left "engineerName debe tener 160 caracteres o menos"
@@ -10903,7 +10945,7 @@ validateEngineer svc mEngineerId mEngineerName
   , not (T.null engineerNameClean)
   , not (T.any isAlphaNum engineerNameClean) =
       Left "engineerName debe incluir letras o números"
-  | requiresEngineer svc && isNothing mEngineerId && maybe True T.null (fmap T.strip mEngineerName) =
+  | engineerRequired && isNothing mEngineerId && maybe True T.null (fmap T.strip mEngineerName) =
       Left "Selecciona un ingeniero para grabación/mezcla/mastering"
   | otherwise = Right ()
 
@@ -10919,7 +10961,7 @@ resolveBookingEngineerName fallbackName mEngineerParty =
 normalizeEngineerNameCandidate :: Maybe Text -> Maybe Text
 normalizeEngineerNameCandidate rawName = do
   name <- normalizeOptionalInput rawName
-  case validateEngineer Nothing Nothing (Just name) of
+  case validateEngineer False Nothing (Just name) of
     Right () -> Just name
     Left _ -> Nothing
 
@@ -10960,11 +11002,11 @@ notifyEngineerIfNeeded booking = do
             LogBuf.addLog LogBuf.LogWarning msg
         Right () -> pure ()
 
-resolveResourcesForBooking :: Maybe Text -> [Text] -> UTCTime -> UTCTime -> SqlPersistT IO [Key Resource]
-resolveResourcesForBooking service requested start end =
+resolveResourcesForBooking :: Maybe (Entity Catalog.ServiceOffering) -> [Text] -> UTCTime -> UTCTime -> SqlPersistT IO [Key Resource]
+resolveResourcesForBooking serviceOffering requested start end =
   case normalizeRequestedResourceIds requested of
     Left err -> liftIO (throwIO err)
-    Right [] -> defaultResourcesForService service start end
+    Right [] -> defaultResourcesForService serviceOffering start end
     Right explicit -> resolveRequestedResources explicit start end
 
 maxBookingResourceIds :: Int
@@ -11096,47 +11138,51 @@ dedupeStable = go Set.empty
       | Set.member x seen = go seen xs
       | otherwise = x : go (Set.insert x seen) xs
 
-defaultResourcesForService :: Maybe Text -> UTCTime -> UTCTime -> SqlPersistT IO [Key Resource]
+defaultResourcesForService :: Maybe (Entity Catalog.ServiceOffering) -> UTCTime -> UTCTime -> SqlPersistT IO [Key Resource]
 defaultResourcesForService Nothing _ _ = pure []
-defaultResourcesForService (Just service) start end = do
-  let normalized = T.toLower (T.strip service)
-  rooms <- selectList [ResourceResourceType ==. Room, ResourceActive ==. True] [Asc ResourceId]
-  let findByName name = find (\(Entity _ room) -> T.toLower (resourceName room) == T.toLower name) rooms
-      boothPredicate (Entity _ room) = "booth" `T.isInfixOf` T.toLower (resourceName room)
-      controlRoom = findByName "Control Room"
-      vocalBooth  =
-        findByName "Vocal Booth"
-          <|> find (\(Entity _ room) ->
-                let lower = T.toLower (resourceName room)
-                in "vocal" `T.isInfixOf` lower || "booth" `T.isInfixOf` lower) rooms
-      djBooths =
-        let candidateNames = ["Booth 1","Booth 2","Booth A","Booth B","DJ Booth 1","DJ Booth 2","DJ Booth"]
-            nameMatches = mapMaybe findByName candidateNames
-            boothMatches = filter boothPredicate rooms
-        in dedupeEntities (nameMatches ++ boothMatches)
-  case () of
-    _ | normalized `elem` ["grabacion audiovisual live", "grabación audiovisual live"] ->
-      requireAvailableDefaultResources normalized
-        (catMaybes (map findByName ["Live Room", "Control Room"]))
-        start
-        end
-    _ | normalized `elem` ["band recording", "grabacion banda", "grabación banda"] ->
-      requireAvailableDefaultResources normalized
-        (catMaybes (map findByName ["Live Room", "Control Room"]))
-        start
-        end
-    _ | normalized `elem` ["vocal recording", "grabacion vocal", "grabación vocal"] ->
-      requireAvailableDefaultResources normalized (catMaybes [vocalBooth, controlRoom]) start end
-    _ | "mix" `T.isInfixOf` normalized || "mezcla" `T.isInfixOf` normalized ->
-      requireAvailableDefaultResources normalized (maybe [] pure controlRoom) start end
-    _ | "master" `T.isInfixOf` normalized ->
-      requireAvailableDefaultResources normalized (maybe [] pure controlRoom) start end
-    _ | normalized `elem` ["band rehearsal", "ensayo banda"] ->
-      requireAvailableDefaultResources normalized (maybe [] pure (findByName "Live Room")) start end
-    _ | normalized `elem` ["dj booth rental", "practica de dj", "práctica de dj", "dj practice"] ||
-        "dj" `T.isInfixOf` normalized -> do
-      pickAvailableDefaultResource normalized djBooths start end
-    _ -> pure []
+defaultResourcesForService (Just (Entity offeringKey offering)) start end = do
+  relationships <- selectList
+    [ Catalog.ServiceOfferingDefaultResourceServiceOfferingId ==. offeringKey
+    , Catalog.ServiceOfferingDefaultResourceActive ==. True
+    ]
+    [ Asc Catalog.ServiceOfferingDefaultResourceSortOrder
+    , Asc Catalog.ServiceOfferingDefaultResourceId
+    ]
+  resources <- forM relationships $ \(Entity _ relationship) -> do
+    mResource <- getEntity (Catalog.serviceOfferingDefaultResourceResourceId relationship)
+    selectionModeRows <- case Catalog.serviceOfferingDefaultResourceSelectionModeId relationship of
+      Nothing -> pure []
+      Just selectionModeKey ->
+        rawSql
+          "SELECT code FROM service_resource_selection_mode WHERE id=? AND active=TRUE"
+          [toPersistValue selectionModeKey]
+    case (mResource, selectionModeRows :: [Single Text]) of
+      (Just resourceEntity, [Single selectionModeCode])
+        | resourceActive (entityVal resourceEntity)
+        , resourceResourceType (entityVal resourceEntity) == Room ->
+            pure (selectionModeCode, resourceEntity)
+      _ ->
+        liftIO . throwIO $
+          err503
+            { errBody =
+                "A configured default resource or selection policy is missing or inactive for service offering "
+                  <> BL.fromStrict (TE.encodeUtf8 (Catalog.serviceOfferingCode offering))
+            }
+  let allResources = [resource | ("all", resource) <- resources]
+      alternatives = [resource | ("first-available", resource) <- resources]
+      unknownModes = dedupeStable [mode | (mode, _) <- resources, mode `notElem` ["all", "first-available"]]
+      serviceLabel = Catalog.serviceOfferingCode offering
+  unless (null unknownModes) $
+    liftIO . throwIO $
+      err503
+        { errBody =
+            BL.fromStrict . TE.encodeUtf8 $
+              "Unsupported default-resource selection mode for service offering "
+                <> serviceLabel
+        }
+  required <- requireAvailableDefaultResources serviceLabel allResources start end
+  selectedAlternative <- pickAvailableDefaultResource serviceLabel alternatives start end
+  pure (dedupeStable (required <> selectedAlternative))
 
 requireAvailableDefaultResources
   :: Text
@@ -11192,16 +11238,6 @@ unavailableDefaultResourcesError serviceLabel names =
             <> " are unavailable: "
             <> T.intercalate ", " names
     }
-
-dedupeEntities :: [Entity Resource] -> [Entity Resource]
-dedupeEntities = go Set.empty []
-  where
-    go _ acc [] = reverse acc
-    go seen acc (e:es) =
-      let key = entityKey e
-      in if Set.member key seen
-           then go seen acc es
-           else go (Set.insert key seen) (e:acc) es
 
 isResourceAvailableDB :: Key Resource -> UTCTime -> UTCTime -> SqlPersistT IO Bool
 isResourceAvailableDB resourceKey start end = do
@@ -11951,8 +11987,6 @@ validateStrictAdminAccess AuthedUser{..}
   | any (not . isStrictAdminRoleScope) auRoles =
       Left err403
         { errBody = "Strict Admin access cannot be combined with non-baseline roles" }
-  | auModules /= modulesForRoles auRoles =
-      Left err403 { errBody = "Admin module grants must match roles" }
   | otherwise =
       Right ()
   where
@@ -11960,55 +11994,10 @@ validateStrictAdminAccess AuthedUser{..}
       role `elem` [Admin, Fan, Customer]
 -- User roles API
 userRolesServer :: AuthedUser -> ServerT UserRolesAPI AppM
-userRolesServer user =
-       listUsers
-  :<|> userRoutes
-  where
-    listUsers = do
-      requireStrictAdmin user
-      Env pool _ <- ask
-      liftIO $ flip runSqlPool pool loadUserRoleSummaries
-
-    userRoutes userId =
-           getUserRolesH userId
-      :<|> updateUserRolesH userId
-
-    getUserRolesH userId = do
-      requireStrictAdmin user
-      userIdValid <- either throwError pure (validateUserRoleUserId userId)
-      Env pool _ <- ask
-      let credKey = toSqlKey userIdValid :: Key UserCredential
-      mRoles <- liftIO $ flip runSqlPool pool $ do
-        mCred <- getEntity credKey
-        case mCred of
-          Nothing -> pure Nothing
-          Just (Entity _ cred) -> do
-            rows <- selectList
-              [ PartyRolePartyId ==. userCredentialPartyId cred
-              , PartyRoleActive ==. True
-              ]
-              [Asc PartyRoleRole]
-            pure $ Just (map (partyRoleRole . entityVal) rows)
-      maybe (throwError err404) pure mRoles
-
-    updateUserRolesH userId UserRoleUpdatePayload{roles = payloadRoles} = do
-      requireStrictAdmin user
-      userIdValid <- either throwError pure (validateUserRoleUserId userId)
-      Env pool _ <- ask
-      let credKey = toSqlKey userIdValid :: Key UserCredential
-      updated <- liftIO $ flip runSqlPool pool $ do
-        mCred <- getEntity credKey
-        case mCred of
-          Nothing -> pure False
-          Just (Entity _ cred) -> do
-            applyRoles (userCredentialPartyId cred) payloadRoles
-            pure True
-      unless updated $ throwError err404
-      pure NoContent
-
-validateUserRoleUserId :: Int64 -> Either ServerError Int64
-validateUserRoleUserId =
-  validatePositiveIdField "userId"
+userRolesServer user = do
+  requireStrictAdmin user
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool loadUserRoleSummaries
 
 loadUserRoleSummaries :: SqlPersistT IO [UserRoleSummaryDTO]
 loadUserRoleSummaries = do
@@ -12017,30 +12006,21 @@ loadUserRoleSummaries = do
   where
     summarize (Entity credId cred) = do
       party <- getJustEntity (userCredentialPartyId cred)
-      roles <- selectList
-        [ PartyRolePartyId ==. userCredentialPartyId cred
-        , PartyRoleActive ==. True
-        ]
-        [Asc PartyRoleRole]
+      rolesResult <- loadCanonicalPartyRoles (userCredentialPartyId cred)
+      roleValues <- either
+        (liftIO . ioError . userError . T.unpack)
+        pure
+        rolesResult
       pure UserRoleSummaryDTO
         { id        = fromSqlKey credId
+        , partyId   = fromSqlKey (userCredentialPartyId cred)
         , name      = M.partyDisplayName (entityVal party)
         , email     = M.partyPrimaryEmail (entityVal party)
         , phone     = M.partyPrimaryPhone (entityVal party)
-        , roles     = map (partyRoleRole . entityVal) roles
+        , roles     = roleValues
         , status    = if userCredentialActive cred then AccountStatusActive else AccountStatusInactive
         , createdAt = M.partyCreatedAt (entityVal party)
         }
-
-applyRoles :: PartyId -> [RoleEnum] -> SqlPersistT IO ()
-applyRoles partyKey rolesList = do
-  existing <- selectList [PartyRolePartyId ==. partyKey] []
-  let desired = Set.fromList rolesList
-  forM_ (Set.toList desired) $ \role ->
-    void $ upsert (PartyRole partyKey role True) [PartyRoleActive =. True]
-  forM_ existing $ \(Entity roleId record) ->
-    when (partyRoleActive record && Set.notMember (partyRoleRole record) desired) $
-      update roleId [PartyRoleActive =. False]
 
 adsPublicServer :: ServerT AdsPublicAPI AppM
 adsPublicServer = adsInquiryPublic :<|> adsAssistPublic
@@ -13426,13 +13406,22 @@ ensurePartyForInquiry AdsInquiry{..} now = do
         , M.partyEmergencyContact = Nothing
         , M.partyNotes            = Nothing
         , M.partyStripeCustomerId = Nothing
+        , M.partyCountryCode       = Nothing
+        , M.partyCountryId         = Nothing
         , M.partyCreatedAt        = now
         }
       ensureStudentRole pid
       pure pid
 
     ensureStudentRole pid =
-      void $ upsert (M.PartyRole pid Student True) [M.PartyRoleActive =. True]
+      requireAutomaticSecurityPolicyDb
+        "trial.inquiry.student"
+        pid
+        False
+        Nothing
+        "trial-inquiry"
+        ("trial-inquiry:" <> T.pack (show (fromSqlKey pid)))
+        now
 
 resolveSubject :: Maybe Text -> SqlPersistT IO (Maybe (Key Trials.Subject), Maybe Text)
 resolveSubject mCourse =
@@ -13511,6 +13500,37 @@ sendAutoReplies pool partyId cfg AdsInquiry{..} mCourse = do
     ]
   pure channels
 
+resolveAuthoredContentIdBySlug :: Text -> AppM (Maybe UUID.UUID)
+resolveAuthoredContentIdBySlug slug = do
+  current <- runDB $ selectFirst
+    [ Catalog.AuthoredContentCurrentSlug ==. slug
+    , Catalog.AuthoredContentActive ==. True
+    ]
+    []
+  candidate <- case current of
+    Just entity -> pure (Just entity)
+    Nothing -> do
+      alias <- runDB $ selectFirst
+        [ Catalog.CatalogSlugAliasEntityKind ==. "authored_content"
+        , Catalog.CatalogSlugAliasScope ==. "cms-public"
+        , Catalog.CatalogSlugAliasSlug ==. slug
+        , Catalog.CatalogSlugAliasRetiredAt ==. Nothing
+        ]
+        []
+      case alias of
+        Nothing -> pure Nothing
+        Just (Entity _ aliasValue) -> runDB $ getEntity
+          (Catalog.AuthoredContentKey (Catalog.catalogSlugAliasEntityId aliasValue))
+  case candidate of
+    Nothing -> pure Nothing
+    Just (Entity (Catalog.AuthoredContentKey contentId) value)
+      | not (Catalog.authoredContentActive value) -> pure Nothing
+      | otherwise -> do
+          workflowState <- runDB (get (Catalog.authoredContentWorkflowStateId value))
+          pure $ case workflowState of
+            Just state | Catalog.workflowStateCode state == "published" -> Just contentId
+            _ -> Nothing
+
 cmsPublicServer :: ServerT CmsPublicAPI AppM
 cmsPublicServer = cmsGet :<|> cmsList
   where
@@ -13518,6 +13538,7 @@ cmsPublicServer = cmsGet :<|> cmsList
       now <- liftIO getCurrentTime
       pure CmsContentDTO
         { ccdId          = 0
+        , ccdContentId   = Nothing
         , ccdSlug        = slug
         , ccdLocale      = locale
         , ccdVersion     = 0
@@ -13534,11 +13555,14 @@ cmsPublicServer = cmsGet :<|> cmsList
           (either throwError pure . validateRequiredCmsSlug)
           mSlug
       locale <- either throwError pure (validateCmsLocaleFilter mLocale)
-      mPublished <- runDB $ selectFirst
-        [ CMS.CmsContentSlug ==. slug
-        , CMS.CmsContentLocale ==. locale
-        , CMS.CmsContentStatus ==. "published"
-        ] [Desc CMS.CmsContentVersion]
+      mAuthoredContentId <- resolveAuthoredContentIdBySlug slug
+      mPublished <- case mAuthoredContentId of
+        Nothing -> pure Nothing
+        Just authoredContentId -> runDB $ selectFirst
+          [ CMS.CmsContentAuthoredContentId ==. Just authoredContentId
+          , CMS.CmsContentLocale ==. locale
+          , CMS.CmsContentStatus ==. "published"
+          ] [Desc CMS.CmsContentVersion]
       maybe (fallbackContent slug locale) (pure . toCmsDTO) mPublished
 
     cmsList mLocale mPrefix = do
@@ -13548,6 +13572,7 @@ cmsPublicServer = cmsGet :<|> cmsList
         selectList
           [ CMS.CmsContentLocale ==. locale
           , CMS.CmsContentStatus ==. "published"
+          , CMS.CmsContentAuthoredContentId !=. Nothing
           ]
           [ Desc CMS.CmsContentPublishedAt
           , Desc CMS.CmsContentVersion
@@ -13583,6 +13608,10 @@ labelServer user =
   :<|> createLabelTrack user
   :<|> updateLabelTrack user
   :<|> deleteLabelTrack user
+  :<|> listLabelProjectNotes user
+  :<|> createLabelProjectNote user
+  :<|> updateLabelProjectNote user
+  :<|> deactivateLabelProjectNote user
 
 validateContractsAccess :: AuthedUser -> Either ServerError ()
 validateContractsAccess user
@@ -16011,6 +16040,120 @@ toLabelTrackDTO nameMap (Entity key t) =
     , ltUpdatedAt = ME.labelTrackUpdatedAt t
     }
 
+requireLabelProjectNotesAccess :: AuthedUser -> AppM ()
+requireLabelProjectNotesAccess user =
+  unless (hasRole Admin user || hasRole Webmaster user) $
+    throwError err403
+      { errBody = "Label project notes require an administrator or webmaster role"
+      }
+
+validateLabelProjectNoteText :: Text -> Either ServerError Text
+validateLabelProjectNoteText rawText =
+  case validateLabelTrackNote rawText of
+    Right (Just noteText) -> Right noteText
+    Right Nothing -> Left err400 { errBody = "Project note text is required" }
+    Left validationError -> Left validationError
+
+validateLabelProjectNotePathId :: Text -> Either ServerError (Key ME.LabelProjectNote)
+validateLabelProjectNotePathId rawId =
+  let normalized = T.strip rawId
+      invalid = Left err400 { errBody = "Invalid project note id" }
+  in if T.null normalized
+       then invalid
+       else case fromPathPiece normalized of
+         Just key | toPathPiece key == normalized -> Right key
+         _ -> invalid
+
+listLabelProjectNotes :: AuthedUser -> AppM [LabelProjectNoteDTO]
+listLabelProjectNotes user = do
+  requireLabelProjectNotesAccess user
+  rows <- runDB $ selectList
+    [ME.LabelProjectNoteActive ==. True]
+    [Asc ME.LabelProjectNoteCompleted, Desc ME.LabelProjectNoteUpdatedAt]
+  pure (map toLabelProjectNoteDTO rows)
+
+createLabelProjectNote :: AuthedUser -> LabelProjectNoteCreate -> AppM LabelProjectNoteDTO
+createLabelProjectNote user LabelProjectNoteCreate{..} = do
+  requireLabelProjectNotesAccess user
+  noteText <- either throwError pure (validateLabelProjectNoteText lpncText)
+  now <- liftIO getCurrentTime
+  let record = ME.LabelProjectNote
+        { ME.labelProjectNoteText = noteText
+        , ME.labelProjectNoteCompleted = False
+        , ME.labelProjectNoteActive = True
+        , ME.labelProjectNoteCreatedBy = Just (auPartyId user)
+        , ME.labelProjectNoteUpdatedBy = Just (auPartyId user)
+        , ME.labelProjectNoteCreatedAt = now
+        , ME.labelProjectNoteUpdatedAt = now
+        , ME.labelProjectNoteVersion = 1
+        , ME.labelProjectNoteSourceCmsContentId = Nothing
+        , ME.labelProjectNoteSourceItemId = Nothing
+        }
+  key <- runDB (insert record)
+  pure (toLabelProjectNoteDTO (Entity key record))
+
+updateLabelProjectNote :: AuthedUser -> Text -> LabelProjectNoteUpdate -> AppM LabelProjectNoteDTO
+updateLabelProjectNote user rawId LabelProjectNoteUpdate{..} = do
+  requireLabelProjectNotesAccess user
+  key <- either throwError pure (validateLabelProjectNotePathId rawId)
+  when (lpnuExpectedVersion <= 0) $
+    throwError err400 { errBody = "expectedVersion must be a positive integer" }
+  textUpdate <- traverse (either throwError pure . validateLabelProjectNoteText) lpnuText
+  when (isNothing textUpdate && isNothing lpnuCompleted) $
+    throwError err400 { errBody = "Project note update must include text or completed" }
+  existing <- runDB (get key)
+  case existing of
+    Nothing -> throwError err404
+    Just note | not (ME.labelProjectNoteActive note) -> throwError err410
+    Just _ -> pure ()
+  now <- liftIO getCurrentTime
+  let updates = catMaybes
+        [ (ME.LabelProjectNoteText =.) <$> textUpdate
+        , (ME.LabelProjectNoteCompleted =.) <$> lpnuCompleted
+        ] <>
+        [ ME.LabelProjectNoteUpdatedBy =. Just (auPartyId user)
+        , ME.LabelProjectNoteUpdatedAt =. now
+        , ME.LabelProjectNoteVersion +=. 1
+        ]
+  updatedRows <- runDB $ updateWhereCount
+    [ ME.LabelProjectNoteId ==. key
+    , ME.LabelProjectNoteActive ==. True
+    , ME.LabelProjectNoteVersion ==. lpnuExpectedVersion
+    ]
+    updates
+  when (updatedRows /= 1) $
+    throwError err409 { errBody = "Project note changed; reload before saving" }
+  toLabelProjectNoteDTO <$> runDB (getJustEntity key)
+
+deactivateLabelProjectNote :: AuthedUser -> Text -> AppM NoContent
+deactivateLabelProjectNote user rawId = do
+  requireLabelProjectNotesAccess user
+  key <- either throwError pure (validateLabelProjectNotePathId rawId)
+  existing <- runDB (get key)
+  case existing of
+    Nothing -> throwError err404
+    Just note | not (ME.labelProjectNoteActive note) -> throwError err410
+    Just _ -> do
+      now <- liftIO getCurrentTime
+      runDB $ update key
+        [ ME.LabelProjectNoteActive =. False
+        , ME.LabelProjectNoteUpdatedBy =. Just (auPartyId user)
+        , ME.LabelProjectNoteUpdatedAt =. now
+        , ME.LabelProjectNoteVersion +=. 1
+        ]
+      pure NoContent
+
+toLabelProjectNoteDTO :: Entity ME.LabelProjectNote -> LabelProjectNoteDTO
+toLabelProjectNoteDTO (Entity key note) =
+  LabelProjectNoteDTO
+    { lpnId = toPathPiece key
+    , lpnText = ME.labelProjectNoteText note
+    , lpnCompleted = ME.labelProjectNoteCompleted note
+    , lpnCreatedAt = ME.labelProjectNoteCreatedAt note
+    , lpnUpdatedAt = ME.labelProjectNoteUpdatedAt note
+    , lpnVersion = ME.labelProjectNoteVersion note
+    }
+
 cmsAdminServer :: AuthedUser -> ServerT CmsAdminAPI AppM
 cmsAdminServer user =
        cmsListH
@@ -16021,12 +16164,12 @@ cmsAdminServer user =
     requireWebmaster = unless (hasRole Admin user || hasRole Webmaster user) $
       throwError err403
 
-    cmsListH mSlug mLocale = do
+    cmsListH mContentId mLocale = do
       requireWebmaster
-      slugFilter <- either throwError pure (validateOptionalCmsSlugFilter mSlug)
+      contentIdFilter <- either throwError pure (validateOptionalCmsContentIdFilter mContentId)
       localeFilter <- either throwError pure (validateOptionalCmsLocaleFilter mLocale)
       let filters = catMaybes
-            [ (CMS.CmsContentSlug ==.) <$> slugFilter
+            [ (CMS.CmsContentAuthoredContentId ==.) . Just <$> contentIdFilter
             , (CMS.CmsContentLocale ==.) <$> localeFilter
             ]
       rows <- runDB $ selectList filters [Desc CMS.CmsContentCreatedAt]
@@ -16036,30 +16179,26 @@ cmsAdminServer user =
       requireWebmaster
       now <- liftIO getCurrentTime
       statusVal <- either throwError pure (validateCmsContentStatus cciStatus)
-      slug <- either throwError pure (validateRequiredCmsSlug cciSlug)
+      when (statusVal /= "draft") $
+        throwError err409
+          { errBody = "CMS changes must be created as drafts and published through review" }
+      (authoredContentUuid, authoredContent, contentType) <- loadAuthoredCmsTarget cciContentId
+      let slug = Catalog.authoredContentCurrentSlug authoredContent
       locale <- either throwError pure (validateRequiredCmsLocale cciLocale)
       title <- either throwError pure (validateOptionalCmsTitle cciTitle)
       payload <- either throwError pure (validateOptionalCmsPayload cciPayload)
+      either throwError pure (validateCmsPayloadSchema contentType payload)
       nextVersion <- runDB $ do
         mLatest <- selectFirst
-          [ CMS.CmsContentSlug ==. slug
+          [ CMS.CmsContentAuthoredContentId ==. Just authoredContentUuid
           , CMS.CmsContentLocale ==. locale
           ]
           [Desc CMS.CmsContentVersion]
         pure $ maybe 1 ((+1) . CMS.cmsContentVersion . entityVal) mLatest
-      let publishedAt = if statusVal == "published" then Just now else Nothing
       cid <- runDB $ do
-        when (statusVal == "published") $
-          updateWhere
-            [ CMS.CmsContentSlug ==. slug
-            , CMS.CmsContentLocale ==. locale
-            , CMS.CmsContentStatus ==. "published"
-            ]
-            [ CMS.CmsContentStatus =. "archived"
-            , CMS.CmsContentUpdatedAt =. now
-            ]
         insert CMS.CmsContent
-          { CMS.cmsContentSlug = slug
+          { CMS.cmsContentAuthoredContentId = Just authoredContentUuid
+          , CMS.cmsContentSlug = slug
           , CMS.cmsContentLocale = locale
           , CMS.cmsContentVersion = nextVersion
           , CMS.cmsContentStatus = statusVal
@@ -16068,7 +16207,7 @@ cmsAdminServer user =
           , CMS.cmsContentCreatedBy = Just (auPartyId user)
           , CMS.cmsContentCreatedAt = now
           , CMS.cmsContentUpdatedAt = now
-          , CMS.cmsContentPublishedAt = publishedAt
+          , CMS.cmsContentPublishedAt = Nothing
           }
       ent <- runDB $ getJustEntity cid
       pure (toCmsDTO ent)
@@ -16081,9 +16220,13 @@ cmsAdminServer user =
       case mEnt of
         Nothing -> throwError err404
         Just ent -> do
+          when (CMS.cmsContentAuthoredContentId ent == Nothing) $
+            throwError err409 { errBody = "Legacy CMS content has no canonical authored content ID" }
+          when (CMS.cmsContentCreatedBy ent == Just (auPartyId user)) $
+            throwError err403 { errBody = "CMS draft authors cannot approve their own changes" }
           runDB $ do
             updateWhere
-              [ CMS.CmsContentSlug ==. CMS.cmsContentSlug ent
+              [ CMS.CmsContentAuthoredContentId ==. CMS.cmsContentAuthoredContentId ent
               , CMS.CmsContentLocale ==. CMS.cmsContentLocale ent
               , CMS.CmsContentStatus ==. "published"
               ]
@@ -16104,14 +16247,23 @@ cmsAdminServer user =
       mEnt <- runDB $ get contentKey
       case mEnt of
         Nothing -> throwError err404
-        Just _ -> do
-          runDB $ delete contentKey
+        Just ent -> do
+          when (CMS.cmsContentAuthoredContentId ent == Nothing) $
+            throwError err409 { errBody = "Legacy CMS content has no canonical authored content ID" }
+          when (CMS.cmsContentStatus ent == "published") $
+            throwError err409 { errBody = "Published CMS content cannot be deleted; publish a replacement revision" }
+          now <- liftIO getCurrentTime
+          runDB $ update contentKey
+            [ CMS.CmsContentStatus =. "archived"
+            , CMS.CmsContentUpdatedAt =. now
+            ]
           pure NoContent
 
 toCmsDTO :: Entity CMS.CmsContent -> CmsContentDTO
 toCmsDTO (Entity cid c) =
   CmsContentDTO
     { ccdId = entityKeyInt cid
+    , ccdContentId = UUID.toText <$> CMS.cmsContentAuthoredContentId c
     , ccdSlug = CMS.cmsContentSlug c
     , ccdLocale = CMS.cmsContentLocale c
     , ccdVersion = CMS.cmsContentVersion c
@@ -16121,6 +16273,60 @@ toCmsDTO (Entity cid c) =
     , ccdCreatedAt = CMS.cmsContentCreatedAt c
     , ccdPublishedAt = CMS.cmsContentPublishedAt c
     }
+
+loadAuthoredCmsTarget :: Text -> AppM (UUID.UUID, Catalog.AuthoredContent, Catalog.ContentType)
+loadAuthoredCmsTarget rawContentId = do
+  contentId <- either throwError pure (validateRequiredCmsContentId rawContentId)
+  authoredContent <- runDB (get (Catalog.AuthoredContentKey contentId)) >>= maybe
+    (throwError err404 { errBody = "Authored content not found" })
+    pure
+  unless (Catalog.authoredContentActive authoredContent) $
+    throwError err409 { errBody = "Authored content is inactive" }
+  contentType <- runDB (get (Catalog.authoredContentContentTypeId authoredContent)) >>= maybe
+    (throwError err503 { errBody = "Authored content type is unavailable" })
+    pure
+  unless (Catalog.contentTypeActive contentType && Catalog.contentTypeEntityKind contentType == "authored_page") $
+    throwError err409 { errBody = "Only active authored-page content types may use the CMS" }
+  authoredState <- runDB (get (Catalog.authoredContentWorkflowStateId authoredContent)) >>= maybe
+    (throwError err503 { errBody = "Authored content workflow state is unavailable" })
+    pure
+  typeState <- runDB (get (Catalog.contentTypeWorkflowStateId contentType)) >>= maybe
+    (throwError err503 { errBody = "Content type workflow state is unavailable" })
+    pure
+  unless (Catalog.workflowStateCode authoredState == "published" && Catalog.workflowStateCode typeState == "published") $
+    throwError err409 { errBody = "Authored content and its content type must be published" }
+  pure (contentId, authoredContent, contentType)
+
+validateRequiredCmsContentId :: Text -> Either ServerError UUID.UUID
+validateRequiredCmsContentId rawContentId =
+  case UUID.fromText (T.strip rawContentId) of
+    Just contentId -> Right contentId
+    Nothing -> Left err400 { errBody = "contentId must be a canonical UUID" }
+
+validateCmsPayloadSchema :: Catalog.ContentType -> Maybe Value -> Either ServerError ()
+validateCmsPayloadSchema contentType payload =
+  case CMS.unAesonValue (Catalog.contentTypeSchemaJson contentType) of
+    Object schemaObject ->
+      case AKeyMap.lookup "required" schemaObject of
+        Nothing -> Right ()
+        Just (Array requiredValues) -> do
+          requiredFields <- traverse requiredFieldName (toList requiredValues)
+          case payload of
+            Just (Object payloadObject) ->
+              case filter (\field -> not (AKeyMap.member (AKey.fromText field) payloadObject)) requiredFields of
+                [] -> Right ()
+                missing -> Left err400
+                  { errBody = BL.fromStrict . TE.encodeUtf8 $
+                      "payload is missing required content-type fields: " <> T.intercalate ", " missing
+                  }
+            _ -> Left err400 { errBody = "payload is required by the persisted content type schema" }
+        Just _ -> Left err503 { errBody = "Persisted content type schema has an invalid required field" }
+    _ -> Left err503 { errBody = "Persisted content type schema must be a JSON object" }
+  where
+    requiredFieldName (String fieldName)
+      | not (T.null (T.strip fieldName)) = Right (T.strip fieldName)
+    requiredFieldName _ = Left err503
+      { errBody = "Persisted content type schema contains a non-string required field" }
 
 entityKeyInt :: ToBackendKey SqlBackend record => Key record -> Int
 entityKeyInt = fromIntegral . fromSqlKey

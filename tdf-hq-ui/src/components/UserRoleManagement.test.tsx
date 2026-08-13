@@ -4,6 +4,7 @@ import { createRoot, type Root } from 'react-dom/client';
 
 interface UserSummary {
   id?: number | null;
+  partyId?: number | null;
   name?: string | null;
   email?: string | null;
   phone?: string | null;
@@ -11,13 +12,69 @@ interface UserSummary {
   roles?: string[] | null;
 }
 
+interface SecurityRoleSummary {
+  id: string;
+  code: string;
+  nameEs: string;
+  nameEn: string;
+  emergencyAdministrator: boolean;
+  systemRole: boolean;
+  active: boolean;
+  moduleCodes: string[];
+  permissionCodes: string[];
+  version: number;
+}
+
+interface SecurityAssignmentSummary {
+  id: string;
+  partyId: number;
+  roleId: string;
+  roleCode: string;
+  roleNameEs: string;
+  active: boolean;
+  approvalMode: string;
+  createdAt: string;
+  version: number;
+}
+
+interface PartyRoleGrantDraft {
+  partyId: number;
+  roleId: string;
+  desiredActive: boolean;
+  expectedVersion: number;
+  reason: string;
+  sourcePlatform: string;
+  correlationId: string;
+}
+
+const securityRoles: SecurityRoleSummary[] = ['Admin', 'Engineer', 'Manager', 'Reception', 'Teacher'].map(
+  (code, index) => ({
+    id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+    code,
+    nameEs: code,
+    nameEn: code,
+    emergencyAdministrator: code === 'Admin',
+    systemRole: true,
+    active: true,
+    moduleCodes: [],
+    permissionCodes: [],
+    version: 1,
+  }),
+);
+
 const getUsersMock = jest.fn<() => Promise<UserSummary[]>>();
-const updateUserRolesMock = jest.fn<(userId: number, roles: string[]) => Promise<void>>();
+const getSecurityRolesMock = jest.fn<() => Promise<SecurityRoleSummary[]>>();
+const getPartyRoleAssignmentsMock = jest.fn<(partyId: number) => Promise<SecurityAssignmentSummary[]>>();
+const createPartyRoleRevisionMock = jest.fn<(payload: PartyRoleGrantDraft) => Promise<{ id: string }>>();
+const submitSecurityRevisionMock = jest.fn<(revisionId: string) => Promise<{ id: string }>>();
 
 jest.unstable_mockModule('../api/generated/client', () => ({
   apiClient: {
     getUsers: () => getUsersMock(),
-    updateUserRoles: (userId: number, roles: string[]) => updateUserRolesMock(userId, roles),
+    getSecurityRoles: () => getSecurityRolesMock(),
+    getPartyRoleAssignments: (partyId: number) => getPartyRoleAssignmentsMock(partyId),
+    createPartyRoleRevision: (payload: PartyRoleGrantDraft) => createPartyRoleRevisionMock(payload),
+    submitSecurityRevision: (revisionId: string) => submitSecurityRevisionMock(revisionId),
   },
 }));
 
@@ -65,6 +122,7 @@ const renderComponent = async (container: HTMLElement) => {
 
 const buildUser = (overrides: Partial<UserSummary> = {}): UserSummary => ({
   id: 101,
+  partyId: 101,
   name: 'Ada Lovelace',
   email: 'ada@example.com',
   phone: '+593999000111',
@@ -128,6 +186,12 @@ const getContactCellText = (row: Element) => {
   return buttonText(contactCell);
 };
 
+const setTextAreaValue = (element: HTMLTextAreaElement, value: string) => {
+  const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+  setter?.call(element, value);
+  element.dispatchEvent(new Event('input', { bubbles: true }));
+};
+
 describe('UserRoleManagement', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -150,9 +214,15 @@ describe('UserRoleManagement', () => {
 
   beforeEach(() => {
     getUsersMock.mockReset();
-    updateUserRolesMock.mockReset();
+    getSecurityRolesMock.mockReset();
+    getPartyRoleAssignmentsMock.mockReset();
+    createPartyRoleRevisionMock.mockReset();
+    submitSecurityRevisionMock.mockReset();
     getUsersMock.mockResolvedValue([]);
-    updateUserRolesMock.mockResolvedValue();
+    getSecurityRolesMock.mockResolvedValue(securityRoles);
+    getPartyRoleAssignmentsMock.mockResolvedValue([]);
+    createPartyRoleRevisionMock.mockResolvedValue({ id: 'security-revision-1' });
+    submitSecurityRevisionMock.mockResolvedValue({ id: 'security-revision-1' });
   });
 
   it('replaces the blank first-run table with setup guidance for admins', async () => {
@@ -444,7 +514,7 @@ describe('UserRoleManagement', () => {
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain('Editar roles de Grace Hopper');
         expect(getButtonsByText(document.body, 'Cerrar')).toHaveLength(1);
-        expect(getButtonsByText(document.body, 'Guardar cambios')).toHaveLength(0);
+        expect(getButtonsByText(document.body, 'Enviar a revisión')).toHaveLength(0);
       });
     } finally {
       await cleanup();
@@ -796,14 +866,14 @@ describe('UserRoleManagement', () => {
 
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain(
-          'Sin cambios pendientes. Modifica la selección para mostrar Guardar cambios.',
+          'Sin cambios pendientes. Modifica la selección para preparar una revisión.',
         );
         const closeButton = getButtonsByText(document.body, 'Cerrar')[0];
         expect(closeButton).toBeInstanceOf(HTMLButtonElement);
         expect((closeButton as HTMLButtonElement).disabled).toBe(false);
-        expect(getButtonsByText(document.body, 'Guardar cambios')).toHaveLength(0);
+        expect(getButtonsByText(document.body, 'Enviar a revisión')).toHaveLength(0);
         expect(getButtonsByText(document.body, 'Descartar cambios')).toHaveLength(0);
-        expect(updateUserRolesMock).not.toHaveBeenCalled();
+        expect(createPartyRoleRevisionMock).not.toHaveBeenCalled();
       });
     } finally {
       await cleanup();
@@ -857,15 +927,15 @@ describe('UserRoleManagement', () => {
 
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain('Cambio pendiente: agregar Manager.');
-        expect(document.body.textContent).not.toContain('Listo para guardar esta actualización de permisos.');
+        expect(document.body.textContent).not.toContain('Listo para enviar esta actualización a revisión.');
       });
     } finally {
       await cleanup();
     }
   });
 
-  it('keeps failed role saves inside the edit dialog so admins can retry without losing the list', async () => {
-    updateUserRolesMock.mockRejectedValue(new Error('No se pudieron guardar permisos'));
+  it('keeps failed role revision submissions inside the dialog so admins can retry without losing the list', async () => {
+    createPartyRoleRevisionMock.mockRejectedValue(new Error('No se pudo crear la revisión'));
     getUsersMock.mockResolvedValue([
       buildUser({
         id: 307,
@@ -916,7 +986,16 @@ describe('UserRoleManagement', () => {
         await flushPromises();
       });
 
-      const saveButton = getButtonsByText(document.body, 'Guardar cambios')[0];
+      const reasonInput = document.body.querySelector('textarea');
+      if (!(reasonInput instanceof HTMLTextAreaElement)) {
+        throw new Error('Change reason input not found');
+      }
+      await act(async () => {
+        setTextAreaValue(reasonInput, 'Acceso requerido para coordinar el catálogo');
+        await flushPromises();
+      });
+
+      const saveButton = getButtonsByText(document.body, 'Enviar a revisión')[0];
       if (!(saveButton instanceof HTMLButtonElement)) {
         throw new Error('Save roles button not found');
       }
@@ -927,16 +1006,24 @@ describe('UserRoleManagement', () => {
       });
 
       await waitForExpectation(() => {
-        expect(updateUserRolesMock).toHaveBeenCalledWith(307, ['Admin', 'Manager']);
+        expect(createPartyRoleRevisionMock).toHaveBeenCalledWith(expect.objectContaining({
+          partyId: 101,
+          roleId: securityRoles.find((role) => role.code === 'Manager')?.id,
+          desiredActive: true,
+          expectedVersion: 0,
+          reason: 'Acceso requerido para coordinar el catálogo',
+          sourcePlatform: 'web',
+        }));
+        expect(submitSecurityRevisionMock).not.toHaveBeenCalled();
 
         const dialog = document.body.querySelector('[role="dialog"]');
         if (!(dialog instanceof HTMLElement)) {
           throw new Error('Edit roles dialog not found');
         }
 
-        expect(dialog.textContent).toContain('No se pudieron guardar permisos');
+        expect(dialog.textContent).toContain('No se pudo crear la revisión');
         expect(dialog.textContent).toContain('Cambio pendiente: agregar Manager.');
-        const retrySaveButton = getButtonsByText(dialog, 'Guardar cambios')[0];
+        const retrySaveButton = getButtonsByText(dialog, 'Enviar a revisión')[0];
         expect(retrySaveButton).toBeInstanceOf(HTMLButtonElement);
         expect((retrySaveButton as HTMLButtonElement).disabled).toBe(false);
         expect(container.textContent).toContain('Roles y permisos');

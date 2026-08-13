@@ -249,8 +249,9 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
         )}
       />
 
-      <Dialog open={rejectDialogOpen} onClose={() => setRejectDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{t('refunds.rejectDialogTitle')}</DialogTitle>
+      <Dialog open={rejectDialogOpen} onClose={() => setRejectDialogOpen(false)} maxWidth="sm" fullWidth aria-labelledby="reject-refund-dialog-title">
+        <form onSubmit={(e) => { e.preventDefault(); handleReject(); }}>
+        <DialogTitle id="reject-refund-dialog-title">{t('refunds.rejectDialogTitle')}</DialogTitle>
         <DialogContent>
           <TextField
             label={t('refunds.rejectionReason')}
@@ -267,7 +268,7 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
         <DialogActions>
           <Button onClick={() => setRejectDialogOpen(false)}>{t('refunds.cancel')}</Button>
           <Button
-            onClick={handleReject}
+            type="submit"
             variant="contained"
             color="error"
             disabled={!rejectionReason.trim() || rejectMutation.isPending}
@@ -277,6 +278,7 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
               : t('refunds.rejectRefund')}
           </Button>
         </DialogActions>
+        </form>
       </Dialog>
       <ConfirmDialog
         open={approveConfirmOpen}

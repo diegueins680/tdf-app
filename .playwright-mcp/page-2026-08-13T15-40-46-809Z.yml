@@ -1,0 +1,205 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - link "Saltar al contenido principal" [ref=e1043] [cursor=pointer]:
+      - /url: "#main-content"
+    - navigation "Navegación de la aplicación" [ref=e1044]:
+      - generic [ref=e6]:
+        - generic [ref=e7]: MENÚ
+        - generic [ref=e9]:
+          - textbox "Buscar sección" [ref=e1045]:
+            - /placeholder: Buscar sección (/)
+          - group
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e16]: ATAJOS
+          - list [ref=e19]:
+            - listitem [ref=e20]:
+              - link "Acerca de Reciente · AYUDA" [ref=e1046] [cursor=pointer]:
+                - /url: /acerca
+                - generic [ref=e24]:
+                  - generic [ref=e25]: Acerca de
+                  - paragraph [ref=e26]: Reciente · AYUDA
+            - listitem [ref=e27]:
+              - link "Pipelines Reciente · CREAR" [ref=e1047] [cursor=pointer]:
+                - /url: /estudio/pipelines
+                - generic [ref=e31]:
+                  - generic [ref=e32]: Pipelines
+                  - paragraph [ref=e33]: Reciente · CREAR
+            - listitem [ref=e34]:
+              - link "CMS Reciente · ADMIN" [ref=e1048] [cursor=pointer]:
+                - /url: /configuracion/cms
+                - generic [ref=e38]:
+                  - generic [ref=e39]: CMS
+                  - paragraph [ref=e40]: Reciente · ADMIN
+            - listitem [ref=e41]:
+              - link "Inicio Reciente · CREAR" [ref=e1049] [cursor=pointer]:
+                - /url: /inicio
+                - generic [ref=e45]:
+                  - generic [ref=e46]: Inicio
+                  - paragraph [ref=e47]: Reciente · CREAR
+            - listitem [ref=e48]:
+              - link "Calendario Reciente · CREAR" [ref=e1050] [cursor=pointer]:
+                - /url: /estudio/calendario
+                - generic [ref=e52]:
+                  - generic [ref=e53]: Calendario
+                  - paragraph [ref=e54]: Reciente · CREAR
+            - listitem [ref=e55]:
+              - link "Clases Reciente · CREAR" [ref=e1051] [cursor=pointer]:
+                - /url: /escuela/clases
+                - generic [ref=e59]:
+                  - generic [ref=e60]: Clases
+                  - paragraph [ref=e61]: Reciente · CREAR
+        - generic [ref=e63]:
+          - generic [ref=e64]: CREAR
+          - button "Mostrar CREAR" [ref=e1052] [cursor=pointer]
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - generic [ref=e74]: GENTE
+            - button "Ocultar GENTE" [expanded] [ref=e1053] [cursor=pointer]
+          - list [ref=e85]:
+            - listitem [ref=e86]:
+              - link "Comunidad" [ref=e1054] [cursor=pointer]:
+                - /url: /fans
+              - button "Favorito Comunidad" [ref=e1055] [cursor=pointer]
+              - button "Fijar Comunidad" [ref=e1056] [cursor=pointer]
+            - listitem [ref=e98]:
+              - link "Tienda" [ref=e1057] [cursor=pointer]:
+                - /url: /marketplace
+              - button "Favorito Tienda" [ref=e1058] [cursor=pointer]
+              - button "Fijar Tienda" [ref=e1059] [cursor=pointer]
+            - listitem [ref=e110]:
+              - link "Reservar estudio" [ref=e1060] [cursor=pointer]:
+                - /url: /reservar
+              - button "Favorito Reservar estudio" [ref=e1061] [cursor=pointer]
+              - button "Fijar Reservar estudio" [ref=e1062] [cursor=pointer]
+            - listitem [ref=e122]:
+              - link "Agenda de pruebas" [ref=e1063] [cursor=pointer]:
+                - /url: /trials
+              - button "Favorito Agenda de pruebas" [ref=e1064] [cursor=pointer]
+              - button "Fijar Agenda de pruebas" [ref=e1065] [cursor=pointer]
+            - listitem [ref=e134]:
+              - link "Registro live sessions" [ref=e1066] [cursor=pointer]:
+                - /url: /live-sessions/registro
+              - button "Favorito Registro live sessions" [ref=e1067] [cursor=pointer]
+              - button "Fijar Registro live sessions" [ref=e1068] [cursor=pointer]
+            - listitem [ref=e146]:
+              - link "Lanzamientos públicos" [ref=e1069] [cursor=pointer]:
+                - /url: /records
+              - button "Favorito Lanzamientos públicos" [ref=e1070] [cursor=pointer]
+              - button "Fijar Lanzamientos públicos" [ref=e1071] [cursor=pointer]
+            - listitem [ref=e158]:
+              - link "Donaciones" [ref=e1072] [cursor=pointer]:
+                - /url: /donar
+              - button "Favorito Donaciones" [ref=e1073] [cursor=pointer]
+              - button "Fijar Donaciones" [ref=e1074] [cursor=pointer]
+            - listitem [ref=e170]:
+              - link "Domo Pululahua" [ref=e1075] [cursor=pointer]:
+                - /url: /domo-del-pululahua
+              - button "Favorito Domo Pululahua" [ref=e1076] [cursor=pointer]
+              - button "Fijar Domo Pululahua" [ref=e1077] [cursor=pointer]
+            - listitem [ref=e182]:
+              - link "Conexiones" [ref=e1078] [cursor=pointer]:
+                - /url: /social
+              - button "Favorito Conexiones" [ref=e1079] [cursor=pointer]
+              - button "Fijar Conexiones" [ref=e1080] [cursor=pointer]
+            - listitem [ref=e194]:
+              - link "Instagram" [ref=e1081] [cursor=pointer]:
+                - /url: /social/instagram
+              - button "Favorito Instagram" [ref=e1082] [cursor=pointer]
+              - button "Fijar Instagram" [ref=e1083] [cursor=pointer]
+            - listitem [ref=e206]:
+              - link "Inbox social" [ref=e1084] [cursor=pointer]:
+                - /url: /social/inbox
+              - button "Favorito Inbox social" [ref=e1085] [cursor=pointer]
+              - button "Fijar Inbox social" [ref=e1086] [cursor=pointer]
+            - listitem [ref=e218]:
+              - link "Eventos sociales" [ref=e1087] [cursor=pointer]:
+                - /url: /social/eventos
+              - button "Favorito Eventos sociales" [ref=e1088] [cursor=pointer]
+              - button "Fijar Eventos sociales" [ref=e1089] [cursor=pointer]
+            - listitem [ref=e230]:
+              - link "Chat" [ref=e1090] [cursor=pointer]:
+                - /url: /chat
+              - button "Favorito Chat" [ref=e1091] [cursor=pointer]
+              - button "Fijar Chat" [ref=e1092] [cursor=pointer]
+            - listitem [ref=e242]:
+              - link "Contactos" [ref=e1093] [cursor=pointer]:
+                - /url: /crm/contactos
+              - button "Favorito Contactos" [ref=e1094] [cursor=pointer]
+              - button "Fijar Contactos" [ref=e1095] [cursor=pointer]
+            - listitem [ref=e254]:
+              - link "Empresas" [ref=e1096] [cursor=pointer]:
+                - /url: /crm/empresas
+              - button "Favorito Empresas" [ref=e1097] [cursor=pointer]
+              - button "Fijar Empresas" [ref=e1098] [cursor=pointer]
+            - listitem [ref=e266]:
+              - link "Leads" [ref=e1099] [cursor=pointer]:
+                - /url: /crm/leads
+              - button "Favorito Leads" [ref=e1100] [cursor=pointer]
+              - button "Fijar Leads" [ref=e1101] [cursor=pointer]
+        - generic [ref=e279]:
+          - generic [ref=e280]: SELLO
+          - button "Mostrar SELLO" [ref=e1102] [cursor=pointer]
+        - generic [ref=e289]:
+          - generic [ref=e290]: OPERAR
+          - button "Mostrar OPERAR" [ref=e1103] [cursor=pointer]
+        - generic [ref=e300]:
+          - generic [ref=e301]: ADMIN
+          - button "Mostrar ADMIN" [ref=e1104] [cursor=pointer]
+        - generic [ref=e313]:
+          - generic [ref=e314]: HERRAMIENTAS
+          - button "Mostrar HERRAMIENTAS" [ref=e1105] [cursor=pointer]
+        - generic [ref=e323]:
+          - generic [ref=e324]: AYUDA
+          - button "Mostrar AYUDA" [ref=e1106] [cursor=pointer]
+    - generic [ref=e332]:
+      - banner [ref=e333]:
+        - generic [ref=e334]:
+          - button "Ocultar menú lateral" [ref=e1107] [cursor=pointer]
+          - link "Ir al inicio" [ref=e1108] [cursor=pointer]:
+            - /url: /inicio
+            - img "TDF Records logo"
+          - button "Buscar sección" [ref=e1109] [cursor=pointer]:
+            - generic [ref=e345]: ⌘K
+          - generic [ref=e346]:
+            - button "Creación rápida" [ref=e1110] [cursor=pointer]:
+              - generic [ref=e351]: Crear
+            - button "Notificaciones" [ref=e1111] [cursor=pointer]:
+              - generic [ref=e353]: "0"
+            - button "Abrir menú de sesión" [ref=e1112] [cursor=pointer]:
+              - generic [ref=e357]: D
+      - status [ref=e358]
+      - main [ref=e359]:
+        - generic [ref=e361]:
+          - generic [ref=e363]:
+            - generic [ref=e364]:
+              - heading "Contactos" [level=3] [ref=e1115]
+              - paragraph [ref=e366]: Gestiona personas, empresas y roles en un solo lugar.
+            - button [ref=e1116] [cursor=pointer]
+          - generic [ref=e374]:
+            - generic "Buscar contactos" [ref=e1117]:
+              - generic [ref=e377]:
+                - textbox "Buscar contactos" [active] [ref=e1118]:
+                  - /placeholder: Buscar por nombre, email o Instagram
+                  - text: midiendocalles.ec
+                - button "Limpiar búsqueda" [ref=e1119] [cursor=pointer]
+                - group
+            - alert [ref=e1135]:
+              - generic [ref=e1139]: No hay contactos que coincidan con "midiendocalles.ec". Limpia la búsqueda desde el buscador para volver a ver toda la lista.
+        - generic [ref=e679]:
+          - status [ref=e680]:
+            - generic [ref=e683]: "API: online"
+          - button "Abrir ChatKit" [ref=e1123] [cursor=pointer]
+  - generic "Control de radio":
+    - generic [ref=e687]:
+      - button "Reproducir radio" [ref=e1124] [cursor=pointer]
+      - generic "Saltar al anterior" [ref=e1125]:
+        - button "Saltar a la estación anterior" [ref=e1126] [cursor=pointer]
+      - generic "Saltar al siguiente" [ref=e1127]:
+        - button "Saltar a la siguiente estación" [ref=e1128] [cursor=pointer]
+      - button "Silenciar radio" [ref=e1129] [cursor=pointer]
+      - button "Ocultar barra de radio" [ref=e1130] [cursor=pointer]
+      - button "Expandir radio" [ref=e1131] [cursor=pointer]
+      - generic [ref=e708]:
+        - generic [ref=e709]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient

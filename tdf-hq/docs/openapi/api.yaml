@@ -9,6 +9,91 @@ servers:
     description: Development server
 
 paths:
+  /social-events/events:
+    get:
+      tags: [Social events]
+      summary: List social events using canonical catalog identifiers
+      operationId: listSocialEvents
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: event_type_id
+          in: query
+          description: Stable UUID of a persisted event type. Codes, labels, and slugs are not accepted as relationships.
+          schema:
+            type: string
+            format: uuid
+        - name: workflow_state_id
+          in: query
+          description: Stable UUID of an active state in the persisted `social-event-lifecycle` workflow.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Matching events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SocialEvent'
+        '422':
+          description: Unknown event type identifier
+    post:
+      tags: [Social events]
+      summary: Create a social event using a canonical event type identifier
+      operationId: createSocialEvent
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SocialEvent'
+      responses:
+        '200':
+          description: Event created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SocialEvent'
+        '422':
+          description: Event type is unknown, inactive, ineffective, deprecated, or unpublished
+  /social-events/events/{eventId}/moments/{momentId}/reactions:
+    post:
+      tags: [Social events]
+      summary: Toggle a persisted reaction type on an event moment
+      operationId: reactToSocialEventMoment
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: momentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventMomentReactionRequest'
+      responses:
+        '200':
+          description: Moment with canonical reaction references
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventMoment'
+        '422':
+          description: Reaction type UUID is unknown, inactive, deprecated, or unpublished
   /version:
     get:
       summary: Get API Version
@@ -996,6 +1081,36 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ArtistProfile'
+  /artists/search:
+    get:
+      tags: [FanHub]
+      summary: Search public artist profiles
+      description: Filters public artists by free text and canonical persisted genre ID.
+      operationId: searchPublicArtists
+      security: [ ]
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: genreId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Matching artist profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArtistProfile'
+        '400':
+          description: Invalid UUID or obsolete text genre parameter
   /fans/artists/{artistId}:
     parameters:
       - name: artistId
@@ -1165,6 +1280,104 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ArtistProfile'
+  /fans/me/clubs/{artistId}/posts/{postId}/react:
+    post:
+      tags: [FanHub]
+      summary: Toggle a persisted Fan Club post reaction
+      description: Accepts only the canonical UUID of an active, published item in the `content-reaction-types` catalog.
+      operationId: reactToFanClubPost
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: artistId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+        - name: postId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentReactionRequest'
+      responses:
+        '200':
+          description: Current canonical reaction summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentReactionSummary'
+        '400':
+          description: Malformed UUID or obsolete string reaction field
+        '404':
+          description: Artist club or post not found
+        '422':
+          description: Reaction UUID is unknown, inactive, deprecated, or unpublished
+  /fans/me/clubs/{artistId}/memories/{memoryId}/react:
+    post:
+      tags: [FanHub]
+      summary: Toggle a persisted Fan Club memory reaction
+      description: Accepts only the canonical UUID of an active, published item in the `content-reaction-types` catalog.
+      operationId: reactToFanClubMemory
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: artistId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+        - name: memoryId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentReactionRequest'
+      responses:
+        '200':
+          description: Current canonical reaction summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentReactionSummary'
+        '400':
+          description: Malformed UUID or obsolete string reaction field
+        '404':
+          description: Artist club or memory not found
+        '422':
+          description: Reaction UUID is unknown, inactive, deprecated, or unpublished
+  /fans/me/clubs/{artistId}/leaderboard:
+    get:
+      tags: [FanHub]
+      summary: Get the Fan Club reaction leaderboard
+      description: Returns creator badges as canonical persisted UUID relationships with bilingual read-only presentation.
+      operationId: getFanClubLeaderboard
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: artistId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+        - name: period
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Ranked Fan Club members
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/LeaderboardEntry' }
+        '404':
+          description: Artist club not found
   /parties:
     get:
       tags: [CRM]
@@ -1248,32 +1461,6 @@ paths:
                 $ref: '#/components/schemas/Party'
         '404':
           description: Party not found
-  /parties/{partyId}/roles:
-    post:
-      tags: [CRM]
-      summary: Add party role
-      description: Activates a single role for the provided party id. Useful to grant extra capabilities (Artist, Student, etc.).
-      operationId: addPartyRole
-      security:
-        - bearerAuth: [ ]
-      parameters:
-        - name: partyId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RoleAssignmentRequest'
-      responses:
-        '204':
-          description: Role assigned
-        '404':
-          description: Party not found
   /api/users:
     get:
       summary: List user accounts
@@ -1290,31 +1477,1384 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/UserRoleSummary'
-  /api/users/{userId}/roles:
-    put:
-      summary: Replace roles for a user
-      description: Assigns the provided set of roles to the credential identified by `userId`.
-      operationId: updateUserRoles
-      security:
-        - bearerAuth: [ ]
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+  /label/project-notes:
+    get:
+      tags: [Label]
+      summary: List active operational project notes
+      operationId: listLabelProjectNotes
+      responses:
+        '200':
+          description: Active notes in deterministic status and update order.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LabelProjectNote'
+        '403':
+          description: Administrator or webmaster access is required.
+    post:
+      tags: [Label]
+      summary: Create an operational project note
+      operationId: createLabelProjectNote
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserRoleUpdate'
+              $ref: '#/components/schemas/LabelProjectNoteCreate'
+      responses:
+        '200':
+          description: Persisted project note.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelProjectNote'
+        '400':
+          description: Invalid or empty text.
+        '403':
+          description: Administrator or webmaster access is required.
+  /label/project-notes/{projectNoteId}:
+    parameters:
+      - name: projectNoteId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      tags: [Label]
+      summary: Update an operational project note with optimistic locking
+      operationId: updateLabelProjectNote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LabelProjectNoteUpdate'
+      responses:
+        '200':
+          description: Updated project note.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelProjectNote'
+        '409':
+          description: The expected version is stale.
+        '410':
+          description: The note was already deactivated.
+    delete:
+      tags: [Label]
+      summary: Deactivate an operational project note
+      operationId: deactivateLabelProjectNote
       responses:
         '204':
-          description: Roles replaced
+          description: Note deactivated without hard deletion.
+        '410':
+          description: The note was already deactivated.
+  /cms/content:
+    get:
+      tags: [CMS]
+      summary: Resolve published authored content by persisted URL slug
+      description: The slug is a public URL alias resolver only; it is never accepted by administrative writes as canonical identity.
+      operationId: getPublicCmsContent
+      security: [ ]
+      parameters:
+        - name: slug
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: locale
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Published content or the existing missing sentinel response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CmsContent'
+  /cms/contents:
+    get:
+      tags: [CMS]
+      summary: List published CMS content for URL resolution
+      operationId: listPublicCmsContent
+      security: [ ]
+      parameters:
+        - name: locale
+          in: query
+          schema:
+            type: string
+        - name: slugPrefix
+          in: query
+          description: URL-compatibility search only; it does not determine an entity type.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Published authored content versions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CmsContent'
+  /cms/admin/content:
+    get:
+      tags: [CMS administration]
+      summary: List CMS versions by canonical authored-content UUID
+      operationId: listAdminCmsContent
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: contentId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: locale
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Historical versions, including inactive versions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CmsContent'
+    post:
+      tags: [CMS administration]
+      summary: Create a CMS draft for canonical authored content
+      operationId: createCmsDraft
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CmsContentDraft'
+      responses:
+        '200':
+          description: Draft created after persisted content-type schema validation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CmsContent'
+        '409':
+          description: Direct publication, inactive content, or an invalid governed relationship was rejected.
+  /cms/admin/content/{cmsContentId}/publish:
+    post:
+      tags: [CMS administration]
+      summary: Publish an eligible CMS draft
+      description: The draft must have a canonical authored-content ID and its author cannot approve it.
+      operationId: publishCmsDraft
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/CmsContentId'
+      responses:
+        '200':
+          description: Published revision.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CmsContent'
+        '403':
+          description: Prohibited author self-approval.
+        '409':
+          description: Legacy slug-only or structured Records content was rejected.
+  /cms/admin/content/{cmsContentId}:
+    delete:
+      tags: [CMS administration]
+      summary: Archive an unpublished CMS version
+      operationId: archiveCmsDraft
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/CmsContentId'
+      responses:
+        '204':
+          description: Draft archived without hard deletion.
+        '409':
+          description: Published, legacy slug-only, or structured Records content cannot be deleted.
+  /services/catalog/public:
+    get:
+      tags: [Services]
+      summary: List published canonical service offerings
+      operationId: listPublicServiceOfferings
+      security: [ ]
+      parameters:
+        - name: locale
+          in: query
+          schema:
+            type: string
+        - name: If-None-Match
+          in: header
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Versioned published offerings with persisted operational defaults.
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceCatalogEnvelope'
+        '304':
+          description: The client already holds this service catalog revision.
+  /services/catalog:
+    get:
+      tags: [Services]
+      summary: List canonical service offerings for scheduling administration
+      operationId: listServiceOfferings
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: includeInactive
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: locale
+          in: query
+          schema:
+            type: string
+        - name: If-None-Match
+          in: header
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Permission-aware versioned offerings; writes use catalog revisions.
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceCatalogEnvelope'
+        '304':
+          description: The client already holds this service catalog revision.
+        '403':
+          description: Scheduling access is required.
+  /pipelines/snapshot:
+    get:
+      tags: [Pipelines]
+      summary: Fetch a versioned canonical pipeline snapshot
+      description: Returns every active pipeline definition and canonical card in one request for offline clients and bounded prefetching.
+      operationId: getPipelineSnapshot
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Permission-aware pipeline registry and cards.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineSnapshot'
+        '403':
+          description: The caller lacks the persisted `pipeline.read` capability.
+  /pipelines/definitions:
+    get:
+      tags: [Pipelines]
+      summary: List persisted pipeline definitions
+      description: Returns internal workflow UUIDs, bilingual labels, bound service offerings, and ordered persisted states. There is no slug or service-kind relationship.
+      operationId: listPipelineDefinitions
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Active pipeline workflows available to the caller.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PipelineDefinition'
+        '403':
+          description: The caller lacks the persisted `pipeline.read` capability.
+  /pipelines/{workflowId}:
+    parameters:
+      - $ref: '#/components/parameters/PipelineWorkflowId'
+    get:
+      tags: [Pipelines]
+      summary: List cards in a persisted pipeline workflow
+      operationId: listPipelineCards
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Canonical cards ordered for the board.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PipelineCard'
         '404':
-          description: User not found
+          description: Unknown, inactive, or unbound workflow UUID.
+        '403':
+          description: The caller lacks the persisted `pipeline.read` capability.
+    post:
+      tags: [Pipelines]
+      summary: Create a card with canonical service and state IDs
+      operationId: createPipelineCard
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PipelineCardCreate'
+      responses:
+        '201':
+          description: Card created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineCard'
+        '400':
+          description: A copied service kind, stage string, inactive ID, or cross-workflow ID was rejected.
+        '403':
+          description: The caller lacks the persisted `pipeline.create` capability.
+  /pipelines/{workflowId}/stages:
+    get:
+      tags: [Pipelines]
+      summary: List ordered states for a persisted pipeline workflow
+      operationId: listPipelineStages
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/PipelineWorkflowId'
+      responses:
+        '200':
+          description: Active bilingual workflow states.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PipelineStage'
+        '403':
+          description: The caller lacks the persisted `pipeline.read` capability.
+  /pipelines/{workflowId}/{cardId}:
+    parameters:
+      - $ref: '#/components/parameters/PipelineWorkflowId'
+      - name: cardId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Pipelines]
+      summary: Get one canonical pipeline card
+      operationId: getPipelineCard
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Card details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineCard'
+        '403':
+          description: The caller lacks the persisted `pipeline.read` capability.
+    patch:
+      tags: [Pipelines]
+      summary: Update a card or move it by workflow-state UUID
+      operationId: updatePipelineCard
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PipelineCardUpdate'
+      responses:
+        '200':
+          description: Updated card.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineCard'
+        '400':
+          description: Invalid state UUID, disallowed transition, copied stage string, or empty patch.
+        '403':
+          description: The caller lacks the persisted `pipeline.update` capability.
+    delete:
+      tags: [Pipelines]
+      summary: Delete an unreferenced operational card
+      operationId: deletePipelineCard
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '204':
+          description: Card removed.
+        '403':
+          description: The caller lacks the persisted `pipeline.delete` capability.
+  /catalogs/definitions:
+    get:
+      tags: [Catalogs]
+      summary: List public catalog definitions
+      operationId: listPublicCatalogDefinitions
+      security: [ ]
+      parameters:
+        - name: locale
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Public, active catalog definitions visible in the requested locale.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogDefinition'
+  /catalogs/batch:
+    get:
+      tags: [Catalogs]
+      summary: Batch-load public catalogs
+      operationId: batchPublicCatalogs
+      security: [ ]
+      parameters:
+        - name: code
+          in: query
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: array
+            minItems: 1
+            maxItems: 50
+            items:
+              type: string
+        - name: locale
+          in: query
+          schema:
+            type: string
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+        - name: If-None-Match
+          in: header
+          description: Previously received catalog ETag.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Versioned catalog batch suitable for client caching.
+          headers:
+            ETag:
+              description: Revision token for conditional refresh.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogBatch'
+        '304':
+          description: The requested catalog revision is already cached by the client.
+          headers:
+            ETag:
+              schema:
+                type: string
+  /catalogs/{catalogCode}/items:
+    get:
+      tags: [Catalogs]
+      summary: Search published items in one public catalog
+      operationId: listPublicCatalogItems
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/CatalogCode'
+        - name: locale
+          in: query
+          schema:
+            type: string
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+        - name: If-None-Match
+          in: header
+          description: Previously received catalog ETag.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deterministically ordered published items.
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogPage'
+        '304':
+          description: The requested catalog revision is already cached by the client.
+          headers:
+            ETag:
+              schema:
+                type: string
+  /catalogs/{catalogCode}/items/{itemId}:
+    get:
+      tags: [Catalogs]
+      summary: Resolve a published public catalog item by canonical UUID
+      operationId: getPublicCatalogItem
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/CatalogCode'
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: locale
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Published catalog item.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogItem'
+        '404':
+          description: Catalog or item not found.
+  /catalogs/workflows/{workflowCode}/states:
+    get:
+      tags: [Public catalogs]
+      summary: Read a public persisted workflow and its effective behavior metadata
+      description: Only active, non-sensitive workflow definitions explicitly marked for public reading are exposed. Defaults, capabilities, and transitions remain database-authoritative.
+      operationId: getPublicWorkflowStates
+      security: [ ]
+      parameters:
+        - name: workflowCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: locale
+          in: query
+          schema:
+            type: string
+        - name: If-None-Match
+          in: header
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Versioned public workflow-state snapshot.
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowStates'
+        '304':
+          description: The caller already has the current workflow revision.
+        '404':
+          description: The workflow is missing, inactive, sensitive, or not marked for public reading.
+  /catalog/definitions:
+    get:
+      tags: [Catalog administration]
+      summary: List catalog definitions visible to an administrator
+      operationId: listAdminCatalogDefinitions
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: locale
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Active public and protected catalog definitions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogDefinition'
+        '403':
+          description: Missing persisted catalog.read capability.
+  /catalog/content-types:
+    get:
+      tags: [Catalog administration]
+      summary: List persisted, governed content types and strict schemas
+      operationId: listContentTypes
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: locale
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Active content types with localized labels, route metadata, and versioned schemas.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentType'
+        '403':
+          description: Missing persisted catalog.read capability.
+  /catalog/workflow-states:
+    get:
+      tags: [Catalog administration]
+      summary: List persisted workflow states and localized labels
+      operationId: listWorkflowStates
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: workflowCode
+          in: query
+          description: Optional persisted workflow definition code.
+          schema:
+            type: string
+        - name: locale
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Active workflow states ordered by their persisted sort order.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkflowState'
+        '403':
+          description: Missing persisted catalog.read capability.
+  /catalog/authored-contents:
+    get:
+      tags: [Catalog administration]
+      summary: List canonical authored-content definitions
+      description: Returns persisted URL aliases, explicit routes, and their governed content-type schemas. Structured Records entities are not CMS content.
+      operationId: listAuthoredContents
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: locale
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Active authored content ordered by persisted sort order.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuthoredContent'
+        '403':
+          description: Missing persisted catalog.read capability.
+  /catalog/batch:
+    get:
+      tags: [Catalog administration]
+      summary: Batch-load catalogs for administration
+      operationId: batchAdminCatalogs
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: code
+          in: query
+          style: form
+          explode: true
+          schema:
+            type: array
+            maxItems: 50
+            items:
+              type: string
+        - name: locale
+          in: query
+          schema:
+            type: string
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+        - name: includeInactive
+          in: query
+          schema:
+            type: boolean
+        - name: If-None-Match
+          in: header
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Permission-filtered catalog batch.
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogBatch'
+        '304':
+          description: The requested catalog revision is already cached.
+  /catalog/{catalogCode}/items:
+    get:
+      tags: [Catalog administration]
+      summary: Search catalog items for administration
+      operationId: listAdminCatalogItems
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/CatalogCode'
+        - name: locale
+          in: query
+          schema:
+            type: string
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+        - name: includeInactive
+          in: query
+          schema:
+            type: boolean
+        - name: If-None-Match
+          in: header
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deterministically ordered active and optionally inactive items.
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogPage'
+        '304':
+          description: The requested catalog revision is already cached.
+  /catalog/{catalogCode}/items/{itemId}:
+    get:
+      tags: [Catalog administration]
+      summary: Resolve an administrable catalog item by canonical UUID
+      operationId: getAdminCatalogItem
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/CatalogCode'
+        - $ref: '#/components/parameters/CatalogItemId'
+        - name: locale
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Catalog item including administrative lifecycle metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogItem'
+        '404':
+          description: Catalog or item not found.
+  /catalog/{catalogCode}/revisions:
+    get:
+      tags: [Catalog administration]
+      summary: List catalog revisions
+      operationId: listCatalogRevisions
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/CatalogCode'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        '200':
+          description: Revisions ordered newest first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogRevision'
+    post:
+      tags: [Catalog administration]
+      summary: Create a catalog draft revision
+      operationId: createCatalogRevision
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/CatalogCode'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogDraft'
+      responses:
+        '201':
+          description: Draft revision created without changing the published item.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogRevision'
+        '409':
+          description: Duplicate open revision, correlation, or optimistic-lock conflict.
+  /catalog/revisions/{revisionId}/submit:
+    post:
+      tags: [Catalog administration]
+      summary: Submit a catalog revision for review
+      operationId: submitCatalogRevision
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/CatalogRevisionId'
+      responses:
+        '200':
+          description: Revision entered review.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogRevision'
+  /catalog/revisions/{revisionId}/approve:
+    post:
+      tags: [Catalog administration]
+      summary: Approve and publish a catalog revision
+      operationId: approveCatalogRevision
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/CatalogRevisionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogReview'
+      responses:
+        '200':
+          description: Revision approved and published.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogRevision'
+        '403':
+          description: Missing approval capability or prohibited self-approval.
+        '409':
+          description: Invalid workflow state or optimistic-lock conflict.
+  /catalog/revisions/{revisionId}/reject:
+    post:
+      tags: [Catalog administration]
+      summary: Reject a catalog revision
+      operationId: rejectCatalogRevision
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/CatalogRevisionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogReview'
+      responses:
+        '200':
+          description: Revision rejected without mutating the published item.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogRevision'
+  /catalog/{catalogCode}/items/{itemId}/activation:
+    patch:
+      tags: [Catalog administration]
+      summary: Activate or deactivate a catalog item
+      operationId: setCatalogItemActivation
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/CatalogCode'
+        - $ref: '#/components/parameters/CatalogItemId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogActivation'
+      responses:
+        '200':
+          description: Updated catalog item.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogItem'
+        '409':
+          description: Invalid replacement or optimistic-lock conflict.
+  /catalog/{catalogCode}/reorder:
+    post:
+      tags: [Catalog administration]
+      summary: Reorder catalog items by canonical UUID
+      operationId: reorderCatalogItems
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/CatalogCode'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogReorder'
+      responses:
+        '204':
+          description: Ordering updated.
+        '409':
+          description: Incomplete item set or stale catalog revision.
+  /catalog/{catalogCode}/merge:
+    post:
+      tags: [Catalog administration]
+      summary: Create a reversible, audited catalog merge revision
+      operationId: mergeCatalogItems
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/CatalogCode'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogMerge'
+      responses:
+        '201':
+          description: Merge revision created for governed review.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogRevision'
+        '409':
+          description: Invalid or identical merge targets.
+  /catalog/{catalogCode}/usage:
+    get:
+      tags: [Catalog administration]
+      summary: Load privacy-conscious aggregate catalog usage
+      operationId: getCatalogUsage
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/CatalogCode'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Aggregate usage rows without personal data.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogUsage'
+  /catalog/{catalogCode}/export.csv:
+    get:
+      tags: [Catalog administration]
+      summary: Export a catalog as CSV
+      operationId: exportCatalogCsv
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/CatalogCode'
+      responses:
+        '200':
+          description: Bilingual catalog export.
+          content:
+            text/plain:
+              schema:
+                type: string
+  /catalog/{catalogCode}/import.csv:
+    post:
+      tags: [Catalog administration]
+      summary: Validate or import catalog CSV
+      operationId: importCatalogCsv
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/CatalogCode'
+        - name: dryRun
+          in: query
+          schema:
+            type: boolean
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: Import validation or execution summary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogImportResult'
+  /records/feed:
+    get:
+      tags: [Records]
+      summary: Load the typed public Records feed
+      description: Returns published releases, recordings, sessions, editorial collections, credits, and external resources using canonical persisted IDs and explicit relationships.
+      operationId: getPublicRecordsFeed
+      security: [ ]
+      parameters:
+        - name: locale
+          in: query
+          schema:
+            type: string
+        - name: If-None-Match
+          in: header
+          description: Previously received Records feed ETag.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The deterministically ordered, localized Records feed.
+          headers:
+            ETag:
+              description: Revision token for conditional refresh.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsFeed'
+        '304':
+          description: The requested Records feed revision is already cached by the client.
+          headers:
+            ETag:
+              schema:
+                type: string
+  /catalog/security/roles:
+    get:
+      tags: [Catalog security]
+      summary: List persisted security roles
+      operationId: listSecurityRoles
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Active roles visible to an authorized security administrator.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SecurityRole'
+        '403':
+          description: Missing persisted security.read capability.
+  /catalog/security/party-role-assignments:
+    get:
+      tags: [Catalog security]
+      summary: List canonical party-role assignments
+      operationId: listPartyRoleAssignments
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: partyId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: Current active and inactive versioned assignments.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SecurityPartyRoleAssignment'
+        '403':
+          description: Missing persisted security.read capability.
+  /catalog/security/revisions:
+    get:
+      tags: [Catalog security]
+      summary: List security grant revisions
+      operationId: listSecurityGrantRevisions
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: workflowState
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        '200':
+          description: Security revisions ordered newest first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SecurityGrantRevision'
+  /catalog/security/audit:
+    get:
+      tags: [Catalog security]
+      summary: List immutable security audit events
+      operationId: listSecurityAuditEvents
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: partyId
+          in: query
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        '200':
+          description: Immutable audit events ordered newest first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SecurityAuditEvent'
+  /catalog/security/party-role-revisions:
+    post:
+      tags: [Catalog security]
+      summary: Create a party-role grant draft
+      operationId: createPartyRoleGrantRevision
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartyRoleGrantDraft'
+      responses:
+        '201':
+          description: Draft created; it grants no access until separately approved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityGrantRevision'
+        '409':
+          description: Version conflict, duplicate correlation id, or no effective change.
+  /catalog/security/role-permission-revisions:
+    post:
+      tags: [Catalog security]
+      summary: Create a role-permission grant draft
+      operationId: createRolePermissionGrantRevision
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RolePermissionGrantDraft'
+      responses:
+        '201':
+          description: Draft created; it grants no access until separately approved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityGrantRevision'
+  /catalog/security/revisions/{revisionId}/submit:
+    post:
+      tags: [Catalog security]
+      summary: Submit a security revision for review
+      operationId: submitSecurityGrantRevision
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/SecurityRevisionId'
+      responses:
+        '200':
+          description: Revision entered review.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityGrantRevision'
+  /catalog/security/revisions/{revisionId}/approve:
+    post:
+      tags: [Catalog security]
+      summary: Approve and publish a security revision
+      description: Normal approval requires a different actor. Documented emergency self-approval is capability-gated and audited.
+      operationId: approveSecurityGrantRevision
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/SecurityRevisionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SecurityGrantReview'
+      responses:
+        '200':
+          description: Revision published and canonical grant updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityGrantRevision'
+        '403':
+          description: Missing approval capability or prohibited self-approval.
+        '409':
+          description: Invalid state or optimistic-lock conflict.
+  /catalog/security/revisions/{revisionId}/reject:
+    post:
+      tags: [Catalog security]
+      summary: Reject a security revision
+      operationId: rejectSecurityGrantRevision
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/SecurityRevisionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SecurityGrantReview'
+      responses:
+        '200':
+          description: Revision rejected without changing the canonical grant.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityGrantRevision'
+  /fans/me/role-request:
+    post:
+      tags: [Fans, Catalog security]
+      summary: Request the persisted Fan role for the authenticated account
+      description: Creates a submitted security revision for the caller only. It does not grant access until a distinct authorized reviewer approves it.
+      operationId: requestMyFanRole
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SelfFanRoleRequest'
+      responses:
+        '202':
+          description: Request entered the security review queue.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityGrantRevision'
+        '409':
+          description: The role is already active or an equivalent request is already pending.
   /admin/users:
     get:
       tags: [Admin]
@@ -1569,6 +3109,119 @@ paths:
                 $ref: '#/components/schemas/DriveTokenResponse'
         '502':
           description: Google OAuth error
+  /radio/auto-stop-options:
+    get:
+      tags: [Radio]
+      summary: List published browser-broadcast auto-stop options
+      description: Returns the specialized persisted options in deterministic order. Exactly one active global option is marked as the broadcast default.
+      operationId: listRadioAutoStopOptions
+      parameters:
+        - name: locale
+          in: query
+          description: Preferred label locale. Spanish is used unless the locale starts with `en`.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Published auto-stop options and the canonical default
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioAutoStopOptions'
+        '503':
+          description: Catalog, publication state, or its single effective default is unavailable
+  /radio/streams:
+    get:
+      tags: [Radio]
+      summary: Search active radio streams
+      description: Returns active streams. Country and genre filtering use immutable UUIDs of active persisted references.
+      operationId: searchRadioStreams
+      parameters:
+        - name: countryId
+          in: query
+          description: Canonical persisted country UUID; copied codes, labels, and slugs are not accepted.
+          schema:
+            type: string
+            format: uuid
+        - name: genreId
+          in: query
+          description: Canonical persisted genre UUID; copied labels and slugs are not accepted.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Active radio streams in deterministic update order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RadioStream'
+        '400':
+          description: Unknown or inactive country UUID, or unknown/inactive/unpublished genre UUID
+  /radio/streams/active:
+    post:
+      tags: [Radio]
+      summary: Register or reactivate a radio stream
+      operationId: upsertActiveRadioStream
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RadioStreamUpsert'
+      responses:
+        '200':
+          description: Canonical radio stream
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioStream'
+        '400':
+          description: Invalid stream metadata, unknown/inactive country UUID, or unknown/inactive/unpublished genre UUID
+  /radio/streams/import:
+    post:
+      tags: [Radio]
+      summary: Import radio stream sources
+      description: Provider country and genre text are retained as review evidence and mapped only when exactly one active persisted reference matches.
+      operationId: importRadioStreams
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RadioImportRequest'
+      responses:
+        '200':
+          description: Import batch result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioImportResult'
+        '400':
+          description: Invalid source list or batch limit
+  /radio/streams/refresh-metadata:
+    post:
+      tags: [Radio]
+      summary: Refresh radio metadata
+      description: Refreshes station names and observes provider genre text without storing it as a relationship.
+      operationId: refreshRadioStreamMetadata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RadioMetadataRefreshRequest'
+      responses:
+        '200':
+          description: Refresh batch result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioMetadataRefreshResult'
+        '400':
+          description: Invalid refresh limit
   /radio/streams/now-playing:
     post:
       tags: [Radio]
@@ -1592,369 +3245,340 @@ paths:
                 $ref: '#/components/schemas/RadioNowPlayingResult'
         '400':
           description: Invalid stream url
-  /access-requests:
-    get:
-      tags: [Access requests]
-      summary: List the current user's feature access requests
-      operationId: listFeatureAccessRequests
+  /radio/transmissions:
+    post:
+      tags: [Radio]
+      summary: Create a radio transmission
+      description: Creates ingest and listening endpoints. The optional genre is referenced only by canonical UUID.
+      operationId: createRadioTransmission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RadioTransmissionRequest'
       responses:
         '200':
-          description: Access requests created by the authenticated user
+          description: Transmission endpoints
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/FeatureAccessRequest'
+                $ref: '#/components/schemas/RadioTransmissionInfo'
+        '400':
+          description: Invalid metadata, unknown/inactive country UUID, or unknown/inactive/unpublished genre UUID
+  /radio/presence:
+    get:
+      tags: [Radio]
+      summary: Get current user's radio presence
+      operationId: getRadioPresence
+      responses:
+        '200':
+          description: Current presence or null
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/RadioPresence'
+                nullable: true
+    post:
+      tags: [Radio]
+      summary: Set current user's radio presence
+      operationId: setRadioPresence
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RadioPresenceUpsert'
+      responses:
+        '200':
+          description: Updated presence
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioPresence'
+        '400':
+          description: Invalid presence metadata
+    delete:
+      tags: [Radio]
+      summary: Clear current user's radio presence
+      operationId: clearRadioPresence
+      responses:
+        '204':
+          description: Presence cleared
+  /radio/presence/{partyId}:
+    get:
+      tags: [Radio]
+      summary: Get a party's radio presence
+      operationId: getPartyRadioPresence
+      parameters:
+        - name: partyId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: Party presence or null
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/RadioPresence'
+                nullable: true
+        '400':
+          description: Invalid party identifier
+  /live-sessions/intake:
+    post:
+      tags: [Live Sessions]
+      summary: Submit a Live Session intake
+      description: >-
+        Creates a Live Session intake using canonical persisted genre and instrument UUIDs.
+        Musicians and setlist are JSON-encoded strings inside the multipart form. Copied genre,
+        instrument, role, label, code, and slug fields are rejected.
+      operationId: createLiveSessionIntake
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LiveSessionIntakeMultipart'
+      responses:
+        '204':
+          description: Intake created
+        '400':
+          description: Invalid multipart data, canonical reference, or terms acceptance
         '401':
           description: Authentication required
+        '409':
+          description: A supplied musician identity is ambiguous
+  /feedback:
     post:
-      tags: [Access requests]
-      summary: Request one feature action
-      description: Creates a scoped, auditable request. Approval does not grant a broader role or module.
-      operationId: createFeatureAccessRequest
+      tags: [Feedback]
+      summary: Submit product feedback
+      description: >-
+        Creates feedback using canonical persisted category and severity UUIDs. Legacy category,
+        severity, copied label, code, and slug fields are rejected. Authentication is optional.
+      operationId: submitFeedback
+      security: []
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: '#/components/schemas/FeatureAccessRequestCreate'
+              $ref: '#/components/schemas/FeedbackMultipart'
       responses:
-        '200':
-          description: Created request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FeatureAccessRequest'
+        '204':
+          description: Feedback accepted
         '400':
-          description: Invalid, unavailable, or already-authorized feature action
-        '409':
-          description: An equivalent pending request already exists
-  /access-requests/review:
+          description: Invalid multipart data, catalog reference, consent, or attachment
+  /ddex/references:
     get:
-      tags: [Access requests]
-      summary: List requests within the reviewer's exact grant scope
-      operationId: listFeatureAccessRequestsForReview
+      tags: [DDEX]
+      summary: Read the governed DDEX runtime registry
+      description: >-
+        Returns active persisted standard versions, executable message types, deployment support,
+        document and operational workflow states, and technical operation registries. IDs are
+        canonical; labels, ordering, and codes are read-only database-authoritative metadata.
+      operationId: getDdexReferences
       parameters:
-        - name: status
+        - name: locale
           in: query
-          required: false
-          schema:
-            $ref: '#/components/schemas/FeatureAccessRequestStatus'
+          schema: { type: string, pattern: '^(es|en)([-_].*)?$' }
       responses:
         '200':
-          description: Reviewable requests without protected record contents
+          description: Permission-aware governed DDEX snapshot
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DdexReferenceSnapshot' }
+        '401': { description: Authentication required }
+        '403': { description: Missing persisted `catalog.read` capability }
+  /ddex/documents:
+    get:
+      tags: [DDEX]
+      summary: List DDEX documents by canonical workflow state
+      operationId: listDdexDocuments
+      parameters:
+        - name: workflowStateId
+          in: query
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Matching DDEX documents
           content:
             application/json:
               schema:
                 type: array
-                items:
-                  $ref: '#/components/schemas/FeatureAccessRequest'
-        '403':
-          description: Reviewer privileges are absent or incoherent
-  /access-requests/{requestId}/decision:
-    patch:
-      tags: [Access requests]
-      summary: Approve or reject one requested feature action
-      operationId: decideFeatureAccessRequest
-      parameters:
-        - $ref: '#/components/parameters/AccessRequestId'
+                items: { $ref: '#/components/schemas/DdexDocument' }
+        '400': { description: The workflow state identifier is not a canonical lowercase UUID }
+        '403': { description: Missing persisted `catalog.read` capability }
+    post:
+      tags: [DDEX]
+      summary: Upload a DDEX document
+      operationId: uploadDdexDocument
       requestBody:
         required: true
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/FeatureAccessRequestDecision'
+            schema: { $ref: '#/components/schemas/DdexUploadRequest' }
       responses:
-        '200':
-          description: Updated request and audit history
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FeatureAccessRequest'
-        '403':
-          description: The reviewer cannot grant this exact action
-        '404':
-          description: Request not found
-        '409':
-          description: Request is no longer pending
-  /access-requests/{requestId}/cancel:
-    patch:
-      tags: [Access requests]
-      summary: Cancel one of the current user's pending requests
-      operationId: cancelFeatureAccessRequest
-      parameters:
-        - $ref: '#/components/parameters/AccessRequestId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FeatureAccessRequestCancel'
-      responses:
-        '200':
-          description: Cancelled request and audit history
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FeatureAccessRequest'
-        '403':
-          description: Only the requester may cancel the request
-        '404':
-          description: Request not found
-        '409':
-          description: Request is no longer pending
-  /navigation/preferences:
+        '501': { description: Storage integration is not implemented }
+        '403': { description: Missing persisted `catalog.import` capability }
+  /ddex/documents/{documentId}:
+    parameters:
+      - $ref: '#/components/parameters/DdexDocumentId'
     get:
-      tags: [Navigation]
-      summary: List the current user's authorized navigation preferences
-      operationId: listNavigationPreferences
+      tags: [DDEX]
+      summary: Read one DDEX document with canonical references
+      operationId: getDdexDocument
       responses:
         '200':
-          description: Preferences filtered against current effective access
+          description: DDEX document
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DdexDocument' }
+        '404': { description: Document not found }
+  /ddex/documents/{documentId}/raw:
+    parameters:
+      - $ref: '#/components/parameters/DdexDocumentId'
+    get:
+      tags: [DDEX]
+      summary: Download the private source document
+      operationId: downloadDdexRawDocument
+      responses:
+        '501': { description: Private file storage integration is not implemented }
+        '403': { description: Missing persisted `catalog.read` capability }
+  /ddex/documents/{documentId}/validation-runs:
+    parameters:
+      - $ref: '#/components/parameters/DdexDocumentId'
+    post:
+      tags: [DDEX]
+      summary: Start governed validation for a DDEX document
+      operationId: validateDdexDocument
+      responses:
+        '501': { description: Governed validation execution is not implemented }
+        '403': { description: Missing persisted `catalog.import` capability }
+        '404': { description: Document not found }
+  /ddex/documents/{documentId}/validation-runs/latest:
+    parameters:
+      - $ref: '#/components/parameters/DdexDocumentId'
+    get:
+      tags: [DDEX]
+      summary: Read the latest validation report for a DDEX document
+      operationId: getLatestDdexValidationReport
+      responses:
+        '200':
+          description: Latest persisted validation report
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DdexValidationReport' }
+        '404': { description: Document not found }
+        '403': { description: Missing persisted `catalog.read` capability }
+  /ddex/documents/{documentId}/preview:
+    parameters:
+      - $ref: '#/components/parameters/DdexDocumentId'
+    get:
+      tags: [DDEX]
+      summary: Preview a DDEX import
+      operationId: previewDdexDocument
+      responses:
+        '501': { description: Typed import preview generation is not implemented }
+        '403': { description: Missing persisted `catalog.read` capability }
+  /ddex/documents/{documentId}/import-plans:
+    parameters:
+      - $ref: '#/components/parameters/DdexDocumentId'
+    post:
+      tags: [DDEX]
+      summary: Create the persisted DDEX import preview
+      operationId: createDdexImportPlan
+      responses:
+        '501': { description: Typed import planning is not implemented }
+        '403': { description: Missing persisted `catalog.import` capability }
+        '404': { description: Document not found }
+  /ddex/import-plans/{importPlanId}:
+    parameters:
+      - $ref: '#/components/parameters/DdexImportPlanId'
+    patch:
+      tags: [DDEX]
+      summary: Resolve typed DDEX import conflicts
+      operationId: resolveDdexImportPlan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DdexImportPlanResolution' }
+      responses:
+        '501': { description: Conflict resolution is not implemented }
+        '400': { description: Unknown or malformed request properties }
+        '403': { description: Missing persisted `catalog.import` capability }
+  /ddex/import-plans/{importPlanId}/commit:
+    parameters:
+      - $ref: '#/components/parameters/DdexImportPlanId'
+    post:
+      tags: [DDEX]
+      summary: Commit an approved DDEX import plan
+      operationId: commitDdexImportPlan
+      responses:
+        '501': { description: Import commit execution is not implemented }
+        '403': { description: Missing persisted `catalog.import` capability }
+  /ddex/exports:
+    post:
+      tags: [DDEX]
+      summary: Request an export using a canonical governed standard version
+      operationId: createDdexExport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DdexExportRequest' }
+      responses:
+        '501': { description: Export rendering and private storage are not implemented }
+        '400': { description: Unknown properties or malformed canonical UUID }
+        '403': { description: Missing persisted `catalog.export` capability }
+        '422': { description: Partner is inactive or does not allow the export-enabled version }
+  /ddex/exports/{exportId}/download:
+    parameters:
+      - $ref: '#/components/parameters/DdexExportId'
+    get:
+      tags: [DDEX]
+      summary: Download a rendered DDEX export
+      operationId: downloadDdexExport
+      responses:
+        '501': { description: Export rendering and private storage are not implemented }
+        '403': { description: Missing persisted `catalog.export` capability }
+  /ddex/partners:
+    get:
+      tags: [DDEX]
+      summary: List partners and canonical standard-version policies
+      operationId: listDdexPartners
+      responses:
+        '200':
+          description: DDEX partners
           content:
             application/json:
               schema:
                 type: array
-                items:
-                  $ref: '#/components/schemas/NavigationPreference'
-  /navigation/preferences/{featureId}:
-    put:
-      tags: [Navigation]
-      summary: Update favorite and pin state for one currently authorized feature
-      operationId: updateNavigationPreference
-      parameters:
-        - $ref: '#/components/parameters/FeatureId'
+                items: { $ref: '#/components/schemas/DdexPartner' }
+    post:
+      tags: [DDEX]
+      summary: Create a partner with canonical standard-version policies
+      operationId: createDdexPartner
       requestBody:
         required: true
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/NavigationPreferenceUpdate'
+            schema: { $ref: '#/components/schemas/DdexPartnerCreateRequest' }
       responses:
         '200':
-          description: Updated preference
+          description: Partner created
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/NavigationPreference'
-        '400':
-          description: Favorite or pin is not supported by this feature
-        '403':
-          description: The feature is not currently authorized
-        '404':
-          description: Unknown or concealed feature
-  /navigation/preferences/{featureId}/visit:
-    post:
-      tags: [Navigation]
-      summary: Record an authorized feature visit
-      operationId: recordNavigationVisit
-      parameters:
-        - $ref: '#/components/parameters/FeatureId'
-      responses:
-        '200':
-          description: Updated privacy-conscious preference aggregate
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NavigationPreference'
-        '403':
-          description: The feature is not currently authorized
-        '404':
-          description: Unknown, concealed, or non-recent feature
-  /operations/metrics:
-    get:
-      tags: [Operations]
-      summary: Get organization-scoped operational KPIs
-      operationId: getOperationsMetrics
-      parameters:
-        - { name: organizationId, in: query, schema: { type: string, format: uuid } }
-        - { name: branchId, in: query, schema: { type: string, format: uuid } }
-      responses:
-        '200':
-          description: Authorized operational metrics
-          content: { application/json: { schema: { $ref: '#/components/schemas/OperationsMetrics' } } }
-        '403': { description: No enabled operations scope }
-  /operations/work-items:
-    get:
-      tags: [Operations]
-      summary: Search and filter the operational inbox
-      operationId: listOperationsWorkItems
-      parameters:
-        - { name: cursor, in: query, schema: { type: string } }
-        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 30 } }
-        - { name: q, in: query, schema: { type: string } }
-        - { name: seen, in: query, schema: { type: boolean } }
-        - { name: entityType, in: query, schema: { type: string } }
-        - { name: status, in: query, schema: { $ref: '#/components/schemas/OperationsStatus' } }
-        - { name: priority, in: query, schema: { $ref: '#/components/schemas/OperationsPriority' } }
-        - { name: slaState, in: query, schema: { $ref: '#/components/schemas/OperationsSlaState' } }
-        - { name: assigneePartyId, in: query, schema: { type: integer, format: int64 } }
-        - { name: customerPartyId, in: query, schema: { type: integer, format: int64 } }
-        - { name: service, in: query, schema: { type: string } }
-        - { name: from, in: query, schema: { type: string, format: date-time } }
-        - { name: to, in: query, schema: { type: string, format: date-time } }
-        - { name: minAmountMinor, in: query, schema: { type: integer, format: int64 } }
-        - { name: maxAmountMinor, in: query, schema: { type: integer, format: int64 } }
-        - { name: paymentState, in: query, schema: { type: string } }
-        - { name: organizationId, in: query, schema: { type: string, format: uuid } }
-        - { name: branchId, in: query, schema: { type: string, format: uuid } }
-        - { name: sourceChannel, in: query, schema: { type: string } }
-      responses:
-        '200':
-          description: Scope-filtered page; restricted fields and records are omitted server-side
-          content: { application/json: { schema: { $ref: '#/components/schemas/OperationsWorkItemPage' } } }
-    post:
-      tags: [Operations]
-      summary: Create a manual correlated or explicitly uncorrelated work item
-      operationId: createOperationsWorkItem
-      requestBody:
-        required: true
-        content: { application/json: { schema: { $ref: '#/components/schemas/OperationsManualWorkItemCreate' } } }
-      responses:
-        '201':
-          description: Durable work item
-          content: { application/json: { schema: { $ref: '#/components/schemas/OperationsWorkItem' } } }
-        '422': { description: Correlation or entity-reference invariant failed }
-  /operations/work-items/{workItemId}:
-    get:
-      tags: [Operations]
-      summary: Get an authorized work-item thread
-      operationId: getOperationsWorkItem
-      parameters: [ { $ref: '#/components/parameters/OperationsWorkItemId' } ]
-      responses:
-        '200':
-          description: Work item, immutable domain history, notes, and authorized actions
-          content: { application/json: { schema: { $ref: '#/components/schemas/OperationsWorkItemDetail' } } }
-        '404': { description: Missing or concealed work item }
-  /operations/work-items/{workItemId}/seen:
-    patch:
-      tags: [Operations]
-      summary: Mark shared first-seen state without mutating the source entity
-      operationId: markOperationsWorkItemSeen
-      parameters: [ { $ref: '#/components/parameters/OperationsWorkItemId' } ]
-      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsVersionedCommand' } } } }
-      responses:
-        '200': { description: Updated work item, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsWorkItem' } } } }
-        '409': { description: Optimistic-concurrency conflict }
-  /operations/work-items/{workItemId}/transition:
-    patch:
-      tags: [Operations]
-      summary: Apply an audited lifecycle transition only
-      operationId: transitionOperationsWorkItem
-      parameters: [ { $ref: '#/components/parameters/OperationsWorkItemId' } ]
-      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsTransitionCommand' } } } }
-      responses:
-        '200': { description: Updated work item, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsWorkItem' } } } }
-        '409': { description: Optimistic-concurrency conflict }
-        '422': { description: State-machine guard rejected the transition }
-  /operations/work-items/{workItemId}/assignment:
-    patch:
-      tags: [Operations]
-      summary: Assign a scoped staff member or team
-      operationId: assignOperationsWorkItem
-      parameters: [ { $ref: '#/components/parameters/OperationsWorkItemId' } ]
-      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsAssignmentCommand' } } } }
-      responses:
-        '200': { description: Updated work item, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsWorkItem' } } } }
-        '422': { description: Assignee is outside the organization and branch scope }
-  /operations/work-items/{workItemId}/priority:
-    patch:
-      tags: [Operations]
-      summary: Override recommended priority with a required reason
-      operationId: prioritizeOperationsWorkItem
-      parameters: [ { $ref: '#/components/parameters/OperationsWorkItemId' } ]
-      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsPriorityCommand' } } } }
-      responses:
-        '200': { description: Updated work item, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsWorkItem' } } } }
-        '403': { description: Manager permission required }
-  /operations/work-items/{workItemId}/notes:
-    post:
-      tags: [Operations]
-      summary: Add an internal note with scoped mentions
-      operationId: addOperationsWorkItemNote
-      parameters: [ { $ref: '#/components/parameters/OperationsWorkItemId' } ]
-      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsNoteCreate' } } } }
-      responses:
-        '201': { description: Created note, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsNote' } } } }
-  /operations/approvals:
-    post:
-      tags: [Operations]
-      summary: Request a consequential action requiring a second person
-      operationId: createOperationsApproval
-      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsApprovalCreate' } } } }
-      responses:
-        '201': { description: Pending approval, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsApproval' } } } }
-  /operations/approvals/{approvalId}/decision:
-    patch:
-      tags: [Operations]
-      summary: Approve or reject with a distinct authorized person
-      operationId: decideOperationsApproval
-      parameters:
-        - { name: approvalId, in: path, required: true, schema: { type: string, format: uuid } }
-      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsApprovalDecision' } } } }
-      responses:
-        '200': { description: Decided approval, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsApproval' } } } }
-        '409': { description: Changed, expired, unavailable, or self-approval attempted }
-  /operations/integration-failures:
-    get:
-      tags: [Operations]
-      summary: List the admin-visible provider and dead-letter failure queue
-      operationId: listOperationsIntegrationFailures
-      parameters:
-        - { name: organizationId, in: query, schema: { type: string, format: uuid } }
-        - { name: status, in: query, schema: { type: string } }
-        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }
-      responses:
-        '200':
-          description: Redacted failure summaries
-          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OperationsIntegrationFailure' } } } }
-  /operations/integration-failures/{failureId}/replay:
-    post:
-      tags: [Operations]
-      summary: Audit and schedule an idempotent manual replay
-      operationId: replayOperationsIntegrationFailure
-      parameters:
-        - { name: failureId, in: path, required: true, schema: { type: string, format: uuid } }
-      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsReplayCommand' } } } }
-      responses:
-        '202': { description: Replay scheduled, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsIntegrationFailure' } } } }
-  /operations/events:
-    get:
-      tags: [Operations]
-      summary: Replay missed authorized real-time effects and provide bounded polling fallback
-      operationId: listOperationsStreamEvents
-      parameters:
-        - { name: afterId, in: query, schema: { type: integer, format: int64, minimum: 0 } }
-        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 250 } }
-        - { name: organizationId, in: query, schema: { type: string, format: uuid } }
-      responses:
-        '200': { description: Ordered resumable event batch, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsStreamBatch' } } } }
-  /operations/saved-views:
-    get:
-      tags: [Operations]
-      summary: List personal and shared operational views
-      operationId: listOperationsSavedViews
-      parameters:
-        - { name: organizationId, in: query, schema: { type: string, format: uuid } }
-      responses:
-        '200': { description: Authorized saved views, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OperationsSavedView' } } } } }
-    post:
-      tags: [Operations]
-      summary: Persist or replace an operational view
-      operationId: createOperationsSavedView
-      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsSavedViewCreate' } } } }
-      responses:
-        '201': { description: Saved view, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsSavedView' } } } }
-  /operations/push-subscriptions:
-    post:
-      tags: [Operations]
-      summary: Register an encrypted staff push token
-      operationId: createOperationsPushSubscription
-      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsPushSubscriptionCreate' } } } }
-      responses:
-        '201': { description: Push subscription metadata, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsPushSubscription' } } } }
-        '503': { description: Token encryption key is not configured }
+              schema: { $ref: '#/components/schemas/DdexPartner' }
+        '400': { description: Unknown properties, duplicated IDs, or malformed canonical UUID }
+        '403': { description: Missing persisted `catalog.import` capability }
+        '422': { description: A supplied standard version is inactive or not detection-enabled }
 security:
   - bearerAuth: [ ]
 
@@ -1965,28 +3589,701 @@ components:
       scheme: bearer
       bearerFormat: JWT
   parameters:
-    AccessRequestId:
-      name: requestId
-      in: path
-      required: true
-      schema:
-        type: integer
-        format: int64
-        minimum: 1
-    FeatureId:
-      name: featureId
+    CatalogCode:
+      name: catalogCode
       in: path
       required: true
       schema:
         type: string
         minLength: 1
-        maxLength: 160
-    OperationsWorkItemId:
-      name: workItemId
+        maxLength: 100
+    CatalogItemId:
+      name: itemId
       in: path
       required: true
-      schema: { type: string, format: uuid }
+      description: Immutable canonical UUID of a persisted catalog item.
+      schema:
+        type: string
+        format: uuid
+    CatalogRevisionId:
+      name: revisionId
+      in: path
+      required: true
+      description: Immutable UUID of a persisted catalog revision.
+      schema:
+        type: string
+        format: uuid
+    CmsContentId:
+      name: cmsContentId
+      in: path
+      required: true
+      description: Positive numeric identifier of one immutable CMS version.
+      schema:
+        type: integer
+        minimum: 1
+    SecurityRevisionId:
+      name: revisionId
+      in: path
+      required: true
+      description: Immutable UUID of the persisted security grant revision.
+      schema:
+        type: string
+        format: uuid
+    PipelineWorkflowId:
+      name: workflowId
+      in: path
+      required: true
+      description: Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships.
+      schema:
+        type: string
+        format: uuid
+    DdexDocumentId:
+      name: documentId
+      in: path
+      required: true
+      schema: { type: integer, format: int64, minimum: 1 }
+    DdexImportPlanId:
+      name: importPlanId
+      in: path
+      required: true
+      schema: { type: integer, format: int64, minimum: 1 }
+    DdexExportId:
+      name: exportId
+      in: path
+      required: true
+      schema: { type: integer, format: int64, minimum: 1 }
   schemas:
+    DdexStandardVersion:
+      type: object
+      additionalProperties: false
+      required: [ddexStandardVersionId, ddexStandardCode, ddexVersionCode, ddexStandardVersionName,
+        ddexStandardVersionNameEs, ddexStandardVersionNameEn, ddexStandardSourceVersion,
+        ddexStandardSourceUri, ddexStandardDetectionEnabled, ddexStandardValidationEnabled,
+        ddexStandardImportEnabled, ddexStandardExportEnabled, ddexStandardVersionRevision]
+      properties:
+        ddexStandardVersionId: { type: string, format: uuid }
+        ddexStandardCode: { type: string, readOnly: true }
+        ddexVersionCode: { type: string, readOnly: true }
+        ddexStandardVersionName: { type: string, readOnly: true }
+        ddexStandardVersionNameEs: { type: string, readOnly: true }
+        ddexStandardVersionNameEn: { type: string, readOnly: true }
+        ddexStandardSourceVersion: { type: string, readOnly: true }
+        ddexStandardSourceUri: { type: string, format: uri, readOnly: true }
+        ddexStandardDetectionEnabled: { type: boolean, readOnly: true }
+        ddexStandardValidationEnabled: { type: boolean, readOnly: true }
+        ddexStandardImportEnabled: { type: boolean, readOnly: true }
+        ddexStandardExportEnabled: { type: boolean, readOnly: true }
+        ddexStandardVersionRevision: { type: integer, minimum: 1, readOnly: true }
+    DdexMessageType:
+      type: object
+      additionalProperties: false
+      required: [ddexMessageTypeId, ddexMessageTypeStandardVersionId, ddexMessageTypeCode,
+        ddexMessageTypeName, ddexMessageTypeNameEs, ddexMessageTypeNameEn,
+        ddexMessageTypeRuntimeSupported, ddexMessageTypeRevision]
+      properties:
+        ddexMessageTypeId: { type: string, format: uuid }
+        ddexMessageTypeStandardVersionId: { type: string, format: uuid }
+        ddexMessageTypeCode: { type: string, readOnly: true }
+        ddexMessageTypeName: { type: string, readOnly: true }
+        ddexMessageTypeNameEs: { type: string, readOnly: true }
+        ddexMessageTypeNameEn: { type: string, readOnly: true }
+        ddexMessageTypeRuntimeSupported: { type: boolean, readOnly: true }
+        ddexMessageTypeRevision: { type: integer, minimum: 1, readOnly: true }
+    DdexDocumentState:
+      type: object
+      additionalProperties: false
+      required: [ddexDocumentStateId, ddexDocumentStateCode, ddexDocumentStateName,
+        ddexDocumentStateNameEs, ddexDocumentStateNameEn, ddexDocumentStateSortOrder,
+        ddexDocumentStateTerminal, ddexDocumentStateRevision]
+      properties:
+        ddexDocumentStateId: { type: string, format: uuid }
+        ddexDocumentStateCode: { type: string, readOnly: true }
+        ddexDocumentStateName: { type: string, readOnly: true }
+        ddexDocumentStateNameEs: { type: string, readOnly: true }
+        ddexDocumentStateNameEn: { type: string, readOnly: true }
+        ddexDocumentStateSortOrder: { type: integer, minimum: 0, readOnly: true }
+        ddexDocumentStateTerminal: { type: boolean, readOnly: true }
+        ddexDocumentStateRevision: { type: integer, minimum: 1, readOnly: true }
+    DdexOperationalState:
+      type: object
+      additionalProperties: false
+      required: [ddexOperationalStateId, ddexOperationalStateCode, ddexOperationalStateName,
+        ddexOperationalStateNameEs, ddexOperationalStateNameEn, ddexOperationalStateSortOrder,
+        ddexOperationalStateTerminal, ddexOperationalStateRevision]
+      properties:
+        ddexOperationalStateId: { type: string, format: uuid }
+        ddexOperationalStateCode: { type: string, readOnly: true }
+        ddexOperationalStateName: { type: string, readOnly: true }
+        ddexOperationalStateNameEs: { type: string, readOnly: true }
+        ddexOperationalStateNameEn: { type: string, readOnly: true }
+        ddexOperationalStateSortOrder: { type: integer, minimum: 0, readOnly: true }
+        ddexOperationalStateTerminal: { type: boolean, readOnly: true }
+        ddexOperationalStateRevision: { type: integer, minimum: 1, readOnly: true }
+    DdexOperationalWorkflow:
+      type: object
+      additionalProperties: false
+      required: [ddexOperationalWorkflowId, ddexOperationalWorkflowCode,
+        ddexOperationalWorkflowName, ddexOperationalWorkflowNameEs,
+        ddexOperationalWorkflowNameEn, ddexOperationalWorkflowSensitive,
+        ddexOperationalWorkflowRevision, ddexOperationalWorkflowStates]
+      properties:
+        ddexOperationalWorkflowId: { type: string, format: uuid }
+        ddexOperationalWorkflowCode: { type: string, readOnly: true }
+        ddexOperationalWorkflowName: { type: string, readOnly: true }
+        ddexOperationalWorkflowNameEs: { type: string, readOnly: true }
+        ddexOperationalWorkflowNameEn: { type: string, readOnly: true }
+        ddexOperationalWorkflowSensitive: { type: boolean, readOnly: true }
+        ddexOperationalWorkflowRevision: { type: integer, format: int64, minimum: 1, readOnly: true }
+        ddexOperationalWorkflowStates:
+          type: array
+          items: { $ref: '#/components/schemas/DdexOperationalState' }
+    DdexOperation:
+      type: object
+      additionalProperties: false
+      required: [ddexOperationId, ddexOperationCode, ddexOperationName, ddexOperationNameEs,
+        ddexOperationNameEn, ddexOperationDescription, ddexOperationDescriptionEs,
+        ddexOperationDescriptionEn, ddexOperationSortOrder, ddexOperationRevision]
+      properties:
+        ddexOperationId: { type: string, format: uuid }
+        ddexOperationCode: { type: string, readOnly: true }
+        ddexOperationName: { type: string, readOnly: true }
+        ddexOperationNameEs: { type: string, readOnly: true }
+        ddexOperationNameEn: { type: string, readOnly: true }
+        ddexOperationDescription: { type: string, nullable: true, readOnly: true }
+        ddexOperationDescriptionEs: { type: string, nullable: true, readOnly: true }
+        ddexOperationDescriptionEn: { type: string, nullable: true, readOnly: true }
+        ddexOperationSortOrder: { type: integer, minimum: 0, readOnly: true }
+        ddexOperationRevision: { type: integer, minimum: 1, readOnly: true }
+    DdexValidationReference:
+      type: object
+      additionalProperties: false
+      required: [ddexValidationReferenceId, ddexValidationReferenceCode,
+        ddexValidationReferenceName, ddexValidationReferenceNameEs,
+        ddexValidationReferenceNameEn, ddexValidationReferenceDescription,
+        ddexValidationReferenceDescriptionEs, ddexValidationReferenceDescriptionEn,
+        ddexValidationReferenceSortOrder, ddexValidationReferenceRevision]
+      properties:
+        ddexValidationReferenceId: { type: string, format: uuid }
+        ddexValidationReferenceCode: { type: string, readOnly: true }
+        ddexValidationReferenceName: { type: string, readOnly: true }
+        ddexValidationReferenceNameEs: { type: string, readOnly: true }
+        ddexValidationReferenceNameEn: { type: string, readOnly: true }
+        ddexValidationReferenceDescription: { type: string, nullable: true, readOnly: true }
+        ddexValidationReferenceDescriptionEs: { type: string, nullable: true, readOnly: true }
+        ddexValidationReferenceDescriptionEn: { type: string, nullable: true, readOnly: true }
+        ddexValidationReferenceSortOrder: { type: integer, minimum: 0, readOnly: true }
+        ddexValidationReferenceRevision: { type: integer, minimum: 1, readOnly: true }
+    DdexReferenceSnapshot:
+      type: object
+      additionalProperties: false
+      required: [ddexReferenceRevision, ddexReferenceLocale, ddexReferenceStandardVersions,
+        ddexReferenceMessageTypes, ddexReferenceDocumentStates,
+        ddexReferenceOperationalWorkflows, ddexReferenceJobOperations,
+        ddexReferenceImportOperations, ddexReferenceValidationResults,
+        ddexReferenceValidationSeverities, ddexReferenceValidationLayers]
+      properties:
+        ddexReferenceRevision: { type: integer, format: int64, minimum: 1 }
+        ddexReferenceLocale: { type: string, enum: [es, en] }
+        ddexReferenceStandardVersions:
+          type: array
+          items: { $ref: '#/components/schemas/DdexStandardVersion' }
+        ddexReferenceMessageTypes:
+          type: array
+          items: { $ref: '#/components/schemas/DdexMessageType' }
+        ddexReferenceDocumentStates:
+          type: array
+          items: { $ref: '#/components/schemas/DdexDocumentState' }
+        ddexReferenceOperationalWorkflows:
+          type: array
+          items: { $ref: '#/components/schemas/DdexOperationalWorkflow' }
+        ddexReferenceJobOperations:
+          type: array
+          items: { $ref: '#/components/schemas/DdexOperation' }
+        ddexReferenceImportOperations:
+          type: array
+          items: { $ref: '#/components/schemas/DdexOperation' }
+        ddexReferenceValidationResults:
+          type: array
+          items: { $ref: '#/components/schemas/DdexValidationReference' }
+        ddexReferenceValidationSeverities:
+          type: array
+          items: { $ref: '#/components/schemas/DdexValidationReference' }
+        ddexReferenceValidationLayers:
+          type: array
+          items: { $ref: '#/components/schemas/DdexValidationReference' }
+    DdexDocument:
+      type: object
+      additionalProperties: false
+      required: [ddexDocumentId, ddexDocumentFileName, ddexDocumentSha256,
+        ddexDocumentStandardVersionId, ddexDocumentStandardCode, ddexDocumentVersionCode,
+        ddexDocumentMessageTypeId, ddexDocumentMessageTypeCode, ddexDocumentWorkflowStateId,
+        ddexDocumentWorkflowStateCode, ddexDocumentWorkflowStateNameEs,
+        ddexDocumentWorkflowStateNameEn, ddexDocumentMessageId, ddexDocumentSenderId,
+        ddexDocumentRecipientId, ddexDocumentCreatedAt]
+      properties:
+        ddexDocumentId: { type: integer, format: int64 }
+        ddexDocumentFileName: { type: string }
+        ddexDocumentSha256: { type: string, readOnly: true }
+        ddexDocumentStandardVersionId: { type: string, format: uuid }
+        ddexDocumentStandardCode: { type: string, readOnly: true }
+        ddexDocumentVersionCode: { type: string, readOnly: true }
+        ddexDocumentMessageTypeId: { type: string, format: uuid, nullable: true }
+        ddexDocumentMessageTypeCode: { type: string, nullable: true, readOnly: true }
+        ddexDocumentWorkflowStateId: { type: string, format: uuid }
+        ddexDocumentWorkflowStateCode: { type: string, readOnly: true }
+        ddexDocumentWorkflowStateNameEs: { type: string, readOnly: true }
+        ddexDocumentWorkflowStateNameEn: { type: string, readOnly: true }
+        ddexDocumentMessageId: { type: string, nullable: true }
+        ddexDocumentSenderId: { type: string, nullable: true }
+        ddexDocumentRecipientId: { type: string, nullable: true }
+        ddexDocumentCreatedAt: { type: string, format: date-time }
+    DdexUploadRequest:
+      type: object
+      additionalProperties: false
+      required: [uploadFileName, uploadContentType, uploadContentBase64]
+      properties:
+        uploadFileName: { type: string, minLength: 1 }
+        uploadContentType: { type: string, minLength: 1 }
+        uploadContentBase64: { type: string, format: byte }
+    DdexValidationRun:
+      type: object
+      additionalProperties: false
+      required: [validationRunId, validationRunDocumentId, validationRunWorkflowStateId,
+        validationRunWorkflowStateCode, validationRunWorkflowStateNameEs,
+        validationRunWorkflowStateNameEn,
+        validationRunStartedAt, validationRunFinishedAt]
+      properties:
+        validationRunId: { type: integer, format: int64 }
+        validationRunDocumentId: { type: integer, format: int64 }
+        validationRunWorkflowStateId: { type: string, format: uuid }
+        validationRunWorkflowStateCode: { type: string, readOnly: true }
+        validationRunWorkflowStateNameEs: { type: string, readOnly: true }
+        validationRunWorkflowStateNameEn: { type: string, readOnly: true }
+        validationRunStartedAt: { type: string, format: date-time }
+        validationRunFinishedAt: { type: string, format: date-time, nullable: true }
+    DdexValidationIssue:
+      type: object
+      additionalProperties: false
+      required: [issueSeverityId, issueSeverityCode, issueSeverityNameEs, issueSeverityNameEn,
+        issueLayerId, issueLayerCode, issueLayerNameEs, issueLayerNameEn,
+        issueCode, issueMessage, issueLine, issueColumn]
+      properties:
+        issueSeverityId: { type: string, format: uuid, readOnly: true }
+        issueSeverityCode: { type: string, readOnly: true }
+        issueSeverityNameEs: { type: string, readOnly: true }
+        issueSeverityNameEn: { type: string, readOnly: true }
+        issueLayerId: { type: string, format: uuid, readOnly: true }
+        issueLayerCode: { type: string, readOnly: true }
+        issueLayerNameEs: { type: string, readOnly: true }
+        issueLayerNameEn: { type: string, readOnly: true }
+        issueCode: { type: string, readOnly: true }
+        issueMessage: { type: string, readOnly: true }
+        issueLine: { type: integer, nullable: true, readOnly: true }
+        issueColumn: { type: integer, nullable: true, readOnly: true }
+    DdexValidationReport:
+      type: object
+      additionalProperties: false
+      required: [reportRunId, reportIssues, reportIsValid]
+      properties:
+        reportRunId: { type: integer, format: int64 }
+        reportIssues:
+          type: array
+          items: { $ref: '#/components/schemas/DdexValidationIssue' }
+        reportIsValid: { type: boolean, readOnly: true }
+    DdexImportConflict:
+      type: object
+      additionalProperties: false
+      required: [conflictId, conflictEntityType, conflictIdentifier, conflictDescription]
+      properties:
+        conflictId: { type: integer, format: int64 }
+        conflictEntityType: { type: string, readOnly: true }
+        conflictIdentifier: { type: string, readOnly: true }
+        conflictDescription: { type: string, readOnly: true }
+    DdexImportPlan:
+      type: object
+      additionalProperties: false
+      required: [importPlanId, importPlanDocumentId, importPlanWorkflowStateId,
+        importPlanWorkflowStateCode, importPlanWorkflowStateNameEs,
+        importPlanWorkflowStateNameEn,
+        importPlanConflicts, importPlanChanges]
+      properties:
+        importPlanId: { type: integer, format: int64 }
+        importPlanDocumentId: { type: integer, format: int64 }
+        importPlanWorkflowStateId: { type: string, format: uuid }
+        importPlanWorkflowStateCode: { type: string, readOnly: true }
+        importPlanWorkflowStateNameEs: { type: string, readOnly: true }
+        importPlanWorkflowStateNameEn: { type: string, readOnly: true }
+        importPlanConflicts:
+          type: array
+          items: { $ref: '#/components/schemas/DdexImportConflict' }
+        importPlanChanges: { type: array, items: { type: string } }
+    DdexConflictResolution:
+      type: object
+      additionalProperties: false
+      required: [resolutionConflictId, resolutionAction, resolutionTargetId]
+      properties:
+        resolutionConflictId: { type: integer, format: int64 }
+        resolutionAction:
+          type: string
+          description: Parser discriminant for the currently unavailable resolution operation.
+        resolutionTargetId: { type: integer, format: int64, nullable: true }
+    DdexImportPlanResolution:
+      type: object
+      additionalProperties: false
+      required: [resolutionPlanId, resolutionConflicts]
+      properties:
+        resolutionPlanId: { type: integer, format: int64 }
+        resolutionConflicts:
+          type: array
+          items: { $ref: '#/components/schemas/DdexConflictResolution' }
+    DdexDownloadResponse:
+      type: object
+      additionalProperties: false
+      required: [downloadFileName, downloadContentType, downloadContentBase64]
+      properties:
+        downloadFileName: { type: string }
+        downloadContentType: { type: string }
+        downloadContentBase64: { type: string, format: byte }
+    DdexExportRequest:
+      type: object
+      additionalProperties: false
+      required: [exportReleaseId, exportPartnerId, exportStandardVersionId]
+      properties:
+        exportReleaseId: { type: integer, format: int64 }
+        exportPartnerId: { type: integer, format: int64 }
+        exportStandardVersionId:
+          type: string
+          format: uuid
+          description: Canonical governed standard-version relationship; version strings and slugs are rejected.
+    DdexExport:
+      type: object
+      additionalProperties: false
+      required: [ddexExportId, ddexExportReleaseId, ddexExportPartnerId,
+        ddexExportWorkflowStateId, ddexExportWorkflowStateCode,
+        ddexExportWorkflowStateNameEs, ddexExportWorkflowStateNameEn,
+        ddexExportXmlChecksum, ddexExportCreatedAt]
+      properties:
+        ddexExportId: { type: integer, format: int64 }
+        ddexExportReleaseId: { type: integer, format: int64 }
+        ddexExportPartnerId: { type: integer, format: int64 }
+        ddexExportWorkflowStateId: { type: string, format: uuid }
+        ddexExportWorkflowStateCode: { type: string, readOnly: true }
+        ddexExportWorkflowStateNameEs: { type: string, readOnly: true }
+        ddexExportWorkflowStateNameEn: { type: string, readOnly: true }
+        ddexExportXmlChecksum: { type: string, readOnly: true }
+        ddexExportCreatedAt: { type: string, format: date-time }
+    DdexPartner:
+      type: object
+      additionalProperties: false
+      required: [ddexPartnerId, ddexPartnerName, ddexPartnerDpid,
+        ddexPartnerAllowedStandardVersions]
+      properties:
+        ddexPartnerId: { type: integer, format: int64 }
+        ddexPartnerName: { type: string }
+        ddexPartnerDpid: { type: string, nullable: true }
+        ddexPartnerAllowedStandardVersions:
+          type: array
+          items: { $ref: '#/components/schemas/DdexStandardVersion' }
+    DdexPartnerCreateRequest:
+      type: object
+      additionalProperties: false
+      required: [partnerName, partnerDpid, partnerAllowedStandardVersionIds]
+      properties:
+        partnerName: { type: string, minLength: 1 }
+        partnerDpid: { type: string, nullable: true }
+        partnerAllowedStandardVersionIds:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items: { type: string, format: uuid }
+    PipelineStage:
+      type: object
+      additionalProperties: false
+      required: [id, code, nameEs, nameEn, sortOrder, terminal]
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string }
+        nameEs: { type: string }
+        nameEn: { type: string }
+        sortOrder: { type: integer, minimum: 0 }
+        terminal: { type: boolean }
+    PipelineServiceOffering:
+      type: object
+      additionalProperties: false
+      required: [id, code, nameEs, nameEn]
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string, readOnly: true }
+        nameEs: { type: string, readOnly: true }
+        nameEn: { type: string, readOnly: true }
+    PipelineDefinition:
+      type: object
+      additionalProperties: false
+      required: [workflowId, code, nameEs, nameEn, revision, serviceOfferings, stages]
+      properties:
+        workflowId: { type: string, format: uuid }
+        code: { type: string, readOnly: true }
+        nameEs: { type: string }
+        nameEn: { type: string }
+        revision: { type: integer, format: int64, minimum: 1 }
+        serviceOfferings:
+          type: array
+          items: { $ref: '#/components/schemas/PipelineServiceOffering' }
+        stages:
+          type: array
+          items: { $ref: '#/components/schemas/PipelineStage' }
+    PipelineSnapshot:
+      type: object
+      additionalProperties: false
+      required: [revision, definitions, cards]
+      properties:
+        revision: { type: integer, format: int64, minimum: 1 }
+        definitions:
+          type: array
+          items: { $ref: '#/components/schemas/PipelineDefinition' }
+        cards:
+          type: array
+          items: { $ref: '#/components/schemas/PipelineCard' }
+    PipelineCard:
+      type: object
+      additionalProperties: false
+      required: [id, title, serviceOfferingId, serviceOfferingCode, workflowId, workflowStateId, workflowStateCode, workflowStateNameEs, workflowStateNameEn, sortOrder]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        artist: { type: string, nullable: true }
+        serviceOfferingId: { type: string, format: uuid }
+        serviceOfferingCode: { type: string, readOnly: true }
+        workflowId: { type: string, format: uuid }
+        workflowStateId: { type: string, format: uuid }
+        workflowStateCode: { type: string, readOnly: true }
+        workflowStateNameEs: { type: string, readOnly: true }
+        workflowStateNameEn: { type: string, readOnly: true }
+        sortOrder: { type: integer, minimum: 0 }
+        notes: { type: string, nullable: true }
+    PipelineCardCreate:
+      type: object
+      additionalProperties: false
+      required: [title, serviceOfferingId]
+      properties:
+        title: { type: string, minLength: 1 }
+        artist: { type: string }
+        serviceOfferingId: { type: string, format: uuid }
+        workflowStateId:
+          type: string
+          format: uuid
+          description: Omit to use the one persisted active initial state.
+        sortOrder: { type: integer, minimum: 0 }
+        notes: { type: string }
+    PipelineCardUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        title: { type: string, minLength: 1 }
+        artist: { type: string, nullable: true }
+        workflowStateId:
+          type: string
+          format: uuid
+          description: The backend enforces the persisted transition relation.
+        sortOrder: { type: integer, minimum: 0 }
+        notes: { type: string, nullable: true }
+    EventMomentReactionRequest:
+      type: object
+      additionalProperties: false
+      required: [emrrReactionTypeId]
+      properties:
+        emrrReactionTypeId:
+          type: string
+          format: uuid
+          description: Canonical UUID of an active published item in the `reaction-types` catalog.
+    ContentReactionRequest:
+      type: object
+      additionalProperties: false
+      required: [crrReactionTypeId]
+      properties:
+        crrReactionTypeId:
+          type: string
+          format: uuid
+          description: Canonical UUID of an active published item in the `content-reaction-types` catalog.
+    ContentReactionSummaryItem:
+      type: object
+      additionalProperties: false
+      required: [rsiReactionTypeId, rsiCode, rsiNameEs, rsiNameEn, rsiDisplaySymbol, rsiCount]
+      properties:
+        rsiReactionTypeId: { type: string, format: uuid }
+        rsiCode: { type: string, readOnly: true }
+        rsiNameEs: { type: string, readOnly: true }
+        rsiNameEn: { type: string, readOnly: true }
+        rsiDisplaySymbol: { type: string, readOnly: true }
+        rsiCount: { type: integer, minimum: 0, readOnly: true }
+    ContentReactionSummary:
+      type: object
+      additionalProperties: false
+      required: [rsItems, rsTotal, rsMyReactionTypeId]
+      properties:
+        rsItems:
+          type: array
+          items: { $ref: '#/components/schemas/ContentReactionSummaryItem' }
+        rsTotal: { type: integer, minimum: 0, readOnly: true }
+        rsMyReactionTypeId:
+          type: string
+          format: uuid
+          nullable: true
+          readOnly: true
+    CreatorBadge:
+      type: object
+      additionalProperties: false
+      required: [cbBadgeTypeId, cbCode, cbNameEs, cbNameEn, cbAwardedAt]
+      properties:
+        cbBadgeTypeId: { type: string, format: uuid }
+        cbCode: { type: string, readOnly: true }
+        cbNameEs: { type: string, readOnly: true }
+        cbNameEn: { type: string, readOnly: true }
+        cbAwardedAt: { type: string, format: date-time, readOnly: true }
+        cbExpiresAt: { type: string, format: date-time, nullable: true, readOnly: true }
+    LeaderboardEntry:
+      type: object
+      additionalProperties: false
+      required: [lbPartyId, lbDisplayName, lbTotalReactions, lbBadges, lbRank]
+      properties:
+        lbPartyId: { type: integer, format: int64 }
+        lbDisplayName: { type: string }
+        lbAvatarUrl: { type: string, nullable: true }
+        lbTotalReactions: { type: integer, minimum: 0 }
+        lbBadges:
+          type: array
+          items: { $ref: '#/components/schemas/CreatorBadge' }
+        lbRank: { type: integer, minimum: 1 }
+    EventMomentReaction:
+      type: object
+      additionalProperties: false
+      required: [emrReactionTypeId, emrReactionCode, emrReactionNameEs, emrReactionNameEn, emrReactionEmoji, emrPartyId]
+      properties:
+        emrReactionTypeId: { type: string, format: uuid }
+        emrReactionCode: { type: string, readOnly: true }
+        emrReactionNameEs: { type: string, readOnly: true }
+        emrReactionNameEn: { type: string, readOnly: true }
+        emrReactionEmoji: { type: string, readOnly: true }
+        emrPartyId: { type: string }
+        emrCreatedAt: { type: string, format: date-time, nullable: true }
+    EventMomentComment:
+      type: object
+      additionalProperties: false
+      required: [emcAuthorName, emcBody]
+      properties:
+        emcId: { type: string, nullable: true }
+        emcMomentId: { type: string, nullable: true }
+        emcAuthorPartyId: { type: string, nullable: true }
+        emcAuthorName: { type: string }
+        emcBody: { type: string }
+        emcCreatedAt: { type: string, format: date-time, nullable: true }
+        emcUpdatedAt: { type: string, format: date-time, nullable: true }
+    EventMoment:
+      type: object
+      additionalProperties: false
+      required: [emAuthorName, emMediaUrl, emMediaType, emReactions, emComments]
+      properties:
+        emId: { type: string, nullable: true }
+        emEventId: { type: string, nullable: true }
+        emAuthorPartyId: { type: string, nullable: true }
+        emAuthorName: { type: string }
+        emCaption: { type: string, nullable: true }
+        emMediaUrl: { type: string }
+        emMediaType: { type: string }
+        emMediaWidth: { type: integer, nullable: true }
+        emMediaHeight: { type: integer, nullable: true }
+        emMediaDurationMs: { type: integer, nullable: true }
+        emCreatedAt: { type: string, format: date-time, nullable: true }
+        emUpdatedAt: { type: string, format: date-time, nullable: true }
+        emReactions:
+          type: array
+          items: { $ref: '#/components/schemas/EventMomentReaction' }
+        emComments:
+          type: array
+          items: { $ref: '#/components/schemas/EventMomentComment' }
+    SocialEvent:
+      type: object
+      additionalProperties: false
+      required: [eventTitle, eventStart, eventEnd, eventTypeId, eventArtists]
+      properties:
+        eventId:
+          type: string
+          nullable: true
+        eventOrganizerPartyId:
+          type: string
+          nullable: true
+        eventTitle:
+          type: string
+        eventDescription:
+          type: string
+          nullable: true
+        eventStart:
+          type: string
+          format: date-time
+        eventEnd:
+          type: string
+          format: date-time
+        eventVenueId:
+          type: string
+          nullable: true
+        eventPriceCents:
+          type: integer
+          nullable: true
+        eventCapacity:
+          type: integer
+          nullable: true
+        eventTypeId:
+          type: string
+          format: uuid
+          description: Canonical relationship to the persisted `event-types` catalog.
+        eventWorkflowStateId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Canonical social-event workflow relationship. Creation may omit it to use the persisted initial default.
+        eventWorkflowStateCode:
+          type: string
+          nullable: true
+          readOnly: true
+        eventWorkflowStateNameEs:
+          type: string
+          nullable: true
+          readOnly: true
+        eventWorkflowStateNameEn:
+          type: string
+          nullable: true
+          readOnly: true
+        eventPublicListable:
+          type: boolean
+          nullable: true
+          readOnly: true
+        eventTicketPurchaseEnabled:
+          type: boolean
+          nullable: true
+          readOnly: true
+        eventCurrency:
+          type: string
+          nullable: true
+        eventBudgetCents:
+          type: integer
+          nullable: true
+        eventTicketUrl:
+          type: string
+          format: uri
+          nullable: true
+        eventImageUrl:
+          type: string
+          format: uri
+          nullable: true
+        eventIsPublic:
+          type: boolean
+          nullable: true
+        eventArtists:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
     Version:
       type: object
       properties:
@@ -2035,6 +4332,7 @@ components:
           description: Google ID token returned by Google Identity Services
     SignupRequest:
       type: object
+      additionalProperties: false
       required: [firstName, lastName, email, password]
       properties:
         firstName:
@@ -2054,22 +4352,18 @@ components:
         password:
           type: string
           format: password
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/Role'
-          description: Optional roles (non-admin) to assign during signup.
+          example: changeme123
         fanArtistIds:
           type: array
           items:
             type: integer
             format: int64
-          description: Artist or band ids the fan wants to follow immediately after signup.
+          description: Artist or band ids to follow after account creation; this does not assign a security role.
         claimArtistId:
           type: integer
           format: int64
           nullable: true
-          description: Optional existing artist profile to claim when it is not already assigned to a user.
+          description: Optional existing artist profile to claim when it is not already assigned to a user. A verified email match applies the persisted artist-claim policy server-side.
     LoginResponse:
       type: object
       properties:
@@ -2117,47 +4411,61 @@ components:
           $ref: '#/components/schemas/LocalePreferences'
     LocalePreferences:
       type: object
-      required: [locale, currency, timezone, supportedLocales, supportedCurrencies]
+      required: [localeId, locale, currencyId, currency, timezone]
       properties:
+        localeId:
+          type: string
+          format: uuid
+          description: Canonical persisted locale identity.
         locale:
           type: string
+          readOnly: true
+          description: Presentation code resolved from localeId; never accepted as write identity.
           example: en
+        currencyId:
+          type: string
+          format: uuid
+          description: Canonical persisted currency identity.
         currency:
           type: string
           pattern: '^[A-Z]{3}$'
+          readOnly: true
+          description: ISO presentation code resolved from currencyId; never accepted as write identity.
           example: USD
         timezone:
           type: string
           example: Europe/Berlin
+        countryId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Canonical persisted country identity selected by the user.
         countryCode:
           type: string
           nullable: true
           pattern: '^[A-Z]{2}$'
-        supportedLocales:
-          type: array
-          items:
-            type: string
-        supportedCurrencies:
-          type: array
-          items:
-            type: string
-            pattern: '^[A-Z]{3}$'
+          readOnly: true
+          description: Presentation and external-wire code resolved from countryId; legacy rows may use preserved migration evidence until backfilled.
     LocalePreferencesUpdate:
       type: object
       additionalProperties: false
-      required: [locale, currency, timezone]
+      required: [localeId, currencyId, timezone]
       properties:
-        locale:
+        localeId:
           type: string
-        currency:
+          format: uuid
+          description: Canonical active deployment-enabled locale identity.
+        currencyId:
           type: string
-          pattern: '^[A-Z]{3}$'
+          format: uuid
+          description: Canonical active deployment-enabled currency identity.
         timezone:
           type: string
-        countryCode:
+        countryId:
           type: string
+          format: uuid
           nullable: true
-          pattern: '^[A-Z]{2}$'
+          description: Canonical active country identity. Null explicitly clears the preference.
     CurrencyConversionAuditCreate:
       type: object
       additionalProperties: false
@@ -2218,8 +4526,12 @@ components:
         - Maintenance
     UserRoleSummary:
       type: object
+      required: [id, partyId, name, roles, status, createdAt]
       properties:
         id:
+          type: integer
+          format: int64
+        partyId:
           type: integer
           format: int64
         name:
@@ -2241,15 +4553,1438 @@ components:
         createdAt:
           type: string
           format: date-time
-    UserRoleUpdate:
+    CmsContentDraft:
       type: object
-      required: [roles]
+      additionalProperties: false
+      required: [contentId, locale]
       properties:
-        roles:
+        contentId:
+          type: string
+          format: uuid
+        locale:
+          type: string
+        title:
+          type: string
+          maxLength: 160
+        status:
+          type: string
+          pattern: '^draft$'
+          description: May be omitted; new CMS writes always enter the draft workflow state.
+        payload:
+          type: object
+          description: Validated against the strict, versioned schema of the referenced persisted content type.
+    CmsContent:
+      type: object
+      additionalProperties: false
+      required: [id, slug, locale, version, status, createdAt]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        contentId:
+          type: string
+          format: uuid
+          description: Canonical authored-content relationship. Null/omitted only on preserved legacy rows.
+        slug:
+          type: string
+          description: Persisted presentation alias copied into the immutable historical version; never a write identifier.
+        locale:
+          type: string
+        version:
+          type: integer
+          minimum: 1
+        status:
+          type: string
+        title:
+          type: string
+        payload:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        publishedAt:
+          type: string
+          format: date-time
+    LabelProjectNote:
+      type: object
+      additionalProperties: false
+      required: [lpnId, lpnText, lpnCompleted, lpnCreatedAt, lpnUpdatedAt, lpnVersion]
+      properties:
+        lpnId:
+          type: string
+          format: uuid
+        lpnText:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        lpnCompleted:
+          type: boolean
+        lpnCreatedAt:
+          type: string
+          format: date-time
+        lpnUpdatedAt:
+          type: string
+          format: date-time
+        lpnVersion:
+          type: integer
+          minimum: 1
+    LabelProjectNoteCreate:
+      type: object
+      additionalProperties: false
+      required: [lpncText]
+      properties:
+        lpncText:
+          type: string
+          minLength: 1
+          maxLength: 1000
+    LabelProjectNoteUpdate:
+      type: object
+      additionalProperties: false
+      required: [lpnuExpectedVersion]
+      minProperties: 2
+      properties:
+        lpnuText:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        lpnuCompleted:
+          type: boolean
+        lpnuExpectedVersion:
+          type: integer
+          minimum: 1
+    CatalogDefinition:
+      type: object
+      required: [id, code, classification, entityKind, name, publicRead, sensitive, orderingMode, cacheRevision, active, version]
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        classification:
+          type: string
+        entityKind:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        publicRead:
+          type: boolean
+        sensitive:
+          type: boolean
+        orderingMode:
+          type: string
+        sourceName:
+          type: string
+        sourceVersion:
+          type: string
+        sourceEffectiveDate:
+          type: string
+          format: date
+        lastSyncedAt:
+          type: string
+          format: date-time
+        cacheRevision:
+          type: integer
+          format: int64
+        active:
+          type: boolean
+        version:
+          type: integer
+          minimum: 1
+    CatalogItem:
+      type: object
+      additionalProperties: false
+      required: [id, catalogId, catalogCode, kind, code, name, nameEs, nameEn, searchAliases, sortOrder, active, workflowState, usageCount, version]
+      properties:
+        id:
+          type: string
+          format: uuid
+        catalogId:
+          type: string
+          format: uuid
+        catalogCode:
+          type: string
+        kind:
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        nameEs:
+          type: string
+        nameEn:
+          type: string
+        description:
+          type: string
+        descriptionEs:
+          type: string
+        descriptionEn:
+          type: string
+        searchAliases:
           type: array
-          description: Complete list of roles that should remain active.
           items:
-            $ref: '#/components/schemas/Role'
+            type: string
+        currentSlug:
+          type: string
+        parentId:
+          type: string
+          format: uuid
+        sortOrder:
+          type: integer
+        active:
+          type: boolean
+        workflowState:
+          type: string
+        deprecatedAt:
+          type: string
+          format: date-time
+        replacementId:
+          type: string
+          format: uuid
+        externalCode:
+          type: string
+        sourceVersion:
+          type: string
+        displaySymbol:
+          type: string
+          description: Persisted short visual marker supplied only by typed catalogs such as reaction types.
+        usageCount:
+          type: integer
+          format: int64
+        version:
+          type: integer
+          minimum: 1
+    CatalogPage:
+      type: object
+      required: [catalog, items, defaults, page, pageSize, total, revision, locale]
+      properties:
+        catalog:
+          $ref: '#/components/schemas/CatalogDefinition'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogItem'
+        defaults:
+          type: array
+          description: Effective persisted defaults for this catalog, scoped explicitly and related by canonical entity UUID.
+          items:
+            $ref: '#/components/schemas/CatalogDefault'
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          format: int64
+        revision:
+          type: integer
+          format: int64
+        locale:
+          type: string
+    CatalogDefault:
+      type: object
+      additionalProperties: false
+      required: [entityId, scopeKind, scopeId, version]
+      properties:
+        entityId:
+          type: string
+          format: uuid
+        scopeKind:
+          type: string
+        scopeId:
+          type: string
+        localeId:
+          type: string
+          format: uuid
+        effectiveFrom:
+          type: string
+          format: date-time
+        effectiveUntil:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          minimum: 1
+    CatalogBatch:
+      type: object
+      required: [catalogs, revision, locale]
+      properties:
+        catalogs:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogPage'
+        revision:
+          type: integer
+          format: int64
+        locale:
+          type: string
+    ContentType:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - code
+        - entityKind
+        - name
+        - nameEs
+        - nameEn
+        - schema
+        - schemaVersion
+        - publicRead
+        - active
+        - workflowState
+        - version
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        entityKind:
+          type: string
+        name:
+          type: string
+        nameEs:
+          type: string
+        nameEn:
+          type: string
+        description:
+          type: string
+        descriptionEs:
+          type: string
+        descriptionEn:
+          type: string
+        schema:
+          type: object
+          additionalProperties: true
+          description: Strict, versioned schema metadata owned by the persisted content type.
+        schemaVersion:
+          type: integer
+          minimum: 1
+        publicRoutePattern:
+          type: string
+        adminRoutePattern:
+          type: string
+        publicRead:
+          type: boolean
+        active:
+          type: boolean
+        workflowState:
+          type: string
+        version:
+          type: integer
+          minimum: 1
+    WorkflowState:
+      type: object
+      additionalProperties: false
+      required: [id, workflowId, workflowCode, code, name, nameEs, nameEn, sortOrder, terminal, active, initialContexts, capabilities, transitions, version]
+      properties:
+        id:
+          type: string
+          format: uuid
+        workflowId:
+          type: string
+          format: uuid
+        workflowCode:
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        nameEs:
+          type: string
+        nameEn:
+          type: string
+        sortOrder:
+          type: integer
+        terminal:
+          type: boolean
+        active:
+          type: boolean
+        initialContexts:
+          type: array
+          items:
+            type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+        transitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowTransition'
+        version:
+          type: integer
+          minimum: 1
+    WorkflowTransition:
+      type: object
+      additionalProperties: false
+      required: [toStateId, directExecutionAllowed, requiresReview, requiresDistinctApprover, version]
+      properties:
+        toStateId:
+          type: string
+          format: uuid
+        directExecutionAllowed:
+          type: boolean
+          description: True only when the backend may execute this transition directly without a permission-bound review flow.
+        requiresReview:
+          type: boolean
+        requiresDistinctApprover:
+          type: boolean
+        effectiveFrom:
+          type: string
+          format: date-time
+        effectiveUntil:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          minimum: 1
+    WorkflowStates:
+      type: object
+      additionalProperties: false
+      required: [workflowCode, locale, revision, states]
+      properties:
+        workflowCode:
+          type: string
+        locale:
+          type: string
+        revision:
+          type: integer
+          format: int64
+          minimum: 1
+        states:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowState'
+    AuthoredContent:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - code
+        - contentTypeId
+        - contentTypeCode
+        - entityKind
+        - name
+        - nameEs
+        - nameEn
+        - currentSlug
+        - schema
+        - schemaVersion
+        - sortOrder
+        - active
+        - workflowState
+        - revision
+        - version
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        contentTypeId:
+          type: string
+          format: uuid
+        contentTypeCode:
+          type: string
+        entityKind:
+          type: string
+        name:
+          type: string
+        nameEs:
+          type: string
+        nameEn:
+          type: string
+        description:
+          type: string
+        descriptionEs:
+          type: string
+        descriptionEn:
+          type: string
+        currentSlug:
+          type: string
+          description: Persisted current URL alias; never a canonical relationship identifier.
+        publicRoute:
+          type: string
+        schema:
+          type: object
+          additionalProperties: true
+        schemaVersion:
+          type: integer
+          minimum: 1
+        sortOrder:
+          type: integer
+        active:
+          type: boolean
+        workflowState:
+          type: string
+        revision:
+          type: integer
+          minimum: 1
+        version:
+          type: integer
+          minimum: 1
+    CatalogDraft:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - nameEs
+        - nameEn
+        - searchAliasesEs
+        - searchAliasesEn
+        - sortOrder
+        - reason
+        - sourcePlatform
+        - correlationId
+      properties:
+        entityId:
+          type: string
+          format: uuid
+        baseVersion:
+          type: integer
+          minimum: 0
+        code:
+          type: string
+        nameEs:
+          type: string
+        nameEn:
+          type: string
+        descriptionEs:
+          type: string
+        descriptionEn:
+          type: string
+        searchAliasesEs:
+          type: array
+          items:
+            type: string
+        searchAliasesEn:
+          type: array
+          items:
+            type: string
+        currentSlug:
+          type: string
+          description: Presentation-only URL alias; never a relationship or canonical identifier.
+        parentId:
+          type: string
+          format: uuid
+        sortOrder:
+          type: integer
+        externalCode:
+          type: string
+        sourceVersion:
+          type: string
+        serviceOffering:
+          $ref: '#/components/schemas/ServiceOfferingDraft'
+        radioAutoStop:
+          $ref: '#/components/schemas/RadioAutoStopDraft'
+        appearanceMode:
+          $ref: '#/components/schemas/AppearanceModeDraft'
+        displaySymbol:
+          type: string
+          maxLength: 16
+          description: Typed persisted visual marker. Currently accepted only by the reaction-types adapter.
+        globalDefault:
+          type: boolean
+          description: >-
+            Reassigns the explicitly scoped global default when true. Accepted only by catalogs
+            whose typed adapter declares a global default scope.
+        reason:
+          type: string
+        sourcePlatform:
+          type: string
+        correlationId:
+          type: string
+    ServiceOfferingDraft:
+      type: object
+      additionalProperties: false
+      required:
+        - categoryId
+        - pricingModelId
+        - currencyId
+        - requiresEngineer
+        - defaultResources
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+        pricingModelId:
+          type: string
+          format: uuid
+        rateCents:
+          type: integer
+          minimum: 0
+          maximum: 1000000000
+        currencyId:
+          type: string
+          format: uuid
+        billingUnitEs:
+          type: string
+          maxLength: 80
+        billingUnitEn:
+          type: string
+          maxLength: 80
+        taxRateId:
+          type: string
+          format: uuid
+        defaultDurationMinutes:
+          type: integer
+          minimum: 15
+          maximum: 840
+        requiresEngineer:
+          type: boolean
+        defaultResources:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/ServiceOfferingDefaultResourceDraft'
+    RadioAutoStopDraft:
+      type: object
+      additionalProperties: false
+      required: [durationMinutes, defaultForBroadcast]
+      properties:
+        durationMinutes:
+          type: integer
+          minimum: 0
+          maximum: 1440
+        defaultForBroadcast:
+          type: boolean
+    AppearanceModeDraft:
+      type: object
+      additionalProperties: false
+      required: [defaultForApplication]
+      properties:
+        defaultForApplication:
+          type: boolean
+    ServiceOfferingDefaultResourceDraft:
+      type: object
+      additionalProperties: false
+      required: [resourceId, selectionModeId, sortOrder]
+      properties:
+        resourceId:
+          type: string
+          pattern: '^[1-9][0-9]*$'
+        selectionModeId:
+          type: string
+          format: uuid
+        sortOrder:
+          type: integer
+          minimum: 0
+    ServiceOffering:
+      type: object
+      additionalProperties: false
+      required:
+        - scId
+        - scCode
+        - scName
+        - scNameEs
+        - scNameEn
+        - scCategoryId
+        - scKind
+        - scPricingModelId
+        - scPricingModel
+        - scCurrency
+        - scCurrencyId
+        - scRequiresEngineer
+        - scDefaultResources
+        - scSortOrder
+        - scActive
+      properties:
+        scId:
+          type: string
+          format: uuid
+        scCode:
+          type: string
+        scName:
+          type: string
+        scNameEs:
+          type: string
+        scNameEn:
+          type: string
+        scCategoryId:
+          type: string
+          format: uuid
+        scKind:
+          type: string
+          description: Persisted service category code for display; category relations use IDs in writes.
+        scPricingModel:
+          type: string
+          description: Persisted pricing-model code for display; draft relations use pricingModelId.
+        scPricingModelId:
+          type: string
+          format: uuid
+        scRateCents:
+          type: integer
+          minimum: 0
+          nullable: true
+        scCurrency:
+          type: string
+        scCurrencyId:
+          type: string
+          format: uuid
+        scBillingUnit:
+          type: string
+          nullable: true
+        scTaxRateCode:
+          type: string
+          nullable: true
+        scTaxRateId:
+          type: string
+          format: uuid
+          nullable: true
+        scDefaultDurationMinutes:
+          type: integer
+          minimum: 15
+          maximum: 840
+          nullable: true
+        scRequiresEngineer:
+          type: boolean
+        scDefaultResources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceDefaultResource'
+        scSortOrder:
+          type: integer
+        scActive:
+          type: boolean
+    ServiceCatalogEnvelope:
+      type: object
+      additionalProperties: false
+      required: [sceSchemaVersion, sceRevision, sceLocale, sceItems]
+      properties:
+        sceSchemaVersion:
+          type: integer
+          minimum: 1
+        sceRevision:
+          type: integer
+          format: int64
+          minimum: 0
+        sceLocale:
+          type: string
+        sceItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceOffering'
+    ServiceDefaultResource:
+      type: object
+      additionalProperties: false
+      required: [sdrResourceId, sdrResourceName, sdrSelectionModeId, sdrSelectionMode, sdrSortOrder]
+      properties:
+        sdrResourceId:
+          type: string
+        sdrResourceName:
+          type: string
+        sdrSelectionModeId:
+          type: string
+          format: uuid
+        sdrSelectionMode:
+          type: string
+          enum: [all, first-available]
+        sdrSortOrder:
+          type: integer
+    CatalogRevision:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - catalogId
+        - catalogCode
+        - entityId
+        - workflowState
+        - baseVersion
+        - proposedVersion
+        - draft
+        - createdBy
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        catalogId:
+          type: string
+          format: uuid
+        catalogCode:
+          type: string
+        entityId:
+          type: string
+          format: uuid
+        workflowState:
+          type: string
+        baseVersion:
+          type: integer
+          minimum: 0
+        proposedVersion:
+          type: integer
+          minimum: 1
+        draft:
+          $ref: '#/components/schemas/CatalogDraft'
+        createdBy:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+        reviewedBy:
+          type: integer
+          format: int64
+        reviewedAt:
+          type: string
+          format: date-time
+        approvedBy:
+          type: integer
+          format: int64
+        approvedAt:
+          type: string
+          format: date-time
+        reviewerNotes:
+          type: string
+        rejectionReason:
+          type: string
+        scheduledPublishAt:
+          type: string
+          format: date-time
+        publishedAt:
+          type: string
+          format: date-time
+    CatalogReview:
+      type: object
+      additionalProperties: false
+      required: [notes, emergencyOverride]
+      properties:
+        notes:
+          type: string
+        scheduledPublishAt:
+          type: string
+          format: date-time
+        emergencyOverride:
+          type: boolean
+    CatalogActivation:
+      type: object
+      additionalProperties: false
+      required: [active, reason, expectedVersion, correlationId]
+      properties:
+        active:
+          type: boolean
+        replacementId:
+          type: string
+          format: uuid
+        reason:
+          type: string
+        expectedVersion:
+          type: integer
+          minimum: 1
+        correlationId:
+          type: string
+    CatalogReorder:
+      type: object
+      additionalProperties: false
+      required: [orderedItemIds, expectedCatalogRevision, reason, correlationId]
+      properties:
+        orderedItemIds:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+            format: uuid
+        expectedCatalogRevision:
+          type: integer
+          format: int64
+          minimum: 0
+        reason:
+          type: string
+        correlationId:
+          type: string
+    CatalogMerge:
+      type: object
+      additionalProperties: false
+      required: [sourceItemId, targetItemId, reason, correlationId]
+      properties:
+        sourceItemId:
+          type: string
+          format: uuid
+        targetItemId:
+          type: string
+          format: uuid
+        reason:
+          type: string
+        correlationId:
+          type: string
+    CatalogUsage:
+      type: object
+      additionalProperties: false
+      required:
+        - day
+        - selectionCount
+        - historicalReferenceCount
+        - replacementCount
+        - noResultSearchCount
+        - formFailureCount
+      properties:
+        itemId:
+          type: string
+          format: uuid
+        day:
+          type: string
+          format: date
+        selectionCount:
+          type: integer
+          format: int64
+          minimum: 0
+        historicalReferenceCount:
+          type: integer
+          format: int64
+          minimum: 0
+        replacementCount:
+          type: integer
+          format: int64
+          minimum: 0
+        noResultSearchCount:
+          type: integer
+          format: int64
+          minimum: 0
+        formFailureCount:
+          type: integer
+          format: int64
+          minimum: 0
+    CatalogImportResult:
+      type: object
+      additionalProperties: false
+      required:
+        - importJobId
+        - dryRun
+        - status
+        - totalRows
+        - acceptedRows
+        - rejectedRows
+        - ambiguousRows
+        - errors
+      properties:
+        importJobId:
+          type: string
+          format: uuid
+        dryRun:
+          type: boolean
+        status:
+          type: string
+        totalRows:
+          type: integer
+          minimum: 0
+        acceptedRows:
+          type: integer
+          minimum: 0
+        rejectedRows:
+          type: integer
+          minimum: 0
+        ambiguousRows:
+          type: integer
+          minimum: 0
+        errors:
+          type: array
+          items:
+            type: string
+    RecordsContributor:
+      type: object
+      additionalProperties: false
+      required: [id, code, kind, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        kind:
+          type: string
+          enum: [artist, group, credited-ensemble, guest]
+        name:
+          type: string
+    RecordsResource:
+      type: object
+      additionalProperties: false
+      required: [id, providerCode, kind, externalCode, url, relationKind, primary, sortOrder]
+      properties:
+        id:
+          type: string
+          format: uuid
+        providerCode:
+          type: string
+        kind:
+          type: string
+          enum: [audio-track, video, playlist, channel]
+        externalCode:
+          type: string
+        url:
+          type: string
+          format: uri
+        label:
+          type: string
+        durationMs:
+          type: integer
+          minimum: 0
+        thumbnailUrl:
+          type: string
+          format: uri
+        relationKind:
+          type: string
+        primary:
+          type: boolean
+        sortOrder:
+          type: integer
+    RecordsCollection:
+      type: object
+      additionalProperties: false
+      required: [id, code, kind, name, resources, revision]
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        kind:
+          type: string
+          enum: [release, recording, session]
+        name:
+          type: string
+        description:
+          type: string
+        publicRoute:
+          type: string
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordsResource'
+        revision:
+          type: integer
+          minimum: 1
+    RecordsRelease:
+      type: object
+      additionalProperties: false
+      required: [id, code, title, releaseTypeId, contributors, resources, sortOrder, revision]
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        slug:
+          type: string
+          description: Presentation-only current URL alias; never a canonical relationship.
+        title:
+          type: string
+        description:
+          type: string
+        releaseTypeId:
+          type: string
+          format: uuid
+        releaseDate:
+          type: string
+          format: date
+        contributors:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordsContributor'
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordsResource'
+        sortOrder:
+          type: integer
+        revision:
+          type: integer
+          minimum: 1
+    RecordsRecording:
+      type: object
+      additionalProperties: false
+      required: [id, code, title, recordingTypeId, contributors, resources, sortOrder, revision]
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        slug:
+          type: string
+          description: Presentation-only current URL alias; never a canonical relationship.
+        title:
+          type: string
+        description:
+          type: string
+        recordingTypeId:
+          type: string
+          format: uuid
+        durationMs:
+          type: integer
+          minimum: 0
+        contributors:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordsContributor'
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordsResource'
+        sortOrder:
+          type: integer
+        revision:
+          type: integer
+          minimum: 1
+    RecordsSession:
+      type: object
+      additionalProperties: false
+      required: [id, code, title, sessionTypeId, contributors, resources, sortOrder, revision]
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        slug:
+          type: string
+          description: Presentation-only current URL alias; never a canonical relationship.
+        title:
+          type: string
+        description:
+          type: string
+        sessionTypeId:
+          type: string
+          format: uuid
+        recordedAt:
+          type: string
+          format: date-time
+        contributors:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordsContributor'
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordsResource'
+        sortOrder:
+          type: integer
+        revision:
+          type: integer
+          minimum: 1
+    RecordsFeed:
+      type: object
+      additionalProperties: false
+      required: [locale, revision, collections, releases, recordings, sessions]
+      properties:
+        locale:
+          type: string
+        revision:
+          type: integer
+          format: int64
+          minimum: 1
+        collections:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordsCollection'
+        releases:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordsRelease'
+        recordings:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordsRecording'
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordsSession'
+    SecurityRole:
+      type: object
+      required: [id, code, nameEs, nameEn, emergencyAdministrator, systemRole, selfAssignable, automaticAssignable, active, moduleCodes, permissionCodes, version]
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        nameEs:
+          type: string
+        nameEn:
+          type: string
+        descriptionEs:
+          type: string
+        descriptionEn:
+          type: string
+        emergencyAdministrator:
+          type: boolean
+        systemRole:
+          type: boolean
+        selfAssignable:
+          type: boolean
+        automaticAssignable:
+          type: boolean
+        active:
+          type: boolean
+        moduleCodes:
+          type: array
+          items:
+            type: string
+        permissionCodes:
+          type: array
+          items:
+            type: string
+        version:
+          type: integer
+          minimum: 1
+    SecurityPartyRoleAssignment:
+      type: object
+      required: [id, partyId, roleId, roleCode, roleNameEs, active, approvalMode, createdAt, version]
+      properties:
+        id:
+          type: string
+          format: uuid
+        partyId:
+          type: integer
+          format: int64
+        roleId:
+          type: string
+          format: uuid
+        roleCode:
+          type: string
+        roleNameEs:
+          type: string
+        active:
+          type: boolean
+        grantedBy:
+          type: integer
+          format: int64
+        approvedBy:
+          type: integer
+          format: int64
+        approvalMode:
+          type: string
+          enum: [normal, emergency, bootstrap, system-policy]
+        sourceRevisionId:
+          type: string
+          format: uuid
+        sourcePolicyId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          minimum: 1
+    PartyRoleGrantDraft:
+      type: object
+      additionalProperties: false
+      required: [partyId, roleId, desiredActive, expectedVersion, reason, sourcePlatform, correlationId]
+      properties:
+        partyId:
+          type: integer
+          format: int64
+          minimum: 1
+        roleId:
+          type: string
+          format: uuid
+        desiredActive:
+          type: boolean
+        expectedVersion:
+          type: integer
+          minimum: 0
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        sourcePlatform:
+          type: string
+          minLength: 2
+          maxLength: 50
+        correlationId:
+          type: string
+          minLength: 8
+          maxLength: 200
+    RolePermissionGrantDraft:
+      type: object
+      additionalProperties: false
+      required: [roleId, permissionId, desiredActive, expectedVersion, reason, sourcePlatform, correlationId]
+      properties:
+        roleId:
+          type: string
+          format: uuid
+        permissionId:
+          type: string
+          format: uuid
+        desiredActive:
+          type: boolean
+        expectedVersion:
+          type: integer
+          minimum: 0
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        sourcePlatform:
+          type: string
+          minLength: 2
+          maxLength: 50
+        correlationId:
+          type: string
+          minLength: 8
+          maxLength: 200
+    SecurityGrantReview:
+      type: object
+      additionalProperties: false
+      required: [notes]
+      properties:
+        notes:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        emergencyOverrideReason:
+          type: string
+          minLength: 20
+          maxLength: 2000
+    SecurityGrantRevision:
+      type: object
+      required: [id, changeKind, roleId, desiredActive, expectedVersion, workflowState, createdBy, createdAt, approvalMode, sourcePlatform, correlationId, reason, version]
+      properties:
+        id:
+          type: string
+          format: uuid
+        changeKind:
+          type: string
+          enum: [party-role, role-permission]
+        partyId:
+          type: integer
+          format: int64
+        roleId:
+          type: string
+          format: uuid
+        permissionId:
+          type: string
+          format: uuid
+        desiredActive:
+          type: boolean
+        expectedVersion:
+          type: integer
+          minimum: 0
+        workflowState:
+          type: string
+        createdBy:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+        reviewedBy:
+          type: integer
+          format: int64
+        reviewedAt:
+          type: string
+          format: date-time
+        approvedBy:
+          type: integer
+          format: int64
+        approvedAt:
+          type: string
+          format: date-time
+        reviewerNotes:
+          type: string
+        rejectionReason:
+          type: string
+        approvalMode:
+          type: string
+        emergencyReason:
+          type: string
+        sourcePlatform:
+          type: string
+        correlationId:
+          type: string
+        reason:
+          type: string
+        result:
+          type: string
+        version:
+          type: integer
+          minimum: 1
+    SecurityAuditEvent:
+      type: object
+      required: [id, entityKind, roleId, operation, occurredAt, sourcePlatform, correlationId, approvalMode, result]
+      properties:
+        id:
+          type: string
+          format: uuid
+        revisionId:
+          type: string
+          format: uuid
+        sourcePolicyId:
+          type: string
+          format: uuid
+        entityKind:
+          type: string
+        partyId:
+          type: integer
+          format: int64
+        roleId:
+          type: string
+          format: uuid
+        permissionId:
+          type: string
+          format: uuid
+        operation:
+          type: string
+        previousActive:
+          type: boolean
+        newActive:
+          type: boolean
+        actorId:
+          type: integer
+          format: int64
+        reviewerId:
+          type: integer
+          format: int64
+        approverId:
+          type: integer
+          format: int64
+        occurredAt:
+          type: string
+          format: date-time
+        sourcePlatform:
+          type: string
+        reason:
+          type: string
+        correlationId:
+          type: string
+        approvalMode:
+          type: string
+        result:
+          type: string
+    SelfFanRoleRequest:
+      type: object
+      additionalProperties: false
+      required: [reason, sourcePlatform, correlationId]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        sourcePlatform:
+          type: string
+          minLength: 2
+          maxLength: 50
+        correlationId:
+          type: string
+          minLength: 8
+          maxLength: 200
     Party:
       type: object
       properties:
@@ -2499,12 +6234,6 @@ components:
         uNotes:
           type: string
           nullable: true
-    RoleAssignmentRequest:
-      type: object
-      required: [role]
-      properties:
-        role:
-          $ref: '#/components/schemas/Role'
     UserAccount:
       type: object
       properties:
@@ -2548,11 +6277,6 @@ components:
         uacActive:
           type: boolean
           nullable: true
-        uacRoles:
-          type: array
-          nullable: true
-          items:
-            $ref: '#/components/schemas/Role'
     UpdateUserAccountRequest:
       type: object
       properties:
@@ -2566,13 +6290,9 @@ components:
         uauActive:
           type: boolean
           nullable: true
-        uauRoles:
-          type: array
-          nullable: true
-          items:
-            $ref: '#/components/schemas/Role'
     ArtistProfile:
       type: object
+      required: [apArtistId, apDisplayName, apGenreIds, apFollowerCount, apHasUserAccount]
       properties:
         apArtistId:
           type: integer
@@ -2623,6 +6343,14 @@ components:
         apGenres:
           type: string
           nullable: true
+          readOnly: true
+          description: Presentation-only Spanish labels resolved from apGenreIds; historical text may be returned for an unmapped legacy record.
+        apGenreIds:
+          type: array
+          description: Canonical persisted genre identifiers in display order.
+          items:
+            type: string
+            format: uuid
         apHighlights:
           type: string
           nullable: true
@@ -2947,11 +6675,15 @@ components:
           items: { $ref: '#/components/schemas/ArtistMediaAsset' }
     ArtistProfileUpsert:
       type: object
-      required: [apuArtistId]
+      additionalProperties: false
+      required: [apuArtistId, apuGenreIds]
       properties:
         apuArtistId:
           type: integer
           format: int64
+        apuDisplayName:
+          type: string
+          nullable: true
         apuSlug:
           type: string
           nullable: true
@@ -2987,9 +6719,13 @@ components:
           type: string
           format: uri
           nullable: true
-        apuGenres:
-          type: string
-          nullable: true
+        apuGenreIds:
+          type: array
+          description: Canonical active published genre identifiers. Copied labels and slugs are rejected.
+          uniqueItems: true
+          items:
+            type: string
+            format: uuid
         apuHighlights:
           type: string
           nullable: true
@@ -3025,6 +6761,7 @@ components:
           nullable: true
     FanProfile:
       type: object
+      required: [fpArtistId, fpFavoriteGenreIds]
       properties:
         fpArtistId:
           type: integer
@@ -3039,6 +6776,13 @@ components:
         fpFavoriteGenres:
           type: string
           nullable: true
+          readOnly: true
+          description: Localized presentation labels derived from canonical genre memberships; legacy labels are returned only for unmigrated historical rows.
+        fpFavoriteGenreIds:
+          type: array
+          items:
+            type: string
+            format: uuid
         fpBio:
           type: string
           nullable: true
@@ -3047,6 +6791,8 @@ components:
           nullable: true
     FanProfileUpdate:
       type: object
+      additionalProperties: false
+      required: [fpuFavoriteGenreIds]
       properties:
         fpuDisplayName:
           type: string
@@ -3055,9 +6801,11 @@ components:
           type: string
           format: uri
           nullable: true
-        fpuFavoriteGenres:
-          type: string
-          nullable: true
+        fpuFavoriteGenreIds:
+          type: array
+          items:
+            type: string
+            format: uuid
         fpuBio:
           type: string
           nullable: true
@@ -3240,8 +6988,400 @@ components:
         tokenType:
           type: string
           nullable: true
+    FeedbackMultipart:
+      type: object
+      additionalProperties: false
+      required:
+        - title
+        - description
+        - categoryId
+        - severityId
+        - consent
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 160
+        description:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        categoryId:
+          type: string
+          format: uuid
+          description: Canonical ID from the published feedback-categories catalog.
+        severityId:
+          type: string
+          format: uuid
+          description: Canonical ID from the published feedback-severities catalog.
+        contactEmail:
+          type: string
+          format: email
+          maxLength: 254
+        consent:
+          type: boolean
+        attachment:
+          type: string
+          format: binary
+    LiveSessionMusician:
+      type: object
+      additionalProperties: false
+      required: [name, isExisting]
+      properties:
+        partyId:
+          type: integer
+          format: int64
+          minimum: 1
+          nullable: true
+        name:
+          type: string
+          maxLength: 160
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          nullable: true
+        instrumentId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Canonical UUID of an active published instrument.
+        notes:
+          type: string
+          maxLength: 4000
+          nullable: true
+        isExisting:
+          type: boolean
+          description: Must agree with whether partyId is supplied.
+    LiveSessionSong:
+      type: object
+      additionalProperties: false
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 160
+        bpm:
+          type: integer
+          minimum: 1
+          maximum: 400
+          nullable: true
+        songKey:
+          type: string
+          maxLength: 64
+          nullable: true
+        lyrics:
+          type: string
+          maxLength: 4000
+          nullable: true
+        sortOrder:
+          type: integer
+          minimum: 0
+          nullable: true
+    LiveSessionIntakeMultipart:
+      type: object
+      additionalProperties: false
+      required: [bandName, acceptedTerms, termsVersion, musicians]
+      properties:
+        bandName:
+          type: string
+          minLength: 1
+          maxLength: 160
+        bandDescription:
+          type: string
+          maxLength: 4000
+          nullable: true
+        primaryGenreId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Canonical UUID of an active published genre.
+        inputList:
+          type: string
+          maxLength: 4000
+          nullable: true
+        contactEmail:
+          type: string
+          format: email
+          maxLength: 254
+          nullable: true
+        contactPhone:
+          type: string
+          nullable: true
+        sessionDate:
+          type: string
+          format: date
+          nullable: true
+        availability:
+          type: string
+          maxLength: 4000
+          nullable: true
+        acceptedTerms:
+          type: boolean
+          enum: [true]
+        termsVersion:
+          type: string
+          minLength: 1
+          maxLength: 160
+        musicians:
+          type: string
+          minLength: 2
+          description: >-
+            JSON-encoded array of 1 to 50 LiveSessionMusician objects. Only instrumentId is
+            accepted for the instrument relationship; instrument and role are invalid fields.
+          example: '[{"name":"Ana","instrumentId":"5f710f45-ca5d-450f-a7da-6c7de20b3a4d","isExisting":false}]'
+        setlist:
+          type: string
+          nullable: true
+          description: JSON-encoded array of at most 100 LiveSessionSong objects.
+          example: '[{"title":"Canción uno","bpm":120,"sortOrder":0}]'
+        rider:
+          type: string
+          format: binary
+          nullable: true
+          description: Optional rider file, limited by the backend to 10 MiB.
+    RadioAutoStopOptions:
+      type: object
+      additionalProperties: false
+      required: [catalogId, revision, options]
+      properties:
+        catalogId:
+          type: string
+          format: uuid
+        revision:
+          type: integer
+          format: int64
+          minimum: 1
+        options:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/RadioAutoStopOption'
+    RadioAutoStopOption:
+      type: object
+      additionalProperties: false
+      required: [id, code, label, durationMinutes, defaultForBroadcast, version]
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        label:
+          type: string
+        description:
+          type: string
+        durationMinutes:
+          type: integer
+          minimum: 0
+          maximum: 1440
+        defaultForBroadcast:
+          type: boolean
+        version:
+          type: integer
+          minimum: 1
+    RadioStream:
+      type: object
+      additionalProperties: false
+      required: [rsId, rsName, rsStreamUrl, rsCountryId, rsCountry, rsGenreId, rsGenre, rsActive, rsLastCheckedAt]
+      properties:
+        rsId:
+          type: integer
+          format: int64
+        rsName:
+          type: string
+          nullable: true
+        rsStreamUrl:
+          type: string
+          format: uri
+        rsCountryId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Immutable canonical country UUID.
+        rsCountry:
+          type: string
+          nullable: true
+          readOnly: true
+          description: Spanish presentation label resolved exclusively from rsCountryId. Retained legacy text is never exposed as a canonical country.
+        rsGenreId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Immutable canonical genre UUID.
+        rsGenre:
+          type: string
+          nullable: true
+          readOnly: true
+          description: Spanish presentation label resolved exclusively from rsGenreId. Retained legacy text is never exposed as a canonical genre.
+        rsActive:
+          type: boolean
+        rsLastCheckedAt:
+          type: string
+          format: date-time
+          nullable: true
+    RadioStreamUpsert:
+      type: object
+      additionalProperties: false
+      required: [rsuStreamUrl]
+      properties:
+        rsuStreamUrl:
+          type: string
+          format: uri
+        rsuName:
+          type: string
+          maxLength: 160
+        rsuCountryId:
+          type: string
+          format: uuid
+          description: Immutable UUID of an active country reference. Codes, labels, and slugs are rejected.
+        rsuClearCountry:
+          type: boolean
+          description: Explicitly clears an existing country relation. It cannot be combined with rsuCountryId; omission preserves the existing relation.
+        rsuGenreId:
+          type: string
+          format: uuid
+          description: Immutable UUID of an active published genre. Labels and slugs are rejected.
+        rsuClearGenre:
+          type: boolean
+          description: Explicitly clears an existing genre relation. It cannot be combined with rsuGenreId; omission preserves the existing relation.
+    RadioImportRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        rirSources:
+          type: array
+          minItems: 1
+          maxItems: 8
+          items:
+            type: string
+            format: uri
+        rirLimit:
+          type: integer
+          minimum: 1
+          maximum: 800
+    RadioImportResult:
+      type: object
+      additionalProperties: false
+      required: [rirProcessed, rirInserted, rirUpdated, rirSources, rirFailed, rirFailedSources]
+      properties:
+        rirProcessed:
+          type: integer
+          minimum: 0
+        rirInserted:
+          type: integer
+          minimum: 0
+        rirUpdated:
+          type: integer
+          minimum: 0
+        rirSources:
+          type: array
+          items:
+            type: string
+            format: uri
+        rirFailed:
+          type: integer
+          minimum: 0
+        rirFailedSources:
+          type: array
+          items:
+            type: string
+            format: uri
+    RadioMetadataRefreshRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        rmrLimit:
+          type: integer
+          minimum: 1
+          maximum: 400
+        rmrOnlyMissing:
+          type: boolean
+    RadioMetadataRefreshResult:
+      type: object
+      additionalProperties: false
+      required: [rmrProcessed, rmrUpdated, rmrFailed]
+      properties:
+        rmrProcessed:
+          type: integer
+          minimum: 0
+        rmrUpdated:
+          type: integer
+          minimum: 0
+        rmrFailed:
+          type: integer
+          minimum: 0
+    RadioTransmissionRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        rtrName:
+          type: string
+          maxLength: 160
+        rtrGenreId:
+          type: string
+          format: uuid
+          description: Immutable UUID of an active published genre. Labels and slugs are rejected.
+        rtrCountryId:
+          type: string
+          format: uuid
+          description: Immutable UUID of an active country reference. Codes, labels, and slugs are rejected.
+    RadioTransmissionInfo:
+      type: object
+      additionalProperties: false
+      required: [rtiStreamId, rtiStreamUrl, rtiIngestUrl, rtiStreamKey, rtiWhipUrl]
+      properties:
+        rtiStreamId:
+          type: integer
+          format: int64
+        rtiStreamUrl:
+          type: string
+          format: uri
+        rtiIngestUrl:
+          type: string
+        rtiStreamKey:
+          type: string
+        rtiWhipUrl:
+          type: string
+          format: uri
+    RadioPresence:
+      type: object
+      additionalProperties: false
+      required: [rpPartyId, rpStreamUrl, rpStationName, rpStationId, rpUpdatedAt]
+      properties:
+        rpPartyId:
+          type: integer
+          format: int64
+        rpStreamUrl:
+          type: string
+          format: uri
+        rpStationName:
+          type: string
+          nullable: true
+        rpStationId:
+          type: string
+          nullable: true
+        rpUpdatedAt:
+          type: string
+          format: date-time
+    RadioPresenceUpsert:
+      type: object
+      additionalProperties: false
+      required: [rpuStreamUrl]
+      properties:
+        rpuStreamUrl:
+          type: string
+          format: uri
+        rpuStationName:
+          type: string
+          maxLength: 160
+        rpuStationId:
+          type: string
+          maxLength: 160
     RadioNowPlayingRequest:
       type: object
+      additionalProperties: false
       required: [rnpStreamUrl]
       properties:
         rnpStreamUrl:
@@ -3250,6 +7390,8 @@ components:
           example: https://icecast.radiofrance.fr/fip-midfi.mp3
     RadioNowPlayingResult:
       type: object
+      additionalProperties: false
+      required: [rnpTitle, rnpArtist, rnpTrack]
       properties:
         rnpTitle:
           type: string

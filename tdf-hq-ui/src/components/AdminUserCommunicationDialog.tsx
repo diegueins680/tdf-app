@@ -752,8 +752,8 @@ export default function AdminUserCommunicationDialog({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="lg">
-      <DialogTitle>{COPY.title}</DialogTitle>
+    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="lg" aria-labelledby="admin-user-comm-dialog-title">
+      <DialogTitle id="admin-user-comm-dialog-title">{COPY.title}</DialogTitle>
       <DialogContent>
         <CommunicationContent
           actionsDisabled={actionsDisabled}

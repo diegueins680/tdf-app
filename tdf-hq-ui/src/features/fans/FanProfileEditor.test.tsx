@@ -7,14 +7,18 @@ import { FanProfileEditor } from './FanProfileEditor';
 const profileDraft: FanProfileUpdate = {
   fpuDisplayName: 'Ada Fan',
   fpuAvatarUrl: 'https://cdn.example.com/avatar.jpg',
-  fpuFavoriteGenres: 'Soul, Indie',
+  fpuFavoriteGenreIds: ['genre-soul', 'genre-indie'],
   fpuBio: 'Always at the front row.',
   fpuCity: 'Quito',
 };
 
 function FanProfileEditorHarness({
+  genreCatalogError = false,
+  genreCatalogReady = true,
   onSave = () => undefined,
 }: {
+  genreCatalogError?: boolean;
+  genreCatalogReady?: boolean;
   onSave?: () => void;
 }) {
   const [draft, setDraft] = useState<FanProfileUpdate>(profileDraft);
@@ -23,6 +27,12 @@ function FanProfileEditorHarness({
     <FanProfileEditor
       avatarInputRef={{ current: null } as RefObject<HTMLInputElement>}
       displayNameFallback="Ada"
+      genreCatalogError={genreCatalogError}
+      genreCatalogReady={genreCatalogReady}
+      genreOptions={[
+        { id: 'genre-soul', name: 'Soul' },
+        { id: 'genre-indie', name: 'Indie' },
+      ]}
       profileDraft={draft}
       saving={false}
       setProfileDraft={setDraft}
@@ -53,5 +63,23 @@ describe('FanProfileEditor', () => {
 
     expect(screen.getByLabelText('Avatar (pega enlace o sube)').value).toBe('');
     expect(screen.queryByRole('button', { name: 'Quitar' })).toBeNull();
+  });
+
+  it('blocks profile writes when the canonical genre catalog is unavailable', () => {
+    const onSave = jest.fn();
+    render(
+      <FanProfileEditorHarness
+        genreCatalogError
+        genreCatalogReady={false}
+        onSave={onSave}
+      />,
+    );
+
+    const saveButton = screen.getByRole('button', { name: 'Guardar perfil' });
+    expect(saveButton.hasAttribute('disabled')).toBe(true);
+    expect(screen.getByText('No se pudo cargar el catálogo de géneros. Intenta nuevamente antes de guardar.'))
+      .not.toBeNull();
+    fireEvent.click(saveButton);
+    expect(onSave).not.toHaveBeenCalled();
   });
 });

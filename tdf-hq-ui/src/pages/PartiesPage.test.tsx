@@ -9,7 +9,7 @@ const listPartiesMock = jest.fn<() => Promise<PartyDTO[]>>();
 const createPartyMock = jest.fn<(body: PartyCreate) => Promise<PartyDTO>>();
 const updatePartyMock = jest.fn<(id: number, body: PartyUpdate) => Promise<PartyDTO | null>>();
 const canAccessPathMock = jest.fn<() => boolean>();
-const createUserMock = jest.fn<(payload: { partyId: number; username?: string; roles?: string[] }) => Promise<null>>();
+const createUserMock = jest.fn<(payload: { partyId: number; username?: string }) => Promise<null>>();
 
 jest.unstable_mockModule('../api/parties', () => ({
   Parties: {
@@ -21,7 +21,7 @@ jest.unstable_mockModule('../api/parties', () => ({
 
 jest.unstable_mockModule('../api/admin', () => ({
   Admin: {
-    createUser: (payload: { partyId: number; username?: string; roles?: string[] }) => createUserMock(payload),
+    createUser: (payload: { partyId: number; username?: string }) => createUserMock(payload),
   },
 }));
 
@@ -835,7 +835,6 @@ describe('PartiesPage', () => {
         expect(createUserMock).toHaveBeenCalledWith({
           partyId: 1,
           username: undefined,
-          roles: undefined,
         });
         expect(updatePartyMock).not.toHaveBeenCalled();
         expect(document.body.textContent).toContain(

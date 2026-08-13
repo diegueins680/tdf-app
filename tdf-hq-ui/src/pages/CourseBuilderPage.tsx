@@ -272,6 +272,7 @@ export default function CourseBuilderPage() {
   const { loadDraft, saveDraft, clearDraft } = useAutoSave('course-builder', payload, {
     enabled: hasLocalEditsRef.current,
     debounceMs: 2000,
+    storageKey: 'tdf-course-builder-draft',
   });
 
   const createMutation = useMutation({

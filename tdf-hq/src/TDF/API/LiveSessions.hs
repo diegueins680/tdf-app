@@ -63,8 +63,7 @@ data LiveSessionMusicianPayload = LiveSessionMusicianPayload
   { lsmPartyId    :: Maybe Int
   , lsmName       :: Text
   , lsmEmail      :: Maybe Text
-  , lsmInstrument :: Maybe Text
-  , lsmRole       :: Maybe Text
+  , lsmInstrumentId :: Maybe Text
   , lsmNotes      :: Maybe Text
   , lsmIsExisting :: Bool
   } deriving (Show, Generic)
@@ -77,10 +76,8 @@ instance FromJSON LiveSessionMusicianPayload where
     , "lsmName"
     , "email"
     , "lsmEmail"
-    , "instrument"
-    , "lsmInstrument"
-    , "role"
-    , "lsmRole"
+    , "instrumentId"
+    , "lsmInstrumentId"
     , "notes"
     , "lsmNotes"
     , "isExisting"
@@ -90,8 +87,7 @@ instance FromJSON LiveSessionMusicianPayload where
       <$> parseAliasedOptionalField obj "partyId" "lsmPartyId"
       <*> parseAliasedRequiredField obj "name" "lsmName"
       <*> parseAliasedOptionalField obj "email" "lsmEmail"
-      <*> parseAliasedOptionalField obj "instrument" "lsmInstrument"
-      <*> parseAliasedOptionalField obj "role" "lsmRole"
+      <*> parseAliasedOptionalField obj "instrumentId" "lsmInstrumentId"
       <*> parseAliasedOptionalField obj "notes" "lsmNotes"
       <*> parseAliasedRequiredField obj "isExisting" "lsmIsExisting"
 
@@ -126,7 +122,7 @@ instance FromJSON LiveSessionSongPayload where
 data LiveSessionIntakePayload = LiveSessionIntakePayload
   { lsiBandName     :: Text
   , lsiBandDescription :: Maybe Text
-  , lsiPrimaryGenre :: Maybe Text
+  , lsiPrimaryGenreId :: Maybe Text
   , lsiInputList    :: Maybe Text
   , lsiContactEmail :: Maybe Text
   , lsiContactPhone :: Maybe Text
@@ -150,7 +146,7 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
     rejectUnexpectedParts multipart
     bandName <- lookupText "bandName" multipart
     bandDescription <- optionalMultilineText "bandDescription" 4000 multipart
-    primaryGenre <- optionalSingleLineText "primaryGenre" 160 multipart
+    primaryGenreId <- optionalSingleLineText "primaryGenreId" 36 multipart
     inputList <- optionalMultilineText "inputList" 4000 multipart
     contactEmail <- optionalEmail "contactEmail" multipart
     contactPhone <- optionalPhone "contactPhone" multipart
@@ -169,7 +165,7 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
         pure LiveSessionIntakePayload
           { lsiBandName     = T.strip bandName
           , lsiBandDescription = bandDescription
-          , lsiPrimaryGenre = primaryGenre
+          , lsiPrimaryGenreId = primaryGenreId
           , lsiInputList    = inputList
           , lsiContactEmail = contactEmail
           , lsiContactPhone = contactPhone
@@ -276,16 +272,11 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
             (validateOptionalEmailText "musician email")
             (lsmEmail musician)
         normalizedName <- validateMusicianName (lsmName musician)
-        normalizedInstrument <-
+        normalizedInstrumentId <-
           validateOptionalMusicianTextField
-            "musician instrument"
-            160
-            (lsmInstrument musician >>= normalizeOptionalText)
-        normalizedRole <-
-          validateOptionalMusicianTextField
-            "musician role"
-            160
-            (lsmRole musician >>= normalizeOptionalText)
+            "musician instrumentId"
+            36
+            (lsmInstrumentId musician >>= normalizeOptionalText)
         normalizedNotes <-
           case lsmNotes musician of
             Nothing -> Right Nothing
@@ -299,8 +290,7 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
               musician
                 { lsmName = normalizedName
                 , lsmEmail = normalizedEmail
-                , lsmInstrument = normalizedInstrument
-                , lsmRole = normalizedRole
+                , lsmInstrumentId = normalizedInstrumentId
                 , lsmNotes = normalizedNotes
                 }
             noReferenceProvided =
@@ -539,7 +529,7 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
           expectedInputs =
             [ "bandName"
             , "bandDescription"
-            , "primaryGenre"
+            , "primaryGenreId"
             , "inputList"
             , "contactEmail"
             , "contactPhone"

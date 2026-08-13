@@ -1,0 +1,282 @@
+- generic [ref=f11e9]:
+  - generic [ref=f11e12]:
+    - link [ref=f11e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f11e22]
+    - generic [ref=f11e25]:
+      - link [ref=f11e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f11e35]
+      - link [ref=f11e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f11e45]
+      - link [ref=f11e2352] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - generic [ref=f11e55]:
+          - img "Messages" [ref=f11e57]
+          - generic "Direct messaging - 3 new notifications link" [ref=f11e2353]: "3"
+      - link [ref=f11e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f11e67]
+      - link [ref=f11e221] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f11e226]
+      - link [ref=f11e85] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f11e90]
+      - link [ref=f11e95] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f11e100]
+      - link [ref=f11e107] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f11e112]:
+          - img "tdf.records.label's profile picture" [ref=f11e113]
+    - generic [ref=f11e114]:
+      - link [ref=f11e117] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f11e122]
+      - link [ref=f11e125] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f11e130]
+  - main [ref=f11e134]:
+    - generic [ref=f11e234]:
+      - navigation "Thread list" [ref=f11e235]:
+        - generic [ref=f11e236]:
+          - generic [ref=f11e237]:
+            - button [ref=f11e238] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f11e240]
+              - img "Down chevron icon" [ref=f11e243]
+            - button [ref=f11e247] [cursor=pointer]:
+              - img "New message" [ref=f11e249]
+          - tablist [ref=f11e254]:
+            - tab "Primary" [ref=f11e255] [cursor=pointer]
+            - tab "General" [active] [selected] [ref=f11e258] [cursor=pointer]
+            - tab "From ads" [ref=f11e261] [cursor=pointer]
+            - tab "Requests" [ref=f11e265] [cursor=pointer]
+          - generic [ref=f11e271]:
+            - img "Search" [ref=f11e273]
+            - textbox "Search" [ref=f11e276]
+          - generic [ref=f11e277]:
+            - generic [ref=f11e279]:
+              - list [ref=f11e281]:
+                - listitem [ref=f11e282]
+                - listitem [ref=f11e283]:
+                  - button "What's new... Your note" [ref=f11e285] [cursor=pointer]:
+                    - generic [ref=f11e286]:
+                      - generic [ref=f11e287]: What's new...
+                      - generic [ref=f11e293]:
+                        - link [ref=f11e295]
+                        - generic [ref=f11e296]: Your note
+                - listitem [ref=f11e298]:
+                  - button "a q hora perdemos la gravedad?😂para vestirme y estar redi pa volar 🫨🐦‍🔥 camymantillan's profile picture Cami Mantilla" [ref=f11e301] [cursor=pointer]:
+                    - generic [ref=f11e302]:
+                      - generic [ref=f11e303]: a q hora perdemos la gravedad?😂para vestirme y estar redi pa volar 🫨🐦‍🔥
+                      - generic [ref=f11e310]:
+                        - link [ref=f11e312]:
+                          - img "camymantillan's profile picture" [ref=f11e313]
+                        - generic [ref=f11e314]: Cami Mantilla
+                - listitem [ref=f11e317]:
+                  - button "show en cdmx hoy 12/08 zoemoff's profile picture Zoe Moff" [ref=f11e320] [cursor=pointer]:
+                    - generic [ref=f11e321]:
+                      - generic [ref=f11e322]: show en cdmx hoy 12/08
+                      - generic [ref=f11e329]:
+                        - link [ref=f11e331]:
+                          - img "zoemoff's profile picture" [ref=f11e332]
+                        - generic [ref=f11e333]: Zoe Moff
+                - listitem [ref=f11e336]:
+                  - button "si tienes una marca de ropa y quieres exponerla es ahoraaaa!!! dimeabiluuu____'s profile picture ✹ emilia ✹" [ref=f11e339] [cursor=pointer]:
+                    - generic [ref=f11e340]:
+                      - generic [ref=f11e341]: si tienes una marca de ropa y quieres exponerla es ahoraaaa!!!
+                      - generic [ref=f11e348]:
+                        - link [ref=f11e350]:
+                          - img "dimeabiluuu____'s profile picture" [ref=f11e351]
+                        - generic [ref=f11e352]: ✹ emilia ✹
+                - listitem [ref=f11e355]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Fearless Pink Floyd Reinventarse las veces que sean necesarias ✨❤️‍🔥 saraking30's profile picture Sara King" [ref=f11e358] [cursor=pointer]:
+                    - generic [ref=f11e359]:
+                      - generic [ref=f11e365]:
+                        - generic [ref=f11e366]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f11e368]
+                          - generic [ref=f11e372]: Fearless
+                        - generic [ref=f11e373]: Pink Floyd
+                        - generic [ref=f11e374]: Reinventarse las veces que sean necesarias ✨❤️‍🔥
+                      - generic [ref=f11e375]:
+                        - link [ref=f11e377]:
+                          - img "saraking30's profile picture" [ref=f11e378]
+                        - generic [ref=f11e379]: Sara King
+                - listitem [ref=f11e382]:
+                  - button "⛰️ 🔥 😔 solcordovamusic's profile picture Sol Córdova 🌞" [ref=f11e385] [cursor=pointer]:
+                    - generic [ref=f11e386]:
+                      - generic [ref=f11e387]: ⛰️ 🔥 😔
+                      - generic [ref=f11e394]:
+                        - link [ref=f11e396]:
+                          - img "solcordovamusic's profile picture" [ref=f11e397]
+                        - generic [ref=f11e398]: Sol Córdova 🌞
+                - listitem [ref=f11e401]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Si No Estás Penyair soley.fino's profile picture Soley Fino" [ref=f11e404] [cursor=pointer]:
+                    - generic [ref=f11e405]:
+                      - generic [ref=f11e411]:
+                        - generic [ref=f11e412]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f11e414]
+                          - generic [ref=f11e418]: Si No Estás
+                        - generic [ref=f11e419]: Penyair
+                      - generic [ref=f11e420]:
+                        - link [ref=f11e422]:
+                          - img "soley.fino's profile picture" [ref=f11e423]
+                        - generic [ref=f11e424]: Soley Fino
+                - listitem [ref=f11e427]:
+                  - button "Este sábado en El Arupo, Pacheco trío ivisflies's profile picture ivisflies" [ref=f11e430] [cursor=pointer]:
+                    - generic [ref=f11e431]:
+                      - generic [ref=f11e432]: Este sábado en El Arupo, Pacheco trío
+                      - generic [ref=f11e439]:
+                        - link [ref=f11e441]:
+                          - img "ivisflies's profile picture" [ref=f11e442]
+                        - generic [ref=f11e443]: ivisflies
+                - listitem [ref=f11e446]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Astro Moog (feat. Llama Este Pez) Juano Ledesma juano_music's profile picture J" [ref=f11e449] [cursor=pointer]:
+                    - generic [ref=f11e450]:
+                      - generic [ref=f11e456]:
+                        - generic [ref=f11e457]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f11e459]
+                          - generic [ref=f11e463]: Astro Moog (feat. Llama Este Pez)
+                        - generic [ref=f11e464]: Juano Ledesma
+                      - generic [ref=f11e465]:
+                        - link [ref=f11e467]:
+                          - img "juano_music's profile picture" [ref=f11e468]
+                        - generic [ref=f11e469]: J
+              - button "Next" [ref=f11e472] [cursor=pointer]
+            - generic [ref=f11e477]:
+              - button "user-profile-picture Instagram User Liked a message a year ago" [ref=f11e2518] [cursor=pointer]:
+                - generic [ref=f11e2520]:
+                  - img "user-profile-picture" [ref=f11e2524]
+                  - generic [ref=f11e2527]:
+                    - generic [ref=f11e2528]: Instagram User
+                    - generic [ref=f11e2534]:
+                      - generic [ref=f11e2535]: Liked a message
+                      - generic [ref=f11e2537]:
+                        - generic [ref=f11e2538]: ·
+                        - generic "a year ago" [ref=f11e2543]: 1y
+              - button "user-profile-picture Jofiel.arch.music Liked a message a year ago" [ref=f11e2547] [cursor=pointer]:
+                - generic [ref=f11e2549]:
+                  - img "user-profile-picture" [ref=f11e2553]
+                  - generic [ref=f11e2556]:
+                    - generic [ref=f11e2557]: Jofiel.arch.music
+                    - generic [ref=f11e2563]:
+                      - generic [ref=f11e2564]: Liked a message
+                      - generic [ref=f11e2566]:
+                        - generic [ref=f11e2567]: ·
+                        - generic "a year ago" [ref=f11e2572]: 1y
+              - button "user-profile-picture Everaldho Everaldho sent an attachment. a year ago" [ref=f11e2576] [cursor=pointer]:
+                - generic [ref=f11e2578]:
+                  - img "user-profile-picture" [ref=f11e2582]
+                  - generic [ref=f11e2585]:
+                    - generic [ref=f11e2586]: Everaldho
+                    - generic [ref=f11e2592]:
+                      - generic [ref=f11e2593]: Everaldho sent an attachment.
+                      - generic [ref=f11e2595]:
+                        - generic [ref=f11e2596]: ·
+                        - generic "a year ago" [ref=f11e2601]: 1y
+              - 'button "user-profile-picture Renato Goyes García You: Primero empiezas con teoría obvio jeje a year ago" [ref=f11e2605] [cursor=pointer]':
+                - generic [ref=f11e2607]:
+                  - img "user-profile-picture" [ref=f11e2611]
+                  - generic [ref=f11e2614]:
+                    - generic [ref=f11e2615]: Renato Goyes García
+                    - generic [ref=f11e2621]:
+                      - generic [ref=f11e2622]: "You: Primero empiezas con teoría obvio jeje"
+                      - generic [ref=f11e2624]:
+                        - generic [ref=f11e2625]: ·
+                        - generic "a year ago" [ref=f11e2630]: 1y
+              - button "user-profile-picture Diego Jaramillo Diego sent an attachment. a year ago" [ref=f11e2634] [cursor=pointer]:
+                - generic [ref=f11e2636]:
+                  - img "user-profile-picture" [ref=f11e2640]
+                  - generic [ref=f11e2643]:
+                    - generic [ref=f11e2644]: Diego Jaramillo
+                    - generic [ref=f11e2650]:
+                      - generic [ref=f11e2651]: Diego sent an attachment.
+                      - generic [ref=f11e2653]:
+                        - generic [ref=f11e2654]: ·
+                        - generic "a year ago" [ref=f11e2659]: 1y
+              - button "user-profile-picture Julio DÍaz Julio sent an attachment. a year ago" [ref=f11e2663] [cursor=pointer]:
+                - generic [ref=f11e2665]:
+                  - img "user-profile-picture" [ref=f11e2669]
+                  - generic [ref=f11e2672]:
+                    - generic [ref=f11e2673]: Julio DÍaz
+                    - generic [ref=f11e2679]:
+                      - generic [ref=f11e2680]: Julio sent an attachment.
+                      - generic [ref=f11e2682]:
+                        - generic [ref=f11e2683]: ·
+                        - generic "a year ago" [ref=f11e2688]: 1y
+              - button "user-profile-picture WE ARE MOVING GATHERING WE sent an attachment. 2 years ago" [ref=f11e2692] [cursor=pointer]:
+                - generic [ref=f11e2694]:
+                  - img "user-profile-picture" [ref=f11e2698]
+                  - generic [ref=f11e2701]:
+                    - generic [ref=f11e2702]: WE ARE MOVING GATHERING
+                    - generic [ref=f11e2708]:
+                      - generic [ref=f11e2709]: WE sent an attachment.
+                      - generic [ref=f11e2711]:
+                        - generic [ref=f11e2712]: ·
+                        - generic "2 years ago" [ref=f11e2717]: 2y
+              - button "user-profile-picture Labii Labii sent an attachment. 2 years ago" [ref=f11e2721] [cursor=pointer]:
+                - generic [ref=f11e2723]:
+                  - img "user-profile-picture" [ref=f11e2727]
+                  - generic [ref=f11e2730]:
+                    - generic [ref=f11e2731]: Labii
+                    - generic [ref=f11e2737]:
+                      - generic [ref=f11e2738]: Labii sent an attachment.
+                      - generic [ref=f11e2740]:
+                        - generic [ref=f11e2741]: ·
+                        - generic "2 years ago" [ref=f11e2746]: 2y
+              - button [ref=f11e732] [cursor=pointer]:
+                - generic [ref=f11e734]:
+                  - status "Loading..." [ref=f11e737]
+                  - generic [ref=f11e740]:
+                    - status "Loading..." [ref=f11e742]
+                    - status "Loading..." [ref=f11e744]
+      - generic [ref=f11e2398]:
+        - generic [ref=f11e2402]:
+          - link "Open the profile page of el_rovlex" [ref=f11e2403] [cursor=pointer]:
+            - /url: /el_rovlex/
+            - generic [ref=f11e2404]:
+              - img "user-profile-picture" [ref=f11e2408]
+              - generic [ref=f11e2409]:
+                - heading "el Rovlex" [level=2] [ref=f11e2411]
+                - generic [ref=f11e2413]: el_rovlex
+          - generic [ref=f11e2417]:
+            - button [ref=f11e2418] [cursor=pointer]:
+              - img "Audio call" [ref=f11e2420]
+            - button [ref=f11e2422] [cursor=pointer]:
+              - img "Video call" [ref=f11e2424]
+            - button [ref=f11e2427] [cursor=pointer]:
+              - img "Conversation information" [ref=f11e2429]
+        - generic [ref=f11e2433]:
+          - generic [ref=f11e2437]:
+            - generic [ref=f11e2438]:
+              - img "user-profile-picture" [ref=f11e2442]
+              - generic [ref=f11e2443]:
+                - heading "el Rovlex" [level=2] [ref=f11e2446]
+                - generic [ref=f11e2448]: el_rovlex · Instagram
+                - link "View profile" [ref=f11e2451] [cursor=pointer]:
+                  - /url: /el_rovlex/
+            - generic [ref=f11e2455]:
+              - generic [ref=f11e2456]: Aug 3, 2026, 11:31 AM
+              - group [ref=f11e2459]:
+                - generic [ref=f11e2461]:
+                  - link "Open the profile page of el_rovlex" [ref=f11e2464] [cursor=pointer]:
+                    - /url: /el_rovlex
+                    - img "user-profile-picture" [ref=f11e2467]
+                  - generic [ref=f11e2468]: ¿Puedo obtener más información sobre tu empresa?
+            - generic [ref=f11e2473]: Seen
+          - generic [ref=f11e2484]:
+            - button [ref=f11e2487] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f11e2489]
+            - generic [ref=f11e2491]:
+              - textbox [ref=f11e2492]:
+                - paragraph [ref=f11e2493]
+              - generic: Message...
+            - generic [ref=f11e2494]:
+              - button [ref=f11e2495] [cursor=pointer]:
+                - img "Voice Clip" [ref=f11e2497]
+              - button [ref=f11e2500] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f11e2502]
+              - button [ref=f11e2507] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f11e2509]

@@ -6,13 +6,22 @@ import es from './locales/es';
 import fr from './locales/fr';
 import pt from './locales/pt';
 
-export const SUPPORTED_LOCALES = ['en', 'es', 'fr', 'de', 'pt'] as const;
-export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
+// These keys describe translation bundles compiled into this build. They are
+// a renderer capability boundary, not the selectable locale catalog; the
+// backend's persisted deployment enablement remains authoritative for choices.
+const resources = {
+  en: { translation: en },
+  es: { translation: es },
+  fr: { translation: fr },
+  de: { translation: de },
+  pt: { translation: pt },
+} as const;
+type SupportedLocale = keyof typeof resources;
 export const LOCALE_STORAGE_KEY = 'tdf-hq-ui/locale';
 
 export function normalizeLocale(value: string | null | undefined): SupportedLocale | null {
   const base = value?.trim().toLowerCase().split(/[-_]/)[0];
-  return SUPPORTED_LOCALES.find((candidate) => candidate === base) ?? null;
+  return base && Object.prototype.hasOwnProperty.call(resources, base) ? base as SupportedLocale : null;
 }
 
 function initialLocale(): SupportedLocale {
@@ -33,17 +42,11 @@ if (typeof document !== 'undefined') {
 
 void i18n.use(initReactI18next).init({
   lng: detectedLocale,
-  fallbackLng: 'es',
-  supportedLngs: [...SUPPORTED_LOCALES],
+  fallbackLng: 'en',
+  supportedLngs: Object.keys(resources),
   load: 'languageOnly',
   interpolation: { escapeValue: false },
-  resources: {
-    en: { translation: en },
-    es: { translation: es },
-    fr: { translation: fr },
-    de: { translation: de },
-    pt: { translation: pt },
-  },
+  resources,
 });
 
 i18n.on('languageChanged', (language) => {

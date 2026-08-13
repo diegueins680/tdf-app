@@ -1,0 +1,68 @@
+- generic [ref=f43e1]:
+  - generic [ref=f43e2]:
+    - generic [ref=f43e3]:
+      - link [ref=f43e1199] [cursor=pointer]:
+        - /url: "#main-content"
+        - text: Saltar al contenido principal
+      - generic [ref=f43e5]:
+        - banner [ref=f43e6]:
+          - generic [ref=f43e7]:
+            - button [ref=f43e1200] [cursor=pointer]
+            - link [ref=f43e1201] [cursor=pointer]:
+              - /url: /inicio
+            - button [ref=f43e1202] [cursor=pointer]:
+              - generic [ref=f43e17]: Buscar sección
+              - generic [ref=f43e18]: ⌘K
+            - generic [ref=f43e19]:
+              - button [ref=f43e1203] [cursor=pointer]:
+                - generic [ref=f43e24]: Crear
+              - button [ref=f43e1204] [cursor=pointer]
+              - button [ref=f43e1205] [cursor=pointer]:
+                - generic [ref=f43e31]: D
+        - status [ref=f43e32]
+        - main [ref=f43e35]:
+          - generic [ref=f43e37]:
+            - generic [ref=f43e39]:
+              - generic [ref=f43e40]:
+                - heading [level=3] [ref=f43e1206]: Contactos
+                - paragraph [ref=f43e42]: Gestiona personas, empresas y roles en un solo lugar.
+              - button [ref=f43e1207] [cursor=pointer]: Nuevo contacto
+            - generic [ref=f43e50]:
+              - generic [ref=f43e93]:
+                - textbox [ref=f43e1209]:
+                  - /placeholder: Buscar por nombre, email o Instagram
+                  - text: el Rovlex
+                - button [ref=f43e1210] [cursor=pointer]
+                - group
+              - alert [ref=f43e1192]:
+                - generic [ref=f43e1196]: No hay contactos que coincidan con "el Rovlex". Limpia la búsqueda desde el buscador para volver a ver toda la lista.
+          - generic [ref=f43e57]:
+            - status [ref=f43e58]:
+              - generic [ref=f43e62]: "API: online"
+            - button [ref=f43e1211] [cursor=pointer]
+    - generic [ref=f43e66]:
+      - button [ref=f43e1212] [cursor=pointer]
+      - button [ref=f43e1214] [cursor=pointer]
+      - button [ref=f43e1216] [cursor=pointer]
+      - button [ref=f43e1217] [cursor=pointer]
+      - button [ref=f43e1218] [cursor=pointer]
+      - button [ref=f43e1219] [cursor=pointer]
+      - generic [ref=f43e87]:
+        - generic [ref=f43e88]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient
+  - dialog [ref=f43e1222]:
+    - heading "Nuevo contacto" [level=2] [ref=f43e1223]
+    - generic [ref=f43e1225]:
+      - generic [ref=f43e1226]:
+        - generic:
+          - text: Nombre / Display
+          - generic: "*"
+        - generic [ref=f43e1227]:
+          - textbox "Nombre / Display" [ref=f43e1228]
+          - group:
+            - generic: Nombre / Display *
+      - paragraph [ref=f43e1229]: "Tipo actual: Persona. Usa Persona para individuos y Empresa para bandas, sellos o negocios."
+      - button "Cambiar a empresa" [ref=f43e1230] [cursor=pointer]
+    - generic [ref=f43e1231]:
+      - button "Cancelar" [ref=f43e1232] [cursor=pointer]
+      - button "Crear" [disabled]

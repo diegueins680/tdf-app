@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -8,7 +9,7 @@
 
 module TDF.ServerExtra where
 
-import           Control.Monad              (filterM, unless, when, join, guard)
+import           Control.Monad              (filterM, forM, unless, when, join, guard)
 import           Control.Applicative        ((<|>))
 import           Control.Exception          (SomeException, try)
 import           Control.Monad.Except       (MonadError)
@@ -39,7 +40,7 @@ import qualified Data.Text.Encoding         as TE
 import qualified Data.ByteString.Char8      as BS
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
-import           Data.Time                  (Day, UTCTime(..), defaultTimeLocale, getCurrentTime, parseTimeM)
+import           Data.Time                  (Day, UTCTime(..), defaultTimeLocale, getCurrentTime, parseTimeM, utctDay)
 import           Data.UUID                  (toText)
 import qualified Data.UUID                  as UUID
 import           Data.UUID.V4               (nextRandom)
@@ -54,7 +55,7 @@ import           System.FilePath            ((</>), takeExtension, takeFileName)
 import           System.IO                  (hPutStrLn, stderr)
 import           Text.Read                  (readMaybe)
 import           Database.Persist        hiding (Active)
-import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
+import           Database.Persist.Sql       (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey)
 import           Network.HTTP.Client        (Manager, Request(..), Response, httpLbs, parseRequest, responseBody, responseStatus)
 import           Network.HTTP.Types.Header  (hAuthorization)
 import           Network.HTTP.Types.Status  (statusCode)
@@ -89,9 +90,9 @@ import           TDF.Services.InstagramMessaging (sendInstagramTextWithContextAn
 import           TDF.Services.FacebookMessaging (sendFacebookText)
 import           TDF.Models                 (Party(..), Payment(..), PaymentMethod(..))
 import qualified TDF.Models                 as M
+import qualified TDF.Catalog.Models         as Catalog
 import           TDF.ModelsExtra
 import qualified TDF.ModelsExtra as ME
-import           TDF.Pipelines              (canonicalStage, defaultStage, pipelineStages, pipelineTypeSlug, parsePipelineType)
 import qualified TDF.Trials.Server          as TrialsServer
   ( hasAmbiguousPublicUrlPath
   , isValidHttpUrl
@@ -1685,6 +1686,8 @@ bandsServer user =
           , partyEmergencyContact = Nothing
           , partyNotes            = Nothing
           , partyStripeCustomerId = Nothing
+          , partyCountryCode       = Nothing
+          , partyCountryId         = Nothing
           , partyCreatedAt        = now
           }
         let band = Band
@@ -1934,20 +1937,47 @@ sessionsServer user =
     sessionInputListH rawId = do
       ensureModule ModuleScheduling user
       sessionKey <- parseKey @Session rawId
-      result <- withPool (InputList.fetchSessionInputRowsByKey sessionKey)
+      result <- withPool $ do
+        loaded <- InputList.fetchSessionInputRowsByKey sessionKey
+        case loaded of
+          Nothing -> pure Nothing
+          Just (session, rows) -> do
+            let instrumentIds = Set.toList . Set.fromList $ mapMaybe (ME.inputRowInstrumentId . entityVal) rows
+            instruments <- if null instrumentIds
+              then pure []
+              else selectList [Catalog.InstrumentId <-. instrumentIds] []
+            let instrumentMap = Map.fromList
+                  [ (entityKey item, Catalog.instrumentNameEs (entityVal item))
+                  | item <- instruments
+                  ]
+            pure (Just (session, rows, instrumentMap))
       case result of
-        Nothing                -> throwError err404
-        Just (_session, rows)  -> pure (map toSessionInputRowDTO rows)
+        Nothing -> throwError err404
+        Just (_session, rows, instrumentMap) ->
+          pure (map (toSessionInputRowDTO instrumentMap) rows)
 
     sessionInputListPdfH rawId = do
       ensureModule ModuleScheduling user
       sessionKey <- parseKey @Session rawId
-      result <- withPool (InputList.fetchSessionInputRowsByKey sessionKey)
+      result <- withPool $ do
+        loaded <- InputList.fetchSessionInputRowsByKey sessionKey
+        case loaded of
+          Nothing -> pure Nothing
+          Just (session, rows) -> do
+            let assetIds = Set.toList . Set.fromList $ mapMaybe (ME.inputRowMicId . entityVal) rows
+            assets <- if null assetIds
+              then pure []
+              else selectList [ME.AssetId <-. assetIds] []
+            pure . Just $
+              ( session
+              , rows
+              , Map.fromList [(entityKey asset, ME.assetName (entityVal asset)) | asset <- assets]
+              )
       case result of
         Nothing -> throwError err404
-        Just (Entity _ session, rows) -> do
+        Just (Entity _ session, rows, assetNames) -> do
           let title = fromMaybe (sessionService session <> " session") (sessionClientPartyRef session)
-              latex = InputList.renderInputListLatex title rows
+              latex = InputList.renderInputListLatexWithAssets title assetNames rows
           pdfResult <- liftIO (InputList.generateInputListPdf latex)
           case pdfResult of
             Left errMsg ->
@@ -1957,10 +1987,11 @@ sessionsServer user =
                   disposition = T.concat ["attachment; filename=\"", fileName, "\""]
               pure (addHeader disposition pdf)
 
-    toSessionInputRowDTO (Entity _ row) = SessionInputRow
+    toSessionInputRowDTO instrumentMap (Entity _ row) = SessionInputRow
       { channelNumber    = ME.inputRowChannelNumber row
       , trackName        = ME.inputRowTrackName row
-      , instrument       = ME.inputRowInstrument row
+      , instrumentId     = toPathPiece <$> ME.inputRowInstrumentId row
+      , instrumentName   = ME.inputRowInstrumentId row >>= (`Map.lookup` instrumentMap)
       , micId            = fmap toPathPiece (ME.inputRowMicId row)
       , standId          = fmap toPathPiece (ME.inputRowStandId row)
       , cableId          = fmap toPathPiece (ME.inputRowCableId row)
@@ -2020,142 +2051,348 @@ pipelinesServer
      )
   => AuthedUser
   -> ServerT PipelinesAPI m
-pipelinesServer user rawType =
-  case parsePipelineType rawType of
-    Nothing   -> notFoundHandlers
-    Just kind ->
-      (     listCards kind
-       :<|> listStages kind
-       :<|> createCard kind
-       :<|> cardServer kind
-      )
+pipelinesServer user = getSnapshot :<|> listDefinitions :<|> workflowRoutes
   where
-    throw404 = throwError err404 { errBody = "Unknown pipeline type" }
+    getSnapshot = do
+      requirePipelineCapability "pipeline.read"
+      (definitions, cards) <- loadPipelineSnapshotRows
+      pure PipelineSnapshotDTO
+        { pspRevision = sum (map pdRevision definitions)
+        , pspDefinitions = definitions
+        , pspCards = cards
+        }
 
-    notFoundHandlers =
-          throw404
-      :<|> throw404
-      :<|> (\_ -> throw404)
-      :<|> (\_ ->
-            throw404
-        :<|> (\_ -> throw404)
-        :<|> throw404
-        )
+    listDefinitions = do
+      requirePipelineCapability "pipeline.read"
+      fst <$> loadPipelineSnapshotRows
 
-    listCards kind = do
-      ensureModule ModuleScheduling user
-      entities <- withPool $ selectList
-        [ ME.PipelineCardServiceKind ==. kind ]
+    workflowRoutes rawWorkflowId =
+          listCards rawWorkflowId
+      :<|> listStages rawWorkflowId
+      :<|> createCard rawWorkflowId
+      :<|> cardServer rawWorkflowId
+
+    listCards rawWorkflowId = do
+      requirePipelineCapability "pipeline.read"
+      workflowId <- parsePipelineWorkflowId rawWorkflowId
+      (workflow, offerings, states) <- requirePipelineDefinition workflowId
+      let offeringIds = map entityKey offerings
+          offeringMap = Map.fromList [(entityKey item, entityVal item) | item <- offerings]
+          stateMap = Map.fromList [(entityKey item, entityVal item) | item <- states]
+      cards <- withPool $ selectList
+        [ ME.PipelineCardServiceOfferingId <-. map Just offeringIds ]
         [ Asc ME.PipelineCardSortOrder
         , Asc ME.PipelineCardCreatedAt
         ]
-      pure (map toPipelineDTO entities)
+      forM cards $ \card ->
+        maybe
+          (throwError err500 { errBody = "Pipeline card has invalid canonical references" })
+          pure
+          (toPipelineDTO (entityKey workflow) offeringMap stateMap card)
 
-    listStages kind = do
-      ensureModule ModuleScheduling user
-      pure (pipelineStages kind)
+    listStages rawWorkflowId = do
+      requirePipelineCapability "pipeline.read"
+      workflowId <- parsePipelineWorkflowId rawWorkflowId
+      (_, _, states) <- requirePipelineDefinition workflowId
+      pure (map toPipelineStageDTO states)
 
-    createCard kind req = do
-      ensureModule ModuleScheduling user
+    createCard rawWorkflowId req = do
+      requirePipelineCapability "pipeline.create"
+      workflowId <- parsePipelineWorkflowId rawWorkflowId
+      (workflow, offerings, states) <- requirePipelineDefinition workflowId
       titleClean <- either throwError pure (normalizePipelineCardTitle (pccTitle req))
-      stageValue <- resolveStage kind (pccStage req)
       sortOrderValue <- either throwError pure (validatePipelineCardSortOrder (pccSortOrder req))
+      offeringId <- parseKey @Catalog.ServiceOffering (pccServiceOfferingId req)
+      unless (offeringId `elem` map entityKey offerings) $
+        throwError err400 { errBody = "serviceOfferingId is not active in this pipeline" }
+      stateId <- case pccWorkflowStateId req of
+        Nothing -> do
+          defaults <- withPool $ selectList
+            [ Catalog.WorkflowDefaultStateWorkflowId ==. workflowId
+            , Catalog.WorkflowDefaultStateContext ==. "initial"
+            , Catalog.WorkflowDefaultStateActive ==. True
+            ]
+            []
+          case defaults of
+            [Entity _ defaultRow]
+              | Catalog.workflowDefaultStateStateId defaultRow `elem` map entityKey states ->
+                  pure (Catalog.workflowDefaultStateStateId defaultRow)
+            _ -> throwError err500 { errBody = "Pipeline requires exactly one active initial state" }
+        Just rawStateId -> parsePipelineStateId states rawStateId
       let artistValue = normalizeOptionalTextField (pccArtist req)
           notesValue = normalizeOptionalTextField (pccNotes req)
       now <- liftIO getCurrentTime
       entity <- withPool $ do
         newId <- insert ME.PipelineCard
-          { ME.pipelineCardServiceKind = kind
+          { ME.pipelineCardServiceKind = Nothing
+          , ME.pipelineCardServiceOfferingId = Just offeringId
           , ME.pipelineCardTitle       = titleClean
           , ME.pipelineCardArtist      = artistValue
-          , ME.pipelineCardStage       = stageValue
+          , ME.pipelineCardStage       = Nothing
+          , ME.pipelineCardWorkflowStateId = Just stateId
           , ME.pipelineCardSortOrder   = fromMaybe 0 sortOrderValue
           , ME.pipelineCardNotes       = notesValue
           , ME.pipelineCardCreatedAt   = now
           , ME.pipelineCardUpdatedAt   = now
           }
         getJustEntity newId
-      pure (toPipelineDTO entity)
+      let offeringMap = Map.fromList [(entityKey item, entityVal item) | item <- offerings]
+          stateMap = Map.fromList [(entityKey item, entityVal item) | item <- states]
+      maybe
+        (throwError err500 { errBody = "Pipeline card has invalid canonical references" })
+        pure
+        (toPipelineDTO (entityKey workflow) offeringMap stateMap entity)
 
-    cardServer kind rawId =
-          getCard kind rawId
-     :<|> updateCard kind rawId
-     :<|> deleteCard kind rawId
+    cardServer rawWorkflowId rawId =
+          getCard rawWorkflowId rawId
+     :<|> updateCard rawWorkflowId rawId
+     :<|> deleteCard rawWorkflowId rawId
 
-    getCard kind rawId = do
-      ensureModule ModuleScheduling user
+    getCard rawWorkflowId rawId = do
+      requirePipelineCapability "pipeline.read"
+      workflowId <- parsePipelineWorkflowId rawWorkflowId
+      (workflow, offerings, states) <- requirePipelineDefinition workflowId
       cardKey <- parseKey @ME.PipelineCard rawId
       mEntity <- withPool $ getEntity cardKey
-      case mEntity of
+      let offeringMap = Map.fromList [(entityKey item, entityVal item) | item <- offerings]
+          stateMap = Map.fromList [(entityKey item, entityVal item) | item <- states]
+      case mEntity >>= toPipelineDTO (entityKey workflow) offeringMap stateMap of
         Nothing -> throwError err404
-        Just ent ->
-          if ME.pipelineCardServiceKind (entityVal ent) /= kind
-            then throwError err404
-            else pure (toPipelineDTO ent)
+        Just dto -> pure dto
 
-    updateCard kind rawId req = do
-      ensureModule ModuleScheduling user
+    updateCard rawWorkflowId rawId req = do
+      requirePipelineCapability "pipeline.update"
+      workflowId <- parsePipelineWorkflowId rawWorkflowId
+      (workflow, offerings, states) <- requirePipelineDefinition workflowId
       cardKey <- parseKey @ME.PipelineCard rawId
       titleUpdate <- either throwError pure (normalizePipelineCardTitleUpdate (pcuTitle req))
-      stageUpdate <- case pcuStage req of
+      stateUpdate <- case pcuWorkflowStateId req of
         Nothing   -> pure Nothing
-        Just raw  -> Just <$> resolveStage kind (Just raw)
+        Just raw  -> Just <$> parsePipelineStateId states raw
       sortOrderUpdate <- either throwError pure (validatePipelineCardSortOrder (pcuSortOrder req))
       let artistUpdate = normalizeOptionalTextFieldUpdate (pcuArtist req)
           notesUpdate = normalizeOptionalTextFieldUpdate (pcuNotes req)
       either throwError pure
-        (validatePipelineCardPatchIntent titleUpdate artistUpdate stageUpdate sortOrderUpdate notesUpdate)
+        (validatePipelineCardPatchIntent titleUpdate artistUpdate (fmap toPathPiece stateUpdate) sortOrderUpdate notesUpdate)
       now <- liftIO getCurrentTime
       result <- withPool $ do
         mEntity <- getEntity cardKey
         case mEntity of
           Nothing -> pure Nothing
           Just (Entity key card)
-            | ME.pipelineCardServiceKind card /= kind -> pure Nothing
+            | maybe True (`notElem` map entityKey offerings) (ME.pipelineCardServiceOfferingId card) -> pure Nothing
             | otherwise -> do
-                let updates = catMaybes
-                      [ fmap (ME.PipelineCardTitle =.) titleUpdate
-                      , fmap (ME.PipelineCardArtist =.) artistUpdate
-                      , fmap (ME.PipelineCardStage =.) stageUpdate
-                      , fmap (ME.PipelineCardSortOrder =.) sortOrderUpdate
-                      , fmap (ME.PipelineCardNotes =.) notesUpdate
-                      ]
-                    updates' = if null updates
-                      then []
-                      else updates ++ [ME.PipelineCardUpdatedAt =. now]
-                unless (null updates') (update key updates')
-                getEntity key
-      maybe (throwError err404) (pure . toPipelineDTO) result
+                transitionAllowed <- case (ME.pipelineCardWorkflowStateId card, stateUpdate) of
+                  (_, Nothing) -> pure True
+                  (Just oldState, Just newState) | oldState == newState -> pure True
+                  (Just oldState, Just newState) -> isDirectPipelineTransitionAllowed workflowId oldState newState
+                  (Nothing, Just _) -> pure False
+                if not transitionAllowed
+                  then pure Nothing
+                  else do
+                    let updates = catMaybes
+                          [ fmap (ME.PipelineCardTitle =.) titleUpdate
+                          , fmap (ME.PipelineCardArtist =.) artistUpdate
+                          , fmap (ME.PipelineCardWorkflowStateId =.) (fmap Just stateUpdate)
+                          , fmap (ME.PipelineCardSortOrder =.) sortOrderUpdate
+                          , fmap (ME.PipelineCardNotes =.) notesUpdate
+                          ]
+                        updates' = if null updates
+                          then []
+                          else updates ++ [ME.PipelineCardUpdatedAt =. now]
+                    unless (null updates') (update key updates')
+                    getEntity key
+      let offeringMap = Map.fromList [(entityKey item, entityVal item) | item <- offerings]
+          stateMap = Map.fromList [(entityKey item, entityVal item) | item <- states]
+      case result >>= toPipelineDTO (entityKey workflow) offeringMap stateMap of
+        Nothing -> throwError err400 { errBody = "Pipeline card or requested workflow transition is invalid" }
+        Just dto -> pure dto
 
-    deleteCard kind rawId = do
-      ensureModule ModuleScheduling user
+    deleteCard rawWorkflowId rawId = do
+      requirePipelineCapability "pipeline.delete"
+      workflowId <- parsePipelineWorkflowId rawWorkflowId
+      (_, offerings, _) <- requirePipelineDefinition workflowId
       cardKey <- parseKey @ME.PipelineCard rawId
       deleted <- withPool $ do
         mCard <- get cardKey
         case mCard of
           Nothing -> pure False
           Just card ->
-            if ME.pipelineCardServiceKind card /= kind
+            if maybe True (`notElem` map entityKey offerings) (ME.pipelineCardServiceOfferingId card)
               then pure False
               else delete cardKey >> pure True
       unless deleted (throwError err404)
       pure NoContent
 
-    resolveStage kind Nothing  = pure (defaultStage kind)
-    resolveStage kind (Just raw) =
-      case canonicalStage kind raw of
-        Nothing   -> throwError err400 { errBody = "Invalid stage for pipeline" }
-        Just val  -> pure val
+    requirePipelineCapability permissionCode = do
+      ensureModule ModuleScheduling user
+      granted <- withPool $ do
+        rows <- rawSql
+          "SELECT EXISTS (SELECT 1 FROM party_security_role assignment JOIN security_role role ON role.id=assignment.role_id JOIN role_permission grant_row ON grant_row.role_id=role.id JOIN security_permission permission ON permission.id=grant_row.permission_id JOIN security_action action ON action.id=permission.action_id JOIN security_module module_row ON module_row.id=permission.module_id WHERE assignment.party_id=? AND assignment.active=TRUE AND role.active=TRUE AND grant_row.active=TRUE AND permission.active=TRUE AND action.active=TRUE AND module_row.active=TRUE AND permission.code=?)"
+          [toPersistValue (auPartyId user), toPersistValue permissionCode]
+          :: SqlPersistT IO [Single Bool]
+        pure (rows == [Single True])
+      unless granted $
+        throwError err403
+          { errBody = BL.fromStrict (TE.encodeUtf8 ("Missing pipeline capability: " <> permissionCode))
+          }
 
-    toPipelineDTO (Entity key card) = PipelineCardDTO
-      { pcId        = toPathPiece key
-      , pcTitle     = ME.pipelineCardTitle card
-      , pcArtist    = ME.pipelineCardArtist card
-      , pcType      = pipelineTypeSlug (ME.pipelineCardServiceKind card)
-      , pcStage     = ME.pipelineCardStage card
-      , pcSortOrder = ME.pipelineCardSortOrder card
-      , pcNotes     = ME.pipelineCardNotes card
+    parsePipelineWorkflowId rawWorkflowId = do
+      workflowId <- parseKey @Catalog.WorkflowDefinition rawWorkflowId
+      mWorkflow <- withPool $ get workflowId
+      case mWorkflow of
+        Just workflow | Catalog.workflowDefinitionActive workflow -> pure workflowId
+        _ -> throwError err404 { errBody = "Unknown pipeline workflowId" }
+
+    requirePipelineDefinition workflowId = do
+      mWorkflow <- withPool $ getEntity workflowId
+      case mWorkflow of
+        Nothing -> throwError err404 { errBody = "Unknown pipeline workflowId" }
+        Just workflow -> do
+          (offerings, states) <- withPool (loadPipelineDefinitionRows workflowId)
+          if null offerings || null states
+            then throwError err404 { errBody = "Unknown pipeline workflowId" }
+            else pure (workflow, offerings, states)
+
+    parsePipelineStateId states rawStateId = do
+      stateId <- parseKey @Catalog.WorkflowState rawStateId
+      if stateId `elem` map entityKey states
+        then pure stateId
+        else throwError err400 { errBody = "workflowStateId is not active in this pipeline" }
+
+    loadPipelineDefinitionRows workflowId = do
+      bindings <- selectList
+        [ Catalog.PipelineWorkflowBindingWorkflowId ==. workflowId
+        , Catalog.PipelineWorkflowBindingActive ==. True
+        ]
+        []
+      offerings <- selectList
+        [ Catalog.ServiceOfferingId <-. map (Catalog.pipelineWorkflowBindingServiceOfferingId . entityVal) bindings
+        , Catalog.ServiceOfferingActive ==. True
+        ]
+        [Asc Catalog.ServiceOfferingSortOrder, Asc Catalog.ServiceOfferingNameEs]
+      states <- selectList
+        [ Catalog.WorkflowStateWorkflowId ==. workflowId
+        , Catalog.WorkflowStateActive ==. True
+        ]
+        [Asc Catalog.WorkflowStateSortOrder, Asc Catalog.WorkflowStateCode]
+      pure (offerings, states)
+
+    loadPipelineSnapshotRows = do
+      (bindings, workflows, offerings, states, cards) <- withPool $ do
+        activeBindings <- selectList [Catalog.PipelineWorkflowBindingActive ==. True] []
+        let workflowIds = Set.toList . Set.fromList $
+              map (Catalog.pipelineWorkflowBindingWorkflowId . entityVal) activeBindings
+            offeringIds = Set.toList . Set.fromList $
+              map (Catalog.pipelineWorkflowBindingServiceOfferingId . entityVal) activeBindings
+        activeWorkflows <- selectList
+          [ Catalog.WorkflowDefinitionId <-. workflowIds
+          , Catalog.WorkflowDefinitionActive ==. True
+          ]
+          [Asc Catalog.WorkflowDefinitionNameEs, Asc Catalog.WorkflowDefinitionCode]
+        activeOfferings <- selectList
+          [ Catalog.ServiceOfferingId <-. offeringIds
+          , Catalog.ServiceOfferingActive ==. True
+          ]
+          [Asc Catalog.ServiceOfferingSortOrder, Asc Catalog.ServiceOfferingNameEs]
+        activeStates <- selectList
+          [ Catalog.WorkflowStateWorkflowId <-. workflowIds
+          , Catalog.WorkflowStateActive ==. True
+          ]
+          [Asc Catalog.WorkflowStateSortOrder, Asc Catalog.WorkflowStateCode]
+        canonicalCards <- selectList
+          [ME.PipelineCardServiceOfferingId <-. map (Just . entityKey) activeOfferings]
+          [Asc ME.PipelineCardSortOrder, Asc ME.PipelineCardCreatedAt]
+        pure (activeBindings, activeWorkflows, activeOfferings, activeStates, canonicalCards)
+      let offeringMap = Map.fromList [(entityKey item, entityVal item) | item <- offerings]
+          stateMap = Map.fromList [(entityKey item, entityVal item) | item <- states]
+          workflowByOffering = Map.fromList
+            [ ( Catalog.pipelineWorkflowBindingServiceOfferingId binding
+              , Catalog.pipelineWorkflowBindingWorkflowId binding
+              )
+            | Entity _ binding <- bindings
+            ]
+          offeringsFor workflowId =
+            [ offering
+            | offering <- offerings
+            , Map.lookup (entityKey offering) workflowByOffering == Just workflowId
+            ]
+          statesFor workflowId =
+            filter ((== workflowId) . Catalog.workflowStateWorkflowId . entityVal) states
+          definitions =
+            [ toPipelineDefinitionDTO workflow (offeringsFor (entityKey workflow)) (statesFor (entityKey workflow))
+            | workflow <- workflows
+            , not (null (offeringsFor (entityKey workflow)))
+            , not (null (statesFor (entityKey workflow)))
+            ]
+          canonicalCardDTOs =
+            [ dto
+            | card <- cards
+            , Just offeringId <- [ME.pipelineCardServiceOfferingId (entityVal card)]
+            , Just workflowId <- [Map.lookup offeringId workflowByOffering]
+            , Just dto <- [toPipelineDTO workflowId offeringMap stateMap card]
+            ]
+      when (length canonicalCardDTOs /= length cards) $
+        throwError err500 { errBody = "Pipeline snapshot contains invalid canonical references" }
+      pure (definitions, canonicalCardDTOs)
+
+    isDirectPipelineTransitionAllowed workflowId fromStateId toStateId =
+      isJust <$> selectFirst
+        [ Catalog.WorkflowTransitionWorkflowId ==. workflowId
+        , Catalog.WorkflowTransitionFromStateId ==. fromStateId
+        , Catalog.WorkflowTransitionToStateId ==. toStateId
+        , Catalog.WorkflowTransitionActive ==. True
+        , Catalog.WorkflowTransitionRequiredPermissionId ==. Nothing
+        , Catalog.WorkflowTransitionRequiresReview ==. False
+        , Catalog.WorkflowTransitionRequiresDistinctApprover ==. False
+        ]
+        []
+
+    toPipelineDefinitionDTO (Entity workflowId workflow) offerings states = PipelineDefinitionDTO
+      { pdWorkflowId = toPathPiece workflowId
+      , pdCode = Catalog.workflowDefinitionCode workflow
+      , pdNameEs = Catalog.workflowDefinitionNameEs workflow
+      , pdNameEn = Catalog.workflowDefinitionNameEn workflow
+      , pdRevision = Catalog.workflowDefinitionCacheRevision workflow
+      , pdServiceOfferings = map toPipelineServiceOfferingDTO offerings
+      , pdStages = map toPipelineStageDTO states
       }
+
+    toPipelineServiceOfferingDTO (Entity offeringId offering) = PipelineServiceOfferingDTO
+      { psoId = toPathPiece offeringId
+      , psoCode = Catalog.serviceOfferingCode offering
+      , psoNameEs = Catalog.serviceOfferingNameEs offering
+      , psoNameEn = Catalog.serviceOfferingNameEn offering
+      }
+
+    toPipelineStageDTO (Entity stateId state) = PipelineStageDTO
+      { psId = toPathPiece stateId
+      , psCode = Catalog.workflowStateCode state
+      , psNameEs = Catalog.workflowStateNameEs state
+      , psNameEn = Catalog.workflowStateNameEn state
+      , psSortOrder = Catalog.workflowStateSortOrder state
+      , psTerminal = Catalog.workflowStateTerminal state
+      }
+
+    toPipelineDTO workflowId offeringMap stateMap (Entity key card) = do
+      offeringId <- ME.pipelineCardServiceOfferingId card
+      stateId <- ME.pipelineCardWorkflowStateId card
+      offering <- Map.lookup offeringId offeringMap
+      state <- Map.lookup stateId stateMap
+      pure PipelineCardDTO
+        { pcId = toPathPiece key
+        , pcTitle = ME.pipelineCardTitle card
+        , pcArtist = ME.pipelineCardArtist card
+        , pcServiceOfferingId = toPathPiece offeringId
+        , pcServiceOfferingCode = Catalog.serviceOfferingCode offering
+        , pcWorkflowId = toPathPiece workflowId
+        , pcWorkflowStateId = toPathPiece stateId
+        , pcWorkflowStateCode = Catalog.workflowStateCode state
+        , pcWorkflowStateNameEs = Catalog.workflowStateNameEs state
+        , pcWorkflowStateNameEn = Catalog.workflowStateNameEn state
+        , pcSortOrder = ME.pipelineCardSortOrder card
+        , pcNotes = ME.pipelineCardNotes card
+        }
 
 roomsServer
   :: ( MonadReader Env m
@@ -2471,51 +2708,13 @@ roomsPublicServer = do
 serviceCatalogPublicServer
   :: ( MonadReader Env m
      , MonadIO m
+     , MonadError ServerError m
      )
   => ServerT ServiceCatalogPublicAPI m
-serviceCatalogPublicServer = do
-  entities <- withPool $ selectList [M.ServiceCatalogActive ==. True] []
-  let sorted = sortOn serviceCatalogSortKey entities
-  pure (map serviceCatalogToDTO sorted)
-  where
-    serviceCatalogSortKey (Entity _ svc) =
-      let nameNorm = normalizeServiceName (M.serviceCatalogName svc)
-      in ( groupRank (M.serviceCatalogKind svc) nameNorm
-         , nameRank nameNorm
-         , nameNorm
-         )
-    groupRank kind nameNorm
-      | nameNorm == "podcast" = 0 :: Int
-      | otherwise =
-          case kind of
-            M.Recording       -> 0
-            M.Rehearsal       -> 1
-            M.Mixing          -> 2
-            M.Mastering       -> 3
-            M.Classes         -> 4
-            M.EventProduction -> 5
-    nameRank nameNorm =
-      case nameNorm of
-        "grabacion de banda"     -> 0 :: Int
-        "grabacion de voz"       -> 1
-        "podcast"                -> 2
-        "ensayo"                 -> 0
-        "practica en dj booth"   -> 1
-        _                        -> 999
-    normalizeServiceName =
-      stripDiacritics . T.unwords . T.words . T.toLower . T.strip
-    stripDiacritics = T.map replaceChar
-      where
-        replaceChar c =
-          case c of
-            'á' -> 'a'
-            'é' -> 'e'
-            'í' -> 'i'
-            'ó' -> 'o'
-            'ú' -> 'u'
-            'ü' -> 'u'
-            'ñ' -> 'n'
-            _   -> c
+serviceCatalogPublicServer requestedLocale ifNoneMatch = do
+  now <- liftIO getCurrentTime
+  envelope <- withPool $ loadCanonicalServiceCatalog now False (normalizeServiceCatalogLocale requestedLocale)
+  serviceCatalogResponse ifNoneMatch envelope
 
 serviceCatalogServer
   :: ( MonadReader Env m
@@ -2524,222 +2723,184 @@ serviceCatalogServer
      )
   => AuthedUser
   -> ServerT ServiceCatalogAPI m
-serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
+serviceCatalogServer user = listH
   where
-    listH mIncludeInactive = do
+    listH mIncludeInactive requestedLocale ifNoneMatch = do
       ensureModule ModuleScheduling user
-      let filters = [M.ServiceCatalogActive ==. True | not (fromMaybe False mIncludeInactive)]
-      entities <- withPool $ selectList filters [Asc M.ServiceCatalogName]
-      pure (map serviceCatalogToDTO entities)
+      now <- liftIO getCurrentTime
+      envelope <- withPool $ loadCanonicalServiceCatalog now (fromMaybe False mIncludeInactive) (normalizeServiceCatalogLocale requestedLocale)
+      serviceCatalogResponse ifNoneMatch envelope
 
-    createH ServiceCatalogCreate{..} = do
-      ensureModule ModuleScheduling user
-      Env _ cfg <- ask
-      nameClean <- normalizeName sccName
-      currencyClean <- either throwError pure (validateServiceCatalogCurrency (sccCurrency <|> Just (defaultCurrency cfg)))
-      unless (currencyClean `elem` supportedCurrencies cfg) $
-        throwError err400 { errBody = "Currency is not enabled by SUPPORTED_CURRENCIES" }
-      taxClean <- either throwError pure (validateServiceCatalogTaxBps sccTaxBps)
-      billingUnitClean <-
-        either throwError pure (validateServiceCatalogBillingUnit sccBillingUnit)
-      when (maybe False (< 0) sccRateCents) $
-        throwError err400 { errBody = "La tarifa debe ser mayor o igual a cero" }
-      duplicate <- withPool $ serviceCatalogNameExists nameClean Nothing
-      when duplicate $
-        throwError err409 { errBody = "Ya existe un servicio con ese nombre" }
-      entity <- withPool $ do
-        let record = M.ServiceCatalog
-              { M.serviceCatalogName = nameClean
-              , M.serviceCatalogKind = fromMaybe M.Recording sccKind
-              , M.serviceCatalogPricingModel = fromMaybe M.Hourly sccPricingModel
-              , M.serviceCatalogDefaultRateCents = sccRateCents
-              , M.serviceCatalogTaxBps = taxClean
-              , M.serviceCatalogCurrency = currencyClean
-              , M.serviceCatalogBillingUnit = billingUnitClean
-              , M.serviceCatalogActive = fromMaybe True sccActive
+normalizeServiceCatalogLocale :: Maybe Text -> Text
+normalizeServiceCatalogLocale requested =
+  if maybe False ("en" `T.isPrefixOf`) (T.toLower . T.strip <$> requested) then "en" else "es"
+
+serviceCatalogResponse
+  :: MonadError ServerError m
+  => Maybe Text
+  -> ServiceCatalogEnvelopeDTO
+  -> m (Headers '[Header "ETag" Text] ServiceCatalogEnvelopeDTO)
+serviceCatalogResponse ifNoneMatch envelope = do
+  let etag = "\"service-catalog-" <> T.pack (show (sceRevision envelope)) <> "\""
+      matches supplied = any (\candidate -> T.strip candidate `elem` [etag, "W/" <> etag, "*"]) (T.splitOn "," supplied)
+  when (maybe False matches ifNoneMatch) $
+    throwError err304 { errHeaders = [("ETag", TE.encodeUtf8 etag)] }
+  pure (addHeader etag envelope)
+
+loadCanonicalServiceCatalog :: UTCTime -> Bool -> Text -> SqlPersistT IO ServiceCatalogEnvelopeDTO
+loadCanonicalServiceCatalog now includeInactive locale = do
+  catalog <- getBy (Catalog.UniqueCatalogDefinitionCode "services") >>= maybe
+    (liftIO $ ioError (userError "Services catalog definition is missing"))
+    pure
+  offerings <- selectList
+    [Catalog.ServiceOfferingActive ==. True | not includeInactive]
+    [ Asc Catalog.ServiceOfferingSortOrder
+    , Asc Catalog.ServiceOfferingNameEs
+    , Asc Catalog.ServiceOfferingCode
+    ]
+  let offeringKeys = map entityKey offerings
+      categoryKeys = map (Catalog.serviceOfferingCategoryId . entityVal) offerings
+      pricingModelKeys = mapMaybe (Catalog.serviceOfferingPricingModelId . entityVal) offerings
+      taxRateKeys = mapMaybe (Catalog.serviceOfferingTaxRateId . entityVal) offerings
+      currencyKeys = map (Catalog.serviceOfferingCurrencyId . entityVal) offerings
+      workflowKeys = map (Catalog.serviceOfferingWorkflowStateId . entityVal) offerings
+  categories <- selectList [Catalog.ServiceCategoryId <-. categoryKeys] []
+  pricingModels <- selectList [Catalog.ServicePricingModelId <-. pricingModelKeys] []
+  taxRates <- selectList [Catalog.TaxRateReferenceId <-. taxRateKeys] []
+  currencies <- selectList [Catalog.CurrencyReferenceId <-. currencyKeys] []
+  workflowStates <- selectList [Catalog.WorkflowStateId <-. workflowKeys] []
+  relationships <- selectList
+    [ Catalog.ServiceOfferingDefaultResourceServiceOfferingId <-. offeringKeys
+    , Catalog.ServiceOfferingDefaultResourceActive ==. True
+    ]
+    [ Asc Catalog.ServiceOfferingDefaultResourceSortOrder
+    , Asc Catalog.ServiceOfferingDefaultResourceId
+    ]
+  let resourceKeys = map (Catalog.serviceOfferingDefaultResourceResourceId . entityVal) relationships
+      selectionModeKeys = mapMaybe (Catalog.serviceOfferingDefaultResourceSelectionModeId . entityVal) relationships
+  resources <- selectList [M.ResourceId <-. resourceKeys, M.ResourceActive ==. True] []
+  selectionModes <- selectList
+    [ Catalog.ServiceResourceSelectionModeId <-. selectionModeKeys
+    , Catalog.ServiceResourceSelectionModeActive ==. True
+    ]
+    []
+  let categoryMap = Map.fromList [(entityKey row, entityVal row) | row <- categories]
+      pricingModelMap = Map.fromList [(entityKey row, entityVal row) | row <- pricingModels]
+      taxRateMap = Map.fromList [(entityKey row, entityVal row) | row <- taxRates]
+      currencyMap = Map.fromList [(entityKey row, entityVal row) | row <- currencies]
+      workflowMap = Map.fromList [(entityKey row, entityVal row) | row <- workflowStates]
+      resourceMap = Map.fromList [(entityKey row, entityVal row) | row <- resources]
+      selectionModeMap = Map.fromList [(entityKey row, entityVal row) | row <- selectionModes]
+      offeringRelationships offeringKey =
+        [ relationship
+        | Entity _ relationship <- relationships
+        , Catalog.serviceOfferingDefaultResourceServiceOfferingId relationship == offeringKey
+        ]
+      isPublished offering =
+        maybe False ((== "published") . Catalog.workflowStateCode)
+          (Map.lookup (Catalog.serviceOfferingWorkflowStateId offering) workflowMap)
+      isEffective offering =
+        let today = utctDay now
+        in maybe True (<= today) (Catalog.serviceOfferingEffectiveFrom offering)
+             && maybe True (>= today) (Catalog.serviceOfferingEffectiveUntil offering)
+      visible offering =
+        isPublished offering
+          && ( includeInactive
+                 || ( Catalog.serviceOfferingActive offering
+                        && isNothing (Catalog.serviceOfferingDeprecatedAt offering)
+                        && isEffective offering
+                    )
+             )
+  items <- fmap catMaybes . forM offerings $ \(Entity offeringKey offering) ->
+    if not (visible offering)
+      then pure Nothing
+      else case UUID.fromText (toPathPiece offeringKey) of
+        Nothing -> liftIO $ ioError (userError "Service offering key is not a UUID")
+        Just offeringUuid -> do
+          category <- maybe
+            (liftIO $ ioError (userError "Service offering category relation is missing"))
+            pure
+            (Map.lookup (Catalog.serviceOfferingCategoryId offering) categoryMap)
+          pricingModel <- maybe
+            (liftIO $ ioError (userError "Service offering pricing model relation is missing"))
+            pure
+            (Catalog.serviceOfferingPricingModelId offering >>= (`Map.lookup` pricingModelMap))
+          currency <- maybe
+            (liftIO $ ioError (userError "Service offering currency relation is missing"))
+            pure
+            (Map.lookup (Catalog.serviceOfferingCurrencyId offering) currencyMap)
+          let taxRateCode =
+                Catalog.taxRateReferenceCode
+                  <$> (Catalog.serviceOfferingTaxRateId offering >>= (`Map.lookup` taxRateMap))
+              keyUuidText key = UUID.fromText (toPathPiece key)
+          categoryUuid <- maybe
+            (liftIO $ ioError (userError "Service category key is not a UUID"))
+            pure
+            (keyUuidText (Catalog.serviceOfferingCategoryId offering))
+          pricingModelUuid <- maybe
+            (liftIO $ ioError (userError "Service pricing model key is not a UUID"))
+            pure
+            (Catalog.serviceOfferingPricingModelId offering >>= keyUuidText)
+          currencyUuid <- maybe
+            (liftIO $ ioError (userError "Currency key is not a UUID"))
+            pure
+            (keyUuidText (Catalog.serviceOfferingCurrencyId offering))
+          taxRateUuid <- traverse
+            (maybe (liftIO $ ioError (userError "Tax rate key is not a UUID")) pure . keyUuidText)
+            (Catalog.serviceOfferingTaxRateId offering)
+          defaultResources <- forM (offeringRelationships offeringKey) $ \relationship -> do
+            let resourceKey = Catalog.serviceOfferingDefaultResourceResourceId relationship
+            resource <- maybe
+              (liftIO $ ioError (userError "A default service resource is missing or inactive"))
+              pure
+              (Map.lookup resourceKey resourceMap)
+            selectionModeKey <- maybe
+              (liftIO $ ioError (userError "A default service resource has no canonical selection mode"))
+              pure
+              (Catalog.serviceOfferingDefaultResourceSelectionModeId relationship)
+            selectionMode <- maybe
+              (liftIO $ ioError (userError "A default service resource selection mode is missing or inactive"))
+              pure
+              (Map.lookup selectionModeKey selectionModeMap)
+            selectionModeUuid <- maybe
+              (liftIO $ ioError (userError "Service resource selection mode key is not a UUID"))
+              pure
+              (keyUuidText selectionModeKey)
+            pure ServiceDefaultResourceDTO
+              { sdrResourceId = toPathPiece resourceKey
+              , sdrResourceName = M.resourceName resource
+              , sdrSelectionModeId = selectionModeUuid
+              , sdrSelectionMode = Catalog.serviceResourceSelectionModeCode selectionMode
+              , sdrSortOrder = Catalog.serviceOfferingDefaultResourceSortOrder relationship
               }
-        newId <- insert record
-        getJustEntity newId
-      pure (serviceCatalogToDTO entity)
-
-    updateH rawId ServiceCatalogUpdate{..} = do
-      ensureModule ModuleScheduling user
-      Env _ cfg <- ask
-      svcId <- either throwError pure (validateServiceCatalogId rawId)
-      let svcKey = toSqlKey svcId :: Key M.ServiceCatalog
-      let rateCandidate = join scuRateCents
-      currencyUpdate <- either throwError pure (validateServiceCatalogCurrencyUpdate scuCurrency)
-      for_ currencyUpdate $ \currencyValue ->
-        unless (currencyValue `elem` supportedCurrencies cfg) $
-          throwError err400 { errBody = "Currency is not enabled by SUPPORTED_CURRENCIES" }
-      taxUpdate <- either throwError pure (validateServiceCatalogTaxBpsUpdate scuTaxBps)
-      billingUnitUpdate <-
-        either throwError pure (validateServiceCatalogBillingUnitUpdate scuBillingUnit)
-      when (maybe False (< 0) rateCandidate) $
-        throwError err400 { errBody = "La tarifa debe ser mayor o igual a cero" }
-      nameClean <- either throwError pure (normalizeServiceCatalogNameUpdate scuName)
-      case nameClean of
-        Just nm -> do
-          conflict <- withPool $ serviceCatalogNameExists nm (Just svcKey)
-          when conflict $
-            throwError err409 { errBody = "Ya existe un servicio con ese nombre" }
-        Nothing -> pure ()
-      updated <- withPool $ do
-        mExisting <- getEntity svcKey
-        case mExisting of
-          Nothing -> pure Nothing
-          Just _ -> do
-            let updates = catMaybes
-                  [ (M.ServiceCatalogName =.) <$> nameClean
-                  , (M.ServiceCatalogKind =.) <$> scuKind
-                  , (M.ServiceCatalogPricingModel =.) <$> scuPricingModel
-                  , (M.ServiceCatalogDefaultRateCents =.) <$> scuRateCents
-                  , (M.ServiceCatalogTaxBps =.) <$> taxUpdate
-                  , (M.ServiceCatalogCurrency =.) <$> currencyUpdate
-                  , (M.ServiceCatalogBillingUnit =.) <$> billingUnitUpdate
-                  , (M.ServiceCatalogActive =.) <$> scuActive
-                  ]
-            unless (null updates) (update svcKey updates)
-            getEntity svcKey
-      maybe (throwError err404) (pure . serviceCatalogToDTO) updated
-
-    deleteH rawId = do
-      ensureModule ModuleScheduling user
-      svcId <- either throwError pure (validateServiceCatalogId rawId)
-      let svcKey = toSqlKey svcId :: Key M.ServiceCatalog
-      found <- withPool $ do
-        mSvc <- getEntity svcKey
-        case mSvc of
-          Nothing -> pure False
-          Just _ -> update svcKey [M.ServiceCatalogActive =. False] >> pure True
-      if found then pure NoContent else throwError err404
-
-    normalizeName txt =
-      either throwError pure (normalizeServiceCatalogName txt)
-
-normalizeServiceCatalogNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
-normalizeServiceCatalogNameUpdate Nothing = Right Nothing
-normalizeServiceCatalogNameUpdate (Just rawName) =
-  Just <$> normalizeServiceCatalogName rawName
-
-normalizeServiceCatalogName :: Text -> Either ServerError Text
-normalizeServiceCatalogName rawName =
-  let trimmed = T.strip rawName
-  in if T.null trimmed
-       then Left err400 { errBody = "Nombre requerido" }
-       else if T.length trimmed > 160
-         then Left err400 { errBody = "Nombre debe tener 160 caracteres o menos" }
-         else if T.any isUnsafeServiceCatalogLabelChar trimmed
-           then Left err400
-             { errBody =
-                 "Nombre no debe contener caracteres de control o marcas de formato ocultas"
-             }
-         else Right trimmed
-
-serviceCatalogNameExists :: Text -> Maybe (Key M.ServiceCatalog) -> SqlPersistT IO Bool
-serviceCatalogNameExists candidate ignoredKey = do
-  services <- selectList ([] :: [Filter M.ServiceCatalog]) []
-  pure $
-    any
-      (\(Entity serviceKey service) ->
-        Just serviceKey /= ignoredKey
-          && serviceCatalogNamesConflict candidate (M.serviceCatalogName service)
-      )
-      services
-
-serviceCatalogNamesConflict :: Text -> Text -> Bool
-serviceCatalogNamesConflict left right =
-  canonicalServiceCatalogName left == canonicalServiceCatalogName right
-
-canonicalServiceCatalogName :: Text -> Text
-canonicalServiceCatalogName =
-  T.toCaseFold . T.unwords . T.words . T.strip
-
-isUnsafeServiceCatalogLabelChar :: Char -> Bool
-isUnsafeServiceCatalogLabelChar ch =
-  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
-
-validateServiceCatalogId :: Int64 -> Either ServerError Int64
-validateServiceCatalogId rawId
-  | rawId > 0 = Right rawId
-  | otherwise = Left err400 { errBody = "serviceCatalogId must be a positive integer" }
-
-validateServiceCatalogBillingUnit :: Maybe Text -> Either ServerError (Maybe Text)
-validateServiceCatalogBillingUnit Nothing = Right Nothing
-validateServiceCatalogBillingUnit (Just rawBillingUnit) =
-  case normalizeOptionalTextField (Just rawBillingUnit) of
-    Nothing -> Right Nothing
-    Just billingUnit -> Just <$> validateServiceCatalogBillingUnitValue billingUnit
-
-validateServiceCatalogBillingUnitUpdate
-  :: Maybe (Maybe Text)
-  -> Either ServerError (Maybe (Maybe Text))
-validateServiceCatalogBillingUnitUpdate Nothing = Right Nothing
-validateServiceCatalogBillingUnitUpdate (Just Nothing) = Right (Just Nothing)
-validateServiceCatalogBillingUnitUpdate (Just (Just rawBillingUnit)) =
-  case normalizeOptionalTextField (Just rawBillingUnit) of
-    Nothing ->
-      Left err400 { errBody = "Unidad debe omitirse, ser null, o contener texto" }
-    Just billingUnit ->
-      Just . Just <$> validateServiceCatalogBillingUnitValue billingUnit
-
-validateServiceCatalogBillingUnitValue :: Text -> Either ServerError Text
-validateServiceCatalogBillingUnitValue billingUnit
-  | T.length billingUnit > 80 =
-      Left err400 { errBody = "Unidad debe tener 80 caracteres o menos" }
-  | T.any isUnsafeServiceCatalogLabelChar billingUnit =
-      Left err400
-        { errBody =
-            "Unidad no debe contener caracteres de control o marcas de formato ocultas"
-        }
-  | otherwise =
-      Right billingUnit
-
-validateServiceCatalogCurrency :: Maybe Text -> Either ServerError Text
-validateServiceCatalogCurrency Nothing =
-  Left err400 { errBody = "Currency is required when no configured default is supplied" }
-validateServiceCatalogCurrency (Just rawCurrency) =
-  let trimmed = T.strip rawCurrency
-  in if T.null trimmed
-       then invalidCurrency
-       else maybe invalidCurrency Right (normalizeCurrencyCode trimmed)
-  where
-    invalidCurrency =
-      Left err400 { errBody = "Moneda inválida. Usa un código ISO de 3 letras, por ejemplo USD" }
-
-validateServiceCatalogCurrencyUpdate :: Maybe Text -> Either ServerError (Maybe Text)
-validateServiceCatalogCurrencyUpdate Nothing = Right Nothing
-validateServiceCatalogCurrencyUpdate (Just rawCurrency) =
-  Just <$> validateServiceCatalogCurrency (Just rawCurrency)
-
-validateServiceCatalogTaxBps :: Maybe Int -> Either ServerError (Maybe Int)
-validateServiceCatalogTaxBps Nothing = Right Nothing
-validateServiceCatalogTaxBps (Just rawTaxBps)
-  | rawTaxBps < 0 = invalidTaxBps
-  | rawTaxBps > 10000 = invalidTaxBps
-  | otherwise = Right (Just rawTaxBps)
-  where
-    invalidTaxBps =
-      Left err400 { errBody = "Impuesto inválido. Usa basis points entre 0 y 10000" }
-
-validateServiceCatalogTaxBpsUpdate :: Maybe (Maybe Int) -> Either ServerError (Maybe (Maybe Int))
-validateServiceCatalogTaxBpsUpdate Nothing = Right Nothing
-validateServiceCatalogTaxBpsUpdate (Just Nothing) = Right (Just Nothing)
-validateServiceCatalogTaxBpsUpdate (Just (Just rawTaxBps)) =
-  Just <$> validateServiceCatalogTaxBps (Just rawTaxBps)
-
-serviceCatalogToDTO :: Entity M.ServiceCatalog -> ServiceCatalogDTO
-serviceCatalogToDTO (Entity key svc) = ServiceCatalogDTO
-  { scId           = fromSqlKey key
-  , scName         = M.serviceCatalogName svc
-  , scKind         = M.serviceCatalogKind svc
-  , scPricingModel = M.serviceCatalogPricingModel svc
-  , scRateCents    = M.serviceCatalogDefaultRateCents svc
-  , scCurrency     = M.serviceCatalogCurrency svc
-  , scBillingUnit  = M.serviceCatalogBillingUnit svc
-  , scTaxBps       = M.serviceCatalogTaxBps svc
-  , scActive       = M.serviceCatalogActive svc
-  }
+          pure . Just $ ServiceCatalogDTO
+            { scId = offeringUuid
+            , scCode = Catalog.serviceOfferingCode offering
+            , scName = if locale == "en" then Catalog.serviceOfferingNameEn offering else Catalog.serviceOfferingNameEs offering
+            , scNameEs = Catalog.serviceOfferingNameEs offering
+            , scNameEn = Catalog.serviceOfferingNameEn offering
+            , scCategoryId = categoryUuid
+            , scKind = Catalog.serviceCategoryCode category
+            , scPricingModelId = pricingModelUuid
+            , scPricingModel = Catalog.servicePricingModelCode pricingModel
+            , scRateCents = Catalog.serviceOfferingDefaultRateCents offering
+            , scCurrency = Catalog.currencyReferenceCode currency
+            , scCurrencyId = currencyUuid
+            , scBillingUnit = if locale == "en" then Catalog.serviceOfferingBillingUnitEn offering else Catalog.serviceOfferingBillingUnitEs offering
+            , scTaxRateCode = taxRateCode
+            , scTaxRateId = taxRateUuid
+            , scDefaultDurationMinutes = Catalog.serviceOfferingDefaultDurationMinutes offering
+            , scRequiresEngineer = Catalog.serviceOfferingRequiresEngineer offering
+            , scDefaultResources = defaultResources
+            , scSortOrder = Catalog.serviceOfferingSortOrder offering
+            , scActive = Catalog.serviceOfferingActive offering
+            }
+  pure ServiceCatalogEnvelopeDTO
+    { sceSchemaVersion = 2
+    , sceRevision = Catalog.catalogDefinitionCacheRevision (entityVal catalog)
+    , sceLocale = locale
+    , sceItems = items
+    }
 
 mkPage :: Int -> Int -> Int -> [a] -> Page a
 mkPage current size totalCount values =

@@ -1,0 +1,63 @@
+- generic [ref=f43e2]:
+  - generic [ref=f43e3]:
+    - link "Saltar al contenido principal" [ref=f43e1796] [cursor=pointer]:
+      - /url: "#main-content"
+    - generic [ref=f43e5]:
+      - banner [ref=f43e6]:
+        - generic [ref=f43e7]:
+          - button "Mostrar menú lateral" [ref=f43e1797] [cursor=pointer]
+          - link "Ir al inicio" [ref=f43e1798] [cursor=pointer]:
+            - /url: /inicio
+            - img "TDF Records logo"
+          - button "Buscar sección" [ref=f43e1799] [cursor=pointer]:
+            - generic [ref=f43e18]: ⌘K
+          - generic [ref=f43e19]:
+            - button "Creación rápida" [ref=f43e1800] [cursor=pointer]:
+              - generic [ref=f43e24]: Crear
+            - button "Notificaciones" [ref=f43e1801] [cursor=pointer]:
+              - generic [ref=f43e26]: "0"
+            - button "Abrir menú de sesión" [ref=f43e1802] [cursor=pointer]:
+              - generic [ref=f43e31]: D
+      - status [ref=f43e32]
+      - main [ref=f43e35]:
+        - generic [ref=f43e36]:
+          - navigation "Migas de pan" [ref=f43e1803]:
+            - list [ref=f43e1804]:
+              - listitem [ref=f43e1805]:
+                - link "Comunidad" [ref=f43e1806] [cursor=pointer]:
+                  - /url: /fans
+              - listitem [ref=f43e1807]: /
+              - listitem [ref=f43e1808]:
+                - paragraph [ref=f43e1809]: Perfil
+          - generic [ref=f43e1813]:
+            - generic [ref=f43e1814]:
+              - generic [ref=f43e1815]: B
+              - generic [ref=f43e1816]:
+                - heading "Blue Records" [level=5] [ref=f43e1817]
+                - generic [ref=f43e1818]:
+                  - generic [ref=f43e1819]: No sigues aún
+                  - generic [ref=f43e1821]: Sin conexión
+              - generic [ref=f43e1823]:
+                - button [ref=f43e1824] [cursor=pointer]
+                - generic "Disponible solo para amigos mutuos" [ref=f43e1828]:
+                  - link "Chatear" [disabled]:
+                    - /url: /chat?partyId=143
+            - paragraph [ref=f43e1829]: Esta persona no está escuchando la radio en este momento.
+            - paragraph [ref=f43e1830]: "Estado: Sin conexión."
+        - generic [ref=f43e57]:
+          - status [ref=f43e58]:
+            - generic [ref=f43e62]: "API: online"
+          - button "Abrir ChatKit" [ref=f43e1831] [cursor=pointer]
+  - generic "Control de radio":
+    - generic [ref=f43e66]:
+      - button "Reproducir radio" [ref=f43e1832] [cursor=pointer]
+      - generic "Saltar al anterior" [ref=f43e1833]:
+        - button "Saltar a la estación anterior" [ref=f43e1834] [cursor=pointer]
+      - generic "Saltar al siguiente" [ref=f43e1835]:
+        - button "Saltar a la siguiente estación" [ref=f43e1836] [cursor=pointer]
+      - button "Silenciar radio" [ref=f43e1837] [cursor=pointer]
+      - button "Ocultar barra de radio" [ref=f43e1838] [cursor=pointer]
+      - button "Expandir radio" [ref=f43e1839] [cursor=pointer]
+      - generic [ref=f43e87]:
+        - generic [ref=f43e88]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient

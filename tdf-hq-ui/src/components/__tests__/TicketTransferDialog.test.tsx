@@ -106,7 +106,7 @@ describe('TicketTransferDialog', () => {
     fireEvent.click(invalidEmailTransferButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/valid email address/i)).toBeInTheDocument();
+      expect(screen.getByText(/invalid|inválido/i)).toBeInTheDocument();
     });
 
     expect(createTransfer).not.toHaveBeenCalled();
@@ -249,7 +249,7 @@ describe('TicketTransferDialog', () => {
     fireEvent.click(missingFieldsTransferButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/fill in all fields/i)).toBeInTheDocument();
+      expect(screen.getByText(/obligatorio|required/i)).toBeInTheDocument();
     });
   });
 });

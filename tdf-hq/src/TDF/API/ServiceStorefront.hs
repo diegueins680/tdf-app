@@ -9,7 +9,6 @@ import           Servant
 import           TDF.API.Types
   ( DatafastCheckoutDTO
   , PaypalCreateDTO
-  , PaypalCaptureReq
   )
 import           TDF.DTO.SocialEventsDTO (StripePaymentIntentDTO)
 import           TDF.API.ServiceStorefrontTypes
@@ -19,14 +18,15 @@ import           TDF.API.ServiceStorefrontTypes
 type ServiceStorefrontPublicAPI =
        "services" :> "storefront" :> Get '[JSON] [ServiceStorefrontPackageDTO]
   :<|> "services" :> "storefront" :> Capture "packageId" Text :> Get '[JSON] ServiceStorefrontPackageDTO
-  :<|> "services" :> "storefront" :> "order" :> ReqBody '[JSON] ServiceStorefrontOrderCreate :> Post '[JSON] ServiceStorefrontOrderDTO
-  :<|> "services" :> "storefront" :> "order" :> Capture "orderId" Text :> Get '[JSON] ServiceStorefrontOrderDTO
-  :<|> "services" :> "storefront" :> "order" :> Capture "orderId" Text :> "stripe" :> "payment-intent" :> Post '[JSON] StripePaymentIntentDTO
-  :<|> "services" :> "storefront" :> "order" :> Capture "orderId" Text :> "datafast" :> "checkout" :> Post '[JSON] DatafastCheckoutDTO
-  :<|> "services" :> "storefront" :> "datafast" :> "status" :> QueryParam "orderId" Text :> QueryParam "resourcePath" Text :> Get '[JSON] ServiceStorefrontOrderDTO
-  :<|> "services" :> "storefront" :> "order" :> Capture "orderId" Text :> "paypal" :> "create" :> Post '[JSON] PaypalCreateDTO
-  :<|> "services" :> "storefront" :> "paypal" :> "capture" :> ReqBody '[JSON] PaypalCaptureReq :> Post '[JSON] ServiceStorefrontOrderDTO
-  :<|> "services" :> "storefront" :> "order" :> Capture "orderId" Text :> "revision" :> ReqBody '[JSON] ServiceStorefrontRevisionCreate :> Post '[JSON] ServiceStorefrontRevisionDTO
+  :<|> "services" :> "storefront" :> "order" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] ServiceStorefrontOrderCreate :> Post '[JSON] ServiceStorefrontOrderDTO
+  :<|> "services" :> "storefront" :> "order" :> Capture "orderId" Text :> Header "X-Order-Lookup-Token" Text :> Get '[JSON] ServiceStorefrontOrderDTO
+  :<|> "services" :> "storefront" :> "order" :> Capture "orderId" Text :> "stripe" :> "payment-intent" :> Header "X-Order-Lookup-Token" Text :> Post '[JSON] StripePaymentIntentDTO
+  :<|> "services" :> "storefront" :> "order" :> Capture "orderId" Text :> "datafast" :> "checkout" :> Header "X-Order-Lookup-Token" Text :> Post '[JSON] DatafastCheckoutDTO
+  :<|> "services" :> "storefront" :> "datafast" :> "status" :> QueryParam "orderId" Text :> QueryParam "resourcePath" Text :> Header "X-Order-Lookup-Token" Text :> Get '[JSON] ServiceStorefrontOrderDTO
+  :<|> "services" :> "storefront" :> "order" :> Capture "orderId" Text :> "paypal" :> "create" :> Header "X-Order-Lookup-Token" Text :> Post '[JSON] PaypalCreateDTO
+  :<|> "services" :> "storefront" :> "paypal" :> "capture" :> Header "X-Order-Lookup-Token" Text :> ReqBody '[JSON] ServiceStorefrontPaypalCaptureReq :> Post '[JSON] ServiceStorefrontOrderDTO
+  :<|> "services" :> "storefront" :> "order" :> Capture "orderId" Text :> "manual-payment" :> Header "X-Order-Lookup-Token" Text :> ReqBody '[JSON] ServiceStorefrontManualPaymentCreate :> Post '[JSON] ServiceStorefrontOrderDTO
+  :<|> "services" :> "storefront" :> "order" :> Capture "orderId" Text :> "revision" :> Header "X-Order-Lookup-Token" Text :> ReqBody '[JSON] ServiceStorefrontRevisionCreate :> Post '[JSON] ServiceStorefrontRevisionDTO
 
 -- | Admin API for managing service storefront orders.
 type ServiceStorefrontAdminAPI =

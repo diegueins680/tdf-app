@@ -1,0 +1,256 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - link [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+      - text: Saltar al contenido principal
+    - banner [ref=e5]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - link [ref=e9] [cursor=pointer]:
+            - /url: /tdf
+          - navigation [ref=e10]:
+            - link [ref=e11] [cursor=pointer]:
+              - /url: /tdf
+              - text: TDF
+            - link [ref=e12] [cursor=pointer]:
+              - /url: /fans
+              - text: Comunidad
+            - link [ref=e13] [cursor=pointer]:
+              - /url: /marketplace
+              - text: Tienda
+            - link [ref=e14] [cursor=pointer]:
+              - /url: /domo-del-pululahua
+              - text: Domo
+            - link [ref=e15] [cursor=pointer]:
+              - /url: /reservar
+              - text: Reservar
+            - link [ref=e16] [cursor=pointer]:
+              - /url: /dj-booth
+              - text: DJ Booth
+            - link [ref=e17] [cursor=pointer]:
+              - /url: /records
+              - text: Lanzamientos
+        - button [ref=e19] [cursor=pointer]
+    - main [ref=e22]:
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - generic [ref=e26]: TDF desde Instagram
+          - paragraph [ref=e30]: Reservas, cursos y clases en un solo lugar.
+        - generic [ref=e31]:
+          - link [ref=e32] [cursor=pointer]:
+            - /url: /reservar?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links
+            - text: Reservar servicios
+          - link [ref=e36] [cursor=pointer]:
+            - /url: /dj-booth?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links
+            - text: DJ Booth
+          - link [ref=e40] [cursor=pointer]:
+            - /url: /curso/produccion-musical?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links
+            - text: "Inscribirme: cursos"
+          - link [ref=e44] [cursor=pointer]:
+            - /url: /trials?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links
+            - text: Clases de prueba
+          - link [ref=e48] [cursor=pointer]:
+            - /url: /curso/produccion-musical-jun-2026?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links
+            - text: Producción musical Jun 2026
+      - main [ref=e52]:
+        - generic [ref=e54]:
+          - generic [ref=e57]:
+            - generic [ref=e58]:
+              - generic [ref=e59]:
+                - generic [ref=e60]: TDF Records
+                - button [ref=e62] [cursor=pointer]
+              - heading [level=5] [ref=e65]: Iniciar sesión
+              - paragraph [ref=e66]: Usa tus credenciales para entrar al panel. Si es tu primera vez, elige una ruta rápida en la tarjeta de al lado.
+            - generic [ref=e68]:
+              - generic [ref=e69]:
+                - generic: Usuario o correo *
+                - generic [ref=e70]:
+                  - textbox [ref=e71]
+                  - group:
+                    - generic: Usuario o correo *
+                - paragraph [ref=e72]: Puedes iniciar sesión con tu usuario o con el correo principal.
+              - generic [ref=e73]:
+                - generic: Contraseña *
+                - generic [ref=e74]:
+                  - textbox [ref=e75]
+                  - button [ref=e77] [cursor=pointer]
+                  - group:
+                    - generic: Contraseña *
+            - generic [ref=e80]:
+              - paragraph [ref=e81]: O continúa con Google
+              - iframe [ref=e84]:
+                - button "Continuar con Google. Se abre en una pestaña nueva" [ref=f1e3] [cursor=pointer]:
+                  - generic [ref=f1e5]: Continuar con Google
+            - generic [ref=e85] [cursor=pointer]:
+              - checkbox [checked] [ref=e87]
+              - generic [ref=e90]: Recordarme en este dispositivo
+            - generic [ref=e91]: Si lo activas, mantendremos tu sesión iniciada en este navegador.
+            - generic [ref=e92]:
+              - generic [ref=e93]:
+                - button [ref=e94] [cursor=pointer]: Ingresar
+                - button [ref=e95] [cursor=pointer]: Crear cuenta general
+              - link [ref=e97] [cursor=pointer]:
+                - /url: /fans
+                - text: Explorar sin cuenta
+            - generic [ref=e98]:
+              - paragraph [ref=e99]:
+                - text: ¿Olvidaste tu contraseña?
+                - button [ref=e100] [cursor=pointer]: Recuperar acceso
+              - paragraph [ref=e101]:
+                - text: ¿Buscas una clase de prueba?
+                - link [ref=e102] [cursor=pointer]:
+                  - /url: /trials
+                  - text: Solicitar clase de prueba
+              - paragraph [ref=e103]:
+                - text: ¿Quieres explorar la música?
+                - link [ref=e104] [cursor=pointer]:
+                  - /url: /fans
+                  - text: Ir a la comunidad
+          - generic [ref=e110]:
+            - generic [ref=e111]:
+              - generic [ref=e112]: Onboarding rápido
+              - heading [level=6] [ref=e114]: Empieza en minutos
+              - paragraph [ref=e115]: Elige la ruta que mejor encaja contigo y te llevamos al panel ideal.
+            - generic [ref=e116]:
+              - generic [ref=e122]:
+                - heading [level=6] [ref=e123]: Soy artista
+                - paragraph [ref=e124]: Crea tu perfil, comparte tu enlace y presenta tu música.
+                - button [ref=e125] [cursor=pointer]: Crear perfil
+              - generic [ref=e131]:
+                - heading [level=6] [ref=e132]: Soy fan
+                - paragraph [ref=e133]: Sigue artistas, recibe lanzamientos y reserva experiencias.
+                - button [ref=e134] [cursor=pointer]: Crear cuenta fan
+              - generic [ref=e140]:
+                - heading [level=6] [ref=e141]: Busco prácticas
+                - paragraph [ref=e142]: Postula, define tu plan y organiza tus rotaciones.
+                - button [ref=e143] [cursor=pointer]: Postular prácticas
+            - generic [ref=e144]:
+              - generic [ref=e145]: Menos de 3 minutos
+              - generic [ref=e147]: Roles editables
+              - generic [ref=e149]: Acceso inmediato
+    - contentinfo [ref=e151]:
+      - generic [ref=e153]:
+        - generic [ref=e154]:
+          - heading [level=6] [ref=e155]: TDF Records
+          - paragraph [ref=e156]: Si te atoras, te dejamos una salida clara desde esta página para que sigas avanzando.
+          - generic [ref=e157]:
+            - link [ref=e158] [cursor=pointer]:
+              - /url: /login?signup=1&redirect=/fans
+              - text: Crear cuenta
+            - link [ref=e159] [cursor=pointer]:
+              - /url: https://wa.me/593984755301?text=Hola%20quiero%20reservar%20un%20servicio%20en%20TDF%20Records
+              - text: WhatsApp
+        - navigation [ref=e160]:
+          - generic [ref=e161]: Explorar
+          - generic [ref=e162]:
+            - link [ref=e163] [cursor=pointer]:
+              - /url: /tdf
+              - text: TDF
+            - link [ref=e164] [cursor=pointer]:
+              - /url: /fans
+              - text: Comunidad
+            - link [ref=e165] [cursor=pointer]:
+              - /url: /marketplace
+              - text: Tienda
+            - link [ref=e166] [cursor=pointer]:
+              - /url: /domo-del-pululahua
+              - text: Domo
+            - link [ref=e167] [cursor=pointer]:
+              - /url: /reservar
+              - text: Reservar
+            - link [ref=e168] [cursor=pointer]:
+              - /url: /dj-booth
+              - text: DJ Booth
+            - link [ref=e169] [cursor=pointer]:
+              - /url: /records
+              - text: Lanzamientos
+            - link [ref=e170] [cursor=pointer]:
+              - /url: /feedback
+              - text: Sugerencias
+            - link [ref=e171] [cursor=pointer]:
+              - /url: /donar
+              - text: Donar
+        - generic [ref=e172]:
+          - generic [ref=e173]: Gestión de mensajes
+          - generic [ref=e174]:
+            - link [ref=e175] [cursor=pointer]:
+              - /url: /whatsapp/consentimiento
+              - text: Consentimiento WhatsApp
+            - link [ref=e176] [cursor=pointer]:
+              - /url: /whatsapp/ok
+              - text: Confirmación WhatsApp
+  - dialog [ref=e179]:
+    - heading "Crear cuenta" [level=2] [ref=e180]
+    - generic [ref=e182]:
+      - generic [ref=e183]:
+        - paragraph [ref=e184]: Crear e ingresar con Google
+        - generic [ref=e186]:
+          - button "Acceder con Google. Se abre en una pestaña nueva" [ref=e188] [cursor=pointer]:
+            - generic [ref=e190]: Acceder con Google
+          - iframe [ref=e200]:
+            - button "Acceder con Google. Se abre en una pestaña nueva" [ref=f2e3] [cursor=pointer]:
+              - generic [ref=f2e5]: Acceder con Google
+      - generic [ref=e201]:
+        - generic [ref=e202]:
+          - generic: Nombre
+          - generic [ref=e203]:
+            - textbox "Nombre" [ref=e204]
+            - group:
+              - generic: Nombre
+        - generic [ref=e205]:
+          - generic: Apellido
+          - generic [ref=e206]:
+            - textbox "Apellido" [ref=e207]
+            - group:
+              - generic: Apellido
+      - generic [ref=e208]:
+        - generic: Correo *
+        - generic [ref=e209]:
+          - textbox "Correo *" [ref=e210]:
+            - /placeholder: tu.correo@tdf.com
+          - group:
+            - generic: Correo *
+      - generic [ref=e211]:
+        - generic: Celular (opcional)
+        - generic [ref=e212]:
+          - textbox "Celular (opcional)" [ref=e213]
+          - group:
+            - generic: Celular (opcional)
+      - generic [ref=e214]:
+        - generic [ref=e215]: Roles (opcional)
+        - generic [ref=e216]:
+          - combobox "Roles (opcional)" [ref=e217] [cursor=pointer]:
+            - generic [ref=e218]: Fan
+          - textbox: Fan
+          - group:
+            - generic: Roles (opcional)
+        - paragraph [ref=e221]: Elige los roles que necesitas (Fan, Artista, Promotor, Manager, A&R, Producer, etc.). Roles administrativos o financieros (como Admin o Accounting) no se pueden autoseleccionar.
+      - generic [ref=e222]:
+        - heading "¿De qué artistas o bandas eres fan?" [level=6] [ref=e223]
+        - generic [ref=e225]:
+          - generic: Artistas o bandas
+          - generic [ref=e226]:
+            - combobox "Artistas o bandas" [ref=e227]
+            - progressbar [ref=e228]
+            - button "Open" [ref=e232] [cursor=pointer]
+            - group:
+              - generic: Artistas o bandas
+      - generic [ref=e235]:
+        - generic: Contraseña *
+        - generic [ref=e236]:
+          - textbox "Contraseña *" [ref=e237]
+          - button "Mostrar contraseña" [ref=e239] [cursor=pointer]
+          - group:
+            - generic: Contraseña *
+        - paragraph [ref=e242]: Usa 8+ caracteres con mayúsculas, minúsculas y un número.
+      - generic [ref=e244]:
+        - heading "Ruta para fans" [level=6] [ref=e248]
+        - generic [ref=e249]:
+          - paragraph [ref=e250]: "- Sigue a tus artistas favoritos."
+          - paragraph [ref=e251]: "- Activa alertas de lanzamientos y eventos."
+          - paragraph [ref=e252]: "- Reserva sesiones o transmisiones cuando quieras."
+        - generic [ref=e253]: "Destino: Comunidad"
+      - paragraph [ref=e256]: Al crear la cuenta aceptas los términos de servicio de TDF Records y recibes acceso inmediato al panel.
+    - generic [ref=e257]:
+      - button "Cancelar" [ref=e258] [cursor=pointer]
+      - button "Crear e ingresar" [ref=e259] [cursor=pointer]

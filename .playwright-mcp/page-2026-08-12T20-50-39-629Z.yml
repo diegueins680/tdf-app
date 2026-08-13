@@ -1,0 +1,235 @@
+- generic [ref=e4]:
+  - generic [ref=e9]:
+    - generic [ref=e12]:
+      - link [ref=e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=e22]
+      - generic [ref=e25]:
+        - link [ref=e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=e35]
+        - link [ref=e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=e45]
+        - link [ref=e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=e57]
+        - link [ref=e63] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=e68]
+        - link [ref=e75] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=e80]
+        - link [ref=e86] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=e91]
+        - link [ref=e96] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=e101]
+        - link [ref=e108] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=e113]:
+            - img "tdf.records.label's profile picture" [ref=e114]
+      - generic [ref=e115]:
+        - link [ref=e118] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=e123]
+        - link [ref=e126] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=e131]
+    - generic [ref=e134]:
+      - main [ref=e135]:
+        - generic [ref=e137]:
+          - generic [ref=e138]:
+            - generic [ref=e139]:
+              - button [ref=e144] [cursor=pointer]:
+                - link [ref=e146]:
+                  - img "blue_records333's profile picture" [ref=e147]
+              - generic [ref=e148]:
+                - generic [ref=e149]:
+                  - generic [ref=e150]:
+                    - link [ref=e152] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "blue_records333" [level=2] [ref=e153]
+                    - button [ref=e155] [cursor=pointer]:
+                      - img "Options" [ref=e157]
+                  - generic [ref=e161]: Blue Records
+                  - generic [ref=e163]:
+                    - generic [ref=e165]:
+                      - generic [ref=e166]: "69"
+                      - text: posts
+                    - link "397 followers" [ref=e168] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=e169]:
+                        - generic "397" [ref=e170]
+                        - text: followers
+                    - link "1,929 following" [ref=e172] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=e173]:
+                        - generic [ref=e174]: 1,929
+                        - text: following
+                - generic [ref=e175]:
+                  - generic [ref=e176]:
+                    - generic [ref=e177]: Musician/band
+                    - button [ref=e180] [cursor=pointer]:
+                      - generic [ref=e181]: Electronic Music Label QUITO ECUADOR 💙https://lnk.bio/Bluerecords333
+                    - generic [ref=e182]:
+                      - button "Link icon open.spotify.com/playlist/0fNlsqVWSohvMW8hkdHjcb?si=6STvkAJaQ76DXxtJYhUlxw&pi=cTc1-FsVSo26D and 4 more" [ref=e183] [cursor=pointer]:
+                        - generic [ref=e184]:
+                          - img "Link icon" [ref=e186]
+                          - generic [ref=e189]: open.spotify.com/playlist/0fNlsqVWSohvMW8hkdHjcb?si=6STvkAJaQ76DXxtJYhUlxw&pi=cTc1-FsVSo26D and 4 more
+                      - link "Threads blue_records333" [ref=e191] [cursor=pointer]:
+                        - /url: https://www.threads.com/@blue_records333?xmt=AQG0S19xMWz3lrGrn-fv2WDLetT3cSQKw9BnckXjCUN-Wns
+                        - img "Threads" [ref=e193]
+                        - generic [ref=e195]: blue_records333
+                  - link "Followed by r3tal__, davidramirez5053 + 26 more" [ref=e197] [cursor=pointer]:
+                    - /url: /blue_records333/followers/mutualOnly
+                    - generic [ref=e199]:
+                      - generic [ref=e201]:
+                        - button [ref=e202]:
+                          - link [ref=e203]
+                        - button [ref=e204]:
+                          - link [ref=e205]
+                        - button [ref=e206]:
+                          - link [ref=e207]
+                      - generic [ref=e208]: Followed by r3tal__, davidramirez5053 + 26 more
+            - generic [ref=e213]:
+              - status "Loading..." [ref=e215]
+              - status "Loading..." [ref=e217]
+            - menu [ref=e219]:
+              - generic [ref=e221]:
+                - generic [ref=e223]:
+                  - status "Loading..." [ref=e225]
+                  - status "Loading..." [ref=e227]
+                - generic [ref=e229]:
+                  - status "Loading..." [ref=e231]
+                  - status "Loading..." [ref=e233]
+                - generic [ref=e235]:
+                  - status "Loading..." [ref=e237]
+                  - status "Loading..." [ref=e239]
+                - generic [ref=e241]:
+                  - status "Loading..." [ref=e243]
+                  - status "Loading..." [ref=e245]
+                - generic [ref=e247]:
+                  - status "Loading..." [ref=e249]
+                  - status "Loading..." [ref=e251]
+                - generic [ref=e253]:
+                  - status "Loading..." [ref=e255]
+                  - status "Loading..." [ref=e257]
+                - generic [ref=e259]:
+                  - status "Loading..." [ref=e261]
+                  - status "Loading..." [ref=e263]
+          - generic [ref=e264]:
+            - tablist [ref=e265]:
+              - link [ref=e267] [cursor=pointer]:
+                - /url: /blue_records333/
+                - img "Posts" [ref=e269]
+              - link [ref=e280] [cursor=pointer]:
+                - /url: /blue_records333/reels/
+                - img "Reels" [ref=e282]
+              - link [ref=e285] [cursor=pointer]:
+                - /url: /blue_records333/reposts/
+                - img "Reposts" [ref=e287]
+              - link [ref=e290] [cursor=pointer]:
+                - /url: /blue_records333/tagged/
+                - img "Tagged" [ref=e292]
+            - tabpanel
+          - progressbar [ref=e296]:
+            - img "Loading..." [ref=e297]
+      - contentinfo [ref=e310]:
+        - generic [ref=e311]:
+          - generic [ref=e313]:
+            - link "Meta" [ref=e315] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=e318] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=e321] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=e324] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=e327] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=e330] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=e333] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=e336] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=e339] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=e342] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=e345] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=e348] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=e351] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=e354] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=e357] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=e359]:
+            - generic [ref=e360] [cursor=pointer]:
+              - generic [ref=e361]:
+                - generic [ref=e362]: English
+                - img "Down chevron icon" [ref=e365]
+              - combobox "Switch Display Language" [ref=e367]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=e368]: © 2026 Instagram from Meta
+  - button "Messages Messages" [ref=e371] [cursor=pointer]:
+    - generic [ref=e373]:
+      - img "Messages" [ref=e375]
+      - generic [ref=e378]: Messages

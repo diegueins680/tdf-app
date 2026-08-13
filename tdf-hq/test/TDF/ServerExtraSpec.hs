@@ -19,7 +19,7 @@ import Data.Time.Clock (addUTCTime, getCurrentTime)
 import Database.Persist hiding (Active)
 import Database.Persist.Sql (SqlBackend, SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool, runSqlite)
-import Servant (ServerError (errBody, errHTTPCode), ServerT, (:<|>) (..))
+import Servant (ServerError (errBody, errHTTPCode), ServerT, getResponse, (:<|>) (..))
 import Servant.Multipart
   ( FileData (..)
   , FromMultipart (fromMultipart)
@@ -33,7 +33,6 @@ import Web.PathPieces (fromPathPiece)
 import qualified TDF.Models as M
 import TDF.API.Bands (BandsAPI)
 import TDF.API.Inventory (AssetUploadForm (..), InventoryAPI, InventoryPublicAPI)
-import TDF.API.Pipelines (PipelinesAPI)
 import TDF.API.Rooms (RoomsAPI)
 import TDF.API.Payments (PaymentCreate (..))
 import TDF.API.Types
@@ -87,13 +86,11 @@ import TDF.API.Types
   , AssetUploadDTO
   , AssetUpdate (..)
   , Page
-  , PipelineCardCreate (..)
-  , PipelineCardDTO (..)
-  , PipelineCardUpdate (..)
   , RoomCreate (..)
   , RoomDTO
   , RoomUpdate (..)
   , SessionInputRow (SessionInputRow)
+  , ServiceCatalogEnvelopeDTO (..)
   )
 import TDF.Auth (AuthedUser (..), ModuleAccess (..), modulesForRoles)
 import TDF.Config (AppConfig (..))
@@ -129,12 +126,15 @@ import TDF.ServerExtra (
     normalizeAssetName,
     normalizeAssetNameUpdate,
     normalizeBandName,
+    normalizeOptionalTextField,
+    normalizePipelineCardTitle,
     normalizePublicQrCheckinRequest,
     normalizePublicQrCheckoutRequest,
     validateAssetPhotoUrl,
     validateAssetPhotoUrlUpdate,
     normalizeRoomName,
     normalizeRoomNameUpdate,
+    normalizeServiceCatalogLocale,
     normalizeMetaSenderLabelIds,
     validateSocialLimit,
     metaWebhookVerifyTokenCandidates,
@@ -144,6 +144,7 @@ import TDF.ServerExtra (
     validateMetaWebhookVerifyRequest,
     parseSocialBoolParam,
     parseSocialDirectionParam,
+    serviceCatalogResponse,
     resolveInstagramReplyContext,
     validateSocialReplyExternalId,
     socialReplyOutcomeFields,
@@ -160,13 +161,11 @@ import TDF.ServerExtra (
     validatePaymentConcept,
     validatePaymentReference,
     validatePaymentPeriod,
+    validatePipelineCardPatchIntent,
+    validatePipelineCardSortOrder,
     validatePositivePaymentReferenceId,
     validateOptionalPositivePaymentReferenceId,
     validatePaymentPartyFilter,
-    normalizeServiceCatalogName,
-    normalizeServiceCatalogNameUpdate,
-    serviceCatalogNamesConflict,
-    validateServiceCatalogId,
     persistMetaInbound,
     validatePaymentMethod,
     parseUTCTimeText,
@@ -185,12 +184,6 @@ import TDF.ServerExtra (
     validateCheckoutTargets,
     validateCheckoutDueAt,
     validateCheckoutTargetReferences,
-    validateServiceCatalogCurrency,
-    validateServiceCatalogCurrencyUpdate,
-    validateServiceCatalogBillingUnit,
-    validateServiceCatalogBillingUnitUpdate,
-    validateServiceCatalogTaxBps,
-    validateServiceCatalogTaxBpsUpdate,
     ensureModule,
     validateAssetCheckoutStatus,
     validateAssetStatusUpdate,
@@ -200,7 +193,6 @@ import TDF.ServerExtra (
     bandsServer,
     inventoryPublicServer,
     inventoryServer,
-    pipelinesServer,
     roomsServer,
  )
 
@@ -224,6 +216,28 @@ mkAssetUploadFile fileName =
 
 spec :: Spec
 spec = do
+  describe "versioned service catalog responses" $ do
+    let envelope = ServiceCatalogEnvelopeDTO 2 42 "es" []
+
+    it "normalizes supported English locales and falls back to Spanish" $ do
+      normalizeServiceCatalogLocale (Just " EN-us ") `shouldBe` "en"
+      normalizeServiceCatalogLocale (Just "fr") `shouldBe` "es"
+      normalizeServiceCatalogLocale Nothing `shouldBe` "es"
+
+    it "returns the revisioned envelope when the client cache is stale" $ do
+      result <- runExceptT (serviceCatalogResponse (Just "\"service-catalog-41\"") envelope)
+      fmap (sceRevision . getResponse) result `shouldBe` Right 42
+
+    it "returns 304 for matching strong, weak, and wildcard ETags" $ do
+      let assertNotModified supplied = do
+            result <- runExceptT (serviceCatalogResponse (Just supplied) envelope)
+            case result of
+              Left serverError -> errHTTPCode serverError `shouldBe` 304
+              Right _ -> expectationFailure "Expected matching service catalog ETag to return 304"
+      assertNotModified "\"service-catalog-42\""
+      assertNotModified "W/\"service-catalog-42\""
+      assertNotModified "*"
+
   describe "PaymentCreate FromJSON" $ do
     it "accepts canonical payment create fields for payment ingestion" $
       case A.eitherDecode
@@ -1779,297 +1793,35 @@ spec = do
         Right value ->
           expectationFailure ("Expected canonical duplicate band create to fail, got " <> show value)
 
-  describe "pipeline card write normalization" $ do
-    let pipelineType = "recording"
-        existingPipelineCardId = "00000000-0000-0000-0000-000000000801"
+  describe "canonical pipeline card write validation" $ do
+    it "trims canonical card text without persisting padded labels" $ do
+      case normalizePipelineCardTitle "  Demo Lead  " of
+        Left err -> expectationFailure ("Expected normalized title, got " <> show err)
+        Right value -> value `shouldBe` "Demo Lead"
+      normalizeOptionalTextField (Just "  Ada  ") `shouldBe` Just "Ada"
+      normalizeOptionalTextField (Just "   ") `shouldBe` Nothing
 
-    it "trims create fields before persistence so CRM cards do not store padded text" $ do
-      result <- runPipelineCreateHandler
-        (pure ())
-        pipelineType
-        (PipelineCardCreate "  Demo Lead  " (Just "  Ada  ") Nothing (Just 2) (Just "  Needs quote  "))
-      case result of
+    it "rejects blank or non-printing titles" $ do
+      let assertInvalid raw expected =
+            case normalizePipelineCardTitle raw of
+              Left err -> BL8.unpack (errBody err) `shouldContain` expected
+              Right value -> expectationFailure ("Expected invalid pipeline title, got " <> show value)
+      assertInvalid "   " "Pipeline card title is required"
+      assertInvalid "Demo\nLead" "Pipeline card title must not contain control characters"
+      assertInvalid ("Demo" <> T.singleton '\x200B' <> "Lead")
+        "Pipeline card title must not contain control characters or hidden formatting characters"
+
+    it "rejects negative ordering and empty canonical patches" $ do
+      case validatePipelineCardSortOrder (Just (-1)) of
         Left err ->
-          expectationFailure ("Expected trimmed pipeline card create to succeed, got " <> show err)
-        Right card -> do
-          pcTitle card `shouldBe` "Demo Lead"
-          pcArtist card `shouldBe` Just "Ada"
-          pcStage card `shouldBe` "Inquiry"
-          pcSortOrder card `shouldBe` 2
-          pcNotes card `shouldBe` Just "Needs quote"
-
-    it "maps blank optional patch text to explicit clears instead of persisting whitespace-only CRM metadata" $ do
-      existingKey <- case (fromPathPiece existingPipelineCardId :: Maybe (Key ME.PipelineCard)) of
-        Just key -> pure key
-        Nothing -> expectationFailure "invalid existing pipeline card fixture key" >> fail "unreachable"
-      result <- runPipelinePatchHandler
-        (do
-            now <- liftIO getCurrentTime
-            insertKey existingKey ME.PipelineCard
-              { ME.pipelineCardServiceKind = M.Recording
-              , ME.pipelineCardTitle = "Initial lead"
-              , ME.pipelineCardArtist = Just "Ada"
-              , ME.pipelineCardStage = "Inquiry"
-              , ME.pipelineCardSortOrder = 3
-              , ME.pipelineCardNotes = Just "Needs quote"
-              , ME.pipelineCardCreatedAt = now
-              , ME.pipelineCardUpdatedAt = now
-              })
-        pipelineType
-        existingPipelineCardId
-        (PipelineCardUpdate (Just "  Final Quote  ") (Just (Just "   ")) Nothing Nothing (Just (Just "   ")))
-      case result of
-        Left err ->
-          expectationFailure ("Expected pipeline card patch normalization to succeed, got " <> show err)
-        Right card -> do
-          pcTitle card `shouldBe` "Final Quote"
-          pcArtist card `shouldBe` Nothing
-          pcNotes card `shouldBe` Nothing
-          pcSortOrder card `shouldBe` 3
-
-    it "rejects blank titles on create and patch instead of creating unlabeled pipeline cards" $ do
-      createResult <- runPipelineCreateHandler
-        (pure ())
-        pipelineType
-        (PipelineCardCreate "   " Nothing Nothing Nothing Nothing)
-      case createResult of
-        Left err -> do
-          errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "Pipeline card title is required"
-        Right value ->
-          expectationFailure ("Expected blank pipeline card create title to fail, got " <> show value)
-
-      existingKey <- case (fromPathPiece existingPipelineCardId :: Maybe (Key ME.PipelineCard)) of
-        Just key -> pure key
-        Nothing -> expectationFailure "invalid existing pipeline card fixture key" >> fail "unreachable"
-      patchResult <- runPipelinePatchHandler
-        (do
-            now <- liftIO getCurrentTime
-            insertKey existingKey ME.PipelineCard
-              { ME.pipelineCardServiceKind = M.Recording
-              , ME.pipelineCardTitle = "Initial lead"
-              , ME.pipelineCardArtist = Nothing
-              , ME.pipelineCardStage = "Inquiry"
-              , ME.pipelineCardSortOrder = 0
-              , ME.pipelineCardNotes = Nothing
-              , ME.pipelineCardCreatedAt = now
-              , ME.pipelineCardUpdatedAt = now
-              })
-        pipelineType
-        existingPipelineCardId
-        (PipelineCardUpdate (Just "   ") Nothing Nothing Nothing Nothing)
-      case patchResult of
-        Left err -> do
-          errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "Pipeline card title is required"
-        Right value ->
-          expectationFailure ("Expected blank pipeline card patch title to fail, got " <> show value)
-
-    it "rejects non-printing titles on create and patch so CRM cards keep visible labels" $ do
-      createResult <- runPipelineCreateHandler
-        (pure ())
-        pipelineType
-        (PipelineCardCreate "Demo\nLead" Nothing Nothing Nothing Nothing)
-      case createResult of
-        Left err -> do
-          errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "Pipeline card title must not contain control characters"
-        Right value ->
-          expectationFailure ("Expected control-character pipeline card create title to fail, got " <> show value)
-
-      existingKey <- case (fromPathPiece existingPipelineCardId :: Maybe (Key ME.PipelineCard)) of
-        Just key -> pure key
-        Nothing -> expectationFailure "invalid existing pipeline card fixture key" >> fail "unreachable"
-      patchResult <- runPipelinePatchHandler
-        (do
-            now <- liftIO getCurrentTime
-            insertKey existingKey ME.PipelineCard
-              { ME.pipelineCardServiceKind = M.Recording
-              , ME.pipelineCardTitle = "Initial lead"
-              , ME.pipelineCardArtist = Nothing
-              , ME.pipelineCardStage = "Inquiry"
-              , ME.pipelineCardSortOrder = 0
-              , ME.pipelineCardNotes = Nothing
-              , ME.pipelineCardCreatedAt = now
-              , ME.pipelineCardUpdatedAt = now
-              })
-        pipelineType
-        existingPipelineCardId
-        (PipelineCardUpdate (Just "Final\tLead") Nothing Nothing Nothing Nothing)
-      case patchResult of
-        Left err -> do
-          errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "Pipeline card title must not contain control characters"
-        Right value ->
-          expectationFailure ("Expected control-character pipeline card patch title to fail, got " <> show value)
-
-      let hiddenFormat = T.singleton '\x200B'
-      hiddenCreateResult <- runPipelineCreateHandler
-        (pure ())
-        pipelineType
-        (PipelineCardCreate ("Demo" <> hiddenFormat <> "Lead") Nothing Nothing Nothing Nothing)
-      case hiddenCreateResult of
-        Left err -> do
-          errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err)
-            `shouldContain` "Pipeline card title must not contain control characters or hidden formatting characters"
-        Right value ->
-          expectationFailure ("Expected hidden-format pipeline card create title to fail, got " <> show value)
-
-      hiddenPatchResult <- runPipelinePatchHandler
-        (do
-            now <- liftIO getCurrentTime
-            insertKey existingKey ME.PipelineCard
-              { ME.pipelineCardServiceKind = M.Recording
-              , ME.pipelineCardTitle = "Initial lead"
-              , ME.pipelineCardArtist = Nothing
-              , ME.pipelineCardStage = "Inquiry"
-              , ME.pipelineCardSortOrder = 0
-              , ME.pipelineCardNotes = Nothing
-              , ME.pipelineCardCreatedAt = now
-              , ME.pipelineCardUpdatedAt = now
-              })
-        pipelineType
-        existingPipelineCardId
-        (PipelineCardUpdate (Just ("Final" <> hiddenFormat <> "Lead")) Nothing Nothing Nothing Nothing)
-      case hiddenPatchResult of
-        Left err -> do
-          errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err)
-            `shouldContain` "Pipeline card title must not contain control characters or hidden formatting characters"
-        Right value ->
-          expectationFailure ("Expected hidden-format pipeline card patch title to fail, got " <> show value)
-
-    it "rejects non-printing pipeline aliases before canonical matching can erase them" $ do
-      let hiddenFormat = T.singleton '\x200B'
-      typeResult <- runPipelineCreateHandler
-        (pure ())
-        ("rec" <> hiddenFormat <> "ording")
-        (PipelineCardCreate "Demo Lead" Nothing Nothing Nothing Nothing)
-      case typeResult of
-        Left err -> do
-          errHTTPCode err `shouldBe` 404
-          BL8.unpack (errBody err) `shouldContain` "Unknown pipeline type"
-        Right value ->
-          expectationFailure
-            ("Expected hidden-format pipeline type to fail, got " <> show value)
-
-      createResult <- runPipelineCreateHandler
-        (pure ())
-        pipelineType
-        (PipelineCardCreate
-          "Demo Lead"
-          Nothing
-          (Just ("In" <> hiddenFormat <> "quiry"))
-          Nothing
-          Nothing)
-      case createResult of
-        Left err -> do
-          errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "Invalid stage for pipeline"
-        Right value ->
-          expectationFailure
-            ("Expected hidden-format pipeline card create stage to fail, got " <> show value)
-
-      existingKey <- case (fromPathPiece existingPipelineCardId :: Maybe (Key ME.PipelineCard)) of
-        Just key -> pure key
-        Nothing -> expectationFailure "invalid existing pipeline card fixture key" >> fail "unreachable"
-      patchResult <- runPipelinePatchHandler
-        (do
-            now <- liftIO getCurrentTime
-            insertKey existingKey ME.PipelineCard
-              { ME.pipelineCardServiceKind = M.Recording
-              , ME.pipelineCardTitle = "Initial lead"
-              , ME.pipelineCardArtist = Nothing
-              , ME.pipelineCardStage = "Inquiry"
-              , ME.pipelineCardSortOrder = 0
-              , ME.pipelineCardNotes = Nothing
-              , ME.pipelineCardCreatedAt = now
-              , ME.pipelineCardUpdatedAt = now
-              })
-        pipelineType
-        existingPipelineCardId
-        (PipelineCardUpdate
-          Nothing
-          Nothing
-          (Just ("In" <> hiddenFormat <> " Session"))
-          Nothing
-          Nothing)
-      case patchResult of
-        Left err -> do
-          errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "Invalid stage for pipeline"
-        Right value ->
-          expectationFailure
-            ("Expected hidden-format pipeline card patch stage to fail, got " <> show value)
-
-    it "rejects negative sort orders before Kanban ordering is persisted" $ do
-      createResult <- runPipelineCreateHandler
-        (pure ())
-        pipelineType
-        (PipelineCardCreate "Demo Lead" Nothing Nothing (Just (-1)) Nothing)
-      case createResult of
-        Left err -> do
-          errHTTPCode err `shouldBe` 400
           BL8.unpack (errBody err)
             `shouldContain` "Pipeline card sortOrder must be greater than or equal to 0"
-        Right value ->
-          expectationFailure ("Expected negative pipeline card create sortOrder to fail, got " <> show value)
-
-      existingKey <- case (fromPathPiece existingPipelineCardId :: Maybe (Key ME.PipelineCard)) of
-        Just key -> pure key
-        Nothing -> expectationFailure "invalid existing pipeline card fixture key" >> fail "unreachable"
-      patchResult <- runPipelinePatchHandler
-        (do
-            now <- liftIO getCurrentTime
-            insertKey existingKey ME.PipelineCard
-              { ME.pipelineCardServiceKind = M.Recording
-              , ME.pipelineCardTitle = "Initial lead"
-              , ME.pipelineCardArtist = Nothing
-              , ME.pipelineCardStage = "Inquiry"
-              , ME.pipelineCardSortOrder = 0
-              , ME.pipelineCardNotes = Nothing
-              , ME.pipelineCardCreatedAt = now
-              , ME.pipelineCardUpdatedAt = now
-              })
-        pipelineType
-        existingPipelineCardId
-        (PipelineCardUpdate Nothing Nothing Nothing (Just (-1)) Nothing)
-      case patchResult of
-        Left err -> do
-          errHTTPCode err `shouldBe` 400
+        Right value -> expectationFailure ("Expected negative sort order to fail, got " <> show value)
+      case validatePipelineCardPatchIntent Nothing Nothing Nothing Nothing Nothing of
+        Left err ->
           BL8.unpack (errBody err)
-            `shouldContain` "Pipeline card sortOrder must be greater than or equal to 0"
-        Right value ->
-          expectationFailure ("Expected negative pipeline card patch sortOrder to fail, got " <> show value)
-
-    it "rejects empty patch payloads instead of silently returning unchanged pipeline cards" $ do
-      existingKey <- case (fromPathPiece existingPipelineCardId :: Maybe (Key ME.PipelineCard)) of
-        Just key -> pure key
-        Nothing -> expectationFailure "invalid existing pipeline card fixture key" >> fail "unreachable"
-      patchResult <- runPipelinePatchHandler
-        (do
-            now <- liftIO getCurrentTime
-            insertKey existingKey ME.PipelineCard
-              { ME.pipelineCardServiceKind = M.Recording
-              , ME.pipelineCardTitle = "Initial lead"
-              , ME.pipelineCardArtist = Just "Ada"
-              , ME.pipelineCardStage = "Inquiry"
-              , ME.pipelineCardSortOrder = 1
-              , ME.pipelineCardNotes = Just "Needs quote"
-              , ME.pipelineCardCreatedAt = now
-              , ME.pipelineCardUpdatedAt = now
-              })
-        pipelineType
-        existingPipelineCardId
-        (PipelineCardUpdate Nothing Nothing Nothing Nothing Nothing)
-      case patchResult of
-        Left err -> do
-          errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "Pipeline card patch requires at least one field to update"
-        Right value ->
-          expectationFailure ("Expected empty pipeline card patch to fail, got " <> show value)
-
+            `shouldContain` "Pipeline card patch requires at least one field to update"
+        Right () -> expectationFailure "Expected empty pipeline patch to fail"
   describe "validateAssetStatusUpdate" $ do
     it "accepts supported asset status variants" $ do
       validateAssetStatusUpdate (Just " booked ") `shouldBe` Right (Just Booked)
@@ -5365,7 +5117,8 @@ spec = do
           SessionInputRow
             1
             (Just "Lead vocal")
-            (Just "Voice")
+            (Just "00000000-0000-0000-0000-000000000042")
+            (Just "Voz")
             Nothing
             Nothing
             Nothing
@@ -6216,13 +5969,13 @@ spec = do
         `shouldBe` ("sent", Nothing)
 
   describe "ensureModule" $ do
-    it "rejects stale role/module grants before backend handlers run" $ do
+    it "honors persisted module grants and rejects missing modules or duplicate roles" $ do
       let missingModuleUser =
             inventoryUser
               { auRoles = [M.Fan]
               , auModules = modulesForRoles [M.Fan]
               }
-          staleModuleUser =
+          independentlyGrantedUser =
             inventoryUser
               { auRoles = [M.Fan, M.Customer]
               , auModules = modulesForRoles [M.Admin]
@@ -6243,162 +5996,8 @@ spec = do
 
       runExceptT (ensureModule ModuleScheduling inventoryUser) `shouldReturn` Right ()
       assertRejected "Missing required module access" missingModuleUser
-      assertRejected "Module grants must match roles" staleModuleUser
+      runExceptT (ensureModule ModuleScheduling independentlyGrantedUser) `shouldReturn` Right ()
       assertRejected "Role grants must be unique" duplicatedRoleUser
-
-  describe "normalizeServiceCatalogName" $ do
-    it "normalizes bounded service catalog names before create/update persistence" $ do
-      normalizeServiceCatalogName "  Mezcla Full  " `shouldBe` Right "Mezcla Full"
-      normalizeServiceCatalogNameUpdate Nothing `shouldBe` Right Nothing
-      normalizeServiceCatalogNameUpdate (Just "  Mezcla Full  ") `shouldBe` Right (Just "Mezcla Full")
-
-    it "treats case-only or spacing-only service name variants as duplicate catalog entries" $ do
-      serviceCatalogNamesConflict "  Mezcla   Full  " "mezcla full" `shouldBe` True
-      serviceCatalogNamesConflict "PODCAST" "podcast" `shouldBe` True
-      serviceCatalogNamesConflict "Mezcla Full" "Mastering Full" `shouldBe` False
-
-    it "rejects malformed service catalog names before persistence" $ do
-      let assertInvalid expected result = case result of
-            Left err -> do
-              errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` expected
-            Right value ->
-              expectationFailure ("Expected invalid service catalog name error, got " <> show value)
-      assertInvalid "Nombre requerido" (normalizeServiceCatalogName "   ")
-      assertInvalid
-        "160 caracteres o menos"
-        (normalizeServiceCatalogName (T.replicate 161 "a"))
-      assertInvalid
-        "caracteres de control"
-        (normalizeServiceCatalogName "Podcast\nLive")
-      assertInvalid
-        "marcas de formato ocultas"
-        (normalizeServiceCatalogName ("Podcast" <> "\x202E" <> "Live"))
-      assertInvalid "Nombre requerido" (normalizeServiceCatalogNameUpdate (Just "   "))
-      assertInvalid
-        "caracteres de control"
-        (normalizeServiceCatalogNameUpdate (Just "Podcast\tLive"))
-
-  describe "validateServiceCatalogId" $ do
-    it "rejects non-positive service catalog ids before admin writes fall through to 404s" $ do
-      validateServiceCatalogId 1 `shouldBe` Right 1
-      let assertInvalid result = case result of
-            Left err -> do
-              errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` "positive integer"
-            Right value ->
-              expectationFailure ("Expected invalid service catalog id error, got " <> show value)
-      assertInvalid (validateServiceCatalogId 0)
-      assertInvalid (validateServiceCatalogId (-7))
-
-  describe "validateServiceCatalogCurrency" $ do
-    it "defaults omitted values to USD and normalizes supported ISO codes" $ do
-      validateServiceCatalogCurrency Nothing `shouldSatisfy` isLeft
-      validateServiceCatalogCurrency (Just " usd ") `shouldBe` Right "USD"
-      validateServiceCatalogCurrency (Just "eur") `shouldBe` Right "EUR"
-
-    it "rejects blank or malformed currency codes instead of storing ambiguous data" $ do
-      let assertInvalid result = case result of
-            Left err -> do
-              errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` "código ISO de 3 letras"
-            Right value ->
-              expectationFailure ("Expected invalid currency error, got " <> show value)
-      assertInvalid (validateServiceCatalogCurrency (Just "   "))
-      assertInvalid (validateServiceCatalogCurrency (Just "usdollars"))
-      assertInvalid (validateServiceCatalogCurrency (Just "12$"))
-
-  describe "validateServiceCatalogCurrencyUpdate" $ do
-    it "preserves omitted updates and normalizes meaningful ones" $ do
-      validateServiceCatalogCurrencyUpdate Nothing `shouldBe` Right Nothing
-      validateServiceCatalogCurrencyUpdate (Just " gbp ") `shouldBe` Right (Just "GBP")
-
-    it "rejects explicit blank updates instead of silently resetting the currency" $
-      case validateServiceCatalogCurrencyUpdate (Just "   ") of
-        Left err -> do
-          errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "código ISO de 3 letras"
-        Right value ->
-          expectationFailure ("Expected invalid currency update error, got " <> show value)
-
-  describe "validateServiceCatalogBillingUnit" $ do
-    it "normalizes bounded billing units and treats omitted create values as empty" $ do
-      validateServiceCatalogBillingUnit Nothing `shouldBe` Right Nothing
-      validateServiceCatalogBillingUnit (Just "   ") `shouldBe` Right Nothing
-      validateServiceCatalogBillingUnit (Just "  por sesión  ")
-        `shouldBe` Right (Just "por sesión")
-
-    it "rejects malformed billing units before service catalog writes persist opaque labels" $ do
-      let assertInvalid expected result = case result of
-            Left err -> do
-              errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` expected
-            Right value ->
-              expectationFailure ("Expected invalid billing unit error, got " <> show value)
-      assertInvalid
-        "80 caracteres o menos"
-        (validateServiceCatalogBillingUnit (Just (T.replicate 81 "a")))
-      assertInvalid
-        "caracteres de control"
-        (validateServiceCatalogBillingUnit (Just "sesión\nextra"))
-      assertInvalid
-        "marcas de formato ocultas"
-        (validateServiceCatalogBillingUnit (Just ("sesión" <> "\x200B" <> "extra")))
-
-  describe "validateServiceCatalogBillingUnitUpdate" $ do
-    it "preserves omitted and explicit-null updates while trimming meaningful billing units" $ do
-      validateServiceCatalogBillingUnitUpdate Nothing `shouldBe` Right Nothing
-      validateServiceCatalogBillingUnitUpdate (Just Nothing) `shouldBe` Right (Just Nothing)
-      validateServiceCatalogBillingUnitUpdate (Just (Just "  por hora  "))
-        `shouldBe` Right (Just (Just "por hora"))
-
-    it "rejects blank or malformed updates instead of silently clearing billing units" $ do
-      let assertInvalid expected result = case result of
-            Left err -> do
-              errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` expected
-            Right value ->
-              expectationFailure ("Expected invalid billing unit update error, got " <> show value)
-      assertInvalid
-        "debe omitirse, ser null, o contener texto"
-        (validateServiceCatalogBillingUnitUpdate (Just (Just "   ")))
-      assertInvalid
-        "caracteres de control"
-        (validateServiceCatalogBillingUnitUpdate (Just (Just "por\nhora")))
-      assertInvalid
-        "marcas de formato ocultas"
-        (validateServiceCatalogBillingUnitUpdate (Just (Just ("por" <> "\x202E" <> "hora"))))
-
-  describe "validateServiceCatalogTaxBps" $ do
-    it "accepts omitted values and basis points within a 0..10000 percentage range" $ do
-      validateServiceCatalogTaxBps Nothing `shouldBe` Right Nothing
-      validateServiceCatalogTaxBps (Just 0) `shouldBe` Right (Just 0)
-      validateServiceCatalogTaxBps (Just 850) `shouldBe` Right (Just 850)
-      validateServiceCatalogTaxBps (Just 10000) `shouldBe` Right (Just 10000)
-
-    it "rejects negative or oversized tax percentages before they can be stored" $ do
-      let assertInvalid result = case result of
-            Left err -> do
-              errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` "entre 0 y 10000"
-            Right value ->
-              expectationFailure ("Expected invalid tax basis points error, got " <> show value)
-      assertInvalid (validateServiceCatalogTaxBps (Just (-1)))
-      assertInvalid (validateServiceCatalogTaxBps (Just 10001))
-
-  describe "validateServiceCatalogTaxBpsUpdate" $ do
-    it "preserves omitted and explicit-null updates" $ do
-      validateServiceCatalogTaxBpsUpdate Nothing `shouldBe` Right Nothing
-      validateServiceCatalogTaxBpsUpdate (Just Nothing) `shouldBe` Right (Just Nothing)
-      validateServiceCatalogTaxBpsUpdate (Just (Just 1200)) `shouldBe` Right (Just (Just 1200))
-
-    it "rejects invalid update values instead of storing impossible tax percentages" $
-      case validateServiceCatalogTaxBpsUpdate (Just (Just 15000)) of
-        Left err -> do
-          errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "entre 0 y 10000"
-        Right value ->
-          expectationFailure ("Expected invalid service catalog tax update error, got " <> show value)
 
   describe "Meta inbox deletion handling" $ do
     it "uses the deterministic external id fallback when Meta sends a blank message id" $ do
@@ -6980,41 +6579,6 @@ runBandCreateHandler setup req =
             }
     liftIO $ runExceptT (runReaderT (createBandHandlerFor inventoryUser req) env)
 
-runPipelineCreateHandler
-  :: SqlPersistT IO ()
-  -> Text
-  -> PipelineCardCreate
-  -> IO (Either ServerError PipelineCardDTO)
-runPipelineCreateHandler setup rawType req =
-  runStdoutLoggingT $ do
-    pool <- createSqlitePool ":memory:" 1
-    liftIO $ runSqlPool initializePipelineSchema pool
-    liftIO $ runSqlPool setup pool
-    let env =
-          Env
-            { envPool = pool
-            , envConfig = error "envConfig should be unused in pipeline tests"
-            }
-    liftIO $ runExceptT (runReaderT (createPipelineHandlerFor inventoryUser rawType req) env)
-
-runPipelinePatchHandler
-  :: SqlPersistT IO ()
-  -> Text
-  -> Text
-  -> PipelineCardUpdate
-  -> IO (Either ServerError PipelineCardDTO)
-runPipelinePatchHandler setup rawType rawId req =
-  runStdoutLoggingT $ do
-    pool <- createSqlitePool ":memory:" 1
-    liftIO $ runSqlPool initializePipelineSchema pool
-    liftIO $ runSqlPool setup pool
-    let env =
-          Env
-            { envPool = pool
-            , envConfig = error "envConfig should be unused in pipeline tests"
-            }
-    liftIO $ runExceptT (runReaderT (patchPipelineHandlerFor inventoryUser rawType rawId req) env)
-
 inventoryUser :: AuthedUser
 inventoryUser =
   AuthedUser
@@ -7233,29 +6797,7 @@ createBandHandlerFor user =
       :<|> _getBand ->
           createBand
 
-createPipelineHandlerFor :: AuthedUser -> Text -> PipelineCardCreate -> InventoryTestM PipelineCardDTO
-createPipelineHandlerFor user rawType =
-  case (pipelinesServer user :: ServerT PipelinesAPI InventoryTestM) of
-    pipelineRoutes ->
-      case pipelineRoutes rawType of
-        _listCards
-          :<|> _listStages
-          :<|> createCard
-          :<|> _cardServer ->
-              createCard
 
-patchPipelineHandlerFor :: AuthedUser -> Text -> Text -> PipelineCardUpdate -> InventoryTestM PipelineCardDTO
-patchPipelineHandlerFor user rawType rawId =
-  case (pipelinesServer user :: ServerT PipelinesAPI InventoryTestM) of
-    pipelineRoutes ->
-      case pipelineRoutes rawType of
-        _listCards
-          :<|> _listStages
-          :<|> _createCard
-          :<|> cardRoutes ->
-              case cardRoutes rawId of
-                _getCard :<|> patchCard :<|> _deleteCard ->
-                  patchCard
 
 initializeMetaInboxSchema :: SqlPersistT (NoLoggingT (ResourceT IO)) ()
 initializeMetaInboxSchema = do
@@ -7423,6 +6965,8 @@ initializeBandSchema = do
         \\"emergency_contact\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL,\
         \\"stripe_customer_id\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
         \)"
         []
@@ -7466,22 +7010,6 @@ initializeRoomSchema = do
         \)"
         []
 
-initializePipelineSchema :: SqlPersistT IO ()
-initializePipelineSchema = do
-    rawExecute "PRAGMA foreign_keys = ON" []
-    rawExecute
-        "CREATE TABLE IF NOT EXISTS \"pipeline_card\" (\
-        \\"id\" uuid PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-' || '4' || substr(hex(randomblob(2)), 2) || '-' || substr('89ab', (abs(random()) % 4) + 1, 1) || substr(hex(randomblob(2)), 2) || '-' || hex(randomblob(6)))),\
-        \\"service_kind\" VARCHAR NOT NULL,\
-        \\"title\" VARCHAR NOT NULL,\
-        \\"artist\" VARCHAR NULL,\
-        \\"stage\" VARCHAR NOT NULL,\
-        \\"sort_order\" INTEGER NOT NULL,\
-        \\"notes\" VARCHAR NULL,\
-        \\"created_at\" TIMESTAMP NOT NULL,\
-        \\"updated_at\" TIMESTAMP NOT NULL\
-        \)"
-        []
 
 initializePaymentValidationSchema :: SqlPersistT (NoLoggingT (ResourceT IO)) ()
 initializePaymentValidationSchema = do
@@ -7500,6 +7028,8 @@ initializePaymentValidationSchema = do
         \\"emergency_contact\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL,\
         \\"stripe_customer_id\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
         \)"
         []
@@ -7522,6 +7052,7 @@ initializePaymentValidationSchema = do
         \\"customer_id\" INTEGER NOT NULL REFERENCES \"party\" ON DELETE RESTRICT ON UPDATE RESTRICT,\
         \\"artist_id\" INTEGER NULL REFERENCES \"party\" ON DELETE RESTRICT ON UPDATE RESTRICT,\
         \\"catalog_id\" INTEGER NOT NULL REFERENCES \"service_catalog\" ON DELETE RESTRICT ON UPDATE RESTRICT,\
+        \\"service_offering_id\" VARCHAR NULL,\
         \\"service_kind\" VARCHAR NOT NULL,\
         \\"title\" VARCHAR NULL,\
         \\"description\" VARCHAR NULL,\
@@ -7670,6 +7201,8 @@ seedPaymentReferenceFixture now = do
     , M.partyEmergencyContact = Nothing
     , M.partyNotes = Nothing
     , M.partyStripeCustomerId = Nothing
+    , M.partyCountryCode = Nothing
+    , M.partyCountryId = Nothing
     , M.partyCreatedAt = now
     }
   otherPartyId <- insert M.Party
@@ -7684,6 +7217,8 @@ seedPaymentReferenceFixture now = do
     , M.partyEmergencyContact = Nothing
     , M.partyNotes = Nothing
     , M.partyStripeCustomerId = Nothing
+    , M.partyCountryCode = Nothing
+    , M.partyCountryId = Nothing
     , M.partyCreatedAt = now
     }
   catalogId <- insert M.ServiceCatalog
@@ -7708,6 +7243,7 @@ seedPaymentReferenceFixture now = do
     , M.serviceOrderQuoteSentAt = Nothing
     , M.serviceOrderScheduledStart = Nothing
     , M.serviceOrderScheduledEnd = Nothing
+    , M.serviceOrderServiceOfferingId = Nothing
     , M.serviceOrderCreatedAt = now
     }
   samePartyOtherOrderId <- insert M.ServiceOrder
@@ -7722,6 +7258,7 @@ seedPaymentReferenceFixture now = do
     , M.serviceOrderQuoteSentAt = Nothing
     , M.serviceOrderScheduledStart = Nothing
     , M.serviceOrderScheduledEnd = Nothing
+    , M.serviceOrderServiceOfferingId = Nothing
     , M.serviceOrderCreatedAt = now
     }
   otherOrderId <- insert M.ServiceOrder
@@ -7736,6 +7273,7 @@ seedPaymentReferenceFixture now = do
     , M.serviceOrderQuoteSentAt = Nothing
     , M.serviceOrderScheduledStart = Nothing
     , M.serviceOrderScheduledEnd = Nothing
+    , M.serviceOrderServiceOfferingId = Nothing
     , M.serviceOrderCreatedAt = now
     }
   let today = utctDay now
