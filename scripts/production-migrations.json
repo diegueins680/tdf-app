@@ -90,6 +90,11 @@
       "id": "2026-08-13_unified_checkout_core",
       "path": "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
       "introducedBy": "c79d22d3e150d9a492ee5eafad7e3052426e0c2b"
+    },
+    {
+      "id": "2026-08-13_distribution_accounting_core",
+      "path": "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
+      "introducedBy": "9c4a621e62073d263989fde9bf51ef5b16107e55"
     }
   ]
 }
