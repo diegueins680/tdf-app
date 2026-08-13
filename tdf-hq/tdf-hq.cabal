@@ -52,6 +52,7 @@ executable tdf-hq-exe
     TDF.Auth
     TDF.CampaignAutomation
     TDF.Config
+    TDF.Commerce.StateMachine
     TDF.Cron
     TDF.Cors
     TDF.DB
@@ -252,6 +253,7 @@ test-suite tdf-hq-test
     TDF.Auth
     TDF.CampaignAutomation
     TDF.Config
+    TDF.Commerce.StateMachine
     TDF.Cors
     TDF.Cron
     TDF.Courses.Production

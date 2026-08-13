@@ -99,6 +99,7 @@ import TDF.CampaignAutomation
       validateCampaignAutomationDailyLimit,
       validateCampaignAutomationStatus )
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
+import qualified TDF.Commerce.StateMachine as Commerce
 import TDF.Email (resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
@@ -756,6 +757,57 @@ main = hspec $ do
             ServiceStorefront.validateIdempotencyKey Nothing `shouldSatisfy` isLeft
             ServiceStorefront.validateIdempotencyKey (Just "too-short") `shouldSatisfy` isLeft
             ServiceStorefront.validateIdempotencyKey (Just "invalid key with spaces") `shouldSatisfy` isLeft
+
+    describe "provider-neutral checkout state machine" $ do
+        let verifiedPayment = Commerce.PaymentVerification
+                { Commerce.pvCheckoutEnvironment = Commerce.ProviderProduction
+                , Commerce.pvEventEnvironment = Commerce.ProviderProduction
+                , Commerce.pvEvidence = Commerce.SignatureVerifiedWebhook
+                , Commerce.pvExpectedAmountMinor = 12500
+                , Commerce.pvActualAmountMinor = 12500
+                , Commerce.pvExpectedCurrency = "USD"
+                , Commerce.pvActualCurrency = "usd"
+                , Commerce.pvExpectedMerchant = "tdf-merchant"
+                , Commerce.pvActualMerchant = "tdf-merchant"
+                , Commerce.pvExpectedOrder = "order-123"
+                , Commerce.pvActualOrder = "order-123"
+                , Commerce.pvExpectedResource = "/v1/checkouts/resource-123/payment"
+                , Commerce.pvActualResource = "/v1/checkouts/resource-123/payment"
+                }
+
+        it "allows payment only from authoritative, fully bound evidence" $ do
+            Commerce.transitionCheckout
+              Commerce.CheckoutProcessing
+              (Commerce.CheckoutPaymentVerified verifiedPayment)
+              `shouldBe` Right Commerce.CheckoutPaid
+
+        it "never treats a browser return or mocked evidence as payment" $
+            QC.property $ \useBrowserReturn ->
+                let evidence = if useBrowserReturn then Commerce.BrowserReturnOnly else Commerce.MockedEvidence
+                    untrusted = verifiedPayment { Commerce.pvEvidence = evidence }
+                in isLeft (Commerce.transitionCheckout Commerce.CheckoutProcessing (Commerce.CheckoutPaymentVerified untrusted))
+
+        it "rejects a sandbox event for a production checkout" $ do
+            let sandboxEvent = verifiedPayment { Commerce.pvEventEnvironment = Commerce.ProviderSandbox }
+            Commerce.transitionCheckout
+              Commerce.CheckoutProcessing
+              (Commerce.CheckoutPaymentVerified sandboxEvent)
+              `shouldSatisfy` isLeft
+
+        it "rejects every provider amount mutation" $
+            QC.property $ \(QC.NonZero delta) ->
+                let tampered = verifiedPayment { Commerce.pvActualAmountMinor = 12500 + delta }
+                in isLeft (Commerce.verifyPaymentBinding tampered)
+
+        it "keeps fulfillment out of the payment state machine" $ do
+            Commerce.transitionCheckout Commerce.CheckoutPaid Commerce.CheckoutProviderProcessing
+              `shouldSatisfy` isLeft
+
+        it "balances immutable ledger entries independently per currency" $ do
+            Commerce.ledgerBalances [("USD", 10000), ("usd", -10000), ("EUR", 8000), ("EUR", -8000)]
+              `shouldBe` True
+            Commerce.ledgerBalances [("USD", 10000), ("EUR", -10000)]
+              `shouldBe` False
 
     describe "central feature registry authorization" $ do
         let modulesFor roleValues = map moduleName (Set.toList (modulesForRoles roleValues))
