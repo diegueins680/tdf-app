@@ -164,6 +164,7 @@ export function renderProtectedRoutes() {
           <Route path="tracks" element={<LabelTracksPage />} />
           <Route path="ddex" element={<DdexInboxPage />} />
           <Route path="ddex/documents/:id" element={<DdexDocumentPage />} />
+          <Route path="ddex/documents/:id/import" element={<DdexDocumentPage />} />
           <Route path="ddex/partners" element={<PartnerManagementPage />} />
           <Route index element={<Navigate to="artistas" replace />} />
         </Route>
