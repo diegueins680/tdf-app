@@ -25,17 +25,29 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Catalogs, type CatalogDraft, type CatalogItem, type CatalogRevision } from '../api/catalogs';
 import PageShell from '../components/PageShell';
 
-const catalogConfiguration = (catalogCode: string | undefined) => catalogCode === 'content-reaction-types'
-  ? {
+const catalogConfiguration = (catalogCode: string | undefined) => {
+  if (catalogCode === 'content-reaction-types') return {
     code: 'content-reaction-types',
     title: 'Reacciones de contenido',
     subtitle: 'Opciones persistidas para publicaciones y recuerdos del club de fans.',
-  }
-  : {
+    itemLabel: 'tipo de reacción',
+    requiresSymbol: true,
+  };
+  if (catalogCode === 'creator-badge-types') return {
+    code: 'creator-badge-types',
+    title: 'Insignias de creadores',
+    subtitle: 'Insignias bilingües persistidas que se asignan dentro de clubes de fans.',
+    itemLabel: 'tipo de insignia',
+    requiresSymbol: false,
+  };
+  return {
     code: 'reaction-types',
     title: 'Reacciones de momentos',
     subtitle: 'Opciones persistidas para momentos de eventos.',
+    itemLabel: 'tipo de reacción',
+    requiresSymbol: true,
   };
+};
 
 export interface ReactionTypeForm {
   entityId?: string;
@@ -80,7 +92,7 @@ export const buildReactionTypeDraft = (form: ReactionTypeForm): CatalogDraft => 
   searchAliasesEs: [],
   searchAliasesEn: [],
   sortOrder: form.sortOrder,
-  displaySymbol: form.displaySymbol.trim(),
+  ...(form.displaySymbol.trim() ? { displaySymbol: form.displaySymbol.trim() } : {}),
   reason: form.reason.trim(),
   sourcePlatform: 'web-admin',
   correlationId: correlationId(),
@@ -161,8 +173,7 @@ export default function ReactionTypesCatalogPage({ catalogCode }: { catalogCode?
 
   const formValid = Boolean(
     form?.code.trim()
-      && form.displaySymbol.trim()
-      && form.displaySymbol.trim().length <= 16
+      && (!catalog.requiresSymbol || (form.displaySymbol.trim() && form.displaySymbol.trim().length <= 16))
       && form.nameEs.trim()
       && form.nameEn.trim()
       && Number.isSafeInteger(form.sortOrder)
@@ -186,7 +197,7 @@ export default function ReactionTypesCatalogPage({ catalogCode }: { catalogCode?
           disabled={queryFailed}
           onClick={() => setForm({ ...emptyForm(), sortOrder: nextSortOrder })}
         >
-          Crear tipo de reacción
+          Crear {catalog.itemLabel}
         </Button>
       </Stack>
 
@@ -217,10 +228,10 @@ export default function ReactionTypesCatalogPage({ catalogCode }: { catalogCode?
             <Alert severity="info">No hay tipos de reacción para este filtro.</Alert>
           ) : (
             <TableContainer sx={{ overflowX: 'auto' }}>
-              <Table size="small" aria-label="Tipos de reacción administrables">
+              <Table size="small" aria-label={`${catalog.title}: elementos administrables`}>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Símbolo</TableCell>
+                    {catalog.requiresSymbol && <TableCell>Símbolo</TableCell>}
                     <TableCell>Nombre / Name</TableCell>
                     <TableCell>Orden</TableCell>
                     <TableCell>Estado</TableCell>
@@ -230,7 +241,7 @@ export default function ReactionTypesCatalogPage({ catalogCode }: { catalogCode?
                 <TableBody>
                   {items.map((item) => (
                     <TableRow key={item.id} hover>
-                      <TableCell><Typography fontSize="1.5rem">{item.displaySymbol}</Typography></TableCell>
+                      {catalog.requiresSymbol && <TableCell><Typography fontSize="1.5rem">{item.displaySymbol}</Typography></TableCell>}
                       <TableCell>
                         <Typography variant="body2">{item.nameEs} / {item.nameEn}</Typography>
                         <Typography variant="caption" color="text.secondary">{item.code} · {item.id}</Typography>
@@ -312,13 +323,13 @@ export default function ReactionTypesCatalogPage({ catalogCode }: { catalogCode?
       </Card>
 
       <Dialog open={Boolean(form)} onClose={() => setForm(null)} fullWidth maxWidth="md">
-        <DialogTitle>{form?.entityId ? 'Crear revisión de reacción' : 'Crear tipo de reacción'}</DialogTitle>
+        <DialogTitle>{form?.entityId ? `Crear revisión de ${catalog.itemLabel}` : `Crear ${catalog.itemLabel}`}</DialogTitle>
         <DialogContent>
           {form && (
             <Stack spacing={2} mt={1}>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
                 <TextField required fullWidth disabled={Boolean(form.entityId)} label="Código estable" value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value })} />
-                <TextField required fullWidth label="Símbolo o emoji" value={form.displaySymbol} onChange={(event) => setForm({ ...form, displaySymbol: event.target.value })} inputProps={{ maxLength: 16 }} />
+                {catalog.requiresSymbol && <TextField required fullWidth label="Símbolo o emoji" value={form.displaySymbol} onChange={(event) => setForm({ ...form, displaySymbol: event.target.value })} inputProps={{ maxLength: 16 }} />}
                 <TextField required fullWidth type="number" label="Orden manual" value={form.sortOrder} onChange={(event) => setForm({ ...form, sortOrder: Number(event.target.value) })} inputProps={{ min: 0, step: 1 }} />
               </Stack>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>

@@ -1087,8 +1087,20 @@ fanClubSecureArtistHandlers user artistId =
             let ranked = zip [1..] $ sortOn (Down . snd) (Map.toList reactionsByAuthor)
             forM (take 10 ranked) $ \(rank, (partyId, totalReactions)) -> do
               author <- getAuthorDTO partyId
-              badges <- selectList [M.CreatorBadgePartyId ==. partyId, M.CreatorBadgeClubId ==. cid] []
-              let badgeTypes = map (creatorBadgeBadgeType . entityVal) badges
+              badges <- selectList [M.CreatorBadgePartyId ==. partyId, M.CreatorBadgeClubId ==. cid] [Asc M.CreatorBadgeAwardedAt]
+              resolvedBadges <- forM badges $ \(Entity _ badge) -> do
+                badgeType <- get (Catalog.CreatorBadgeTypeKey (creatorBadgeBadgeTypeId badge)) >>= maybe
+                  (liftIO . ioError . userError $ "Creator badge references a missing canonical badge type")
+                  pure
+                pure (badgeType, CreatorBadgeDTO
+                  { cbBadgeTypeId = creatorBadgeBadgeTypeId badge
+                  , cbCode = Catalog.creatorBadgeTypeCode badgeType
+                  , cbNameEs = Catalog.creatorBadgeTypeNameEs badgeType
+                  , cbNameEn = Catalog.creatorBadgeTypeNameEn badgeType
+                  , cbAwardedAt = creatorBadgeAwardedAt badge
+                  , cbExpiresAt = creatorBadgeExpiresAt badge
+                  })
+              let badgeTypes = map snd (sortOn (Catalog.creatorBadgeTypeSortOrder . fst) resolvedBadges)
               pure LeaderboardEntryDTO
                 { lbPartyId = fromSqlKey partyId
                 , lbDisplayName = sppDisplayName author

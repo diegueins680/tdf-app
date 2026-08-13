@@ -1108,6 +1108,32 @@ paths:
           description: Artist club or memory not found
         '422':
           description: Reaction UUID is unknown, inactive, deprecated, or unpublished
+  /fans/me/clubs/{artistId}/leaderboard:
+    get:
+      tags: [FanHub]
+      summary: Get the Fan Club reaction leaderboard
+      description: Returns creator badges as canonical persisted UUID relationships with bilingual read-only presentation.
+      operationId: getFanClubLeaderboard
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: artistId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+        - name: period
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Ranked Fan Club members
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/LeaderboardEntry' }
+        '404':
+          description: Artist club not found
   /parties:
     get:
       tags: [CRM]
@@ -3861,6 +3887,30 @@ components:
           format: uuid
           nullable: true
           readOnly: true
+    CreatorBadge:
+      type: object
+      additionalProperties: false
+      required: [cbBadgeTypeId, cbCode, cbNameEs, cbNameEn, cbAwardedAt]
+      properties:
+        cbBadgeTypeId: { type: string, format: uuid }
+        cbCode: { type: string, readOnly: true }
+        cbNameEs: { type: string, readOnly: true }
+        cbNameEn: { type: string, readOnly: true }
+        cbAwardedAt: { type: string, format: date-time, readOnly: true }
+        cbExpiresAt: { type: string, format: date-time, nullable: true, readOnly: true }
+    LeaderboardEntry:
+      type: object
+      additionalProperties: false
+      required: [lbPartyId, lbDisplayName, lbTotalReactions, lbBadges, lbRank]
+      properties:
+        lbPartyId: { type: integer, format: int64 }
+        lbDisplayName: { type: string }
+        lbAvatarUrl: { type: string, nullable: true }
+        lbTotalReactions: { type: integer, minimum: 0 }
+        lbBadges:
+          type: array
+          items: { $ref: '#/components/schemas/CreatorBadge' }
+        lbRank: { type: integer, minimum: 1 }
     EventMomentReaction:
       type: object
       additionalProperties: false

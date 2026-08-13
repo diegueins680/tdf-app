@@ -1010,10 +1010,10 @@ Notification
 CreatorBadge
     partyId      PartyId
     clubId       FanClubId
-    badgeType    Text
+    badgeTypeId  UUID
     awardedAt    UTCTime default=now()
     expiresAt    UTCTime Maybe
-    UniqueCreatorBadge partyId clubId badgeType
+    UniqueCreatorBadge partyId clubId badgeTypeId
     deriving Show Generic
 
 BoostedContent

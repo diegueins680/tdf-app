@@ -167,6 +167,7 @@ catalogTableSpec entityKind =
     "tag" -> Just (flatCatalog "tag" True)
     "reaction_type" -> Just ((flatCatalog "reaction_type" True) { ctsDisplaySymbolExpr = "emoji" })
     "content_reaction_type" -> Just ((flatCatalog "content_reaction_type" True) { ctsDisplaySymbolExpr = "emoji" })
+    "creator_badge_type" -> Just (flatCatalog "creator_badge_type" True)
     "record_release" -> Just (readOnlyRecords "record_release")
     "recording" -> Just (readOnlyRecords "recording")
     "recording_session" -> Just (readOnlyRecords "recording_session")

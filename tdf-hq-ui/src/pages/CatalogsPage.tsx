@@ -22,6 +22,7 @@ export const catalogEditorPath = (entityKind: string): string | undefined => {
     case 'feedback_severity': return '/configuracion/catalogos/feedback';
     case 'reaction_type': return '/configuracion/catalogos/reacciones';
     case 'content_reaction_type': return '/configuracion/catalogos/reacciones-contenido';
+    case 'creator_badge_type': return '/configuracion/catalogos/insignias-creadores';
     default: return undefined;
   }
 };

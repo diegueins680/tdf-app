@@ -19,7 +19,7 @@ import Data.Either (isLeft, isRight)
 import Data.Int (Int64)
 import Data.List (isInfixOf, nub)
 import qualified Data.Map.Strict as Map
-import Data.Maybe (isNothing)
+import Data.Maybe (fromMaybe, isNothing)
 import Data.Text (Text)
 import qualified Data.Text
 import qualified Data.Text.Encoding as TE
@@ -8865,6 +8865,27 @@ main = hspec $ do
             (eitherDecode "{\"crrReactionTypeId\":\"fire\"}"
                 :: Either String DTO.ContentReactionReq)
                 `shouldSatisfy` isLeft
+
+    describe "fan club creator badge response contract" $ do
+        it "serializes canonical UUID identity and bilingual presentation instead of a badge string" $ do
+            let badgeId = fromMaybe UUID.nil (UUID.fromText "50a00000-0000-4000-8000-000000000003")
+                awardedAt = posixSecondsToUTCTime 0
+                payload = A.toJSON DTO.CreatorBadgeDTO
+                    { DTO.cbBadgeTypeId = badgeId
+                    , DTO.cbCode = "og"
+                    , DTO.cbNameEs = "Miembro fundador"
+                    , DTO.cbNameEn = "Founding member"
+                    , DTO.cbAwardedAt = awardedAt
+                    , DTO.cbExpiresAt = Nothing
+                    }
+            payload `shouldBe` A.object
+                [ "cbBadgeTypeId" .= badgeId
+                , "cbCode" .= ("og" :: Text)
+                , "cbNameEs" .= ("Miembro fundador" :: Text)
+                , "cbNameEn" .= ("Founding member" :: Text)
+                , "cbAwardedAt" .= awardedAt
+                , "cbExpiresAt" .= (Nothing :: Maybe UTCTime)
+                ]
 
     describe "inventory asset image upload multipart parsing" $ do
         it "rejects Unicode space lookalikes before storage filename fallbacks sanitize them" $ do

@@ -44,6 +44,8 @@ CREATE INDEX idx_notification_recipient ON notification(recipient_party_id, is_r
 -- ============================================================================
 -- Phase 4: Creator Badges
 -- ============================================================================
+-- Historical pre-cutover schema only. The active model and guarded conversion
+-- live in 2026-08-12_creator_badge_cutover_{dry_run,apply,rollback}.sql.
 
 CREATE TABLE IF NOT EXISTS creator_badge (
     id BIGSERIAL PRIMARY KEY,

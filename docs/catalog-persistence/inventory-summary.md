@@ -4,13 +4,13 @@ Captured on 2026-08-07 from the baselines documented in `README.md`.
 
 ## Static inventory
 
-The latest reproducible pass (2026-08-12 UTC, including the candidate implementation) scanned 863
-files and produced 524 semantic candidates after coalescing repeated occurrences in the same
+The latest reproducible pass (generated at `2026-08-13T15:31:28.296Z`, including the candidate
+implementation) scanned 872 files and produced 522 semantic candidates after coalescing repeated occurrences in the same
 source. It found:
 
 - 335 likely dynamic business catalogs.
 - 48 likely governed reference datasets.
-- 105 likely security/system registries.
+- 103 likely security/system registries.
 - 36 likely technical constants.
 - 57 exact duplicate groups.
 - 89 normalized spelling, punctuation, case, or accent variant groups.
@@ -181,6 +181,19 @@ Notable migration evidence includes:
   rollback, reapply, and four negative integrity guards passed. Unknown/unsupported legacy target
   types abort without guessing. Production distinct values still require the current read-only
   dry-run. Full evidence is in `content-reaction-cutover.md`.
+
+## Candidate cutover status for creator badges
+
+- `creator_badge.badge_type_id` replaces the copied `trendsetter`, `regular`, and `og` text.
+  `creator_badge_type` owns UUID identity, bilingual presentation, ordering, lifecycle,
+  deprecation/replacement metadata, usage, and version.
+- Leaderboard badges are typed objects rather than string arrays. Web and mobile discover and
+  administer the catalog through the central service; mobile snapshot schema 9 adds the published
+  catalog without emergency badge values.
+- The guarded dry-run/apply/rollback and disposable PostgreSQL fixture preserve original casing,
+  reject unknown or duplicate mappings, prove idempotency, and block rollback after post-cutover
+  drift. Production distinct values still require a current dry-run. Full design is in
+  `creator-badge-cutover.md`.
 
 ## Candidate cutover status for DDEX references and lifecycle
 

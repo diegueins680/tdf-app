@@ -1042,6 +1042,15 @@ export interface LeaderboardEntryDTO {
   lbDisplayName: string;
   lbAvatarUrl?: string | null;
   lbTotalReactions: number;
-  lbBadges: string[];
+  lbBadges: CreatorBadgeDTO[];
   lbRank: number;
+}
+
+export interface CreatorBadgeDTO {
+  cbBadgeTypeId: string;
+  cbCode: string;
+  cbNameEs: string;
+  cbNameEn: string;
+  cbAwardedAt: string;
+  cbExpiresAt?: string | null;
 }

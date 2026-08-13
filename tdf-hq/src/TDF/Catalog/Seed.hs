@@ -540,6 +540,7 @@ seedCatalogDefinitions =
       , technical "ddex-validation-severities" "ddex_validation_severity" "Severidades de validación DDEX" "DDEX validation severities"
       , technical "ddex-validation-layers" "ddex_validation_layer" "Capas de validación DDEX" "DDEX validation layers"
       , dynamic "content-reaction-types" "content_reaction_type" "Reacciones de contenido" "Content reactions" True
+      , dynamic "creator-badge-types" "creator_badge_type" "Insignias de creadores" "Creator badges" True
       ]
     dynamic code entityKind nameEs nameEn publicRead = (code, "dynamic-business-catalog", entityKind, nameEs, nameEn, publicRead, False, "catalog-publication")
     governed code entityKind nameEs nameEn publicRead = (code, "governed-reference-data", entityKind, nameEs, nameEn, publicRead, True, "governed-import")
@@ -734,6 +735,10 @@ seedDomainFoundation = do
     rawExecute
       "INSERT INTO content_reaction_type (id, catalog_id, code, emoji, name_es, name_en, current_slug, sort_order, active, workflow_state_id, version) SELECT ?::uuid, c.id, ?, ?, ?, ?, ?, ?, TRUE, ws.id, 1 FROM catalog_definition c JOIN workflow_state ws ON ws.workflow_id=c.workflow_id AND ws.code='published' WHERE c.code='content-reaction-types' ON CONFLICT (code) DO UPDATE SET emoji=EXCLUDED.emoji, name_es=EXCLUDED.name_es, name_en=EXCLUDED.name_en WHERE content_reaction_type.id=EXCLUDED.id AND content_reaction_type.version=1"
       [PersistText identifier, PersistText code, PersistText emoji, PersistText nameEs, PersistText nameEn, PersistText code, PersistInt64 (fromIntegral position)]
+  forM_ (zip [0 :: Int ..] creatorBadges) $ \(position, (identifier, code, nameEs, nameEn)) ->
+    rawExecute
+      "INSERT INTO creator_badge_type (id, catalog_id, code, name_es, name_en, current_slug, sort_order, active, workflow_state_id, version) SELECT ?::uuid, c.id, ?, ?, ?, ?, ?, TRUE, ws.id, 1 FROM catalog_definition c JOIN workflow_state ws ON ws.workflow_id=c.workflow_id AND ws.code='published' WHERE c.code='creator-badge-types' ON CONFLICT (code) DO UPDATE SET name_es=EXCLUDED.name_es, name_en=EXCLUDED.name_en WHERE creator_badge_type.id=EXCLUDED.id AND creator_badge_type.version=1"
+      [PersistText identifier, PersistText code, PersistText nameEs, PersistText nameEn, PersistText code, PersistInt64 (fromIntegral position)]
   where
     releaseTypes =
       [ ("album", "Álbum", "Album"), ("single", "Sencillo", "Single"), ("ep", "EP", "EP")
@@ -791,6 +796,11 @@ seedDomainFoundation = do
       , ("50900000-0000-4000-8000-000000000003", "clap", "👏", "Aplauso", "Applause")
       , ("50900000-0000-4000-8000-000000000004", "mic_drop", "🎤", "Mic drop", "Mic drop")
       , ("50900000-0000-4000-8000-000000000005", "skull", "💀", "Me muero", "I'm dead")
+      ]
+    creatorBadges =
+      [ ("50a00000-0000-4000-8000-000000000001", "trendsetter", "Marcador de tendencia", "Trendsetter")
+      , ("50a00000-0000-4000-8000-000000000002", "regular", "Miembro frecuente", "Regular")
+      , ("50a00000-0000-4000-8000-000000000003", "og", "Miembro fundador", "Founding member")
       ]
 
 -- These launch stations used to be a frontend constant. They are now
@@ -1155,6 +1165,23 @@ validateCatalogRuntimeRegistries = do
     []
   rawExecute
     "UPDATE content_reaction_type item SET usage_count=0 WHERE item.usage_count<>0 AND NOT EXISTS (SELECT 1 FROM fan_club_post_reaction reaction WHERE reaction.reaction_type_id=item.id) AND NOT EXISTS (SELECT 1 FROM fan_club_memory_reaction reaction WHERE reaction.reaction_type_id=item.id)"
+    []
+  invalidCreatorBadgeReferences <-
+    ( rawSql
+        "SELECT COUNT(*) FROM creator_badge badge LEFT JOIN creator_badge_type item ON item.id=badge.badge_type_id LEFT JOIN catalog_definition catalog ON catalog.id=item.catalog_id LEFT JOIN workflow_state state ON state.id=item.workflow_state_id WHERE item.id IS NULL OR item.active IS DISTINCT FROM TRUE OR item.deprecated_at IS NOT NULL OR catalog.code IS DISTINCT FROM 'creator-badge-types' OR catalog.active IS DISTINCT FROM TRUE OR state.code IS DISTINCT FROM 'published' OR state.active IS DISTINCT FROM TRUE OR state.workflow_id IS DISTINCT FROM catalog.workflow_id"
+        []
+        :: SqlPersistT IO [Single Int]
+    )
+  case invalidCreatorBadgeReferences of
+    [Single 0] -> pure ()
+    [Single countValue] -> liftIO . ioError . userError $
+      "Creator badges require canonical active published badge type references: " <> show countValue
+    _ -> liftIO $ ioError (userError "Unable to validate canonical creator badge references")
+  rawExecute
+    "WITH counts AS (SELECT badge_type_id,count(*)::bigint AS usage_count FROM creator_badge GROUP BY badge_type_id) UPDATE creator_badge_type item SET usage_count=counts.usage_count FROM counts WHERE item.id=counts.badge_type_id AND item.usage_count IS DISTINCT FROM counts.usage_count"
+    []
+  rawExecute
+    "UPDATE creator_badge_type item SET usage_count=0 WHERE item.usage_count<>0 AND NOT EXISTS (SELECT 1 FROM creator_badge badge WHERE badge.badge_type_id=item.id)"
     []
   lifecycleStateRows <-
     ( rawSql

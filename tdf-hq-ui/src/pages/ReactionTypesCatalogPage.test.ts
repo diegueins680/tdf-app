@@ -37,4 +37,13 @@ describe('reaction type catalog administration', () => {
     expect(draft.entityId).toBeUndefined();
     expect(draft.baseVersion).toBeUndefined();
   });
+
+  it('omits reaction-only symbol metadata for a creator badge type', () => {
+    const draft = buildReactionTypeDraft({
+      code: 'og', displaySymbol: '', nameEs: 'Miembro fundador', nameEn: 'Founding member',
+      descriptionEs: '', descriptionEn: '', sortOrder: 30, reason: 'Persistir insignia',
+    });
+    expect(draft).not.toHaveProperty('displaySymbol');
+    expect(draft).toMatchObject({ code: 'og', nameEs: 'Miembro fundador', nameEn: 'Founding member' });
+  });
 });

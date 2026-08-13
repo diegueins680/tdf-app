@@ -1664,7 +1664,7 @@
       "reviewed": true
     },
     {
-      "id": "e05ccd4faf225e9a85bf",
+      "id": "7f52de09c7e377db5d9f",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -3837,8 +3837,8 @@
       "id": "8b57686ad41ff10c9424",
       "classification": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-schema-history",
+      "specializedModel": "creator_badge_type, creator_badge",
+      "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true
@@ -4179,6 +4179,16 @@
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "instrument, instrument_translation, session_instrument",
       "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "0353a588c26e45240ba8",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "creator_badge_type, creator_badge",
+      "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true
@@ -5044,7 +5054,7 @@
       "reviewed": true
     },
     {
-      "id": "19464663bcae619ef779",
+      "id": "6e9eda1dfc26bc18c463",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -5054,7 +5064,7 @@
       "reviewed": true
     },
     {
-      "id": "45cac5dfa00854fa1180",
+      "id": "6f98c1d067cb558de91a",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",

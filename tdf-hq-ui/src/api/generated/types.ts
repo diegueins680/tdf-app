@@ -814,6 +814,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/fans/me/clubs/{artistId}/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the Fan Club reaction leaderboard
+         * @description Returns creator badges as canonical persisted UUID relationships with bilingual read-only presentation.
+         */
+        get: operations["getFanClubLeaderboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/parties": {
         parameters: {
             query?: never;
@@ -2697,6 +2717,26 @@ export interface components {
             readonly rsTotal: number;
             /** Format: uuid */
             readonly rsMyReactionTypeId: string | null;
+        };
+        CreatorBadge: {
+            /** Format: uuid */
+            cbBadgeTypeId: string;
+            readonly cbCode: string;
+            readonly cbNameEs: string;
+            readonly cbNameEn: string;
+            /** Format: date-time */
+            readonly cbAwardedAt: string;
+            /** Format: date-time */
+            readonly cbExpiresAt?: string | null;
+        };
+        LeaderboardEntry: {
+            /** Format: int64 */
+            lbPartyId: number;
+            lbDisplayName: string;
+            lbAvatarUrl?: string | null;
+            lbTotalReactions: number;
+            lbBadges: components["schemas"]["CreatorBadge"][];
+            lbRank: number;
         };
         EventMomentReaction: {
             /** Format: uuid */
@@ -5411,6 +5451,37 @@ export interface operations {
             };
             /** @description Reaction UUID is unknown, inactive, deprecated, or unpublished */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getFanClubLeaderboard: {
+        parameters: {
+            query?: {
+                period?: string;
+            };
+            header?: never;
+            path: {
+                artistId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ranked Fan Club members */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaderboardEntry"][];
+                };
+            };
+            /** @description Artist club not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

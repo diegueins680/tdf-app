@@ -258,7 +258,7 @@ rerun, exact rollback, reapply, immutable evidence, and seven negative integrity
 
 Directed verification after the latest changes:
 
-- Hardcoded-list CI audit: passed across 863 files and 524 candidates with no unreviewed or stale
+- Hardcoded-list CI audit: passed across 872 files and 522 candidates with no unreviewed or stale
   decisions. The generated JSON inventory and CSV consumer matrix now both include those reviewed
   decisions rather than an intermediate unreviewed scan.
 - Records PostgreSQL forward/rerun/rollback integration: passed.
@@ -412,6 +412,10 @@ Directed verification after the latest changes:
 This evidence is local candidate evidence, not production rollout evidence. Commands and the full
 suite status will be refreshed in the draft pull request before any deployment gate is considered
 satisfied.
+
+The next isolated P1 slice is documented in `creator-badge-cutover.md`: creator badge assignments
+move from copied text to published `creator_badge_type` UUIDs. Notification types and their typed
+destinations remain a separate governed operational cutover.
 
 ## Safety state
 

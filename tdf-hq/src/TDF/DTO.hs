@@ -1367,7 +1367,17 @@ data LeaderboardEntryDTO = LeaderboardEntryDTO
   , lbDisplayName    :: Text
   , lbAvatarUrl      :: Maybe Text
   , lbTotalReactions :: Int
-  , lbBadges         :: [Text]
+  , lbBadges         :: [CreatorBadgeDTO]
   , lbRank           :: Int
   } deriving (Show, Generic)
 instance ToJSON LeaderboardEntryDTO
+
+data CreatorBadgeDTO = CreatorBadgeDTO
+  { cbBadgeTypeId :: UUID
+  , cbCode        :: Text
+  , cbNameEs      :: Text
+  , cbNameEn      :: Text
+  , cbAwardedAt   :: UTCTime
+  , cbExpiresAt   :: Maybe UTCTime
+  } deriving (Show, Generic)
+instance ToJSON CreatorBadgeDTO
