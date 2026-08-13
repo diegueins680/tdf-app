@@ -100,6 +100,7 @@ import TDF.CampaignAutomation
       validateCampaignAutomationStatus )
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
 import qualified TDF.Commerce.StateMachine as Commerce
+import qualified TDF.Distribution.StateMachine as Distribution
 import TDF.Email (resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
@@ -814,6 +815,58 @@ main = hspec $ do
               `shouldBe` True
             Commerce.ledgerBalances [("USD", 10000), ("EUR", -10000)]
               `shouldBe` False
+
+    describe "distribution state machine invariants" $ do
+        let completeGates = Distribution.DistributionGates
+              { Distribution.metadataValid = True
+              , Distribution.identifiersValid = True
+              , Distribution.assetsValid = True
+              , Distribution.rightsComplete = True
+              , Distribution.splitsAccepted = True
+              , Distribution.termsAccepted = True
+              , Distribution.commerciallyCleared = True
+              }
+
+        it "requires every intake and rights gate before validation" $
+            QC.property $ \metadata identifiers assets rights splits terms ->
+              let gates = completeGates
+                    { Distribution.metadataValid = metadata
+                    , Distribution.identifiersValid = identifiers
+                    , Distribution.assetsValid = assets
+                    , Distribution.rightsComplete = rights
+                    , Distribution.splitsAccepted = splits
+                    , Distribution.termsAccepted = terms
+                    }
+                  result = Distribution.transitionDistribution gates
+                    Distribution.DistributionDraft Distribution.DistributionValidated
+              in isRight result == and [metadata, identifiers, assets, rights, splits, terms]
+
+        it "accepts splits only when positive allocations total exactly 100 percent" $
+            QC.property $ \(QC.NonEmpty rawShares) ->
+              let shares = map (\value -> 1 + abs value `mod` 9999) rawShares
+              in Distribution.splitTotalValid shares == (sum shares == 10000)
+
+        it "cannot mark distribution paid without a verified checkout or approved waiver" $ do
+            let unpaid = completeGates { Distribution.commerciallyCleared = False }
+            Distribution.transitionDistribution unpaid
+              Distribution.DistributionPaymentDue Distribution.DistributionPaid
+              `shouldSatisfy` isLeft
+
+        it "rejects mock and sandbox evidence for every production status transition" $
+            QC.property $ \useMock ->
+              let evidence = if useMock then Distribution.MockEvidence else Distribution.SandboxEvidence
+              in isLeft (Distribution.validateRecipientEvidence Distribution.EvidenceProduction evidence)
+
+        it "keeps package generation, send, acknowledgement, acceptance, and live distinct" $ do
+            Distribution.transitionDistribution completeGates
+              Distribution.DistributionScheduled Distribution.DistributionPackageGenerated
+              `shouldBe` Right Distribution.DistributionPackageGenerated
+            Distribution.transitionDistribution completeGates
+              Distribution.DistributionPackageGenerated Distribution.DistributionSent
+              `shouldSatisfy` isLeft
+            Distribution.transitionDistribution completeGates
+              Distribution.DistributionSent Distribution.DistributionLive
+              `shouldSatisfy` isLeft
 
     describe "central feature registry authorization" $ do
         let modulesFor roleValues = map moduleName (Set.toList (modulesForRoles roleValues))
