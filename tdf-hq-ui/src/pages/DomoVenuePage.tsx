@@ -36,7 +36,7 @@ import { Bookings } from '../api/bookings';
 import { PUBLIC_BASE } from '../config/appConfig';
 import { useMetaTags } from '../hooks/useMetaTags';
 
-const DOMO_TIMEZONE = (import.meta.env as Record<string, string | undefined> | undefined)?.VITE_DOMO_TIMEZONE ?? 'UTC';
+const DOMO_TIMEZONE = (import.meta.env as Record<string, string | undefined> | undefined)?.['VITE_DOMO_TIMEZONE'] ?? 'UTC';
 
 type EventType = 'wedding' | 'corporate' | 'retreat' | 'concert' | 'workshop' | 'photo';
 type DomoExperienceKey = 'naturaleza' | 'eventos' | 'musica' | 'ceremonias';
