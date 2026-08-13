@@ -48,8 +48,6 @@ import { buildSignupPayload, deriveEffectiveRoles } from '../utils/roles';
 import { parsePositiveSafeInt } from '../utils/ids';
 import { parseGoogleIdToken } from '../utils/googleIdToken';
 import { pickLandingPath, readSafeRedirectPath } from '../utils/loginRouting';
-import { useAnalytics } from '../analytics/useAnalytics';
-import { captureGrowthAttribution, captureGrowthEvent } from '../analytics/growthAttribution';
 
 const LANDING_LABELS: Record<string, string> = {
   '/configuracion/roles-permisos': 'Roles y permisos',
@@ -147,7 +145,6 @@ const loadGoogleScript = () => {
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const analytics = useAnalytics();
   const servicePreparingMessage = 'Estamos activando el servicio. Apenas termine podrás iniciar sesión.';
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -299,19 +296,6 @@ export default function LoginPage() {
   }, [location.search]);
 
   const appliedSignupPresetRef = useRef<string | null>(null);
-  const trackedAuthViewRef = useRef<string | null>(null);
-  useEffect(() => {
-    captureGrowthAttribution({ search: location.search, pathname: location.pathname });
-    const viewKey = `${location.pathname}${location.search}`;
-    if (trackedAuthViewRef.current === viewKey) return;
-    trackedAuthViewRef.current = viewKey;
-    captureGrowthEvent(analytics, 'auth_page_viewed', {
-      route: location.pathname,
-      signup_requested: signupPreset.openSignup,
-      preset_roles: signupPreset.roles,
-    });
-  }, [analytics, location.pathname, location.search, signupPreset.openSignup, signupPreset.roles]);
-
   useEffect(() => {
     if (!signupPreset.openSignup) return;
     if (appliedSignupPresetRef.current === location.search) return;
@@ -381,7 +365,6 @@ export default function LoginPage() {
     const normalizedIdentifier = identifier.trim();
     const normalizedPassword = password.trim();
     if (!normalizedIdentifier || !normalizedPassword) {
-      captureGrowthEvent(analytics, 'login_validation_failed', { reason: 'missing_credentials' });
       setFormError('Ingresa tu usuario o correo y la contraseña.');
       return;
     }
@@ -390,7 +373,6 @@ export default function LoginPage() {
       normalizedIdentifier.charAt(0).toUpperCase() + normalizedIdentifier.slice(1);
 
     try {
-      captureGrowthEvent(analytics, 'login_submitted', { method: 'password' });
       const response = await loginMutation.mutateAsync({
         username: normalizedIdentifier,
         password: normalizedPassword,
@@ -407,15 +389,9 @@ export default function LoginPage() {
       const targetPath = redirectPath ?? landingPath;
 
       login(nextSession, { remember: rememberDevice });
-      captureGrowthEvent(analytics, 'login_completed', {
-        method: 'password',
-        landing_path: targetPath,
-        roles: nextSession.roles,
-      });
       navigate(targetPath, { replace: true });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No se pudo iniciar sesión.';
-      captureGrowthEvent(analytics, 'login_failed', { method: 'password' });
       setFormError(message.trim() === '' ? 'No se pudo iniciar sesión.' : message);
     }
   };
@@ -459,17 +435,11 @@ export default function LoginPage() {
         const landingPath = pickLandingPath(nextSession.roles, nextSession.modules);
         const targetPath = redirectPath ?? landingPath;
         login(nextSession, { remember: rememberDevice });
-        captureGrowthEvent(analytics, 'authentication_completed', {
-          method: 'google',
-          landing_path: targetPath,
-          roles: nextSession.roles,
-        });
         setSignupDialogOpen(false);
         setSignupFeedback(null);
         navigate(targetPath, { replace: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : 'No pudimos iniciar sesión con Google.';
-        captureGrowthEvent(analytics, 'authentication_failed', { method: 'google' });
         setGoogleError(message);
         if (signupDialogOpen) {
           setSignupFeedback({ type: 'error', message });
@@ -480,7 +450,7 @@ export default function LoginPage() {
         setGoogleStatus(null);
       }
     },
-    [analytics, buildResolvedSession, googleLoginMutation, login, navigate, redirectPath, rememberDevice, servicePreparing, signupDialogOpen],
+    [buildResolvedSession, googleLoginMutation, login, navigate, redirectPath, rememberDevice, servicePreparing, signupDialogOpen],
   );
 
   useEffect(() => {
@@ -629,20 +599,9 @@ export default function LoginPage() {
     setFavoriteArtistIds([]);
     setClaimArtistId(null);
     signupMutation.reset();
-    captureGrowthEvent(analytics, 'signup_started', {
-      route: '/login',
-      trigger: 'auth_page',
-      preset_roles: roles,
-      has_artist_claim: false,
-    });
   };
 
   const closeSignupDialog = () => {
-    captureGrowthEvent(analytics, 'signup_abandoned', {
-      route: '/login',
-      selected_roles: signupRoles,
-      selected_artist_count: favoriteArtistIds.length,
-    });
     setSignupDialogOpen(false);
     setSignupFeedback(null);
     setShowSignupPassword(false);
@@ -653,37 +612,27 @@ export default function LoginPage() {
 
   const handleSignupSubmit = async () => {
     if (servicePreparing) {
-      captureGrowthEvent(analytics, 'signup_blocked', { reason: 'service_preparing' });
       setSignupFeedback({ type: 'error', message: servicePreparingMessage });
       return;
     }
 
     const claimIsValid = claimArtistId ? claimableArtists.some((artist) => artist.apArtistId === claimArtistId) : true;
     if (!claimIsValid) {
-      captureGrowthEvent(analytics, 'signup_validation_failed', { reason: 'artist_claim_unavailable' });
       setSignupFeedback({ type: 'error', message: 'El perfil seleccionado ya no está disponible para reclamar.' });
       return;
     }
 
     const payload = buildSignupPayload(signupForm, favoriteArtistIds, claimArtistId ?? undefined);
     if (!payload.email || !payload.password || (!payload.firstName && !payload.lastName)) {
-      captureGrowthEvent(analytics, 'signup_validation_failed', { reason: 'missing_required_fields' });
       setSignupFeedback({ type: 'error', message: 'Completa nombre, correo y una contraseña segura (8+ caracteres).' });
       return;
     }
     if (payload.password.length < 8) {
-      captureGrowthEvent(analytics, 'signup_validation_failed', { reason: 'password_too_short' });
       setSignupFeedback({ type: 'error', message: 'La contraseña debe tener al menos 8 caracteres.' });
       return;
     }
     setSignupFeedback(null);
     try {
-      captureGrowthEvent(analytics, 'signup_submitted', {
-        method: 'password',
-        selected_roles: selectedRoles,
-        selected_artist_count: favoriteArtistIds.length,
-        has_artist_claim: Boolean(claimArtistId),
-      });
       const response = await signupMutation.mutateAsync(payload);
       const effectiveRoles = deriveEffectiveRoles(response.roles);
       const landingPath = pickLandingPath(effectiveRoles, response.modules);
@@ -699,13 +648,6 @@ export default function LoginPage() {
         partyId: response.partyId,
       });
       login(nextSession, { remember: rememberDevice });
-      captureGrowthEvent(analytics, 'signup_completed', {
-        method: 'password',
-        party_id: response.partyId,
-        roles: effectiveRoles,
-        selected_artist_count: selectedFanArtistIds.length,
-        landing_path: targetPath,
-      });
       if (shouldFollowArtists) {
         void Promise.all(
           selectedFanArtistIds.map((artistId) =>
@@ -717,10 +659,6 @@ export default function LoginPage() {
       }
       navigate(targetPath, { replace: true });
     } catch (err) {
-      captureGrowthEvent(analytics, 'signup_failed', {
-        method: 'password',
-        selected_roles: selectedRoles,
-      });
       setSignupFeedback({
         type: 'error',
         message: err instanceof Error ? err.message : 'No pudimos crear la cuenta. Intenta de nuevo.',
@@ -1389,7 +1327,7 @@ export default function LoginPage() {
               value={signupForm.password}
               onChange={(event) => setSignupForm((prev) => ({ ...prev, password: event.target.value }))}
               fullWidth
-              inputProps={{ 'aria-describedby': 'password-hint' }}
+              helperText={passwordHint}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -1407,9 +1345,6 @@ export default function LoginPage() {
               }}
               sx={dialogFieldSx}
             />
-            <span id="password-hint" style={{ color: 'rgba(15,23,42,0.6)', fontSize: '0.75rem' }}>
-              {passwordHint}
-            </span>
             {signupFeedback && (
               <Alert severity={signupFeedback.type === 'success' ? 'success' : 'error'}>
                 {signupFeedback.message}

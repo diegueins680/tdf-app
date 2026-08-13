@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Paper,
@@ -40,14 +40,6 @@ const DdexInboxPage: React.FC = () => {
     queryKey: ['ddex-documents', statusFilter],
     queryFn: () => DDEX.listDocuments(statusFilter || undefined),
   });
-  const { data: summaryDocuments } = useQuery({
-    queryKey: ['ddex-documents', 'authorized-summary'],
-    queryFn: () => DDEX.listDocuments(),
-  });
-  const statusCounts = useMemo(() => ({
-    errors: (summaryDocuments ?? []).filter((document) => ['invalid', 'import_failed', 'quarantined'].includes(document.ddexDocumentStatus)).length,
-    pending: (summaryDocuments ?? []).filter((document) => ['received', 'queued', 'validating', 'mapping_required', 'ready_to_import', 'importing'].includes(document.ddexDocumentStatus)).length,
-  }), [summaryDocuments]);
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
@@ -89,14 +81,12 @@ const DdexInboxPage: React.FC = () => {
     <Box p={3}>
       <Typography variant="h4" mb={3}>DDEX Inbox</Typography>
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} mb={3}>
-        <FormControl sx={{ minWidth: { sm: 200 } }}>
-          <InputLabel id="ddex-status-filter-label">{text.status}</InputLabel>
+      <Stack direction="row" spacing={2} mb={3}>
+        <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel>Status</InputLabel>
           <Select
-            id="ddex-status-filter"
-            labelId="ddex-status-filter-label"
             value={statusFilter}
-            label={text.status}
+            label="Status"
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <MenuItem value="">All</MenuItem>
@@ -113,14 +103,14 @@ const DdexInboxPage: React.FC = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>{text.status}</TableCell>
-              <TableCell>{text.fileName}</TableCell>
-              <TableCell>{text.family}</TableCell>
-              <TableCell>{text.version}</TableCell>
-              <TableCell>{text.messageId}</TableCell>
-              <TableCell>{text.sender}</TableCell>
-              <TableCell>{text.received}</TableCell>
-              <TableCell align="right">{text.actions}</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>File Name</TableCell>
+              <TableCell>Family</TableCell>
+              <TableCell>Version</TableCell>
+              <TableCell>Message ID</TableCell>
+              <TableCell>Sender</TableCell>
+              <TableCell>Received</TableCell>
+              <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -131,7 +121,6 @@ const DdexInboxPage: React.FC = () => {
                     <Chip
                       label={doc.ddexDocumentWorkflowStateNameEs}
                       size="small"
-                      sx={getStatusColor(doc.ddexDocumentStatus) === 'warning' ? { color: '#7a4100', borderColor: '#9a5200' } : undefined}
                     />
                   </Stack>
                 </TableCell>
@@ -149,11 +138,10 @@ const DdexInboxPage: React.FC = () => {
                 <TableCell>{formatDate(doc.ddexDocumentCreatedAt)}</TableCell>
                 <TableCell align="right">
                   <IconButton
+                    size="small"
                     color="primary"
-                    component={RouterLink}
-                    to={`/label/ddex/documents/${doc.ddexDocumentId}`}
-                    aria-label={`${text.view} ${doc.ddexDocumentFileName}`}
-                    sx={{ minWidth: 44, minHeight: 44 }}
+                    href={`/label/ddex/documents/${doc.ddexDocumentId}`}
+                    aria-label={`View DDEX document ${doc.ddexDocumentFileName}`}
                   >
                     <ViewIcon />
                   </IconButton>
@@ -164,7 +152,7 @@ const DdexInboxPage: React.FC = () => {
               <TableRow>
                 <TableCell colSpan={8} align="center">
                   <Typography color="text.secondary" py={4}>
-                    {text.empty}
+                    No DDEX documents found
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -179,9 +167,6 @@ const DdexInboxPage: React.FC = () => {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage={text.rowsPerPage}
-          getItemAriaLabel={(type) => locale === 'en' ? `${type} page` : `Página ${type}`}
-          sx={{ '& .MuiIconButton-root': { width: 44, height: 44 } }}
         />
       </TableContainer>
     </Box>

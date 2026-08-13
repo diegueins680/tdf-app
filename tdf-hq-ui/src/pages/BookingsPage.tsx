@@ -34,9 +34,6 @@ import { Services } from '../api/services';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   getBookingCalendarStatusState,
-  bookingRoomReferencesFromOptions,
-  bookingRoomReferencesFromResources,
-  bookingSharesAssignedRoom,
   getBookingConflictAlertText,
   getBookingCustomerFieldState,
   getBookingEngineerFieldState,
@@ -47,7 +44,6 @@ import {
 } from './bookingsPageLogic';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useCurrency } from '../contexts/CurrencyContext';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 // FullCalendar v6 auto-injects its styles when the modules load, so importing the
 // CSS bundles directly is unnecessary and breaks with Vite due to missing files.
@@ -60,7 +56,6 @@ const parsePositiveInt = (raw: string | null): number | null => {
 };
 
 export default function BookingsPage() {
-  useDocumentTitle('Estudio / Reservas');
   const { timezone: zone, locale } = useLocalePreferences();
   const { formatMoney } = useCurrency();
   const location = useLocation();
@@ -104,10 +99,7 @@ export default function BookingsPage() {
   });
   const qc = useQueryClient();
   const bookings = useMemo<BookingDTO[]>(() => bookingsQuery.data ?? [], [bookingsQuery.data]);
-  const rooms = useMemo<RoomDTO[]>(
-    () => (roomsQuery.data ?? []).filter((room) => room.rBookable),
-    [roomsQuery.data],
-  );
+  const rooms = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
   const parties = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
   const hasActiveBookingFilter = bookingIdFilter != null || partyIdFilter != null || engineerPartyIdFilter != null;
   const handleClearBookingFilters = useCallback(() => {
@@ -222,7 +214,7 @@ export default function BookingsPage() {
   const [engineerPartyId, setEngineerPartyId] = useState<number | null>(null);
   const [customerPartyId, setCustomerPartyId] = useState<number | null>(null);
   const [customerName, setCustomerName] = useState('');
-  const [assignedRoomReferences, setAssignedRoomReferences] = useState<string[]>([]);
+  const [assignedRoomIds, setAssignedRoomIds] = useState<string[]>([]);
   const [status, setStatus] = useState<string>('Confirmed');
   const [calendarError, setCalendarError] = useState<string | null>(null);
   const [courseNotice, setCourseNotice] = useState<string | null>(null);
@@ -265,6 +257,7 @@ export default function BookingsPage() {
     const start = DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone });
     const end = DateTime.fromFormat(endInput, "yyyy-LL-dd'T'HH:mm", { zone });
     if (!start.isValid || !end.isValid) return [];
+    const assigned = new Set(assignedRoomIds);
     const isOverlap = (aStart: string, aEnd: string) => {
       const s = DateTime.fromISO(aStart);
       const e = DateTime.fromISO(aEnd);
@@ -279,9 +272,11 @@ export default function BookingsPage() {
       if (!isActive(b.status ?? '')) return false;
       if (editingId && b.bookingId === editingId) return false;
       if (!isOverlap(b.startsAt, b.endsAt)) return false;
-      return bookingSharesAssignedRoom(assignedRoomReferences, b.resources ?? []);
+      const roomIds = (b.resources ?? []).map((r) => r.brRoomId);
+      if (roomIds.length === 0) return false;
+      return roomIds.some((rid) => assigned.has(rid));
     });
-  }, [assignedRoomReferences, bookings, editingId, endInput, startInput, zone]);
+  }, [assignedRoomIds, bookings, editingId, endInput, startInput, zone]);
 
   const selectedService = useMemo(
     () => serviceTypes.find((service) => service.id === serviceOfferingId) ?? null,
@@ -300,13 +295,8 @@ export default function BookingsPage() {
   }, [rooms, serviceTypes]);
 
   const assignedRooms = useMemo(
-    () => assignedRoomReferences.map((reference) =>
-      rooms.find((room) => room.rName.trim().toLocaleLowerCase() === reference.trim().toLocaleLowerCase()) ?? {
-        roomId: `booking-room:${reference}`,
-        rName: reference,
-        rBookable: true,
-      }),
-    [assignedRoomReferences, rooms],
+    () => rooms.filter((room) => assignedRoomIds.includes(room.roomId)),
+    [rooms, assignedRoomIds],
   );
 
   const engineerOptions = useMemo(
@@ -410,7 +400,7 @@ useEffect(() => {
   if (!serviceOfferingId || rooms.length === 0 || assignedRoomIds.length > 0) return;
   const defaults = defaultRoomsForService(serviceOfferingId);
   if (defaults.length) {
-    setAssignedRoomReferences(bookingRoomReferencesFromOptions(defaults));
+    setAssignedRoomIds(defaults.map((room) => room.roomId));
     setRoomsManuallyAdjusted(false);
   }
 }, [serviceOfferingId, rooms, assignedRoomIds.length, defaultRoomsForService]);
@@ -420,7 +410,7 @@ useEffect(() => {
   setServiceOfferingId(defaultService.id);
   const defaults = defaultRoomsForService(defaultService.id);
   if (defaults.length) {
-    setAssignedRoomReferences(bookingRoomReferencesFromOptions(defaults));
+    setAssignedRoomIds(defaults.map((room) => room.roomId));
     setRoomsManuallyAdjusted(false);
   }
 }, [defaultRoomsForService, defaultService, serviceOfferingId]);
@@ -568,7 +558,7 @@ const openDialogForRange = (start: Date, end: Date) => {
         cbNotes: buildCombinedNotes(),
         cbServiceOfferingId: serviceOfferingId,
         cbPartyId: customerPartyId,
-        cbResourceIds: assignedRoomReferences,
+        cbResourceIds: assignedRoomIds,
         cbEngineerPartyId: engineerPartyId,
         cbEngineerName: engineerName.trim() || null,
       }),
@@ -582,7 +572,7 @@ const openDialogForRange = (start: Date, end: Date) => {
       setStatus('Confirmed');
       setEditingId(null);
       setMode('create');
-      setAssignedRoomReferences([]);
+      setAssignedRoomIds([]);
       setEngineerName('');
       setEngineerPartyId(null);
       setCustomerName('');
@@ -644,7 +634,7 @@ const openDialogForRange = (start: Date, end: Date) => {
       setFormError('Todavía no hay salas registradas. Abre Salas y recursos antes de guardar la sesión.');
       return;
     }
-    if (assignedRoomReferences.length === 0) {
+    if (assignedRoomIds.length === 0) {
       setFormError('Asigna al menos una sala para la sesión.');
       return;
     }
@@ -1006,7 +996,6 @@ const openDialogForRange = (start: Date, end: Date) => {
               onChange={(e) => setCreateContactForm((prev) => ({ ...prev, email: e.target.value }))}
             />
             <TextField
-              type="tel"
               label="Teléfono"
               value={createContactForm.phone}
               onChange={(e) => setCreateContactForm((prev) => ({ ...prev, phone: e.target.value }))}
@@ -1165,7 +1154,7 @@ const openDialogForRange = (start: Date, end: Date) => {
                       if (!wasRoomsManual || assignedRoomIds.length === 0) {
                         const defaults = defaultRoomsForService(service.id);
                         if (defaults.length) {
-                          setAssignedRoomReferences(bookingRoomReferencesFromOptions(defaults));
+                          setAssignedRoomIds(defaults.map((room) => room.roomId));
                           messageParts.push(`Salas sugeridas: ${defaults.map((r) => r.rName).join(' + ')}`);
                           setRoomsManuallyAdjusted(false);
                         }
@@ -1305,12 +1294,9 @@ const openDialogForRange = (start: Date, end: Date) => {
                   multiple
                   options={rooms}
                   getOptionLabel={(option) => option.rName}
-                  isOptionEqualToValue={(option, value) =>
-                    option.rName.trim().toLocaleLowerCase() === value.rName.trim().toLocaleLowerCase()
-                  }
                   value={assignedRooms}
                   onChange={(_, value) => {
-                    setAssignedRoomReferences(bookingRoomReferencesFromOptions(value));
+                    setAssignedRoomIds(value.map((room) => room.roomId));
                     setRoomsManuallyAdjusted(true);
                   }}
                   renderTags={(value, getTagProps) =>

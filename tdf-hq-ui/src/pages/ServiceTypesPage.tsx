@@ -442,15 +442,6 @@ export default function ServiceTypesPage() {
         </DialogContent>
         <DialogActions><Button onClick={() => setDialogOpen(false)}>Cancelar</Button><Button variant="contained" disabled={!formValid || createRevision.isPending} onClick={submitForm}>Guardar borrador</Button></DialogActions>
       </Dialog>
-      <ConfirmDialog
-        open={deleteConfirmOpen}
-        onClose={() => setDeleteConfirmOpen(false)}
-        onConfirm={handleDeleteConfirm}
-        title="Desactivar servicio"
-        description="¿Desactivar este servicio del catálogo?"
-        severity="warning"
-        confirming={deleteMutation.isPending}
-      />
     </Box>
   );
 }

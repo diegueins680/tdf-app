@@ -37,7 +37,7 @@ import LaunchIcon from '@mui/icons-material/Launch';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import LazyPaginatedList from '../components/LazyPaginatedList';
-import type { ArtistProfileUpsert, FanFollowDTO } from '../api/types';
+import type { ArtistProfileUpsert } from '../api/types';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { Fans } from '../api/fans';
 import { Admin } from '../api/admin';
@@ -269,13 +269,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   } = useFanProfile({
     enabled: Boolean(viewerId && isFan && hasAuthToken && !isHomeManagerView),
     viewerId,
-    onProfileSaved: (profile) => {
-      const completedFields = Object.values(profile).filter((value) => Boolean(String(value ?? '').trim())).length;
-      captureGrowthEvent(analytics, 'fan_profile_saved', {
-        party_id: viewerId,
-        completed_fields: completedFields,
-      });
-    },
   });
 
   const followsQuery = useQuery({
@@ -368,14 +361,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
   const updateArtistProfileMutation = useMutation({
     mutationFn: Fans.updateMyArtistProfile,
-    onSuccess: (_profile, payload) => {
+    onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['artist-profile', viewerId] });
-      const completedFields = Object.values(payload).filter((value) => Boolean(String(value ?? '').trim())).length;
-      captureGrowthEvent(analytics, 'artist_profile_saved', {
-        party_id: viewerId,
-        completed_fields: completedFields,
-        has_public_slug: Boolean(payload.apuSlug?.trim()),
-      });
       setArtistToast('Perfil de artista actualizado.');
     },
     onError: (error) => {
@@ -398,39 +385,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
   const followMutation = useMutation({
     mutationFn: (artistId: number) => Fans.follow(artistId),
-    onMutate: async (artistId) => {
-      await qc.cancelQueries({ queryKey: ['fan-follows', viewerId] });
-      const previousFollows = qc.getQueryData<FanFollowDTO[]>(['fan-follows', viewerId]);
-      const artist = artists.find((a) => a.apArtistId === artistId);
-      qc.setQueryData<FanFollowDTO[]>(['fan-follows', viewerId], (old) => {
-        if ((old ?? []).some((f) => f.ffArtistId === artistId)) return old;
-        return [
-          ...(old ?? []),
-          {
-            ffArtistId: artistId,
-            ffArtistName: artist?.apDisplayName ?? '',
-            ffHeroImageUrl: artist?.apHeroImageUrl ?? null,
-            ffSpotifyUrl: artist?.apSpotifyUrl ?? null,
-            ffYoutubeUrl: artist?.apYoutubeUrl ?? null,
-            ffStartedAt: new Date().toISOString(),
-          },
-        ];
-      });
-      return { previousFollows };
-    },
-    onSuccess: (_follow, artistId) => {
-      captureGrowthEvent(analytics, 'artist_followed', {
-        party_id: viewerId,
-        artist_id: artistId,
-        is_first_follow: followsQuery.data?.length === 0,
-      });
-    },
-    onError: (_err, _artistId, context) => {
-      if (context?.previousFollows !== undefined) {
-        qc.setQueryData(['fan-follows', viewerId], context.previousFollows);
-      }
-    },
-    onSettled: () => {
+    onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
     },
@@ -438,26 +393,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
   const unfollowMutation = useMutation({
     mutationFn: (artistId: number) => Fans.unfollow(artistId),
-    onMutate: async (artistId) => {
-      await qc.cancelQueries({ queryKey: ['fan-follows', viewerId] });
-      const previousFollows = qc.getQueryData<FanFollowDTO[]>(['fan-follows', viewerId]);
-      qc.setQueryData<FanFollowDTO[]>(['fan-follows', viewerId], (old) =>
-        (old ?? []).filter((f) => f.ffArtistId !== artistId),
-      );
-      return { previousFollows };
-    },
-    onSuccess: (_result, artistId) => {
-      captureGrowthEvent(analytics, 'artist_unfollowed', {
-        party_id: viewerId,
-        artist_id: artistId,
-      });
-    },
-    onError: (_err, _artistId, context) => {
-      if (context?.previousFollows !== undefined) {
-        qc.setQueryData(['fan-follows', viewerId], context.previousFollows);
-      }
-    },
-    onSettled: () => {
+    onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
     },
@@ -659,7 +595,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     const file = event.target.files?.[0];
     if (!file) return;
     if (file.size > FAN_AVATAR_MAX_BYTES) {
-      showError('El archivo supera 10 MB. Usa una imagen más liviana.');
+      alert('El archivo supera 10 MB. Usa una imagen más liviana.'); // small UX guard; avoid bigger error plumbing here
       return;
     }
     const reader = new FileReader();
