@@ -1,4 +1,4 @@
-import { Dialog, DialogTitle, DialogContent, List, ListItem, ListItemText, Typography, Box } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, List, ListItem, ListItemText, Box } from '@mui/material';
 
 interface Props {
   open: boolean;

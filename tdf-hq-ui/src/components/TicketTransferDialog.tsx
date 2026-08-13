@@ -114,7 +114,14 @@ export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess
 
         <Divider sx={{ my: 2 }} />
 
-        <Box component="form" id="transfer-form" onSubmit={onSubmit} noValidate>
+        <Box
+          component="form"
+          id="transfer-form"
+          onSubmit={(event) => {
+            void onSubmit(event);
+          }}
+          noValidate
+        >
           <TextField
             {...register('email')}
             label={t('ticketTransfer.recipientEmail')}

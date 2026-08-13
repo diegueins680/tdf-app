@@ -31,7 +31,7 @@ export function useMetaTags({ title, description, ogImage, ogType = 'website', c
     setMeta('og:type', ogType, true);
     if (ogImage) setMeta('og:image', ogImage, true);
     if (canonical) {
-      let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+      let link = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
       if (!link) {
         link = document.createElement('link');
         link.rel = 'canonical';

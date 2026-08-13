@@ -37,7 +37,9 @@ export function useAutoSave<T>(
   const loadDraft = useCallback((): T | null => {
     try {
       const saved = localStorage.getItem(`draft:${key}`);
-      return saved ? JSON.parse(saved) : null;
+      if (!saved) return null;
+      const parsed: unknown = JSON.parse(saved);
+      return parsed as T;
     } catch {
       return null;
     }

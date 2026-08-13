@@ -140,7 +140,13 @@ function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button onClick={onSubmit} variant="contained" disabled={mutation.isPending}>
+        <Button
+          onClick={() => {
+            void onSubmit();
+          }}
+          variant="contained"
+          disabled={mutation.isPending}
+        >
           Crear
         </Button>
       </DialogActions>
