@@ -3058,7 +3058,10 @@ export interface components {
             email: string;
             /** @example +1 415 555 2671 */
             phone?: string | null;
-            /** Format: password */
+            /**
+             * Format: password
+             * @example changeme123
+             */
             password: string;
             /** @description Artist or band ids to follow after account creation; this does not assign a security role. */
             fanArtistIds?: number[];
@@ -3976,6 +3979,7 @@ export interface components {
             /** Format: int64 */
             apArtistId: number;
             apDisplayName: string;
+            apOfficialName?: string | null;
             apSlug?: string | null;
             apBio?: string | null;
             apCity?: string | null;
