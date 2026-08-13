@@ -35,7 +35,7 @@ export default function GoogleDriveCallbackPage() {
           <Alert severity="error">
             No pudimos autorizar Google Drive: {result.message}
             <br />
-            Verifica el redirect configurado en Google: {import.meta.env['VITE_GOOGLE_DRIVE_REDIRECT_URI'] ?? 'no definido'}
+            Verifica el redirect configurado en Google: {import.meta.env.VITE_GOOGLE_DRIVE_REDIRECT_URI ?? 'no definido'}
           </Alert>
           <Button variant="contained" onClick={() => navigate('/', { replace: true })}>
             Volver

@@ -77,7 +77,7 @@ export default function CalendarSyncPage() {
   );
   const icsUrl = useMemo(() => {
     if (typeof window === 'undefined') return '';
-    const base = (import.meta.env['VITE_CALENDAR_ICS_BASE'] ?? `${window.location.origin}/calendar/v1/ics`).trim();
+    const base = (import.meta.env.VITE_CALENDAR_ICS_BASE ?? `${window.location.origin}/calendar/v1/ics`).trim();
     const cal = trimmedCalendarId || 'primary';
     const separator = base.includes('?') ? '&' : '?';
     return `${base}${separator}calendarId=${encodeURIComponent(cal)}`;

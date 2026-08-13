@@ -170,7 +170,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const passwordHint = 'Usa 8+ caracteres con mayúsculas, minúsculas y un número.';
-  const googleClientId = import.meta.env['VITE_GOOGLE_CLIENT_ID'] ?? '';
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const googleSignupButtonRef = useRef<HTMLDivElement | null>(null);
   const identifierInputRef = useRef<HTMLInputElement | null>(null);
