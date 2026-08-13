@@ -354,13 +354,13 @@
       "reviewed": true
     },
     {
-      "id": "f2f1802a6dc8abf422a9",
-      "classification": "governed-reference-data",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
+      "id": "864ea981d61cca3699cc",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
       "reviewed": true
     },
     {
@@ -594,7 +594,7 @@
       "reviewed": true
     },
     {
-      "id": "f7e34b9d0c20e089e5b3",
+      "id": "8f3e91d141addebb8077",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -2834,103 +2834,13 @@
       "reviewed": true
     },
     {
-      "id": "e568422d17007502e28c",
-      "classification": "governed-reference-data",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P2-domain",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
-      "reviewed": true
-    },
-    {
-      "id": "a3eec724c5e2dbeb6588",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "939b3424f5ac880dfeb1",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "9b2f443535a631614506",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "c13d5a37d16ec2d7d2b8",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "a3a2cda4da7cdc5cba53",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "3c72789cd9f66668d5c4",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "ccbb69f96cc25533a789",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "1342f1b591033c585491",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "1142a2ee26ec3046cc28",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "id": "df111f3ba9df60cf7a7b",
+      "classification": "genuine-technical-constant",
+      "disposition": "consumer-update",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-consumer",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
       "reviewed": true
     },
     {
@@ -3161,6 +3071,16 @@
       "priority": "P0-security",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
       "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "62284e9c0f3c55874dd3",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition, workflow_default_state",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
     },
     {
@@ -6014,7 +5934,7 @@
       "reviewed": true
     },
     {
-      "id": "7d0e6cdadf29e41514ec",
+      "id": "93b40ecc5e920939ff3e",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",

@@ -56,9 +56,30 @@ function isSocialEventCapabilityMirror(candidate) {
     && candidate.name === 'recognizedSocialEventCapabilityCodes';
 }
 
+function isServiceStorefrontOrderStatus(candidate) {
+  return candidate.file.endsWith('/ServiceOrderTrackingPage.tsx')
+    && candidate.kind === 'switch-cases'
+    && candidate.name === 'status';
+}
+
 function technicalRule(candidate) {
   const value = context(candidate);
   const lowerName = candidate.name.toLowerCase();
+
+  if (
+    candidate.file === 'scripts/production-migrations.json'
+    && candidate.kind === 'json-array'
+    && candidate.name === 'migrations'
+  ) {
+    return 'Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.';
+  }
+  if (
+    candidate.file.endsWith('/MixingMasteringPage.test.tsx')
+    && candidate.kind === 'object-registry'
+    && candidate.name === 'packageDto'
+  ) {
+    return 'These are field names in a typed test DTO fixture, not selectable values; the fixture remains a consumer of the service-package contract.';
+  }
 
   if (
     candidate.kind === 'object-registry' &&
@@ -169,6 +190,7 @@ function classificationFor(candidate, technicalJustification) {
   if (isServiceResourceSelectionModeMirror(candidate)) return 'dynamic-business-catalog';
   if (isSocialEventStateParserMirror(candidate)) return 'dynamic-business-catalog';
   if (isSocialEventCapabilityMirror(candidate)) return 'security-system-registry';
+  if (isServiceStorefrontOrderStatus(candidate)) return 'dynamic-business-catalog';
   if (technicalJustification) return 'genuine-technical-constant';
   const value = context(candidate);
   // "reaction" contains the substring "action". Reaction choices are
@@ -193,6 +215,9 @@ function specializedModel(candidate, classification) {
   }
   if (isSocialEventStateParserMirror(candidate) || isSocialEventCapabilityMirror(candidate)) {
     return 'workflow_definition, workflow_state, workflow_transition, workflow_default_state, workflow_state_capability';
+  }
+  if (isServiceStorefrontOrderStatus(candidate)) {
+    return 'workflow_definition, workflow_state, workflow_transition, workflow_default_state';
   }
   if (classification === 'genuine-technical-constant') return 'technical_constant_allowlist';
   if (/navigation|menu|feature|sidebar|public_nav/i.test(value)) {
