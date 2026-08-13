@@ -248,6 +248,14 @@ export function canAccessPath(
   roles: readonly string[] | undefined,
   modules: readonly string[] | undefined,
 ): boolean {
+  const registryDecision = evaluatePathAccess(path, {
+    authenticated: true,
+    roles,
+    modules,
+  });
+  if (registryDecision) {
+    return registryDecision.state === 'allowed';
+  }
   if (path.startsWith('/configuracion/roles-permisos') || path.startsWith('/configuracion/usuarios-admin')) {
     return hasStrictAdminAccess(roles, modules);
   }

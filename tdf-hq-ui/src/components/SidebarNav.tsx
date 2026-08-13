@@ -460,7 +460,7 @@ function ShortcutSection(props: ShortcutSectionProps) {
   if (items.length === 0) return null;
 
   return (
-    <Box sx={{ pb: 1.5 }}>
+    <Box component="li" sx={{ pb: 1.5, listStyle: 'none' }}>
       <Stack sx={{ px: 1.5, py: 1 }}>
         <SectionCaption label="ATAJOS" />
       </Stack>
@@ -627,24 +627,27 @@ function NavGroupSection(props: NavGroupSectionProps) {
   } = props;
 
   return (
-    <Box>
+    <Box component="li" sx={{ listStyle: 'none' }}>
       <NavGroupHeader group={group} isExpanded={isExpanded} onToggle={onToggle} />
       <Collapse in={isExpanded} timeout="auto" unmountOnExit>
         <List disablePadding>
           {group.items.map((item) => (
-            <NavItemLink
-              key={item.path}
-              item={item}
-              groupTitle={group.title}
-              activePath={activePath}
-              highlighted={highlightedPath === item.path}
-              searchQuery={searchQuery}
-              unreadCount={chatBadgeCountForPath(item.path, chatUnreadCount)}
-              onVisit={onVisit}
-            />
+            <Box component="li" key={item.path} sx={{ listStyle: 'none' }}>
+              <NavItemLink
+                item={item}
+                groupTitle={group.title}
+                activePath={activePath}
+                highlighted={highlightedPath === item.path}
+                searchQuery={searchQuery}
+                unreadCount={chatBadgeCountForPath(item.path, chatUnreadCount)}
+                onVisit={onVisit}
+              />
+            </Box>
           ))}
           {group.items.length === 0 && group.restricted ? (
-            <RestrictedGroupNotice href={getAccessHref(group)} />
+            <Box component="li" sx={{ listStyle: 'none' }}>
+              <RestrictedGroupNotice href={getAccessHref(group)} />
+            </Box>
           ) : null}
         </List>
       </Collapse>
@@ -954,9 +957,11 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
           />
         )}
         {filteredNavGroups.length === 0 ? (
-          <SidebarNavErrorBoundary boundaryName={SIDEBAR_NAV_NO_RESULTS_BOUNDARY_NAME}>
-            {SIDEBAR_NAV_NO_RESULTS_CONTENT}
-          </SidebarNavErrorBoundary>
+          <Box component="li" sx={{ listStyle: 'none' }}>
+            <SidebarNavErrorBoundary boundaryName={SIDEBAR_NAV_NO_RESULTS_BOUNDARY_NAME}>
+              {SIDEBAR_NAV_NO_RESULTS_CONTENT}
+            </SidebarNavErrorBoundary>
+          </Box>
         ) : null}
         {filteredNavGroups.map((group) => {
           const isExpanded = searchQuery.length > 0 || expandedGroups.has(group.title) || Boolean(group.restricted);

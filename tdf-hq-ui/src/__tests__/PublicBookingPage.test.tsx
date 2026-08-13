@@ -428,7 +428,7 @@ describe('PublicBookingPage', () => {
     document.body.removeChild(container);
   });
 
-  it('uses the shared room name when legacy room UUIDs are ambiguous', async () => {
+  it('lets the backend resolve persisted default resources when legacy room UUIDs are ambiguous', async () => {
     listPublicRoomsMock.mockResolvedValueOnce([
       { roomId: 'room-live-a', rName: 'Live Room', rBookable: true },
       { roomId: 'room-live-b', rName: 'Live Room', rBookable: true },
@@ -478,7 +478,10 @@ describe('PublicBookingPage', () => {
 
     expect(createPublicMock).toHaveBeenCalledTimes(1);
     const payload = createPublicMock.mock.calls[0]?.[0];
-    expect(payload?.pbResourceIds).toEqual(['Live Room', 'Control Room']);
+    expect(payload).toMatchObject({
+      pbServiceOfferingId: BAND_RECORDING_ID,
+      pbResourceIds: null,
+    });
 
     await cleanup();
     document.body.removeChild(container);

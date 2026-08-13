@@ -4,6 +4,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import type { AssetCheckoutDTO, AssetDTO, DropdownOptionDTO, RoomDTO } from '../api/types';
+import { ToastProvider } from '../contexts/ToastContext';
 
 const listAssetsMock = jest.fn<() => Promise<AssetDTO[]>>();
 const listRoomsMock = jest.fn<() => Promise<RoomDTO[]>>();
@@ -106,9 +107,11 @@ const renderPage = async (container: HTMLElement) => {
   await act(async () => {
     root?.render(
       <MemoryRouter>
-        <QueryClientProvider client={qc}>
-          <LabelAssetsPage />
-        </QueryClientProvider>
+        <ToastProvider>
+          <QueryClientProvider client={qc}>
+            <LabelAssetsPage />
+          </QueryClientProvider>
+        </ToastProvider>
       </MemoryRouter>,
     );
     await flushPromises();
