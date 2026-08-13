@@ -1,0 +1,91 @@
+- generic [ref=f43e1]:
+  - generic [ref=f43e2]:
+    - generic [ref=f43e3]:
+      - link [ref=f43e1536] [cursor=pointer]:
+        - /url: "#main-content"
+        - text: Saltar al contenido principal
+      - generic [ref=f43e5]:
+        - banner [ref=f43e6]:
+          - generic [ref=f43e7]:
+            - button [ref=f43e1537] [cursor=pointer]
+            - link [ref=f43e1538] [cursor=pointer]:
+              - /url: /inicio
+            - button [ref=f43e1539] [cursor=pointer]:
+              - generic [ref=f43e17]: Buscar sección
+              - generic [ref=f43e18]: ⌘K
+            - generic [ref=f43e19]:
+              - button [ref=f43e1540] [cursor=pointer]:
+                - generic [ref=f43e24]: Crear
+              - button [ref=f43e1541] [cursor=pointer]
+              - button [ref=f43e1542] [cursor=pointer]:
+                - generic [ref=f43e31]: D
+        - status [ref=f43e32]
+        - main [ref=f43e35]:
+          - generic [ref=f43e37]:
+            - generic [ref=f43e39]:
+              - generic [ref=f43e40]:
+                - heading [level=3] [ref=f43e1543]: Contactos
+                - paragraph [ref=f43e42]: Gestiona personas, empresas y roles en un solo lugar.
+              - button [ref=f43e1544] [cursor=pointer]: Nuevo contacto
+            - generic [ref=f43e50]:
+              - generic [ref=f43e93]:
+                - textbox [ref=f43e1546]:
+                  - /placeholder: Buscar por nombre, email o Instagram
+                  - text: Fabro Alomìa Torres
+                - button [ref=f43e1547] [cursor=pointer]
+                - group
+              - generic [ref=f43e1524]:
+                - generic [ref=f43e1525]:
+                  - heading [level=6] [ref=f43e1548]: 1 coincidencia para "Fabro Alomìa Torres"
+                  - paragraph [ref=f43e1527]: La búsqueda dejó un solo contacto visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar contactos en la tabla.
+                - generic [ref=f43e1528]:
+                  - button [ref=f43e1549] [cursor=pointer]:
+                    - paragraph [ref=f43e1531]: Fabro Alomìa Torres
+                  - paragraph [ref=f43e1532]: "Contacto: Falta correo e Instagram"
+                  - paragraph [ref=f43e1533]: Completa el correo desde Acciones antes de crear el usuario.
+                - button [ref=f43e1550] [cursor=pointer]: Completar contacto
+          - generic [ref=f43e57]:
+            - status [ref=f43e58]:
+              - generic [ref=f43e62]: "API: online"
+            - button [ref=f43e1551] [cursor=pointer]
+    - generic [ref=f43e66]:
+      - button [ref=f43e1552] [cursor=pointer]
+      - button [ref=f43e1554] [cursor=pointer]
+      - button [ref=f43e1556] [cursor=pointer]
+      - button [ref=f43e1557] [cursor=pointer]
+      - button [ref=f43e1558] [cursor=pointer]
+      - button [ref=f43e1559] [cursor=pointer]
+      - generic [ref=f43e87]:
+        - generic [ref=f43e88]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient
+  - dialog [ref=f43e1568]:
+    - heading "Editar Fabro Alomìa Torres" [level=2] [ref=f43e1569]
+    - generic [ref=f43e1571]:
+      - generic [ref=f43e1572]:
+        - generic [ref=f43e1573]: Display
+        - generic [ref=f43e1574]:
+          - textbox "Display" [ref=f43e1575]: Fabro Alomìa Torres
+          - group:
+            - generic: Display
+      - generic [ref=f43e1576]:
+        - generic: Email
+        - generic [ref=f43e1577]:
+          - textbox "Email" [ref=f43e1578]
+          - group:
+            - generic: Email
+        - paragraph [ref=f43e1579]: Se usa como contacto principal y para crear accesos de usuario. Guarda un correo aquí y luego aparecerá Crear usuario en Acciones.
+      - generic [ref=f43e1580]:
+        - generic: Instagram
+        - generic [ref=f43e1581]:
+          - textbox "Instagram" [ref=f43e1582]
+          - group:
+            - generic: Instagram
+      - generic [ref=f43e1583]:
+        - generic: Teléfono
+        - generic [ref=f43e1584]:
+          - textbox "Teléfono" [ref=f43e1585]
+          - group:
+            - generic: Teléfono
+    - generic [ref=f43e1586]:
+      - button "Cancelar" [ref=f43e1587] [cursor=pointer]
+      - button "Guardar" [ref=f43e1588] [cursor=pointer]

@@ -1,0 +1,250 @@
+- generic [ref=f6e7]:
+  - generic [ref=f6e9]:
+    - generic [ref=f6e12]:
+      - link [ref=f6e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f6e22]
+      - generic [ref=f6e25]:
+        - link [ref=f6e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f6e35]
+        - link [ref=f6e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f6e45]
+        - link [ref=f6e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f6e57]
+        - link [ref=f6e62] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f6e67]
+        - link [ref=f6e218] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f6e223]
+        - link [ref=f6e85] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f6e90]
+        - link [ref=f6e95] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f6e100]
+        - link [ref=f6e107] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f6e112]:
+            - img "tdf.records.label's profile picture" [ref=f6e113]
+      - generic [ref=f6e114]:
+        - link [ref=f6e117] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f6e122]
+        - link [ref=f6e125] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f6e130]
+    - main [ref=f6e134]:
+      - generic [ref=f6e231]:
+        - navigation "Thread list" [ref=f6e232]:
+          - generic [ref=f6e233]:
+            - generic [ref=f6e234]:
+              - button [ref=f6e235] [cursor=pointer]:
+                - heading "tdf.records.label" [level=2] [ref=f6e237]
+                - img "Down chevron icon" [ref=f6e240]
+              - button [ref=f6e244] [cursor=pointer]:
+                - img "New message" [ref=f6e246]
+            - tablist [ref=f6e251]:
+              - tab "Primary" [selected] [ref=f6e252] [cursor=pointer]
+              - tab "General" [ref=f6e255] [cursor=pointer]
+              - tab "From ads" [ref=f6e258] [cursor=pointer]
+              - tab "Requests" [ref=f6e262] [cursor=pointer]
+            - generic [ref=f6e268]:
+              - img "Search" [ref=f6e270]
+              - textbox "Search" [ref=f6e273]
+            - generic [ref=f6e274]:
+              - generic [ref=f6e276]:
+                - list [ref=f6e278]:
+                  - listitem [ref=f6e279]
+                  - listitem [ref=f6e280]:
+                    - button "Your turn... Your note" [ref=f6e282] [cursor=pointer]:
+                      - generic [ref=f6e283]:
+                        - generic [ref=f6e284]: Your turn...
+                        - generic [ref=f6e290]:
+                          - link [ref=f6e292]
+                          - generic [ref=f6e293]: Your note
+                  - listitem [ref=f6e295]:
+                    - button "a q hora perdemos la gravedad?😂para vestirme y estar redi pa volar 🫨🐦‍🔥 camymantillan's profile picture Cami Mantilla" [ref=f6e298] [cursor=pointer]:
+                      - generic [ref=f6e299]:
+                        - generic [ref=f6e300]: a q hora perdemos la gravedad?😂para vestirme y estar redi pa volar 🫨🐦‍🔥
+                        - generic [ref=f6e307]:
+                          - link [ref=f6e309]:
+                            - img "camymantillan's profile picture" [ref=f6e310]
+                          - generic [ref=f6e311]: Cami Mantilla
+                  - listitem [ref=f6e314]:
+                    - button "Toca la nota Así me gustan las perritas, obedientes anajusegovia's profile picture Ana Julia/ DJ JU🫧" [ref=f6e317] [cursor=pointer]:
+                      - generic [ref=f6e318]:
+                        - generic [ref=f6e319]: Toca la notaAsí me gustan las perritas, obedientes
+                        - generic [ref=f6e328]:
+                          - link [ref=f6e330]:
+                            - img "anajusegovia's profile picture" [ref=f6e331]
+                          - generic [ref=f6e332]: Ana Julia/ DJ JU🫧
+                  - listitem [ref=f6e335]:
+                    - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Astro Moog (feat. Llama Este Pez) Juano Ledesma juano_music's profile picture J" [ref=f6e338] [cursor=pointer]:
+                      - generic [ref=f6e339]:
+                        - generic [ref=f6e345]:
+                          - generic [ref=f6e346]:
+                            - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f6e348]
+                            - generic [ref=f6e352]: Astro Moog (feat. Llama Este Pez)
+                          - generic [ref=f6e353]: Juano Ledesma
+                        - generic [ref=f6e354]:
+                          - link [ref=f6e356]:
+                            - img "juano_music's profile picture" [ref=f6e357]
+                          - generic [ref=f6e358]: J
+                  - listitem [ref=f6e361]:
+                    - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner The Curse (feat. Mac Demarco) Yellow Days alexdrnoise's profile picture Alex Alvarez" [ref=f6e364] [cursor=pointer]:
+                      - generic [ref=f6e365]:
+                        - generic [ref=f6e371]:
+                          - generic [ref=f6e372]:
+                            - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f6e374]
+                            - generic [ref=f6e378]: The Curse (feat. Mac Demarco)
+                          - generic [ref=f6e379]: Yellow Days
+                        - generic [ref=f6e380]:
+                          - link [ref=f6e382]:
+                            - img "alexdrnoise's profile picture" [ref=f6e383]
+                          - generic [ref=f6e384]: Alex Alvarez
+                  - listitem [ref=f6e387]:
+                    - button "No hay nada más caro que deberle favores a 🇺🇸 e 🇮🇱 jofiel.arch.music's profile picture Jofiel.arch.music" [ref=f6e390] [cursor=pointer]:
+                      - generic [ref=f6e391]:
+                        - generic [ref=f6e392]: No hay nada más caro que deberle favores a 🇺🇸 e 🇮🇱
+                        - generic [ref=f6e399]:
+                          - link [ref=f6e401]:
+                            - img "jofiel.arch.music's profile picture" [ref=f6e402]
+                          - generic [ref=f6e403]: Jofiel.arch.music
+                  - listitem [ref=f6e406]:
+                    - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Shape Of My Heart Sting natiqdati's profile picture Natali Quintero" [ref=f6e409] [cursor=pointer]:
+                      - generic [ref=f6e410]:
+                        - generic [ref=f6e416]:
+                          - generic [ref=f6e417]:
+                            - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f6e419]
+                            - generic [ref=f6e423]: Shape Of My Heart
+                          - generic [ref=f6e424]: Sting
+                        - generic [ref=f6e425]:
+                          - link [ref=f6e427]:
+                            - img "natiqdati's profile picture" [ref=f6e428]
+                          - generic [ref=f6e429]: Natali Quintero
+                  - listitem [ref=f6e432]:
+                    - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Hacer volar la casa Cultura Profética chevymusic1's profile picture (Chevy)" [ref=f6e435] [cursor=pointer]:
+                      - generic [ref=f6e436]:
+                        - generic [ref=f6e442]:
+                          - generic [ref=f6e443]:
+                            - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f6e445]
+                            - generic [ref=f6e449]: Hacer volar la casa
+                          - generic [ref=f6e450]: Cultura Profética
+                        - generic [ref=f6e451]:
+                          - link [ref=f6e453]:
+                            - img "chevymusic1's profile picture" [ref=f6e454]
+                          - generic [ref=f6e455]: (Chevy)
+                  - listitem [ref=f6e458]:
+                    - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Sidewalks (feat. Kendrick Lamar) Explicit The Weeknd djettalessi__'s profile picture JETTALESSI" [ref=f6e461] [cursor=pointer]:
+                      - generic [ref=f6e462]:
+                        - generic [ref=f6e468]:
+                          - generic [ref=f6e469]:
+                            - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f6e471]
+                            - generic [ref=f6e475]: Sidewalks (feat. Kendrick Lamar)
+                            - img "Explicit" [ref=f6e477]
+                          - generic [ref=f6e479]: The Weeknd
+                        - generic [ref=f6e480]:
+                          - link [ref=f6e482]:
+                            - img "djettalessi__'s profile picture" [ref=f6e483]
+                          - generic [ref=f6e484]: JETTALESSI
+                - button "Next" [ref=f6e487] [cursor=pointer]
+              - generic [ref=f6e492]:
+                - button "user-profile-picture BACKROOM SESSIONS Hola! 👋 Sí, de una, nos interesa. Estamos arrancando un proyecto de sesiones electrónicas con artistas y público, y también buscando ser parte de los eventos y movernos dentro de la escena. Creemos que TDF encaja súper bien con lo que estamos haciendo 🙌 about a minute ago" [ref=f6e496] [cursor=pointer]:
+                  - generic [ref=f6e498]:
+                    - img "user-profile-picture" [ref=f6e502]
+                    - generic [ref=f6e505]:
+                      - generic [ref=f6e506]: BACKROOM SESSIONS
+                      - generic [ref=f6e512]:
+                        - generic [ref=f6e513]: Hola! 👋 Sí, de una, nos interesa. Estamos arrancando un proyecto de sesiones electrónicas con artistas y público, y también buscando ser parte de los eventos y movernos dentro de la escena. Creemos que TDF encaja súper bien con lo que estamos haciendo 🙌
+                        - generic [ref=f6e515]:
+                          - generic [ref=f6e516]: ·
+                          - generic "about a minute ago" [ref=f6e521]: 1m
+                - 'button "user-profile-picture Alvaro Pardey You: Hola, Alvaro 👋 Vimos tu interacción con TDF y tus sets recientes de afro house y live act en Quito. En TDF puedes reunir perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Te invitamos a recorrerlo: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records about a minute ago" [ref=f6e525] [cursor=pointer]':
+                  - generic [ref=f6e527]:
+                    - img "user-profile-picture" [ref=f6e531]
+                    - generic [ref=f6e534]:
+                      - generic [ref=f6e535]: Alvaro Pardey
+                      - generic [ref=f6e541]:
+                        - generic [ref=f6e542]: "You: Hola, Alvaro 👋 Vimos tu interacción con TDF y tus sets recientes de afro house y live act en Quito. En TDF puedes reunir perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Te invitamos a recorrerlo: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                        - generic [ref=f6e544]:
+                          - generic [ref=f6e545]: ·
+                          - generic "about a minute ago" [ref=f6e550]: 1m
+                - 'button "user-profile-picture Risk You: Hola, Risk 👋 Vimos tu reacción en el reel de TDF y tus publicaciones de phonk vinculadas a Quito. Tu escena necesita un espacio propio: en TDF puedes seguir artistas, ver lanzamientos y explorar experiencias de la comunidad. Puedes entrar como fan aquí: https://tdf-app.pages.dev/login?signup=1&roles=Fan&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=fan_a Si no te interesa, todo bien: no volvemos a escribir. — TDF Records 8 minutes ago" [ref=f6e554] [cursor=pointer]':
+                  - generic [ref=f6e556]:
+                    - img "user-profile-picture" [ref=f6e560]
+                    - generic [ref=f6e563]:
+                      - generic [ref=f6e564]: Risk
+                      - generic [ref=f6e570]:
+                        - generic [ref=f6e571]: "You: Hola, Risk 👋 Vimos tu reacción en el reel de TDF y tus publicaciones de phonk vinculadas a Quito. Tu escena necesita un espacio propio: en TDF puedes seguir artistas, ver lanzamientos y explorar experiencias de la comunidad. Puedes entrar como fan aquí: https://tdf-app.pages.dev/login?signup=1&roles=Fan&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=fan_a Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                        - generic [ref=f6e573]:
+                          - generic [ref=f6e574]: ·
+                          - generic "8 minutes ago" [ref=f6e579]: 8m
+                - 'button "user-profile-picture TAKIJANA You: Hola, Takijana 👋 Vimos su interacción con TDF y las fechas recientes de la banda dentro de la escena ska de Quito. En TDF pueden reunir perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Les invitamos a crear su perfil: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no les interesa, todo bien: no volvemos a escribir. — TDF Records 10 minutes ago" [ref=f6e583] [cursor=pointer]':
+                  - generic [ref=f6e585]:
+                    - img "user-profile-picture" [ref=f6e589]
+                    - generic [ref=f6e592]:
+                      - generic [ref=f6e593]: TAKIJANA
+                      - generic [ref=f6e599]:
+                        - generic [ref=f6e600]: "You: Hola, Takijana 👋 Vimos su interacción con TDF y las fechas recientes de la banda dentro de la escena ska de Quito. En TDF pueden reunir perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Les invitamos a crear su perfil: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                        - generic [ref=f6e602]:
+                          - generic [ref=f6e603]: ·
+                          - generic "10 minutes ago" [ref=f6e608]: 10m
+                - 'button "user-profile-picture KIRMANA RECORDS You: Hola, Kirmana Records 👋 Vimos su reacción a una historia de TDF y las fechas conectadas con Tollywood UIO y Sereno Moreno. Tu escena necesita un espacio propio: en TDF pueden explorar perfiles, lanzamientos y experiencias de la comunidad musical. Les invitamos a conocerla: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a Si no les interesa, todo bien: no volvemos a escribir. — TDF Records 14 minutes ago" [ref=f6e612] [cursor=pointer]':
+                  - generic [ref=f6e614]:
+                    - img "user-profile-picture" [ref=f6e618]
+                    - generic [ref=f6e621]:
+                      - generic [ref=f6e622]: KIRMANA RECORDS
+                      - generic [ref=f6e628]:
+                        - generic [ref=f6e629]: "You: Hola, Kirmana Records 👋 Vimos su reacción a una historia de TDF y las fechas conectadas con Tollywood UIO y Sereno Moreno. Tu escena necesita un espacio propio: en TDF pueden explorar perfiles, lanzamientos y experiencias de la comunidad musical. Les invitamos a conocerla: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                        - generic [ref=f6e631]:
+                          - generic [ref=f6e632]: ·
+                          - generic "14 minutes ago" [ref=f6e637]: 14m
+                - 'button "user-profile-picture George Molina You: Hola, Jorge 👋 Vimos tus interacciones con las historias de TDF y tus publicaciones como fan de Verde 70 en Quito. En TDF puedes seguir artistas, ver lanzamientos y explorar experiencias de la escena en un mismo lugar. Puedes entrar como fan aquí: https://tdf-app.pages.dev/login?signup=1&roles=Fan&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=fan_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records 29 minutes ago" [ref=f6e641] [cursor=pointer]':
+                  - generic [ref=f6e643]:
+                    - img "user-profile-picture" [ref=f6e647]
+                    - generic [ref=f6e650]:
+                      - generic [ref=f6e651]: George Molina
+                      - generic [ref=f6e657]:
+                        - generic [ref=f6e658]: "You: Hola, Jorge 👋 Vimos tus interacciones con las historias de TDF y tus publicaciones como fan de Verde 70 en Quito. En TDF puedes seguir artistas, ver lanzamientos y explorar experiencias de la escena en un mismo lugar. Puedes entrar como fan aquí: https://tdf-app.pages.dev/login?signup=1&roles=Fan&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=fan_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                        - generic [ref=f6e660]:
+                          - generic [ref=f6e661]: ·
+                          - generic "29 minutes ago" [ref=f6e666]: 29m
+                - 'button "user-profile-picture Midiendo Calles | Medio Cultural You: Hola, Midiendo Calles 👋 Vimos que empezaron a seguir a TDF y su cobertura reciente de arte, cultura y agenda de Quito. Tu escena necesita un espacio propio: en TDF pueden recorrer perfiles, lanzamientos y experiencias de la comunidad musical. Les invitamos a conocerla: https://tdf-app.pages.dev/login?signup=1&roles=Publicist&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a Si no les interesa, todo bien: no volvemos a escribir. — TDF Records 32 minutes ago" [ref=f6e670] [cursor=pointer]':
+                  - generic [ref=f6e672]:
+                    - img "user-profile-picture" [ref=f6e676]
+                    - generic [ref=f6e679]:
+                      - generic [ref=f6e680]: Midiendo Calles | Medio Cultural
+                      - generic [ref=f6e686]:
+                        - generic [ref=f6e687]: "You: Hola, Midiendo Calles 👋 Vimos que empezaron a seguir a TDF y su cobertura reciente de arte, cultura y agenda de Quito. Tu escena necesita un espacio propio: en TDF pueden recorrer perfiles, lanzamientos y experiencias de la comunidad musical. Les invitamos a conocerla: https://tdf-app.pages.dev/login?signup=1&roles=Publicist&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                        - generic [ref=f6e689]:
+                          - generic [ref=f6e690]: ·
+                          - generic "32 minutes ago" [ref=f6e695]: 32m
+                - 'button "user-profile-picture ✨Festival Mestizónica ✨ You: Hola, Mestizónica 👋 Vimos que empezaron a seguir a TDF y la agenda reciente del festival de música original en Quito. Tu escena necesita un espacio propio: en TDF pueden explorar perfiles, lanzamientos y experiencias de la comunidad local. Les invitamos a conocerla: https://tdf-app.pages.dev/login?signup=1&roles=Promotor&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a Si no les interesa, todo bien: no volvemos a escribir. — TDF Records 46 minutes ago" [ref=f6e699] [cursor=pointer]':
+                  - generic [ref=f6e701]:
+                    - img "user-profile-picture" [ref=f6e705]
+                    - generic [ref=f6e708]:
+                      - generic [ref=f6e709]: ✨Festival Mestizónica ✨
+                      - generic [ref=f6e715]:
+                        - generic [ref=f6e716]: "You: Hola, Mestizónica 👋 Vimos que empezaron a seguir a TDF y la agenda reciente del festival de música original en Quito. Tu escena necesita un espacio propio: en TDF pueden explorar perfiles, lanzamientos y experiencias de la comunidad local. Les invitamos a conocerla: https://tdf-app.pages.dev/login?signup=1&roles=Promotor&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                        - generic [ref=f6e718]:
+                          - generic [ref=f6e719]: ·
+                          - generic "46 minutes ago" [ref=f6e724]: 46m
+                - button [ref=f6e747] [cursor=pointer]:
+                  - generic [ref=f6e749]:
+                    - status "Loading..." [ref=f6e752]
+                    - generic [ref=f6e755]:
+                      - status "Loading..." [ref=f6e757]
+                      - status "Loading..." [ref=f6e759]
+        - generic [ref=f6e764]:
+          - heading "Your messages" [level=2] [ref=f6e771]
+          - generic [ref=f6e772]: Send a message to start a chat.
+          - button "Send message" [ref=f6e776] [cursor=pointer]
+  - button [ref=f6e778] [cursor=pointer]:
+    - tooltip "Relationships 1" [ref=f6e780]:
+      - generic [ref=f6e783]:
+        - generic "Relationships" [ref=f6e784]
+        - generic [ref=f6e785]: "1"

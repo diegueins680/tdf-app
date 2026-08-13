@@ -1,0 +1,259 @@
+- generic [ref=f3e1]:
+  - generic [ref=f3e2]:
+    - generic [ref=f3e3]:
+      - link [ref=f3e1370] [cursor=pointer]:
+        - /url: "#main-content"
+        - text: Saltar al contenido principal
+      - navigation [ref=f3e1371]:
+        - generic [ref=f3e6]:
+          - generic [ref=f3e7]: MENÚ
+          - generic [ref=f3e9]:
+            - textbox [ref=f3e1372]:
+              - /placeholder: Buscar sección (/)
+            - group
+        - generic [ref=f3e14]:
+          - generic [ref=f3e15]:
+            - generic [ref=f3e16]: ATAJOS
+            - list [ref=f3e19]:
+              - listitem [ref=f3e20]:
+                - link [ref=f3e1373] [cursor=pointer]:
+                  - /url: /acerca
+                  - generic [ref=f3e24]:
+                    - generic [ref=f3e25]: Acerca de
+                    - paragraph [ref=f3e26]: Reciente · AYUDA
+              - listitem [ref=f3e27]:
+                - link [ref=f3e1374] [cursor=pointer]:
+                  - /url: /estudio/pipelines
+                  - generic [ref=f3e31]:
+                    - generic [ref=f3e32]: Pipelines
+                    - paragraph [ref=f3e33]: Reciente · CREAR
+              - listitem [ref=f3e34]:
+                - link [ref=f3e1375] [cursor=pointer]:
+                  - /url: /configuracion/cms
+                  - generic [ref=f3e38]:
+                    - generic [ref=f3e39]: CMS
+                    - paragraph [ref=f3e40]: Reciente · ADMIN
+              - listitem [ref=f3e41]:
+                - link [ref=f3e1376] [cursor=pointer]:
+                  - /url: /inicio
+                  - generic [ref=f3e45]:
+                    - generic [ref=f3e46]: Inicio
+                    - paragraph [ref=f3e47]: Reciente · CREAR
+              - listitem [ref=f3e48]:
+                - link [ref=f3e1377] [cursor=pointer]:
+                  - /url: /estudio/calendario
+                  - generic [ref=f3e52]:
+                    - generic [ref=f3e53]: Calendario
+                    - paragraph [ref=f3e54]: Reciente · CREAR
+              - listitem [ref=f3e55]:
+                - link [ref=f3e1378] [cursor=pointer]:
+                  - /url: /escuela/clases
+                  - generic [ref=f3e59]:
+                    - generic [ref=f3e60]: Clases
+                    - paragraph [ref=f3e61]: Reciente · CREAR
+          - generic [ref=f3e63]:
+            - generic [ref=f3e64]: CREAR
+            - button [ref=f3e1379] [cursor=pointer]
+          - generic [ref=f3e72]:
+            - generic [ref=f3e73]:
+              - generic [ref=f3e74]: GENTE
+              - button [expanded] [ref=f3e1380] [cursor=pointer]
+            - list [ref=f3e85]:
+              - listitem [ref=f3e86]:
+                - link [ref=f3e1381] [cursor=pointer]:
+                  - /url: /fans
+                  - generic [ref=f3e90]: Comunidad
+                - button [ref=f3e1382] [cursor=pointer]
+                - button [ref=f3e1383] [cursor=pointer]
+              - listitem [ref=f3e98]:
+                - link [ref=f3e1384] [cursor=pointer]:
+                  - /url: /marketplace
+                  - generic [ref=f3e102]: Tienda
+                - button [ref=f3e1385] [cursor=pointer]
+                - button [ref=f3e1386] [cursor=pointer]
+              - listitem [ref=f3e110]:
+                - link [ref=f3e1387] [cursor=pointer]:
+                  - /url: /reservar
+                  - generic [ref=f3e114]: Reservar estudio
+                - button [ref=f3e1388] [cursor=pointer]
+                - button [ref=f3e1389] [cursor=pointer]
+              - listitem [ref=f3e122]:
+                - link [ref=f3e1390] [cursor=pointer]:
+                  - /url: /trials
+                  - generic [ref=f3e126]: Agenda de pruebas
+                - button [ref=f3e1391] [cursor=pointer]
+                - button [ref=f3e1392] [cursor=pointer]
+              - listitem [ref=f3e134]:
+                - link [ref=f3e1393] [cursor=pointer]:
+                  - /url: /live-sessions/registro
+                  - generic [ref=f3e138]: Registro live sessions
+                - button [ref=f3e1394] [cursor=pointer]
+                - button [ref=f3e1395] [cursor=pointer]
+              - listitem [ref=f3e146]:
+                - link [ref=f3e1396] [cursor=pointer]:
+                  - /url: /records
+                  - generic [ref=f3e150]: Lanzamientos públicos
+                - button [ref=f3e1397] [cursor=pointer]
+                - button [ref=f3e1398] [cursor=pointer]
+              - listitem [ref=f3e158]:
+                - link [ref=f3e1399] [cursor=pointer]:
+                  - /url: /donar
+                  - generic [ref=f3e162]: Donaciones
+                - button [ref=f3e1400] [cursor=pointer]
+                - button [ref=f3e1401] [cursor=pointer]
+              - listitem [ref=f3e170]:
+                - link [ref=f3e1402] [cursor=pointer]:
+                  - /url: /domo-del-pululahua
+                  - generic [ref=f3e174]: Domo Pululahua
+                - button [ref=f3e1403] [cursor=pointer]
+                - button [ref=f3e1404] [cursor=pointer]
+              - listitem [ref=f3e182]:
+                - link [ref=f3e1405] [cursor=pointer]:
+                  - /url: /social
+                  - generic [ref=f3e186]: Conexiones
+                - button [ref=f3e1406] [cursor=pointer]
+                - button [ref=f3e1407] [cursor=pointer]
+              - listitem [ref=f3e194]:
+                - link [ref=f3e1408] [cursor=pointer]:
+                  - /url: /social/instagram
+                  - generic [ref=f3e198]: Instagram
+                - button [ref=f3e1409] [cursor=pointer]
+                - button [ref=f3e1410] [cursor=pointer]
+              - listitem [ref=f3e206]:
+                - link [ref=f3e1411] [cursor=pointer]:
+                  - /url: /social/inbox
+                  - generic [ref=f3e210]: Inbox social
+                - button [ref=f3e1412] [cursor=pointer]
+                - button [ref=f3e1413] [cursor=pointer]
+              - listitem [ref=f3e218]:
+                - link [ref=f3e1414] [cursor=pointer]:
+                  - /url: /social/eventos
+                  - generic [ref=f3e222]: Eventos sociales
+                - button [ref=f3e1415] [cursor=pointer]
+                - button [ref=f3e1416] [cursor=pointer]
+              - listitem [ref=f3e230]:
+                - link [ref=f3e1417] [cursor=pointer]:
+                  - /url: /chat
+                  - generic [ref=f3e234]: Chat
+                - button [ref=f3e1418] [cursor=pointer]
+                - button [ref=f3e1419] [cursor=pointer]
+              - listitem [ref=f3e242]:
+                - link [ref=f3e1420] [cursor=pointer]:
+                  - /url: /crm/contactos
+                  - generic [ref=f3e246]: Contactos
+                - button [ref=f3e1421] [cursor=pointer]
+                - button [ref=f3e1422] [cursor=pointer]
+              - listitem [ref=f3e254]:
+                - link [ref=f3e1423] [cursor=pointer]:
+                  - /url: /crm/empresas
+                  - generic [ref=f3e258]: Empresas
+                - button [ref=f3e1424] [cursor=pointer]
+                - button [ref=f3e1425] [cursor=pointer]
+              - listitem [ref=f3e266]:
+                - link [ref=f3e1426] [cursor=pointer]:
+                  - /url: /crm/leads
+                  - generic [ref=f3e270]: Leads
+                - button [ref=f3e1427] [cursor=pointer]
+                - button [ref=f3e1428] [cursor=pointer]
+          - generic [ref=f3e279]:
+            - generic [ref=f3e280]: SELLO
+            - button [ref=f3e1429] [cursor=pointer]
+          - generic [ref=f3e289]:
+            - generic [ref=f3e290]: OPERAR
+            - button [ref=f3e1430] [cursor=pointer]
+          - generic [ref=f3e300]:
+            - generic [ref=f3e301]: ADMIN
+            - button [ref=f3e1431] [cursor=pointer]
+          - generic [ref=f3e313]:
+            - generic [ref=f3e314]: HERRAMIENTAS
+            - button [ref=f3e1432] [cursor=pointer]
+          - generic [ref=f3e323]:
+            - generic [ref=f3e324]: AYUDA
+            - button [ref=f3e1433] [cursor=pointer]
+      - generic [ref=f3e332]:
+        - banner [ref=f3e333]:
+          - generic [ref=f3e334]:
+            - button [ref=f3e1434] [cursor=pointer]
+            - link [ref=f3e1435] [cursor=pointer]:
+              - /url: /inicio
+            - button [ref=f3e1436] [cursor=pointer]:
+              - generic [ref=f3e344]: Buscar sección
+              - generic [ref=f3e345]: ⌘K
+            - generic [ref=f3e346]:
+              - button [ref=f3e1437] [cursor=pointer]:
+                - generic [ref=f3e351]: Crear
+              - button [ref=f3e1438] [cursor=pointer]
+              - button [ref=f3e1439] [cursor=pointer]:
+                - generic [ref=f3e358]: D
+        - status [ref=f3e359]
+        - main [ref=f3e362]:
+          - generic [ref=f3e364]:
+            - generic [ref=f3e366]:
+              - generic [ref=f3e367]:
+                - heading [level=3] [ref=f3e1440]: Contactos
+                - paragraph [ref=f3e369]: Gestiona personas, empresas y roles en un solo lugar.
+              - button [ref=f3e1441] [cursor=pointer]: Nuevo contacto
+            - generic [ref=f3e377]:
+              - generic [ref=f3e419]:
+                - textbox [ref=f3e1443]:
+                  - /placeholder: Buscar por nombre, email o Instagram
+                  - text: Takijana
+                - button [ref=f3e1444] [cursor=pointer]
+                - group
+              - generic [ref=f3e1356]:
+                - generic [ref=f3e1357]:
+                  - heading [level=6] [ref=f3e1445]: 1 coincidencia para "Takijana"
+                  - paragraph [ref=f3e1359]: La búsqueda dejó un solo contacto visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar contactos en la tabla.
+                - generic [ref=f3e1360]:
+                  - generic [ref=f3e1361]:
+                    - button [ref=f3e1446] [cursor=pointer]:
+                      - paragraph [ref=f3e1363]: Takijana
+                    - generic [ref=f3e1364]: Empresa
+                  - paragraph [ref=f3e1366]: "Contacto: Falta correo e Instagram"
+                  - paragraph [ref=f3e1367]: Completa el correo desde Acciones antes de crear el usuario.
+                - button [ref=f3e1447] [cursor=pointer]: Completar contacto
+          - generic [ref=f3e384]:
+            - status [ref=f3e385]:
+              - generic [ref=f3e388]: "API: online"
+            - button [ref=f3e1448] [cursor=pointer]
+    - generic [ref=f3e392]:
+      - button [ref=f3e1449] [cursor=pointer]
+      - button [ref=f3e1451] [cursor=pointer]
+      - button [ref=f3e1453] [cursor=pointer]
+      - button [ref=f3e1454] [cursor=pointer]
+      - button [ref=f3e1455] [cursor=pointer]
+      - button [ref=f3e1456] [cursor=pointer]
+      - generic [ref=f3e413]:
+        - generic [ref=f3e414]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient
+  - dialog [ref=f3e1465]:
+    - heading "Editar Takijana" [level=2] [ref=f3e1466]
+    - generic [ref=f3e1468]:
+      - generic [ref=f3e1469]:
+        - generic [ref=f3e1470]: Display
+        - generic [ref=f3e1471]:
+          - textbox "Display" [ref=f3e1472]: Takijana
+          - group:
+            - generic: Display
+      - generic [ref=f3e1473]:
+        - generic: Email
+        - generic [ref=f3e1474]:
+          - textbox "Email" [ref=f3e1475]
+          - group:
+            - generic: Email
+        - paragraph [ref=f3e1476]: Se usa como contacto principal y para crear accesos de usuario. Guarda un correo aquí y luego aparecerá Crear usuario en Acciones.
+      - generic [ref=f3e1477]:
+        - generic: Instagram
+        - generic [ref=f3e1478]:
+          - textbox "Instagram" [ref=f3e1479]
+          - group:
+            - generic: Instagram
+      - generic [ref=f3e1480]:
+        - generic: Teléfono
+        - generic [ref=f3e1481]:
+          - textbox "Teléfono" [ref=f3e1482]
+          - group:
+            - generic: Teléfono
+    - generic [ref=f3e1483]:
+      - button "Cancelar" [ref=f3e1484] [cursor=pointer]
+      - button "Guardar" [ref=f3e1485] [cursor=pointer]

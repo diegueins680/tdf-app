@@ -1,0 +1,213 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - link "Saltar al contenido principal" [ref=e975] [cursor=pointer]:
+      - /url: "#main-content"
+    - navigation "Navegación de la aplicación" [ref=e976]:
+      - generic [ref=e6]:
+        - generic [ref=e7]: MENÚ
+        - generic [ref=e9]:
+          - textbox "Buscar sección" [ref=e977]:
+            - /placeholder: Buscar sección (/)
+          - group
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e16]: ATAJOS
+          - list [ref=e19]:
+            - listitem [ref=e20]:
+              - link "Pipelines Reciente · CREAR" [ref=e978] [cursor=pointer]:
+                - /url: /estudio/pipelines
+                - generic [ref=e24]:
+                  - generic [ref=e25]: Pipelines
+                  - paragraph [ref=e26]: Reciente · CREAR
+            - listitem [ref=e27]:
+              - link "CMS Reciente · ADMIN" [ref=e979] [cursor=pointer]:
+                - /url: /configuracion/cms
+                - generic [ref=e31]:
+                  - generic [ref=e32]: CMS
+                  - paragraph [ref=e33]: Reciente · ADMIN
+            - listitem [ref=e34]:
+              - link "Inicio Reciente · CREAR" [ref=e980] [cursor=pointer]:
+                - /url: /inicio
+                - generic [ref=e38]:
+                  - generic [ref=e39]: Inicio
+                  - paragraph [ref=e40]: Reciente · CREAR
+            - listitem [ref=e41]:
+              - link "Acerca de Reciente · AYUDA" [ref=e981] [cursor=pointer]:
+                - /url: /acerca
+                - generic [ref=e45]:
+                  - generic [ref=e46]: Acerca de
+                  - paragraph [ref=e47]: Reciente · AYUDA
+            - listitem [ref=e48]:
+              - link "Calendario Reciente · CREAR" [ref=e982] [cursor=pointer]:
+                - /url: /estudio/calendario
+                - generic [ref=e52]:
+                  - generic [ref=e53]: Calendario
+                  - paragraph [ref=e54]: Reciente · CREAR
+            - listitem [ref=e55]:
+              - link "Clases Reciente · CREAR" [ref=e983] [cursor=pointer]:
+                - /url: /escuela/clases
+                - generic [ref=e59]:
+                  - generic [ref=e60]: Clases
+                  - paragraph [ref=e61]: Reciente · CREAR
+        - generic [ref=e63]:
+          - generic [ref=e64]: CREAR
+          - button "Mostrar CREAR" [ref=e984] [cursor=pointer]
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - generic [ref=e74]: GENTE
+            - button "Ocultar GENTE" [expanded] [ref=e985] [cursor=pointer]
+          - list [ref=e85]:
+            - listitem [ref=e86]:
+              - link "Comunidad" [ref=e986] [cursor=pointer]:
+                - /url: /fans
+              - button "Favorito Comunidad" [ref=e987] [cursor=pointer]
+              - button "Fijar Comunidad" [ref=e988] [cursor=pointer]
+            - listitem [ref=e98]:
+              - link "Tienda" [ref=e989] [cursor=pointer]:
+                - /url: /marketplace
+              - button "Favorito Tienda" [ref=e990] [cursor=pointer]
+              - button "Fijar Tienda" [ref=e991] [cursor=pointer]
+            - listitem [ref=e110]:
+              - link "Reservar estudio" [ref=e992] [cursor=pointer]:
+                - /url: /reservar
+              - button "Favorito Reservar estudio" [ref=e993] [cursor=pointer]
+              - button "Fijar Reservar estudio" [ref=e994] [cursor=pointer]
+            - listitem [ref=e122]:
+              - link "Agenda de pruebas" [ref=e995] [cursor=pointer]:
+                - /url: /trials
+              - button "Favorito Agenda de pruebas" [ref=e996] [cursor=pointer]
+              - button "Fijar Agenda de pruebas" [ref=e997] [cursor=pointer]
+            - listitem [ref=e134]:
+              - link "Registro live sessions" [ref=e998] [cursor=pointer]:
+                - /url: /live-sessions/registro
+              - button "Favorito Registro live sessions" [ref=e999] [cursor=pointer]
+              - button "Fijar Registro live sessions" [ref=e1000] [cursor=pointer]
+            - listitem [ref=e146]:
+              - link "Lanzamientos públicos" [ref=e1001] [cursor=pointer]:
+                - /url: /records
+              - button "Favorito Lanzamientos públicos" [ref=e1002] [cursor=pointer]
+              - button "Fijar Lanzamientos públicos" [ref=e1003] [cursor=pointer]
+            - listitem [ref=e158]:
+              - link "Donaciones" [ref=e1004] [cursor=pointer]:
+                - /url: /donar
+              - button "Favorito Donaciones" [ref=e1005] [cursor=pointer]
+              - button "Fijar Donaciones" [ref=e1006] [cursor=pointer]
+            - listitem [ref=e170]:
+              - link "Domo Pululahua" [ref=e1007] [cursor=pointer]:
+                - /url: /domo-del-pululahua
+              - button "Favorito Domo Pululahua" [ref=e1008] [cursor=pointer]
+              - button "Fijar Domo Pululahua" [ref=e1009] [cursor=pointer]
+            - listitem [ref=e182]:
+              - link "Conexiones" [ref=e1010] [cursor=pointer]:
+                - /url: /social
+              - button "Favorito Conexiones" [ref=e1011] [cursor=pointer]
+              - button "Fijar Conexiones" [ref=e1012] [cursor=pointer]
+            - listitem [ref=e194]:
+              - link "Instagram" [ref=e1013] [cursor=pointer]:
+                - /url: /social/instagram
+              - button "Favorito Instagram" [ref=e1014] [cursor=pointer]
+              - button "Fijar Instagram" [ref=e1015] [cursor=pointer]
+            - listitem [ref=e206]:
+              - link "Inbox social" [ref=e1016] [cursor=pointer]:
+                - /url: /social/inbox
+              - button "Favorito Inbox social" [ref=e1017] [cursor=pointer]
+              - button "Fijar Inbox social" [ref=e1018] [cursor=pointer]
+            - listitem [ref=e218]:
+              - link "Eventos sociales" [ref=e1019] [cursor=pointer]:
+                - /url: /social/eventos
+              - button "Favorito Eventos sociales" [ref=e1020] [cursor=pointer]
+              - button "Fijar Eventos sociales" [ref=e1021] [cursor=pointer]
+            - listitem [ref=e230]:
+              - link "Chat" [ref=e1022] [cursor=pointer]:
+                - /url: /chat
+              - button "Favorito Chat" [ref=e1023] [cursor=pointer]
+              - button "Fijar Chat" [ref=e1024] [cursor=pointer]
+            - listitem [ref=e242]:
+              - link "Contactos" [ref=e1025] [cursor=pointer]:
+                - /url: /crm/contactos
+              - button "Favorito Contactos" [ref=e1026] [cursor=pointer]
+              - button "Fijar Contactos" [ref=e1027] [cursor=pointer]
+            - listitem [ref=e254]:
+              - link "Empresas" [ref=e1028] [cursor=pointer]:
+                - /url: /crm/empresas
+              - button "Favorito Empresas" [ref=e1029] [cursor=pointer]
+              - button "Fijar Empresas" [ref=e1030] [cursor=pointer]
+            - listitem [ref=e266]:
+              - link "Leads" [ref=e1031] [cursor=pointer]:
+                - /url: /crm/leads
+              - button "Favorito Leads" [ref=e1032] [cursor=pointer]
+              - button "Fijar Leads" [ref=e1033] [cursor=pointer]
+        - generic [ref=e279]:
+          - generic [ref=e280]: SELLO
+          - button "Mostrar SELLO" [ref=e1034] [cursor=pointer]
+        - generic [ref=e289]:
+          - generic [ref=e290]: OPERAR
+          - button "Mostrar OPERAR" [ref=e1035] [cursor=pointer]
+        - generic [ref=e300]:
+          - generic [ref=e301]: ADMIN
+          - button "Mostrar ADMIN" [ref=e1036] [cursor=pointer]
+        - generic [ref=e313]:
+          - generic [ref=e314]: HERRAMIENTAS
+          - button "Mostrar HERRAMIENTAS" [ref=e1037] [cursor=pointer]
+        - generic [ref=e323]:
+          - generic [ref=e324]: AYUDA
+          - button "Mostrar AYUDA" [ref=e1038] [cursor=pointer]
+    - generic [ref=e332]:
+      - banner [ref=e333]:
+        - generic [ref=e334]:
+          - button "Ocultar menú lateral" [ref=e1039] [cursor=pointer]
+          - link "Ir al inicio" [ref=e1040] [cursor=pointer]:
+            - /url: /inicio
+            - img "TDF Records logo"
+          - button "Buscar sección" [ref=e1041] [cursor=pointer]:
+            - generic [ref=e345]: ⌘K
+          - generic [ref=e346]:
+            - button "Creación rápida" [ref=e1042] [cursor=pointer]:
+              - generic [ref=e351]: Crear
+            - button "Notificaciones" [ref=e1043] [cursor=pointer]:
+              - generic [ref=e353]: "0"
+            - button "Abrir menú de sesión" [ref=e1044] [cursor=pointer]:
+              - generic [ref=e358]: D
+      - status [ref=e359]
+      - main [ref=e362]:
+        - generic [ref=e364]:
+          - generic [ref=e366]:
+            - generic [ref=e367]:
+              - heading "Contactos" [level=3] [ref=e1048]
+              - paragraph [ref=e369]: Gestiona personas, empresas y roles en un solo lugar.
+            - button [ref=e1049] [cursor=pointer]
+          - generic [ref=e377]:
+            - generic "Buscar contactos" [ref=e1050]:
+              - generic [ref=e419]:
+                - textbox "Buscar contactos" [active] [ref=e1051]:
+                  - /placeholder: Buscar por nombre, email o Instagram
+                  - text: Gabby Gonzalez
+                - button "Limpiar búsqueda" [ref=e1218] [cursor=pointer]
+                - group
+            - generic [ref=e1222]:
+              - generic [ref=e1223]:
+                - heading "1 coincidencia para \"Gabby Gonzalez\"" [level=6] [ref=e1224]
+                - paragraph [ref=e1225]: La búsqueda dejó un solo contacto visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar contactos en la tabla.
+              - generic [ref=e1226]:
+                - button [ref=e1228] [cursor=pointer]:
+                  - paragraph [ref=e1229]: Gabby Gonzalez
+                - paragraph [ref=e1230]: "Contacto: Falta correo e Instagram"
+                - paragraph [ref=e1231]: Completa el correo desde Acciones antes de crear el usuario.
+              - button "Abrir acciones para Gabby Gonzalez" [ref=e1233] [cursor=pointer]: Completar contacto
+        - generic [ref=e384]:
+          - status [ref=e385]:
+            - generic [ref=e388]: "API: online"
+          - button "Abrir ChatKit" [ref=e1208] [cursor=pointer]
+  - generic "Control de radio":
+    - generic [ref=e392]:
+      - button "Reproducir radio" [ref=e1209] [cursor=pointer]
+      - generic "Saltar al anterior" [ref=e1210]:
+        - button "Saltar a la estación anterior" [ref=e1211] [cursor=pointer]
+      - generic "Saltar al siguiente" [ref=e1212]:
+        - button "Saltar a la siguiente estación" [ref=e1213] [cursor=pointer]
+      - button "Silenciar radio" [ref=e1214] [cursor=pointer]
+      - button "Ocultar barra de radio" [ref=e1215] [cursor=pointer]
+      - button "Expandir radio" [ref=e1216] [cursor=pointer]
+      - generic [ref=e413]:
+        - generic [ref=e414]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient

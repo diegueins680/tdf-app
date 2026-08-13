@@ -1,0 +1,64 @@
+- generic [ref=f46e1]:
+  - generic [ref=f46e2]:
+    - generic [ref=f46e3]:
+      - link [ref=f46e412] [cursor=pointer]:
+        - /url: "#main-content"
+        - text: Saltar al contenido principal
+      - generic [ref=f46e5]:
+        - banner [ref=f46e6]:
+          - generic [ref=f46e7]:
+            - button [ref=f46e413] [cursor=pointer]
+            - link [ref=f46e414] [cursor=pointer]:
+              - /url: /inicio
+            - button [ref=f46e415] [cursor=pointer]:
+              - generic [ref=f46e17]: Buscar sección
+              - generic [ref=f46e18]: ⌘K
+            - generic [ref=f46e19]:
+              - button [ref=f46e416] [cursor=pointer]:
+                - generic [ref=f46e24]: Crear
+              - button [ref=f46e417] [cursor=pointer]
+              - button [ref=f46e418] [cursor=pointer]:
+                - generic [ref=f46e31]: D
+        - status [ref=f46e32]
+        - main [ref=f46e35]:
+          - generic [ref=f46e37]:
+            - generic [ref=f46e39]:
+              - generic [ref=f46e40]:
+                - heading [level=3] [ref=f46e419]: Contactos
+                - paragraph [ref=f46e42]: Gestiona personas, empresas y roles en un solo lugar.
+              - button [ref=f46e420] [cursor=pointer]: Nuevo contacto
+            - generic [ref=f46e50]:
+              - generic [ref=f46e92]:
+                - textbox [ref=f46e422]:
+                  - /placeholder: Buscar por nombre, email o Instagram
+                  - text: blue_records333
+                - button [ref=f46e423] [cursor=pointer]
+                - group
+              - generic [ref=f46e398]:
+                - generic [ref=f46e399]:
+                  - heading [level=6] [ref=f46e424]: 1 coincidencia para "blue_records333"
+                  - paragraph [ref=f46e401]: La búsqueda dejó un solo contacto visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar contactos en la tabla.
+                - generic [ref=f46e402]:
+                  - generic [ref=f46e403]:
+                    - button [ref=f46e425] [cursor=pointer]:
+                      - paragraph [ref=f46e405]: Blue Records
+                    - generic [ref=f46e406]: Empresa
+                  - paragraph [ref=f46e408]: "Contacto: blue_records333"
+                  - paragraph [ref=f46e409]: Completa el correo desde Acciones antes de crear el usuario.
+                - button [ref=f46e426] [cursor=pointer]: Completar contacto
+          - generic [ref=f46e57]:
+            - status [ref=f46e58]:
+              - generic [ref=f46e61]: "API: online"
+            - button [ref=f46e427] [cursor=pointer]
+    - generic [ref=f46e65]:
+      - button [ref=f46e428] [cursor=pointer]
+      - button [ref=f46e430] [cursor=pointer]
+      - button [ref=f46e432] [cursor=pointer]
+      - button [ref=f46e433] [cursor=pointer]
+      - button [ref=f46e434] [cursor=pointer]
+      - button [ref=f46e435] [cursor=pointer]
+      - generic [ref=f46e86]:
+        - generic [ref=f46e87]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient
+  - menu [ref=f46e438]:
+    - menuitem "Completar contacto" [active] [ref=f46e439] [cursor=pointer]

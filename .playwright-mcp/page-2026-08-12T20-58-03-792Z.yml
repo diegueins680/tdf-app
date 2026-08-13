@@ -1,0 +1,243 @@
+- generic [ref=f36e4]:
+  - generic [ref=f36e9]:
+    - generic [ref=f36e12]:
+      - link [ref=f36e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f36e22]
+      - generic [ref=f36e25]:
+        - link [ref=f36e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f36e35]
+        - link [ref=f36e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f36e45]
+        - link [ref=f36e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f36e55]:
+            - img "Messages" [ref=f36e57]
+            - generic "Direct messaging - 3 new notifications link" [ref=f36e60]: "3"
+        - link [ref=f36e66] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f36e71]
+        - link [ref=f36e78] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f36e83]
+        - link [ref=f36e89] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f36e94]
+        - link [ref=f36e99] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f36e104]
+        - link [ref=f36e111] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f36e116]:
+            - img "tdf.records.label's profile picture" [ref=f36e117]
+      - generic [ref=f36e118]:
+        - link [ref=f36e121] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f36e126]
+        - link [ref=f36e129] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f36e134]
+    - generic [ref=f36e137]:
+      - main [ref=f36e138]:
+        - generic [ref=f36e140]:
+          - generic [ref=f36e141]:
+            - generic [ref=f36e142]:
+              - button [ref=f36e147] [cursor=pointer]:
+                - link [ref=f36e149]:
+                  - img "choxmoni_'s profile picture" [ref=f36e150]
+              - generic [ref=f36e151]:
+                - generic [ref=f36e152]:
+                  - generic [ref=f36e153]:
+                    - link [ref=f36e155] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "choxmoni_" [level=2] [ref=f36e156]
+                    - button [ref=f36e158] [cursor=pointer]:
+                      - img "Options" [ref=f36e160]
+                  - generic [ref=f36e164]: Silvio
+                  - generic [ref=f36e166]:
+                    - generic [ref=f36e168]:
+                      - generic [ref=f36e169]: "312"
+                      - text: posts
+                    - link "578 followers" [ref=f36e171] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f36e172]:
+                        - generic "578" [ref=f36e173]
+                        - text: followers
+                    - link "3,653 following" [ref=f36e175] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f36e176]:
+                        - generic [ref=f36e177]: 3,653
+                        - text: following
+                - generic [ref=f36e178]:
+                  - generic [ref=f36e179]:
+                    - generic [ref=f36e180]:
+                      - button [ref=f36e181] [cursor=pointer]:
+                        - generic [ref=f36e182]: "🫀📈🙌🍫TikTok : El chox🍫 Ecuador 🇪🇨 grabando para el mundo Así que no te olvides de seguirme me ayudas full te espero"
+                      - generic [ref=f36e183]:
+                        - text: ...
+                        - button "more" [ref=f36e184] [cursor=pointer]
+                    - generic [ref=f36e187]:
+                      - img "Link icon" [ref=f36e189]
+                      - link "www.tiktok.com/@silviocho?_r=1&_t=ZS-94KhoSrP3fF" [ref=f36e193] [cursor=pointer]:
+                        - /url: https://l.instagram.com/?u=https%3A%2F%2Fwww.tiktok.com%2F%40silviocho%3F_r%3D1%26_t%3DZS-94KhoSrP3fF%26fbclid%3DPAcGRvZgJleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAae41X5RORvqtpF6hA_UrgP0i6pxebLFM8imAdiLxvXfzNEYIR7uk2XvbdMyaQ_aem_HrxQLEwj1x-Hupj0vzU5qQ&e=AUAahrPSKibL1T2Kg0ix6mtMw_JA1NXj6lpMrCCWvcVRCZbcQv_QD13qbu0UezPksUVIrXV-ModERivhetUp0BUxUEmKRyhxHAEx278pm96qnd1H-uEVDK3Z1SVRtRrpRqkHrpTSo919
+                  - link "Followed by fortiaeventos" [ref=f36e195] [cursor=pointer]:
+                    - /url: /choxmoni_/followers/mutualOnly
+                    - generic [ref=f36e197]:
+                      - button [ref=f36e200]:
+                        - link [ref=f36e201]
+                      - generic [ref=f36e202]: Followed by fortiaeventos
+            - generic [ref=f36e207]:
+              - button "Follow Back" [ref=f36e209] [cursor=pointer]
+              - button [ref=f36e213] [cursor=pointer]:
+                - img "Similar accounts" [ref=f36e215]
+            - menu [ref=f36e219]:
+              - list [ref=f36e223]:
+                - listitem [ref=f36e224]
+                - listitem [ref=f36e225]
+                - listitem [ref=f36e226]:
+                  - link "View Felicidad 🔥 highlight" [ref=f36e229] [cursor=pointer]:
+                    - /url: /stories/highlights/17940156026507801/
+                    - button "choxmoni_'s highlight story picture Felicidad 🔥" [ref=f36e230]:
+                      - button [ref=f36e231]:
+                        - img "choxmoni_'s highlight story picture" [ref=f36e234]
+                      - generic [ref=f36e235]: Felicidad 🔥
+                - listitem [ref=f36e238]:
+                  - link "View El año highlight" [ref=f36e241] [cursor=pointer]:
+                    - /url: /stories/highlights/17948346845258302/
+                    - button "choxmoni_'s highlight story picture El año" [ref=f36e242]:
+                      - button [ref=f36e243]:
+                        - img "choxmoni_'s highlight story picture" [ref=f36e246]
+                      - generic [ref=f36e247]: El año
+                - listitem [ref=f36e250]:
+                  - link "View Feliz🔥🍄❣️🎮 highlight" [ref=f36e253] [cursor=pointer]:
+                    - /url: /stories/highlights/18077460013801181/
+                    - button "choxmoni_'s highlight story picture Feliz🔥🍄❣️🎮" [ref=f36e254]:
+                      - button [ref=f36e255]:
+                        - img "choxmoni_'s highlight story picture" [ref=f36e258]
+                      - generic [ref=f36e259]: Feliz🔥🍄❣️🎮
+          - generic [ref=f36e262]:
+            - tablist [ref=f36e263]:
+              - link [ref=f36e265] [cursor=pointer]:
+                - /url: /choxmoni_/
+                - img "Posts" [ref=f36e267]
+              - link [ref=f36e278] [cursor=pointer]:
+                - /url: /choxmoni_/reels/
+                - img "Reels" [ref=f36e280]
+              - link [ref=f36e283] [cursor=pointer]:
+                - /url: /choxmoni_/reposts/
+                - img "Reposts" [ref=f36e285]
+              - link [ref=f36e288] [cursor=pointer]:
+                - /url: /choxmoni_/tagged/
+                - img "Tagged" [ref=f36e290]
+            - tabpanel
+          - progressbar [ref=f36e294]:
+            - img "Loading..." [ref=f36e295]
+      - contentinfo [ref=f36e308]:
+        - generic [ref=f36e309]:
+          - generic [ref=f36e311]:
+            - link "Meta" [ref=f36e313] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f36e316] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f36e319] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f36e322] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f36e325] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f36e328] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f36e331] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f36e334] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f36e337] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f36e340] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f36e343] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f36e346] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f36e349] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f36e352] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f36e355] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f36e357]:
+            - generic [ref=f36e358] [cursor=pointer]:
+              - generic [ref=f36e359]:
+                - generic [ref=f36e360]: English
+                - img "Down chevron icon" [ref=f36e363]
+              - combobox "Switch Display Language" [ref=f36e365]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f36e366]: © 2026 Instagram from Meta
+  - button [ref=f36e369] [cursor=pointer]:
+    - generic "Messages - 3 new notifications" [ref=f36e370]:
+      - generic [ref=f36e371]:
+        - generic [ref=f36e373]:
+          - img "Messages" [ref=f36e374]
+          - generic "Direct messaging - 3 new notifications link" [ref=f36e377]: "3"
+        - generic [ref=f36e380]: Messages
+      - generic [ref=f36e381]:
+        - button "User avatar Santiii" [ref=f36e383]:
+          - img "User avatar" [ref=f36e386]
+        - button "User avatar Diego Saa" [ref=f36e388]:
+          - img "User avatar" [ref=f36e391]
+        - button "User avatar Martini 🍸" [ref=f36e393]:
+          - img "User avatar" [ref=f36e396]

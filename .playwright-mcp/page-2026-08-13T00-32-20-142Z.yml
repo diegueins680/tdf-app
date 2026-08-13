@@ -1,0 +1,91 @@
+- generic [ref=f43e1]:
+  - generic [ref=f43e2]:
+    - generic [ref=f43e3]:
+      - link [ref=f43e1373] [cursor=pointer]:
+        - /url: "#main-content"
+        - text: Saltar al contenido principal
+      - generic [ref=f43e5]:
+        - banner [ref=f43e6]:
+          - generic [ref=f43e7]:
+            - button [ref=f43e1374] [cursor=pointer]
+            - link [ref=f43e1375] [cursor=pointer]:
+              - /url: /inicio
+            - button [ref=f43e1376] [cursor=pointer]:
+              - generic [ref=f43e17]: Buscar sección
+              - generic [ref=f43e18]: ⌘K
+            - generic [ref=f43e19]:
+              - button [ref=f43e1377] [cursor=pointer]:
+                - generic [ref=f43e24]: Crear
+              - button [ref=f43e1378] [cursor=pointer]
+              - button [ref=f43e1379] [cursor=pointer]:
+                - generic [ref=f43e31]: D
+        - status [ref=f43e32]
+        - main [ref=f43e35]:
+          - generic [ref=f43e37]:
+            - generic [ref=f43e39]:
+              - generic [ref=f43e40]:
+                - heading [level=3] [ref=f43e1380]: Contactos
+                - paragraph [ref=f43e42]: Gestiona personas, empresas y roles en un solo lugar.
+              - button [ref=f43e1381] [cursor=pointer]: Nuevo contacto
+            - generic [ref=f43e50]:
+              - generic [ref=f43e93]:
+                - textbox [ref=f43e1383]:
+                  - /placeholder: Buscar por nombre, email o Instagram
+                  - text: Llama Este Pez
+                - button [ref=f43e1384] [cursor=pointer]
+                - group
+              - generic [ref=f43e1361]:
+                - generic [ref=f43e1362]:
+                  - heading [level=6] [ref=f43e1385]: 1 coincidencia para "Llama Este Pez"
+                  - paragraph [ref=f43e1364]: La búsqueda dejó un solo contacto visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar contactos en la tabla.
+                - generic [ref=f43e1365]:
+                  - button [ref=f43e1386] [cursor=pointer]:
+                    - paragraph [ref=f43e1368]: Llama Este Pez
+                  - paragraph [ref=f43e1369]: "Contacto: Falta correo e Instagram"
+                  - paragraph [ref=f43e1370]: Completa el correo desde Acciones antes de crear el usuario.
+                - button [ref=f43e1387] [cursor=pointer]: Completar contacto
+          - generic [ref=f43e57]:
+            - status [ref=f43e58]:
+              - generic [ref=f43e62]: "API: online"
+            - button [ref=f43e1390] [cursor=pointer]
+    - generic [ref=f43e66]:
+      - button [ref=f43e1391] [cursor=pointer]
+      - button [ref=f43e1393] [cursor=pointer]
+      - button [ref=f43e1395] [cursor=pointer]
+      - button [ref=f43e1396] [cursor=pointer]
+      - button [ref=f43e1397] [cursor=pointer]
+      - button [ref=f43e1398] [cursor=pointer]
+      - generic [ref=f43e87]:
+        - generic [ref=f43e88]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient
+  - dialog [ref=f43e1407]:
+    - heading "Editar Llama Este Pez" [level=2] [ref=f43e1408]
+    - generic [ref=f43e1410]:
+      - generic [ref=f43e1411]:
+        - generic [ref=f43e1412]: Display
+        - generic [ref=f43e1413]:
+          - textbox "Display" [ref=f43e1414]: Llama Este Pez
+          - group:
+            - generic: Display
+      - generic [ref=f43e1415]:
+        - generic: Email
+        - generic [ref=f43e1416]:
+          - textbox "Email" [ref=f43e1417]
+          - group:
+            - generic: Email
+        - paragraph [ref=f43e1418]: Se usa como contacto principal y para crear accesos de usuario. Guarda un correo aquí y luego aparecerá Crear usuario en Acciones.
+      - generic [ref=f43e1419]:
+        - generic: Instagram
+        - generic [ref=f43e1420]:
+          - textbox "Instagram" [ref=f43e1421]
+          - group:
+            - generic: Instagram
+      - generic [ref=f43e1422]:
+        - generic: Teléfono
+        - generic [ref=f43e1423]:
+          - textbox "Teléfono" [ref=f43e1424]
+          - group:
+            - generic: Teléfono
+    - generic [ref=f43e1425]:
+      - button "Cancelar" [ref=f43e1426] [cursor=pointer]
+      - button "Guardar" [ref=f43e1427] [cursor=pointer]

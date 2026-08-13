@@ -1,0 +1,161 @@
+- generic [ref=f29e4]:
+  - generic [ref=f29e9]:
+    - generic [ref=f29e12]:
+      - link [ref=f29e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f29e22]
+      - generic [ref=f29e25]:
+        - link [ref=f29e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f29e35]
+        - link [ref=f29e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f29e45]
+        - link [ref=f29e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f29e55]:
+            - img "Messages" [ref=f29e57]
+            - generic "Direct messaging - 3 new notifications link" [ref=f29e60]: "3"
+        - link [ref=f29e66] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f29e71]
+        - link [ref=f29e78] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f29e83]
+        - link [ref=f29e89] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f29e94]
+        - link [ref=f29e99] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f29e104]
+        - link [ref=f29e111] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f29e116]:
+            - img "tdf.records.label's profile picture" [ref=f29e117]
+      - generic [ref=f29e118]:
+        - link [ref=f29e121] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f29e126]
+        - link [ref=f29e129] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f29e134]
+    - generic [ref=f29e137]:
+      - main [ref=f29e138]:
+        - generic [ref=f29e140]:
+          - generic [ref=f29e141]:
+            - status "Loading..." [ref=f29e145]
+            - generic [ref=f29e146]:
+              - generic [ref=f29e147]:
+                - status "Loading..." [ref=f29e148]
+                - generic [ref=f29e150]:
+                  - status "Loading..." [ref=f29e152]
+                  - status "Loading..." [ref=f29e154]
+              - list [ref=f29e155]:
+                - listitem [ref=f29e156]:
+                  - status "Loading..." [ref=f29e157]
+                - listitem [ref=f29e158]:
+                  - status "Loading..." [ref=f29e159]
+                - listitem [ref=f29e160]:
+                  - status "Loading..." [ref=f29e161]
+              - generic [ref=f29e162]:
+                - status "Loading..." [ref=f29e164]
+                - status "Loading..." [ref=f29e165]
+          - progressbar [ref=f29e168]:
+            - img "Loading..." [ref=f29e169]
+      - contentinfo [ref=f29e182]:
+        - generic [ref=f29e183]:
+          - generic [ref=f29e185]:
+            - link "Meta" [ref=f29e187] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f29e190] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f29e193] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f29e196] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f29e199] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f29e202] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f29e205] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f29e208] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f29e211] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f29e214] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f29e217] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f29e220] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f29e223] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f29e226] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f29e229] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f29e231]:
+            - generic [ref=f29e232] [cursor=pointer]:
+              - generic [ref=f29e233]:
+                - generic [ref=f29e234]: English
+                - img "Down chevron icon" [ref=f29e237]
+              - combobox "Switch Display Language" [ref=f29e239]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f29e240]: © 2026 Instagram from Meta
+  - button "Messages Messages" [ref=f29e243] [cursor=pointer]:
+    - generic [ref=f29e245]:
+      - img "Messages" [ref=f29e247]
+      - generic [ref=f29e250]: Messages

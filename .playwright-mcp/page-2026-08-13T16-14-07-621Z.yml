@@ -1,0 +1,105 @@
+- generic [ref=f6e9]:
+  - generic [ref=f6e12]:
+    - link [ref=f6e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f6e22]
+    - generic [ref=f6e25]:
+      - link [ref=f6e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f6e35]
+      - link [ref=f6e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f6e45]
+      - link [ref=f6e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=f6e57]
+      - link [ref=f6e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f6e67]
+      - link [ref=f6e74] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f6e79]
+      - link [ref=f6e85] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f6e90]
+      - link [ref=f6e95] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f6e100]
+      - link [ref=f6e107] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f6e112]:
+          - img "tdf.records.label's profile picture" [ref=f6e113]
+    - generic [ref=f6e114]:
+      - link [ref=f6e117] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f6e122]
+      - link [ref=f6e125] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f6e130]
+  - main [ref=f6e134]:
+    - generic [ref=f6e136]:
+      - navigation "Thread list" [ref=f6e137]:
+        - generic [ref=f6e138]:
+          - generic [ref=f6e139]:
+            - status "Loading..." [ref=f6e140]
+            - status "Loading..." [ref=f6e142]
+          - generic [ref=f6e143]:
+            - status "Loading..." [ref=f6e145]
+            - generic [ref=f6e146]:
+              - status "Loading..." [ref=f6e147]
+              - status "Loading..." [ref=f6e148]
+          - generic [ref=f6e149]:
+            - status "Loading..." [ref=f6e151]
+            - generic [ref=f6e152]:
+              - status "Loading..." [ref=f6e153]
+              - status "Loading..." [ref=f6e154]
+          - generic [ref=f6e155]:
+            - status "Loading..." [ref=f6e157]
+            - generic [ref=f6e158]:
+              - status "Loading..." [ref=f6e159]
+              - status "Loading..." [ref=f6e160]
+          - generic [ref=f6e161]:
+            - status "Loading..." [ref=f6e163]
+            - generic [ref=f6e164]:
+              - status "Loading..." [ref=f6e165]
+              - status "Loading..." [ref=f6e166]
+          - generic [ref=f6e167]:
+            - status "Loading..." [ref=f6e169]
+            - generic [ref=f6e170]:
+              - status "Loading..." [ref=f6e171]
+              - status "Loading..." [ref=f6e172]
+          - generic [ref=f6e173]:
+            - status "Loading..." [ref=f6e175]
+            - generic [ref=f6e176]:
+              - status "Loading..." [ref=f6e177]
+              - status "Loading..." [ref=f6e178]
+          - generic [ref=f6e179]:
+            - status "Loading..." [ref=f6e181]
+            - generic [ref=f6e182]:
+              - status "Loading..." [ref=f6e183]
+              - status "Loading..." [ref=f6e184]
+          - generic [ref=f6e185]:
+            - status "Loading..." [ref=f6e187]
+            - generic [ref=f6e188]:
+              - status "Loading..." [ref=f6e189]
+              - status "Loading..." [ref=f6e190]
+          - generic [ref=f6e191]:
+            - status "Loading..." [ref=f6e193]
+            - generic [ref=f6e194]:
+              - status "Loading..." [ref=f6e195]
+              - status "Loading..." [ref=f6e196]
+          - generic [ref=f6e197]:
+            - status "Loading..." [ref=f6e199]
+            - generic [ref=f6e200]:
+              - status "Loading..." [ref=f6e201]
+              - status "Loading..." [ref=f6e202]
+          - generic [ref=f6e203]:
+            - status "Loading..." [ref=f6e205]
+            - generic [ref=f6e206]:
+              - status "Loading..." [ref=f6e207]
+              - status "Loading..." [ref=f6e208]
+      - generic [ref=f6e211]:
+        - status "Loading..." [ref=f6e212]
+        - status "Loading..." [ref=f6e213]
+        - status "Loading..." [ref=f6e214]
+        - status "Loading..." [ref=f6e215]

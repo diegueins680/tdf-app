@@ -653,11 +653,12 @@ export default function UserRoleManagement() {
         </Stack>
       )}
 
-      <Dialog open={editDialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>{editDialogTitle}</DialogTitle>
+      <Dialog open={editDialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth aria-labelledby="edit-roles-dialog-title">
+        <form onSubmit={(e) => { e.preventDefault(); void handleSaveRoles(); }}>
+        <DialogTitle id="edit-roles-dialog-title">{editDialogTitle}</DialogTitle>
         <DialogContent>
           {dialogError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
+            <Alert severity="error" role="alert" sx={{ mt: 2 }}>
               {dialogError}
             </Alert>
           )}
@@ -728,11 +729,12 @@ export default function UserRoleManagement() {
             {hasPendingRoleChanges ? 'Descartar cambios' : 'Cerrar'}
           </Button>
           {hasPendingRoleChanges && (
-            <Button onClick={() => void handleSaveRoles()} variant="contained" disabled={saving}>
+            <Button type="submit" variant="contained" disabled={saving}>
               {saving ? 'Guardando...' : 'Guardar cambios'}
             </Button>
           )}
         </DialogActions>
+        </form>
       </Dialog>
     </Box>
   );

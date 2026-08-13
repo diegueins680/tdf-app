@@ -1,0 +1,468 @@
+- generic [ref=f49e4]:
+  - generic [ref=f49e9]:
+    - generic [ref=f49e12]:
+      - link [ref=f49e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f49e22]
+      - generic [ref=f49e25]:
+        - link [ref=f49e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f49e35]
+        - link [ref=f49e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f49e45]
+        - link [ref=f49e52] [cursor=pointer]:
+          - /url: /direct/t/17847287684511709
+          - generic [ref=f49e55]:
+            - img "Messages" [ref=f49e57]
+            - generic "Direct messaging - 3 new notifications link" [ref=f49e60]: "3"
+        - link [ref=f49e66] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f49e71]
+        - link [ref=f49e78] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f49e83]
+        - link [ref=f49e91] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f49e96]
+        - link [ref=f49e101] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f49e106]
+        - link [ref=f49e113] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f49e118]:
+            - img "tdf.records.label's profile picture" [ref=f49e119]
+      - generic [ref=f49e120]:
+        - link [ref=f49e123] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f49e128]
+        - link [ref=f49e131] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f49e136]
+    - generic [ref=f49e139]:
+      - main [ref=f49e140]:
+        - generic [ref=f49e142]:
+          - generic [ref=f49e143]:
+            - generic [ref=f49e144]:
+              - button [ref=f49e149] [cursor=pointer]:
+                - link [ref=f49e151]:
+                  - img "gabbygonzalez333's profile picture" [ref=f49e152]
+              - generic [ref=f49e154]:
+                - generic [ref=f49e155]:
+                  - link [ref=f49e157] [cursor=pointer]:
+                    - /url: "#"
+                    - heading "gabbygonzalez333" [level=2] [ref=f49e158]
+                  - button [ref=f49e160] [cursor=pointer]:
+                    - img "Options" [ref=f49e162]
+                - generic [ref=f49e166]: Gabby Gonzalez
+                - generic [ref=f49e168]:
+                  - generic [ref=f49e170]:
+                    - generic [ref=f49e171]: "665"
+                    - text: posts
+                  - link "265 followers" [ref=f49e173] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=f49e174]:
+                      - generic "265" [ref=f49e175]
+                      - text: followers
+                  - link "130 following" [ref=f49e177] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=f49e178]:
+                      - generic [ref=f49e179]: "130"
+                      - text: following
+            - generic [ref=f49e181]:
+              - generic [ref=f49e182]:
+                - generic [ref=f49e183]: Musician/band
+                - generic [ref=f49e185]:
+                  - button "Productora, Dj, Artista, terapeuta holística, creadora de terapias de energéticas y físicas que te permiten acceder a" [ref=f49e186] [cursor=pointer]
+                  - generic [ref=f49e187]:
+                    - text: ...
+                    - button "more" [ref=f49e188] [cursor=pointer]
+                - generic [ref=f49e190]:
+                  - button "Link icon open.spotify.com/artist/119X4rVzDGdFm9TzeCmOhf?si=iPgJbc4gQhiXv3nhBT8QSQ and 2 more" [ref=f49e191] [cursor=pointer]:
+                    - generic [ref=f49e192]:
+                      - img "Link icon" [ref=f49e194]
+                      - generic [ref=f49e197]: open.spotify.com/artist/119X4rVzDGdFm9TzeCmOhf?si=iPgJbc4gQhiXv3nhBT8QSQ and 2 more
+                  - link "Threads gabbygonzalez333" [ref=f49e199] [cursor=pointer]:
+                    - /url: https://www.threads.com/@gabbygonzalez333?xmt=AQG0Z-ASFBpYjaRRrhLv7GvFNEeUYYQqOQJMSycGuBmALE4
+                    - img "Threads" [ref=f49e201]
+                    - generic [ref=f49e203]: gabbygonzalez333
+              - link "Followed by semiazas354, hno613613 + 10 more" [ref=f49e205] [cursor=pointer]:
+                - /url: /gabbygonzalez333/followers/mutualOnly
+                - generic [ref=f49e207]:
+                  - generic [ref=f49e209]:
+                    - button [ref=f49e210]:
+                      - link [ref=f49e211]
+                    - button [ref=f49e579]:
+                      - link [ref=f49e580]
+                    - button [ref=f49e214]:
+                      - link [ref=f49e215]
+                  - generic [ref=f49e216]: Followed by semiazas354, hno613613 + 10 more
+            - generic [ref=f49e221]:
+              - button "Follow" [ref=f49e223] [cursor=pointer]
+              - button "Message" [ref=f49e227] [cursor=pointer]
+              - button [ref=f49e229] [cursor=pointer]:
+                - img "Similar accounts" [ref=f49e231]
+            - menu [ref=f49e235]:
+              - list [ref=f49e239]:
+                - listitem [ref=f49e240]
+                - listitem [ref=f49e241]
+                - listitem [ref=f49e242]:
+                  - link "View Ensayos Rap highlight" [ref=f49e245] [cursor=pointer]:
+                    - /url: /stories/highlights/18097666972891899/
+                    - button "gabbygonzalez333's highlight story picture Ensayos Rap" [ref=f49e246]:
+                      - button [ref=f49e247]:
+                        - img "gabbygonzalez333's highlight story picture" [ref=f49e250]
+                      - generic [ref=f49e251]: Ensayos Rap
+                - listitem [ref=f49e254]:
+                  - link "View Sets highlight" [ref=f49e257] [cursor=pointer]:
+                    - /url: /stories/highlights/18113056690676363/
+                    - button "gabbygonzalez333's highlight story picture Sets" [ref=f49e258]:
+                      - button [ref=f49e259]:
+                        - img "gabbygonzalez333's highlight story picture" [ref=f49e262]
+                      - generic [ref=f49e263]: Sets
+                - listitem [ref=f49e266]:
+                  - link "View EPS highlight" [ref=f49e269] [cursor=pointer]:
+                    - /url: /stories/highlights/17998975178902971/
+                    - button "gabbygonzalez333's highlight story picture EPS" [ref=f49e270]:
+                      - button [ref=f49e271]:
+                        - img "gabbygonzalez333's highlight story picture" [ref=f49e274]
+                      - generic [ref=f49e275]: EPS
+                - listitem [ref=f49e278]:
+                  - link "View All my music 🎧 highlight" [ref=f49e281] [cursor=pointer]:
+                    - /url: /stories/highlights/17994520364753354/
+                    - button "gabbygonzalez333's highlight story picture All my music 🎧" [ref=f49e282]:
+                      - button [ref=f49e283]:
+                        - img "gabbygonzalez333's highlight story picture" [ref=f49e286]
+                      - generic [ref=f49e287]: All my music 🎧
+                - listitem [ref=f49e290]:
+                  - link "View VideoClips highlight" [ref=f49e293] [cursor=pointer]:
+                    - /url: /stories/highlights/18362342347225702/
+                    - button "gabbygonzalez333's highlight story picture VideoClips" [ref=f49e294]:
+                      - button [ref=f49e295]:
+                        - img "gabbygonzalez333's highlight story picture" [ref=f49e298]
+                      - generic [ref=f49e299]: VideoClips
+          - generic [ref=f49e302]:
+            - tablist [ref=f49e303]:
+              - link [ref=f49e305] [cursor=pointer]:
+                - /url: /gabbygonzalez333/
+                - img "Posts" [ref=f49e307]
+              - link [ref=f49e318] [cursor=pointer]:
+                - /url: /gabbygonzalez333/reels/
+                - img "Reels" [ref=f49e320]
+              - link [ref=f49e323] [cursor=pointer]:
+                - /url: /gabbygonzalez333/reposts/
+                - img "Reposts" [ref=f49e325]
+              - link [ref=f49e328] [cursor=pointer]:
+                - /url: /gabbygonzalez333/tagged/
+                - img "Tagged" [ref=f49e330]
+            - tabpanel
+          - generic [ref=f49e337]:
+            - generic [ref=f49e338]:
+              - link [ref=f49e340] [cursor=pointer]:
+                - /url: /gabbygonzalez333/reel/DZLicurPs8e/
+                - 'img "Te dejo un setcito para que disfrutes 🌹 De la Vibe 🎧 Tocado en el Espacio Cultural @lacuadra.uio Gracias 🍀 #BlueRecords #GaBByGonzález #DeepHouseVibes #HouseSet #ᴅᴊsᴇᴛ" [ref=f49e343]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f49e346] [cursor=pointer]:
+                - /url: /gabbygonzalez333/reel/DYU8bQRxCbv/
+                - 'img "Te dejo el Spotify 👇 Dale play 🎧🤩 https://open.spotify.com/artist/119X4rVzDGdFm9TzeCmOhf?si=wgtLf5MsQJay050m4GAyxQ #ElectronicArtist #bluerecords #NewMusic #fypシ #housevibes" [ref=f49e349]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f49e352] [cursor=pointer]:
+                - /url: /gabbygonzalez333/reel/DKoNnKctnVO/
+                - 'img "MaGa set #MaGa #magiablanca #fypシ #viralreelsシ #ᴍᴜsɪᴄʟᴏᴠᴇʀ #djset🎧 #zadkiel&amatista #musicayangeles" [ref=f49e355]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+            - generic [ref=f49e357]:
+              - link [ref=f49e359] [cursor=pointer]:
+                - /url: /mystica_music22/reel/DbyJY7kREGI/
+                - 'img "Padre nuestro Video Oficial Escuchala en todas las plataformas 🎧 Magia Rap #mysticamusic #nuevamusica #consciousrap #hiphopmusic" [ref=f49e362]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f49e365] [cursor=pointer]:
+                - /url: /blue_records333/reel/DbgwyuEBayO/
+                - 'img "🌙 MOON ya está aquí. El nuevo lanzamiento de Blue Records presenta a GaBBy Gonzalez y Juano Ledesma en una experiencia sonora que viaja entre el Minimal House y el Micro House. Grooves hipnóticos, bajos profundos y texturas espaciales crean una atmósfera elegante, minimal y totalmente inmersiva. Una pista diseñada para perder la noción del tiempo y dejar que el ritmo tome el control. 🚀 NEW RELEASE • AGOSTO 2026 Escúchala, compártela y cuéntanos desde dónde la estás escuchando. 🎧 MOON — GaBBy Gonzalez & Juano Ledesma 🔵 Blue Records #Moon #GaBByGonzalez #JuanoLedesma #BlueRecords #NewRelease MinimalHouse MicroHouse HouseMusic ElectronicMusic UndergroundHouse DeepGroove MinimalGroove DJ ClubMusic ElectronicGroove NowPlaying" [ref=f49e368]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f49e371] [cursor=pointer]:
+                - /url: /gabbygonzalez333/reel/Da-jZoux3Tk/
+                - 'img "Te dejo el Set completo para que lo disfrutes en🎧 Mix Cloud 👇 https://www.mixcloud.com/BlueRecords333/gabby-gonzalez-juano-ledesma-bluemix_003/ #HouseMusic #DeepHouse #ElectronicMusic #DJSet #HouseVibes" [ref=f49e374]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f49e376]:
+              - link [ref=f49e378] [cursor=pointer]:
+                - /url: /blue_records333/reel/DWZtWTKhoWh/
+                - 'img "✨ COLORS TRAVELERS – GaBBy González ✨ Blue Records presenta su más reciente lanzamiento: “Colors Travelers”, un EP de 3 tracks que explora una nueva dimensión del house. Sonidos frescos, texturas envolventes y una vibra que viaja entre lo orgánico y lo futurista, creando una experiencia única en cada track. Este trabajo marca el último release de Blue Records por ahora, dejando una huella sonora que seguirá rodando en cada pista, cada viaje y cada momento. 🎧 Ya disponible en todas las plataformas digitales Déjate llevar por los colores del sonido. #ColorsTravelers #GaBByGonzalez #BlueRecords #HouseMusic #NewMusic ElectronicMusic DeepHouse OrganicHouse ChillHouse UndergroundMusic MusicRelease NowPlaying StreamingNow" [ref=f49e381]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f49e384] [cursor=pointer]:
+                - /url: /blue_records333/reel/DarGWKWRLze/
+                - 'img "✨ SOUL – GaBBy González ✨ Blue Records presenta su lanzamiento #26: SOUL, el nuevo trabajo de GaBBy González. Un viaje sonoro que conecta emociones, profundidad y una identidad musical única. 🎧 Escúchalo ahora en Spotify. 💿 Adquiere tu copia en Bandcamp y apoya la música independiente. 🔗 Encuentra todos los enlaces en la biografía de nuestro perfil. Comparte, guarda este lanzamiento y disfruta de SOUL. #Soul #GaBByGonzález #BlueRecords #BlueRecords26 NewRelease ElectronicMusic HouseMusic DeepHouse Minimal MinimalHouse OrganicHouse MelodicHouse Downtempo UndergroundMusic ElectronicArtist" [ref=f49e387]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f49e390] [cursor=pointer]:
+                - /url: /juano_music/reel/DaF4tDxx7F7/
+                - 'img "BLUE CAST #11 Ya disponible. ⬆️ LINK IN BIO ⬆️ para escucharlo en YouTube y Mixcloud. B2B: GaBBy Gonzalez × Juano Ledesma #BlueCast #BlueCast11 #B2B #GaBByGonzalez JuanoLedesma HouseMusic TechHouse DeepHouse ElectronicMusic DJMix DJSet Mixcloud YouTube UndergroundMusic Ecuador" [ref=f49e393]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f49e395]:
+              - link [ref=f49e397] [cursor=pointer]:
+                - /url: /blue_records333/reel/DXAqO5Kxkf1/
+                - 'img "✨ Del EP Colors Travelers (019) presentamos el segundo track de Gabby Gonzalez: Make Me Dance 🎶💜 Una vibra envolvente, energética y llena de color que te lleva directo a la pista. Este lanzamiento forma parte del catálogo 019 de Blue Records, marcando una nueva etapa sonora con identidad única. Déjate llevar por el ritmo… esto apenas comienza. 🔊🔥 #MakeMeDance #GabbyGonzalez #ColorsTravelers #BlueRecords #Blue019 EP019 NewMusic ElectronicMusic DanceMusic HouseMusic MusicRelease NowPlaying Spotify AppleMusic Deezer SoundCloud Beatport MusicLovers NewTrack IndieElectronic Vibes FeelTheMusic OnRepeat" [ref=f49e400]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f49e403] [cursor=pointer]:
+                - /url: /blue_records333/reel/DY9haiJxdMz/
+                - 'img "Estrenooooo , GaBBy Gonzalez nos trae el Bluecast 007 de Blue Records, con una selección de temas propios. Disfrútalo, compártelo y suscríbete al canal. Disponible en YouTube. Link en la bio. #BlueRecords #Bluecast007 #GaBByGonzalez #Podcast #DJMix ElectronicMusic UndergroundMusic HouseMusic TechHouse DeepHouse ProgressiveHouse YouTubeMusic MusicPodcast EcuadorMusic" [ref=f49e406]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f49e409] [cursor=pointer]:
+                - /url: /blue_records333/reel/DRkaAsngfxb/
+                - 'img "🎧 Blue Records presenta: Ya disponible en todas las plataformas digitales, el nuevo lanzamiento que reúne el talento de Gaby González feat. Juano Ledesma y Macario Zapata. Este track marca un nuevo capítulo en nuestra línea de releases, destacando una producción sólida, fresca y con un sonido que refuerza el sello distintivo de Blue Records. Agradecemos a todos los involucrados por su entrega y dedicación en este proyecto. Escúchalo ahora, agrégalo a tus playlists y comparte el lanzamiento. 💙 Blue Records — Música que trasciende. #BlueRecords #NuevoLanzamiento #DisponibleYa #NewMusic #MusicRelease #GabyGonzález #JuanoLedesma #MacarioZapata #LatinMusic #OutNow" [ref=f49e412]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f49e414]:
+              - link [ref=f49e416] [cursor=pointer]:
+                - /url: /blue_records333/reel/DXCX3BCRICJ/
+                - 'img "✨🎶 Gabby Gonzalez presenta Recreation 🎶✨ Desde el increíble EP Colors Travelers, llega este viaje sonoro que te envuelve en vibras profundas y energías únicas 💜🌌 💿 Lanzamiento 019 bajo el sello Blue Records Déjate llevar por los sonidos, siente el ritmo y conecta con esta experiencia musical 🔊⚡ 📍 Directo desde Quito, Ecuador para el mundo 🌍 🔥 Recreation ya está disponible — ¡disfruta, comparte y súbele el volumen! 🚀 Mantente atento porque seguimos soltando música sin parar... esto no se detiene 💥 #GabbyGonzalez #Recreation #ColorsTravelers #BlueRecords #NewMusic ElectronicVibes Quito Ecuador MusicLovers NowPlaying FreshRelease UndergroundMusic BeatLife 🎧💜" [ref=f49e419]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f49e422] [cursor=pointer]:
+                - /url: /lordethnic/p/DZY6PCwjCDA/
+                - img "Photo by Alvaro Pardey in Quito, Ecuador with @kirmanarecords, @gabbygonzalez333, @tdf.records.label, @juanledesma, and @blue_records333. May be an image of poster and text that says 'έο CHAKANA IOTI RAYMI JUANO GABBY EDESMA GONZALEZ Boл-AbE LORD KIRMANA ETHANIC SOUND LIAMAESTEPEZ SYSTEM SYSTEM 2pm#11pm pm 2pm ๘ ιε HOSTEL Calles CallesVenezuelayRocafuerte Venezuelay Rocafuert Entrada Entradageneral$ general $5 Con hospedaje $15 Euogroutle N BLUE VIAJERO NIRMANIE ብወዬሪ'." [ref=f49e425]
+              - link [ref=f49e428] [cursor=pointer]:
+                - /url: /blue_records333/reel/DYrf3cmRVjP/
+                - 'img "🔥 LANZAMIENTO 022 🔥 Estrenamos un nuevo EP colaborativo: “Pachasounds” de GaBBY González 🎶 Un proyecto lleno de ritmo, identidad y sonidos que reúnen el talento de grandes artistas invitados: 🎤 Lord Ethnic 🎤 Juan LEDESMA 🎤 César Vega “Pachasounds” ya está disponible. Comparte, disfruta y que siga la música 🔊✨ #PachaSounds #GabiGonzalez #LordEthnic #JuanOlivesma #CesarVega EP NuevoEP MusicRelease LatinMusic UrbanMusic ElectronicMusic IndieMusic MusicaNueva NowPlaying Release022 Lanzamiento022 StreamingNow Spotify AppleMusic YouTubeMusic Deezer SoundCloud MusicaLatina ArtistasLatinos ProducerLife NewMusic MusicLovers MusicaIndependiente QueSigaLaMusica" [ref=f49e431]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f49e433]:
+              - link [ref=f49e435] [cursor=pointer]:
+                - /url: /hno613613/reel/DW61poZDmqW/
+                - 'img "🔥 NUEVO DROP 🔥 “Timing Up” ya está afuera 🪄 Una pieza más de Hecho a Mano, este proyecto que estamos construyendo con puro corazón, crayón y lápiz 🎨✍️ Esta es la cuarta que soltamos en el feed… y viene con magia Con: Zapura, Mystica, Morex Ya disponible en TODAS las plataformas digitales 🚀 Dale play, comparte y difunde 💥 #TimingUp #HechoAMano #StoneLoco #HNO #Zapura Mystica Morex MusicaNueva NewMusic LatinTrap HipHopLatino Independiente Underground ArteHechoAMano MusicRelease NowPlaying EnTodasLasPlataformas Comparte Difunde" [ref=f49e438]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f49e441] [cursor=pointer]:
+                - /url: /hno613613/reel/DVWLXS0Dvic/
+                - 'img "DanceMusic ✨ Ya salió lo nuevo ✨ La energía se alinea, la vibración sube y el sonido se convierte en ritual. 🔮🔥 Esta vez feat. Mystica, una conexión profunda entre beats, intención y expansión. No es solo una canción… es una experiencia sonora que atraviesa el cuerpo y despierta la mente. Frecuencias envolventes, atmósfera hipnótica y un viaje que te lleva directo al centro de tu poder interior. 🎧 Dale play ya en todas las plataformas digitales.#NewMusic #NowOut #OutNow #Fit #Mystica FeatMystica ElectronicMusic HouseMusic TechHouse Techno Minimal UndergroundVibes RaveEnergy" [ref=f49e444]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f49e447] [cursor=pointer]:
+                - /url: /hno613613/reel/DWqiv8gDpAs/
+                - 'img "Nuevo single, nueva vibra ✨🔥 Esta vez salimos del disco para traerles algo especial… ALQUIMIA feat Mýstica & HNO ya está disponible en todas las plataformas. Una mezcla distinta, energía nueva y el mismo corazón en cada barra. Gracias por estar, por escuchar y por compartir este viaje conmigo 🤍 Dale play, súbele y dime qué te transmite 🎧 #ALQUIMIA #NuevaMusica #Estreno #Single #MusicRelease Latino ArtistaIndependiente MúsicaNueva Spotify AppleMusic YouTubeMusic TrapLatino Reggaeton LatinMusic MusicaUrbana NowPlaying NewMusicFriday FeatMystica HNO IndieArtist ViralMusic" [ref=f49e450]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f49e452]:
+              - link [ref=f49e454] [cursor=pointer]:
+                - /url: /blue_records333/reel/DUVt00TkZLR/
+                - 'img "Nuevo lanzamiento de GABBY González 🎶🔥 Comenzamos este febrero 2026 con nuestro nuevo single. Síguenos para más lanzamientos… ¡Se viene música todo el año! Blue Records #GABBYGonzález #NuevoLanzamiento #BlueRecords #MusicaNueva #Single2026 #ElectronicMusic #LatinMusic #NewMusic #Release #musiclabel" [ref=f49e457]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f49e460] [cursor=pointer]:
+                - /url: /hno613613/reel/DSslKp8Dgx0/
+                - 'img "Esta vez desde Blue Records, HNO feat Mística @mystica_ecuador nos traen este single cargado de mística y profundidad, dedicado al ángel Zandalfon. Un viaje sonoro entre lo espiritual y lo terrenal. Ya disponible en todas las plataformas digitales. Dale play y siente la vibración. #HNO #FeatMistica #BlueRecords #Zandalfon #AngelZandalfon MusicaMistica MusicaConsciente SonidoEspiritual Vibracion Frecuencia ElectronicaMistica NuevoSingle EstrenoMusical ArteSonoro ConexionEspiritual 🎧✨" [ref=f49e463]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f49e466] [cursor=pointer]:
+                - /url: /gabbygonzalez333/reel/DUOjxchEuWw/
+                - 'img "Video Clip Angeles de Miel 🐝 🍯 Un regalo del Arcángel Uriel Disfrútalo, Dale Play en todas las plataformas 🌹 @mystica_ecuador @blue_records333 @juano_ledesma #Mystica #fypシ #viralreelsシ #angelesdemiel #viralreelsvideo❤️" [ref=f49e469]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f49e471]:
+              - link [ref=f49e473] [cursor=pointer]:
+                - /url: /blue_records333/reel/DSaFOzFEW1d/
+                - 'img "GaBBy González feat. Juano Ledesma y Macarios Zapata traen su nuevo lanzamiento Purple Soul, ya disponible en todas las plataformas digitales. 🎶✨ Cerramos el año con broche de oro 💜 Blue Records. Pronto más lanzamientos… 🔥 #PurpleSoul #GaBByGonzalez #JuanoLedesma #MacariosZapata #BlueRecords #NewMusic #MusicRelease #EDM #HouseMusic #Techno #ElectronicMusic #DanceMusic #PartyVibes #MusicLovers #NowPlaying #StreamingNow #OnRepeat #MusicIsLife #BeatDrop #DJLife #ProducerLife #MusicProduction #MusicCommunity #GoodVibesOnly #EndOfYearRelease" [ref=f49e476]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f49e479] [cursor=pointer]:
+                - /url: /blue_records333/reel/DPIDZc8EVPJ/
+                - 'img "✨ Próximo lanzamiento ✨ Tenemos el gusto de anunciar que Gabby González se viene con algo nuevo y poderoso. Muy pronto disponible, ¡atentos a lo que se viene! 🚀 #dancemusic #housemusic #housemusic #minimalhouse #housemusic #producerlife" [ref=f49e482]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f49e485] [cursor=pointer]:
+                - /url: /blue_records333/reel/DQ_xUlUkWJu/
+                - 'img "🎶 ¡Ya está disponible la nueva canción de GaBBy González! 🎶 Disfrútala en todas las plataformas digitales. 🔥 Blue Records Live — ¡Ponte pilas y no te quedes fuera! Seguimos sacando música… 💥 Porque en Blue Records, el azul manda. 💙 #GaBByGonzález #BlueRecords #NuevaMúsica #Estreno #Live #Music #ElAzulManda #Streaming #DisponibleEnTodasLasPlataformas" [ref=f49e488]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+      - contentinfo [ref=f49e490]:
+        - generic [ref=f49e491]:
+          - generic [ref=f49e493]:
+            - link "Meta" [ref=f49e495] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f49e498] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f49e501] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f49e504] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f49e507] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f49e510] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f49e513] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f49e516] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f49e519] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f49e522] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f49e525] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f49e528] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f49e531] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f49e534] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f49e537] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f49e539]:
+            - generic [ref=f49e540] [cursor=pointer]:
+              - generic [ref=f49e541]:
+                - generic [ref=f49e542]: English
+                - img "Down chevron icon" [ref=f49e545]
+              - combobox "Switch Display Language" [ref=f49e547]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f49e548]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f49e551] [cursor=pointer]:
+              - generic "Messages - 3 new notifications" [ref=f49e552]:
+                - generic [ref=f49e553]:
+                  - generic [ref=f49e555]:
+                    - img "Messages" [ref=f49e556]
+                    - generic "Direct messaging - 3 new notifications link" [ref=f49e559]: "3"
+                  - generic [ref=f49e562]: Messages
+                - generic [ref=f49e563]:
+                  - button "User avatar Santiii" [ref=f49e565]:
+                    - img "User avatar" [ref=f49e568]
+                  - button "User avatar Diego Saa" [ref=f49e570]:
+                    - img "User avatar" [ref=f49e573]
+                  - button "User avatar Martini 🍸" [ref=f49e575]:
+                    - img "User avatar" [ref=f49e578]
+            - generic [ref=f49e581]:
+              - generic [ref=f49e582]:
+                - generic [ref=f49e583]:
+                  - generic [ref=f49e585]:
+                    - status "Loading..." [ref=f49e587]
+                    - status "Loading..." [ref=f49e589]
+                  - button [active] [ref=f49e591] [cursor=pointer]:
+                    - img "Close" [ref=f49e593]
+                - separator [ref=f49e596]
+              - generic [ref=f49e597]:
+                - generic [ref=f49e598]:
+                  - status "Loading..." [ref=f49e600]
+                  - status "Loading..." [ref=f49e602]
+                - status "Loading..." [ref=f49e605]
+                - generic [ref=f49e606]:
+                  - status "Loading..." [ref=f49e608]
+                  - status "Loading..." [ref=f49e610]
+                - generic [ref=f49e611]:
+                  - status "Loading..." [ref=f49e613]
+                  - status "Loading..." [ref=f49e615]
+                - status "Loading..." [ref=f49e618]
+                - generic [ref=f49e619]:
+                  - status "Loading..." [ref=f49e621]
+                  - status "Loading..." [ref=f49e623]
+                - status "Loading..." [ref=f49e625]

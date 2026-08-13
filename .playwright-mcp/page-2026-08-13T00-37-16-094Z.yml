@@ -1,0 +1,244 @@
+- generic [ref=f35e1]:
+  - generic [ref=f35e612]:
+    - generic [ref=f35e615]:
+      - link [ref=f35e2514] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f35e628]:
+        - link [ref=f35e2516] [cursor=pointer]:
+          - /url: /
+        - link [ref=f35e2518] [cursor=pointer]:
+          - /url: /reels/
+        - link [ref=f35e2520] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f35e656]: "3"
+        - link [ref=f35e2523] [cursor=pointer]:
+          - /url: /explore/
+        - link [ref=f35e2525] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f35e2527] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f35e2529] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f35e2531] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f35e2532]
+      - generic [ref=f35e720]:
+        - link [ref=f35e2534] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f35e2536] [cursor=pointer]:
+          - /url: "#"
+    - main [ref=f35e740]:
+      - generic [ref=f35e745]:
+        - navigation [ref=f35e2538]:
+          - generic [ref=f35e747]:
+            - generic [ref=f35e748]:
+              - button [ref=f35e2539] [cursor=pointer]:
+                - heading [level=2] [ref=f35e2540]:
+                  - generic [ref=f35e752]: tdf.records.label
+              - button [ref=f35e2542] [cursor=pointer]
+            - tablist [ref=f35e765]:
+              - tab [selected] [ref=f35e2544] [cursor=pointer]:
+                - generic [ref=f35e767]: Primary
+              - tab [ref=f35e2545] [cursor=pointer]:
+                - generic [ref=f35e770]: General
+              - tab [ref=f35e2546] [cursor=pointer]:
+                - generic [ref=f35e773]: From ads
+              - tab [ref=f35e2547] [cursor=pointer]:
+                - generic [ref=f35e777]: Requests
+            - textbox [ref=f35e2549]:
+              - /placeholder: Search
+            - generic [ref=f35e788]:
+              - generic [ref=f35e790]:
+                - list [ref=f35e792]:
+                  - listitem [ref=f35e793]
+                  - listitem [ref=f35e794]:
+                    - button [ref=f35e2550] [cursor=pointer]:
+                      - generic [ref=f35e797]:
+                        - generic [ref=f35e798]: Current obsession...
+                        - generic [ref=f35e804]:
+                          - link [ref=f35e806]
+                          - generic [ref=f35e807]: Your note
+                  - listitem [ref=f35e809]:
+                    - button [ref=f35e2551] [cursor=pointer]:
+                      - generic [ref=f35e813]:
+                        - generic [ref=f35e814]: a q hora perdemos la gravedad?😂para vestirme y estar redi pa volar 🫨🐦‍🔥
+                        - generic [ref=f35e821]:
+                          - link [ref=f35e2552]
+                          - generic [ref=f35e825]: Cami Mantilla
+                  - listitem [ref=f35e828]:
+                    - button [ref=f35e2554] [cursor=pointer]:
+                      - generic [ref=f35e832]:
+                        - generic [ref=f35e833]: Toca la nota Así me gustan las perritas, obedientes
+                        - generic [ref=f35e842]:
+                          - link [ref=f35e2555]
+                          - generic [ref=f35e846]: Ana Julia/ DJ JU🫧
+                  - listitem [ref=f35e849]:
+                    - button [ref=f35e2557] [cursor=pointer]:
+                      - generic [ref=f35e853]:
+                        - generic [ref=f35e854]: show en cdmx hoy 12/08
+                        - generic [ref=f35e861]:
+                          - link [ref=f35e2558]
+                          - generic [ref=f35e865]: Zoe Moff
+                  - listitem [ref=f35e868]:
+                    - button [ref=f35e2560] [cursor=pointer]:
+                      - generic [ref=f35e872]:
+                        - generic [ref=f35e878]:
+                          - generic [ref=f35e879]: Fearless
+                          - generic [ref=f35e886]: Pink Floyd
+                          - generic [ref=f35e887]: Reinventarse las veces que sean necesarias ✨❤️‍🔥
+                        - generic [ref=f35e888]:
+                          - link [ref=f35e2562]
+                          - generic [ref=f35e892]: Sara King
+                  - listitem [ref=f35e895]:
+                    - button [ref=f35e2564] [cursor=pointer]:
+                      - generic [ref=f35e899]:
+                        - generic [ref=f35e905]:
+                          - generic [ref=f35e906]: Si No Estás
+                          - generic [ref=f35e913]: Penyair
+                        - generic [ref=f35e914]:
+                          - link [ref=f35e2566]
+                          - generic [ref=f35e918]: Soley Fino
+                  - listitem [ref=f35e921]:
+                    - button [ref=f35e2568] [cursor=pointer]:
+                      - generic [ref=f35e925]:
+                        - generic [ref=f35e931]:
+                          - generic [ref=f35e932]: Senorita Tristeza
+                          - generic [ref=f35e939]: Scsi-9
+                        - generic [ref=f35e940]:
+                          - link [ref=f35e2570]
+                          - generic [ref=f35e944]: Daniela Cadena Dávila
+                  - listitem [ref=f35e947]:
+                    - button [ref=f35e2572] [cursor=pointer]:
+                      - generic [ref=f35e951]:
+                        - generic [ref=f35e957]:
+                          - generic [ref=f35e958]: Action League Now
+                          - generic [ref=f35e965]: ASTU
+                        - generic [ref=f35e966]:
+                          - link [ref=f35e2574]
+                          - generic [ref=f35e970]: Blue Records
+                  - listitem [ref=f35e973]:
+                    - button [ref=f35e2576] [cursor=pointer]:
+                      - generic [ref=f35e977]:
+                        - generic [ref=f35e983]:
+                          - generic [ref=f35e984]: Mi lanza es este Ska (Live)
+                          - generic [ref=f35e991]: Cálmese Banda Brava
+                          - generic [ref=f35e992]: Nos hemos preparado 7 años para este momento 😎
+                        - generic [ref=f35e993]:
+                          - link [ref=f35e2578]
+                          - generic [ref=f35e997]: Quito Bohemio
+                - button [ref=f35e2580] [cursor=pointer]
+              - generic [ref=f35e1005]:
+                - button [ref=f35e2581] [cursor=pointer]:
+                  - generic [ref=f35e1018]:
+                    - generic [ref=f35e1019]: Federico Molinari
+                    - generic [ref=f35e1025]:
+                      - generic [ref=f35e1026]: "You: Hola, Federico 👋 Vimos tu fecha en Cumbayá y la conversación grupal reciente conectada con TDF. En TDF puedes reunir perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Te invitamos a recorrerlo: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f35e1028]:
+                        - generic [ref=f35e1029]: ·
+                        - generic [ref=f35e1032]: 1m
+                - button [ref=f35e2584] [cursor=pointer]:
+                  - generic [ref=f35e1047]:
+                    - generic [ref=f35e1048]: Fabro Alomìa Torres
+                    - generic [ref=f35e1054]:
+                      - generic [ref=f35e1055]: "You: Hola, Fabro 👋 Vimos tus fechas electrónicas en Las Abejas y Cumbayá, además del grupo reciente conectado con TDF. Tu escena necesita un espacio propio: en TDF puedes armar tu perfil y encontrarte con artistas, lanzamientos y experiencias de Quito. Te invitamos a probarlo: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f35e1057]:
+                        - generic [ref=f35e1058]: ·
+                        - generic [ref=f35e1061]: 3m
+                - button [ref=f35e2587] [cursor=pointer]:
+                  - generic [ref=f35e1076]:
+                    - generic [ref=f35e1077]: Llama Este Pez
+                    - generic [ref=f35e1083]:
+                      - generic [ref=f35e1084]: "You: Hola, Llama Este Pez 👋 Vimos tu interacción reciente con TDF y tus fechas electrónicas en Plaza Belmonte y Quito. En TDF puedes reunir perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Te invitamos a recorrerlo: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f35e1086]:
+                        - generic [ref=f35e1087]: ·
+                        - generic [ref=f35e1090]: 5m
+                - button [ref=f35e2590] [cursor=pointer]:
+                  - generic [ref=f35e1105]:
+                    - generic [ref=f35e1106]: el Rovlex
+                    - generic [ref=f35e1112]:
+                      - generic [ref=f35e1113]: "You: Hola, Rovlex 👋 Nos pediste información sobre TDF y vimos tu contenido de trap, rap y drill vinculado a Quito. Tu escena necesita un espacio propio: aquí puedes crear tu perfil público, mostrar música y conectar con la comunidad. Te invitamos a probarlo: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f35e1115]:
+                        - generic [ref=f35e1116]: ·
+                        - generic [ref=f35e1119]: 6m
+                - button [ref=f35e2593] [cursor=pointer]:
+                  - generic [ref=f35e1134]:
+                    - generic [ref=f35e1135]: La T de Teez
+                    - generic [ref=f35e1141]:
+                      - generic [ref=f35e1142]: "You: Hola, Teez 👋 Nos escribiste por el anuncio y vimos tu trabajo urbano desde Quitumbe. En TDF puedes reunir tu perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Aquí puedes crear tu cuenta: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f35e1144]:
+                        - generic [ref=f35e1145]: ·
+                        - generic [ref=f35e1148]: 8m
+                - button [ref=f35e2596] [cursor=pointer]:
+                  - generic [ref=f35e1163]:
+                    - generic [ref=f35e1164]: HNO
+                    - generic [ref=f35e1170]:
+                      - generic [ref=f35e1171]: Ya le hago
+                      - generic [ref=f35e1173]:
+                        - generic [ref=f35e1174]: ·
+                        - generic [ref=f35e1177]: 10m
+                - button [ref=f35e2599] [cursor=pointer]:
+                  - generic [ref=f35e1192]:
+                    - generic [ref=f35e1193]: Blue Records
+                    - generic [ref=f35e1199]:
+                      - generic [ref=f35e1200]: Listo :)
+                      - generic [ref=f35e1202]:
+                        - generic [ref=f35e1203]: ·
+                        - generic [ref=f35e1206]: 2h
+                - button [ref=f35e2602] [cursor=pointer]:
+                  - generic [ref=f35e1221]:
+                    - generic [ref=f35e1222]: InmoDesarrollo - Enríquez & Arquitectos | IDEA ∴
+                    - generic [ref=f35e1228]:
+                      - generic [ref=f35e1229]: InmoDesarrollo sent an attachment.
+                      - generic [ref=f35e1231]:
+                        - generic [ref=f35e1232]: ·
+                        - generic [ref=f35e1235]: 1d
+                - button [ref=f35e2605] [cursor=pointer]:
+                  - generic [ref=f35e1262]:
+                    - status [ref=f35e2606]
+                    - generic [ref=f35e1268]:
+                      - status [ref=f35e2607]
+                      - status [ref=f35e2608]
+        - generic [ref=f35e2429]:
+          - generic [ref=f35e2433]:
+            - link [ref=f35e2609] [cursor=pointer]:
+              - /url: /oximoron_tu_tentaculo/
+              - generic [ref=f35e2440]:
+                - heading [level=2] [ref=f35e2611]:
+                  - generic [ref=f35e2443]: Tentáculos
+                - generic [ref=f35e2444]: oximoron_tu_tentaculo
+            - button [ref=f35e2612] [cursor=pointer]
+          - generic [ref=f35e2455]:
+            - generic [ref=f35e2459]:
+              - generic [ref=f35e2465]:
+                - heading [level=2] [ref=f35e2615]:
+                  - generic [ref=f35e2469]: Tentáculos
+                - generic [ref=f35e2470]: oximoron_tu_tentaculo · Instagram
+                - link [ref=f35e2616] [cursor=pointer]:
+                  - /url: /oximoron_tu_tentaculo/
+                  - text: View profile
+              - generic [ref=f35e2477]:
+                - generic [ref=f35e2478]: 7/11/23, 6:27 PM
+                - group [ref=f35e2481]:
+                  - generic [ref=f35e2483]:
+                    - link [ref=f35e2617] [cursor=pointer]:
+                      - /url: /oximoron_tu_tentaculo
+                    - generic [ref=f35e2493]:
+                      - generic [ref=f35e2494]: Unsupported message
+                      - generic [ref=f35e2496]: Use the Instagram mobile app to view this message.
+              - generic [ref=f35e2512]: Seen
+            - generic [ref=f35e2498]:
+              - generic [ref=f35e2499]:
+                - generic [ref=f35e2500]: Accept message request from Tentáculos (oximoron_tu_tentaculo)?
+                - generic [ref=f35e2501]: If you accept, they will also be able to call you and see info such as your activity status and when you've read messages.
+              - generic [ref=f35e2503]:
+                - button [ref=f35e2619] [cursor=pointer]: Block
+                - button [ref=f35e2620] [cursor=pointer]: Delete
+                - button [ref=f35e2621] [cursor=pointer]: Accept
+  - dialog [ref=f35e2628]:
+    - generic [ref=f35e2631]:
+      - heading [level=1] [ref=f35e2632]:
+        - heading "Move messages from oximoron_tu_tentaculo into:" [active] [level=1] [ref=f35e2633]
+      - generic [ref=f35e2634]:
+        - button "Primary" [ref=f35e2635] [cursor=pointer]
+        - button "General" [ref=f35e2636] [cursor=pointer]
+        - button "Cancel" [ref=f35e2637] [cursor=pointer]

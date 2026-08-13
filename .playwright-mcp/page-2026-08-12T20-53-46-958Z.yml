@@ -1,0 +1,301 @@
+- generic [ref=f12e4]:
+  - generic [ref=f12e9]:
+    - generic [ref=f12e12]:
+      - link [ref=f12e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f12e22]
+      - generic [ref=f12e25]:
+        - link [ref=f12e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f12e35]
+        - link [ref=f12e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f12e45]
+        - link [ref=f12e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f12e55]:
+            - img "Messages" [ref=f12e57]
+            - generic "Direct messaging - 4 new notifications link" [ref=f12e60]: "4"
+        - link [ref=f12e66] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f12e71]
+        - link [ref=f12e78] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f12e83]
+        - link [ref=f12e91] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f12e96]
+        - link [ref=f12e101] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f12e106]
+        - link [ref=f12e113] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f12e118]:
+            - img "tdf.records.label's profile picture" [ref=f12e119]
+      - generic [ref=f12e120]:
+        - link [ref=f12e123] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f12e128]
+        - link [ref=f12e131] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f12e136]
+    - generic [ref=f12e139]:
+      - main [ref=f12e140]:
+        - generic [ref=f12e142]:
+          - generic [ref=f12e143]:
+            - generic [ref=f12e144]:
+              - button [ref=f12e149] [cursor=pointer]:
+                - link [ref=f12e151]:
+                  - img "planet_303's profile picture" [ref=f12e152]
+              - generic [ref=f12e153]:
+                - generic [ref=f12e154]:
+                  - generic [ref=f12e155]:
+                    - link [ref=f12e157] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "planet_303" [level=2] [ref=f12e158]
+                    - button [ref=f12e160] [cursor=pointer]:
+                      - img "Options" [ref=f12e162]
+                  - generic [ref=f12e166]: Fabro Alomìa Torres
+                  - generic [ref=f12e168]:
+                    - generic [ref=f12e170]:
+                      - generic [ref=f12e171]: "579"
+                      - text: posts
+                    - link "1,673 followers" [ref=f12e173] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f12e174]:
+                        - generic "1,673" [ref=f12e175]
+                        - text: followers
+                    - link "4,717 following" [ref=f12e177] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f12e178]:
+                        - generic [ref=f12e179]: 4,717
+                        - text: following
+                - generic [ref=f12e180]:
+                  - generic [ref=f12e181]:
+                    - button [ref=f12e183] [cursor=pointer]:
+                      - generic [ref=f12e184]:
+                        - link "@interdit_____" [ref=f12e185]:
+                          - /url: /interdit_____/
+                        - link "@artesoscurass" [ref=f12e186]:
+                          - /url: /artesoscurass/
+                    - generic [ref=f12e187]:
+                      - button "Link icon www.deejay.de/Various_Analog_Travellers_Ep_YAY017_Vinyl__1107902 and 1 more" [ref=f12e188] [cursor=pointer]:
+                        - generic [ref=f12e189]:
+                          - img "Link icon" [ref=f12e191]
+                          - generic [ref=f12e194]: www.deejay.de/Various_Analog_Travellers_Ep_YAY017_Vinyl__1107902 and 1 more
+                      - link "Threads planet_303" [ref=f12e196] [cursor=pointer]:
+                        - /url: https://www.threads.com/@planet_303?xmt=AQG0J7xaFedz3HrGuzRJBWuala_vHItOtCcahpyfj217AjU
+                        - img "Threads" [ref=f12e198]
+                        - generic [ref=f12e200]: planet_303
+                  - link "Followed by natiqdati, circuitosanfelipe + 52 more" [ref=f12e202] [cursor=pointer]:
+                    - /url: /planet_303/followers/mutualOnly
+                    - generic [ref=f12e204]:
+                      - generic [ref=f12e206]:
+                        - button [ref=f12e207]:
+                          - link [ref=f12e208]
+                        - button [ref=f12e209]:
+                          - link [ref=f12e210]
+                        - button [ref=f12e211]:
+                          - link [ref=f12e212]
+                      - generic [ref=f12e213]: Followed by natiqdati, circuitosanfelipe + 52 more
+            - generic [ref=f12e218]:
+              - button "Following Down chevron icon" [ref=f12e220] [cursor=pointer]:
+                - generic [ref=f12e221]:
+                  - generic [ref=f12e222]: Following
+                  - img "Down chevron icon" [ref=f12e225]
+              - button "Message" [ref=f12e228] [cursor=pointer]
+              - button [ref=f12e230] [cursor=pointer]:
+                - img "Similar accounts" [ref=f12e232]
+            - menu [ref=f12e236]:
+              - generic [ref=f12e238]:
+                - list [ref=f12e240]:
+                  - listitem [ref=f12e241]
+                  - listitem [ref=f12e242]
+                  - listitem [ref=f12e243]:
+                    - link "View 🥷🏻 highlight" [ref=f12e246] [cursor=pointer]:
+                      - /url: /stories/highlights/17923991154155714/
+                      - button "planet_303's highlight story picture 🥷🏻" [ref=f12e247]:
+                        - button [ref=f12e248]:
+                          - img "planet_303's highlight story picture" [ref=f12e251]
+                        - generic [ref=f12e252]: 🥷🏻
+                  - listitem [ref=f12e255]:
+                    - link "View 🛰️ highlight" [ref=f12e258] [cursor=pointer]:
+                      - /url: /stories/highlights/17867438165196851/
+                      - button "planet_303's highlight story picture 🛰️" [ref=f12e259]:
+                        - button [ref=f12e260]:
+                          - img "planet_303's highlight story picture" [ref=f12e263]
+                        - generic [ref=f12e264]: 🛰️
+                  - listitem [ref=f12e267]:
+                    - link "View Destacada highlight" [ref=f12e270] [cursor=pointer]:
+                      - /url: /stories/highlights/17867602615305772/
+                      - button "planet_303's highlight story picture Destacada" [ref=f12e271]:
+                        - button [ref=f12e272]:
+                          - img "planet_303's highlight story picture" [ref=f12e275]
+                        - generic [ref=f12e276]: Destacada
+                  - listitem [ref=f12e279]:
+                    - link "View Destacada highlight" [ref=f12e282] [cursor=pointer]:
+                      - /url: /stories/highlights/17930567131257578/
+                      - button "planet_303's highlight story picture Destacada" [ref=f12e283]:
+                        - button [ref=f12e284]:
+                          - img "planet_303's highlight story picture" [ref=f12e287]
+                        - generic [ref=f12e288]: Destacada
+                  - listitem [ref=f12e291]:
+                    - link "View Destacada highlight" [ref=f12e294] [cursor=pointer]:
+                      - /url: /stories/highlights/17946824545222370/
+                      - button "planet_303's highlight story picture Destacada" [ref=f12e295]:
+                        - button [ref=f12e296]:
+                          - img "planet_303's highlight story picture" [ref=f12e299]
+                        - generic [ref=f12e300]: Destacada
+                  - listitem [ref=f12e303]:
+                    - link "View Destacada highlight" [ref=f12e306] [cursor=pointer]:
+                      - /url: /stories/highlights/17959447288226168/
+                      - button "planet_303's highlight story picture Destacada" [ref=f12e307]:
+                        - button [ref=f12e308]:
+                          - img "planet_303's highlight story picture" [ref=f12e311]
+                        - generic [ref=f12e312]: Destacada
+                  - listitem [ref=f12e315]:
+                    - link "View Destacada highlight" [ref=f12e318] [cursor=pointer]:
+                      - /url: /stories/highlights/18031601995044361/
+                      - button "planet_303's highlight story picture Destacada" [ref=f12e319]:
+                        - button [ref=f12e320]:
+                          - img "planet_303's highlight story picture" [ref=f12e323]
+                        - generic [ref=f12e324]: Destacada
+                  - listitem [ref=f12e327]:
+                    - link "View Destacada highlight" [ref=f12e330] [cursor=pointer]:
+                      - /url: /stories/highlights/18018045097106045/
+                      - button "planet_303's highlight story picture Destacada" [ref=f12e331]:
+                        - button [ref=f12e332]:
+                          - img "planet_303's highlight story picture" [ref=f12e335]
+                        - generic [ref=f12e336]: Destacada
+                  - listitem [ref=f12e339]:
+                    - link "View PLANET 303 highlight" [ref=f12e342] [cursor=pointer]:
+                      - /url: /stories/highlights/17855497663741165/
+                      - button "planet_303's highlight story picture PLANET 303" [ref=f12e343]:
+                        - button [ref=f12e344]:
+                          - img "planet_303's highlight story picture" [ref=f12e347]
+                        - generic [ref=f12e348]: PLANET 303
+                  - listitem [ref=f12e351]:
+                    - link "View Dumb highlight" [ref=f12e354] [cursor=pointer]:
+                      - /url: /stories/highlights/18089762782030013/
+                      - button "planet_303's highlight story picture Dumb" [ref=f12e355]:
+                        - button [ref=f12e356]:
+                          - img "planet_303's highlight story picture" [ref=f12e359]
+                        - generic [ref=f12e360]: Dumb
+                - button "Next" [ref=f12e363] [cursor=pointer]
+          - generic [ref=f12e365]:
+            - tablist [ref=f12e366]:
+              - link [ref=f12e368] [cursor=pointer]:
+                - /url: /planet_303/
+                - img "Posts" [ref=f12e370]
+              - link [ref=f12e381] [cursor=pointer]:
+                - /url: /planet_303/reels/
+                - img "Reels" [ref=f12e383]
+              - link [ref=f12e386] [cursor=pointer]:
+                - /url: /planet_303/reposts/
+                - img "Reposts" [ref=f12e388]
+              - link [ref=f12e391] [cursor=pointer]:
+                - /url: /planet_303/tagged/
+                - img "Tagged" [ref=f12e393]
+            - tabpanel
+          - progressbar [ref=f12e397]:
+            - img "Loading..." [ref=f12e398]
+      - contentinfo [ref=f12e411]:
+        - generic [ref=f12e412]:
+          - generic [ref=f12e414]:
+            - link "Meta" [ref=f12e416] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f12e419] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f12e422] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f12e425] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f12e428] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f12e431] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f12e434] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f12e437] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f12e440] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f12e443] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f12e446] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f12e449] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f12e452] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f12e455] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f12e458] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f12e460]:
+            - generic [ref=f12e461] [cursor=pointer]:
+              - generic [ref=f12e462]:
+                - generic [ref=f12e463]: English
+                - img "Down chevron icon" [ref=f12e466]
+              - combobox "Switch Display Language" [ref=f12e468]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f12e469]: © 2026 Instagram from Meta
+  - button [ref=f12e472] [cursor=pointer]:
+    - generic "Messages - 4 new notifications" [ref=f12e473]:
+      - generic [ref=f12e474]:
+        - generic [ref=f12e476]:
+          - img "Messages" [ref=f12e477]
+          - generic "Direct messaging - 4 new notifications link" [ref=f12e480]: "4"
+        - generic [ref=f12e483]: Messages

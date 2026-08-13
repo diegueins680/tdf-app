@@ -1,0 +1,328 @@
+- generic [ref=f3e4]:
+  - generic [ref=f3e18]:
+    - generic [ref=f3e21]:
+      - link [ref=f3e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f3e31]
+      - generic [ref=f3e34]:
+        - link [ref=f3e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f3e44]
+        - link [ref=f3e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f3e54]
+        - link [ref=f3e61] [cursor=pointer]:
+          - /url: /direct/t/17843400270542458
+          - generic [ref=f3e64]:
+            - img "Messages" [ref=f3e66]
+            - generic "Direct messaging - 2 new notifications link" [ref=f3e69]: "2"
+        - link [ref=f3e75] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f3e80]
+        - link [ref=f3e87] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f3e92]
+        - link [ref=f3e98] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f3e103]
+        - link [ref=f3e108] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f3e113]
+        - link [ref=f3e120] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f3e125]:
+            - img "tdf.records.label's profile picture" [ref=f3e126]
+      - generic [ref=f3e127]:
+        - link [ref=f3e130] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f3e135]
+        - link [ref=f3e138] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f3e143]
+    - generic [ref=f3e146]:
+      - main [ref=f3e147]:
+        - generic [ref=f3e149]:
+          - generic [ref=f3e150]:
+            - generic [ref=f3e151]:
+              - button [ref=f3e156] [cursor=pointer]:
+                - link [ref=f3e158]:
+                  - img "festival_mestizonica's profile picture" [ref=f3e159]
+              - generic [ref=f3e160]:
+                - generic [ref=f3e161]:
+                  - generic [ref=f3e162]:
+                    - link [ref=f3e164] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "festival_mestizonica" [level=2] [ref=f3e165]
+                    - button [ref=f3e167] [cursor=pointer]:
+                      - img "Options" [ref=f3e169]
+                  - generic [ref=f3e173]: ✨Festival Mestizónica ✨
+                  - generic [ref=f3e175]:
+                    - generic [ref=f3e177]:
+                      - generic [ref=f3e178]: "30"
+                      - text: posts
+                    - link "353 followers" [ref=f3e180] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f3e181]:
+                        - generic "353" [ref=f3e182]
+                        - text: followers
+                    - link "765 following" [ref=f3e184] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f3e185]:
+                        - generic [ref=f3e186]: "765"
+                        - text: following
+                - generic [ref=f3e187]:
+                  - generic [ref=f3e188]:
+                    - generic [ref=f3e189]:
+                      - button [ref=f3e190] [cursor=pointer]:
+                        - generic [ref=f3e191]: 🔥✨MESTIZÓNICA✨🔥Festival Independiente de Música Experimental... sé parte de esta experiencia sonora
+                      - generic [ref=f3e192]:
+                        - text: ...
+                        - button "more" [ref=f3e193] [cursor=pointer]
+                    - heading [level=1]
+                    - generic [ref=f3e196]:
+                      - img "Link icon" [ref=f3e198]
+                      - link "docs.google.com/forms/d/e/1FAIpQLSf1Q8h1dIZ9oldMISIJfetxo6-qetG5czp1_h17OJ6yo-r4fQ/viewform?usp=header" [ref=f3e202] [cursor=pointer]:
+                        - /url: https://l.instagram.com/?u=https%3A%2F%2Fdocs.google.com%2Fforms%2Fd%2Fe%2F1FAIpQLSf1Q8h1dIZ9oldMISIJfetxo6-qetG5czp1_h17OJ6yo-r4fQ%2Fviewform%3Fusp%3Dheader%26utm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio&e=AUAH11txgSWwsq6dFegf-pMF01ChdwgL7emOmjsenLD9ix3ez211yY9fbtVqErg6PX-NL3rkWZK7tm1hG2hk3kNb4CiutriLFWqwR-jN3w-soNVbvakTpHXrL6G8zV1gAjaemazMTjkk
+                  - link "Followed by colecciondemusica_ecuatoriana, quitobohemio + 3 more" [ref=f3e204] [cursor=pointer]:
+                    - /url: /festival_mestizonica/followers/mutualOnly
+                    - generic [ref=f3e206]:
+                      - generic [ref=f3e208]:
+                        - button [ref=f3e209]:
+                          - link [ref=f3e210]
+                        - button [ref=f3e211]:
+                          - link [ref=f3e212]
+                        - button [ref=f3e213]:
+                          - link [ref=f3e214]
+                      - generic [ref=f3e215]: Followed by colecciondemusica_ecuatoriana, quitobohemio + 3 more
+            - generic [ref=f3e220]:
+              - button "Follow Back" [ref=f3e222] [cursor=pointer]
+              - button "Message" [ref=f3e226] [cursor=pointer]
+              - button [ref=f3e228] [cursor=pointer]:
+                - img "Similar accounts" [ref=f3e230]
+            - generic:
+              - menu
+          - generic [ref=f3e233]:
+            - tablist [ref=f3e234]:
+              - link [ref=f3e236] [cursor=pointer]:
+                - /url: /festival_mestizonica/
+                - img "Posts" [ref=f3e238]
+              - link [ref=f3e249] [cursor=pointer]:
+                - /url: /festival_mestizonica/reels/
+                - img "Reels" [ref=f3e251]
+              - link [ref=f3e254] [cursor=pointer]:
+                - /url: /festival_mestizonica/reposts/
+                - img "Reposts" [ref=f3e256]
+              - link [ref=f3e259] [cursor=pointer]:
+                - /url: /festival_mestizonica/tagged/
+                - img "Tagged" [ref=f3e261]
+            - tabpanel
+          - generic [ref=f3e268]:
+            - generic [ref=f3e269]:
+              - link [ref=f3e271] [cursor=pointer]:
+                - /url: /festival_mestizonica/p/Db6xMbTFnxP/
+                - img "Photo shared by ✨Festival Mestizónica ✨ on August 11, 2026 tagging @punoec, @mangataband.uio, @silvestreskalon, @_kawina__, and @nepenta_rapcore. May be an image of poster and text." [ref=f3e274]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f3e277] [cursor=pointer]:
+                - /url: /festival_mestizonica/p/Db6aWVlltqk/
+                - img "Photo shared by ✨Festival Mestizónica ✨ on August 11, 2026 tagging @dezenzoec, @cosmos.music.lab, @laboleraquito, and @calavery.inc. May be an image of poster and text that says 'MestiZCNICA PUÑO DEZELİZO NEPENTA MRAATa FILUESTRE EKALON KAWИMa ¿CÓMO COMPRAR TUS ENTRADAS? GUÍA RÁPIDA DE COMPRA GENERAL $8 APORTE MENORES DE EDAD $4'." [ref=f3e280]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f3e283] [cursor=pointer]:
+                - /url: /festival_mestizonica/reel/Db1Ph6GhBGR/
+                - 'img "Esto fue un poco de lo que vivimos en la primera edición del Mestizónica el año pasado junto a @nosanctuary_ec con su tema \"Eros\"!! Este año regresamos con más ganas, con más bandas geniales y todo el poder de la música original que se está haciendo en la capital... No te pierdas esta segunda edición el 22 de agosto! Cosmos Music Lab. Producciones Cámaras, audio y video: @xavolopez" [ref=f3e286]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f3e288]:
+              - link [ref=f3e290] [cursor=pointer]:
+                - /url: /dezenzoec/reel/DbrY2AoRaXO/
+                - img "Nuevos temas para el cuarto disco. Nos vemos en el Mestizónica" [ref=f3e293]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f3e296] [cursor=pointer]:
+                - /url: /dezenzoec/reel/Dbix9KLxvCp/
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f3e302] [cursor=pointer]:
+                - /url: /dezenzoec/reel/DbePkEsJItH/
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f3e307]:
+              - link [ref=f3e309] [cursor=pointer]:
+                - /url: /keltoiec/p/DbcGk_Clm1b/
+                - img [ref=f3e312]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f3e315] [cursor=pointer]:
+                - /url: /mangataband.uio/reel/DbUNTy3C4Zg/
+                - 'img "•••Imagenes Sonoras••• Otro vistazo de Mangata en el @quitoenllamasfest . Gracias a @quitobohemio por permitirnos ser parte de su celebración. Nos vemos este 22 de agosto en @festival_mestizonica Registro y edición: @el_man_zana" [ref=f3e318]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f3e321] [cursor=pointer]:
+                - /url: /festival_mestizonica/p/DbI1n8nvub9/
+                - img "Photo by ✨Festival Mestizónica ✨ in La Bolera Quito with @keltoiec, @punoec, @mangataband.uio, @silvestreskalon, @dezenzoec, @cosmos.music.lab, @_kawina__, @laboleraquito, @calavery.inc, and @nepenta_rapcore. May be an image of ‎poster and ‎text that says '‎MestiZONICA !ពី DEZENIZO NEPENTA WAnORTR FILUESTRE EKALON KAWИHA ENTRADA $8 GENERAL $4 DE EDAD MENORES SÁBADO 14:00 22-AGO CentroCuervidBspe Centro הל Bи3apB la belera‎'‎‎." [ref=f3e324]
+            - generic [ref=f3e326]:
+              - link [ref=f3e328] [cursor=pointer]:
+                - /url: /festival_mestizonica/reel/DbCSit2BcMa/
+                - img "Esto fue un poco de lo que vivimos en la primera edición del Mestizónica!! Este año regresamos con más ganas, con más bandas geniales y todo el poder de la música original que se está haciendo en la capital... Esta semana lanzamos el cartel oficial! Nos vemos pronto!! (próximamente más videos de las otras bandas que nos acompañaron)" [ref=f3e331]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f3e334] [cursor=pointer]:
+                - /url: /festival_mestizonica/p/DaHqz24yHYk/
+                - img "Photo by ✨Festival Mestizónica ✨ in Ecuador with @dezenzoec, @cosmos.music.lab, and @calavery.inc. May be an image of poster and text that says 'DEZENZO PRESENTA MestTECNICA StIZONIG SÁBADO 15-AGO'." [ref=f3e337]
+              - link [ref=f3e340] [cursor=pointer]:
+                - /url: /festival_mestizonica/p/DZqrdHksc5Y/
+                - img "Photo by ✨Festival Mestizónica ✨ in Quito, Ecuador with @dezenzoec, @cosmos.music.lab, and @calavery.inc. May be an image of poster, top, concert and text that says 'MestizONica tiZÓNIGA AGOSTO 2026 PRONTO OMÁSINFORMACIÓN MÁS MÁS INFORMACIÓN N-'." [ref=f3e343]
+      - contentinfo [ref=f3e345]:
+        - generic [ref=f3e346]:
+          - generic [ref=f3e348]:
+            - link "Meta" [ref=f3e350] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f3e353] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f3e356] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f3e359] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f3e362] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f3e365] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f3e368] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f3e371] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f3e374] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f3e377] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f3e380] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f3e383] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f3e386] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f3e389] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f3e392] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f3e394]:
+            - generic [ref=f3e395] [cursor=pointer]:
+              - generic [ref=f3e396]:
+                - generic [ref=f3e397]: English
+                - img "Down chevron icon" [ref=f3e400]
+              - combobox "Switch Display Language" [ref=f3e402]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f3e403]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f3e406] [cursor=pointer]:
+              - generic "Messages - 2 new notifications" [ref=f3e407]:
+                - generic [ref=f3e408]:
+                  - generic [ref=f3e410]:
+                    - img "Messages" [ref=f3e411]
+                    - generic "Direct messaging - 2 new notifications link" [ref=f3e414]: "2"
+                  - generic [ref=f3e417]: Messages
+                - generic [ref=f3e418]:
+                  - button "User avatar Diego Saa" [ref=f3e420]:
+                    - img "User avatar" [ref=f3e423]
+                  - button "User avatar Martini 🍸" [ref=f3e425]:
+                    - img "User avatar" [ref=f3e428]
+            - generic [ref=f3e429]:
+              - generic [ref=f3e430]:
+                - generic [ref=f3e431]:
+                  - generic [ref=f3e433]:
+                    - status "Loading..." [ref=f3e435]
+                    - status "Loading..." [ref=f3e437]
+                  - button [active] [ref=f3e439] [cursor=pointer]:
+                    - img "Close" [ref=f3e441]
+                - separator [ref=f3e444]
+              - generic [ref=f3e445]:
+                - generic [ref=f3e446]:
+                  - status "Loading..." [ref=f3e448]
+                  - status "Loading..." [ref=f3e450]
+                - status "Loading..." [ref=f3e453]
+                - generic [ref=f3e454]:
+                  - status "Loading..." [ref=f3e456]
+                  - status "Loading..." [ref=f3e458]
+                - generic [ref=f3e459]:
+                  - status "Loading..." [ref=f3e461]
+                  - status "Loading..." [ref=f3e463]
+                - status "Loading..." [ref=f3e466]
+                - generic [ref=f3e467]:
+                  - status "Loading..." [ref=f3e469]
+                  - status "Loading..." [ref=f3e471]
+                - status "Loading..." [ref=f3e473]

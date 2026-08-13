@@ -1,0 +1,14 @@
+- generic [ref=f55e11]:
+  - generic [ref=f55e15]:
+    - generic:
+      - button "Menu" [ref=f55e16] [cursor=pointer]
+      - generic [ref=f55e20]:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - heading "Confirm you're human to use your account, tdf.records.label"
+            - button "Continue" [ref=f55e21] [cursor=pointer]
+            - generic "Takes about 30 seconds"
+  - alert

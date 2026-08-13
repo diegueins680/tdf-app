@@ -1,0 +1,63 @@
+- generic [ref=f43e2]:
+  - generic [ref=f43e3]:
+    - link "Saltar al contenido principal" [ref=f43e1500] [cursor=pointer]:
+      - /url: "#main-content"
+    - generic [ref=f43e5]:
+      - banner [ref=f43e6]:
+        - generic [ref=f43e7]:
+          - button "Mostrar menú lateral" [ref=f43e1501] [cursor=pointer]
+          - link "Ir al inicio" [ref=f43e1502] [cursor=pointer]:
+            - /url: /inicio
+            - img "TDF Records logo"
+          - button "Buscar sección" [ref=f43e1503] [cursor=pointer]:
+            - generic [ref=f43e18]: ⌘K
+          - generic [ref=f43e19]:
+            - button "Creación rápida" [ref=f43e1504] [cursor=pointer]:
+              - generic [ref=f43e24]: Crear
+            - button "Notificaciones" [ref=f43e1505] [cursor=pointer]:
+              - generic [ref=f43e26]: "0"
+            - button "Abrir menú de sesión" [ref=f43e1506] [cursor=pointer]:
+              - generic [ref=f43e31]: D
+      - status [ref=f43e32]
+      - main [ref=f43e35]:
+        - generic [ref=f43e37]:
+          - generic [ref=f43e39]:
+            - generic [ref=f43e40]:
+              - heading "Contactos" [level=3] [ref=f43e1509]
+              - paragraph [ref=f43e42]: Gestiona personas, empresas y roles en un solo lugar.
+            - button [active] [ref=f43e1510] [cursor=pointer]
+          - generic [ref=f43e50]:
+            - generic "Buscar contactos" [ref=f43e1511]:
+              - generic [ref=f43e93]:
+                - textbox "Buscar contactos" [ref=f43e1512]:
+                  - /placeholder: Buscar por nombre, email o Instagram
+                  - text: Fabro Alomìa Torres
+                - button "Limpiar búsqueda" [ref=f43e1513] [cursor=pointer]
+                - group
+            - generic [ref=f43e1524]:
+              - generic [ref=f43e1525]:
+                - heading "1 coincidencia para \"Fabro Alomìa Torres\"" [level=6] [ref=f43e1526]
+                - paragraph [ref=f43e1527]: La búsqueda dejó un solo contacto visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar contactos en la tabla.
+              - generic [ref=f43e1528]:
+                - button [ref=f43e1530] [cursor=pointer]:
+                  - paragraph [ref=f43e1531]: Fabro Alomìa Torres
+                - paragraph [ref=f43e1532]: "Contacto: Falta correo e Instagram"
+                - paragraph [ref=f43e1533]: Completa el correo desde Acciones antes de crear el usuario.
+              - button "Abrir acciones para Fabro Alomìa Torres" [ref=f43e1535] [cursor=pointer]: Completar contacto
+        - generic [ref=f43e57]:
+          - status [ref=f43e58]:
+            - generic [ref=f43e62]: "API: online"
+          - button "Abrir ChatKit" [ref=f43e1514] [cursor=pointer]
+  - generic "Control de radio":
+    - generic [ref=f43e66]:
+      - button "Reproducir radio" [ref=f43e1515] [cursor=pointer]
+      - generic "Saltar al anterior" [ref=f43e1516]:
+        - button "Saltar a la estación anterior" [ref=f43e1517] [cursor=pointer]
+      - generic "Saltar al siguiente" [ref=f43e1518]:
+        - button "Saltar a la siguiente estación" [ref=f43e1519] [cursor=pointer]
+      - button "Silenciar radio" [ref=f43e1520] [cursor=pointer]
+      - button "Ocultar barra de radio" [ref=f43e1521] [cursor=pointer]
+      - button "Expandir radio" [ref=f43e1522] [cursor=pointer]
+      - generic [ref=f43e87]:
+        - generic [ref=f43e88]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient
