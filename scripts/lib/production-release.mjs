@@ -28,6 +28,65 @@ export function validateMigrationRelativePath(value) {
   return normalized;
 }
 
+export function parseSecurityEmergencyReadinessOutput(output) {
+  const records = String(output ?? '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('{'))
+    .map((line) => {
+      try {
+        return JSON.parse(line);
+      } catch {
+        return undefined;
+      }
+    })
+    .filter(Boolean);
+  const report = [...records]
+    .reverse()
+    .find(({ kind }) => kind === 'security-emergency-readiness');
+  if (!report) throw new Error('Security emergency readiness preflight returned no report.');
+  if (!['legacy', 'canonical', 'missing'].includes(report.schemaMode)) {
+    throw new Error('Security emergency readiness preflight returned an unknown schema mode.');
+  }
+  if (report.transactionReadOnly !== 'on') {
+    throw new Error('Security emergency readiness preflight was not read-only.');
+  }
+  if (report.requiredIndependentPaths !== 2
+      || typeof report.preMigrationReady !== 'boolean'
+      || typeof report.databaseReady !== 'boolean') {
+    throw new Error('Security emergency readiness preflight returned an invalid gate payload.');
+  }
+  for (const field of [
+    'activeEmergencyAssignments',
+    'distinctAssignedParties',
+    'authenticatableParties',
+    'databaseCoherentPaths',
+  ]) {
+    if (report[field] !== undefined
+        && report[field] !== null
+        && (!Number.isInteger(report[field]) || report[field] < 0)) {
+      throw new Error(`Security emergency readiness preflight returned an invalid ${field}.`);
+    }
+  }
+  return report;
+}
+
+export function securityEmergencyReadinessBlocker(report, options = {}) {
+  if (options.requireCanonical === true) {
+    if (report.schemaMode !== 'canonical') {
+      return `post-migration emergency readiness remained in ${report.schemaMode} schema mode`;
+    }
+    if (!report.databaseReady) {
+      return `canonical emergency recovery has ${report.databaseCoherentPaths ?? 0} coherent paths; 2 are required`;
+    }
+    return undefined;
+  }
+  if (!report.preMigrationReady) {
+    return `emergency recovery has ${report.authenticatableParties ?? 0} independently authenticatable parties; 2 are required before migration`;
+  }
+  return undefined;
+}
+
 function stripTomlComment(line) {
   let quote;
   let escaped = false;

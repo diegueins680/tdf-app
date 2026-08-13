@@ -37,6 +37,8 @@
     "loop:ci-polling-status": "node scripts/set-loop-github-polling.mjs status",
     "loop:idea": "node scripts/discover-improvement-idea.mjs",
     "audit:ui:static": "node scripts/ui-static-audit.mjs",
+    "audit:catalog-lists": "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --output /tmp/tdf-catalog-list-audit.json",
+    "audit:catalog-lists:refresh": "node scripts/catalog-list-audit.mjs --output docs/catalog-persistence/reports/static-list-inventory.json && node scripts/build-catalog-decisions.mjs && node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --output docs/catalog-persistence/reports/static-list-inventory.json && node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv",
     "audit:formal": "node scripts/audit-formal-methods.mjs",
     "verify:formal": "npm run verify:auto-loop && npm run audit:formal -- --fail-on error",
     "verify:auto-loop": "node scripts/verify-improvement-loop.mjs",

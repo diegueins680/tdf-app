@@ -1,0 +1,4502 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-07T17:22:12.071Z",
+  "source": {
+    "app": "tdf-hq",
+    "databaseApp": "tdf-hq-db",
+    "database": "tdf_hq",
+    "querySha256": "f4c536d1d4554386817b1f44e6a7281ff7c0eb2a435234a8bd6a8ef9c06d394d",
+    "readOnly": true
+  },
+  "health": {
+    "db": "ok",
+    "status": "ok"
+  },
+  "version": {
+    "buildTime": "2026-08-07T08:20:05Z",
+    "commit": "fc09aed0899476d3617933e6103d7c00995d1fdd",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "machines": [
+    {
+      "id": "0807ee9cd34668",
+      "region": "ord",
+      "state": "started",
+      "version": "2077",
+      "imageDigest": "sha256:37b57e165ba9f756b12fab90418eaf1cb6d76462670bc07f2a331335cbfd4d37"
+    },
+    {
+      "id": "3d8d2500c67168",
+      "region": "lax",
+      "state": "started",
+      "version": "2078",
+      "imageDigest": "sha256:37b57e165ba9f756b12fab90418eaf1cb6d76462670bc07f2a331335cbfd4d37"
+    }
+  ],
+  "records": [
+    {
+      "kind": "metadata",
+      "database": "tdf_hq",
+      "serverVersion": "17.2 (Ubuntu 17.2-1.pgdg24.04+1)",
+      "transactionReadOnly": "on",
+      "tableCount": 184,
+      "capturedAt": "2026-08-07T17:22:11.290059+00:00"
+    },
+    {
+      "kind": "column",
+      "table": "academy_microcourse",
+      "column": "slug",
+      "dataType": "character varying",
+      "rowCount": 1,
+      "nonEmptyCount": 1,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "release-readiness",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "academy_user",
+      "column": "platform",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "academy_user",
+      "column": "role",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "ad_creative",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "artist_enrichment_run",
+      "column": "mode",
+      "dataType": "text",
+      "rowCount": 6,
+      "nonEmptyCount": 6,
+      "distinctCount": 2,
+      "truncated": false,
+      "values": [
+        {
+          "value": "production",
+          "count": 4
+        },
+        {
+          "value": "dry_run",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "artist_enrichment_run",
+      "column": "scope",
+      "dataType": "text",
+      "rowCount": 6,
+      "nonEmptyCount": 6,
+      "distinctCount": 2,
+      "truncated": false,
+      "values": [
+        {
+          "value": "full",
+          "count": 5
+        },
+        {
+          "value": "artist:9",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "artist_enrichment_run",
+      "column": "status",
+      "dataType": "text",
+      "rowCount": 6,
+      "nonEmptyCount": 6,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "completed",
+          "count": 6
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "artist_enrichment_suggestion",
+      "column": "status",
+      "dataType": "text",
+      "rowCount": 63,
+      "nonEmptyCount": 63,
+      "distinctCount": 2,
+      "truncated": false,
+      "values": [
+        {
+          "value": "pending",
+          "count": 48
+        },
+        {
+          "value": "auto_applied",
+          "count": 15
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "artist_genre",
+      "column": "genre",
+      "dataType": "character varying",
+      "rowCount": 4,
+      "nonEmptyCount": 4,
+      "distinctCount": 4,
+      "truncated": false,
+      "values": [
+        {
+          "value": "electro pop",
+          "count": 1
+        },
+        {
+          "value": "indie rock",
+          "count": 1
+        },
+        {
+          "value": "pop",
+          "count": 1
+        },
+        {
+          "value": "rock",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "artist_identity_candidate",
+      "column": "provider",
+      "dataType": "text",
+      "rowCount": 46,
+      "nonEmptyCount": 46,
+      "distinctCount": 2,
+      "truncated": false,
+      "values": [
+        {
+          "value": "external_research",
+          "count": 34
+        },
+        {
+          "value": "tdf_inventory",
+          "count": 12
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "artist_identity_candidate",
+      "column": "status",
+      "dataType": "text",
+      "rowCount": 46,
+      "nonEmptyCount": 46,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "pending",
+          "count": 46
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "artist_inventory_reference",
+      "column": "disposition",
+      "dataType": "text",
+      "rowCount": 344,
+      "nonEmptyCount": 344,
+      "distinctCount": 3,
+      "truncated": false,
+      "values": [
+        {
+          "value": "matched",
+          "count": 303
+        },
+        {
+          "value": "needs_review",
+          "count": 40
+        },
+        {
+          "value": "obsolete_review",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "artist_inventory_reference",
+      "column": "source_type",
+      "dataType": "text",
+      "rowCount": 344,
+      "nonEmptyCount": 344,
+      "distinctCount": 10,
+      "truncated": false,
+      "values": [
+        {
+          "value": "event_artist",
+          "count": 89
+        },
+        {
+          "value": "artist_release",
+          "count": 65
+        },
+        {
+          "value": "social_artist_profile",
+          "count": 50
+        },
+        {
+          "value": "artist_profile",
+          "count": 48
+        },
+        {
+          "value": "fan_follow.artist_party_id",
+          "count": 46
+        },
+        {
+          "value": "party_role",
+          "count": 34
+        },
+        {
+          "value": "artist_genre.artist_id",
+          "count": 4
+        },
+        {
+          "value": "pipeline_card.artist",
+          "count": 4
+        },
+        {
+          "value": "live_session_intake.band_name",
+          "count": 3
+        },
+        {
+          "value": "fan_club.artist_party_id",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "artist_media_asset",
+      "column": "asset_kind",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "artist_media_asset",
+      "column": "mime_type",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "artist_media_asset",
+      "column": "rights_status",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "artist_media_asset",
+      "column": "source_mime_type",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "artist_profile",
+      "column": "country_code",
+      "dataType": "text",
+      "rowCount": 48,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "artist_profile",
+      "column": "genres",
+      "dataType": "character varying",
+      "rowCount": 48,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "artist_profile",
+      "column": "slug",
+      "dataType": "character varying",
+      "rowCount": 48,
+      "nonEmptyCount": 48,
+      "distinctCount": 48,
+      "truncated": false,
+      "values": [
+        {
+          "value": "agus",
+          "count": 1
+        },
+        {
+          "value": "alejandro-romero",
+          "count": 1
+        },
+        {
+          "value": "arkabuz",
+          "count": 1
+        },
+        {
+          "value": "avr",
+          "count": 1
+        },
+        {
+          "value": "barrelshots",
+          "count": 1
+        },
+        {
+          "value": "categal",
+          "count": 1
+        },
+        {
+          "value": "celaya",
+          "count": 1
+        },
+        {
+          "value": "cohema",
+          "count": 1
+        },
+        {
+          "value": "dani-alban",
+          "count": 1
+        },
+        {
+          "value": "dati-dice",
+          "count": 1
+        },
+        {
+          "value": "diego-sa",
+          "count": 1
+        },
+        {
+          "value": "diego-saa",
+          "count": 1
+        },
+        {
+          "value": "double-og",
+          "count": 1
+        },
+        {
+          "value": "el-bloque",
+          "count": 1
+        },
+        {
+          "value": "eli-lasso",
+          "count": 1
+        },
+        {
+          "value": "emanuele-pilo-pais",
+          "count": 1
+        },
+        {
+          "value": "e-quimika-soul",
+          "count": 1
+        },
+        {
+          "value": "esteban-mu-oz",
+          "count": 1
+        },
+        {
+          "value": "everaldo-vasco",
+          "count": 1
+        },
+        {
+          "value": "fabro",
+          "count": 1
+        },
+        {
+          "value": "federico-molinari",
+          "count": 1
+        },
+        {
+          "value": "hno",
+          "count": 1
+        },
+        {
+          "value": "jossefina",
+          "count": 1
+        },
+        {
+          "value": "juan-diego",
+          "count": 1
+        },
+        {
+          "value": "juano-ledesma",
+          "count": 1
+        },
+        {
+          "value": "julio-diaz",
+          "count": 1
+        },
+        {
+          "value": "just-one-nite",
+          "count": 1
+        },
+        {
+          "value": "la-bestia-qui-onez",
+          "count": 1
+        },
+        {
+          "value": "labii",
+          "count": 1
+        },
+        {
+          "value": "la-clau",
+          "count": 1
+        },
+        {
+          "value": "la-gente-naranja",
+          "count": 1
+        },
+        {
+          "value": "le-chu",
+          "count": 1
+        },
+        {
+          "value": "liquid-paper-girl",
+          "count": 1
+        },
+        {
+          "value": "llama-este-pez",
+          "count": 1
+        },
+        {
+          "value": "los-morrison",
+          "count": 1
+        },
+        {
+          "value": "lysergicman",
+          "count": 1
+        },
+        {
+          "value": "machaka",
+          "count": 1
+        },
+        {
+          "value": "melania",
+          "count": 1
+        },
+        {
+          "value": "mood-pattern",
+          "count": 1
+        },
+        {
+          "value": "morex",
+          "count": 1
+        },
+        {
+          "value": "ospina",
+          "count": 1
+        },
+        {
+          "value": "owen",
+          "count": 1
+        },
+        {
+          "value": "r-de-nexo",
+          "count": 1
+        },
+        {
+          "value": "rizlo",
+          "count": 1
+        },
+        {
+          "value": "ruz",
+          "count": 1
+        },
+        {
+          "value": "semiazas",
+          "count": 1
+        },
+        {
+          "value": "skankafe",
+          "count": 1
+        },
+        {
+          "value": "verde70",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "artist_profile_enrichment",
+      "column": "review_status",
+      "dataType": "text",
+      "rowCount": 47,
+      "nonEmptyCount": 47,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "unverified",
+          "count": 47
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "artist_promo_slot",
+      "column": "medium",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "artist_promo_slot",
+      "column": "status",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "artist_research_source",
+      "column": "source_type",
+      "dataType": "text",
+      "rowCount": 175,
+      "nonEmptyCount": 175,
+      "distinctCount": 8,
+      "truncated": false,
+      "values": [
+        {
+          "value": "musicbrainz_search_no_exact_match",
+          "count": 55
+        },
+        {
+          "value": "discogs_search_no_exact_match",
+          "count": 52
+        },
+        {
+          "value": "discogs",
+          "count": 30
+        },
+        {
+          "value": "musicbrainz",
+          "count": 27
+        },
+        {
+          "value": "instagram_linked_candidate",
+          "count": 5
+        },
+        {
+          "value": "link_validation_valid",
+          "count": 2
+        },
+        {
+          "value": "official_bandcamp",
+          "count": 2
+        },
+        {
+          "value": "official_website",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "artist_tip",
+      "column": "currency",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "artist_tip",
+      "column": "status",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "asset",
+      "column": "category",
+      "dataType": "character varying",
+      "rowCount": 61,
+      "nonEmptyCount": 61,
+      "distinctCount": 15,
+      "truncated": false,
+      "values": [
+        {
+          "value": "fx/pedal",
+          "count": 31
+        },
+        {
+          "value": "mic",
+          "count": 12
+        },
+        {
+          "value": "pre",
+          "count": 4
+        },
+        {
+          "value": "fx/outboard",
+          "count": 2
+        },
+        {
+          "value": "synth",
+          "count": 2
+        },
+        {
+          "value": "amp/headphone",
+          "count": 1
+        },
+        {
+          "value": "converter-ad",
+          "count": 1
+        },
+        {
+          "value": "di",
+          "count": 1
+        },
+        {
+          "value": "di/pre",
+          "count": 1
+        },
+        {
+          "value": "fx/looper",
+          "count": 1
+        },
+        {
+          "value": "iem",
+          "count": 1
+        },
+        {
+          "value": "interface",
+          "count": 1
+        },
+        {
+          "value": "pre/converter",
+          "count": 1
+        },
+        {
+          "value": "pre/dante",
+          "count": 1
+        },
+        {
+          "value": "synth/drum",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "asset",
+      "column": "condition",
+      "dataType": "character varying",
+      "rowCount": 61,
+      "nonEmptyCount": 61,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "Good",
+          "count": 61
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "asset",
+      "column": "maintenance_policy",
+      "dataType": "character varying",
+      "rowCount": 61,
+      "nonEmptyCount": 61,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "None",
+          "count": 61
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "asset",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 61,
+      "nonEmptyCount": 61,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "Active",
+          "count": 61
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "asset_checkout",
+      "column": "disposition",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "asset_checkout",
+      "column": "payment_currency",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "asset_checkout",
+      "column": "payment_type",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "asset_checkout",
+      "column": "target_kind",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "asset_checkout",
+      "column": "terms_and_conditions",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "attendance",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "audit_log",
+      "column": "action",
+      "dataType": "character varying",
+      "rowCount": 38,
+      "nonEmptyCount": 38,
+      "distinctCount": 4,
+      "truncated": false,
+      "values": [
+        {
+          "value": "login_password",
+          "count": 33
+        },
+        {
+          "value": "notify_failed",
+          "count": 2
+        },
+        {
+          "value": "signup",
+          "count": 2
+        },
+        {
+          "value": "login_google",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "band",
+      "column": "primary_genre",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "booking",
+      "column": "service_type",
+      "dataType": "character varying",
+      "rowCount": 4,
+      "nonEmptyCount": 4,
+      "distinctCount": 4,
+      "truncated": false,
+      "values": [
+        {
+          "value": "Grabación de Banda",
+          "count": 1
+        },
+        {
+          "value": "Grabación de Voz",
+          "count": 1
+        },
+        {
+          "value": "Recording",
+          "count": 1
+        },
+        {
+          "value": "Rehearsal (DJ)",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "booking",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 4,
+      "nonEmptyCount": 4,
+      "distinctCount": 2,
+      "truncated": false,
+      "values": [
+        {
+          "value": "Tentative",
+          "count": 3
+        },
+        {
+          "value": "Confirmed",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "booking_resource",
+      "column": "role",
+      "dataType": "character varying",
+      "rowCount": 6,
+      "nonEmptyCount": 6,
+      "distinctCount": 2,
+      "truncated": false,
+      "values": [
+        {
+          "value": "primary",
+          "count": 4
+        },
+        {
+          "value": "secondary",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "campaign",
+      "column": "platform",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "campaign",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "class_package_purchase",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "cms_content",
+      "column": "locale",
+      "dataType": "text",
+      "rowCount": 6,
+      "nonEmptyCount": 6,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "es",
+          "count": 6
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "cms_content",
+      "column": "slug",
+      "dataType": "text",
+      "rowCount": 6,
+      "nonEmptyCount": 6,
+      "distinctCount": 3,
+      "truncated": false,
+      "values": [
+        {
+          "value": "records-sessions",
+          "count": 4
+        },
+        {
+          "value": "records-recordings",
+          "count": 1
+        },
+        {
+          "value": "records-releases",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "cms_content",
+      "column": "status",
+      "dataType": "text",
+      "rowCount": 6,
+      "nonEmptyCount": 6,
+      "distinctCount": 2,
+      "truncated": false,
+      "values": [
+        {
+          "value": "archived",
+          "count": 3
+        },
+        {
+          "value": "published",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "cohort",
+      "column": "slug",
+      "dataType": "character varying",
+      "rowCount": 2,
+      "nonEmptyCount": 2,
+      "distinctCount": 2,
+      "truncated": false,
+      "values": [
+        {
+          "value": "rr-q4",
+          "count": 1
+        },
+        {
+          "value": "rr-sprint",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "commission",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "country",
+      "column": "name",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "course",
+      "column": "currency",
+      "dataType": "character varying",
+      "rowCount": 11,
+      "nonEmptyCount": 11,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "USD",
+          "count": 11
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "course",
+      "column": "slug",
+      "dataType": "character varying",
+      "rowCount": 11,
+      "nonEmptyCount": 11,
+      "distinctCount": 11,
+      "truncated": false,
+      "values": [
+        {
+          "value": "bateria-guillermo-diaz-abr-2026",
+          "count": 1
+        },
+        {
+          "value": "produccion-musical-abr-2026",
+          "count": 1
+        },
+        {
+          "value": "produccion-musical-ago-08-2026",
+          "count": 1
+        },
+        {
+          "value": "produccion-musical-ago-15-2026",
+          "count": 1
+        },
+        {
+          "value": "produccion-musical-ago-2026",
+          "count": 1
+        },
+        {
+          "value": "produccion-musical-ago-22-2026",
+          "count": 1
+        },
+        {
+          "value": "produccion-musical-ago-29-2026",
+          "count": 1
+        },
+        {
+          "value": "produccion-musical-dic-2025",
+          "count": 1
+        },
+        {
+          "value": "produccion-musical-feb-2026",
+          "count": 1
+        },
+        {
+          "value": "produccion-musical-jun-2026",
+          "count": 1
+        },
+        {
+          "value": "produccion-musical-sep-2026",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "course_email_event",
+      "column": "course_slug",
+      "dataType": "character varying",
+      "rowCount": 325,
+      "nonEmptyCount": 325,
+      "distinctCount": 5,
+      "truncated": false,
+      "values": [
+        {
+          "value": "produccion-musical-abr-2026",
+          "count": 229
+        },
+        {
+          "value": "produccion-musical-feb-2026",
+          "count": 81
+        },
+        {
+          "value": "produccion-musical-ago-08-2026",
+          "count": 11
+        },
+        {
+          "value": "produccion-musical-ago-15-2026",
+          "count": 2
+        },
+        {
+          "value": "produccion-musical-ago-29-2026",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "course_email_event",
+      "column": "event_type",
+      "dataType": "character varying",
+      "rowCount": 325,
+      "nonEmptyCount": 325,
+      "distinctCount": 3,
+      "truncated": false,
+      "values": [
+        {
+          "value": "payment_reminder",
+          "count": 191
+        },
+        {
+          "value": "registration_confirmation",
+          "count": 127
+        },
+        {
+          "value": "welcome_credentials",
+          "count": 7
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "course_email_event",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 325,
+      "nonEmptyCount": 325,
+      "distinctCount": 3,
+      "truncated": false,
+      "values": [
+        {
+          "value": "skipped",
+          "count": 145
+        },
+        {
+          "value": "sent",
+          "count": 120
+        },
+        {
+          "value": "failed",
+          "count": 60
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "course_registration",
+      "column": "course_slug",
+      "dataType": "character varying",
+      "rowCount": 22,
+      "nonEmptyCount": 22,
+      "distinctCount": 6,
+      "truncated": false,
+      "values": [
+        {
+          "value": "produccion-musical-dic-2025",
+          "count": 8
+        },
+        {
+          "value": "produccion-musical-feb-2026",
+          "count": 7
+        },
+        {
+          "value": "produccion-musical-abr-2026",
+          "count": 4
+        },
+        {
+          "value": "produccion-musical-ago-08-2026",
+          "count": 1
+        },
+        {
+          "value": "produccion-musical-ago-15-2026",
+          "count": 1
+        },
+        {
+          "value": "produccion-musical-ago-29-2026",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "course_registration",
+      "column": "source",
+      "dataType": "character varying",
+      "rowCount": 22,
+      "nonEmptyCount": 22,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "landing",
+          "count": 22
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "course_registration",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 22,
+      "nonEmptyCount": 22,
+      "distinctCount": 3,
+      "truncated": false,
+      "values": [
+        {
+          "value": "pending_payment",
+          "count": 11
+        },
+        {
+          "value": "cancelled",
+          "count": 8
+        },
+        {
+          "value": "paid",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "course_registration",
+      "column": "subscription_status",
+      "dataType": "text",
+      "rowCount": 22,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "course_registration",
+      "column": "utm_medium",
+      "dataType": "character varying",
+      "rowCount": 22,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "course_registration",
+      "column": "utm_source",
+      "dataType": "character varying",
+      "rowCount": 22,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "course_registration_follow_up",
+      "column": "entry_type",
+      "dataType": "character varying",
+      "rowCount": 18,
+      "nonEmptyCount": 18,
+      "distinctCount": 4,
+      "truncated": false,
+      "values": [
+        {
+          "value": "status_change",
+          "count": 8
+        },
+        {
+          "value": "registration",
+          "count": 7
+        },
+        {
+          "value": "call",
+          "count": 2
+        },
+        {
+          "value": "payment_receipt",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "course_registration_receipt",
+      "column": "mime_type",
+      "dataType": "character varying",
+      "rowCount": 1,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "currency_conversion_audit",
+      "column": "rate_source",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "currency_conversion_audit",
+      "column": "source_currency",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "currency_conversion_audit",
+      "column": "target_currency",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "dropdown_option",
+      "column": "category",
+      "dataType": "character varying",
+      "rowCount": 15,
+      "nonEmptyCount": 15,
+      "distinctCount": 2,
+      "truncated": false,
+      "values": [
+        {
+          "value": "band-genre",
+          "count": 9
+        },
+        {
+          "value": "band-role",
+          "count": 6
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "event_artist",
+      "column": "role",
+      "dataType": "character varying",
+      "rowCount": 89,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_budget_line",
+      "column": "category",
+      "dataType": "character varying",
+      "rowCount": 5,
+      "nonEmptyCount": 5,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "sponsorship",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "event_budget_line",
+      "column": "line_type",
+      "dataType": "character varying",
+      "rowCount": 5,
+      "nonEmptyCount": 5,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "income",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "event_city",
+      "column": "country_code",
+      "dataType": "text",
+      "rowCount": 2,
+      "nonEmptyCount": 2,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "EC",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "event_discovery_source",
+      "column": "source_type",
+      "dataType": "text",
+      "rowCount": 2,
+      "nonEmptyCount": 2,
+      "distinctCount": 2,
+      "truncated": false,
+      "values": [
+        {
+          "value": "buenplan",
+          "count": 1
+        },
+        {
+          "value": "ticketmaster",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "event_finance_entry",
+      "column": "category",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_finance_entry",
+      "column": "currency",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_finance_entry",
+      "column": "source",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_finance_entry",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_invitation",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_logistics_activity",
+      "column": "activity_type",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_logistics_activity",
+      "column": "priority",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_logistics_activity",
+      "column": "status",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_logistics_activity",
+      "column": "travel_mode",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_logistics_member",
+      "column": "member_role",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_logistics_place",
+      "column": "place_type",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_logistics_plan",
+      "column": "default_travel_mode",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_moment",
+      "column": "media_type",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_route_verification",
+      "column": "provider",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_route_verification",
+      "column": "travel_mode",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_rsvp",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_ticket",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_ticket_order",
+      "column": "currency",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_ticket_order",
+      "column": "payment_method",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_ticket_order",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_ticket_tier",
+      "column": "currency",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_ticket_tier",
+      "column": "refund_policy",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "event_waitlist",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "external_artist_ref",
+      "column": "provider",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "external_event_discovery_run",
+      "column": "provider",
+      "dataType": "text",
+      "rowCount": 26,
+      "nonEmptyCount": 26,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "ticketmaster",
+          "count": 26
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "external_event_discovery_run",
+      "column": "status",
+      "dataType": "text",
+      "rowCount": 26,
+      "nonEmptyCount": 26,
+      "distinctCount": 2,
+      "truncated": false,
+      "values": [
+        {
+          "value": "completed",
+          "count": 25
+        },
+        {
+          "value": "failed",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "external_event_ref",
+      "column": "country_code",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "external_event_ref",
+      "column": "currency",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "external_event_ref",
+      "column": "provider",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "external_event_ref",
+      "column": "source_status",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "external_venue_ref",
+      "column": "provider",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "facebook_message",
+      "column": "reply_status",
+      "dataType": "character varying",
+      "rowCount": 325,
+      "nonEmptyCount": 325,
+      "distinctCount": 3,
+      "truncated": false,
+      "values": [
+        {
+          "value": "error",
+          "count": 262
+        },
+        {
+          "value": "sent",
+          "count": 60
+        },
+        {
+          "value": "hold",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "fan_club_candidacy",
+      "column": "role",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "fan_club_election",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "fan_club_officer",
+      "column": "role",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "fan_club_vote",
+      "column": "role",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "fan_profile",
+      "column": "favorite_genres",
+      "dataType": "character varying",
+      "rowCount": 46,
+      "nonEmptyCount": 6,
+      "distinctCount": 6,
+      "truncated": false,
+      "values": [
+        {
+          "value": "Femenino",
+          "count": 1
+        },
+        {
+          "value": "Pop",
+          "count": 1
+        },
+        {
+          "value": "Rock",
+          "count": 1
+        },
+        {
+          "value": "Rock alternativo, hip-hop, trap",
+          "count": 1
+        },
+        {
+          "value": "ROCK, BLUES, LATIN",
+          "count": 1
+        },
+        {
+          "value": "Ultra Hiper Mega High Weight Metal Grind Core",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "feedback",
+      "column": "category",
+      "dataType": "character varying",
+      "rowCount": 1,
+      "nonEmptyCount": 1,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "idea",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "input_list_template",
+      "column": "genre",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "input_list_template_row",
+      "column": "instrument",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "input_row",
+      "column": "instrument",
+      "dataType": "character varying",
+      "rowCount": 21,
+      "nonEmptyCount": 21,
+      "distinctCount": 14,
+      "truncated": false,
+      "values": [
+        {
+          "value": "AKG C414 (HC)",
+          "count": 2
+        },
+        {
+          "value": "AKG D112",
+          "count": 2
+        },
+        {
+          "value": "Royer R121",
+          "count": 2
+        },
+        {
+          "value": "Sennheiser e906",
+          "count": 2
+        },
+        {
+          "value": "Sennheiser MD421",
+          "count": 2
+        },
+        {
+          "value": "Shure SM57",
+          "count": 2
+        },
+        {
+          "value": "Shure SM58",
+          "count": 2
+        },
+        {
+          "value": "Electro-Voice RE20",
+          "count": 1
+        },
+        {
+          "value": "Neumann KM184",
+          "count": 1
+        },
+        {
+          "value": "Neumann KU-100 L",
+          "count": 1
+        },
+        {
+          "value": "Neumann KU-100 R",
+          "count": 1
+        },
+        {
+          "value": "Neve RNDI",
+          "count": 1
+        },
+        {
+          "value": "Sennheiser e835",
+          "count": 1
+        },
+        {
+          "value": "Sennheiser MKE600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "instagram_message",
+      "column": "reply_status",
+      "dataType": "character varying",
+      "rowCount": 743,
+      "nonEmptyCount": 743,
+      "distinctCount": 4,
+      "truncated": false,
+      "values": [
+        {
+          "value": "error",
+          "count": 580
+        },
+        {
+          "value": "sent",
+          "count": 125
+        },
+        {
+          "value": "hold",
+          "count": 32
+        },
+        {
+          "value": "pending",
+          "count": 6
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "intern_permission_request",
+      "column": "category",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "intern_permission_request",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "intern_project",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 2,
+      "nonEmptyCount": 2,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "active",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "intern_task",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 12,
+      "nonEmptyCount": 12,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "todo",
+          "count": 12
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "invoice",
+      "column": "currency",
+      "dataType": "character varying",
+      "rowCount": 1,
+      "nonEmptyCount": 1,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "USD",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "invoice",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 1,
+      "nonEmptyCount": 1,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "Draft",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "label_track",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "lead_interest",
+      "column": "interest_type",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "lead_interest",
+      "column": "source",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "lead_interest",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "live_session_intake",
+      "column": "primary_genre",
+      "dataType": "character varying",
+      "rowCount": 3,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "live_session_musician",
+      "column": "instrument",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "live_session_musician",
+      "column": "role",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "maintenance_ticket",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "marketplace_listing",
+      "column": "currency",
+      "dataType": "character varying",
+      "rowCount": 57,
+      "nonEmptyCount": 57,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "USD",
+          "count": 57
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "marketplace_order",
+      "column": "currency",
+      "dataType": "character varying",
+      "rowCount": 21,
+      "nonEmptyCount": 21,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "USD",
+          "count": 21
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "marketplace_order",
+      "column": "payment_provider",
+      "dataType": "character varying",
+      "rowCount": 21,
+      "nonEmptyCount": 14,
+      "distinctCount": 2,
+      "truncated": false,
+      "values": [
+        {
+          "value": "paypal",
+          "count": 9
+        },
+        {
+          "value": "datafast",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "marketplace_order",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 21,
+      "nonEmptyCount": 21,
+      "distinctCount": 3,
+      "truncated": false,
+      "values": [
+        {
+          "value": "paypal_pending",
+          "count": 9
+        },
+        {
+          "value": "pending",
+          "count": 7
+        },
+        {
+          "value": "datafast_init",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "notification",
+      "column": "notif_type",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "notification",
+      "column": "target_type",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "package_catalog",
+      "column": "refund_policy",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "package_product",
+      "column": "refund_policy",
+      "dataType": "character varying",
+      "rowCount": 15,
+      "nonEmptyCount": 15,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "CreditOnly",
+          "count": 15
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "package_product",
+      "column": "service_kind",
+      "dataType": "character varying",
+      "rowCount": 15,
+      "nonEmptyCount": 15,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "Classes",
+          "count": 15
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "package_product",
+      "column": "units_kind",
+      "dataType": "character varying",
+      "rowCount": 15,
+      "nonEmptyCount": 15,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "Hours",
+          "count": 15
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "package_purchase",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "party",
+      "column": "country_code",
+      "dataType": "text",
+      "rowCount": 138,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "party_role",
+      "column": "role",
+      "dataType": "character varying",
+      "rowCount": 285,
+      "nonEmptyCount": 285,
+      "distinctCount": 29,
+      "truncated": false,
+      "values": [
+        {
+          "value": "Customer",
+          "count": 76
+        },
+        {
+          "value": "Fan",
+          "count": 74
+        },
+        {
+          "value": "Artist",
+          "count": 49
+        },
+        {
+          "value": "Student",
+          "count": 18
+        },
+        {
+          "value": "Teacher",
+          "count": 7
+        },
+        {
+          "value": "Engineer",
+          "count": 5
+        },
+        {
+          "value": "ReadOnly",
+          "count": 5
+        },
+        {
+          "value": "Accounting",
+          "count": 4
+        },
+        {
+          "value": "Artista",
+          "count": 4
+        },
+        {
+          "value": "Manager",
+          "count": 4
+        },
+        {
+          "value": "Producer",
+          "count": 4
+        },
+        {
+          "value": "Reception",
+          "count": 4
+        },
+        {
+          "value": "AandR",
+          "count": 3
+        },
+        {
+          "value": "DJ",
+          "count": 3
+        },
+        {
+          "value": "Intern",
+          "count": 3
+        },
+        {
+          "value": "LiveSessionsProducer",
+          "count": 3
+        },
+        {
+          "value": "Admin",
+          "count": 2
+        },
+        {
+          "value": "LabelRep",
+          "count": 2
+        },
+        {
+          "value": "Promoter",
+          "count": 2
+        },
+        {
+          "value": "Promotor",
+          "count": 2
+        },
+        {
+          "value": "Publicist",
+          "count": 2
+        },
+        {
+          "value": "StudioManager",
+          "count": 2
+        },
+        {
+          "value": "Photographer",
+          "count": 1
+        },
+        {
+          "value": "RoadCrew",
+          "count": 1
+        },
+        {
+          "value": "Songwriter",
+          "count": 1
+        },
+        {
+          "value": "StageManager",
+          "count": 1
+        },
+        {
+          "value": "TourManager",
+          "count": 1
+        },
+        {
+          "value": "Vendor",
+          "count": 1
+        },
+        {
+          "value": "Webmaster",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "payment",
+      "column": "currency",
+      "dataType": "text",
+      "rowCount": 4,
+      "nonEmptyCount": 4,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "USD",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "payment",
+      "column": "method",
+      "dataType": "character varying",
+      "rowCount": 4,
+      "nonEmptyCount": 4,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "BankTransferM",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "pipeline_card",
+      "column": "service_kind",
+      "dataType": "character varying",
+      "rowCount": 4,
+      "nonEmptyCount": 4,
+      "distinctCount": 2,
+      "truncated": false,
+      "values": [
+        {
+          "value": "Mastering",
+          "count": 2
+        },
+        {
+          "value": "Mixing",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "pipeline_card",
+      "column": "stage",
+      "dataType": "character varying",
+      "rowCount": 4,
+      "nonEmptyCount": 4,
+      "distinctCount": 4,
+      "truncated": false,
+      "values": [
+        {
+          "value": "Approved",
+          "count": 1
+        },
+        {
+          "value": "Brief",
+          "count": 1
+        },
+        {
+          "value": "Prep",
+          "count": 1
+        },
+        {
+          "value": "v1",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "promo_code",
+      "column": "currency",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "promo_code",
+      "column": "discount_type",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "proposal",
+      "column": "service_kind",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "proposal",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "radio_stream",
+      "column": "genre",
+      "dataType": "character varying",
+      "rowCount": 501,
+      "nonEmptyCount": 5,
+      "distinctCount": 2,
+      "truncated": false,
+      "values": [
+        {
+          "value": "Prueba",
+          "count": 4
+        },
+        {
+          "value": "Indie / Live Sessions",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "rag_chunk",
+      "column": "source",
+      "dataType": "text",
+      "rowCount": 48,
+      "nonEmptyCount": 48,
+      "distinctCount": 5,
+      "truncated": false,
+      "values": [
+        {
+          "value": "service",
+          "count": 15
+        },
+        {
+          "value": "course",
+          "count": 11
+        },
+        {
+          "value": "resource",
+          "count": 11
+        },
+        {
+          "value": "room",
+          "count": 9
+        },
+        {
+          "value": "studio_brain",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "receipt",
+      "column": "currency",
+      "dataType": "character varying",
+      "rowCount": 1,
+      "nonEmptyCount": 1,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "USD",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "resource",
+      "column": "resource_type",
+      "dataType": "character varying",
+      "rowCount": 11,
+      "nonEmptyCount": 11,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "Room",
+          "count": 11
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "resource",
+      "column": "slug",
+      "dataType": "character varying",
+      "rowCount": 11,
+      "nonEmptyCount": 11,
+      "distinctCount": 11,
+      "truncated": false,
+      "values": [
+        {
+          "value": "booth-a",
+          "count": 1
+        },
+        {
+          "value": "booth-b",
+          "count": 1
+        },
+        {
+          "value": "booth-c",
+          "count": 1
+        },
+        {
+          "value": "booth-d",
+          "count": 1
+        },
+        {
+          "value": "classroom",
+          "count": 1
+        },
+        {
+          "value": "control-room",
+          "count": 1
+        },
+        {
+          "value": "live-room",
+          "count": 1
+        },
+        {
+          "value": "rehearsal-1",
+          "count": 1
+        },
+        {
+          "value": "studio-a",
+          "count": 1
+        },
+        {
+          "value": "studio-b",
+          "count": 1
+        },
+        {
+          "value": "synth-room",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "service_ad",
+      "column": "currency",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "service_ad",
+      "column": "role_tag",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "service_ad_slot",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "service_catalog",
+      "column": "billing_unit",
+      "dataType": "character varying",
+      "rowCount": 15,
+      "nonEmptyCount": 9,
+      "distinctCount": 5,
+      "truncated": false,
+      "values": [
+        {
+          "value": "hora",
+          "count": 4
+        },
+        {
+          "value": "canción",
+          "count": 2
+        },
+        {
+          "value": "episodio",
+          "count": 1
+        },
+        {
+          "value": "paquete",
+          "count": 1
+        },
+        {
+          "value": "proyecto (hasta 30 min)",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "service_catalog",
+      "column": "currency",
+      "dataType": "character varying",
+      "rowCount": 15,
+      "nonEmptyCount": 15,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "USD",
+          "count": 15
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "service_catalog",
+      "column": "kind",
+      "dataType": "character varying",
+      "rowCount": 15,
+      "nonEmptyCount": 15,
+      "distinctCount": 6,
+      "truncated": false,
+      "values": [
+        {
+          "value": "Recording",
+          "count": 4
+        },
+        {
+          "value": "EventProduction",
+          "count": 3
+        },
+        {
+          "value": "Rehearsal",
+          "count": 3
+        },
+        {
+          "value": "Classes",
+          "count": 2
+        },
+        {
+          "value": "Mixing",
+          "count": 2
+        },
+        {
+          "value": "Mastering",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "service_catalog",
+      "column": "name",
+      "dataType": "character varying",
+      "rowCount": 15,
+      "nonEmptyCount": 15,
+      "distinctCount": 15,
+      "truncated": false,
+      "values": [
+        {
+          "value": "Clases",
+          "count": 1
+        },
+        {
+          "value": "Classes",
+          "count": 1
+        },
+        {
+          "value": "Ensayo",
+          "count": 1
+        },
+        {
+          "value": "Event Production",
+          "count": 1
+        },
+        {
+          "value": "Grabación Audiovisual Live",
+          "count": 1
+        },
+        {
+          "value": "Grabación de Banda",
+          "count": 1
+        },
+        {
+          "value": "Grabación de Voz",
+          "count": 1
+        },
+        {
+          "value": "Mastering",
+          "count": 1
+        },
+        {
+          "value": "Mezcla",
+          "count": 1
+        },
+        {
+          "value": "Mixing",
+          "count": 1
+        },
+        {
+          "value": "Podcast",
+          "count": 1
+        },
+        {
+          "value": "Práctica en DJ Booth",
+          "count": 1
+        },
+        {
+          "value": "Producción de eventos",
+          "count": 1
+        },
+        {
+          "value": "Recording",
+          "count": 1
+        },
+        {
+          "value": "Rehearsal",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "service_escrow",
+      "column": "currency",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "service_escrow",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "service_order",
+      "column": "service_kind",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "service_order",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "service_status_change",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "session",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 1,
+      "nonEmptyCount": 1,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "InPrep",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "session_deliverable",
+      "column": "kind",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "social_artist_profile",
+      "column": "country_code",
+      "dataType": "text",
+      "rowCount": 50,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "social_discovery_review",
+      "column": "status",
+      "dataType": "text",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "social_sync_account",
+      "column": "platform",
+      "dataType": "character varying",
+      "rowCount": 2,
+      "nonEmptyCount": 2,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "instagram",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "social_sync_account",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 2,
+      "nonEmptyCount": 2,
+      "distinctCount": 2,
+      "truncated": false,
+      "values": [
+        {
+          "value": "connected",
+          "count": 1
+        },
+        {
+          "value": "pending",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "social_sync_post",
+      "column": "ingest_source",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "social_sync_post",
+      "column": "platform",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "social_sync_post",
+      "column": "tags",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "social_sync_run",
+      "column": "ingest_source",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "social_sync_run",
+      "column": "platform",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "social_sync_run",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "stock_item",
+      "column": "unit",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "stripe_payment_intent",
+      "column": "currency",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "stripe_payment_intent",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "stripe_webhook_event",
+      "column": "event_type",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "studio_brain_entry",
+      "column": "category",
+      "dataType": "character varying",
+      "rowCount": 2,
+      "nonEmptyCount": 2,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "instagram",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "ticket_refund_request",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "ticket_transfer",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 0,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "trial_request",
+      "column": "status",
+      "dataType": "character varying",
+      "rowCount": 9,
+      "nonEmptyCount": 9,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "Requested",
+          "count": 9
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "user_locale_preferences",
+      "column": "country_code",
+      "dataType": "text",
+      "rowCount": 138,
+      "nonEmptyCount": 138,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "EC",
+          "count": 138
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "user_locale_preferences",
+      "column": "currency",
+      "dataType": "text",
+      "rowCount": 138,
+      "nonEmptyCount": 138,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "USD",
+          "count": 138
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "user_locale_preferences",
+      "column": "locale",
+      "dataType": "text",
+      "rowCount": 138,
+      "nonEmptyCount": 138,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "es",
+          "count": 138
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "venue",
+      "column": "city",
+      "dataType": "character varying",
+      "rowCount": 7,
+      "nonEmptyCount": 7,
+      "distinctCount": 3,
+      "truncated": false,
+      "values": [
+        {
+          "value": "Quito",
+          "count": 5
+        },
+        {
+          "value": "Centro Historico",
+          "count": 1
+        },
+        {
+          "value": "Samborondón",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "venue",
+      "column": "country_code",
+      "dataType": "text",
+      "rowCount": 7,
+      "nonEmptyCount": 0,
+      "distinctCount": 0,
+      "truncated": false,
+      "values": []
+    },
+    {
+      "kind": "column",
+      "table": "whats_app_consent",
+      "column": "source",
+      "dataType": "character varying",
+      "rowCount": 1,
+      "nonEmptyCount": 1,
+      "distinctCount": 1,
+      "truncated": false,
+      "values": [
+        {
+          "value": "public-review",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "whats_app_message",
+      "column": "delivery_status",
+      "dataType": "character varying",
+      "rowCount": 3,
+      "nonEmptyCount": 3,
+      "distinctCount": 2,
+      "truncated": false,
+      "values": [
+        {
+          "value": "failed",
+          "count": 2
+        },
+        {
+          "value": "pending",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "whats_app_message",
+      "column": "reply_status",
+      "dataType": "character varying",
+      "rowCount": 3,
+      "nonEmptyCount": 3,
+      "distinctCount": 2,
+      "truncated": false,
+      "values": [
+        {
+          "value": "error",
+          "count": 2
+        },
+        {
+          "value": "sent",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "column",
+      "table": "whats_app_message",
+      "column": "source",
+      "dataType": "character varying",
+      "rowCount": 3,
+      "nonEmptyCount": 2,
+      "distinctCount": 2,
+      "truncated": false,
+      "values": [
+        {
+          "value": "consent_confirmation",
+          "count": 1
+        },
+        {
+          "value": "manual_reply",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "role-assignment-summary",
+      "rows": [
+        {
+          "role": "AandR",
+          "active": false,
+          "assignment_count": 1
+        },
+        {
+          "role": "AandR",
+          "active": true,
+          "assignment_count": 2
+        },
+        {
+          "role": "Accounting",
+          "active": false,
+          "assignment_count": 2
+        },
+        {
+          "role": "Accounting",
+          "active": true,
+          "assignment_count": 2
+        },
+        {
+          "role": "Admin",
+          "active": true,
+          "assignment_count": 2
+        },
+        {
+          "role": "Artist",
+          "active": true,
+          "assignment_count": 48
+        },
+        {
+          "role": "Artist",
+          "active": false,
+          "assignment_count": 1
+        },
+        {
+          "role": "Artista",
+          "active": false,
+          "assignment_count": 1
+        },
+        {
+          "role": "Artista",
+          "active": true,
+          "assignment_count": 3
+        },
+        {
+          "role": "Customer",
+          "active": true,
+          "assignment_count": 76
+        },
+        {
+          "role": "DJ",
+          "active": true,
+          "assignment_count": 3
+        },
+        {
+          "role": "Engineer",
+          "active": true,
+          "assignment_count": 3
+        },
+        {
+          "role": "Engineer",
+          "active": false,
+          "assignment_count": 2
+        },
+        {
+          "role": "Fan",
+          "active": true,
+          "assignment_count": 74
+        },
+        {
+          "role": "Intern",
+          "active": true,
+          "assignment_count": 3
+        },
+        {
+          "role": "LabelRep",
+          "active": false,
+          "assignment_count": 2
+        },
+        {
+          "role": "LiveSessionsProducer",
+          "active": false,
+          "assignment_count": 2
+        },
+        {
+          "role": "LiveSessionsProducer",
+          "active": true,
+          "assignment_count": 1
+        },
+        {
+          "role": "Manager",
+          "active": true,
+          "assignment_count": 2
+        },
+        {
+          "role": "Manager",
+          "active": false,
+          "assignment_count": 2
+        },
+        {
+          "role": "Photographer",
+          "active": false,
+          "assignment_count": 1
+        },
+        {
+          "role": "Producer",
+          "active": true,
+          "assignment_count": 3
+        },
+        {
+          "role": "Producer",
+          "active": false,
+          "assignment_count": 1
+        },
+        {
+          "role": "Promoter",
+          "active": false,
+          "assignment_count": 1
+        },
+        {
+          "role": "Promoter",
+          "active": true,
+          "assignment_count": 1
+        },
+        {
+          "role": "Promotor",
+          "active": false,
+          "assignment_count": 1
+        },
+        {
+          "role": "Promotor",
+          "active": true,
+          "assignment_count": 1
+        },
+        {
+          "role": "Publicist",
+          "active": false,
+          "assignment_count": 2
+        },
+        {
+          "role": "ReadOnly",
+          "active": false,
+          "assignment_count": 3
+        },
+        {
+          "role": "ReadOnly",
+          "active": true,
+          "assignment_count": 2
+        },
+        {
+          "role": "Reception",
+          "active": false,
+          "assignment_count": 2
+        },
+        {
+          "role": "Reception",
+          "active": true,
+          "assignment_count": 2
+        },
+        {
+          "role": "RoadCrew",
+          "active": false,
+          "assignment_count": 1
+        },
+        {
+          "role": "Songwriter",
+          "active": false,
+          "assignment_count": 1
+        },
+        {
+          "role": "StageManager",
+          "active": false,
+          "assignment_count": 1
+        },
+        {
+          "role": "Student",
+          "active": false,
+          "assignment_count": 1
+        },
+        {
+          "role": "Student",
+          "active": true,
+          "assignment_count": 17
+        },
+        {
+          "role": "StudioManager",
+          "active": true,
+          "assignment_count": 1
+        },
+        {
+          "role": "StudioManager",
+          "active": false,
+          "assignment_count": 1
+        },
+        {
+          "role": "Teacher",
+          "active": true,
+          "assignment_count": 6
+        },
+        {
+          "role": "Teacher",
+          "active": false,
+          "assignment_count": 1
+        },
+        {
+          "role": "TourManager",
+          "active": false,
+          "assignment_count": 1
+        },
+        {
+          "role": "Vendor",
+          "active": false,
+          "assignment_count": 1
+        },
+        {
+          "role": "Webmaster",
+          "active": true,
+          "assignment_count": 1
+        }
+      ]
+    },
+    {
+      "kind": "table-estimates",
+      "rows": [
+        {
+          "table_name": "academy_lesson",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "academy_microcourse",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "academy_progress",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "academy_user",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "ad_conversation_example",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "ad_creative",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "api_token",
+          "estimated_rows": 586
+        },
+        {
+          "table_name": "artist_enrichment_run",
+          "estimated_rows": 6
+        },
+        {
+          "table_name": "artist_enrichment_suggestion",
+          "estimated_rows": 63
+        },
+        {
+          "table_name": "artist_field_change",
+          "estimated_rows": 15
+        },
+        {
+          "table_name": "artist_follow",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "artist_genre",
+          "estimated_rows": 4
+        },
+        {
+          "table_name": "artist_identity_candidate",
+          "estimated_rows": 46
+        },
+        {
+          "table_name": "artist_inventory_reference",
+          "estimated_rows": 344
+        },
+        {
+          "table_name": "artist_media_asset",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "artist_profile",
+          "estimated_rows": 2
+        },
+        {
+          "table_name": "artist_profile_enrichment",
+          "estimated_rows": 47
+        },
+        {
+          "table_name": "artist_promo_slot",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "artist_release",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "artist_research_source",
+          "estimated_rows": 175
+        },
+        {
+          "table_name": "artist_tip",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "asset",
+          "estimated_rows": 61
+        },
+        {
+          "table_name": "asset_audit",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "asset_checkout",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "asset_kit_member",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "attendance",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "audit_log",
+          "estimated_rows": 38
+        },
+        {
+          "table_name": "band",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "band_member",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "booking",
+          "estimated_rows": 2
+        },
+        {
+          "table_name": "booking_resource",
+          "estimated_rows": 4
+        },
+        {
+          "table_name": "campaign",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "chat_message",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "chat_thread",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "class_package_purchase",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "class_session",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "cms_content",
+          "estimated_rows": 6
+        },
+        {
+          "table_name": "cohort",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "cohort_enrollment",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "commission",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "country",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "course",
+          "estimated_rows": 11
+        },
+        {
+          "table_name": "course_email_event",
+          "estimated_rows": 325
+        },
+        {
+          "table_name": "course_registration",
+          "estimated_rows": 22
+        },
+        {
+          "table_name": "course_registration_follow_up",
+          "estimated_rows": 18
+        },
+        {
+          "table_name": "course_registration_receipt",
+          "estimated_rows": 1
+        },
+        {
+          "table_name": "course_session_model",
+          "estimated_rows": 48
+        },
+        {
+          "table_name": "course_syllabus_item",
+          "estimated_rows": 48
+        },
+        {
+          "table_name": "currency_conversion_audit",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "dropdown_option",
+          "estimated_rows": 15
+        },
+        {
+          "table_name": "event_artist",
+          "estimated_rows": 90
+        },
+        {
+          "table_name": "event_budget_line",
+          "estimated_rows": 5
+        },
+        {
+          "table_name": "event_city",
+          "estimated_rows": 2
+        },
+        {
+          "table_name": "event_city_subscription",
+          "estimated_rows": 10
+        },
+        {
+          "table_name": "event_discovery_source",
+          "estimated_rows": 2
+        },
+        {
+          "table_name": "event_finance_entry",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "event_invitation",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "event_logistics_activity",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "event_logistics_alert_delivery",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "event_logistics_assignment",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "event_logistics_dependency",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "event_logistics_member",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "event_logistics_place",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "event_logistics_plan",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "event_moment",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "event_moment_comment",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "event_moment_reaction",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "event_route_verification",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "event_rsvp",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "event_ticket",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "event_ticket_order",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "event_ticket_tier",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "event_waitlist",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "external_artist_ref",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "external_calendar_mapping",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "external_event_discovery_run",
+          "estimated_rows": 26
+        },
+        {
+          "table_name": "external_event_ref",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "external_venue_ref",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "facebook_message",
+          "estimated_rows": 325
+        },
+        {
+          "table_name": "fan_club",
+          "estimated_rows": 1
+        },
+        {
+          "table_name": "fan_club_candidacy",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "fan_club_election",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "fan_club_event",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "fan_club_member_profile",
+          "estimated_rows": 11
+        },
+        {
+          "table_name": "fan_club_memory",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "fan_club_memory_report",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "fan_club_officer",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "fan_club_post",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "fan_club_vote",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "fan_follow",
+          "estimated_rows": 17
+        },
+        {
+          "table_name": "fan_profile",
+          "estimated_rows": 27
+        },
+        {
+          "table_name": "feedback",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "input_list",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "input_list_template",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "input_list_template_row",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "input_list_version",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "input_row",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "instagram_message",
+          "estimated_rows": 743
+        },
+        {
+          "table_name": "intern_permission_request",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "intern_profile",
+          "estimated_rows": 2
+        },
+        {
+          "table_name": "intern_project",
+          "estimated_rows": 1
+        },
+        {
+          "table_name": "intern_task",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "intern_time_entry",
+          "estimated_rows": 1
+        },
+        {
+          "table_name": "intern_todo",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "invoice",
+          "estimated_rows": 1
+        },
+        {
+          "table_name": "invoice_line",
+          "estimated_rows": 1
+        },
+        {
+          "table_name": "label_track",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "lead_interest",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "live_session_intake",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "live_session_musician",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "live_session_song",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "maintenance_attachment",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "maintenance_ticket",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "marketplace_cart",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "marketplace_cart_item",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "marketplace_listing",
+          "estimated_rows": 57
+        },
+        {
+          "table_name": "marketplace_order",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "marketplace_order_item",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "notification",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "package_catalog",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "package_ledger",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "package_product",
+          "estimated_rows": 9
+        },
+        {
+          "table_name": "package_purchase",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "party",
+          "estimated_rows": 45
+        },
+        {
+          "table_name": "party_follow",
+          "estimated_rows": 112
+        },
+        {
+          "table_name": "party_radio_presence",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "party_role",
+          "estimated_rows": 285
+        },
+        {
+          "table_name": "payment",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "payment_split",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "pipeline_card",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "promo_code",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "promo_code_redemption",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "proposal",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "proposal_version",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "radio_stream",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "rag_chunk",
+          "estimated_rows": 48
+        },
+        {
+          "table_name": "receipt",
+          "estimated_rows": 1
+        },
+        {
+          "table_name": "receipt_line",
+          "estimated_rows": 1
+        },
+        {
+          "table_name": "referral_claim",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "referral_code",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "resource",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "room",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "room_default_gear",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "room_feature",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "service_ad",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "service_ad_slot",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "service_catalog",
+          "estimated_rows": 15
+        },
+        {
+          "table_name": "service_escrow",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "service_order",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "service_status_change",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "session",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "session_deliverable",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "session_invoice",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "session_room",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "social_artist_profile",
+          "estimated_rows": 50
+        },
+        {
+          "table_name": "social_discovery_review",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "social_event",
+          "estimated_rows": 88
+        },
+        {
+          "table_name": "social_sync_account",
+          "estimated_rows": 1
+        },
+        {
+          "table_name": "social_sync_post",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "social_sync_run",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "stock_item",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "stock_movement",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "stripe_payment_intent",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "stripe_webhook_event",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "studio_brain_entry",
+          "estimated_rows": 2
+        },
+        {
+          "table_name": "subject",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "subject_room_preference",
+          "estimated_rows": 6
+        },
+        {
+          "table_name": "supported_currencies",
+          "estimated_rows": 7
+        },
+        {
+          "table_name": "tdf_release_lease",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "tdf_schema_migration",
+          "estimated_rows": 10
+        },
+        {
+          "table_name": "teacher_availability",
+          "estimated_rows": 36
+        },
+        {
+          "table_name": "teacher_student",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "teacher_subject",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "ticket_qr_code",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "ticket_refund_request",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "ticket_transfer",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "trial_assignment",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "trial_request",
+          "estimated_rows": 5
+        },
+        {
+          "table_name": "trial_throttle",
+          "estimated_rows": 0
+        },
+        {
+          "table_name": "user_credential",
+          "estimated_rows": 87
+        },
+        {
+          "table_name": "user_locale_preferences",
+          "estimated_rows": 138
+        },
+        {
+          "table_name": "venue",
+          "estimated_rows": 7
+        },
+        {
+          "table_name": "whats_app_consent",
+          "estimated_rows": 1
+        },
+        {
+          "table_name": "whats_app_message",
+          "estimated_rows": 3
+        }
+      ]
+    }
+  ]
+}
