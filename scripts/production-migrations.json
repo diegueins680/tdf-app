@@ -95,6 +95,11 @@
       "id": "2026-08-13_distribution_accounting_core",
       "path": "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
       "introducedBy": "9c4a621e62073d263989fde9bf51ef5b16107e55"
+    },
+    {
+      "id": "2026-08-13_versioned_revenue_products",
+      "path": "tdf-hq/sql/2026-08-13_versioned_revenue_products.sql",
+      "introducedBy": "62a9cfaed413a50fe80c88ee834325648da6324d"
     }
   ]
 }
