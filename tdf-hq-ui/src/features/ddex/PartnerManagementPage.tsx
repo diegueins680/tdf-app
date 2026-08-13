@@ -11,33 +11,40 @@ import {
   Typography,
   Button,
   Chip,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
+  Checkbox,
+  FormControl,
+  InputLabel,
+  ListItemText,
+  MenuItem,
+  Select,
   Stack,
   Alert,
   CircularProgress,
 } from '@mui/material';
 import {
   Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DDEX } from '../../api/ddex';
-import type { DdexPartnerDTO, DdexPartnerCreateRequest } from '../../api/ddex';
+import type { DdexPartnerCreateRequest } from '../../api/ddex';
 
 const PartnerManagementPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingPartner, setEditingPartner] = useState<DdexPartnerDTO | null>(null);
   const [formData, setFormData] = useState<DdexPartnerCreateRequest>({
     partnerName: '',
     partnerDpid: null,
-    partnerAllowedVersions: ['4.3.2'],
+    partnerAllowedStandardVersionIds: [],
+  });
+
+  const { data: references, isLoading: referencesLoading, error: referencesError } = useQuery({
+    queryKey: ['ddex-references', 'es'],
+    queryFn: () => DDEX.getReferences('es'),
   });
 
   const { data: partners, isLoading, error } = useQuery({
@@ -53,32 +60,21 @@ const PartnerManagementPage: React.FC = () => {
     },
   });
 
-  const handleOpenDialog = (partner?: DdexPartnerDTO) => {
-    if (partner) {
-      setEditingPartner(partner);
-      setFormData({
-        partnerName: partner.ddexPartnerName,
-        partnerDpid: partner.ddexPartnerDpid,
-        partnerAllowedVersions: partner.ddexPartnerAllowedVersions,
-      });
-    } else {
-      setEditingPartner(null);
-      setFormData({
-        partnerName: '',
-        partnerDpid: null,
-        partnerAllowedVersions: ['4.3.2'],
-      });
-    }
+  const handleOpenDialog = () => {
+    setFormData({
+      partnerName: '',
+      partnerDpid: null,
+      partnerAllowedStandardVersionIds: [],
+    });
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setEditingPartner(null);
     setFormData({
       partnerName: '',
       partnerDpid: null,
-      partnerAllowedVersions: ['4.3.2'],
+      partnerAllowedStandardVersionIds: [],
     });
   };
 
@@ -86,7 +82,7 @@ const PartnerManagementPage: React.FC = () => {
     createMutation.mutate(formData);
   };
 
-  if (isLoading) {
+  if (isLoading || referencesLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />
@@ -94,11 +90,11 @@ const PartnerManagementPage: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (error || referencesError) {
     return (
       <Box p={3}>
         <Alert severity="error">
-          Error loading partners: {error.message}
+          Error loading DDEX partner configuration: {(error || referencesError)?.message}
         </Alert>
       </Box>
     );
@@ -111,7 +107,7 @@ const PartnerManagementPage: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
+          onClick={handleOpenDialog}
         >
           Add Partner
         </Button>
@@ -124,7 +120,6 @@ const PartnerManagementPage: React.FC = () => {
               <TableCell>Name</TableCell>
               <TableCell>DPID</TableCell>
               <TableCell>Allowed Versions</TableCell>
-              <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -138,34 +133,20 @@ const PartnerManagementPage: React.FC = () => {
                 </TableCell>
                 <TableCell>
                   <Stack direction="row" spacing={1}>
-                    {partner.ddexPartnerAllowedVersions.map((version) => (
-                      <Chip key={version} label={version} size="small" />
+                    {partner.ddexPartnerAllowedStandardVersions.map((version) => (
+                      <Chip
+                        key={version.ddexStandardVersionId}
+                        label={`${version.ddexStandardCode} ${version.ddexVersionCode}`}
+                        size="small"
+                      />
                     ))}
                   </Stack>
-                </TableCell>
-                <TableCell align="right">
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    aria-label={`Edit partner ${partner.ddexPartnerName}`}
-                    onClick={() => handleOpenDialog(partner)}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    color="error"
-                    aria-label={`Delete partner ${partner.ddexPartnerName}`}
-                    onClick={() => console.log('Delete', partner.ddexPartnerId)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
                 </TableCell>
               </TableRow>
             ))}
             {(!partners || partners.length === 0) && (
               <TableRow>
-                <TableCell colSpan={4} align="center">
+                <TableCell colSpan={3} align="center">
                   <Typography color="text.secondary" py={4}>
                     No partners configured
                   </Typography>
@@ -176,10 +157,10 @@ const PartnerManagementPage: React.FC = () => {
         </Table>
       </TableContainer>
 
-      {/* Add/Edit Dialog */}
+      {/* Creation only: published partner policy has no destructive or update endpoint yet. */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
-          {editingPartner ? 'Edit Partner' : 'Add Partner'}
+          Add Partner
         </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
@@ -198,16 +179,41 @@ const PartnerManagementPage: React.FC = () => {
               placeholder="DPID:XXXXXXXX"
               helperText="DDEX Party Identifier (optional)"
             />
-            <TextField
-              label="Allowed Versions"
-              value={formData.partnerAllowedVersions.join(', ')}
-              onChange={(e) => setFormData({
-                ...formData,
-                partnerAllowedVersions: e.target.value.split(',').map(v => v.trim()).filter(Boolean),
-              })}
-              fullWidth
-              helperText="Comma-separated list (e.g., 4.3.2, 4.2)"
-            />
+            <FormControl fullWidth required>
+              <InputLabel id="ddex-standard-version-label">Versiones DDEX permitidas</InputLabel>
+              <Select
+                labelId="ddex-standard-version-label"
+                multiple
+                label="Versiones DDEX permitidas"
+                value={formData.partnerAllowedStandardVersionIds}
+                onChange={(event) => setFormData({
+                  ...formData,
+                  partnerAllowedStandardVersionIds: typeof event.target.value === 'string'
+                    ? [event.target.value]
+                    : event.target.value,
+                })}
+                renderValue={(selected) => selected.map((selectedId) => {
+                  const version = references?.ddexReferenceStandardVersions.find(
+                    (item) => item.ddexStandardVersionId === selectedId,
+                  );
+                  return version ? `${version.ddexStandardCode} ${version.ddexVersionCode}` : selectedId;
+                }).join(', ')}
+              >
+                {references?.ddexReferenceStandardVersions
+                  .filter((version) => version.ddexStandardDetectionEnabled)
+                  .map((version) => (
+                    <MenuItem key={version.ddexStandardVersionId} value={version.ddexStandardVersionId}>
+                      <Checkbox
+                        checked={formData.partnerAllowedStandardVersionIds.includes(version.ddexStandardVersionId)}
+                      />
+                      <ListItemText
+                        primary={`${version.ddexStandardCode} ${version.ddexVersionCode}`}
+                        secondary={version.ddexStandardVersionName}
+                      />
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
           </Stack>
         </DialogContent>
         <DialogActions>
@@ -215,7 +221,11 @@ const PartnerManagementPage: React.FC = () => {
           <Button
             variant="contained"
             onClick={handleSubmit}
-            disabled={!formData.partnerName || createMutation.isPending}
+            disabled={
+              !formData.partnerName
+              || formData.partnerAllowedStandardVersionIds.length === 0
+              || createMutation.isPending
+            }
           >
             {createMutation.isPending ? 'Saving...' : 'Save'}
           </Button>

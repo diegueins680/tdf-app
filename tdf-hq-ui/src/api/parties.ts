@@ -13,7 +13,5 @@ export const Parties = {
   create: (body: PartyCreate) => post<PartyDTO>('/parties', body),
   getOne: (id: number) => get<PartyDTO>(`/parties/${requirePositiveInteger(id, 'id')}`),
   update: (id: number, body: PartyUpdate) => put<PartyDTO>(`/parties/${requirePositiveInteger(id, 'id')}`, body),
-  addRole: (id: number, role: string) =>
-    post<void>(`/parties/${requirePositiveInteger(id, 'id')}/roles`, role),
   related: (id: number) => get<PartyRelatedDTO>(`/parties/${requirePositiveInteger(id, 'id')}/related`),
 };

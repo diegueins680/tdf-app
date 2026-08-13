@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Alert,
   Box,
@@ -33,6 +34,7 @@ import NaturePeopleIcon from '@mui/icons-material/NaturePeople';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import { DateTime } from 'luxon';
 import { Bookings } from '../api/bookings';
+import { Services } from '../api/services';
 import { PUBLIC_BASE } from '../config/appConfig';
 
 const DOMO_TIMEZONE = import.meta.env.VITE_DOMO_TIMEZONE ?? 'UTC';
@@ -42,7 +44,6 @@ type DomoExperienceKey = 'naturaleza' | 'eventos' | 'musica' | 'ceremonias';
 
 interface EventTypeConfig {
   label: string;
-  serviceType: string;
   baseCents: number;
   perGuestCents: number;
   minimumHours: number;
@@ -267,7 +268,6 @@ const DOMO_EXPERIENCES: Record<DomoExperienceKey, DomoExperience> = {
 const EVENT_TYPES: Record<EventType, EventTypeConfig> = {
   wedding: {
     label: 'Boda',
-    serviceType: 'Domo del Pululahua - boda',
     baseCents: 180000,
     perGuestCents: 800,
     minimumHours: 8,
@@ -275,7 +275,6 @@ const EVENT_TYPES: Record<EventType, EventTypeConfig> = {
   },
   corporate: {
     label: 'Evento corporativo',
-    serviceType: 'Domo del Pululahua - evento corporativo',
     baseCents: 120000,
     perGuestCents: 600,
     minimumHours: 6,
@@ -283,7 +282,6 @@ const EVENT_TYPES: Record<EventType, EventTypeConfig> = {
   },
   retreat: {
     label: 'Retiro o taller',
-    serviceType: 'Domo del Pululahua - retiro',
     baseCents: 95000,
     perGuestCents: 500,
     minimumHours: 6,
@@ -291,7 +289,6 @@ const EVENT_TYPES: Record<EventType, EventTypeConfig> = {
   },
   concert: {
     label: 'Concierto',
-    serviceType: 'Domo del Pululahua - concierto',
     baseCents: 150000,
     perGuestCents: 700,
     minimumHours: 7,
@@ -299,7 +296,6 @@ const EVENT_TYPES: Record<EventType, EventTypeConfig> = {
   },
   workshop: {
     label: 'Taller',
-    serviceType: 'Domo del Pululahua - taller',
     baseCents: 70000,
     perGuestCents: 450,
     minimumHours: 4,
@@ -307,7 +303,6 @@ const EVENT_TYPES: Record<EventType, EventTypeConfig> = {
   },
   photo: {
     label: 'Sesión fotográfica',
-    serviceType: 'Domo del Pululahua - sesion fotografica',
     baseCents: 45000,
     perGuestCents: 300,
     minimumHours: 3,
@@ -416,6 +411,14 @@ export default function DomoVenuePage() {
   const [form, setForm] = useState<BookingFormState>(initialForm);
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<{ severity: 'success' | 'error'; message: string } | null>(null);
+  const serviceCatalogQuery = useQuery({
+    queryKey: ['service-catalog', 'public'],
+    queryFn: () => Services.listPublic(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const eventProductionOffering = serviceCatalogQuery.data?.find(
+    (service) => service.scCode === 'event-production' && service.scActive,
+  );
   const activeExperience = DOMO_EXPERIENCES[activeExperienceKey];
   const quote = useMemo(() => calculateQuote(form), [form]);
   const bookingIso = toBookingIso(form.startsAt);
@@ -438,6 +441,10 @@ export default function DomoVenuePage() {
       setStatus({ severity: 'error', message: 'Elige una fecha y hora válida para la reserva.' });
       return;
     }
+    if (!eventProductionOffering) {
+      setStatus({ severity: 'error', message: 'El servicio de producción de eventos no está publicado. Intenta nuevamente más tarde.' });
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -445,7 +452,7 @@ export default function DomoVenuePage() {
         pbFullName: form.fullName.trim(),
         pbEmail: form.email.trim(),
         pbPhone: form.phone.trim() || null,
-        pbServiceType: EVENT_TYPES[form.eventType].serviceType,
+        pbServiceOfferingId: eventProductionOffering.scId,
         pbStartsAt: bookingIso,
         pbDurationMinutes: quote.billableHours * 60,
         pbNotes: buildBookingNotes(form, quote),

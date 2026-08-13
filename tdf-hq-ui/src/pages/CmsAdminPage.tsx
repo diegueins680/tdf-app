@@ -22,150 +22,38 @@ import {
 } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import { Cms, type CmsContentDTO, type CmsContentIn } from '../api/cms';
+import { Catalogs, type AuthoredContent, type CatalogItem } from '../api/catalogs';
 import ApiErrorNotice, { ApiLoadingNotice } from '../components/ApiErrorNotice';
 import { SessionGate } from '../components/SessionGate';
-import { COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
-import { CUSTOM_CMS_SLUG_OPTION, DEFAULT_CMS_SLUGS, getCmsSlugFieldState } from './cmsAdminSlugSelection';
+import { PUBLIC_BASE } from '../config/appConfig';
 import { getCmsVersionListUiState } from './cmsAdminVersionListState';
 import { getCmsVersionRowActions } from './cmsAdminVersionActions';
 import { getCmsLiveEditorActionState } from './cmsAdminLiveEditorActions';
 
-const localeOptions = [
-  { value: 'es', label: 'Español (es)' },
-  { value: 'en', label: 'Inglés (en)' },
-] as const;
 const STORAGE_KEY = 'tdf-cms-admin:last-selection';
 const DRAFT_PREFIX = 'tdf-cms-admin:draft';
-const CONTENT_STATUS_OPTIONS = ['draft', 'published'] as const;
-type ContentStatus = (typeof CONTENT_STATUS_OPTIONS)[number];
-const STATUS_FILTER_OPTIONS = ['all', 'published', 'draft', 'archived'] as const;
-type StatusFilter = (typeof STATUS_FILTER_OPTIONS)[number];
+type ContentStatus = 'draft';
+type StatusFilter = string;
 type SamplePayload = {
   heroTitle?: string;
   heroSubtitle?: string;
   locale?: string;
 } & Record<string, unknown>;
-const schemaHints: Record<string, string[]> = {
-  'records-public': ['heroTitle', 'heroSubtitle', 'ctaText', 'ctaUrl', 'cards[]'],
-  'records-recordings': ['channelUrl', 'videos[]', 'videos[].title', 'videos[].url/youtubeId', 'videos[].duration', 'videos[].sortOrder'],
-  'records-releases': ['playlistUrl', 'tracks[]', 'tracks[].title', 'tracks[].artist', 'tracks[].url/spotifyUrl', 'tracks[].links[]', 'tracks[].sortOrder'],
-  'records-sessions': ['playlistUrl', 'videos[]', 'videos[].title', 'videos[].url/youtubeId', 'videos[].sortOrder'],
-  'fan-hub': ['heroTitle', 'heroSubtitle', 'ctaWhatsapp', 'sections[]'],
-  'course-production': ['heroTitle', 'heroSubtitle', 'bullets[]', 'ctaPrimary', 'sessions[]'],
-};
 const draftAutosaveHelperText =
-  'El borrador se guarda automáticamente en este navegador por slug e idioma mientras editas.';
-const samplePayloads: Record<string, SamplePayload> = {
-  'records-public': {
-    heroTitle: 'Lanzamientos destacados',
-    heroSubtitle: 'Explora los releases recientes del sello.',
-    locale: 'es',
-  },
-  'records-releases': {
-    playlistName: 'RELEASES by TDF',
-    playlistUrl: 'https://open.spotify.com/playlist/4FSMAk7z9GFk4pUH9Uffbt',
-    tracks: [
-      {
-        title: 'Canción',
-        artist: 'Artista',
-        spotifyUrl: 'https://open.spotify.com/track/TRACK_ID',
-        duration: '03:30',
-        links: [
-          { platform: 'Spotify', url: 'https://open.spotify.com/track/TRACK_ID', accent: '#1db954' },
-          { platform: 'YouTube', url: 'https://www.youtube.com/watch?v=VIDEO_ID', accent: '#ff0033' },
-        ],
-        sortOrder: 1,
-      },
-    ],
-    locale: 'es',
-  },
-  'records-recordings': {
-    channelUrl: 'https://www.youtube.com/@tdf.records',
-    videos: [
-      {
-        title: 'DJ Set @ TDF Sessions',
-        artist: 'TDF Records',
-        url: 'https://www.youtube.com/watch?v=VIDEO_ID',
-        duration: '44:14',
-        vibe: 'TDF Sessions',
-        description: 'Video reciente del canal TDF Records.',
-        sortOrder: 1,
-      },
-    ],
-    locale: 'es',
-  },
-  'records-sessions': {
-    playlistUrl: 'https://www.youtube.com/playlist?list=...',
-    videos: [
-      {
-        title: 'Artista - TDF Live Sessions E01',
-        guests: 'Artista',
-        url: 'https://www.youtube.com/watch?v=VIDEO_ID&list=PLAYLIST_ID',
-        duration: '12:34',
-        description: 'Sesión en vivo para TDF Live Sessions.',
-        sortOrder: 1,
-      },
-    ],
-    locale: 'es',
-  },
-  'fan-hub': {
-    heroTitle: 'Descubre artistas emergentes',
-    heroSubtitle: 'Sigue y guarda lanzamientos para escuchar luego.',
-    locale: 'es',
-  },
-  'course-production': {
-    heroTitle: 'Producción musical en vivo',
-    heroSubtitle: 'Reserva tu cupo con clases hands-on.',
-    locale: 'es',
-  },
+  'El borrador se guarda automáticamente en este navegador por contenido e idioma mientras editas.';
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const getSchemaHints = (content: AuthoredContent | undefined): string[] | undefined => {
+  if (!content || !isRecord(content.schema) || !Array.isArray(content.schema['required'])) return undefined;
+  const required = content.schema['required'].filter((value): value is string => typeof value === 'string');
+  return required.length > 0 ? required : undefined;
 };
 
-const getSchemaHints = (slug: string): string[] | undefined => {
-  if (slug.startsWith('records-session-')) {
-    return ['title', 'url/youtubeId', 'guests', 'duration', 'description', 'sortOrder'];
-  }
-  if (slug.startsWith('records-release-')) {
-    return ['title', 'artist', 'releasedOn', 'description/blurb', 'cover', 'links[]'];
-  }
-  if (slug.startsWith('records-recording-')) {
-    return ['title', 'image', 'description', 'artist', 'recordedAt', 'vibe'];
-  }
-  return schemaHints[slug];
-};
-
-const getSamplePayload = (slug: string): SamplePayload | undefined => {
-  if (samplePayloads[slug]) return samplePayloads[slug];
-  if (slug.startsWith('records-session-')) {
-    return {
-      title: 'Artista - TDF Live Sessions E01',
-      guests: 'Artista',
-      url: 'https://www.youtube.com/watch?v=VIDEO_ID&list=PLAYLIST_ID',
-      duration: '12:34',
-      description: 'Sesión en vivo para TDF Live Sessions.',
-      sortOrder: 1,
-      locale: 'es',
-    };
-  }
-  return undefined;
-};
-
-const livePathForSlug = (slug: string) => {
-  switch (slug) {
-    case 'records-public':
-      return '/records';
-    case 'records-recordings':
-      return '/records';
-    case 'records-releases':
-      return '/records';
-    case 'records-sessions':
-      return '/records';
-    case 'fan-hub':
-      return '/fans';
-    case 'course-production':
-      return `/curso/${COURSE_DEFAULTS.slug}`;
-    default:
-      return `/${slug}`;
-  }
+const getSamplePayload = (content: AuthoredContent | undefined): SamplePayload | undefined => {
+  if (!content || !isRecord(content.schema) || !isRecord(content.schema['example'])) return undefined;
+  return content.schema['example'] as SamplePayload;
 };
 
 interface DiffLine {
@@ -190,12 +78,6 @@ const buildLineDiff = (left: string, right: string): DiffLine[] => {
   return result;
 };
 
-const isStatusFilter = (value: string): value is StatusFilter =>
-  STATUS_FILTER_OPTIONS.some((status) => status === value);
-
-const isContentStatus = (value: string): value is ContentStatus =>
-  CONTENT_STATUS_OPTIONS.some((status) => status === value);
-
 const parseMinVersionFilter = (raw: string): number | null => {
   const trimmed = raw.trim();
   if (!trimmed) return null;
@@ -215,36 +97,38 @@ const formatCmsAdminTimestamp = (value: string) => {
   }
 };
 
-const CMS_STATUS_LABELS: Record<string, string> = {
-  archived: 'Archivado',
-  draft: 'Borrador',
-  published: 'Publicado',
-};
-
 const normalizeCmsStatus = (value: string) => value.trim().toLowerCase();
 
-const formatCmsStatusLabel = (value: string) => {
+const fallbackCmsStatusLabel = (value: string) => {
   const normalized = normalizeCmsStatus(value);
-  return CMS_STATUS_LABELS[normalized] ?? (value.trim() || 'Sin estado');
+  if (!normalized) return 'Sin estado';
+  return normalized.charAt(0).toLocaleUpperCase() + normalized.slice(1);
 };
-
-const formatLocaleLabel = (value: string) =>
-  localeOptions.find((option) => option.value === value)?.label ?? value;
 
 export default function CmsAdminPage() {
   const qc = useQueryClient();
   const [searchParams] = useSearchParams();
   const querySlug = searchParams.get('slug')?.trim() ?? '';
   const queryLocale = searchParams.get('locale')?.trim() ?? '';
+  const [contentIdFilter, setContentIdFilter] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? (JSON.parse(raw) as { contentId?: string }) : null;
+      return parsed?.contentId ?? '';
+    } catch {
+      return '';
+    }
+  });
   const [slugFilter, setSlugFilter] = useState<string>(() => {
     if (querySlug) return querySlug;
-    if (typeof window === 'undefined') return 'records-public';
+    if (typeof window === 'undefined') return '';
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       const parsed = raw ? (JSON.parse(raw) as { slug?: string }) : null;
-      return parsed?.slug ?? 'records-public';
+      return parsed?.slug ?? '';
     } catch {
-      return 'records-public';
+      return '';
     }
   });
   const [localeFilter, setLocaleFilter] = useState<string>(() => {
@@ -270,46 +154,90 @@ export default function CmsAdminPage() {
   const [liveFetchError, setLiveFetchError] = useState<string | null>(null);
   const [pendingVersion, setPendingVersion] = useState<CmsContentDTO | null>(null);
   const [showDraftDiff, setShowDraftDiff] = useState(false);
-  const draftKey = useMemo(() => `${DRAFT_PREFIX}:${slugFilter}:${localeFilter}`, [slugFilter, localeFilter]);
+  const authoredContentsQuery = useQuery({
+    queryKey: ['catalog-authored-contents', localeFilter],
+    queryFn: () => Catalogs.listAuthoredContents(localeFilter),
+  });
+  const localeCatalogQuery = useQuery({
+    queryKey: ['catalog-locales', localeFilter],
+    queryFn: () => Catalogs.listItems('locales', { locale: localeFilter, pageSize: 200 }),
+  });
+  const workflowStatesQuery = useQuery({
+    queryKey: ['catalog-workflow-states', 'catalog-publication', localeFilter],
+    queryFn: () => Catalogs.listWorkflowStates('catalog-publication', localeFilter),
+  });
+  const authoredContents = useMemo(
+    () => (Array.isArray(authoredContentsQuery.data) ? authoredContentsQuery.data : []),
+    [authoredContentsQuery.data],
+  );
+  const localeItems = useMemo<CatalogItem[]>(
+    () => (Array.isArray(localeCatalogQuery.data?.items) ? localeCatalogQuery.data.items : []),
+    [localeCatalogQuery.data],
+  );
+  const localeLabels = useMemo(
+    () => new Map(localeItems.map((item) => [item.code, `${item.name} (${item.code})`] as const)),
+    [localeItems],
+  );
+  const statusLabels = useMemo(
+    () => new Map((workflowStatesQuery.data ?? []).map((state) => [state.code, state.name] as const)),
+    [workflowStatesQuery.data],
+  );
+  const statusLabel = (value: string) =>
+    statusLabels.get(normalizeCmsStatus(value)) ?? fallbackCmsStatusLabel(value);
+  const selectedContent = useMemo(
+    () => authoredContents.find((content) => content.id === contentIdFilter),
+    [authoredContents, contentIdFilter],
+  );
+  const draftKey = useMemo(
+    () => `${DRAFT_PREFIX}:${contentIdFilter || 'unselected'}:${localeFilter}`,
+    [contentIdFilter, localeFilter],
+  );
   const normalizedSlugFilter = slugFilter.trim();
-  const hasSlugSelection = normalizedSlugFilter.length > 0;
-  const slugFieldState = useMemo(() => getCmsSlugFieldState(slugFilter), [slugFilter]);
-  const customSlugHelperText = hasSlugSelection
-    ? 'Usa el mismo slug que consume la ruta pública.'
-    : 'Completa este slug para habilitar el guardado y Abrir página en vivo.';
-  const saveActionLabel = status === 'published' ? 'Guardar y publicar' : 'Guardar borrador';
-  const baseStatusHelperText =
-    status === 'published'
-      ? 'Publicará esta versión al guardar y actualizará la página en vivo.'
-      : 'Guardará esta versión como borrador sin cambiar la página en vivo.';
+  const hasSlugSelection = Boolean(contentIdFilter && selectedContent && normalizedSlugFilter);
+  const saveActionLabel = 'Guardar borrador';
+  const baseStatusHelperText = 'Guardará esta versión como borrador sin cambiar la página en vivo.';
 
   useEffect(() => {
-    if (querySlug && querySlug !== slugFilter) {
-      setSlugFilter(querySlug);
-    }
+    if (authoredContents.length === 0) return;
+    const requestedContent = querySlug
+      ? authoredContents.find((content) => content.currentSlug === querySlug)
+      : undefined;
+    if (querySlug && !requestedContent) return;
+    const currentContent = authoredContents.find((content) => content.id === contentIdFilter);
+    const storedSlugContent = authoredContents.find((content) => content.currentSlug === slugFilter);
+    const nextContent = requestedContent ?? currentContent ?? storedSlugContent ?? authoredContents[0];
+    if (!nextContent) return;
+    if (contentIdFilter !== nextContent.id) setContentIdFilter(nextContent.id);
+    if (slugFilter !== nextContent.currentSlug) setSlugFilter(nextContent.currentSlug);
+  }, [authoredContents, contentIdFilter, querySlug, slugFilter]);
+
+  useEffect(() => {
     if (queryLocale && queryLocale !== localeFilter) {
       setLocaleFilter(queryLocale);
     }
-  }, [localeFilter, queryLocale, querySlug, slugFilter]);
+  }, [localeFilter, queryLocale]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ slug: slugFilter, locale: localeFilter }));
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ contentId: contentIdFilter, slug: slugFilter, locale: localeFilter }),
+      );
     } catch {
       // ignore storage issues
     }
-  }, [slugFilter, localeFilter]);
+  }, [contentIdFilter, slugFilter, localeFilter]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
       const raw = window.localStorage.getItem(draftKey);
       if (raw) {
-        const parsed = JSON.parse(raw) as { title?: string; payload?: string; status?: string };
+        const parsed = JSON.parse(raw) as { title?: string; payload?: string };
         setTitle(parsed.title ?? '');
         setPayload(parsed.payload ?? '{}');
-        setStatus(parsed.status && isContentStatus(parsed.status) ? parsed.status : 'draft');
+        setStatus('draft');
         setEditingFromId(null);
         return;
       }
@@ -317,12 +245,11 @@ export default function CmsAdminPage() {
       // ignore broken drafts
     }
 
-    if (hasSlugSelection && slugFieldState.showCustomInput) return;
     setTitle('');
     setPayload('{}');
     setStatus('draft');
     setEditingFromId(null);
-  }, [draftKey, hasSlugSelection, slugFieldState.showCustomInput]);
+  }, [draftKey]);
 
   useEffect(() => {
     try {
@@ -336,8 +263,8 @@ export default function CmsAdminPage() {
   }, [payload]);
 
   const listQuery = useQuery({
-    queryKey: ['cms-content', slugFilter, localeFilter],
-    queryFn: () => Cms.list({ slug: slugFilter, locale: localeFilter }),
+    queryKey: ['cms-content', contentIdFilter, localeFilter],
+    queryFn: () => Cms.list({ contentId: contentIdFilter, locale: localeFilter }),
     enabled: hasSlugSelection,
   });
 
@@ -427,7 +354,7 @@ export default function CmsAdminPage() {
     }
     const normalizedTitle = title.trim();
     createMutation.mutate({
-      cciSlug: normalizedSlugFilter,
+      cciContentId: contentIdFilter,
       cciLocale: localeFilter,
       cciTitle: normalizedTitle.length > 0 ? normalizedTitle : undefined,
       cciStatus: status,
@@ -437,10 +364,11 @@ export default function CmsAdminPage() {
   };
 
   const loadVersionIntoForm = (v: CmsContentDTO) => {
+    if (v.ccdContentId) setContentIdFilter(v.ccdContentId);
     setSlugFilter(v.ccdSlug);
     setLocaleFilter(v.ccdLocale);
     setTitle(v.ccdTitle ?? '');
-    setStatus((v.ccdStatus as 'draft' | 'published') ?? 'draft');
+    setStatus('draft');
     setEditingFromId(v.ccdId);
     try {
       setPayload(JSON.stringify(v.ccdPayload ?? {}, null, 2));
@@ -491,7 +419,7 @@ export default function CmsAdminPage() {
     try {
       const fresh = await Cms.getPublic(normalizedSlugFilter, localeFilter);
       setTitle(fresh.ccdTitle ?? '');
-      setStatus((fresh.ccdStatus as 'draft' | 'published') ?? 'draft');
+      setStatus('draft');
       setEditingFromId(fresh.ccdId);
       try {
         setPayload(JSON.stringify(fresh.ccdPayload ?? {}, null, 2));
@@ -507,7 +435,7 @@ export default function CmsAdminPage() {
   };
 
   const liveUrl = hasSlugSelection
-    ? `${PUBLIC_BASE}${livePathForSlug(normalizedSlugFilter)}${localeFilter ? `?locale=${encodeURIComponent(localeFilter)}` : ''}`
+    ? `${PUBLIC_BASE}${selectedContent?.publicRoute ?? `/${normalizedSlugFilter}`}${localeFilter ? `?locale=${encodeURIComponent(localeFilter)}` : ''}`
     : '';
   const livePayloadPretty = useMemo(() => {
     if (!liveContent) return '';
@@ -527,9 +455,10 @@ export default function CmsAdminPage() {
   const titleChangedFromLive = liveContent
     ? title.trim() !== (liveContent.ccdTitle ?? '').trim()
     : false;
-  const statusChangedFromLive = liveContent
-    ? status !== liveContent.ccdStatus
-    : false;
+  // A published version is always loaded into a new draft. That governed
+  // lifecycle difference is not an editorial change and must not keep the
+  // "use live" action open after title and payload match.
+  const statusChangedFromLive = false;
   const canCompareWithLive =
     Boolean(livePayloadPretty) && !payloadError && payloadChanged && editorHasMeaningfulPayloadDraft;
   const liveEditorActionState = useMemo(
@@ -598,10 +527,10 @@ export default function CmsAdminPage() {
     const parts: string[] = [];
     if (sharedVersionTitle) parts.push(`título ${sharedVersionTitle}`);
     if (sharedVersionSlug) parts.push(`slug ${sharedVersionSlug}`);
-    if (sharedVersionLocale) parts.push(`idioma ${formatLocaleLabel(sharedVersionLocale)}`);
-    if (sharedVersionStatus) parts.push(`estado ${formatCmsStatusLabel(sharedVersionStatus)}`);
+    if (sharedVersionLocale) parts.push(`idioma ${localeLabels.get(sharedVersionLocale) ?? sharedVersionLocale}`);
+    if (sharedVersionStatus) parts.push(`estado ${statusLabel(sharedVersionStatus)}`);
     return parts.join(' · ');
-  }, [sharedVersionLocale, sharedVersionSlug, sharedVersionStatus, sharedVersionTitle]);
+  }, [localeLabels, sharedVersionLocale, sharedVersionSlug, sharedVersionStatus, sharedVersionTitle, statusLabels]);
   const versionListUiState = useMemo(
     () => getCmsVersionListUiState({
       filteredCount: filteredVersions.length,
@@ -612,15 +541,11 @@ export default function CmsAdminPage() {
     [filteredVersions.length, minVersionFilter, statusFilter, versions.length],
   );
   const historyStatuses = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          versions
-            .map((version) => normalizeCmsStatus(version.ccdStatus))
-            .filter((value) => value !== ''),
-        ),
-      ),
-    [versions],
+    () => [...(workflowStatesQuery.data ?? [])]
+      .filter((state) => state.active)
+      .sort((left, right) => left.sortOrder - right.sortOrder)
+      .map((state) => state.code),
+    [workflowStatesQuery.data],
   );
   const hasActiveVersionFilters = statusFilter.trim().toLowerCase() !== 'all' || minVersionFilter != null;
   const showSingleLiveVersionSummary =
@@ -665,7 +590,7 @@ export default function CmsAdminPage() {
       ? `Base: v${editingVersion}`
       : `Base: ID ${editingFromId}`
     : null;
-  const samplePayload = getSamplePayload(normalizedSlugFilter);
+  const samplePayload = getSamplePayload(selectedContent);
   const samplePayloadPreview = useMemo(
     () => (samplePayload ? JSON.stringify(samplePayload, null, 2) : ''),
     [samplePayload],
@@ -679,7 +604,7 @@ export default function CmsAdminPage() {
   const liveLookupFailed = liveQuery.isError;
   const liveLookupPending = liveQuery.isLoading || liveQuery.isFetching;
   const liveLookupUnresolved = liveLookupPending || liveLookupFailed;
-  const schemaHint = getSchemaHints(normalizedSlugFilter);
+  const schemaHint = getSchemaHints(selectedContent);
   const payloadHelperText = payloadError
     ? `Error: ${payloadError}`
     : schemaHint
@@ -712,10 +637,10 @@ export default function CmsAdminPage() {
         ? 'El ejemplo sugerido ya está cargado. Ajusta título y payload antes de guardar.'
         : hasCustomNewContentDraft
         ? 'Ya hay contenido en el editor. Usa "Limpiar" si quieres volver a partir de un ejemplo sugerido.'
-        : 'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).'
+        : 'Usa "Cargar ejemplo" para partir del ejemplo versionado del tipo de contenido.'
       : hasSlugSelection
-        ? 'Este slug no tiene un ejemplo sugerido todavía. Empieza con tu propio JSON o trae la versión en vivo si ya existe.'
-        : 'Elige un slug sugerido o escribe uno para empezar a editar.';
+        ? 'Este tipo no tiene un ejemplo persistido. Completa las claves requeridas del esquema o trae la versión en vivo.'
+        : 'Elige una definición editorial persistida para empezar a editar.';
   const showSamplePayloadGuidance =
     !liveLookupFailed && (!liveContent || (liveEditorActionState.showUseLiveAction && showLiveStartEmptyEditorGuard));
   const showLiveStartGuidance =
@@ -765,7 +690,7 @@ export default function CmsAdminPage() {
     && !liveContent
     && !editorHasFirstVersionContentDraft;
   const statusHelperText = !hasSlugSelection
-    ? 'Completa el slug para habilitar el estado y el guardado.'
+    ? 'Selecciona un contenido persistido para habilitar el guardado.'
     : showFirstVersionLiveLookupGuard
       ? 'Espera a que termine la búsqueda en vivo antes de guardar la primera versión.'
     : showFirstVersionEmptyDraftGuard
@@ -773,11 +698,6 @@ export default function CmsAdminPage() {
       : showLiveStartEmptyEditorGuard
         ? 'Parte de la versión en vivo o empieza un borrador propio antes de guardar.'
         : baseStatusHelperText;
-  const showStatusControl =
-    hasSlugSelection
-    && !showFirstVersionLiveLookupGuard
-    && !showFirstVersionEmptyDraftGuard
-    && !showLiveStartEmptyEditorGuard;
   const canSaveVersion =
     hasSlugSelection
     && !payloadError
@@ -821,7 +741,7 @@ export default function CmsAdminPage() {
             <Stack spacing={1.5}>
               <Typography fontWeight={700}>{pendingVersion.ccdTitle ?? pendingVersion.ccdSlug}</Typography>
               <Typography variant="body2" color="text.secondary">
-                v{pendingVersion.ccdVersion} · {formatCmsStatusLabel(pendingVersion.ccdStatus)} · {formatLocaleLabel(pendingVersion.ccdLocale)} ·{' '}
+                v{pendingVersion.ccdVersion} · {statusLabel(pendingVersion.ccdStatus)} · {localeLabels.get(pendingVersion.ccdLocale) ?? pendingVersion.ccdLocale} ·{' '}
                 {pendingVersion.ccdPublishedAt
                   ? `publicado ${formatCmsAdminTimestamp(pendingVersion.ccdPublishedAt)}`
                   : `creado ${formatCmsAdminTimestamp(pendingVersion.ccdCreatedAt)}`}
@@ -829,7 +749,7 @@ export default function CmsAdminPage() {
               <Typography variant="body2">
                 Live actual:{' '}
                 {liveContent
-                  ? `v${liveContent.ccdVersion} (${formatCmsStatusLabel(liveContent.ccdStatus)} · ${formatLocaleLabel(liveContent.ccdLocale)})`
+                  ? `v${liveContent.ccdVersion} (${statusLabel(liveContent.ccdStatus)} · ${localeLabels.get(liveContent.ccdLocale) ?? liveContent.ccdLocale})`
                   : 'no hay versión publicada'}
               </Typography>
               <Typography
@@ -945,7 +865,7 @@ export default function CmsAdminPage() {
           <Typography variant="overline" color="text.secondary">CMS</Typography>
           <Typography variant="h4" fontWeight={800}>Contenido público</Typography>
           <Typography color="text.secondary">
-            Crear, publicar y versionar bloques para páginas públicas (records, fan hub, landing cursos).
+            Crear borradores versionados para páginas editoriales tipadas. Records se administra como entidades estructuradas en Catálogos.
           </Typography>
         </Box>
       </Stack>
@@ -954,36 +874,35 @@ export default function CmsAdminPage() {
         <Stack spacing={2.5}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
+              {authoredContentsQuery.isLoading && (
+                <ApiLoadingNotice title="Cargando contenidos" message="Consultando las definiciones editoriales publicadas." />
+              )}
+              {authoredContentsQuery.isError && (
+                <ApiErrorNotice
+                  error={authoredContentsQuery.error}
+                  title="No pudimos cargar los contenidos editoriales"
+                  onRetry={() => authoredContentsQuery.refetch()}
+                />
+              )}
               <TextField
                 select
                 fullWidth
-                label="Slug"
-                value={slugFieldState.selectValue}
+                label="Contenido"
+                value={contentIdFilter}
                 onChange={(e) => {
-                  const nextValue = e.target.value;
-                  setSlugFilter(nextValue === CUSTOM_CMS_SLUG_OPTION ? '' : nextValue);
+                  const nextContent = authoredContents.find((content) => content.id === e.target.value);
+                  setContentIdFilter(nextContent?.id ?? '');
+                  setSlugFilter(nextContent?.currentSlug ?? '');
                 }}
-                helperText={
-                  slugFieldState.showCustomInput
-                    ? 'Escribe el slug exacto abajo si todavía no aparece en la lista.'
-                    : 'Identificador de la página.'
-                }
+                helperText={selectedContent
+                  ? `${selectedContent.currentSlug} · esquema v${selectedContent.schemaVersion}`
+                  : 'Selecciona una definición editorial persistida.'}
+                disabled={authoredContentsQuery.isLoading || authoredContentsQuery.isError}
               >
-                {DEFAULT_CMS_SLUGS.map((slug) => (
-                  <MenuItem key={slug} value={slug}>{slug}</MenuItem>
+                {authoredContents.map((content) => (
+                  <MenuItem key={content.id} value={content.id}>{content.name}</MenuItem>
                 ))}
-                <MenuItem value={CUSTOM_CMS_SLUG_OPTION}>Otro slug…</MenuItem>
               </TextField>
-              {slugFieldState.showCustomInput && (
-                <TextField
-                  fullWidth
-                  label="Slug personalizado"
-                  value={slugFilter}
-                  onChange={(e) => setSlugFilter(e.target.value)}
-                  sx={{ mt: 1 }}
-                  helperText={customSlugHelperText}
-                />
-              )}
             </Grid>
             <Grid item xs={12} md={2}>
               <TextField
@@ -993,8 +912,8 @@ export default function CmsAdminPage() {
                 value={localeFilter}
                 onChange={(e) => setLocaleFilter(e.target.value)}
               >
-                {localeOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                {localeItems.map((option) => (
+                  <MenuItem key={option.id} value={option.code}>{localeLabels.get(option.code) ?? option.name}</MenuItem>
                 ))}
               </TextField>
             </Grid>
@@ -1048,7 +967,7 @@ export default function CmsAdminPage() {
                         <Stack direction="row" spacing={1} flexWrap="wrap">
                           <Chip label={`v${liveContent.ccdVersion}`} size="small" />
                           <Chip
-                            label={formatCmsStatusLabel(liveContent.ccdStatus)}
+                            label={statusLabel(liveContent.ccdStatus)}
                             size="small"
                             color={normalizeCmsStatus(liveContent.ccdStatus) === 'published' ? 'success' : 'default'}
                           />
@@ -1167,22 +1086,8 @@ export default function CmsAdminPage() {
                 >
                   {editorGuidance}
                 </Typography>
-                {showStatusControl ? (
-                  <TextField
-                    select
-                    label="Estado"
-                    value={status}
-                    onChange={(e) => {
-                      const next = e.target.value.trim();
-                      setStatus(isContentStatus(next) ? next : 'draft');
-                    }}
-                    helperText={statusHelperText}
-                    sx={{ width: 240 }}
-                  >
-                    <MenuItem value="draft">Borrador</MenuItem>
-                    <MenuItem value="published">Publicado</MenuItem>
-                  </TextField>
-                ) : (
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Chip label="Borrador" size="small" />
                   <Typography
                     data-testid="cms-admin-first-version-save-guidance"
                     variant="caption"
@@ -1190,7 +1095,7 @@ export default function CmsAdminPage() {
                   >
                     {statusHelperText}
                   </Typography>
-                )}
+                </Stack>
                 <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                   {showSaveVersionAction && (
                     <Button
@@ -1263,14 +1168,16 @@ export default function CmsAdminPage() {
                     value={statusFilter}
                     onChange={(e) => {
                       const next = e.target.value.trim();
-                      setStatusFilter(isStatusFilter(next) ? next : 'all');
+                      setStatusFilter(next || 'all');
                     }}
                     sx={{ minWidth: 140 }}
                   >
                     <MenuItem value="all">Todos</MenuItem>
-                    <MenuItem value="published">Publicados</MenuItem>
-                    <MenuItem value="draft">Borradores</MenuItem>
-                    <MenuItem value="archived">Archivados</MenuItem>
+                    {historyStatuses.map((historyStatus) => (
+                      <MenuItem key={historyStatus} value={historyStatus}>
+                        {statusLabel(historyStatus)}
+                      </MenuItem>
+                    ))}
                   </TextField>
                 )}
                 {showHistoryMinVersionFilter && (
@@ -1342,11 +1249,11 @@ export default function CmsAdminPage() {
                       <Typography fontWeight={700}>{rowTitle}</Typography>
                       <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 0.5 }}>
                         {!sharedVersionSlug && <Chip label={v.ccdSlug} size="small" />}
-                        {!sharedVersionLocale && <Chip label={formatLocaleLabel(v.ccdLocale)} size="small" />}
+                        {!sharedVersionLocale && <Chip label={localeLabels.get(v.ccdLocale) ?? v.ccdLocale} size="small" />}
                         {!sharedVersionTitle && <Chip label={`v${v.ccdVersion}`} size="small" />}
                         {showRowStatusChip && (
                           <Chip
-                            label={formatCmsStatusLabel(v.ccdStatus)}
+                            label={statusLabel(v.ccdStatus)}
                             size="small"
                             color={rowStatus === 'published' ? 'success' : 'default'}
                           />

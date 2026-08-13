@@ -8,6 +8,15 @@ const es = {
     saved: 'Preferencias guardadas.',
     error: 'Ocurrió un error.',
   },
+  pipelines: {
+    title: 'Pipelines',
+    subtitle: 'Gestiona proyectos de {{workflow}}',
+    workflowTabs: 'Flujos de proyecto disponibles',
+    empty: 'No hay etapas definidas para este pipeline.',
+    keyboardHelp: 'Teclado: enfoca una tarjeta, presiona Espacio para levantarla, usa las flechas para moverla y presiona Espacio para soltarla.',
+    stageLabel: 'Etapa {{stage}}',
+    cardMoveLabel: 'Mover {{title}}, actualmente en {{stage}}',
+  },
   pagination: {
     items: 'registros',
     rowsPerPage: 'Por página',
@@ -116,7 +125,7 @@ const es = {
     currency: 'Moneda',
     timezone: 'Zona horaria',
     country: 'Código de país',
-    countryHint: 'Código ISO opcional de dos letras, por ejemplo EC o ES.',
+    countryHint: 'Selecciona un país del catálogo oficial o deja el campo vacío.',
   },
   system: {
     title: 'Estado del sistema',

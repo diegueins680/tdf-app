@@ -23,11 +23,10 @@ import {
   ArrowBack as BackIcon,
   CheckCircle as ValidIcon,
   Error as InvalidIcon,
-  Download as DownloadIcon,
-  PlayArrow as ImportIcon,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
-import { DDEX, getStatusColor } from '../../api/ddex';
+import { DDEX } from '../../api/ddex';
+import { useLocalePreferences } from '../../contexts/LocalePreferencesContext';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -44,6 +43,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
 const DdexDocumentPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { locale } = useLocalePreferences();
   const [tabValue, setTabValue] = React.useState(0);
 
   const documentId = parseInt(id || '0', 10);
@@ -54,16 +54,11 @@ const DdexDocumentPage: React.FC = () => {
     enabled: documentId > 0,
   });
 
-  const { data: validationReport } = useQuery({
+  const { data: validationReport, error: validationError } = useQuery({
     queryKey: ['ddex-validation', documentId],
     queryFn: () => DDEX.getValidationReport(documentId),
     enabled: documentId > 0,
-  });
-
-  const { data: preview } = useQuery({
-    queryKey: ['ddex-preview', documentId],
-    queryFn: () => DDEX.getPreview(documentId),
-    enabled: documentId > 0,
+    retry: false,
   });
 
   if (docLoading) {
@@ -100,28 +95,8 @@ const DdexDocumentPage: React.FC = () => {
           </Button>
           <Typography variant="h4">{document.ddexDocumentFileName}</Typography>
           <Chip
-            label={document.ddexDocumentStatus}
-            color={getStatusColor(document.ddexDocumentStatus)}
+            label={document.ddexDocumentWorkflowStateNameEs}
           />
-        </Stack>
-        <Stack direction="row" spacing={1}>
-          <Button
-            variant="outlined"
-            startIcon={<DownloadIcon />}
-            onClick={() => console.log('Download raw')}
-          >
-            Download XML
-          </Button>
-          {document.ddexDocumentStatus === 'valid' && (
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<ImportIcon />}
-              onClick={() => console.log('Start import')}
-            >
-              Start Import
-            </Button>
-          )}
         </Stack>
       </Stack>
 
@@ -164,14 +139,14 @@ const DdexDocumentPage: React.FC = () => {
                   <ListItem>
                     <ListItemText
                       primary="Family"
-                      secondary={document.ddexDocumentFamily}
+                      secondary={document.ddexDocumentStandardCode}
                     />
                   </ListItem>
                   <Divider />
                   <ListItem>
                     <ListItemText
                       primary="Version"
-                      secondary={document.ddexDocumentVersion}
+                      secondary={document.ddexDocumentVersionCode}
                     />
                   </ListItem>
                   <Divider />
@@ -226,7 +201,11 @@ const DdexDocumentPage: React.FC = () => {
       <TabPanel value={tabValue} index={1}>
         <Card>
           <CardContent>
-            <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+            {validationError ? (
+              <Alert severity="info">
+                No existe todavía un reporte de validación publicado para este documento.
+              </Alert>
+            ) : validationReport ? <><Stack direction="row" spacing={2} alignItems="center" mb={2}>
               {validationReport?.reportIsValid ? (
                 <>
                   <ValidIcon color="success" />
@@ -252,11 +231,18 @@ const DdexDocumentPage: React.FC = () => {
                       primary={
                         <Stack direction="row" spacing={1} alignItems="center">
                           <Chip
-                            label={issue.issueSeverity}
+                            label={locale.startsWith('en')
+                              ? issue.issueSeverityNameEn
+                              : issue.issueSeverityNameEs}
                             size="small"
-                            color={issue.issueSeverity === 'Error' ? 'error' : 'warning'}
                           />
-                          <Chip label={issue.issueLayer} size="small" variant="outlined" />
+                          <Chip
+                            label={locale.startsWith('en')
+                              ? issue.issueLayerNameEn
+                              : issue.issueLayerNameEs}
+                            size="small"
+                            variant="outlined"
+                          />
                           <Typography>{issue.issueMessage}</Typography>
                         </Stack>
                       }
@@ -274,67 +260,15 @@ const DdexDocumentPage: React.FC = () => {
                 No validation issues found
               </Typography>
             )}
+            </> : null}
           </CardContent>
         </Card>
       </TabPanel>
 
       <TabPanel value={tabValue} index={2}>
-        {preview ? (
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Import Preview
-              </Typography>
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={4}>
-                  <Typography variant="body2" color="text.secondary">
-                    Message ID
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontFamily: 'monospace' }}>
-                    {preview.previewMessageId}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Typography variant="body2" color="text.secondary">
-                    Sender
-                  </Typography>
-                  <Typography variant="body1">{preview.previewSender}</Typography>
-                </Grid>
-                <Grid item xs={12} md={2}>
-                  <Typography variant="body2" color="text.secondary">
-                    Releases
-                  </Typography>
-                  <Typography variant="h4">{preview.previewReleaseCount}</Typography>
-                </Grid>
-                <Grid item xs={12} md={2}>
-                  <Typography variant="body2" color="text.secondary">
-                    Resources
-                  </Typography>
-                  <Typography variant="h4">{preview.previewResourceCount}</Typography>
-                </Grid>
-              </Grid>
-              
-              {preview.previewWarnings.length > 0 && (
-                <Box mt={3}>
-                  <Typography variant="subtitle2" color="warning.main" gutterBottom>
-                    Warnings
-                  </Typography>
-                  <List dense>
-                    {preview.previewWarnings.map((warning, idx) => (
-                      <ListItem key={idx}>
-                        <ListItemText primary={warning} />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <Alert severity="info">
-            Preview not available. Run validation first.
-          </Alert>
-        )}
+        <Alert severity="info">
+          La vista previa tipada de importación aún no está disponible en esta revisión.
+        </Alert>
       </TabPanel>
 
       <TabPanel value={tabValue} index={3}>

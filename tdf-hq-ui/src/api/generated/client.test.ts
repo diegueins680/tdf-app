@@ -139,4 +139,38 @@ describe('generated ApiClient', () => {
 
     await expect(client.getUsers()).rejects.toThrow('No se pudo contactar la API.');
   });
+
+  it('uses canonical security ids and revision endpoints for role changes', async () => {
+    fetchMock
+      .mockResolvedValueOnce(buildResponse({ body: '[]' }))
+      .mockResolvedValueOnce(buildResponse({ body: '[]' }))
+      .mockResolvedValueOnce(buildResponse({ body: '{"id":"revision-1"}' }))
+      .mockResolvedValueOnce(buildResponse({ body: '{"id":"revision-1","workflowState":"review"}' }));
+
+    const client = new ApiClient('https://api.tdf.test');
+    await client.getSecurityRoles();
+    await client.getPartyRoleAssignments(42);
+    const revision = await client.createPartyRoleRevision({
+      partyId: 42,
+      roleId: 'f683a8fc-39aa-4635-a56d-b1e43e603a9f',
+      desiredActive: true,
+      expectedVersion: 0,
+      reason: 'Acceso revisable',
+      sourcePlatform: 'web',
+      correlationId: 'security-client-test-001',
+    });
+    await client.submitSecurityRevision(revision.id);
+
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+      'https://api.tdf.test/catalog/security/roles',
+      'https://api.tdf.test/catalog/security/party-role-assignments?partyId=42',
+      'https://api.tdf.test/catalog/security/party-role-revisions',
+      'https://api.tdf.test/catalog/security/revisions/revision-1/submit',
+    ]);
+    expect(fetchMock.mock.calls[2]?.[1]).toEqual(expect.objectContaining({
+      method: 'POST',
+      body: expect.stringContaining('"roleId":"f683a8fc-39aa-4635-a56d-b1e43e603a9f"'),
+    }));
+    expect(fetchMock.mock.calls[3]?.[1]).toEqual(expect.objectContaining({ method: 'POST' }));
+  });
 });

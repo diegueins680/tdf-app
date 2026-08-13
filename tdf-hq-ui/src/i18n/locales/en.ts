@@ -8,6 +8,15 @@ const en = {
     saved: 'Preferences saved.',
     error: 'Something went wrong.',
   },
+  pipelines: {
+    title: 'Pipelines',
+    subtitle: 'Manage {{workflow}} projects',
+    workflowTabs: 'Available project workflows',
+    empty: 'No stages are defined for this pipeline.',
+    keyboardHelp: 'Keyboard: focus a card, press Space to lift it, use the arrow keys to move it, then press Space to drop it.',
+    stageLabel: '{{stage}} stage',
+    cardMoveLabel: 'Move {{title}}, currently in {{stage}}',
+  },
   pagination: {
     items: 'items',
     rowsPerPage: 'Per page',
@@ -116,7 +125,7 @@ const en = {
     currency: 'Currency',
     timezone: 'Time zone',
     country: 'Country code',
-    countryHint: 'Optional two-letter ISO code, for example US or DE.',
+    countryHint: 'Select a country from the official catalog or leave this empty.',
   },
   system: {
     title: 'System status',

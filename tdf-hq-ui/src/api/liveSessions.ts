@@ -1,34 +1,22 @@
 import { buildAuthorizationHeader } from './authHeader';
+import { resolveApiBase } from '../config/apiBase';
+import type { components } from './generated/types';
 
-export interface LiveSessionMusicianInput {
-  partyId: number;
-  name: string;
-  email?: string | null;
-  instrument?: string | null;
-  role?: string | null;
-  notes?: string | null;
-  isExisting: boolean;
-}
-
-export interface LiveSessionSongInput {
-  title: string;
-  bpm?: number | null;
-  songKey?: string | null;
-  lyrics?: string | null;
-  sortOrder?: number;
-}
+export type LiveSessionMusicianInput = components['schemas']['LiveSessionMusician'];
+export type LiveSessionSongInput = components['schemas']['LiveSessionSong'];
+type LiveSessionIntakeMultipart = components['schemas']['LiveSessionIntakeMultipart'];
 
 export interface LiveSessionIntakePayload {
   bandName: string;
   bandDescription?: string | null;
-  primaryGenre?: string | null;
+  primaryGenreId?: string | null;
   inputList?: string | null;
   contactEmail?: string | null;
   contactPhone?: string | null;
   sessionDate?: string | null;
   availabilityNotes?: string | null;
-  acceptedTerms?: boolean;
-  termsVersion?: string | null;
+  acceptedTerms: LiveSessionIntakeMultipart['acceptedTerms'];
+  termsVersion: LiveSessionIntakeMultipart['termsVersion'];
   musicians: LiveSessionMusicianInput[];
   setlist?: LiveSessionSongInput[];
   riderFile?: File | null;
@@ -44,24 +32,36 @@ export interface InputInventoryItem {
 }
 
 export async function submitLiveSessionIntake(payload: LiveSessionIntakePayload): Promise<void> {
-  const base = import.meta.env.VITE_API_BASE ?? '';
+  const base = resolveApiBase();
   const authHeader = buildAuthorizationHeader();
+  const wireFields: Omit<LiveSessionIntakeMultipart, 'rider'> = {
+    bandName: payload.bandName,
+    bandDescription: payload.bandDescription,
+    primaryGenreId: payload.primaryGenreId,
+    inputList: payload.inputList,
+    contactEmail: payload.contactEmail,
+    contactPhone: payload.contactPhone,
+    sessionDate: payload.sessionDate,
+    availability: payload.availabilityNotes,
+    acceptedTerms: payload.acceptedTerms,
+    termsVersion: payload.termsVersion,
+    musicians: JSON.stringify(payload.musicians),
+    setlist: payload.setlist ? JSON.stringify(payload.setlist) : undefined,
+  };
 
   const form = new FormData();
-  form.append('bandName', payload.bandName);
-  if (payload.bandDescription) form.append('bandDescription', payload.bandDescription);
-  if (payload.primaryGenre) form.append('primaryGenre', payload.primaryGenre);
-  if (payload.inputList) form.append('inputList', payload.inputList);
-  if (payload.contactEmail) form.append('contactEmail', payload.contactEmail);
-  if (payload.contactPhone) form.append('contactPhone', payload.contactPhone);
-  if (payload.sessionDate) form.append('sessionDate', payload.sessionDate);
-  if (payload.availabilityNotes) form.append('availability', payload.availabilityNotes);
-  if (typeof payload.acceptedTerms === 'boolean') form.append('acceptedTerms', String(payload.acceptedTerms));
-  if (payload.termsVersion) form.append('termsVersion', payload.termsVersion);
-  form.append('musicians', JSON.stringify(payload.musicians));
-  if (payload.setlist) {
-    form.append('setlist', JSON.stringify(payload.setlist));
-  }
+  form.append('bandName', wireFields.bandName);
+  if (wireFields.bandDescription) form.append('bandDescription', wireFields.bandDescription);
+  if (wireFields.primaryGenreId) form.append('primaryGenreId', wireFields.primaryGenreId);
+  if (wireFields.inputList) form.append('inputList', wireFields.inputList);
+  if (wireFields.contactEmail) form.append('contactEmail', wireFields.contactEmail);
+  if (wireFields.contactPhone) form.append('contactPhone', wireFields.contactPhone);
+  if (wireFields.sessionDate) form.append('sessionDate', wireFields.sessionDate);
+  if (wireFields.availability) form.append('availability', wireFields.availability);
+  form.append('acceptedTerms', String(wireFields.acceptedTerms));
+  form.append('termsVersion', wireFields.termsVersion);
+  form.append('musicians', wireFields.musicians);
+  if (wireFields.setlist) form.append('setlist', wireFields.setlist);
   if (payload.riderFile) {
     form.append('rider', payload.riderFile);
   }
@@ -79,7 +79,7 @@ export async function submitLiveSessionIntake(payload: LiveSessionIntakePayload)
 }
 
 export async function listInputInventory(field?: 'mic' | 'preamp' | 'interface'): Promise<InputInventoryItem[]> {
-  const base = import.meta.env.VITE_API_BASE ?? '';
+  const base = resolveApiBase();
   const params = new URLSearchParams();
   if (field) params.set('field', field);
   const res = await fetch(`${base}/input-list/inventory?${params.toString()}`);

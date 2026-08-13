@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import {
   Alert,
   AlertTitle,
+  Autocomplete,
   Avatar,
   Box,
   Button,
@@ -40,7 +41,6 @@ import type { ArtistProfileUpsert } from '../api/types';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { Fans } from '../api/fans';
 import { Admin } from '../api/admin';
-import { Parties } from '../api/parties';
 import { useSession } from '../session/SessionContext';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { useCmsContent } from '../hooks/useCmsContent';
@@ -51,7 +51,7 @@ import { buildLoginRedirectPath } from '../utils/loginRouting';
 import { canAccessPath } from '../utils/accessControl';
 import { uploadToDrive as uploadToDriveApi } from '../api/drive';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
-import { recordings, releases as featuredReleases, sessionVideos } from '../constants/recordsContent';
+import { Records, type RecordsResourceDTO } from '../api/records';
 import {
   buildReleaseStreamUpdatePayload,
   dispatchReleaseToRadio,
@@ -65,6 +65,7 @@ import { FollowedArtists } from '../features/fans/FollowedArtists';
 import { ProfileSectionCard } from '../features/fans/ProfileSectionCard';
 import { useFanProfile } from '../features/fans/useFanProfile';
 import { FanClubPreview } from '../features/fanclubs/FanClubPreview';
+import { Catalogs, type CatalogItem } from '../api/catalogs';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
 const ARTIST_CATALOG_INITIAL_ROWS_PER_PAGE: number = 3 * 4;
@@ -100,46 +101,73 @@ interface CatalogRecoveryCard {
   action: string;
 }
 
-const FAN_HUB_RECOVERY_CARDS: CatalogRecoveryCard[] = [
-  {
-    eyebrow: featuredReleases[0]?.artist ?? 'Sofia Marquez',
-    title: featuredReleases[0]?.title ?? 'Luna Baja',
-    description:
-      featuredReleases[0]?.blurb ??
-      'Explora los lanzamientos más recientes del sello mientras reconectamos el catálogo completo.',
-    image: featuredReleases[0]?.cover ?? recordings[0]?.image ?? '',
-    to: '/records',
-    action: 'Ver lanzamientos',
-  },
-  {
-    eyebrow: recordings[0]?.artist ?? 'La Bruma',
-    title: recordings[0]?.title ?? 'Late Night Brass',
-    description:
-      recordings[0]?.description ??
-      'Descubre sesiones destacadas del estudio y agenda tu propia experiencia cuando estés listo.',
-    image: recordings[0]?.image ?? featuredReleases[0]?.cover ?? '',
-    to: '/reservar',
-    action: 'Reservar estudio',
-  },
-  {
-    eyebrow: sessionVideos[0]?.guests ?? 'TDF Sessions',
-    title: sessionVideos[0]?.title ?? 'TDF Sessions',
-    description:
-      sessionVideos[0]?.description ??
-      'Súmate a la próxima sesión en vivo y sigue descubriendo el universo TDF mientras vuelve el hub.',
-    image: recordings[1]?.image ?? recordings[0]?.image ?? featuredReleases[0]?.cover ?? '',
-    to: '/live-sessions/registro',
-    action: 'Ver sesiones',
-  },
-];
+const primaryRecordsImage = (resources: RecordsResourceDTO[]): string =>
+  resources.find((resource) => resource.primary && resource.thumbnailUrl)?.thumbnailUrl ??
+  resources.find((resource) => resource.thumbnailUrl)?.thumbnailUrl ??
+  '';
 
 export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
-  const { session, login } = useSession();
+  const { session } = useSession();
   const navigate = useNavigate();
   const location = useLocation();
   const qc = useQueryClient();
   const viewerId = session?.partyId ?? null;
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const recordsFeedQuery = useQuery({
+    queryKey: ['records', 'feed', 'es'],
+    queryFn: () => Records.getFeed('es'),
+    staleTime: 5 * 60 * 1000,
+  });
+  const genresCatalogQuery = useQuery({
+    queryKey: ['catalog', 'genres', 'es'],
+    queryFn: () => Catalogs.listItems('genres', { locale: 'es', page: 1, pageSize: 500 }),
+    staleTime: 5 * 60 * 1000,
+  });
+  const fanHubRecoveryCards = useMemo<CatalogRecoveryCard[]>(() => {
+    const feed = recordsFeedQuery.data;
+    if (!feed) return [];
+    const collectionFor = (kind: string) => feed.collections.find((collection) => collection.kind === kind);
+    const contributorNames = (contributors: { name: string }[]) =>
+      contributors.map((contributor) => contributor.name).join(', ');
+    const release = feed.releases[0];
+    const recording = feed.recordings[0];
+    const sessionItem = feed.sessions[0];
+    return [
+      release && (() => {
+        const collection = collectionFor('release');
+        return {
+          eyebrow: contributorNames(release.contributors) || collection?.name || release.code,
+          title: release.title,
+          description: collection?.description || collection?.name || release.title,
+          image: primaryRecordsImage(release.resources),
+          to: collection?.publicRoute || '/records',
+          action: collection?.name || 'Ver lanzamientos',
+        };
+      })(),
+      recording && (() => {
+        const collection = collectionFor('recording');
+        return {
+          eyebrow: contributorNames(recording.contributors) || collection?.name || recording.code,
+          title: recording.title,
+          description: recording.description || collection?.description || collection?.name || recording.title,
+          image: primaryRecordsImage(recording.resources),
+          to: collection?.publicRoute || '/records',
+          action: collection?.name || 'Ver grabaciones',
+        };
+      })(),
+      sessionItem && (() => {
+        const collection = collectionFor('session');
+        return {
+          eyebrow: contributorNames(sessionItem.contributors) || collection?.name || sessionItem.code,
+          title: sessionItem.title,
+          description: sessionItem.description || collection?.description || collection?.name || sessionItem.title,
+          image: primaryRecordsImage(sessionItem.resources),
+          to: collection?.publicRoute || '/records',
+          action: collection?.name || 'Ver sesiones',
+        };
+      })(),
+    ].filter((card): card is CatalogRecoveryCard => Boolean(card));
+  }, [recordsFeedQuery.data]);
   const isFan = useMemo(() => {
     const roles = session?.roles ?? [];
     return roles.some((role) => {
@@ -197,21 +225,16 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     queryFn: Fans.listArtists,
   });
   const artists = useMemo(() => artistsQuery.data ?? [], [artistsQuery.data]);
-  const genreOptions = useMemo(() => {
-    const set = new Set<string>();
-    artists.forEach((a) => {
-      const raw = a.apGenres ?? '';
-      raw.split(',').forEach((g) => {
-        const trimmed = g.trim();
-        if (trimmed) set.add(trimmed);
-      });
-    });
-    return Array.from(set).sort();
-  }, [artists]);
+  const genreOptions = useMemo<CatalogItem[]>(
+    () => (genresCatalogQuery.data?.items ?? [])
+      .filter((genre) => genre.active && genre.workflowState === 'published')
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name)),
+    [genresCatalogQuery.data?.items],
+  );
   const filteredGenreOptions = useMemo(() => {
     if (!genreSearch.trim()) return genreOptions;
     const term = genreSearch.trim().toLowerCase();
-    return genreOptions.filter((g) => g.toLowerCase().includes(term));
+    return genreOptions.filter((genre) => genre.name.toLowerCase().includes(term));
   }, [genreOptions, genreSearch]);
   const visibleGenreOptions = useMemo(() => {
     if (showAllGenres) return filteredGenreOptions;
@@ -219,8 +242,14 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   }, [filteredGenreOptions, showAllGenres]);
   const filteredArtists = useMemo(() => {
     if (!genreFilter) return artists;
-    return artists.filter((a) => (a.apGenres ?? '').toLowerCase().includes(genreFilter.toLowerCase()));
+    return artists.filter((artist) => artist.apGenreIds.includes(genreFilter));
   }, [artists, genreFilter]);
+  const selectedGenreFilterName = genreOptions.find((genre) => genre.id === genreFilter)?.name;
+
+  useEffect(() => {
+    if (!genreFilter || !genresCatalogQuery.isSuccess) return;
+    if (!genreOptions.some((genre) => genre.id === genreFilter)) setGenreFilter('');
+  }, [genreFilter, genreOptions, genresCatalogQuery.isSuccess]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -273,7 +302,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     apuYoutubeUrl: '',
     apuWebsiteUrl: '',
     apuFeaturedVideoUrl: '',
-    apuGenres: '',
+    apuGenreIds: [],
     apuHighlights: '',
   });
   const [heroImageFileName, setHeroImageFileName] = useState<string>('');
@@ -305,7 +334,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         apuYoutubeUrl: dto.apYoutubeUrl ?? '',
         apuWebsiteUrl: dto.apWebsiteUrl ?? '',
         apuFeaturedVideoUrl: dto.apFeaturedVideoUrl ?? '',
-        apuGenres: dto.apGenres ?? '',
+        apuGenreIds: dto.apGenreIds ?? [],
         apuHighlights: dto.apHighlights ?? '',
       });
       setHeroImageFileName(dto.apHeroImageUrl ? 'Imagen existente' : '');
@@ -343,14 +372,14 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const enableFanRoleMutation = useMutation({
     mutationFn: async () => {
       if (!session?.partyId) throw new Error('No encontramos tu cuenta para activar el rol Fan.');
-      await Parties.addRole(session.partyId, 'Fan');
-      const nextRoles = Array.from(new Set([...(session.roles ?? []), 'Fan']));
-      login({ ...session, roles: nextRoles });
-      await qc.invalidateQueries({ queryKey: ['fan-profile', viewerId] });
-      await qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
+      await Fans.requestMyFanRole({
+        reason: 'Solicitud del titular para acceder a la experiencia Fan.',
+        sourcePlatform: 'web',
+        correlationId: `web-fan-request-${session.partyId}-${Date.now()}`,
+      });
     },
     onSuccess: () => {
-      setFanRoleToast('Rol Fan activado. Refrescamos tu feed.');
+      setFanRoleToast('Solicitud enviada a revisión. El acceso se activará únicamente después de la aprobación.');
     },
   });
 
@@ -581,6 +610,14 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
   const handleSaveArtistProfile = () => {
     if (!session?.partyId) return;
+    if (!genresCatalogQuery.isSuccess) {
+      setArtistToast('Espera a que el catálogo de géneros esté disponible antes de guardar.');
+      return;
+    }
+    if (unavailableArtistGenreIds.length > 0) {
+      setArtistToast('Sustituye los géneros inactivos o reemplazados antes de guardar.');
+      return;
+    }
     const slugClean = slugify(artistDraft.apuSlug ?? '');
     const payload: ArtistProfileUpsert = {
       apuArtistId: session.partyId,
@@ -595,7 +632,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       apuYoutubeUrl: normalizeField(artistDraft.apuYoutubeUrl),
       apuWebsiteUrl: normalizeField(artistDraft.apuWebsiteUrl),
       apuFeaturedVideoUrl: normalizeField(artistDraft.apuFeaturedVideoUrl),
-      apuGenres: normalizeField(artistDraft.apuGenres),
+      apuGenreIds: artistDraft.apuGenreIds,
       apuHighlights: normalizeField(artistDraft.apuHighlights),
     };
     updateArtistProfileMutation.mutate(payload);
@@ -694,8 +731,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const showHubDataAlert = isHomeManagerView
     ? hasArtistCatalogError
     : !showCatalogFallback && hasPersonalizationError;
+  const unavailableArtistGenreIds = artistDraft.apuGenreIds.filter(
+    (genreId) => !genreOptions.some((genre) => genre.id === genreId),
+  );
   const emptyArtistMessage = genreFilter
-    ? `No encontramos artistas en "${genreFilter}". Prueba otro genero o limpia el filtro.`
+    ? `No encontramos artistas en "${selectedGenreFilterName ?? 'el género seleccionado'}". Prueba otro género o limpia el filtro.`
     : 'Pronto encontrarás artistas disponibles para seguir.';
 
   return (
@@ -1307,11 +1347,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 onClick={() => enableFanRoleMutation.mutate()}
                 disabled={enableFanRoleMutation.isPending}
               >
-                {enableFanRoleMutation.isPending ? 'Activando…' : 'Convertirme en fan'}
+                {enableFanRoleMutation.isPending ? 'Enviando…' : 'Solicitar rol Fan'}
               </Button>
             }
           >
-            Activa tu rol Fan para ver el feed y editar tu perfil. Lo aplicamos sólo a tu cuenta.
+            Solicita el rol Fan para ver el feed y editar tu perfil. Otra persona autorizada debe aprobar el cambio.
             {enableFanRoleMutation.isError && (
               <Typography variant="body2" color="error">
                 {enableFanRoleMutation.error instanceof Error
@@ -1326,6 +1366,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           <FanProfileEditor
             avatarInputRef={avatarInputRef}
             displayNameFallback={session?.displayName}
+            genreCatalogError={genresCatalogQuery.isError}
+            genreCatalogReady={genresCatalogQuery.isSuccess}
+            genreOptions={genreOptions}
             profileDraft={profileDraft}
             saving={updateProfileMutation.isPending}
             setProfileDraft={setProfileDraft}
@@ -1386,7 +1429,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     <Button
                       variant="contained"
                       onClick={handleSaveArtistProfile}
-                      disabled={updateArtistProfileMutation.isPending || !session?.partyId}
+                      disabled={updateArtistProfileMutation.isPending || !session?.partyId || !genresCatalogQuery.isSuccess || unavailableArtistGenreIds.length > 0}
                     >
                       {updateArtistProfileMutation.isPending ? 'Guardando…' : 'Actualizar perfil de artista'}
                     </Button>
@@ -1599,10 +1642,24 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       />
                     </Stack>
                     <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                      <TextField
-                        label="Géneros (separados por coma)"
-                        value={artistDraft.apuGenres ?? ''}
-                        onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuGenres: event.target.value }))}
+                      <Autocomplete
+                        multiple
+                        disabled={!genresCatalogQuery.isSuccess}
+                        options={genreOptions}
+                        value={genreOptions.filter((genre) => artistDraft.apuGenreIds.includes(genre.id))}
+                        getOptionLabel={(genre) => genre.name}
+                        isOptionEqualToValue={(option, value) => option.id === value.id}
+                        onChange={(_event, selected) => setArtistDraft((prev) => ({
+                          ...prev,
+                          apuGenreIds: selected.map((genre) => genre.id),
+                        }))}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Géneros"
+                            helperText="Selecciona valores del catálogo publicado."
+                          />
+                        )}
                         fullWidth
                       />
                       <TextField
@@ -1612,12 +1669,22 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                         fullWidth
                       />
                     </Stack>
+                    {genresCatalogQuery.isError && (
+                      <Alert severity="error">
+                        No se pudo cargar el catálogo de géneros. Intenta nuevamente antes de guardar.
+                      </Alert>
+                    )}
+                    {unavailableArtistGenreIds.length > 0 && (
+                      <Alert severity="warning">
+                        El perfil contiene géneros inactivos o reemplazados. Selecciona valores vigentes antes de guardar.
+                      </Alert>
+                    )}
                     {isHomeManagerView && (
                       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
                         <Button
                           variant="contained"
                           onClick={handleSaveArtistProfile}
-                          disabled={updateArtistProfileMutation.isPending || !session?.partyId}
+                          disabled={updateArtistProfileMutation.isPending || !session?.partyId || !genresCatalogQuery.isSuccess || unavailableArtistGenreIds.length > 0}
                         >
                           {updateArtistProfileMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
                         </Button>
@@ -1663,8 +1730,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     : 'Estamos renovando el catálogo del hub. Mientras tanto, aquí tienes tres rutas útiles para seguir descubriendo TDF.'}
                 </Typography>
               </Stack>
-              <Grid container spacing={2}>
-                {FAN_HUB_RECOVERY_CARDS.map((card) => (
+              {fanHubRecoveryCards.length > 0 ? (
+                <Grid container spacing={2}>
+                {fanHubRecoveryCards.map((card) => (
                   <Grid item xs={12} md={4} key={card.title}>
                     <Card
                       variant="outlined"
@@ -1692,7 +1760,14 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     </Card>
                   </Grid>
                 ))}
-              </Grid>
+                </Grid>
+              ) : (
+                <Alert severity={recordsFeedQuery.isError ? 'warning' : 'info'}>
+                  {recordsFeedQuery.isError
+                    ? 'El catálogo editorial tampoco está disponible. Conservamos tu sesión y puedes reintentar sin perder cambios.'
+                    : 'Cargando el catálogo editorial publicado…'}
+                </Alert>
+              )}
             </Stack>
           </Card>
         )}
@@ -1739,13 +1814,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             </Stack>
             <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
               <Chip label="Todos los géneros" onClick={() => setGenreFilter('')} color={genreFilter ? 'default' : 'primary'} />
-              {visibleGenreOptions.map((g) => (
+              {visibleGenreOptions.map((genre) => (
                 <Chip
-                  key={g}
-                  label={g}
-                  onClick={() => setGenreFilter(g)}
-                  color={genreFilter === g ? 'primary' : 'default'}
-                  variant={genreFilter === g ? 'filled' : 'outlined'}
+                  key={genre.id}
+                  label={genre.name}
+                  onClick={() => setGenreFilter(genre.id)}
+                  color={genreFilter === genre.id ? 'primary' : 'default'}
+                  variant={genreFilter === genre.id ? 'filled' : 'outlined'}
                 />
               ))}
             </Stack>

@@ -1,6 +1,4 @@
 import {
-  defaultMinutesForService,
-  describeServiceDefaults,
   getBookingCalendarStatusState,
   getBookingConflictAlertText,
   getBookingCustomerFieldState,
@@ -8,34 +6,10 @@ import {
   getBookingOptionalDetailsState,
   getBookingRoomsFieldState,
   getBookingServiceEntryGateState,
-  getBookingServiceFallbackEntryState,
   getBookingServiceFieldState,
-  getBookingServiceInputVisibilityState,
-  requiresEngineerForService,
-  shouldShowQuickBookingTemplate,
 } from './bookingsPageLogic';
 
 describe('bookingsPageLogic', () => {
-  it('keeps the service prompt generic until a service is chosen', () => {
-    expect(describeServiceDefaults('')).toBe('Elige el tipo de servicio asociado a la sesión.');
-  });
-
-  it('describes vocal recording defaults with room, duration, and engineer guidance', () => {
-    expect(defaultMinutesForService('Vocal recording')).toBe(120);
-    expect(requiresEngineerForService('Vocal recording')).toBe(true);
-    expect(describeServiceDefaults('Vocal recording')).toBe(
-      'Salas sugeridas: Vocal Booth + Control Room · Duración sugerida: 120 min · Se sugerirá un ingeniero',
-    );
-  });
-
-  it('describes rehearsals without adding engineer guidance', () => {
-    expect(defaultMinutesForService('Band rehearsal')).toBe(90);
-    expect(requiresEngineerForService('Band rehearsal')).toBe(false);
-    expect(describeServiceDefaults('Band rehearsal')).toBe(
-      'Salas sugeridas: Live Room · Duración sugerida: 90 min',
-    );
-  });
-
   it('uses first-contact copy when the customer catalog is still empty', () => {
     expect(getBookingCustomerFieldState({
       customerCount: 0,
@@ -96,143 +70,29 @@ describe('bookingsPageLogic', () => {
     });
   });
 
-  it('keeps quick booking templates as a fallback instead of duplicating the service catalog', () => {
-    expect(shouldShowQuickBookingTemplate({
-      hasServiceCatalog: false,
-      mode: 'create',
-      serviceCatalogReady: true,
-      serviceLocked: false,
-    })).toBe(true);
-    expect(shouldShowQuickBookingTemplate({
-      hasServiceCatalog: true,
-      mode: 'create',
-      serviceCatalogReady: true,
-      serviceLocked: false,
-    })).toBe(false);
-    expect(shouldShowQuickBookingTemplate({
-      hasServiceCatalog: false,
-      mode: 'create',
-      serviceCatalogReady: false,
-      serviceLocked: false,
-    })).toBe(false);
-    expect(shouldShowQuickBookingTemplate({
-      hasServiceCatalog: false,
-      mode: 'edit',
-      serviceCatalogReady: true,
-      serviceLocked: false,
-    })).toBe(false);
-    expect(shouldShowQuickBookingTemplate({
-      hasServiceCatalog: false,
-      mode: 'create',
-      serviceCatalogReady: true,
-      serviceLocked: true,
-    })).toBe(false);
-  });
-
-  it('switches the service field to manual entry when the catalog fallback is active', () => {
+  it('keeps service entry canonical when the published catalog is empty', () => {
     expect(getBookingServiceFieldState({
       hasServiceCatalog: false,
-      mode: 'create',
       serviceCatalogReady: true,
       serviceLocked: false,
     })).toEqual({
-      helperText: 'Todavía no hay catálogo de servicios. Usa una plantilla de respaldo o escribe el servicio manualmente.',
-      mode: 'manual',
+      helperText: 'No hay servicios publicados. Publica una oferta desde Catálogos antes de guardar una sesión.',
+      mode: 'catalog',
     });
 
     expect(getBookingServiceFieldState({
       hasServiceCatalog: false,
-      mode: 'edit',
       serviceCatalogReady: true,
       serviceLocked: false,
     })).toEqual({
-      helperText: 'Todavía no hay catálogo de servicios. Escribe el servicio manualmente para actualizar la sesión.',
-      mode: 'manual',
-    });
-
-    expect(getBookingServiceFieldState({
-      hasServiceCatalog: false,
-      manualEntryRequested: true,
-      mode: 'create',
-      serviceCatalogReady: true,
-      serviceLocked: false,
-    })).toEqual({
-      helperText: 'Escribe el servicio manualmente. Si prefieres una opción común, vuelve a plantillas.',
-      mode: 'manual',
-    });
-  });
-
-  it('keeps the no-catalog fallback focused on one service-entry path at a time', () => {
-    const manualOnlyState = getBookingServiceFallbackEntryState({
-      fallbackTemplatesActive: false,
-      manualEntryRequested: false,
-    });
-    expect(manualOnlyState).toEqual({
-      showManualEntryField: true,
-      showManualEntryToggle: false,
-      showTemplateField: false,
-      templateHelperText: '',
-    });
-    expect(getBookingServiceInputVisibilityState({
-      serviceFallbackEntryState: manualOnlyState,
-      serviceFieldMode: 'manual',
-    })).toEqual({
-      showCatalogSelect: false,
-      showManualTextField: true,
-    });
-
-    const templateOnlyState = getBookingServiceFallbackEntryState({
-      fallbackTemplatesActive: true,
-      manualEntryRequested: false,
-    });
-    expect(templateOnlyState).toEqual({
-      manualEntryToggleLabel: 'Escribir servicio manualmente',
-      showManualEntryField: false,
-      showManualEntryToggle: true,
-      showTemplateField: true,
-      templatePlaceholderLabel: 'Elige una plantilla',
-      templateHelperText: 'Usa una plantilla para precargar servicio, salas y notas. Si no aplica, abre la entrada manual.',
-    });
-    expect(getBookingServiceInputVisibilityState({
-      serviceFallbackEntryState: templateOnlyState,
-      serviceFieldMode: 'manual',
-    })).toEqual({
-      showCatalogSelect: false,
-      showManualTextField: false,
-    });
-
-    const manualFallbackState = getBookingServiceFallbackEntryState({
-      fallbackTemplatesActive: true,
-      manualEntryRequested: true,
-    });
-    expect(manualFallbackState).toEqual({
-      showManualEntryField: true,
-      showManualEntryToggle: false,
-      showTemplateField: false,
-      templateReturnActionLabel: 'Volver a plantillas',
-      templateHelperText: '',
-    });
-    expect(getBookingServiceInputVisibilityState({
-      serviceFallbackEntryState: manualFallbackState,
-      serviceFieldMode: 'manual',
-    })).toEqual({
-      showCatalogSelect: false,
-      showManualTextField: true,
-    });
-
-    expect(getBookingServiceInputVisibilityState({
-      serviceFallbackEntryState: manualOnlyState,
-      serviceFieldMode: 'catalog',
-    })).toEqual({
-      showCatalogSelect: true,
-      showManualTextField: false,
+      helperText: 'No hay servicios publicados. Publica una oferta desde Catálogos antes de guardar una sesión.',
+      mode: 'catalog',
     });
   });
 
   it('keeps the catalog selector once services are available or still loading', () => {
     expect(getBookingServiceFieldState({
       hasServiceCatalog: true,
-      mode: 'create',
       serviceCatalogReady: true,
       serviceLocked: false,
     })).toEqual({
@@ -242,11 +102,10 @@ describe('bookingsPageLogic', () => {
 
     expect(getBookingServiceFieldState({
       hasServiceCatalog: false,
-      mode: 'create',
       serviceCatalogReady: false,
       serviceLocked: false,
     })).toEqual({
-      helperText: '',
+      helperText: 'Cargando catálogo de servicios…',
       mode: 'catalog',
     });
   });
@@ -255,9 +114,9 @@ describe('bookingsPageLogic', () => {
     expect(getBookingServiceEntryGateState({
       serviceCatalogReady: false,
       serviceLocked: false,
-      serviceType: '',
+      serviceOfferingId: '',
     })).toEqual({
-      helperText: 'Cargando catálogo de servicios… En cuanto termine esta primera carga podrás elegir una plantilla o seleccionar el servicio.',
+      helperText: 'Cargando catálogo de servicios… En cuanto termine esta primera carga podrás seleccionar el servicio.',
       showDependentFields: false,
       showServiceField: false,
     });
@@ -265,7 +124,7 @@ describe('bookingsPageLogic', () => {
     expect(getBookingServiceEntryGateState({
       serviceCatalogReady: true,
       serviceLocked: false,
-      serviceType: '',
+      serviceOfferingId: '',
     })).toEqual({
       helperText: '',
       showDependentFields: true,
@@ -275,7 +134,7 @@ describe('bookingsPageLogic', () => {
     expect(getBookingServiceEntryGateState({
       serviceCatalogReady: false,
       serviceLocked: false,
-      serviceType: 'Mixing',
+      serviceOfferingId: '11111111-1111-4111-8111-111111111111',
     })).toEqual({
       helperText: '',
       showDependentFields: true,
@@ -285,7 +144,7 @@ describe('bookingsPageLogic', () => {
     expect(getBookingServiceEntryGateState({
       serviceCatalogReady: false,
       serviceLocked: true,
-      serviceType: '',
+      serviceOfferingId: '',
     })).toEqual({
       helperText: '',
       showDependentFields: true,
@@ -297,7 +156,8 @@ describe('bookingsPageLogic', () => {
     expect(getBookingEngineerFieldState({
       engineerCount: 2,
       hasAssignedEngineer: false,
-      serviceType: '',
+      hasSelectedService: false,
+      requiresEngineer: false,
     })).toEqual({
       helperText: 'Selecciona el servicio primero para decidir si hace falta un ingeniero.',
       label: 'Ingeniero',
@@ -307,7 +167,8 @@ describe('bookingsPageLogic', () => {
     expect(getBookingEngineerFieldState({
       engineerCount: 2,
       hasAssignedEngineer: true,
-      serviceType: '',
+      hasSelectedService: false,
+      requiresEngineer: false,
     })).toEqual({
       helperText: 'Opcional.',
       label: 'Ingeniero',
@@ -319,7 +180,8 @@ describe('bookingsPageLogic', () => {
     expect(getBookingEngineerFieldState({
       engineerCount: 2,
       hasAssignedEngineer: false,
-      serviceType: 'Mixing',
+      hasSelectedService: true,
+      requiresEngineer: true,
     })).toEqual({
       helperText: 'Recomendado para recording/mixing/mastering.',
       label: 'Ingeniero',
@@ -329,7 +191,8 @@ describe('bookingsPageLogic', () => {
     expect(getBookingEngineerFieldState({
       engineerCount: 2,
       hasAssignedEngineer: false,
-      serviceType: 'Band rehearsal',
+      hasSelectedService: true,
+      requiresEngineer: false,
     })).toEqual({
       helperText: 'Opcional.',
       label: 'Ingeniero',
@@ -341,7 +204,8 @@ describe('bookingsPageLogic', () => {
     expect(getBookingEngineerFieldState({
       engineerCount: 0,
       hasAssignedEngineer: false,
-      serviceType: 'Band rehearsal',
+      hasSelectedService: true,
+      requiresEngineer: false,
     })).toEqual({
       helperText: '',
       label: 'Ingeniero',
@@ -351,7 +215,8 @@ describe('bookingsPageLogic', () => {
     expect(getBookingEngineerFieldState({
       engineerCount: 0,
       hasAssignedEngineer: false,
-      serviceType: 'Mixing',
+      hasSelectedService: true,
+      requiresEngineer: true,
     })).toEqual({
       helperText: 'Todavía no hay ingenieros en el catálogo de contactos. Continúa sin asignar uno o agrégalo después.',
       label: 'Ingeniero',
@@ -361,7 +226,8 @@ describe('bookingsPageLogic', () => {
     expect(getBookingEngineerFieldState({
       engineerCount: 0,
       hasAssignedEngineer: true,
-      serviceType: 'Mixing',
+      hasSelectedService: true,
+      requiresEngineer: true,
     })).toEqual({
       helperText: 'No hay ingenieros en el catálogo de contactos. Conserva el nombre actual o actualiza contactos para volver a seleccionarlo.',
       label: 'Ingeniero',
@@ -374,7 +240,7 @@ describe('bookingsPageLogic', () => {
       hasAssignedRooms: false,
       roomCatalogLoading: true,
       roomCount: 0,
-      serviceType: '',
+      hasSelectedService: false,
     })).toEqual({
       helperText: 'Cargando salas disponibles… En cuanto termine esta primera carga podrás asignarlas aquí.',
       showField: false,
@@ -384,7 +250,7 @@ describe('bookingsPageLogic', () => {
       hasAssignedRooms: false,
       roomCatalogLoading: false,
       roomCount: 0,
-      serviceType: '',
+      hasSelectedService: false,
     })).toEqual({
       helperText: 'Todavía no hay salas registradas. Crea la primera en Salas y recursos para poder guardar sesiones.',
       setupActionLabel: 'Abrir salas y recursos',
@@ -395,7 +261,7 @@ describe('bookingsPageLogic', () => {
       hasAssignedRooms: false,
       roomCatalogLoading: false,
       roomCount: 2,
-      serviceType: '',
+      hasSelectedService: false,
     })).toEqual({
       helperText: 'Selecciona el servicio primero para sugerir salas y ajustar la combinación si hace falta.',
       showField: false,
@@ -405,7 +271,7 @@ describe('bookingsPageLogic', () => {
       hasAssignedRooms: true,
       roomCatalogLoading: false,
       roomCount: 2,
-      serviceType: '',
+      hasSelectedService: false,
     })).toEqual({
       helperText: 'Ajusta las salas solo si esta sesión necesita otra combinación.',
       showField: true,
@@ -415,7 +281,7 @@ describe('bookingsPageLogic', () => {
       hasAssignedRooms: false,
       roomCatalogLoading: false,
       roomCount: 2,
-      serviceType: 'Recording',
+      hasSelectedService: true,
     })).toEqual({
       helperText: 'Se precargan según el tipo de servicio.',
       showField: true,

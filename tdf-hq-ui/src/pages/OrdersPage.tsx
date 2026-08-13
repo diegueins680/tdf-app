@@ -876,7 +876,6 @@ interface OrderEditDialogProps {
 
 const buildOrderEditFormState = (booking: BookingDTO | null) => ({
   title: booking?.title ?? '',
-  serviceType: booking?.serviceType ?? '',
   status: normalizeStatusValue(booking?.status),
   notes: booking?.notes ?? '',
 });
@@ -886,7 +885,6 @@ function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessag
   const [form, setForm] = useState(() => buildOrderEditFormState(null));
   const hasChanges =
     form.title !== initialForm.title
-    || form.serviceType !== initialForm.serviceType
     || form.status !== initialForm.status
     || form.notes !== initialForm.notes;
 
@@ -899,7 +897,7 @@ function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessag
     return null;
   }
 
-  const handleFieldChange = (field: 'title' | 'serviceType' | 'notes') =>
+  const handleFieldChange = (field: 'title' | 'notes') =>
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       setForm((prev) => ({ ...prev, [field]: event.target.value }));
     };
@@ -913,7 +911,6 @@ function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessag
     if (!hasChanges) return;
     const payload: BookingUpdatePayload = {
       ubTitle: form.title,
-      ubServiceType: form.serviceType,
       ubStatus: form.status,
       ubNotes: form.notes,
     };
@@ -943,9 +940,9 @@ function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessag
             />
             <TextField
               label="Servicio"
-              value={form.serviceType}
-              onChange={handleFieldChange('serviceType')}
-              disabled={saving}
+              value={booking.serviceType ?? '—'}
+              helperText="El servicio se cambia desde Agenda usando una oferta publicada."
+              disabled
             />
             <FormControl fullWidth disabled={saving}>
               <InputLabel id="booking-status-label">Estado</InputLabel>

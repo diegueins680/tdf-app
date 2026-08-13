@@ -33,8 +33,8 @@ describe('feedback api', () => {
     await submitFeedback({
       title: 'No puedo enviar feedback',
       description: 'El formulario devuelve un error de autenticación.',
-      category: 'bug',
-      severity: 'P2',
+      categoryId: '11111111-1111-1111-1111-111111111111',
+      severityId: '22222222-2222-2222-2222-222222222222',
       consent: true,
     });
 
@@ -50,6 +50,10 @@ describe('feedback api', () => {
     const form = request?.body as FormData;
     expect(form.get('title')).toBe('No puedo enviar feedback');
     expect(form.get('description')).toBe('El formulario devuelve un error de autenticación.');
+    expect(form.get('categoryId')).toBe('11111111-1111-1111-1111-111111111111');
+    expect(form.get('severityId')).toBe('22222222-2222-2222-2222-222222222222');
+    expect(form.get('category')).toBeNull();
+    expect(form.get('severity')).toBeNull();
     expect(form.get('consent')).toBe('true');
   });
 
@@ -60,6 +64,8 @@ describe('feedback api', () => {
     await submitFeedback({
       title: 'Idea',
       description: 'Agregar filtros.',
+      categoryId: '11111111-1111-1111-1111-111111111111',
+      severityId: '22222222-2222-2222-2222-222222222222',
       consent: true,
     });
 

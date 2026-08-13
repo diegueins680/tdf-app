@@ -43,7 +43,7 @@ const pt = {
   preferences: {
     title: 'Idioma e região', subtitle: 'Escolha como idioma, dinheiro, datas e horários são exibidos.',
     language: 'Idioma', currency: 'Moeda', timezone: 'Fuso horário', country: 'Código do país',
-    countryHint: 'Código ISO opcional de duas letras, por exemplo BR ou PT.',
+    countryHint: 'Selecione um país do catálogo oficial ou deixe o campo vazio.',
   },
   system: { title: 'Status do sistema', subtitle: 'Versão, integridade e metadados do backend.', application: 'Aplicação', version: 'Versão', status: 'Status', built: 'Compilado', codebase: 'Código-base' },
 } as const;

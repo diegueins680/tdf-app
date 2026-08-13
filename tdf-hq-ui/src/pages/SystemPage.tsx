@@ -14,68 +14,45 @@ import {
   Typography,
 } from '@mui/material';
 import { Meta } from '../api/meta';
+import { Catalogs } from '../api/catalogs';
 import PageShell from '../components/PageShell';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useThemeMode } from '../theme/AppThemeProvider';
 import { formatDateTime } from '../utils/formatters';
 
-const COMMON_TIMEZONES = [
-  'UTC',
-  'America/Los_Angeles',
-  'America/Denver',
-  'America/Chicago',
-  'America/New_York',
-  'America/Toronto',
-  'America/Mexico_City',
-  'America/Bogota',
-  'America/Lima',
-  'America/Sao_Paulo',
-  'Europe/London',
-  'Europe/Paris',
-  'Europe/Berlin',
-  'Europe/Madrid',
-  'Africa/Johannesburg',
-  'Asia/Dubai',
-  'Asia/Kolkata',
-  'Asia/Singapore',
-  'Asia/Tokyo',
-  'Australia/Sydney',
-];
-
-const LANGUAGE_LABELS: Record<string, string> = {
-  en: 'English',
-  es: 'Español',
-  fr: 'Français',
-  de: 'Deutsch',
-  pt: 'Português',
-};
-
 function availableTimezones(): string[] {
   const intl = Intl as typeof Intl & { supportedValuesOf?: (key: 'timeZone') => string[] };
   try {
-    return intl.supportedValuesOf?.('timeZone') ?? COMMON_TIMEZONES;
+    return intl.supportedValuesOf?.('timeZone') ?? [];
   } catch {
-    return COMMON_TIMEZONES;
+    return [];
   }
 }
 
 export default function SystemPage() {
   const { t } = useTranslation();
   const preferences = useLocalePreferences();
-  const { preference: themePreference, setMode: setThemeMode } = useThemeMode();
-  const [locale, setLocale] = useState(preferences.locale);
-  const [currency, setCurrency] = useState(preferences.currency);
+  const {
+    preferenceId: themePreferenceId,
+    options: themeOptions,
+    catalogSource: themeCatalogSource,
+    catalogLoading: themeCatalogLoading,
+    catalogError: themeCatalogError,
+    setModeById: setThemeModeById,
+  } = useThemeMode();
+  const [localeId, setLocaleId] = useState(preferences.localeId);
+  const [currencyId, setCurrencyId] = useState(preferences.currencyId);
   const [timezone, setTimezone] = useState(preferences.timezone);
-  const [countryCode, setCountryCode] = useState(preferences.countryCode ?? '');
+  const [countryId, setCountryId] = useState(preferences.countryId ?? '');
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    setLocale(preferences.locale);
-    setCurrency(preferences.currency);
+    setLocaleId(preferences.localeId);
+    setCurrencyId(preferences.currencyId);
     setTimezone(preferences.timezone);
-    setCountryCode(preferences.countryCode ?? '');
-  }, [preferences.locale, preferences.currency, preferences.timezone, preferences.countryCode]);
+    setCountryId(preferences.countryId ?? '');
+  }, [preferences.localeId, preferences.currencyId, preferences.timezone, preferences.countryId]);
 
   const { data: version, isLoading: versionLoading, error: versionError } = useQuery({
     queryKey: ['meta', 'version'], queryFn: Meta.version,
@@ -83,12 +60,41 @@ export default function SystemPage() {
   const { data: health, isLoading: healthLoading, error: healthError } = useQuery({
     queryKey: ['meta', 'health'], queryFn: Meta.health,
   });
-  const loading = versionLoading || healthLoading;
+  const regionalCatalogsQuery = useQuery({
+    queryKey: ['catalogs', 'regional-preferences', preferences.locale],
+    queryFn: () => Catalogs.listPublicBatch(
+      ['locales', 'currencies', 'countries'],
+      { locale: preferences.locale, page: 1, pageSize: 500 },
+    ),
+  });
+  const regionalCatalogs = useMemo(
+    () => regionalCatalogsQuery.data?.catalogs ?? [],
+    [regionalCatalogsQuery.data?.catalogs],
+  );
+  const localeOptions = useMemo(
+    () => regionalCatalogs.find((page) => page.catalog.code === 'locales')?.items ?? [],
+    [regionalCatalogs],
+  );
+  const currencyOptions = useMemo(
+    () => regionalCatalogs.find((page) => page.catalog.code === 'currencies')?.items ?? [],
+    [regionalCatalogs],
+  );
+  const countries = useMemo(
+    () => regionalCatalogs.find((page) => page.catalog.code === 'countries')?.items ?? [],
+    [regionalCatalogs],
+  );
+  useEffect(() => {
+    if (countryId || !preferences.countryCode) return;
+    const legacyMatch = countries.find((country) => country.code === preferences.countryCode);
+    if (legacyMatch) setCountryId(legacyMatch.id);
+  }, [countries, countryId, preferences.countryCode]);
+  const loading = versionLoading || healthLoading || regionalCatalogsQuery.isLoading;
   const errMsg = useMemo(() => {
     if (versionError instanceof Error) return versionError.message;
     if (healthError instanceof Error) return healthError.message;
+    if (regionalCatalogsQuery.error instanceof Error) return regionalCatalogsQuery.error.message;
     return null;
-  }, [versionError, healthError]);
+  }, [versionError, healthError, regionalCatalogsQuery.error]);
   const commitInfo = version?.commit ? version.commit.slice(0, 7) : null;
   const healthColor = (health?.status ?? '').toLowerCase() === 'ok' ? 'success' : 'warning';
   const timezones = [...new Set([timezone, preferences.timezone, 'UTC', ...availableTimezones()])];
@@ -97,12 +103,11 @@ export default function SystemPage() {
     setSaveError(null);
     setSaved(false);
     try {
-      const normalizedCountryCode = countryCode.trim().toUpperCase();
       await preferences.savePreferences({
-        locale,
-        currency,
+        localeId,
+        currencyId,
         timezone,
-        countryCode: normalizedCountryCode.length > 0 ? normalizedCountryCode : null,
+        countryId: countryId || null,
       });
       setSaved(true);
     } catch (error) {
@@ -121,38 +126,52 @@ export default function SystemPage() {
             </Stack>
             {saveError && <Alert severity="error">{saveError}</Alert>}
             {saved && <Alert severity="success">{t('common.saved')}</Alert>}
+            {themeCatalogSource === 'emergency' && !themeCatalogLoading && (
+              <Alert severity={themeCatalogError ? 'warning' : 'info'}>
+                No se pudo validar el catálogo de apariencia; se usan opciones de emergencia hasta la próxima sincronización.
+              </Alert>
+            )}
             <Stack direction={{ xs: 'column', md: 'row' }} gap={2}>
               <TextField
                 select
                 fullWidth
                 label="Apariencia"
-                value={themePreference}
-                onChange={(event) => setThemeMode(event.target.value as 'light' | 'dark' | 'system')}
+                value={themePreferenceId}
+                onChange={(event) => setThemeModeById(event.target.value)}
+                disabled={themeCatalogLoading && themeOptions.length === 0}
               >
-                <MenuItem value="system">Usar configuración del sistema</MenuItem>
-                <MenuItem value="light">Tema claro</MenuItem>
-                <MenuItem value="dark">Tema oscuro</MenuItem>
-              </TextField>
-              <TextField select fullWidth label={t('preferences.language')} value={locale} onChange={(event) => setLocale(event.target.value)}>
-                {preferences.supportedLocales.map((value) => (
-                  <MenuItem key={value} value={value}>{LANGUAGE_LABELS[value] ?? value}</MenuItem>
+                {themeOptions.map((option) => (
+                  <MenuItem key={option.id} value={option.id}>{option.label}</MenuItem>
                 ))}
               </TextField>
-              <TextField select fullWidth label={t('preferences.currency')} value={currency} onChange={(event) => setCurrency(event.target.value)}>
-                {preferences.supportedCurrencies.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+              <TextField select fullWidth label={t('preferences.language')} value={localeId} onChange={(event) => setLocaleId(event.target.value)}>
+                {localeOptions.map((option) => (
+                  <MenuItem key={option.id} value={option.id}>{option.name}</MenuItem>
+                ))}
+              </TextField>
+              <TextField select fullWidth label={t('preferences.currency')} value={currencyId} onChange={(event) => setCurrencyId(event.target.value)}>
+                {currencyOptions.map((option) => <MenuItem key={option.id} value={option.id}>{option.name} · {option.code}</MenuItem>)}
               </TextField>
               <TextField select fullWidth label={t('preferences.timezone')} value={timezone} onChange={(event) => setTimezone(event.target.value)}>
                 {timezones.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
               </TextField>
               <TextField
+                select
                 fullWidth
                 label={t('preferences.country')}
-                value={countryCode}
-                onChange={(event) => setCountryCode(event.target.value.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase())}
+                value={countryId}
+                onChange={(event) => setCountryId(event.target.value)}
                 helperText={t('preferences.countryHint')}
-              />
+              >
+                <MenuItem value="">—</MenuItem>
+                {countries.map((country) => (
+                  <MenuItem key={country.id} value={country.id}>
+                    {country.name} · {country.code}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Stack>
-            <Box><Button variant="contained" onClick={() => void save()} disabled={preferences.saving}>{preferences.saving ? t('common.saving') : t('common.save')}</Button></Box>
+            <Box><Button variant="contained" onClick={() => void save()} disabled={preferences.saving || !localeId || !currencyId || regionalCatalogsQuery.isError}>{preferences.saving ? t('common.saving') : t('common.save')}</Button></Box>
           </Stack>
         </Paper>
 

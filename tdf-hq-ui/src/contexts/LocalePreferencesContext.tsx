@@ -1,41 +1,32 @@
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import i18n, { LOCALE_STORAGE_KEY, normalizeLocale, SUPPORTED_LOCALES } from '../i18n';
+import { useQuery } from '@tanstack/react-query';
+import i18n, { LOCALE_STORAGE_KEY, normalizeLocale } from '../i18n';
 import { Preferences, type LocalePreferences, type LocalePreferencesUpdate } from '../api/preferences';
+import { Catalogs } from '../api/catalogs';
 import { useSession } from '../session/SessionContext';
 
 const STORAGE_KEY = 'tdf-hq-ui/locale-preferences';
-const DEFAULT_CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'BRL'];
-
-function envList(name: string, fallback: string[]): string[] {
-  const raw = (import.meta.env as Record<string, string | undefined>)[name];
-  const values = raw?.split(',').map((value) => value.trim()).filter(Boolean) ?? [];
-  return values.length > 0 ? [...new Set(values)] : fallback;
-}
 
 function browserTimezone(): string {
   try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return timezone.length > 0 ? timezone : 'UTC';
   } catch {
     return 'UTC';
   }
 }
 
 function defaults(): LocalePreferences {
-  const supportedLocales = envList('VITE_SUPPORTED_LOCALES', [...SUPPORTED_LOCALES])
-    .map((value) => normalizeLocale(value))
-    .filter((value): value is NonNullable<typeof value> => value !== null);
-  const supportedCurrencies = envList('VITE_SUPPORTED_CURRENCIES', DEFAULT_CURRENCIES)
-    .map((value) => value.toUpperCase());
-  const locale = normalizeLocale(i18n.language) ?? supportedLocales[0] ?? 'en';
-  const requestedCurrency = (import.meta.env.VITE_DEFAULT_CURRENCY ?? 'USD').toUpperCase();
+  const configuredTimezone = import.meta.env.VITE_DEFAULT_TIMEZONE?.trim();
   return {
-    locale,
-    currency: supportedCurrencies.includes(requestedCurrency) ? requestedCurrency : supportedCurrencies[0] ?? 'USD',
-    timezone: browserTimezone() || import.meta.env.VITE_DEFAULT_TIMEZONE || 'UTC',
+    localeId: '',
+    locale: normalizeLocale(i18n.language) ?? 'en',
+    currencyId: '',
+    currency: (import.meta.env.VITE_DEFAULT_CURRENCY ?? 'USD').toUpperCase(),
+    timezone: configuredTimezone && configuredTimezone.length > 0 ? configuredTimezone : browserTimezone(),
+    countryId: null,
     countryCode: null,
-    supportedLocales,
-    supportedCurrencies,
   };
 }
 
@@ -47,12 +38,14 @@ function readStoredPreferences(): LocalePreferences {
     if (!raw) return fallback;
     const stored = JSON.parse(raw) as Partial<LocalePreferences>;
     const locale = normalizeLocale(stored.locale) ?? fallback.locale;
-    const currency = typeof stored.currency === 'string' ? stored.currency.toUpperCase() : fallback.currency;
     return {
       ...fallback,
+      localeId: typeof stored.localeId === 'string' ? stored.localeId.trim() : '',
       locale,
-      currency: fallback.supportedCurrencies.includes(currency) ? currency : fallback.currency,
+      currencyId: typeof stored.currencyId === 'string' ? stored.currencyId.trim() : '',
+      currency: typeof stored.currency === 'string' ? stored.currency.toUpperCase() : fallback.currency,
       timezone: typeof stored.timezone === 'string' && stored.timezone.trim() ? stored.timezone : fallback.timezone,
+      countryId: typeof stored.countryId === 'string' && stored.countryId.trim() ? stored.countryId.trim() : null,
       countryCode: typeof stored.countryCode === 'string' ? stored.countryCode.toUpperCase() : null,
     };
   } catch {
@@ -61,23 +54,24 @@ function readStoredPreferences(): LocalePreferences {
 }
 
 function normalizePreferences(value: LocalePreferences, fallback: LocalePreferences): LocalePreferences {
-  const supportedLocales = value.supportedLocales
-    .map((entry) => normalizeLocale(entry))
-    .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
-  const supportedCurrencies = value.supportedCurrencies.map((entry) => entry.toUpperCase());
   const locale = normalizeLocale(value.locale) ?? normalizeLocale(fallback.locale) ?? 'en';
   const currency = value.currency.toUpperCase();
+  const countryId = value.countryId?.trim();
+  const countryCode = value.countryCode?.trim().toUpperCase();
   return {
-    locale: supportedLocales.includes(locale) ? locale : supportedLocales[0] ?? fallback.locale,
-    currency: supportedCurrencies.includes(currency) ? currency : supportedCurrencies[0] ?? fallback.currency,
+    localeId: value.localeId.trim(),
+    locale,
+    currencyId: value.currencyId.trim(),
+    currency,
     timezone: value.timezone.trim() || fallback.timezone,
-    countryCode: value.countryCode?.trim().toUpperCase() || null,
-    supportedLocales: supportedLocales.length > 0 ? supportedLocales : fallback.supportedLocales,
-    supportedCurrencies: supportedCurrencies.length > 0 ? supportedCurrencies : fallback.supportedCurrencies,
+    countryId: countryId && countryId.length > 0 ? countryId : null,
+    countryCode: countryCode && countryCode.length > 0 ? countryCode : null,
   };
 }
 
 export interface LocalePreferencesContextValue extends LocalePreferences {
+  supportedLocales: string[];
+  supportedCurrencies: string[];
   savePreferences: (input: LocalePreferencesUpdate) => Promise<void>;
   saving: boolean;
 }
@@ -88,6 +82,25 @@ export function LocalePreferencesProvider({ children }: { children: ReactNode })
   const { session } = useSession();
   const [preferences, setPreferences] = useState<LocalePreferences>(readStoredPreferences);
   const [saving, setSaving] = useState(false);
+  const regionalCatalogsQuery = useQuery({
+    queryKey: ['catalogs', 'locale-preferences', preferences.locale],
+    queryFn: () => Catalogs.listPublicBatch(
+      ['locales', 'currencies'],
+      { locale: preferences.locale, page: 1, pageSize: 500 },
+    ),
+  });
+  const localeCatalog = useMemo(
+    () => regionalCatalogsQuery.data?.catalogs.find((page) => page.catalog.code === 'locales'),
+    [regionalCatalogsQuery.data?.catalogs],
+  );
+  const currencyCatalog = useMemo(
+    () => regionalCatalogsQuery.data?.catalogs.find((page) => page.catalog.code === 'currencies'),
+    [regionalCatalogsQuery.data?.catalogs],
+  );
+  const localeOptions = useMemo(() => localeCatalog?.items ?? [], [localeCatalog]);
+  const currencyOptions = useMemo(() => currencyCatalog?.items ?? [], [currencyCatalog]);
+  const supportedLocales = useMemo(() => localeOptions.map((item) => item.code), [localeOptions]);
+  const supportedCurrencies = useMemo(() => currencyOptions.map((item) => item.code), [currencyOptions]);
 
   const apply = useCallback((next: LocalePreferences) => {
     const normalized = normalizePreferences(next, defaults());
@@ -98,6 +111,36 @@ export function LocalePreferencesProvider({ children }: { children: ReactNode })
     }
     void i18n.changeLanguage(normalized.locale);
   }, []);
+
+  useEffect(() => {
+    if (localeOptions.length === 0 || currencyOptions.length === 0) return;
+    const selectedLocale = localeOptions.find((item) => item.id === preferences.localeId)
+      ?? localeOptions.find((item) => item.code === preferences.locale)
+      ?? localeOptions.find((item) => item.id === localeCatalog?.defaults.find(
+        (entry) => entry.scopeKind === 'deployment' && entry.scopeId === 'default',
+      )?.entityId)
+      ?? localeOptions[0];
+    const selectedCurrency = currencyOptions.find((item) => item.id === preferences.currencyId)
+      ?? currencyOptions.find((item) => item.code === preferences.currency)
+      ?? currencyOptions.find((item) => item.id === currencyCatalog?.defaults.find(
+        (entry) => entry.scopeKind === 'deployment' && entry.scopeId === 'default',
+      )?.entityId)
+      ?? currencyOptions[0];
+    if (!selectedLocale || !selectedCurrency) return;
+    if (
+      selectedLocale.id === preferences.localeId
+      && selectedLocale.code === preferences.locale
+      && selectedCurrency.id === preferences.currencyId
+      && selectedCurrency.code === preferences.currency
+    ) return;
+    apply({
+      ...preferences,
+      localeId: selectedLocale.id,
+      locale: selectedLocale.code,
+      currencyId: selectedCurrency.id,
+      currency: selectedCurrency.code,
+    });
+  }, [apply, currencyCatalog, currencyOptions, localeCatalog, localeOptions, preferences]);
 
   useEffect(() => {
     if (!session) return;
@@ -117,7 +160,7 @@ export function LocalePreferencesProvider({ children }: { children: ReactNode })
     return () => {
       cancelled = true;
     };
-  }, [apply, session?.preferences, session?.username]);
+  }, [apply, session]);
 
   const savePreferences = useCallback(async (input: LocalePreferencesUpdate) => {
     setSaving(true);
@@ -125,14 +168,28 @@ export function LocalePreferencesProvider({ children }: { children: ReactNode })
       if (session) {
         apply(await Preferences.update(input));
       } else {
-        apply({ ...preferences, ...input });
+        const selectedLocale = localeOptions.find((item) => item.id === input.localeId);
+        const selectedCurrency = currencyOptions.find((item) => item.id === input.currencyId);
+        if (!selectedLocale || !selectedCurrency) {
+          throw new Error('Select active locale and currency catalog items.');
+        }
+        apply({
+          ...preferences,
+          ...input,
+          locale: selectedLocale.code,
+          currency: selectedCurrency.code,
+          countryCode: preferences.countryCode ?? null,
+        });
       }
     } finally {
       setSaving(false);
     }
-  }, [apply, preferences, session]);
+  }, [apply, currencyOptions, localeOptions, preferences, session]);
 
-  const value = useMemo(() => ({ ...preferences, savePreferences, saving }), [preferences, savePreferences, saving]);
+  const value = useMemo(
+    () => ({ ...preferences, supportedLocales, supportedCurrencies, savePreferences, saving }),
+    [preferences, savePreferences, saving, supportedCurrencies, supportedLocales],
+  );
   return <LocalePreferencesContext.Provider value={value}>{children}</LocalePreferencesContext.Provider>;
 }
 

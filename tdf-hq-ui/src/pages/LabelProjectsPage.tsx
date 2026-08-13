@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
@@ -16,9 +16,9 @@ import {
 import { alpha } from '@mui/material/styles';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import SaveIcon from '@mui/icons-material/Save';
 import SyncIcon from '@mui/icons-material/Sync';
-import { Cms, type CmsContentDTO } from '../api/cms';
+import { Label } from '../api/label';
+import type { LabelProjectNoteDTO } from '../api/types';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import PageShell from '../components/PageShell';
 
@@ -27,10 +27,9 @@ interface ProjectNote {
   text: string;
   done: boolean;
   createdAt: string;
+  version: number;
 }
 
-const slug = 'label-projects';
-const locale = 'es';
 const COMPLETED_PROJECT_NOTE_BACKGROUND_ALPHA: number = 8 / 100;
 
 function focusNextProjectNoteDeleteAction(currentTarget: HTMLElement) {
@@ -47,21 +46,13 @@ function focusNextProjectNoteDeleteAction(currentTarget: HTMLElement) {
   });
 }
 
-function parsePayload(content?: CmsContentDTO): ProjectNote[] {
-  if (!content) return [];
-  try {
-    const payload = content.ccdPayload;
-    if (payload && typeof payload === 'object' && Array.isArray((payload as { items?: unknown }).items)) {
-      const items = (payload as { items?: unknown }).items as ProjectNote[];
-      return items;
-    }
-    return [];
-  } catch {
-    return [];
-  }
-}
-
-const fingerprintNotes = (items: readonly ProjectNote[]) => JSON.stringify(items);
+const toProjectNote = (note: LabelProjectNoteDTO): ProjectNote => ({
+  id: note.lpnId,
+  text: note.lpnText,
+  done: note.lpnCompleted,
+  createdAt: note.lpnCreatedAt,
+  version: note.lpnVersion,
+});
 
 const formatCount = (count: number, singular: string, plural: string) =>
   `${count} ${count === 1 ? singular : plural}`;
@@ -84,7 +75,7 @@ function LiveReloadAction({ loading, onReload }: LiveReloadActionProps) {
       size="small"
       startIcon={<SyncIcon />}
     >
-      Cargar desde vivo
+      Actualizar
     </Button>
   );
 }
@@ -143,18 +134,13 @@ function NoteStats({ total, pendingCount, completedCount }: NoteStatsProps) {
   );
 }
 
-interface SaveStatusProps {
-  isError: boolean;
-  isSuccess: boolean;
-}
-
-function SaveStatus({ isError, isSuccess }: SaveStatusProps) {
+function SaveStatus({ isError, isSuccess }: { isError: boolean; isSuccess: boolean }) {
   if (isError) {
-    return <Alert severity="error">No se pudieron guardar las notas.</Alert>;
+    return <Alert severity="error">No se pudo guardar el cambio. Actualiza e inténtalo de nuevo.</Alert>;
   }
 
   if (isSuccess) {
-    return <Alert severity="success">Notas guardadas en el CMS.</Alert>;
+    return <Alert severity="success">Cambio guardado.</Alert>;
   }
 
   return null;
@@ -240,107 +226,51 @@ function ProjectNotesList({ notes, onToggle, onDelete }: ProjectNotesListProps) 
   );
 }
 
-interface SaveActionsProps {
-  saving: boolean;
-  onSave: () => void;
-}
-
-function SaveActions({ saving, onSave }: SaveActionsProps) {
-  return (
-    <Stack direction="row" justifyContent="flex-end">
-      <Button
-        disabled={saving}
-        tabIndex={0}
-        onClick={(event) => {
-          onSave();
-          event.currentTarget.focus();
-        }}
-        variant="contained"
-        startIcon={<SaveIcon />}
-      >
-        Guardar en CMS
-      </Button>
-    </Stack>
-  );
-}
-
 export default function LabelProjectsPage() {
   const qc = useQueryClient();
   const [input, setInput] = useState('');
-  const [notes, setNotes] = useState<ProjectNote[]>([]);
-  const hydratedNotesFingerprintRef = useRef<string | null>(null);
-
-  const liveQuery = useQuery({
-    queryKey: ['cms-public', slug, locale],
-    queryFn: () => Cms.getPublic(slug, locale),
-    retry: 1,
-  });
 
   const listQuery = useQuery({
-    queryKey: ['cms-content', slug, locale],
-    queryFn: () => Cms.list({ slug, locale }),
+    queryKey: ['label-project-notes'],
+    queryFn: Label.listProjectNotes,
   });
 
-  useEffect(() => {
-    const fromCms = parsePayload(listQuery.data?.[0]);
-    const nextNotes = fromCms.length ? fromCms : parsePayload(liveQuery.data);
-    const nextFingerprint = fingerprintNotes(nextNotes);
-
-    setNotes((currentNotes) => {
-      const currentFingerprint = fingerprintNotes(currentNotes);
-      const lastHydratedFingerprint = hydratedNotesFingerprintRef.current;
-
-      if (currentFingerprint === nextFingerprint) {
-        hydratedNotesFingerprintRef.current = nextFingerprint;
-        return currentNotes;
-      }
-      if (lastHydratedFingerprint === null || currentFingerprint === lastHydratedFingerprint) {
-        hydratedNotesFingerprintRef.current = nextFingerprint;
-        return nextNotes;
-      }
-      return currentNotes;
-    });
-  }, [listQuery.data, liveQuery.data]);
-
-  const saveMutation = useMutation({
-    mutationFn: (items: ProjectNote[]) =>
-      Cms.create({
-        cciSlug: slug,
-        cciLocale: locale,
-        cciTitle: 'Notas de proyectos del label',
-        cciStatus: 'published',
-        cciPayload: { items },
-      }),
+  const refresh = () => qc.invalidateQueries({ queryKey: ['label-project-notes'] });
+  const createMutation = useMutation({
+    mutationFn: Label.createProjectNote,
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['cms-content'] });
-      void qc.invalidateQueries({ queryKey: ['cms-public'] });
+      setInput('');
+      void refresh();
     },
   });
+  const updateMutation = useMutation({
+    mutationFn: (note: ProjectNote) =>
+      Label.updateProjectNote(note.id, {
+        lpnuCompleted: !note.done,
+        lpnuExpectedVersion: note.version,
+      }),
+    onSuccess: () => void refresh(),
+  });
+  const deleteMutation = useMutation({
+    mutationFn: Label.deactivateProjectNote,
+    onSuccess: () => void refresh(),
+  });
+
+  const notes = useMemo(() => (listQuery.data ?? []).map(toProjectNote), [listQuery.data]);
 
   const handleAdd = () => {
     const txt = input.trim();
     if (!txt) return;
-    const now = new Date().toISOString();
-    setNotes((prev) => [{ id: crypto.randomUUID(), text: txt, done: false, createdAt: now }, ...prev]);
-    setInput('');
+    createMutation.mutate(txt);
   };
 
   const handleToggle = (id: string) => {
-    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, done: !n.done } : n)));
+    const note = notes.find((candidate) => candidate.id === id);
+    if (note) updateMutation.mutate(note);
   };
 
   const handleDelete = (id: string) => {
-    setNotes((prev) => prev.filter((n) => n.id !== id));
-  };
-
-  const saveNotes = () => {
-    saveMutation.mutate(notes);
-  };
-
-  const handleReloadLive = () => {
-    const live = parsePayload(liveQuery.data);
-    hydratedNotesFingerprintRef.current = fingerprintNotes(live);
-    setNotes(live);
+    deleteMutation.mutate(id);
   };
 
   const pending = useMemo(() => notes.filter((n) => !n.done), [notes]);
@@ -349,20 +279,23 @@ export default function LabelProjectsPage() {
   return (
     <PageShell
       title="Proyectos del label"
-      subtitle="Guarda ideas, estado y pendientes de proyectos del label. Las notas se almacenan en el CMS para que el equipo las comparta."
-      actions={<LiveReloadAction loading={liveQuery.isLoading} onReload={handleReloadLive} />}
+      subtitle="Guarda ideas, estado y pendientes como registros operativos compartidos y recuperables."
+      actions={<LiveReloadAction loading={listQuery.isFetching} onReload={() => void listQuery.refetch()} />}
     >
       <Stack spacing={3}>
-        {(listQuery.isLoading || liveQuery.isLoading) && <LinearProgress />}
+        {(listQuery.isLoading || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending) && <LinearProgress />}
+        {listQuery.isError && <Alert severity="error">No se pudieron cargar las notas.</Alert>}
 
         <Card>
           <CardContent>
             <Stack spacing={2}>
               <NoteComposer value={input} onChange={setInput} onAdd={handleAdd} />
               <NoteStats total={notes.length} pendingCount={pending.length} completedCount={completed.length} />
-              <SaveStatus isError={saveMutation.isError} isSuccess={saveMutation.isSuccess} />
+              <SaveStatus
+                isError={createMutation.isError || updateMutation.isError || deleteMutation.isError}
+                isSuccess={createMutation.isSuccess || updateMutation.isSuccess || deleteMutation.isSuccess}
+              />
               <ProjectNotesList notes={notes} onToggle={handleToggle} onDelete={handleDelete} />
-              <SaveActions saving={saveMutation.isPending} onSave={saveNotes} />
             </Stack>
           </CardContent>
         </Card>

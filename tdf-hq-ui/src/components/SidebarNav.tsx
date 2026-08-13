@@ -215,6 +215,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Diagnósticos', path: '/admin/diagnosticos' },
       { label: 'Brain y RAG', path: '/configuracion/brain' },
       { label: 'Usuarios admin', path: '/configuracion/usuarios-admin' },
+      { label: 'Catálogos', path: '/configuracion/catalogos' },
       { label: 'Roles y permisos', path: '/configuracion/roles-permisos' },
       { label: 'Calendario Google', path: '/configuracion/integraciones/calendario' },
       { label: 'CMS', path: '/configuracion/cms' },

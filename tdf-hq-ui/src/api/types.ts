@@ -1,3 +1,5 @@
+import type { components } from './generated/types';
+
 export interface PartyDTO {
   partyId: number;
   legalName?: string | null;
@@ -296,6 +298,15 @@ export interface LabelTrackDTO {
   ltUpdatedAt: string;
 }
 
+export interface LabelProjectNoteDTO {
+  lpnId: string;
+  lpnText: string;
+  lpnCompleted: boolean;
+  lpnCreatedAt: string;
+  lpnUpdatedAt: string;
+  lpnVersion: number;
+}
+
 export interface AssetCheckoutDTO {
   checkoutId: string;
   assetId: string;
@@ -334,6 +345,7 @@ export interface BookingDTO {
   partyId?: number | null;
   engineerPartyId?: number | null;
   engineerName?: string | null;
+  serviceOfferingId?: string | null;
   serviceType?: string | null;
   serviceOrderId?: number | null;
   serviceOrderTitle?: string | null;
@@ -362,49 +374,8 @@ export interface HealthStatus {
   version?: string | null;
 }
 
-export type ServiceKind =
-  | 'Recording'
-  | 'Mixing'
-  | 'Mastering'
-  | 'Rehearsal'
-  | 'Classes'
-  | 'EventProduction';
-
-export type PricingModel = 'Hourly' | 'PerSong' | 'Package' | 'Quote' | 'Retainer';
-
-export interface ServiceCatalogDTO {
-  scId: number;
-  scName: string;
-  scKind: ServiceKind;
-  scPricingModel: PricingModel;
-  scRateCents?: number | null;
-  scCurrency: string;
-  scBillingUnit?: string | null;
-  scTaxBps?: number | null;
-  scActive: boolean;
-}
-
-export interface ServiceCatalogCreate {
-  sccName: string;
-  sccKind?: ServiceKind | null;
-  sccPricingModel?: PricingModel | null;
-  sccRateCents?: number | null;
-  sccCurrency?: string | null;
-  sccBillingUnit?: string | null;
-  sccTaxBps?: number | null;
-  sccActive?: boolean | null;
-}
-
-export interface ServiceCatalogUpdate {
-  scuName?: string;
-  scuKind?: ServiceKind | null;
-  scuPricingModel?: PricingModel | null;
-  scuRateCents?: number | null;
-  scuCurrency?: string | null;
-  scuBillingUnit?: string | null;
-  scuTaxBps?: number | null;
-  scuActive?: boolean | null;
-}
+export type ServiceCatalogDTO = components['schemas']['ServiceOffering'];
+export type ServiceDefaultResourceDTO = components['schemas']['ServiceDefaultResource'];
 
 export interface RoomDTO {
   roomId: string;
@@ -422,21 +393,55 @@ export interface RoomUpdate {
 }
 
 export interface PipelineCardDTO {
-  pcId: string;
-  pcTitle: string;
-  pcArtist?: string | null;
-  pcType: string;
-  pcStage: string;
-  pcSortOrder: number;
-  pcNotes?: string | null;
+  id: string;
+  title: string;
+  artist?: string | null;
+  serviceOfferingId: string;
+  serviceOfferingCode: string;
+  workflowId: string;
+  workflowStateId: string;
+  workflowStateCode: string;
+  workflowStateNameEs: string;
+  workflowStateNameEn: string;
+  sortOrder: number;
+  notes?: string | null;
 }
 
+export interface PipelineStageDTO {
+  id: string;
+  code: string;
+  nameEs: string;
+  nameEn: string;
+  sortOrder: number;
+  terminal: boolean;
+}
+
+export interface PipelineServiceOfferingDTO {
+  id: string;
+  code: string;
+  nameEs: string;
+  nameEn: string;
+}
+
+export interface PipelineDefinitionDTO {
+  workflowId: string;
+  code: string;
+  nameEs: string;
+  nameEn: string;
+  revision: number;
+  serviceOfferings: PipelineServiceOfferingDTO[];
+  stages: PipelineStageDTO[];
+}
+
+export type PipelineSnapshotDTO = components['schemas']['PipelineSnapshot'];
+export type PipelineCardCreate = components['schemas']['PipelineCardCreate'];
+
 export interface PipelineCardUpdate {
-  pcuTitle?: string;
-  pcuArtist?: string | null;
-  pcuStage?: string;
-  pcuSortOrder?: number;
-  pcuNotes?: string | null;
+  title?: string;
+  artist?: string | null;
+  workflowStateId?: string;
+  sortOrder?: number;
+  notes?: string | null;
 }
 
 export interface ArtistProfileDTO {
@@ -452,7 +457,9 @@ export interface ArtistProfileDTO {
   apYoutubeUrl?: string | null;
   apWebsiteUrl?: string | null;
   apFeaturedVideoUrl?: string | null;
+  /** Presentation-only labels resolved by the backend. */
   apGenres?: string | null;
+  apGenreIds: string[];
   apHighlights?: string | null;
   apFollowerCount: number;
   apHasUserAccount?: boolean;
@@ -519,6 +526,7 @@ export interface FanProfileDTO {
   fpDisplayName?: string | null;
   fpAvatarUrl?: string | null;
   fpFavoriteGenres?: string | null;
+  fpFavoriteGenreIds: string[];
   fpBio?: string | null;
   fpCity?: string | null;
 }
@@ -526,7 +534,7 @@ export interface FanProfileDTO {
 export interface FanProfileUpdate {
   fpuDisplayName?: string | null;
   fpuAvatarUrl?: string | null;
-  fpuFavoriteGenres?: string | null;
+  fpuFavoriteGenreIds: string[];
   fpuBio?: string | null;
   fpuCity?: string | null;
 }
@@ -610,7 +618,7 @@ export interface ArtistProfileUpsert {
   apuYoutubeUrl?: string | null;
   apuWebsiteUrl?: string | null;
   apuFeaturedVideoUrl?: string | null;
-  apuGenres?: string | null;
+  apuGenreIds: string[];
   apuHighlights?: string | null;
 }
 

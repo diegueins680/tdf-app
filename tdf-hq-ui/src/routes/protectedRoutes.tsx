@@ -13,6 +13,8 @@ const AdminTokenPage = lazy(() => import('../pages/AdminTokenPage'));
 const AdminUsersPage = lazy(() => import('../pages/AdminUsersPage'));
 const BookingsPage = lazy(() => import('../pages/BookingsPage'));
 const BrainAdminPage = lazy(() => import('../pages/BrainAdminPage'));
+const CatalogsPage = lazy(() => import('../pages/CatalogsPage'));
+const FeedbackCatalogPage = lazy(() => import('../pages/FeedbackCatalogPage'));
 const CalendarSyncPage = lazy(() => import('../pages/CalendarSyncPage'));
 const CampaignAutomationsPage = lazy(() => import('../pages/CampaignAutomationsPage'));
 const ChatKitPage = lazy(() => import('../pages/ChatKitPage'));
@@ -41,7 +43,6 @@ const LabelReleasesPage = lazy(() => import('../pages/LabelReleasesPage'));
 const LabelTracksPage = lazy(() => import('../pages/LabelTracksPage'));
 const DdexInboxPage = lazy(() => import('../features/ddex/DdexInboxPage'));
 const DdexDocumentPage = lazy(() => import('../features/ddex/DdexDocumentPage'));
-const ImportWizardPage = lazy(() => import('../features/ddex/ImportWizardPage'));
 const PartnerManagementPage = lazy(() => import('../features/ddex/PartnerManagementPage'));
 const LeadsPage = lazy(() => import('../pages/LeadsPage'));
 const LiveSessionIntakePage = lazy(() => import('../pages/LiveSessionIntakePage'));
@@ -52,8 +53,10 @@ const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 const OrdersPage = lazy(() => import('../pages/OrdersPage'));
 const PartiesPage = lazy(() => import('../pages/PartiesPage'));
 const PaymentsPage = lazy(() => import('../pages/PaymentsPage'));
+const AppearanceModeCatalogPage = lazy(() => import('../pages/AppearanceModeCatalogPage'));
 const PublicProfilePage = lazy(() => import('../pages/PublicProfilePage'));
 const ReportsPage = lazy(() => import('../pages/ReportsPage'));
+const RadioAutoStopCatalogPage = lazy(() => import('../pages/RadioAutoStopCatalogPage'));
 const ReservasEquipoPage = lazy(() => import('../pages/ReservasEquipoPage'));
 const RoomsPage = lazy(() => import('../pages/RoomsPage'));
 const SecurityPage = lazy(() => import('../pages/SecurityPage'));
@@ -142,7 +145,6 @@ export function renderProtectedRoutes() {
           <Route path="tracks" element={<LabelTracksPage />} />
           <Route path="ddex" element={<DdexInboxPage />} />
           <Route path="ddex/documents/:id" element={<DdexDocumentPage />} />
-          <Route path="ddex/documents/:id/import" element={<ImportWizardPage />} />
           <Route path="ddex/partners" element={<PartnerManagementPage />} />
           <Route index element={<Navigate to="artistas" replace />} />
         </Route>
@@ -171,6 +173,10 @@ export function renderProtectedRoutes() {
         </Route>
 
         <Route path="/configuracion" element={<Outlet />}>
+          <Route path="catalogos" element={<CatalogsPage />} />
+          <Route path="catalogos/radio-auto-stop" element={<RadioAutoStopCatalogPage />} />
+          <Route path="catalogos/apariencia" element={<AppearanceModeCatalogPage />} />
+          <Route path="catalogos/feedback" element={<FeedbackCatalogPage />} />
           <Route path="inscripciones-curso" element={<CourseRegistrationsAdminPage />} />
           <Route path="cursos" element={<CourseBuilderPage />} />
           <Route path="usuarios-admin" element={<AdminUsersPage />} />

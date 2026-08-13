@@ -140,6 +140,15 @@ export function canAccessLabelTracks(
     : hasAnyRole(normalizedRoles, LABEL_TRACK_ROLE_KEYS);
 }
 
+export function canAccessLabelProjects(
+  roles: readonly string[] | undefined,
+  modules: readonly string[] | undefined,
+): boolean {
+  const normalizedRoles = normalizeAccessRoles(roles);
+  const moduleSet = buildAccessibleModuleSet(roles, modules);
+  return moduleSet.has('admin') && hasAnyRole(normalizedRoles, CMS_EDITOR_ROLE_KEYS);
+}
+
 export function canAccessCmsAdmin(
   roles: readonly string[] | undefined,
   modules: readonly string[] | undefined,
@@ -276,6 +285,9 @@ export function canAccessPath(
   }
   if (path.startsWith('/label/tracks')) {
     return canAccessLabelTracks(roles, modules);
+  }
+  if (path.startsWith('/label/proyectos')) {
+    return canAccessLabelProjects(roles, modules);
   }
   if (path.startsWith('/label/assets')) {
     return hasOperationsAccess(roles, modules);

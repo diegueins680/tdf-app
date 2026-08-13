@@ -1,5 +1,5 @@
 import type { ChangeEvent, Dispatch, RefObject, SetStateAction } from 'react';
-import { Avatar, Box, Button, IconButton, Stack, TextField } from '@mui/material';
+import { Alert, Autocomplete, Avatar, Box, Button, IconButton, Stack, TextField } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import type { FanProfileUpdate } from '../../api/types';
 import { ProfileSectionCard } from './ProfileSectionCard';
@@ -7,6 +7,9 @@ import { ProfileSectionCard } from './ProfileSectionCard';
 export function FanProfileEditor({
   avatarInputRef,
   displayNameFallback,
+  genreCatalogError,
+  genreCatalogReady,
+  genreOptions,
   profileDraft,
   saving,
   setProfileDraft,
@@ -15,12 +18,18 @@ export function FanProfileEditor({
 }: {
   avatarInputRef: RefObject<HTMLInputElement>;
   displayNameFallback?: string | null;
+  genreCatalogError: boolean;
+  genreCatalogReady: boolean;
+  genreOptions: { id: string; name: string }[];
   profileDraft: FanProfileUpdate;
   saving: boolean;
   setProfileDraft: Dispatch<SetStateAction<FanProfileUpdate>>;
   onAvatarFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onSave: () => void;
 }) {
+  const unavailableGenreIds = profileDraft.fpuFavoriteGenreIds.filter(
+    (genreId) => !genreOptions.some((genre) => genre.id === genreId),
+  );
   return (
     <ProfileSectionCard
       title="Tu perfil fan"
@@ -30,7 +39,7 @@ export function FanProfileEditor({
           variant="contained"
           sx={{ alignSelf: 'flex-start' }}
           onClick={onSave}
-          disabled={saving}
+          disabled={saving || !genreCatalogReady || unavailableGenreIds.length > 0}
         >
           {saving ? 'Guardando…' : 'Guardar perfil'}
         </Button>
@@ -107,15 +116,37 @@ export function FanProfileEditor({
             />
           </Stack>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-            <TextField
-              label="Géneros favoritos"
-              value={profileDraft.fpuFavoriteGenres ?? ''}
-              onChange={(event) =>
-                setProfileDraft((prev) => ({ ...prev, fpuFavoriteGenres: event.target.value }))
-              }
+            <Autocomplete
+              multiple
+              disabled={!genreCatalogReady}
+              options={genreOptions}
+              value={genreOptions.filter((genre) => profileDraft.fpuFavoriteGenreIds.includes(genre.id))}
+              getOptionLabel={(genre) => genre.name}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              onChange={(_event, selected) => setProfileDraft((prev) => ({
+                ...prev,
+                fpuFavoriteGenreIds: selected.map((genre) => genre.id),
+              }))}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Géneros favoritos"
+                  helperText="Selecciona valores del catálogo publicado."
+                />
+              )}
               fullWidth
             />
           </Stack>
+          {genreCatalogError && (
+            <Alert severity="error">
+              No se pudo cargar el catálogo de géneros. Intenta nuevamente antes de guardar.
+            </Alert>
+          )}
+          {unavailableGenreIds.length > 0 && genreCatalogReady && (
+            <Alert severity="warning">
+              Tu perfil referencia géneros inactivos o reemplazados. Sustitúyelos por valores vigentes.
+            </Alert>
+          )}
           <TextField
             label="Bio"
             multiline

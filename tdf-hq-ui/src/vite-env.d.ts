@@ -14,9 +14,7 @@ interface ImportMetaEnv {
   readonly VITE_INSTAGRAM_SCOPES?: string;
   readonly VITE_GOOGLE_MAPS_BROWSER_API_KEY?: string;
   readonly VITE_DEFAULT_LOCALE?: string;
-  readonly VITE_SUPPORTED_LOCALES?: string;
   readonly VITE_DEFAULT_CURRENCY?: string;
-  readonly VITE_SUPPORTED_CURRENCIES?: string;
   readonly VITE_DEFAULT_TIMEZONE?: string;
   readonly VITE_EXCHANGE_RATE_API_BASE?: string;
   readonly VITE_DOMO_TIMEZONE?: string;

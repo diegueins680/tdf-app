@@ -172,6 +172,9 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 export const get = <T>(p: string) => api<T>(p, { method: 'GET' });
 export const post = <T>(p: string, body: unknown) =>
   api<T>(p, { method: 'POST', body: JSON.stringify(body) });
+export const postEmpty = <T>(p: string) => api<T>(p, { method: 'POST' });
+export const postText = <T>(p: string, body: string) =>
+  api<T>(p, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body });
 export const postForm = <T>(p: string, form: FormData) =>
   api<T>(p, { method: 'POST', body: form });
 export const put = <T>(p: string, body: unknown) =>

@@ -42,7 +42,9 @@ import {
   type SocialTicketTierDTO,
 } from '../api/socialEvents';
 import { ContractsAPI } from '../api/contracts';
+import { Catalogs } from '../api/catalogs';
 import { useSession } from '../session/SessionContext';
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { parseUnsignedSafeInt } from '../utils/ids';
 import {
   getSocialEventCardActionUiState,
@@ -394,10 +396,11 @@ const buildEventFinanceCsvRows = (
 export default function SocialEventsPage() {
   const qc = useQueryClient();
   const { session } = useSession();
+  const { locale } = useLocalePreferences();
   const preferredCurrency = resolveRuntimeCurrency();
   const [city, setCity] = useState('');
   const [eventTypeFilter, setEventTypeFilter] = useState('');
-  const [eventStatusFilter, setEventStatusFilter] = useState('');
+  const [eventWorkflowStateFilter, setEventWorkflowStateFilter] = useState('');
   const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
   const [invites, setInvites] = useState<Record<string, InvitationState>>({});
   const [ticketPurchases, setTicketPurchases] = useState<Record<string, TicketPurchaseState>>({});
@@ -412,15 +415,15 @@ export default function SocialEventsPage() {
   const startAfter = useMemo(() => new Date().toISOString(), []);
   const sessionPartyId = session?.partyId != null ? String(session.partyId) : null;
   const hasSession = Boolean(sessionPartyId);
-  const eventsQueryKey = ['social-events', city, eventTypeFilter, eventStatusFilter, startAfter] as const;
+  const eventsQueryKey = ['social-events', city, eventTypeFilter, eventWorkflowStateFilter, startAfter] as const;
 
   const eventsQuery = useQuery({
     queryKey: eventsQueryKey,
     queryFn: () =>
       SocialEventsAPI.listEvents({
         city: city.trim() || undefined,
-        eventType: eventTypeFilter || undefined,
-        eventStatus: eventStatusFilter || undefined,
+        eventTypeId: eventTypeFilter || undefined,
+        workflowStateId: eventWorkflowStateFilter || undefined,
         startAfter,
       }),
   });
@@ -429,6 +432,31 @@ export default function SocialEventsPage() {
     queryKey: ['social-venues', city],
     queryFn: () => SocialEventsAPI.listVenues({ city: city.trim() || undefined }),
   });
+  const eventTypesQuery = useQuery({
+    queryKey: ['catalog', 'event-types', 'social-events', locale],
+    queryFn: () => Catalogs.listItems('event-types', {
+      locale,
+      page: 1,
+      pageSize: 500,
+      includeInactive: true,
+    }),
+    staleTime: 5 * 60 * 1000,
+  });
+  const eventWorkflowStatesQuery = useQuery({
+    queryKey: ['catalog', 'workflow-states', 'social-event-lifecycle', locale],
+    queryFn: () => Catalogs.getPublicWorkflowStates('social-event-lifecycle', locale),
+    staleTime: 5 * 60 * 1000,
+  });
+  const eventTypeById = useMemo(
+    () => new Map((eventTypesQuery.data?.items ?? []).map((item) => [item.id, item])),
+    [eventTypesQuery.data?.items],
+  );
+  const selectableEventTypes = useMemo(
+    () => (eventTypesQuery.data?.items ?? []).filter(
+      (item) => item.active && item.workflowState === 'published' && !item.deprecatedAt,
+    ),
+    [eventTypesQuery.data?.items],
+  );
 
   const venueById = useMemo(() => {
     const map = new Map<string, string>();
@@ -439,7 +467,7 @@ export default function SocialEventsPage() {
   }, [venuesQuery.data]);
 
   const events = useMemo(() => eventsQuery.data ?? [], [eventsQuery.data]);
-  const eventFiltersActive = city.trim().length > 0 || eventTypeFilter !== '' || eventStatusFilter !== '';
+  const eventFiltersActive = city.trim().length > 0 || eventTypeFilter !== '' || eventWorkflowStateFilter !== '';
   const eventOverviewUiState = getSocialEventsOverviewUiState({
     canCreateEvent: hasSession,
     eventCount: events.length,
@@ -1033,26 +1061,22 @@ export default function SocialEventsPage() {
                 sx={{ minWidth: 150 }}
               >
                 <MenuItem value="">Todos</MenuItem>
-                <MenuItem value="party">Party</MenuItem>
-                <MenuItem value="concert">Concert</MenuItem>
-                <MenuItem value="festival">Festival</MenuItem>
-                <MenuItem value="showcase">Showcase</MenuItem>
+                {selectableEventTypes.map((item) => (
+                  <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>
+                ))}
               </TextField>
               <TextField
                 select
                 label="Estado"
                 size="small"
-                value={eventStatusFilter}
-                onChange={(e) => setEventStatusFilter(e.target.value)}
+                value={eventWorkflowStateFilter}
+                onChange={(e) => setEventWorkflowStateFilter(e.target.value)}
                 sx={{ minWidth: 150 }}
               >
                 <MenuItem value="">Todos</MenuItem>
-                <MenuItem value="planning">Planning</MenuItem>
-                <MenuItem value="announced">Announced</MenuItem>
-                <MenuItem value="on_sale">On Sale</MenuItem>
-                <MenuItem value="live">Live</MenuItem>
-                <MenuItem value="completed">Completed</MenuItem>
-                <MenuItem value="cancelled">Cancelled</MenuItem>
+                {(eventWorkflowStatesQuery.data?.states ?? []).map((state) => (
+                  <MenuItem key={state.id} value={state.id}>{state.name}</MenuItem>
+                ))}
               </TextField>
             </>
           )}
@@ -1302,8 +1326,21 @@ export default function SocialEventsPage() {
                       </Stack>
                       <Stack direction="row" spacing={1} flexWrap="wrap">
                         {ev.eventCapacity ? <Chip label={`Cupo: ${ev.eventCapacity}`} size="small" /> : null}
-                        {ev.eventType ? <Chip label={`Tipo: ${ev.eventType}`} size="small" color="secondary" variant="outlined" /> : null}
-                        {ev.eventStatus ? <Chip label={`Estado: ${ev.eventStatus}`} size="small" variant="outlined" /> : null}
+                        {ev.eventTypeId ? (
+                          <Chip
+                            label={`Tipo: ${eventTypeById.get(ev.eventTypeId)?.name ?? 'Tipo histórico no disponible'}`}
+                            size="small"
+                            color="secondary"
+                            variant="outlined"
+                          />
+                        ) : null}
+                        {ev.eventWorkflowStateId ? (
+                          <Chip
+                            label={`Estado: ${locale.toLowerCase().startsWith('en') ? ev.eventWorkflowStateNameEn : ev.eventWorkflowStateNameEs}`}
+                            size="small"
+                            variant="outlined"
+                          />
+                        ) : null}
                       </Stack>
                     </Stack>
 

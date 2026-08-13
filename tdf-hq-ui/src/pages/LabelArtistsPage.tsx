@@ -48,6 +48,7 @@ import type {
   ArtistPromoSlotUpsert,
 } from '../api/types';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import { Catalogs, type CatalogItem } from '../api/catalogs';
 
 interface ArtistFormState {
   partyId: number | null;
@@ -62,7 +63,7 @@ interface ArtistFormState {
   youtubeUrl: string;
   websiteUrl: string;
   featuredVideoUrl: string;
-  genres: string;
+  genreIds: string[];
   highlights: string;
 }
 
@@ -97,7 +98,7 @@ function buildEmptyForm(): ArtistFormState {
     youtubeUrl: '',
     websiteUrl: '',
     featuredVideoUrl: '',
-    genres: '',
+    genreIds: [],
     highlights: '',
   };
 }
@@ -188,7 +189,7 @@ function formFromArtist(artist: ArtistProfileDTO): ArtistFormState {
     youtubeUrl: artist.apYoutubeUrl ?? '',
     websiteUrl: artist.apWebsiteUrl ?? '',
     featuredVideoUrl: artist.apFeaturedVideoUrl ?? '',
-    genres: artist.apGenres ?? '',
+    genreIds: artist.apGenreIds ?? [],
     highlights: artist.apHighlights ?? '',
   };
 }
@@ -219,9 +220,24 @@ export default function LabelArtistsPage() {
     queryKey: ['parties'],
     queryFn: () => Parties.list(),
   });
+  const genresCatalogQuery = useQuery({
+    queryKey: ['catalog', 'genres', locale],
+    queryFn: () => Catalogs.listItems('genres', { locale, page: 1, pageSize: 500, includeInactive: true }),
+    staleTime: 5 * 60 * 1000,
+  });
 
   const artists = useMemo(() => artistsQuery.data ?? [], [artistsQuery.data]);
   const parties = useMemo(() => partiesQuery.data ?? [], [partiesQuery.data]);
+  const genreOptions = useMemo<CatalogItem[]>(
+    () => (genresCatalogQuery.data?.items ?? [])
+      .filter((genre) => genre.active && genre.workflowState === 'published')
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name)),
+    [genresCatalogQuery.data?.items],
+  );
+  const unavailableFormGenreIds = useMemo(
+    () => form.genreIds.filter((genreId) => !genreOptions.some((genre) => genre.id === genreId)),
+    [form.genreIds, genreOptions],
+  );
   const partyMap = useMemo(() => new Map(parties.map((p) => [p.partyId, p])), [parties]);
   const selectedPromotionArtist = useMemo(
     () => artists.find((artist) => artist.apArtistId === promotionArtistId) ?? null,
@@ -397,7 +413,7 @@ export default function LabelArtistsPage() {
         apuYoutubeUrl: toNullableField(draft.youtubeUrl),
         apuWebsiteUrl: toNullableField(draft.websiteUrl),
         apuFeaturedVideoUrl: toNullableField(draft.featuredVideoUrl),
-        apuGenres: toNullableField(draft.genres),
+        apuGenreIds: draft.genreIds,
         apuHighlights: toNullableField(draft.highlights),
       };
       return Admin.upsertArtistProfile(body);
@@ -539,6 +555,14 @@ export default function LabelArtistsPage() {
   };
 
   const handleSubmit = () => {
+    if (!genresCatalogQuery.isSuccess) {
+      setFormError('Espera a que el catálogo de géneros esté disponible antes de guardar.');
+      return;
+    }
+    if (unavailableFormGenreIds.length > 0) {
+      setFormError('Sustituye los géneros inactivos o reemplazados antes de guardar.');
+      return;
+    }
     const originalName = selectedParty?.displayName ?? selectedArtist?.apDisplayName ?? '';
     upsertMutation.mutate({ draft: form, originalDisplayName: originalName });
   };
@@ -1299,10 +1323,24 @@ export default function LabelArtistsPage() {
               />
             </Stack>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-              <TextField
-                label="Géneros (coma separada)"
-                value={form.genres}
-                onChange={(event) => setForm((prev) => ({ ...prev, genres: event.target.value }))}
+              <Autocomplete
+                multiple
+                disabled={!genresCatalogQuery.isSuccess}
+                options={genreOptions}
+                value={genreOptions.filter((genre) => form.genreIds.includes(genre.id))}
+                getOptionLabel={(genre) => genre.name}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                onChange={(_event, selected) => setForm((prev) => ({
+                  ...prev,
+                  genreIds: selected.map((genre) => genre.id),
+                }))}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Géneros"
+                    helperText="Solo se pueden asignar géneros publicados y activos."
+                  />
+                )}
                 fullWidth
               />
               <TextField
@@ -1312,6 +1350,14 @@ export default function LabelArtistsPage() {
                 fullWidth
               />
             </Stack>
+            {genresCatalogQuery.isError && (
+              <Alert severity="error">No se pudo cargar el catálogo de géneros. Intenta nuevamente antes de guardar.</Alert>
+            )}
+            {unavailableFormGenreIds.length > 0 && !genresCatalogQuery.isLoading && (
+              <Alert severity="warning">
+                Este perfil referencia géneros inactivos o reemplazados. Sustitúyelos por valores vigentes.
+              </Alert>
+            )}
             {formError && <Alert severity="error">{formError}</Alert>}
           </Stack>
         </DialogContent>
@@ -1320,7 +1366,7 @@ export default function LabelArtistsPage() {
           <Button
             variant="contained"
             onClick={handleSubmit}
-            disabled={upsertMutation.isPending || !form.partyId}
+            disabled={upsertMutation.isPending || !form.partyId || !genresCatalogQuery.isSuccess || unavailableFormGenreIds.length > 0}
           >
             {upsertMutation.isPending ? 'Guardando…' : 'Guardar'}
           </Button>

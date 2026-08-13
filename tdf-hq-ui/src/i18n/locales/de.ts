@@ -41,7 +41,7 @@ const de = {
   preferences: {
     title: 'Sprache und Region', subtitle: 'Wähle die Darstellung von Sprache, Währung, Datum und Uhrzeit.',
     language: 'Sprache', currency: 'Währung', timezone: 'Zeitzone', country: 'Ländercode',
-    countryHint: 'Optionaler zweistelliger ISO-Code, zum Beispiel DE oder AT.',
+    countryHint: 'Wähle ein Land aus dem offiziellen Katalog oder lasse das Feld leer.',
   },
   system: { title: 'Systemstatus', subtitle: 'Backend-Version, Status und Metadaten.', application: 'Anwendung', version: 'Version', status: 'Status', built: 'Erstellt', codebase: 'Codebasis' },
 } as const;

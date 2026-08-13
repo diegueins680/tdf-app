@@ -8,6 +8,7 @@ import { MemoryRouter } from 'react-router-dom';
 import type { ServiceCatalogDTO } from '../api/types';
 
 interface CreatePublicPayload {
+  pbServiceOfferingId: string;
   pbResourceIds?: string[] | null;
 }
 
@@ -18,6 +19,77 @@ interface PublicRoomItem {
 }
 
 type PublicServiceCatalogItem = ServiceCatalogDTO;
+
+const BAND_RECORDING_ID = '11111111-1111-4111-8111-111111111111';
+const DJ_PRACTICE_ID = '22222222-2222-4222-8222-222222222222';
+
+const defaultPublicServices: PublicServiceCatalogItem[] = [
+  {
+    scId: BAND_RECORDING_ID,
+    scCode: 'band-recording',
+    scName: 'Grabación de banda',
+    scNameEs: 'Grabación de banda',
+    scNameEn: 'Band recording',
+    scCategoryId: '33333333-3333-4333-8333-333333333333',
+    scKind: 'recording',
+    scPricingModelId: '44444444-4444-4444-8444-444444444444',
+    scPricingModel: 'hourly',
+    scRateCents: 10000,
+    scCurrency: 'USD',
+    scCurrencyId: '55555555-5555-4555-8555-555555555555',
+    scBillingUnit: 'hour',
+    scTaxRateCode: 'ec-iva-standard',
+    scDefaultDurationMinutes: 120,
+    scRequiresEngineer: true,
+    scDefaultResources: [
+      {
+        sdrResourceId: '1',
+        sdrResourceName: 'Live Room',
+        sdrSelectionModeId: '66666666-6666-4666-8666-666666666666',
+        sdrSelectionMode: 'all',
+        sdrSortOrder: 10,
+      },
+      {
+        sdrResourceId: '2',
+        sdrResourceName: 'Control Room',
+        sdrSelectionModeId: '66666666-6666-4666-8666-666666666666',
+        sdrSelectionMode: 'all',
+        sdrSortOrder: 20,
+      },
+    ],
+    scSortOrder: 10,
+    scActive: true,
+  },
+  {
+    scId: DJ_PRACTICE_ID,
+    scCode: 'dj-booth-practice',
+    scName: 'Práctica en DJ Booth',
+    scNameEs: 'Práctica en DJ Booth',
+    scNameEn: 'DJ Booth practice',
+    scCategoryId: '77777777-7777-4777-8777-777777777777',
+    scKind: 'dj-practice',
+    scPricingModelId: '44444444-4444-4444-8444-444444444444',
+    scPricingModel: 'hourly',
+    scRateCents: 5000,
+    scCurrency: 'USD',
+    scCurrencyId: '55555555-5555-4555-8555-555555555555',
+    scBillingUnit: 'hour',
+    scTaxRateCode: 'ec-iva-standard',
+    scDefaultDurationMinutes: 60,
+    scRequiresEngineer: false,
+    scDefaultResources: [
+      {
+        sdrResourceId: '3',
+        sdrResourceName: 'DJ Booth',
+        sdrSelectionModeId: '88888888-8888-4888-8888-888888888888',
+        sdrSelectionMode: 'first-available',
+        sdrSortOrder: 10,
+      },
+    ],
+    scSortOrder: 20,
+    scActive: true,
+  },
+];
 
 const createPublicMock = jest.fn<(payload: CreatePublicPayload) => Promise<{ bookingId: number }>>(
   () => Promise.resolve({ bookingId: 123 }),
@@ -172,7 +244,7 @@ describe('PublicBookingPage', () => {
   beforeEach(() => {
     createPublicMock.mockClear();
     listPublicServicesMock.mockReset();
-    listPublicServicesMock.mockResolvedValue([]);
+    listPublicServicesMock.mockResolvedValue(defaultPublicServices);
     listPublicEngineersMock.mockReset();
     listPublicEngineersMock.mockResolvedValue([]);
     listPublicRoomsMock.mockReset();
@@ -217,7 +289,7 @@ describe('PublicBookingPage', () => {
     expect(tomorrowShortcut.toFormat("yyyy-MM-dd'T'HH:mm")).toBe('2030-01-02T14:00');
   });
 
-  it('submits auto-assigned rooms based on service rules', async () => {
+  it('submits the canonical offering ID and lets the backend assign persisted default resources', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -264,13 +336,16 @@ describe('PublicBookingPage', () => {
 
     expect(createPublicMock).toHaveBeenCalledTimes(1);
     const payload = createPublicMock.mock.calls[0]?.[0];
-    expect(payload?.pbResourceIds).toEqual(['room-live', 'room-control']);
+    expect(payload).toMatchObject({
+      pbServiceOfferingId: BAND_RECORDING_ID,
+      pbResourceIds: null,
+    });
 
     await cleanup();
     document.body.removeChild(container);
   });
 
-  it('uses the DJ Booth preset route copy, service label, and room assignment', async () => {
+  it('uses the DJ Booth preset route copy and canonical service offering', async () => {
     listPublicRoomsMock.mockResolvedValueOnce([
       ...defaultPublicRooms,
       { roomId: 'room-dj', rName: 'DJ Booth', rBookable: true },
@@ -321,8 +396,8 @@ describe('PublicBookingPage', () => {
     expect(createPublicMock).toHaveBeenCalledTimes(1);
     expect(createPublicMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        pbServiceType: 'Práctica en DJ Booth',
-        pbResourceIds: ['room-dj'],
+        pbServiceOfferingId: DJ_PRACTICE_ID,
+        pbResourceIds: null,
       }),
     );
 
@@ -466,14 +541,24 @@ describe('PublicBookingPage', () => {
       if (!resolveServices) throw new Error('Service resolver was not initialized');
       resolveServices([
         {
-          scId: 91,
+          scId: BAND_RECORDING_ID,
+          scCode: 'band-recording',
           scName: 'Grabación de banda',
-          scKind: 'Recording',
-          scPricingModel: 'Hourly',
+          scNameEs: 'Grabación de banda',
+          scNameEn: 'Band recording',
+          scCategoryId: '33333333-3333-4333-8333-333333333333',
+          scKind: 'recording',
+          scPricingModelId: '44444444-4444-4444-8444-444444444444',
+          scPricingModel: 'hourly',
           scRateCents: 10000,
           scCurrency: 'USD',
-          scBillingUnit: 'hora',
-          scTaxBps: 1200,
+          scCurrencyId: '55555555-5555-4555-8555-555555555555',
+          scBillingUnit: 'hour',
+          scTaxRateCode: 'ec-iva-standard',
+          scDefaultDurationMinutes: 120,
+          scRequiresEngineer: true,
+          scDefaultResources: [],
+          scSortOrder: 10,
           scActive: true,
         },
       ]);

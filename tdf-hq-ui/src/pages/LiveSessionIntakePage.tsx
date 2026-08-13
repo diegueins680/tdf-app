@@ -19,14 +19,14 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Parties } from '../api/parties';
-import type { DropdownOptionDTO, PartyDTO, PartyUpdate } from '../api/types';
+import type { PartyDTO, PartyUpdate } from '../api/types';
 import { Admin } from '../api/admin';
-import type { Role } from '../api/generated/client';
 import { submitLiveSessionIntake } from '../api/liveSessions';
+import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { getStoredSessionToken, useSession } from '../session/SessionContext';
-import { Bands } from '../api/bands';
 import { toLocalDateInputValue } from '../utils/dateOnly';
 import EnrollmentSuccessDialog from '../components/EnrollmentSuccessDialog';
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 
 interface MusicianEntry {
   id: string;
@@ -34,8 +34,7 @@ interface MusicianEntry {
   name: string;
   email: string;
   phone: string;
-  instrument: string;
-  role: string;
+  instrumentId: string;
   instagram: string;
   notes?: string;
   mode: 'existing' | 'new';
@@ -46,8 +45,7 @@ const emptyMusician = (): MusicianEntry => ({
   name: '',
   email: '',
   phone: '',
-  instrument: '',
-  role: '',
+  instrumentId: '',
   instagram: '',
   mode: 'new',
 });
@@ -84,27 +82,29 @@ const asNullableString = (value?: string | null): string | null => {
 
 export interface LiveSessionIntakeFormProps {
   variant?: 'internal' | 'public';
-  requireTerms?: boolean;
 }
 
-export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: LiveSessionIntakeFormProps) {
+export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntakeFormProps) {
   const qc = useQueryClient();
   const { session } = useSession();
+  const { locale } = useLocalePreferences();
   const hasToken = Boolean(session) || Boolean(getStoredSessionToken());
   const { data: parties = [], isLoading: partiesLoading } = useQuery({
     queryKey: ['parties'],
     queryFn: () => Parties.list(),
     enabled: hasToken,
   });
-  const { data: bandOptions, isLoading: bandOptionsLoading } = useQuery({
-    queryKey: ['band-options'],
-    queryFn: () => Bands.options(),
-    enabled: hasToken,
+  const { data: musicCatalogs, isLoading: musicCatalogsLoading } = useQuery({
+    queryKey: ['catalogs', 'live-session-intake', locale],
+    queryFn: () => Catalogs.listPublicBatch(
+      ['genres', 'instruments'],
+      { locale, page: 1, pageSize: 500 },
+    ),
     staleTime: 5 * 60 * 1000,
   });
   const [bandName, setBandName] = useState('');
   const [bandDescription, setBandDescription] = useState('');
-  const [primaryGenre, setPrimaryGenre] = useState('');
+  const [primaryGenreId, setPrimaryGenreId] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [sessionDate, setSessionDate] = useState(() => toLocalDateInputValue());
@@ -114,7 +114,6 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
   const [setlist, setSetlist] = useState<SongEntry[]>([emptySong()]);
   const [riderFile, setRiderFile] = useState<File | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const mustAcceptTerms = requireTerms ?? variant === 'public';
   const termsVersion = 'TDF Live Sessions v2';
   const draftKey = 'live-session-draft';
 
@@ -126,7 +125,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
       const parsed = JSON.parse(raw) as Partial<{
         bandName: string;
         bandDescription: string;
-        primaryGenre: string;
+        primaryGenreId: string;
         contactEmail: string;
         contactPhone: string;
         sessionDate: string;
@@ -136,13 +135,16 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
       }>;
       setBandName(parsed.bandName ?? '');
       setBandDescription(parsed.bandDescription ?? '');
-      setPrimaryGenre(parsed.primaryGenre ?? '');
+      setPrimaryGenreId(parsed.primaryGenreId ?? '');
       setContactEmail(parsed.contactEmail ?? '');
       setContactPhone(parsed.contactPhone ?? '');
       setSessionDate(parsed.sessionDate ?? toLocalDateInputValue());
       setAvailableDates(parsed.availableDates ?? '');
       if (Array.isArray(parsed.musicians) && parsed.musicians.length > 0) {
-        setMusicians(parsed.musicians);
+        setMusicians(parsed.musicians.map((musician) => ({
+          ...musician,
+          instrumentId: typeof musician.instrumentId === 'string' ? musician.instrumentId : '',
+        })));
       }
       if (Array.isArray(parsed.setlist) && parsed.setlist.length > 0) {
         setSetlist(parsed.setlist);
@@ -157,7 +159,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
     const payload = {
       bandName,
       bandDescription,
-      primaryGenre,
+      primaryGenreId,
       contactEmail,
       contactPhone,
       sessionDate,
@@ -173,7 +175,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
   }, [
     bandName,
     bandDescription,
-    primaryGenre,
+    primaryGenreId,
     contactEmail,
     contactPhone,
     sessionDate,
@@ -190,14 +192,21 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
       })),
     [parties],
   );
-  const genreOptions = useMemo(() => bandOptions?.genres ?? [], [bandOptions]);
-  const roleOptions = useMemo(() => bandOptions?.roles ?? [], [bandOptions]);
+  const genreOptions = useMemo<CatalogItem[]>(
+    () => musicCatalogs?.catalogs.find((page) => page.catalog.code === 'genres')?.items ?? [],
+    [musicCatalogs?.catalogs],
+  );
+  const instrumentOptions = useMemo<CatalogItem[]>(
+    () => musicCatalogs?.catalogs.find((page) => page.catalog.code === 'instruments')?.items ?? [],
+    [musicCatalogs?.catalogs],
+  );
   const selectedGenreOption = useMemo(
-    () => genreOptions.find((opt) => opt.value === primaryGenre || opt.label === primaryGenre) ?? null,
-    [genreOptions, primaryGenre],
+    () => genreOptions.find((option) => option.id === primaryGenreId) ?? null,
+    [genreOptions, primaryGenreId],
   );
 
   const createPartyAndUser = async (entry: MusicianEntry): Promise<PartyDTO> => {
+    const instrumentName = instrumentOptions.find((item) => item.id === entry.instrumentId)?.name;
     const created = await Parties.create({
       cDisplayName: entry.name,
       cIsOrg: false,
@@ -206,16 +215,14 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
     const updatePayload: PartyUpdate = {
       uPrimaryEmail: asNullableString(entry.email),
       uPrimaryPhone: asNullableString(entry.phone),
-      uNotes: entry.instrument ? `Instrumento: ${entry.instrument}` : undefined,
+      uNotes: instrumentName ? `Instrumento: ${instrumentName}` : undefined,
       uInstagram: asNullableString(entry.instagram),
     };
     await Parties.update(created.partyId, updatePayload);
     if (entry.email) {
-      const roles: Role[] = ['Artist'];
       await Admin.createUser({
         partyId: created.partyId,
         username: entry.email,
-        roles,
       });
     }
     return created;
@@ -253,8 +260,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
           partyId,
           name: entry.name,
           email: asNullableString(entry.email),
-          instrument: asNullableString(entry.instrument),
-          role: asNullableString(entry.role),
+          instrumentId: asNullableString(entry.instrumentId),
           notes: mergedNotes,
           isExisting: Boolean(entry.partyId),
         });
@@ -263,13 +269,13 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
       await submitLiveSessionIntake({
         bandName,
         bandDescription: asNullableString(bandDescription),
-        primaryGenre: asNullableString(primaryGenre),
+        primaryGenreId: asNullableString(primaryGenreId),
         contactEmail: asNullableString(contactEmail),
         contactPhone: asNullableString(contactPhone),
         sessionDate: asNullableString(sessionDate),
         availabilityNotes: asNullableString(availableDates),
-        acceptedTerms: mustAcceptTerms ? acceptedTerms : undefined,
-        termsVersion: mustAcceptTerms ? termsVersion : undefined,
+        acceptedTerms: true,
+        termsVersion,
         musicians: ensuredMusicians,
         setlist: setlist
           .map((song, idx) => {
@@ -374,25 +380,13 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
               />
             </Grid>
             <Grid item xs={12} md={3}>
-              <Autocomplete<DropdownOptionDTO, false, false, true>
-                freeSolo
+              <Autocomplete<CatalogItem, false, false, false>
                 options={genreOptions}
-                loading={bandOptionsLoading}
+                loading={musicCatalogsLoading}
                 value={selectedGenreOption}
-                inputValue={primaryGenre}
-                onInputChange={(_, value) => setPrimaryGenre(value)}
-                onChange={(_, value) => {
-                  if (!value) {
-                    setPrimaryGenre('');
-                  } else if (typeof value === 'string') {
-                    setPrimaryGenre(value);
-                  } else {
-                    setPrimaryGenre(value.value);
-                  }
-                }}
-                getOptionLabel={(option) =>
-                  typeof option === 'string' ? option : option.label ?? option.value
-                }
+                onChange={(_, value) => setPrimaryGenreId(value?.id ?? '')}
+                getOptionLabel={(option) => option.name}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
                 renderInput={(params) => (
                   <TextField
                     {...params}
@@ -400,7 +394,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
                     placeholder="Rock, Rap, Pop..."
                   />
                 )}
-                noOptionsText={bandOptionsLoading ? 'Cargando géneros…' : 'Agrega un género'}
+                noOptionsText={musicCatalogsLoading ? 'Cargando géneros…' : 'No hay géneros publicados'}
               />
             </Grid>
             <Grid item xs={12} md={3}>
@@ -541,31 +535,15 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
                     />
                   </Grid>
                   <Grid item xs={12} md={3}>
-                    <Autocomplete<DropdownOptionDTO, false, false, true>
-                      freeSolo
-                      options={roleOptions}
-                      loading={bandOptionsLoading}
-                      value={
-                        roleOptions.find(
-                          (opt) => opt.value === musician.instrument || opt.label === musician.instrument,
-                        ) ?? null
+                    <Autocomplete<CatalogItem, false, false, false>
+                      options={instrumentOptions}
+                      loading={musicCatalogsLoading}
+                      value={instrumentOptions.find((option) => option.id === musician.instrumentId) ?? null}
+                      onChange={(_, value) =>
+                        handleMusicianChange(musician.id, { instrumentId: value?.id ?? '' })
                       }
-                      inputValue={musician.instrument}
-                      onInputChange={(_, value) =>
-                        handleMusicianChange(musician.id, { instrument: value, role: value })
-                      }
-                      onChange={(_, value) => {
-                        if (!value) {
-                          handleMusicianChange(musician.id, { instrument: '', role: '' });
-                        } else if (typeof value === 'string') {
-                          handleMusicianChange(musician.id, { instrument: value, role: value });
-                        } else {
-                          handleMusicianChange(musician.id, { instrument: value.value, role: value.value });
-                        }
-                      }}
-                      getOptionLabel={(option) =>
-                        typeof option === 'string' ? option : option.label ?? option.value
-                      }
+                      getOptionLabel={(option) => option.name}
+                      isOptionEqualToValue={(option, value) => option.id === value.id}
                       renderInput={(params) => (
                         <TextField
                           {...params}
@@ -574,7 +552,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
                           fullWidth
                         />
                       )}
-                      noOptionsText={bandOptionsLoading ? 'Cargando roles…' : 'Agrega un rol'}
+                      noOptionsText={musicCatalogsLoading ? 'Cargando instrumentos…' : 'No hay instrumentos publicados'}
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -695,27 +673,25 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
             También confirmas que tienes los derechos para interpretar y grabar el material presentado y que aceptarás la agenda
             definitiva propuesta por TDF Records según disponibilidad de salas y staff.
           </Typography>
-          {mustAcceptTerms && (
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={acceptedTerms}
-                  onChange={(e) => setAcceptedTerms(e.target.checked)}
-                />
-              }
-              label={
-                <Box>
-                  <Typography variant="body2" fontWeight={600}>
-                    Acepto los términos de participación ({termsVersion})
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Lee y acepta antes de enviar. Esto sirve como constancia de consentimiento.
-                  </Typography>
-                </Box>
-              }
-              sx={{ alignItems: 'flex-start' }}
-            />
-          )}
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+              />
+            }
+            label={
+              <Box>
+                <Typography variant="body2" fontWeight={600}>
+                  Acepto los términos de participación ({termsVersion})
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Lee y acepta antes de enviar. Esto sirve como constancia de consentimiento.
+                </Typography>
+              </Box>
+            }
+            sx={{ alignItems: 'flex-start' }}
+          />
         </Stack>
       </Paper>
 
@@ -755,7 +731,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
           variant="contained"
           size="large"
           onClick={() => mutation.mutate()}
-          disabled={mutation.isPending || (mustAcceptTerms && !acceptedTerms)}
+          disabled={mutation.isPending || !acceptedTerms}
         >
           {mutation.isPending ? 'Guardando…' : 'Enviar Live Session'}
         </Button>

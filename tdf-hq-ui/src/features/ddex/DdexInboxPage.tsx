@@ -12,37 +12,33 @@ import {
   Chip,
   IconButton,
   Typography,
-  TextField,
   MenuItem,
   Select,
   FormControl,
   InputLabel,
-  Button,
   Stack,
   Alert,
   CircularProgress,
 } from '@mui/material';
 import {
   Visibility as ViewIcon,
-  Download as DownloadIcon,
-  CheckCircle as ValidIcon,
-  Error as InvalidIcon,
-  HourglassEmpty as PendingIcon,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
-import { DDEX, getStatusColor } from '../../api/ddex';
-import { DdexUploadDropzone } from './DdexUploadDropzone';
+import { DDEX } from '../../api/ddex';
 
 const DdexInboxPage: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const [partnerFilter, setPartnerFilter] = useState<string>('');
-  const [showUpload, setShowUpload] = useState(false);
 
-  const { data: documents, isLoading, error, refetch } = useQuery({
-    queryKey: ['ddex-documents', statusFilter, partnerFilter],
-    queryFn: () => DDEX.listDocuments(statusFilter || undefined, partnerFilter || undefined),
+  const { data: references, isLoading: referencesLoading, error: referencesError } = useQuery({
+    queryKey: ['ddex-references', 'es'],
+    queryFn: () => DDEX.getReferences('es'),
+  });
+
+  const { data: documents, isLoading, error } = useQuery({
+    queryKey: ['ddex-documents', statusFilter],
+    queryFn: () => DDEX.listDocuments(statusFilter || undefined),
   });
 
   const handleChangePage = (_event: unknown, newPage: number) => {
@@ -54,29 +50,11 @@ const DdexInboxPage: React.FC = () => {
     setPage(0);
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'valid':
-      case 'imported':
-        return <ValidIcon color="success" />;
-      case 'invalid':
-      case 'import_failed':
-        return <InvalidIcon color="error" />;
-      default:
-        return <PendingIcon color="action" />;
-    }
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
   };
 
-  const handleUploadComplete = () => {
-    setShowUpload(false);
-    void refetch();
-  };
-
-  if (isLoading) {
+  if (isLoading || referencesLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />
@@ -84,11 +62,11 @@ const DdexInboxPage: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (error || referencesError) {
     return (
       <Box p={3}>
         <Alert severity="error">
-          Error loading DDEX documents: {error.message}
+          Error loading DDEX documents: {(error || referencesError)?.message}
         </Alert>
       </Box>
     );
@@ -101,18 +79,7 @@ const DdexInboxPage: React.FC = () => {
 
   return (
     <Box p={3}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">DDEX Inbox</Typography>
-        <Button variant="contained" onClick={() => setShowUpload(!showUpload)}>
-          {showUpload ? 'Cancel' : 'Upload Document'}
-        </Button>
-      </Stack>
-
-      {showUpload && (
-        <Box mb={3}>
-          <DdexUploadDropzone onUploadComplete={handleUploadComplete} />
-        </Box>
-      )}
+      <Typography variant="h4" mb={3}>DDEX Inbox</Typography>
 
       <Stack direction="row" spacing={2} mb={3}>
         <FormControl sx={{ minWidth: 200 }}>
@@ -123,21 +90,13 @@ const DdexInboxPage: React.FC = () => {
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <MenuItem value="">All</MenuItem>
-            <MenuItem value="received">Received</MenuItem>
-            <MenuItem value="validating">Validating</MenuItem>
-            <MenuItem value="valid">Valid</MenuItem>
-            <MenuItem value="invalid">Invalid</MenuItem>
-            <MenuItem value="ready_to_import">Ready to Import</MenuItem>
-            <MenuItem value="imported">Imported</MenuItem>
+            {references?.ddexReferenceDocumentStates.map((state) => (
+              <MenuItem key={state.ddexDocumentStateId} value={state.ddexDocumentStateId}>
+                {state.ddexDocumentStateName}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
-
-        <TextField
-          label="Partner"
-          value={partnerFilter}
-          onChange={(e) => setPartnerFilter(e.target.value)}
-          sx={{ minWidth: 200 }}
-        />
       </Stack>
 
       <TableContainer component={Paper}>
@@ -159,19 +118,17 @@ const DdexInboxPage: React.FC = () => {
               <TableRow key={doc.ddexDocumentId} hover>
                 <TableCell>
                   <Stack direction="row" spacing={1} alignItems="center">
-                    {getStatusIcon(doc.ddexDocumentStatus)}
                     <Chip
-                      label={doc.ddexDocumentStatus}
-                      color={getStatusColor(doc.ddexDocumentStatus)}
+                      label={doc.ddexDocumentWorkflowStateNameEs}
                       size="small"
                     />
                   </Stack>
                 </TableCell>
                 <TableCell>{doc.ddexDocumentFileName}</TableCell>
                 <TableCell>
-                  <Chip label={doc.ddexDocumentFamily} size="small" variant="outlined" />
+                  <Chip label={doc.ddexDocumentStandardCode} size="small" variant="outlined" />
                 </TableCell>
-                <TableCell>{doc.ddexDocumentVersion}</TableCell>
+                <TableCell>{doc.ddexDocumentVersionCode}</TableCell>
                 <TableCell>
                   <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
                     {doc.ddexDocumentMessageId || '-'}
@@ -187,17 +144,6 @@ const DdexInboxPage: React.FC = () => {
                     aria-label={`View DDEX document ${doc.ddexDocumentFileName}`}
                   >
                     <ViewIcon />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    color="default"
-                    aria-label={`Download DDEX document ${doc.ddexDocumentFileName}`}
-                    onClick={() => {
-                      // TODO: Implement download
-                      console.log('Download', doc.ddexDocumentId);
-                    }}
-                  >
-                    <DownloadIcon />
                   </IconButton>
                 </TableCell>
               </TableRow>
