@@ -64,10 +64,8 @@ import { buildAccessibleModuleSet } from '../utils/accessControl';
 import { assertNever } from '../utils/assertNever';
 import { formatCurrencyForUser, resolveRuntimeCurrency } from '../utils/formatters';
 
-const IMPORT_META_ENV = (import.meta.env ?? {}) as Record<string, string | undefined>;
-
-const API_BASE = (IMPORT_META_ENV['VITE_API_BASE'] && IMPORT_META_ENV['VITE_API_BASE'].trim() !== ''
-  ? IMPORT_META_ENV['VITE_API_BASE']
+const API_BASE = (import.meta.env?.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
+  ? import.meta.env.VITE_API_BASE
   : 'https://tdf-hq.fly.dev');
 const normalizeGoogleDriveUrl = (url: string): string | null => {
   const trimmed = url.trim();
@@ -292,8 +290,7 @@ const hasBuyerInfo = (buyer: SavedBuyer) => {
   return name !== '' || email !== '' || phone !== '';
 };
 
-const parseEnvNumber = (key: string): number | null => {
-  const raw = IMPORT_META_ENV[key];
+const parseEnvNumber = (raw: string | undefined): number | null => {
   const trimmed = raw?.trim();
   if (trimmed == null || trimmed === '') return null;
   const val = Number(trimmed);
@@ -401,13 +398,13 @@ export default function MarketplacePage() {
   );
   const canManagePhotos = modules.has('ops') || modules.has('admin');
   const paypalClientId = useMemo<string>(() => {
-    const baked = String(IMPORT_META_ENV['VITE_PAYPAL_CLIENT_ID'] ?? '').trim();
+    const baked = String(import.meta.env?.VITE_PAYPAL_CLIENT_ID ?? '').trim();
     const runtimeVal: string = readRuntimeEnv('VITE_PAYPAL_CLIENT_ID');
     const cleanedRuntime = runtimeVal.trim();
     return baked !== '' ? baked : cleanedRuntime;
   }, []);
   const stripePublishableKey = useMemo<string>(() => {
-    const baked = String(IMPORT_META_ENV['VITE_STRIPE_PUBLISHABLE_KEY'] ?? '').trim();
+    const baked = String(import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY ?? '').trim();
     const runtimeVal = readRuntimeEnv('VITE_STRIPE_PUBLISHABLE_KEY');
     return baked !== '' ? baked : runtimeVal.trim();
   }, []);
@@ -478,8 +475,8 @@ export default function MarketplacePage() {
   const [imagePreview, setImagePreview] = useState<{ src: string; alt: string } | null>(null);
   const [brokenPhotoUrls, setBrokenPhotoUrls] = useState<Set<string>>(() => new Set());
   const [showRestoreBanner, setShowRestoreBanner] = useState(false);
-  const adaUsdRate = useMemo(() => parseEnvNumber('VITE_ADA_USD_RATE'), []);
-  const sedUsdRate = useMemo(() => parseEnvNumber('VITE_SED_USD_RATE'), []);
+  const adaUsdRate = useMemo(() => parseEnvNumber(import.meta.env?.VITE_ADA_USD_RATE), []);
+  const sedUsdRate = useMemo(() => parseEnvNumber(import.meta.env?.VITE_SED_USD_RATE), []);
   const showTokenRates = Boolean(adaUsdRate ?? sedUsdRate);
   const normalizedSearchTerm = useMemo(() => normalizeText(search.trim()), [search]);
   const searchTokens = useMemo(() => normalizedSearchTerm.split(' ').filter(Boolean), [normalizedSearchTerm]);

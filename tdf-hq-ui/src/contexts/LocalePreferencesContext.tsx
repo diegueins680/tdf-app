@@ -7,17 +7,16 @@ import { useSession } from '../session/SessionContext';
 const STORAGE_KEY = 'tdf-hq-ui/locale-preferences';
 const DEFAULT_CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'BRL'];
 
-function envList(name: string, fallback: string[]): string[] {
-  const raw = (import.meta.env as Record<string, string | undefined>)[name];
+function envList(raw: string | undefined, fallback: string[]): string[] {
   const values = raw?.split(',').map((value) => value.trim()).filter(Boolean) ?? [];
   return values.length > 0 ? [...new Set(values)] : fallback;
 }
 
 function defaults(): LocalePreferences {
-  const supportedLocales = envList('VITE_SUPPORTED_LOCALES', [...SUPPORTED_LOCALES])
+  const supportedLocales = envList(import.meta.env?.VITE_SUPPORTED_LOCALES, [...SUPPORTED_LOCALES])
     .map((value) => normalizeLocale(value))
     .filter((value): value is NonNullable<typeof value> => value !== null);
-  const supportedCurrencies = envList('VITE_SUPPORTED_CURRENCIES', DEFAULT_CURRENCIES)
+  const supportedCurrencies = envList(import.meta.env?.VITE_SUPPORTED_CURRENCIES, DEFAULT_CURRENCIES)
     .map((value) => value.toUpperCase());
   const locale = normalizeLocale(i18n.language) ?? supportedLocales[0] ?? 'en';
   const requestedCurrency = (import.meta.env.VITE_DEFAULT_CURRENCY ?? 'USD').toUpperCase();
