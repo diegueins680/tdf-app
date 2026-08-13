@@ -234,13 +234,13 @@ generateSummary changes conflicts =
 
 -- | Execute the actual import transactionally
 executeImport :: ImportPlan -> [ConflictResolution] -> SqlPersistT IO ImportResult
-executeImport plan resolutions = do
-  -- TODO: Implement actual database insertion
-  -- For now, return a stub result
-  return ImportResult
-    { irSuccess = True
-    , irEntitiesCreated = length (ipChanges plan)
+executeImport _plan _resolutions =
+  -- Fail closed until the catalog writer records reversible import changes in
+  -- the same transaction. A generated plan is never evidence of an import.
+  pure ImportResult
+    { irSuccess = False
+    , irEntitiesCreated = 0
     , irEntitiesUpdated = 0
     , irEntitiesSkipped = 0
-    , irErrors = []
+    , irErrors = ["Transactional DDEX catalog import is feature-disabled"]
     }

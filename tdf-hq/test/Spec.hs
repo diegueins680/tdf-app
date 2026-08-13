@@ -157,6 +157,12 @@ import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.Operations.ModelSpec as OperationsModelSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import qualified TDF.Server.DDEX as DDEXServer
+import qualified TDF.DDEX.Detect as DDEXDetect
+import qualified TDF.DDEX.Security as DDEXSecurity
+import qualified TDF.DDEX.ERN.V432.BusinessRulesSpec as DDEXBusinessRulesSpec
+import qualified TDF.DDEX.ERN.V432.Convert as DDEXConvert
+import qualified TDF.DDEX.ERN.V432.ParseSpec as DDEXParseSpec
+import qualified TDF.DDEX.Types as DDEXTypes
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.ServerProposalsSpec as ServerProposalsSpec
 import TDF.ServerRadio
@@ -886,6 +892,28 @@ main = hspec $ do
             case validateAuthenticatedPartyReference artistUser anotherParty of
                 Left serverError -> errHTTPCode serverError `shouldBe` 403
                 Right () -> expectationFailure "Artist unexpectedly changed another follower identity"
+
+    describe "DDEX intake safety and truthfulness" $ do
+        it "rejects entity, doctype, XInclude, malformed, and invalid UTF-8 payloads" $ do
+            let unsafePayloads =
+                  [ "<?xml version=\"1.0\"?><!DOCTYPE x [<!ENTITY e SYSTEM \"file:///etc/passwd\">]><x>&e;</x>"
+                  , "<?xml version=\"1.0\"?><x xmlns:xi=\"http://www.w3.org/2001/XInclude\"><xi:include href=\"file:///etc/passwd\"/></x>"
+                  , "<?xml version=\"1.0\"?><unclosed>"
+                  ]
+            mapM_ (\payload ->
+              DDEXSecurity.safeParseXml DDEXSecurity.defaultXmlParseConfig (BL.pack payload)
+                `shouldSatisfy` isLeft) unsafePayloads
+            DDEXSecurity.safeParseXml DDEXSecurity.defaultXmlParseConfig (BL.pack "\255\254")
+              `shouldSatisfy` isLeft
+
+        it "detects the official ERN 4.3.2 profile without inventing a version" $ do
+            let payload = BL.pack "<ernNewReleaseMessage xmlns=\"http://ddex.net/xml/ern/432\" MessageSchemaVersionId=\"ern/432\"></ernNewReleaseMessage>"
+            fmap DDEXTypes.detectionVersion (DDEXDetect.detectDocument payload)
+              `shouldBe` Just "4.3.2"
+
+        it "refuses to render an ERN from placeholder sender or recipient identities" $ do
+            DDEXConvert.catalogToErn DDEXConvert.defaultConvertConfig currentSocialSyncTestTime [] [] [] []
+              `shouldSatisfy` isLeft
 
     describe "internationalization primitives" $ do
         it "validates ISO 4217 currency codes and currency precision" $ do
@@ -14750,6 +14778,8 @@ main = hspec $ do
                     expectationFailure ("Expected unexpected multipart file to be rejected, got: " <> show payload)
 
     APITypesSpec.spec
+    DDEXParseSpec.spec
+    DDEXBusinessRulesSpec.spec
     ArtistEnrichmentSpec.spec
     ArtistPromotionSpec.spec
     OperationsModelSpec.spec

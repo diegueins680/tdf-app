@@ -11,6 +11,7 @@ module TDF.DDEX.DB
     -- * Validation
   , insertValidationRun
   , insertValidationIssue
+  , completeValidationRun
   , getLatestValidationRun
   , getValidationReport
     -- * Import Plans
@@ -110,12 +111,12 @@ toJobStatusEnum T.JobRetry = JobRetry
 -- ============================================================
 
 -- | Insert a new DDEX document
-insertDocument :: Text -> Text -> Text -> Int -> T.DdexFamily -> Text -> Maybe Text -> Maybe Text -> T.DdexDocumentStatus -> Int -> Maybe Text -> Maybe Text -> Maybe Text -> SqlPersistT IO DdexDocumentId
+insertDocument :: Text -> Text -> Text -> Int -> T.DdexFamily -> Text -> Maybe Text -> Maybe Text -> T.DdexDocumentStatus -> Int -> Maybe Text -> Maybe Text -> Maybe Text -> SqlPersistT IO (Maybe DdexDocumentId)
 insertDocument fileName privateUri sha256 sizeBytes family version namespace messageType status uploadedBy messageId senderId recipientId = do
   now <- liftIO getCurrentTime
   let familyEnum = toFamilyEnum family
       statusEnum = toStatusEnum status
-  insert $ DdexDocument
+  insertUnique $ DdexDocument
     { ddexDocumentFileName = fileName
     , ddexDocumentPrivateUri = privateUri
     , ddexDocumentSha256 = sha256
@@ -213,6 +214,21 @@ insertValidationIssue runId severity layer code lineNumber colNumber xpath messa
     , ddexValidationIssueMessage = message
     , ddexValidationIssueSuggestion = suggestion
     }
+
+completeValidationRun
+  :: DdexValidationRunId
+  -> ValidationResultEnum
+  -> Int
+  -> Int
+  -> SqlPersistT IO ()
+completeValidationRun runId result errorCount warningCount = do
+  now <- liftIO getCurrentTime
+  update runId
+    [ DdexValidationRunFinishedAt =. Just now
+    , DdexValidationRunResult =. Just result
+    , DdexValidationRunErrorCount =. errorCount
+    , DdexValidationRunWarningCount =. warningCount
+    ]
 
 -- | Get latest validation run for a document
 getLatestValidationRun :: DdexDocumentId -> SqlPersistT IO (Maybe (Entity DdexValidationRun))

@@ -116,6 +116,7 @@ executable tdf-hq-exe
     TDF.Trials.Server
     TDF.Calendar.Models
     TDF.CMS.Models
+    TDF.Catalog.DB
     TDF.Catalog.Types
     TDF.DDEX.Types
     TDF.DDEX.Models
@@ -273,9 +274,14 @@ test-suite tdf-hq-test
     TDF.ModelsExtra
     TDF.Models.SocialEventsModels
     TDF.CMS.Models
+    TDF.Catalog.DB
     TDF.Catalog.Types
     TDF.DDEX.DB
+    TDF.DDEX.Storage
+    TDF.DDEX.Detect
+    TDF.DDEX.Security
     TDF.DDEX.ERN.V432.BusinessRules
+    TDF.DDEX.ERN.V432.Convert
     TDF.DDEX.ERN.V432.Normalize
     TDF.DDEX.ERN.V432.Parse
     TDF.DDEX.ERN.V432.Types
