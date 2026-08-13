@@ -1,7 +1,9 @@
 # Revenue platform implementation status
 
-Date: 2026-08-13  
-Branch: `feat/unified-revenue-platform-20260813`  
+Date: 2026-08-13
+
+Branch: `feat/unified-revenue-platform-20260813`
+
 Baseline: `692e8d75d9c6fa00390e33a931d052f0f3ce2a38`
 
 This is an evidence record, not a production-readiness declaration. A database object, generated

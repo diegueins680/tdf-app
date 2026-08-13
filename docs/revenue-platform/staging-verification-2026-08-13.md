@@ -1,7 +1,9 @@
 # Staging verification record
 
-Date: 2026-08-13  
-Environment tested: local isolated worktree and disposable PostgreSQL 16 containers.  
+Date: 2026-08-13
+
+Environment tested: local isolated worktree and disposable PostgreSQL 16 containers.
+
 Staging deployment: **not performed**. Provider sandbox transaction: **not performed**. DDEX partner
 sandbox delivery: **not performed**. No credentials or real customer/royalty data were used.
 
