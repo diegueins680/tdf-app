@@ -155,21 +155,23 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
           mode,
           // Keep the brighter brand hues as `light`, while using AA-safe
           // action shades whenever MUI places normal-size white text on top.
-          primary: { main: '#7c3aed', light: '#8b5cf6', dark: '#6d28d9', contrastText: '#ffffff' },
-          secondary: { main: '#e11d48', light: '#f43f5e', dark: '#be123c', contrastText: '#ffffff' },
+          primary: { main: '#7c3aed', light: '#7c3aed', dark: '#6d28d9', contrastText: '#ffffff' },
+          secondary: { main: '#be123c', light: '#f43f5e', dark: '#be123c', contrastText: '#ffffff' },
           background: {
             default: mode === 'light' ? '#f8f7f5' : '#0a0a0f',
             paper: mode === 'light' ? '#ffffff' : '#12121a',
           },
           text: {
             primary: mode === 'light' ? '#111113' : '#f4f4f5',
-            secondary: mode === 'light' ? '#6b6b74' : '#a1a1aa',
+            secondary: mode === 'light' ? '#595963' : '#a1a1aa',
           },
-          divider: mode === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)',
+          divider: mode === 'light' ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.10)',
         },
         shape: { borderRadius: 8 },
         typography: {
           fontFamily: '"Inter", system-ui, -apple-system, sans-serif',
+          h1: { fontSize: '2.5rem', fontWeight: 800, lineHeight: 1.2 },
+          h2: { fontSize: '2rem', fontWeight: 700, lineHeight: 1.3 },
           h3: { fontSize: '1.75rem', fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.02em' },
           h4: { fontSize: '1.25rem', fontWeight: 600, lineHeight: 1.3 },
           h5: { fontSize: '1rem', fontWeight: 600, lineHeight: 1.4 },
@@ -177,7 +179,7 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
           body1: { fontSize: '0.9375rem', lineHeight: 1.5 },
           body2: { fontSize: '0.875rem', lineHeight: 1.5 },
           caption: {
-            fontSize: '0.6875rem',
+            fontSize: '0.75rem',
             letterSpacing: '0.06em',
             textTransform: 'uppercase',
             fontWeight: 600,
@@ -205,10 +207,6 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
               root: {
                 borderRadius: 8,
                 transition: 'all 0.15s ease',
-                '&:hover': {
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                },
               },
               containedPrimary: {
                 backgroundColor: '#7c3aed',
@@ -224,14 +222,6 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
             styleOverrides: {
               root: {
                 borderRadius: 12,
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow:
-                    mode === 'light'
-                      ? '0 8px 24px rgba(0,0,0,0.06)'
-                      : '0 8px 24px rgba(0,0,0,0.25)',
-                },
               },
             },
           },

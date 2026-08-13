@@ -1460,6 +1460,7 @@ export default function TeacherPortalPage() {
               required
             />
             <TextField
+              type="tel"
               label="Teléfono"
               value={studentForm.phone}
               onChange={(e) => setStudentForm((prev) => ({ ...prev, phone: e.target.value }))}
@@ -1504,6 +1505,7 @@ export default function TeacherPortalPage() {
               onChange={(e) => setStudentEditForm((prev) => ({ ...prev, email: e.target.value }))}
             />
             <TextField
+              type="tel"
               label="Teléfono"
               value={studentEditForm.phone}
               onChange={(e) => setStudentEditForm((prev) => ({ ...prev, phone: e.target.value }))}

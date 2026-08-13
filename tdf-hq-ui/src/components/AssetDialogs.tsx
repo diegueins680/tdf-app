@@ -251,6 +251,7 @@ export function CheckoutDialog({
             type="email"
           />
           <TextField
+            type="tel"
             label="Teléfono del responsable"
             value={form.coHolderPhone ?? ''}
             onChange={(e) => onFormChange({ ...form, coHolderPhone: e.target.value })}

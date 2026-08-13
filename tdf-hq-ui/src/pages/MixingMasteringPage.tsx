@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
+import { useMetaTags } from '../hooks/useMetaTags';
 import {
   Alert,
   Box,
@@ -251,6 +252,11 @@ const initialFormData: OrderFormData = {
 };
 
 export default function MixingMasteringPage() {
+  useMetaTags({
+    title: 'Mezcla y Masterización',
+    description: 'Servicios profesionales de mezcla y masterización en TDF Records.',
+  });
+
   const [serviceFilter, setServiceFilter] = useState<ServiceFilter>('all');
   const [selectedPackage, setSelectedPackage] = useState<ServicePackage | null>(null);
   const [currentStep, setCurrentStep] = useState<OrderStep>('select');
@@ -562,6 +568,7 @@ export default function MixingMasteringPage() {
               helperText="Te enviaremos la confirmación y las instrucciones aquí"
             />
             <TextField
+              type="tel"
               label="Teléfono (opcional)"
               value={formData.buyerPhone}
               onChange={handleFormChange('buyerPhone')}

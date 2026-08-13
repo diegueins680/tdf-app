@@ -28,6 +28,7 @@ import type { TrialSlot, TrialSubject, TeacherDTO, ClassSessionDTO } from '../ap
 import { Trials } from '../api/trials';
 import { Parties } from '../api/parties';
 import { resolveTeacherClasses } from './teachersPageLogic';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { formatDateForUser } from '../utils/formatters';
 
 type ClassStatus = 'programada' | 'por-confirmar' | 'cancelada' | 'realizada' | 'reprogramada';
@@ -205,6 +206,7 @@ const buildClassesFromDTO = (classes: ClassSessionDTO[]): ClassRow[] =>
   }));
 
 export default function TeachersPage() {
+  useDocumentTitle('Escuela / Profesores');
   const qc = useQueryClient();
   const subjectsQuery = useQuery({
     queryKey: ['trial-subjects-for-teachers'],

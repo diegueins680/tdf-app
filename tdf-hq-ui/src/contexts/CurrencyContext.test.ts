@@ -1,4 +1,10 @@
-import { convertCurrency } from './CurrencyContext';
+import { convertCurrency, DEFAULT_EXCHANGE_RATE_API_BASE } from './CurrencyContext';
+
+describe('exchange-rate service', () => {
+  it('uses the current Frankfurter API without a cross-origin redirect', () => {
+    expect(DEFAULT_EXCHANGE_RATE_API_BASE).toBe('https://api.frankfurter.dev/v1');
+  });
+});
 
 describe('convertCurrency', () => {
   const rates = { USD: 1, EUR: 0.8, JPY: 150 };

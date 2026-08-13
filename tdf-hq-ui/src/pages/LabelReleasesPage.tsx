@@ -28,6 +28,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Admin } from '../api/admin';
 import { Fans } from '../api/fans';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import type { ArtistProfileDTO, ArtistReleaseDTO, ArtistReleaseUpsert } from '../api/types';
 import StreamingPlayer from '../components/StreamingPlayer';
 import { SessionGate } from '../components/SessionGate';
@@ -70,6 +71,7 @@ const isValidYoutube = (url?: string | null) => {
 };
 
 export default function LabelReleasesPage() {
+  useDocumentTitle('Label / Lanzamientos');
   const qc = useQueryClient();
   const [form, setForm] = useState(emptyForm);
   const [coverFileName, setCoverFileName] = useState('');

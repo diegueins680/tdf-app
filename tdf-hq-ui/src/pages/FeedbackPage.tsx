@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { submitFeedback } from '../api/feedback';
 import { Catalogs, type CatalogItem, type CatalogPage } from '../api/catalogs';
 import { useSession } from '../session/SessionContext';
+import { feedbackSchema, emailSchema } from '../lib/schemas';
 
 const CATEGORY_CATALOG = 'feedback-categories';
 const SEVERITY_CATALOG = 'feedback-severities';
@@ -33,6 +34,13 @@ const globalDefaultId = (page: CatalogPage | undefined, scopeKind: string): stri
 export const contactEmailFromSessionUsername = (username?: string): string =>
   username?.includes('@') ? username : '';
 
+const feedbackFormSchema = feedbackSchema.extend({
+  category: z.string(),
+  severity: z.string(),
+  contactEmail: emailSchema.optional().or(z.literal('')),
+});
+type FeedbackFormData = z.infer<typeof feedbackFormSchema>;
+
 export default function FeedbackPage() {
   const { session } = useSession();
   const { i18n } = useTranslation();
@@ -43,6 +51,17 @@ export default function FeedbackPage() {
   const [contactEmail, setContactEmail] = useState(contactEmailFromSessionUsername(session?.username));
   const [consent, setConsent] = useState(false);
   const [attachment, setAttachment] = useState<File | null>(null);
+  const { register, handleSubmit, reset, getValues, formState: { errors } } = useForm<FeedbackFormData>({
+    resolver: zodResolver(feedbackFormSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      category: 'bug',
+      severity: 'P2',
+      contactEmail: contactEmailFromSessionUsername(session?.username),
+      consent: false,
+    },
+  });
 
   const catalogQuery = useQuery({
     queryKey: ['catalogs', 'feedback-form', i18n.resolvedLanguage ?? i18n.language],
@@ -97,6 +116,18 @@ export default function FeedbackPage() {
     },
   });
 
+  const onSubmit = handleSubmit((data) => {
+    mutation.mutate({
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      severity: data.severity,
+      contactEmail: data.contactEmail?.trim() || undefined,
+      consent: data.consent,
+      attachment,
+    });
+  });
+
   const attachmentLabel = attachment
     ? `${attachment.name} (${Math.round(attachment.size / 1024)} KB)`
     : 'Adjuntar captura o documento (opcional)';
@@ -134,11 +165,12 @@ export default function FeedbackPage() {
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <TextField
+                {...register('title')}
                 label="Título"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
                 required
                 fullWidth
+                error={Boolean(errors.title)}
+                helperText={errors.title?.message}
               />
             </Grid>
             <Grid item xs={12} md={3}>
@@ -149,6 +181,7 @@ export default function FeedbackPage() {
                 onChange={(e) => setCategoryId(e.target.value)}
                 disabled={!catalogsReady}
                 fullWidth
+                {...register('category')}
               >
                 {categories.map((opt) => (
                   <MenuItem key={opt.id} value={opt.id}>
@@ -165,6 +198,7 @@ export default function FeedbackPage() {
                 onChange={(e) => setSeverityId(e.target.value)}
                 disabled={!catalogsReady}
                 fullWidth
+                {...register('severity')}
               >
                 {severities.map((opt) => (
                   <MenuItem key={opt.id} value={opt.id}>
@@ -175,22 +209,24 @@ export default function FeedbackPage() {
             </Grid>
             <Grid item xs={12}>
               <TextField
+                {...register('description')}
                 label="Descripción"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
                 required
                 fullWidth
                 multiline
                 minRows={4}
+                error={Boolean(errors.description)}
+                helperText={errors.description?.message}
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
+                {...register('contactEmail')}
                 label="Correo de contacto"
-                value={contactEmail}
-                onChange={(e) => setContactEmail(e.target.value)}
                 placeholder="Opcional si queremos hacer seguimiento"
                 fullWidth
+                error={Boolean(errors.contactEmail)}
+                helperText={errors.contactEmail?.message}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -210,12 +246,16 @@ export default function FeedbackPage() {
               <FormControlLabel
                 control={
                   <Checkbox
-                    checked={consent}
-                    onChange={(e) => setConsent(e.target.checked)}
+                    {...register('consent')}
                   />
                 }
                 label="Autorizo usar esta información para mejoras internas y seguimiento."
               />
+              {errors.consent && (
+                <Typography variant="caption" color="error" sx={{ display: 'block', ml: 4 }}>
+                  {errors.consent.message}
+                </Typography>
+              )}
             </Grid>
           </Grid>
 

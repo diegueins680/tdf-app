@@ -9,7 +9,8 @@ import {
   Tabs,
   Typography,
 } from '@mui/material';
-import PageShell, { SkeletonCards } from '../components/PageShell';
+import PageShell, { SkeletonCards, EmptyState } from '../components/PageShell';
+import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Pipelines } from '../api/pipelines';

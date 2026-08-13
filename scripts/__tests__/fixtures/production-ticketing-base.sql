@@ -6,6 +6,10 @@ CREATE TABLE party (
     id BIGSERIAL PRIMARY KEY
 );
 
+CREATE TABLE campaign (
+    id BIGSERIAL PRIMARY KEY
+);
+
 CREATE TABLE notification (
     id BIGSERIAL PRIMARY KEY,
     recipient_party_id BIGINT NOT NULL REFERENCES party(id),
@@ -34,7 +38,9 @@ CREATE TABLE social_artist_profile (
 );
 
 CREATE TABLE artist_profile (
-    id BIGSERIAL PRIMARY KEY
+    id BIGSERIAL PRIMARY KEY,
+    artist_party_id BIGINT REFERENCES party(id),
+    slug TEXT
 );
 
 CREATE TABLE event_ticket_tier (

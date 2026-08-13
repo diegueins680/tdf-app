@@ -12,11 +12,16 @@ const session = {
 };
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
+  getStoredSessionToken: () => null,
   useSession: () => ({
     session,
     loading: false,
     logout: jest.fn(),
   }),
+}));
+
+jest.unstable_mockModule('../hooks/useNavigationPreferences', () => ({
+  useNavigationPreferences: () => ({ visit: { mutate: jest.fn() } }),
 }));
 
 jest.unstable_mockModule('../components/SidebarNav', () => ({

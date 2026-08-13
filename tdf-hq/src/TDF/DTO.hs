@@ -87,6 +87,20 @@ data ArtistProfileDTO = ArtistProfileDTO
   , apGenres          :: Maybe Text
   , apGenreIds        :: [UUID]
   , apHighlights      :: Maybe Text
+  , apOfficialName    :: Maybe Text
+  , apCountry         :: Maybe Text
+  , apInstagramUrl    :: Maybe Text
+  , apSocialLinks     :: Maybe Text
+  , apDiscography     :: Maybe Text
+  , apAchievements    :: Maybe Text
+  , apHeroOriginalUrl :: Maybe Text
+  , apHeroSquareUrl   :: Maybe Text
+  , apHeroLandscapeUrl :: Maybe Text
+  , apHeroResponsiveUrls :: Maybe Text
+  , apHeroFocalPoint  :: Maybe Text
+  , apLastVerifiedAt  :: Maybe UTCTime
+  , apConfidence      :: Maybe Double
+  , apReviewStatus    :: Maybe Text
   , apFollowerCount   :: Int
   , apHasUserAccount  :: Bool
   } deriving (Show, Generic)
@@ -1034,11 +1048,92 @@ data SessionResponse = SessionResponse
   , sessionPartyId :: Int64
   , sessionRoles :: [RoleEnum]
   , sessionModules :: [Text]
+  , sessionFeatureFlags :: [Text]
   , sessionPreferences :: LocalePreferencesDTO
   } deriving (Show, Generic)
 
 instance ToJSON SessionResponse where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 7 }
+
+data FeatureAccessRequestCreate = FeatureAccessRequestCreate
+  { featureId     :: Text
+  , action        :: Text
+  , justification :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON FeatureAccessRequestCreate where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FeatureAccessRequestDecision = FeatureAccessRequestDecision
+  { decision :: Text
+  , notes    :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON FeatureAccessRequestDecision where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FeatureAccessRequestCancel = FeatureAccessRequestCancel
+  { cancellationNote :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON FeatureAccessRequestCancel where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FeatureAccessRequestHistoryDTO = FeatureAccessRequestHistoryDTO
+  { farhId          :: Int64
+  , farhTransition  :: Text
+  , farhFromStatus  :: Maybe Text
+  , farhToStatus    :: Text
+  , farhNote        :: Maybe Text
+  , farhCreatedAt   :: UTCTime
+  } deriving (Show, Generic)
+
+instance ToJSON FeatureAccessRequestHistoryDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 4 }
+
+data FeatureAccessRequestDTO = FeatureAccessRequestDTO
+  { farId               :: Int64
+  , farRequesterPartyId :: Int64
+  , farFeatureId        :: Text
+  , farAction           :: Text
+  , farRoleContext      :: [Text]
+  , farModuleContext    :: [Text]
+  , farStatus           :: Text
+  , farReviewerGroup    :: Text
+  , farJustification    :: Maybe Text
+  , farReviewerNotes    :: Maybe Text
+  , farRequestedAt      :: UTCTime
+  , farUpdatedAt        :: UTCTime
+  , farDecidedAt        :: Maybe UTCTime
+  , farCancelledAt      :: Maybe UTCTime
+  , farExpiresAt        :: Maybe UTCTime
+  , farHistory          :: [FeatureAccessRequestHistoryDTO]
+  } deriving (Show, Generic)
+
+instance ToJSON FeatureAccessRequestDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3 }
+
+data NavigationPreferenceUpdate = NavigationPreferenceUpdate
+  { npuFavorite :: Bool
+  , npuPinned   :: Bool
+  , npuPinOrder :: Maybe Int
+  } deriving (Show, Generic)
+
+instance FromJSON NavigationPreferenceUpdate where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data NavigationPreferenceDTO = NavigationPreferenceDTO
+  { npFeatureId     :: Text
+  , npFavorite      :: Bool
+  , npPinned        :: Bool
+  , npPinOrder      :: Maybe Int
+  , npLastVisitedAt :: Maybe UTCTime
+  , npUseCount      :: Int
+  , npUpdatedAt     :: UTCTime
+  } deriving (Show, Generic)
+
+instance ToJSON NavigationPreferenceDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 2 }
 
 data LocalePreferencesDTO = LocalePreferencesDTO
   { lpLocaleId :: UUID

@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "productionApi": "https://tdf-hq.fly.dev",
+  "status": "complete",
+  "sha": "fc09aed0899476d3617933e6103d7c00995d1fdd",
+  "imageTag": "diegueins680/tdf-hq:fc09aed0899476d3617933e6103d7c00995d1fdd",
+  "resolvedFlyImage": "docker-hub-mirror.fly.io/diegueins680/tdf-hq@sha256:37b57e165ba9f756b12fab90418eaf1cb6d76462670bc07f2a331335cbfd4d37",
+  "build": {
+    "workflowRun": "https://github.com/diegueins680/tdf-app/actions/runs/31160103791",
+    "conclusion": "success",
+    "jobs": {
+      "quality": "success",
+      "apiContracts": "success",
+      "productionMigrations": "success",
+      "docker": "success"
+    }
+  },
+  "releases": [
+    {
+      "version": 2077,
+      "machineId": "0807ee9cd34668",
+      "region": "ord",
+      "createdAt": "2026-08-07T08:57:13Z",
+      "state": "started",
+      "healthChecks": "1/1 passing"
+    },
+    {
+      "version": 2078,
+      "machineId": "3d8d2500c67168",
+      "region": "lax",
+      "createdAt": "2026-08-07T08:58:04Z",
+      "state": "started",
+      "healthChecks": "1/1 passing"
+    }
+  ],
+  "fleetHealth": {
+    "db": "ok",
+    "status": "ok",
+    "reportedCommit": "fc09aed0899476d3617933e6103d7c00995d1fdd",
+    "reportedBuildTime": "2026-08-07T08:20:05Z"
+  },
+  "dailyEnrichment": {
+    "enabled": true,
+    "autoPublish": false,
+    "hourLocal": 4,
+    "batchSize": 500,
+    "staleDays": 90
+  },
+  "rollback": {
+    "previousCommit": "a212acaed553eb47b02cadc77cee7a1cc979351e",
+    "previousReleaseVersions": [2075, 2076],
+    "previousFlyImage": "docker-hub-mirror.fly.io/diegueins680/tdf-hq@sha256:dfcc1df96aa5be72b660e3e8ca93062a1097fbca0ad5b0bfba7b9a120ab4f62c",
+    "databaseSnapshot": "vs_8G6Y36yAqZ9io05MMgDG",
+    "databaseDump": "/private/tmp/tdf-artist-enrichment-backups/tdf_hq_artist_enrichment_20260806T0610Z.dump"
+  },
+  "verifiedAt": "2026-08-07T15:54:51Z"
+}

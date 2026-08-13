@@ -14,9 +14,11 @@ const emptyFanProfileDraft: FanProfileUpdate = {
 export function useFanProfile({
   enabled,
   viewerId,
+  onProfileSaved,
 }: {
   enabled: boolean;
   viewerId: number | null;
+  onProfileSaved?: (profile: FanProfileUpdate) => void;
 }) {
   const qc = useQueryClient();
   const profileQuery = useQuery({
@@ -40,8 +42,9 @@ export function useFanProfile({
 
   const updateProfileMutation = useMutation({
     mutationFn: Fans.updateProfile,
-    onSuccess: () => {
+    onSuccess: (_profile, variables) => {
       void qc.invalidateQueries({ queryKey: ['fan-profile', viewerId] });
+      onProfileSaved?.(variables);
     },
   });
 

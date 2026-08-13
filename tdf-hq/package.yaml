@@ -80,6 +80,7 @@ library:
     - TDF.Catalog.Security
     - TDF.Catalog.Seed
     - TDF.Cors
+    - TDF.FeatureRegistry
     - TDF.ModelsExtra
     - TDF.Seed
     - TDF.Services.EventLogisticsRoutes

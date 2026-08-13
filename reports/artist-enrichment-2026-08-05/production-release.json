@@ -1,0 +1,115 @@
+{
+  "status": "complete",
+  "startedAt": "2026-08-06T17:56:22.029Z",
+  "finishedAt": "2026-08-06T17:59:27.708Z",
+  "sha": "a212acaed553eb47b02cadc77cee7a1cc979351e",
+  "image": "diegueins680/tdf-hq:a212acaed553eb47b02cadc77cee7a1cc979351e",
+  "resolvedImage": "diegueins680/tdf-hq@sha256:ae8a6e8d7f39cfd9a7c7cf97cf5bd907e515add8ac0642ec45abc186816e527a",
+  "acceptableImageDigests": [
+    "sha256:ae8a6e8d7f39cfd9a7c7cf97cf5bd907e515add8ac0642ec45abc186816e527a",
+    "sha256:dfcc1df96aa5be72b660e3e8ca93062a1097fbca0ad5b0bfba7b9a120ab4f62c"
+  ],
+  "canaryMachine": "0807ee9cd34668",
+  "remainingMachines": [
+    "3d8d2500c67168"
+  ],
+  "canary": {
+    "machineId": "0807ee9cd34668",
+    "health": {
+      "db": "ok",
+      "status": "ok"
+    },
+    "version": {
+      "buildTime": "2026-08-06T17:19:13Z",
+      "commit": "a212acaed553eb47b02cadc77cee7a1cc979351e",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "smokePath": "public-fallback"
+  },
+  "rollout": [
+    {
+      "machineId": "3d8d2500c67168",
+      "health": {
+        "db": "ok",
+        "status": "ok"
+      },
+      "version": {
+        "buildTime": "2026-08-06T17:19:13Z",
+        "commit": "a212acaed553eb47b02cadc77cee7a1cc979351e",
+        "name": "tdf-hq",
+        "version": "0.1.0.0"
+      },
+      "smokePath": "public-fallback"
+    }
+  ],
+  "fleet": {
+    "machines": [
+      "0807ee9cd34668",
+      "3d8d2500c67168"
+    ],
+    "health": {
+      "db": "ok",
+      "status": "ok"
+    },
+    "version": {
+      "buildTime": "2026-08-06T17:19:13Z",
+      "commit": "a212acaed553eb47b02cadc77cee7a1cc979351e",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    }
+  },
+  "rollbacks": [],
+  "migrations": [
+    {
+      "id": "2026-07-12_ticketing_runtime_schema",
+      "path": "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
+      "checksum": "778ed4cbe300a6050e875d0f31137670930d497bdcfd1ad58d1baed0c097a4c7"
+    },
+    {
+      "id": "2026-07-12_ticket_checkout_idempotency",
+      "path": "tdf-hq/sql/2026-07-12_ticket_checkout_idempotency.sql",
+      "checksum": "1ecccba9ae0a0d6ae0cbe52df539e6cbf8049e111093a7c579d8b73169e13a28"
+    },
+    {
+      "id": "2026-07-12_event_discovery_imports",
+      "path": "tdf-hq/sql/2026-07-12_event_discovery_imports.sql",
+      "checksum": "bec7e569f1b09a85f0bb50b88dd1fda8c4ad2132313209c9e979810e6f1e9475"
+    },
+    {
+      "id": "2026-07-15_social_sync_runtime_schema",
+      "path": "tdf-hq/sql/2026-07-15_social_sync_runtime_schema.sql",
+      "checksum": "8a1ece3ed4799a11e358c3b7645296f37f26db04009f3766b67d4919e586a2e3"
+    },
+    {
+      "id": "2026-07-15_social_discovery_reviews",
+      "path": "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
+      "checksum": "e14e59e1bf80f8a19907db02a38c83d08721463054b37002892790be8d91c2b8"
+    },
+    {
+      "id": "2026-07-21_event_logistics",
+      "path": "tdf-hq/sql/2026-07-21_event_logistics.sql",
+      "checksum": "25da8ffd43a21468a443633c519db9a49b0642222d6e7d8c68141eb70c1cc780"
+    },
+    {
+      "id": "2026-07-30_event_city_subscriptions",
+      "path": "tdf-hq/sql/2026-07-30_event_city_subscriptions.sql",
+      "checksum": "571360b49944b6146505d9aaff8c4bb7fc9ddc5702cd2a5fa2b7b316d47828a0"
+    },
+    {
+      "id": "2026-08-05_platform_internationalization",
+      "path": "tdf-hq/sql/2026-08-05_platform_internationalization.sql",
+      "checksum": "e0014984b3351c481b81c8e6c44ab98d6cf8bc73b2ce0db01ad0aa5888ac45be"
+    },
+    {
+      "id": "2026-08-05_artist_promotion_slots",
+      "path": "tdf-hq/sql/2026-08-05_artist_promotion_slots.sql",
+      "checksum": "d0621170eafa63f9063a0569e432fb54863b5c846e6f788a5dfba0c66619e849"
+    },
+    {
+      "id": "2026-08-05_artist_enrichment",
+      "path": "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
+      "checksum": "d30f97b8adadaaca5ce418653fa7afed2efa6aeec48032cc2900a121f7f6a79a"
+    }
+  ]
+}

@@ -959,6 +959,52 @@ ServiceStorefrontRevision
     UniqueServiceStorefrontRevisionOrderNumber orderId revisionNumber
     deriving Show Generic
 
+FeatureAccessRequest sql=feature_access_requests
+    requesterPartyId PartyId
+    featureId Text
+    action Text
+    roleContext Text
+    moduleContext Text
+    justification Text Maybe
+    status Text default='pending'
+    reviewerGroup Text
+    reviewerPartyId PartyId Maybe
+    reviewerNotes Text Maybe
+    requestedAt UTCTime
+    updatedAt UTCTime
+    decidedAt UTCTime Maybe
+    cancelledAt UTCTime Maybe
+    expiresAt UTCTime Maybe
+    IndexFeatureAccessRequestRequester requesterPartyId requestedAt !force
+    IndexFeatureAccessRequestQueue status reviewerGroup requestedAt !force
+    IndexFeatureAccessRequestDuplicate requesterPartyId featureId action status !force
+    deriving Show Generic
+
+FeatureAccessRequestHistory sql=feature_access_request_history
+    requestId FeatureAccessRequestId
+    actorPartyId PartyId Maybe
+    transition Text
+    fromStatus Text Maybe
+    toStatus Text
+    note Text Maybe
+    createdAt UTCTime
+    IndexFeatureAccessRequestHistory requestId createdAt !force
+    deriving Show Generic
+
+FeatureNavigationPreference sql=feature_navigation_preferences
+    partyId PartyId
+    featureId Text
+    favorite Bool default=False
+    pinned Bool default=False
+    pinOrder Int Maybe
+    lastVisitedAt UTCTime Maybe
+    useCount Int default=0
+    updatedAt UTCTime
+    UniqueFeatureNavigationPreference partyId featureId
+    IndexFeatureNavigationPreferencePinned partyId pinned pinOrder !force
+    IndexFeatureNavigationPreferenceRecent partyId lastVisitedAt !force
+    deriving Show Generic
+
 |]
 
 instance ToJSON (Entity Asset) where

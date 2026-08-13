@@ -58,6 +58,7 @@ import {
   summarizeMarketplaceOrderList,
   type MarketplaceOrderFilters,
 } from '../utils/marketplace';
+import ConfirmDialog from '../components/ConfirmDialog';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 
 const STATUS_PRESETS: { value: string; label: string; color: ChipProps['color'] }[] = [
@@ -188,6 +189,8 @@ export default function MarketplaceOrdersPage() {
   const [paidAtInput, setPaidAtInput] = useState<string>('');
   const [toast, setToast] = useState<string | null>(null);
   const [copyMenuAnchorEl, setCopyMenuAnchorEl] = useState<HTMLElement | null>(null);
+  const [statusConfirmOpen, setStatusConfirmOpen] = useState(false);
+  const [pendingSavePayload, setPendingSavePayload] = useState<{ id: string; payload: MarketplaceOrderUpdatePayload } | null>(null);
 
   const ordersQuery = useQuery<MarketplaceOrderDTO[], Error>({
     queryKey: ['marketplace-orders', statusFilter],
@@ -621,12 +624,16 @@ export default function MarketplaceOrdersPage() {
     }
   };
 
+  const executeSave = async (saveData: { id: string; payload: MarketplaceOrderUpdatePayload }) => {
+    await updateMutation.mutateAsync(saveData);
+    setPendingSavePayload(null);
+  };
+
   const handleSave = async () => {
     if (!selectedOrder) return;
     const payload: MarketplaceOrderUpdatePayload = {};
     const nextStatus = statusInput.trim();
     if (nextStatus && nextStatus !== selectedOrder.moStatus) {
-      if (!confirmIfIrreversible(nextStatus)) return;
       payload.mouStatus = nextStatus;
     }
     const normalizedProvider = paymentProviderInput.trim();
@@ -640,7 +647,21 @@ export default function MarketplaceOrdersPage() {
       closeDialog();
       return;
     }
-    await updateMutation.mutateAsync({ id: selectedOrder.moOrderId, payload });
+    const saveData = { id: selectedOrder.moOrderId, payload };
+    const risky = ['paid', 'cancelled', 'refunded', 'failed'];
+    if (payload.mouStatus && risky.includes(payload.mouStatus)) {
+      setPendingSavePayload(saveData);
+      setStatusConfirmOpen(true);
+      return;
+    }
+    await executeSave(saveData);
+  };
+
+  const handleStatusConfirm = async () => {
+    if (pendingSavePayload) {
+      await executeSave(pendingSavePayload);
+    }
+    setStatusConfirmOpen(false);
   };
 
   const markPaidNow = () => {
@@ -675,12 +696,6 @@ export default function MarketplaceOrdersPage() {
     } catch {
       // ignore clipboard failures silently
     }
-  };
-
-  const confirmIfIrreversible = (nextStatus: string): boolean => {
-    const risky = ['paid', 'cancelled', 'refunded', 'failed'];
-    if (!risky.includes(nextStatus)) return true;
-    return window.confirm(`¿Confirmas cambiar el estado a "${nextStatus}"?`);
   };
 
   const trimmedStatusInput = statusInput.trim();
@@ -1593,6 +1608,17 @@ export default function MarketplaceOrdersPage() {
           {toast}
         </Alert>
       </Snackbar>
+      <ConfirmDialog
+        open={statusConfirmOpen}
+        onClose={() => setStatusConfirmOpen(false)}
+        onConfirm={() => {
+          void handleStatusConfirm();
+        }}
+        title="Confirmar cambio de estado"
+        description={`¿Confirmas cambiar el estado a "${pendingSavePayload?.payload.mouStatus ?? ''}"?`}
+        severity="warning"
+        confirming={updateMutation.isPending}
+      />
     </Box>
   );
 }

@@ -127,6 +127,7 @@ export default function PublicWhatsAppConsentPage() {
       <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
         <Stack spacing={2}>
           <TextField
+            type="tel"
             label="Número WhatsApp (E.164)"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}

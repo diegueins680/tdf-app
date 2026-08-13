@@ -19,7 +19,7 @@ const interpolationVariables = (value: string): string[] =>
 
 describe('localized component resources', () => {
   const resources = { en, es, fr, de, pt } as const;
-  const namespaces = ['pagination', 'promoCode', 'refunds', 'artistFans', 'partyRelated'] as const;
+  const namespaces = ['pagination', 'promoCode', 'refunds', 'artistFans', 'partyRelated', 'internships'] as const;
 
   it.each(namespaces)('keeps the %s namespace complete in every supported locale', (namespace) => {
     const englishTree = en[namespace] as TranslationTree;

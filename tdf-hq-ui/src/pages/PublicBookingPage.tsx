@@ -1,6 +1,7 @@
 import { logger } from '../utils/logger';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useMetaTags } from '../hooks/useMetaTags';
 import {
   Alert,
   Autocomplete,
@@ -292,6 +293,11 @@ interface PublicBookingPageProps {
 }
 
 export default function PublicBookingPage({ preset }: PublicBookingPageProps = {}) {
+  useMetaTags({
+    title: 'Reservar',
+    description: 'Reserva una sesión de estudio, clase o servicio en TDF Records.',
+  });
+
   const location = useLocation();
   const presetConfig = preset ? PUBLIC_BOOKING_PRESETS[preset] : null;
   const healthQuery = useQuery({
@@ -1396,6 +1402,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                           </Grid>
                           <Grid item xs={12}>
                             <TextField
+                              type="tel"
                               label="WhatsApp / Teléfono"
                               value={form.phone}
                               onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}

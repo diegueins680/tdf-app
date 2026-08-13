@@ -4,7 +4,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import type { PromoCodeDTO } from '../../api/socialEvents';
-import '../../i18n/index';
+import appI18n from '../../i18n/index';
 
 const validatePromoCode =
   jest.fn<(eventId: string, codeId: string, code?: string, tierId?: string) => Promise<PromoCodeDTO>>();
@@ -47,6 +47,8 @@ const createWrapper = () => {
 };
 
 describe('PromoCodeField', () => {
+  beforeAll(async () => appI18n.changeLanguage('en'));
+  afterAll(async () => appI18n.changeLanguage('es'));
   const mockOnPromoApplied = jest.fn();
 
   /**

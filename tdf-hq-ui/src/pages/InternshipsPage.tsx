@@ -21,6 +21,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link as RouterLink } from 'react-router-dom';
 import { Internships } from '../api/internships';
 import type {
   InternProfileUpdate,
@@ -190,6 +191,11 @@ const normalizeOptional = (value?: string | null) => {
   return trimmed === '' ? null : trimmed;
 };
 
+const normalizeCreateOptional = (value?: string | null) => {
+  const trimmed = value?.trim() ?? '';
+  return trimmed === '' ? undefined : trimmed;
+};
+
 const normalizeOptionalInt = (value?: string | null) => {
   const trimmed = value?.trim() ?? '';
   if (trimmed === '') return null;
@@ -199,7 +205,23 @@ const normalizeOptionalInt = (value?: string | null) => {
   return parsed;
 };
 
-const buildEmptyTaskForm = (): InternTaskCreate => ({
+interface InternProjectForm {
+  ipcTitle: string;
+  ipcDescription: string;
+  ipcStatus: string;
+  ipcStartAt: string;
+  ipcDueAt: string;
+}
+
+interface InternTaskForm {
+  itcProjectId: string;
+  itcTitle: string;
+  itcDescription: string;
+  itcAssignedTo: number | null;
+  itcDueAt: string;
+}
+
+const buildEmptyTaskForm = (): InternTaskForm => ({
   itcProjectId: '',
   itcTitle: '',
   itcDescription: '',
@@ -239,7 +261,7 @@ export default function InternshipsPage() {
   const [checklistFeedback, setChecklistFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [profileFeedback, setProfileFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  const [projectForm, setProjectForm] = useState<InternProjectCreate>({
+  const [projectForm, setProjectForm] = useState<InternProjectForm>({
     ipcTitle: '',
     ipcDescription: '',
     ipcStatus: 'active',
@@ -254,7 +276,7 @@ export default function InternshipsPage() {
     skills: '',
     areas: '',
   });
-  const [taskForm, setTaskForm] = useState<InternTaskCreate>(buildEmptyTaskForm);
+  const [taskForm, setTaskForm] = useState<InternTaskForm>(buildEmptyTaskForm);
   const [showTaskComposer, setShowTaskComposer] = useState(false);
   const [todoForm, setTodoForm] = useState<InternTodoCreate>({ itdcText: '' });
   const [permissionForm, setPermissionForm] = useState<InternPermissionCreate>(buildEmptyPermissionForm);
@@ -431,8 +453,6 @@ export default function InternshipsPage() {
           ipcTitle: projectTitle,
           ipcDescription: PLAYBOOK_PROJECT_DESCRIPTION,
           ipcStatus: 'active',
-          ipcStartAt: null,
-          ipcDueAt: null,
         });
         finalProjectId = project.ipId;
         projectCreated = true;
@@ -446,8 +466,7 @@ export default function InternshipsPage() {
             itcProjectId: finalProjectId,
             itcTitle: task.title,
             itcDescription: task.description,
-            itcAssignedTo: assigneeId,
-            itcDueAt: null,
+            ...(assigneeId != null ? { itcAssignedTo: assigneeId } : {}),
           }),
         ),
       );
@@ -1098,11 +1117,15 @@ export default function InternshipsPage() {
                 <Button
                   variant="contained"
                   onClick={() => {
-                    const payload = {
-                      ...projectForm,
-                      ipcDescription: normalizeOptional(projectForm.ipcDescription),
-                      ipcStartAt: normalizeOptional(projectForm.ipcStartAt),
-                      ipcDueAt: normalizeOptional(projectForm.ipcDueAt),
+                    const description = normalizeCreateOptional(projectForm.ipcDescription);
+                    const startAt = normalizeCreateOptional(projectForm.ipcStartAt);
+                    const dueAt = normalizeCreateOptional(projectForm.ipcDueAt);
+                    const payload: InternProjectCreate = {
+                      ipcTitle: projectForm.ipcTitle,
+                      ipcStatus: projectForm.ipcStatus,
+                      ...(description !== undefined ? { ipcDescription: description } : {}),
+                      ...(startAt !== undefined ? { ipcStartAt: startAt } : {}),
+                      ...(dueAt !== undefined ? { ipcDueAt: dueAt } : {}),
                     };
                     void createProjectMutation.mutateAsync(payload);
                   }}
@@ -1277,10 +1300,14 @@ export default function InternshipsPage() {
                 <Button
                   variant="contained"
                   onClick={() => {
-                    const payload = {
-                      ...taskForm,
-                      itcDescription: normalizeOptional(taskForm.itcDescription),
-                      itcDueAt: normalizeOptional(taskForm.itcDueAt),
+                    const description = normalizeCreateOptional(taskForm.itcDescription);
+                    const dueAt = normalizeCreateOptional(taskForm.itcDueAt);
+                    const payload: InternTaskCreate = {
+                      itcProjectId: taskForm.itcProjectId,
+                      itcTitle: taskForm.itcTitle,
+                      ...(description !== undefined ? { itcDescription: description } : {}),
+                      ...(taskForm.itcAssignedTo != null ? { itcAssignedTo: taskForm.itcAssignedTo } : {}),
+                      ...(dueAt !== undefined ? { itcDueAt: dueAt } : {}),
                     };
                     void createTaskMutation.mutateAsync(payload);
                   }}
@@ -1323,7 +1350,21 @@ export default function InternshipsPage() {
                   <Stack spacing={1}>
                     <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} justifyContent="space-between">
                       <Box>
-                        <Typography fontWeight={700}>{task.itTitle}</Typography>
+                        <Typography
+                          component={RouterLink}
+                          to={`/practicas/tareas/${encodeURIComponent(task.itId)}`}
+                          fontWeight={700}
+                          color="primary"
+                          sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            minHeight: 44,
+                            textDecoration: 'none',
+                            '&:hover': { textDecoration: 'underline' },
+                          }}
+                        >
+                          {task.itTitle}
+                        </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {task.itProjectName}
                           {task.itDescription ? ` · ${task.itDescription}` : ''}

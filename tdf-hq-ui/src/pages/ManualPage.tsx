@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { Alert, Box, Card, CardContent, Chip, Link, Stack, Typography } from '@mui/material';
 import LaunchIcon from '@mui/icons-material/Launch';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import { EmptyState } from '../components/PageShell';
 import { useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
 
@@ -83,7 +85,11 @@ export default function ManualPage() {
       </Stack>
 
       {items.length === 0 && (
-        <Alert severity="info">Tu usuario no tiene módulos asignados o la sesión expiró.</Alert>
+        <EmptyState
+          icon={<MenuBookIcon />}
+          title="Sin módulos"
+          description="Tu usuario no tiene módulos asignados o la sesión expiró."
+        />
       )}
 
       <Stack spacing={2}>

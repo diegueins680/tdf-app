@@ -23,6 +23,7 @@ import {
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import DescriptionIcon from '@mui/icons-material/Description';
+import ReceiptIcon from '@mui/icons-material/Receipt';
 import { createFilterOptions } from '@mui/material/Autocomplete';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { PaymentCreate, PaymentDTO, PartyDTO } from '../api/types';
@@ -35,6 +36,8 @@ import SessionInvoiceGeneratorCard from '../components/SessionInvoiceGeneratorCa
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { EmptyState } from '../components/PageShell';
 
 const PAYMENT_METHODS = ['Produbanco', 'Bank', 'Cash', 'Card', 'Crypto', 'Other'] as const;
 const CONCEPT_PRESETS = ['Honorarios', 'Adelanto', 'Licencia', 'Reembolso', 'Otros'];
@@ -442,6 +445,7 @@ function PaymentForm({
 }
 
 export default function PaymentsPage() {
+  useDocumentTitle('Finanzas / Pagos');
   const { formatMoney } = useCurrency();
   const [partyFilter, setPartyFilter] = useState<PartyDTO | null>(null);
   const [partyFilterInput, setPartyFilterInput] = useState<string>('');
@@ -600,7 +604,11 @@ export default function PaymentsPage() {
               {paymentsQuery.isFetching && <Typography variant="body2">Cargando...</Typography>}
             </Stack>
             {filteredPayments.length === 0 ? (
-              <Alert severity="info">No hay pagos registrados con este filtro.</Alert>
+              <EmptyState
+                icon={<ReceiptIcon />}
+                title="Sin pagos"
+                description="No hay pagos registrados con este filtro."
+              />
             ) : (
               <LazyPaginatedList
                 items={filteredPayments}

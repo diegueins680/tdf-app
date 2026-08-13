@@ -26,6 +26,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useTranslation } from 'react-i18next';
 import { SocialEventsAPI, type RefundDTO } from '../api/socialEvents';
 import { getRefundStatusColor } from './RefundManagementPanel.logic';
+import ConfirmDialog from './ConfirmDialog';
 import LazyPaginatedList from './LazyPaginatedList';
 import {
   formatCurrencyForUser,
@@ -57,6 +58,9 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
   const [selectedRefund, setSelectedRefund] = useState<RefundDTO | null>(null);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [approveConfirmOpen, setApproveConfirmOpen] = useState(false);
+  const [pendingApproveRefundId, setPendingApproveRefundId] = useState<string | null>(null);
+  const [approveConfirmMessage, setApproveConfirmMessage] = useState('');
 
   const refundsQuery = useQuery({
     queryKey: ['refunds', eventId],
@@ -89,9 +93,17 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
     }
 
     const amount = formatMoney(refund.refundAmountCents, refund.refundCurrency);
-    if (window.confirm(t('refunds.confirmApproval', { amount }))) {
-      approveMutation.mutate(approvedRefundId);
+    setPendingApproveRefundId(approvedRefundId);
+    setApproveConfirmMessage(t('refunds.confirmApproval', { amount }));
+    setApproveConfirmOpen(true);
+  };
+
+  const handleApproveConfirm = () => {
+    if (pendingApproveRefundId) {
+      approveMutation.mutate(pendingApproveRefundId);
     }
+    setApproveConfirmOpen(false);
+    setPendingApproveRefundId(null);
   };
 
   const handleReject = () => {
@@ -266,6 +278,15 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
           </Button>
         </DialogActions>
       </Dialog>
+      <ConfirmDialog
+        open={approveConfirmOpen}
+        onClose={() => setApproveConfirmOpen(false)}
+        onConfirm={handleApproveConfirm}
+        title={t('refunds.confirmApprovalTitle', 'Aprobar reembolso')}
+        description={approveConfirmMessage}
+        severity="danger"
+        confirming={approveMutation.isPending}
+      />
     </Box>
   );
 

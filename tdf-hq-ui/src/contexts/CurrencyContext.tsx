@@ -21,6 +21,7 @@ export interface CurrencyContextValue {
 
 const CACHE_KEY = 'tdf-hq-ui/exchange-rates';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+export const DEFAULT_EXCHANGE_RATE_API_BASE = 'https://api.frankfurter.dev/v1';
 const CurrencyContext = createContext<CurrencyContextValue | undefined>(undefined);
 
 export function convertCurrency(
@@ -68,7 +69,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       return;
     }
     const controller = new AbortController();
-    const endpoint = (import.meta.env.VITE_EXCHANGE_RATE_API_BASE ?? 'https://api.frankfurter.app').replace(/\/$/, '');
+    const endpoint = (import.meta.env.VITE_EXCHANGE_RATE_API_BASE ?? DEFAULT_EXCHANGE_RATE_API_BASE).replace(/\/$/, '');
     setRatesLoading(true);
     void fetch(`${endpoint}/latest?from=${encodeURIComponent(rateBase)}`, { signal: controller.signal })
       .then(async (response) => {

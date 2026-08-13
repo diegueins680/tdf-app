@@ -21,6 +21,7 @@ import           Data.Char          ( GeneralCategory(Format)
                                      , generalCategory
                                      , isAscii
                                      , isControl
+                                     , isHexDigit
                                      , isSpace
                                      )
 import qualified Data.Text         as T
@@ -36,6 +37,7 @@ data DriveUploadForm = DriveUploadForm
   , duFolderId    :: Maybe Text
   , duName        :: Maybe Text
   , duAccessToken :: Maybe Text
+  , duIdempotencyKey :: Maybe Text
   } deriving (Generic)
 
 instance FromMultipart Tmp DriveUploadForm where
@@ -45,11 +47,13 @@ instance FromMultipart Tmp DriveUploadForm where
     folder <- optionalText "folderId" multipart
     nameTxt <- optionalText "name" multipart
     token <- optionalAccessToken "accessToken" multipart
+    idempotencyKey <- optionalIdempotencyKey "idempotencyKey" multipart
     pure DriveUploadForm
       { duFile = file
       , duFolderId = folder
       , duName = nameTxt
       , duAccessToken = token
+      , duIdempotencyKey = idempotencyKey
       }
     where
       optionalText name mp =
@@ -72,6 +76,16 @@ instance FromMultipart Tmp DriveUploadForm where
                 then Left (T.unpack name <> " must not be blank")
                 else Just <$> validateMultipartAccessToken name trimmed
 
+      optionalIdempotencyKey name mp =
+        case lookupSingleInput name mp of
+          Left err -> Left err
+          Right Nothing -> Right Nothing
+          Right (Just (Input _ value)) ->
+            let trimmed = T.toLower (T.strip value)
+            in if T.length trimmed /= 64 || not (T.all isHexDigit trimmed)
+                then Left (T.unpack name <> " must be a 64-character SHA-256 hex digest")
+                else Right (Just trimmed)
+
       lookupSingleInput name mp =
         case filter (\(Input nm _) -> nm == name) (inputs mp) of
           [] -> Right Nothing
@@ -90,7 +104,7 @@ instance FromMultipart Tmp DriveUploadForm where
           (_, fileName : _) -> Left ("Unexpected file field: " <> T.unpack fileName)
           _ -> Right ()
         where
-          expectedInputs = ["folderId", "name", "accessToken"]
+          expectedInputs = ["folderId", "name", "accessToken", "idempotencyKey"]
           expectedFiles = ["file"]
           unexpectedInputs =
             [ name

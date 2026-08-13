@@ -821,6 +821,250 @@ paths:
                 $ref: '#/components/schemas/CourseRegistrationResponse'
         '404':
           description: Registration not found
+  /admin/artists/enrichment/overview:
+    get:
+      tags: [Admin]
+      summary: Inspect artist enrichment inventory and review queues
+      operationId: getArtistEnrichmentOverview
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: artistId
+          in: query
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: Complete enrichment overview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtistEnrichmentOverview'
+        '401': { description: Authentication required }
+        '403': { description: Strict Admin role required }
+  /admin/artists/enrichment/runs:
+    get:
+      tags: [Admin]
+      summary: List artist enrichment runs
+      operationId: listArtistEnrichmentRuns
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Recent runs
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ArtistEnrichmentRun' }
+    post:
+      tags: [Admin]
+      summary: Start or safely resume artist enrichment
+      operationId: runArtistEnrichment
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArtistEnrichmentRunRequest' }
+      responses:
+        '200':
+          description: Run result
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArtistEnrichmentRun' }
+  /admin/artists/enrichment/runs/{runId}:
+    parameters:
+      - name: runId
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    patch:
+      tags: [Admin]
+      summary: Checkpoint an external enrichment run
+      operationId: updateArtistEnrichmentRun
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArtistEnrichmentRunUpdate' }
+      responses:
+        '200':
+          description: Durable updated run state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArtistEnrichmentRun' }
+  /admin/artists/enrichment/artists/{artistId}/rerun:
+    parameters:
+      - name: artistId
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    post:
+      tags: [Admin]
+      summary: Rerun enrichment for one artist
+      operationId: rerunArtistEnrichment
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArtistEnrichmentRunRequest' }
+      responses:
+        '200':
+          description: Artist-scoped run
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArtistEnrichmentRun' }
+  /admin/artists/enrichment/suggestions/{suggestionId}:
+    parameters:
+      - name: suggestionId
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    patch:
+      tags: [Admin]
+      summary: Approve, edit, or reject one field suggestion
+      operationId: decideArtistEnrichmentSuggestion
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArtistEnrichmentDecision' }
+      responses:
+        '200':
+          description: Idempotent decision
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArtistEnrichmentSuggestion' }
+  /admin/artists/enrichment/sources:
+    post:
+      tags: [Admin]
+      summary: Persist field-level research provenance
+      operationId: createArtistResearchSource
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArtistResearchSourceCreate' }
+      responses:
+        '200':
+          description: Idempotent provenance record
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArtistResearchSource' }
+  /admin/artists/enrichment/suggestions:
+    post:
+      tags: [Admin]
+      summary: Create an idempotent field suggestion
+      operationId: createArtistEnrichmentSuggestion
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArtistEnrichmentSuggestionCreate' }
+      responses:
+        '200':
+          description: Created or existing suggestion
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArtistEnrichmentSuggestion' }
+  /admin/artists/enrichment/media:
+    post:
+      tags: [Admin]
+      summary: Register a validated Google Drive artist image derivative
+      operationId: createArtistMediaAsset
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArtistMediaAssetCreate' }
+      responses:
+        '200':
+          description: Created or existing media asset
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArtistMediaAsset' }
+  /admin/artists/enrichment/suggestion-sets/{artistId}:
+    parameters:
+      - name: artistId
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    patch:
+      tags: [Admin]
+      summary: Approve or reject all pending suggestions for one artist
+      operationId: decideArtistEnrichmentSuggestionSet
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArtistEnrichmentDecision' }
+      responses:
+        '200':
+          description: Updated suggestion set
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ArtistEnrichmentSuggestion' }
+  /admin/artists/enrichment/identity-candidates:
+    post:
+      tags: [Admin]
+      summary: Persist an idempotent externally researched identity candidate
+      operationId: createArtistIdentityCandidate
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArtistIdentityCandidateCreate' }
+      responses:
+        '200':
+          description: Candidate queued for review or automatic approval
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArtistIdentityCandidate' }
+  /admin/artists/enrichment/identity-candidates/{candidateId}:
+    parameters:
+      - name: candidateId
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    patch:
+      tags: [Admin]
+      summary: Resolve an ambiguous artist identity candidate
+      operationId: decideArtistIdentityCandidate
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArtistEnrichmentDecision' }
+      responses:
+        '200':
+          description: Updated candidate
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArtistIdentityCandidate' }
   /fans/artists:
     get:
       tags: [FanHub]
@@ -4079,7 +4323,6 @@ components:
         password:
           type: string
           format: password
-          example: changeme123
     GoogleLoginRequest:
       type: object
       required: [idToken]
@@ -4141,7 +4384,7 @@ components:
             description: Enabled modules for the user.
     SessionResponse:
       type: object
-      required: [username, displayName, partyId, roles, modules, preferences]
+      required: [username, displayName, partyId, roles, modules, featureFlags, preferences]
       properties:
         username:
           type: string
@@ -4159,6 +4402,11 @@ components:
           items:
             type: string
             description: Enabled modules for the user.
+        featureFlags:
+          type: array
+          description: Enabled public feature-flag identifiers; never contains configuration secrets.
+          items:
+            type: string
         preferences:
           $ref: '#/components/schemas/LocalePreferences'
     LocalePreferences:
@@ -6051,6 +6299,9 @@ components:
           format: int64
         apDisplayName:
           type: string
+        apOfficialName:
+          type: string
+          nullable: true
         apSlug:
           type: string
           nullable: true
@@ -6058,6 +6309,9 @@ components:
           type: string
           nullable: true
         apCity:
+          type: string
+          nullable: true
+        apCountry:
           type: string
           nullable: true
         apHeroImageUrl:
@@ -6100,6 +6354,53 @@ components:
         apHighlights:
           type: string
           nullable: true
+        apInstagramUrl:
+          type: string
+          format: uri
+          nullable: true
+        apSocialLinks:
+          type: string
+          nullable: true
+          description: JSON object containing additional official social URLs.
+        apDiscography:
+          type: string
+          nullable: true
+          description: JSON array of corroborated relevant releases.
+        apAchievements:
+          type: string
+          nullable: true
+        apHeroOriginalUrl:
+          type: string
+          format: uri
+          nullable: true
+        apHeroSquareUrl:
+          type: string
+          format: uri
+          nullable: true
+        apHeroLandscapeUrl:
+          type: string
+          format: uri
+          nullable: true
+        apHeroResponsiveUrls:
+          type: string
+          nullable: true
+          description: JSON responsive AVIF/WebP source set.
+        apHeroFocalPoint:
+          type: string
+          nullable: true
+        apLastVerifiedAt:
+          type: string
+          format: date-time
+          nullable: true
+        apConfidence:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+          nullable: true
+        apReviewStatus:
+          type: string
+          enum: [unverified, pending, verified, rejected, ambiguous]
         apFollowerCount:
           type: integer
           format: int64
@@ -6107,6 +6408,271 @@ components:
         apHasUserAccount:
           type: boolean
           description: Whether this artist is already assigned to a user account.
+    ArtistEnrichmentRunRequest:
+      type: object
+      required: [aerrMode]
+      properties:
+        aerrMode:
+          type: string
+          enum: [dry_run, production]
+        aerrArtistId: { type: integer, format: int64, nullable: true }
+        aerrResumeRunKey: { type: string, maxLength: 200, nullable: true }
+        aerrBatchSize: { type: integer, minimum: 1, maximum: 10000, nullable: true }
+        aerrStaleDays: { type: integer, minimum: 7, maximum: 730, nullable: true }
+    ArtistEnrichmentRunUpdate:
+      type: object
+      properties:
+        aeruStatus:
+          type: string
+          enum: [running, completed, failed, cancelled, blocked]
+        aeruPhase: { type: string, maxLength: 100 }
+        aeruCheckpoint: { type: string, maxLength: 20000 }
+        aeruCounters: { type: string, maxLength: 20000 }
+        aeruErrorSummary: { type: string, maxLength: 12000 }
+    ArtistEnrichmentRun:
+      type: object
+      required: [aerId, aerRunKey, aerMode, aerScope, aerStatus, aerPhase, aerStartedAt, aerHeartbeatAt]
+      properties:
+        aerId: { type: integer, format: int64 }
+        aerRunKey: { type: string }
+        aerMode: { type: string, enum: [dry_run, production] }
+        aerScope: { type: string }
+        aerRequestedArtistId: { type: integer, format: int64, nullable: true }
+        aerStatus: { type: string, enum: [running, completed, failed, cancelled, blocked] }
+        aerPhase: { type: string }
+        aerCheckpoint: { type: string, nullable: true }
+        aerCounters: { type: string, nullable: true }
+        aerErrorSummary: { type: string, nullable: true }
+        aerStartedAt: { type: string, format: date-time }
+        aerHeartbeatAt: { type: string, format: date-time }
+        aerFinishedAt: { type: string, format: date-time, nullable: true }
+    ArtistEnrichmentDecision:
+      type: object
+      required: [aedDecision]
+      properties:
+        aedDecision: { type: string, enum: [approve, reject] }
+        aedEditedValue:
+          type: string
+          nullable: true
+          description: Edited field value for suggestions; for identity approval, an existing artist party ID or `new` to explicitly create a distinct profile.
+        aedNote: { type: string, nullable: true }
+    ArtistEnrichmentSuggestion:
+      type: object
+      required: [aesId, aesFieldName, aesConfidence, aesStatus, aesAutoPublish, aesEvidence, aesCreatedAt, aesUpdatedAt]
+      properties:
+        aesId: { type: integer, format: int64 }
+        aesArtistId: { type: integer, format: int64, nullable: true }
+        aesInventoryReferenceId: { type: integer, format: int64, nullable: true }
+        aesArtistName: { type: string, nullable: true }
+        aesFieldName: { type: string }
+        aesCurrentValue: { type: string, nullable: true }
+        aesProposedValue: { type: string, nullable: true }
+        aesConfidence: { type: number, format: double, minimum: 0, maximum: 1 }
+        aesStatus: { type: string, enum: [pending, approved, rejected, superseded, auto_applied] }
+        aesAutoPublish: { type: boolean }
+        aesEvidence: { type: string }
+        aesCreatedAt: { type: string, format: date-time }
+        aesUpdatedAt: { type: string, format: date-time }
+        aesDecidedAt: { type: string, format: date-time, nullable: true }
+        aesDecidedBy: { type: integer, format: int64, nullable: true }
+        aesDecisionNote: { type: string, nullable: true }
+    ArtistEnrichmentSuggestionCreate:
+      type: object
+      required: [aescFieldName, aescConfidence, aescEvidence]
+      properties:
+        aescArtistId: { type: integer, format: int64, nullable: true }
+        aescInventoryReferenceId: { type: integer, format: int64, nullable: true }
+        aescFieldName: { type: string }
+        aescCurrentValue: { type: string, nullable: true }
+        aescProposedValue: { type: string, nullable: true }
+        aescConfidence: { type: number, format: double, minimum: 0, maximum: 1 }
+        aescAutoPublish: { type: boolean, nullable: true }
+        aescEvidence: { type: string }
+    ArtistInventoryReference:
+      type: object
+      required: [airId, airSourceType, airSourceRecordId, airOriginalName, airNormalizedName, airDisposition, airFirstSeenAt, airLastSeenAt]
+      properties:
+        airId: { type: integer, format: int64 }
+        airSourceType: { type: string }
+        airSourceRecordId: { type: string }
+        airOriginalName: { type: string }
+        airNormalizedName: { type: string }
+        airArtistId: { type: integer, format: int64, nullable: true }
+        airSocialArtistId: { type: integer, format: int64, nullable: true }
+        airAliases: { type: string, nullable: true, description: JSON array retaining original spellings. }
+        airEvidence: { type: string, nullable: true }
+        airConfidence: { type: number, format: double, minimum: 0, maximum: 1, nullable: true }
+        airDisposition: { type: string }
+        airFirstSeenAt: { type: string, format: date-time }
+        airLastSeenAt: { type: string, format: date-time }
+    ArtistResearchSourceCreate:
+      type: object
+      required: [arscSourceUrl, arscSourceType, arscSupportedFields]
+      properties:
+        arscArtistId: { type: integer, format: int64, nullable: true }
+        arscInventoryReferenceId: { type: integer, format: int64, nullable: true }
+        arscSourceUrl: { type: string, format: uri }
+        arscSourceType: { type: string }
+        arscRetrievedAt: { type: string, format: date-time, nullable: true }
+        arscSupportedFields: { type: string, description: Comma-separated field names supported by this source. }
+        arscAttribution: { type: string, nullable: true }
+        arscContentHash: { type: string, nullable: true }
+    ArtistResearchSource:
+      type: object
+      required: [arsId, arsSourceUrl, arsSourceType, arsRetrievedAt, arsSupportedFields]
+      properties:
+        arsId: { type: integer, format: int64 }
+        arsArtistId: { type: integer, format: int64, nullable: true }
+        arsInventoryReferenceId: { type: integer, format: int64, nullable: true }
+        arsSourceUrl: { type: string, format: uri }
+        arsSourceType: { type: string }
+        arsRetrievedAt: { type: string, format: date-time }
+        arsSupportedFields: { type: string }
+        arsAttribution: { type: string, nullable: true }
+        arsContentHash: { type: string, nullable: true }
+    ArtistFieldChange:
+      type: object
+      required: [afcId, afcArtistId, afcFieldName, afcEvidence, afcConfidence, afcActor, afcChangedAt]
+      properties:
+        afcId: { type: integer, format: int64 }
+        afcArtistId: { type: integer, format: int64 }
+        afcSuggestionId: { type: integer, format: int64, nullable: true }
+        afcFieldName: { type: string }
+        afcPreviousValue: { type: string, nullable: true }
+        afcNewValue: { type: string, nullable: true }
+        afcEvidence: { type: string }
+        afcConfidence: { type: number, format: double, minimum: 0, maximum: 1 }
+        afcActor: { type: string }
+        afcChangedAt: { type: string, format: date-time }
+    ArtistProfileEnrichment:
+      type: object
+      required: [apeArtistId, apeArtistName, apeReviewStatus, apeMissingFields, apeBrokenFields]
+      properties:
+        apeArtistId: { type: integer, format: int64 }
+        apeArtistName: { type: string }
+        apeOfficialName: { type: string, nullable: true }
+        apeCountry: { type: string, nullable: true }
+        apeInstagramUrl: { type: string, format: uri, nullable: true }
+        apeSocialLinks: { type: string, nullable: true }
+        apeDiscography: { type: string, nullable: true }
+        apeAchievements: { type: string, nullable: true }
+        apeHeroOriginalUrl: { type: string, format: uri, nullable: true }
+        apeHeroSquareUrl: { type: string, format: uri, nullable: true }
+        apeHeroLandscapeUrl: { type: string, format: uri, nullable: true }
+        apeHeroResponsiveUrls: { type: string, nullable: true }
+        apeHeroFocalPoint: { type: string, nullable: true }
+        apeLastVerifiedAt: { type: string, format: date-time, nullable: true }
+        apeConfidence: { type: number, format: double, minimum: 0, maximum: 1, nullable: true }
+        apeReviewStatus: { type: string, enum: [unverified, pending, verified, rejected, ambiguous] }
+        apeMissingFields: { type: array, items: { type: string } }
+        apeBrokenFields: { type: array, items: { type: string } }
+    ArtistIdentityCandidate:
+      type: object
+      required: [aicId, aicInventoryReferenceId, aicProvider, aicEvidence, aicConfidence, aicStatus, aicCreatedAt, aicUpdatedAt]
+      properties:
+        aicId: { type: integer, format: int64 }
+        aicInventoryReferenceId: { type: integer, format: int64 }
+        aicArtistId: { type: integer, format: int64, nullable: true }
+        aicProvider: { type: string }
+        aicExternalId: { type: string, nullable: true }
+        aicCandidateUrl: { type: string, format: uri, nullable: true }
+        aicEvidence: { type: string }
+        aicConfidence: { type: number, format: double, minimum: 0, maximum: 1 }
+        aicStatus: { type: string, enum: [pending, approved, rejected, superseded] }
+        aicCreatedAt: { type: string, format: date-time }
+        aicUpdatedAt: { type: string, format: date-time }
+        aicDecidedAt: { type: string, format: date-time, nullable: true }
+        aicDecidedBy: { type: integer, format: int64, nullable: true }
+        aicDecisionNote: { type: string, nullable: true }
+    ArtistIdentityCandidateCreate:
+      type: object
+      required: [aiccInventoryReferenceId, aiccProvider, aiccEvidence, aiccConfidence]
+      properties:
+        aiccInventoryReferenceId: { type: integer, format: int64 }
+        aiccArtistId: { type: integer, format: int64, nullable: true }
+        aiccProvider: { type: string }
+        aiccExternalId: { type: string, nullable: true }
+        aiccCandidateUrl: { type: string, format: uri, nullable: true }
+        aiccEvidence: { type: string }
+        aiccConfidence: { type: number, format: double, minimum: 0, maximum: 1 }
+    ArtistMediaAssetCreate:
+      type: object
+      required: [amacArtistId, amacAssetKind, amacSourceUrl, amacSourceAttribution, amacSourceContentHash, amacSourceWidth, amacSourceHeight, amacSourceMimeType, amacSourceByteSize, amacContentHash, amacWidth, amacHeight, amacMimeType, amacByteSize, amacRightsStatus, amacDriveFileId, amacPublicUrl]
+      properties:
+        amacArtistId: { type: integer, format: int64 }
+        amacAssetKind: { type: string, enum: [original, square, landscape, responsive] }
+        amacSourceUrl: { type: string, format: uri }
+        amacSourceAttribution: { type: string }
+        amacRetrievedAt: { type: string, format: date-time, nullable: true }
+        amacSourceContentHash: { type: string, pattern: '^[0-9a-f]{64}([0-9a-f]{64})?$' }
+        amacSourceWidth: { type: integer, minimum: 1 }
+        amacSourceHeight: { type: integer, minimum: 1 }
+        amacSourceMimeType: { type: string, enum: [image/jpeg, image/png, image/avif, image/webp] }
+        amacSourceByteSize: { type: integer, format: int64, minimum: 1 }
+        amacContentHash: { type: string, pattern: '^[0-9a-f]{64}([0-9a-f]{64})?$' }
+        amacWidth: { type: integer, minimum: 1 }
+        amacHeight: { type: integer, minimum: 1 }
+        amacMimeType: { type: string, enum: [image/avif, image/webp] }
+        amacByteSize: { type: integer, format: int64, minimum: 1 }
+        amacRightsStatus: { type: string, enum: [authorized, licensed] }
+        amacDriveFileId: { type: string }
+        amacPublicUrl: { type: string, format: uri }
+        amacParentAssetId: { type: integer, format: int64, nullable: true }
+        amacFocalPoint: { type: string, nullable: true }
+    ArtistMediaAsset:
+      type: object
+      required: [amaId, amaArtistId, amaAssetKind, amaSourceUrl, amaSourceAttribution, amaRetrievedAt, amaSourceContentHash, amaSourceWidth, amaSourceHeight, amaSourceMimeType, amaSourceByteSize, amaContentHash, amaWidth, amaHeight, amaMimeType, amaByteSize, amaRightsStatus, amaDriveFileId, amaPublicUrl, amaCreatedAt]
+      properties:
+        amaId: { type: integer, format: int64 }
+        amaArtistId: { type: integer, format: int64 }
+        amaAssetKind: { type: string }
+        amaSourceUrl: { type: string, format: uri }
+        amaSourceAttribution: { type: string }
+        amaRetrievedAt: { type: string, format: date-time }
+        amaSourceContentHash: { type: string }
+        amaSourceWidth: { type: integer }
+        amaSourceHeight: { type: integer }
+        amaSourceMimeType: { type: string }
+        amaSourceByteSize: { type: integer, format: int64 }
+        amaContentHash: { type: string }
+        amaWidth: { type: integer }
+        amaHeight: { type: integer }
+        amaMimeType: { type: string }
+        amaByteSize: { type: integer, format: int64 }
+        amaRightsStatus: { type: string }
+        amaDriveFileId: { type: string }
+        amaPublicUrl: { type: string, format: uri }
+        amaParentAssetId: { type: integer, format: int64, nullable: true }
+        amaFocalPoint: { type: string, nullable: true }
+        amaCreatedAt: { type: string, format: date-time }
+    ArtistEnrichmentOverview:
+      type: object
+      required: [aeoProfiles, aeoInventory, aeoSources, aeoSuggestions, aeoChanges, aeoRuns, aeoIdentityCandidates, aeoMedia]
+      properties:
+        aeoProfiles:
+          type: array
+          items: { $ref: '#/components/schemas/ArtistProfileEnrichment' }
+        aeoInventory:
+          type: array
+          items: { $ref: '#/components/schemas/ArtistInventoryReference' }
+        aeoSources:
+          type: array
+          items: { $ref: '#/components/schemas/ArtistResearchSource' }
+        aeoSuggestions:
+          type: array
+          items: { $ref: '#/components/schemas/ArtistEnrichmentSuggestion' }
+        aeoChanges:
+          type: array
+          items: { $ref: '#/components/schemas/ArtistFieldChange' }
+        aeoRuns:
+          type: array
+          items: { $ref: '#/components/schemas/ArtistEnrichmentRun' }
+        aeoIdentityCandidates:
+          type: array
+          items: { $ref: '#/components/schemas/ArtistIdentityCandidate' }
+        aeoMedia:
+          type: array
+          items: { $ref: '#/components/schemas/ArtistMediaAsset' }
     ArtistProfileUpsert:
       type: object
       additionalProperties: false
@@ -6839,3 +7405,521 @@ components:
           type: string
           nullable: true
           description: Parsed track title when StreamTitle includes a separator.
+    FeatureAccessRequestStatus:
+      type: string
+      enum: [pending, approved, rejected, cancelled, expired]
+    FeatureAccessRequestHistory:
+      type: object
+      required: [id, transition, toStatus, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        transition:
+          type: string
+        fromStatus:
+          allOf:
+            - $ref: '#/components/schemas/FeatureAccessRequestStatus'
+          nullable: true
+        toStatus:
+          $ref: '#/components/schemas/FeatureAccessRequestStatus'
+        note:
+          type: string
+          nullable: true
+          maxLength: 2000
+        createdAt:
+          type: string
+          format: date-time
+    FeatureAccessRequest:
+      type: object
+      required:
+        - id
+        - requesterPartyId
+        - featureId
+        - action
+        - roleContext
+        - moduleContext
+        - status
+        - reviewerGroup
+        - requestedAt
+        - updatedAt
+        - history
+      properties:
+        id:
+          type: integer
+          format: int64
+        requesterPartyId:
+          type: integer
+          format: int64
+          description: Internal subject identifier; clients must not expose it unnecessarily.
+        featureId:
+          type: string
+        action:
+          type: string
+        roleContext:
+          type: array
+          items:
+            type: string
+        moduleContext:
+          type: array
+          items:
+            type: string
+        status:
+          $ref: '#/components/schemas/FeatureAccessRequestStatus'
+        reviewerGroup:
+          type: string
+        justification:
+          type: string
+          nullable: true
+          maxLength: 2000
+        reviewerNotes:
+          type: string
+          nullable: true
+          maxLength: 2000
+        requestedAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        decidedAt:
+          type: string
+          format: date-time
+          nullable: true
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureAccessRequestHistory'
+    FeatureAccessRequestCreate:
+      type: object
+      required: [featureId, action]
+      additionalProperties: false
+      properties:
+        featureId:
+          type: string
+          minLength: 1
+          maxLength: 160
+        action:
+          type: string
+          minLength: 1
+          maxLength: 40
+        justification:
+          type: string
+          nullable: true
+          maxLength: 2000
+    FeatureAccessRequestDecision:
+      type: object
+      required: [decision]
+      additionalProperties: false
+      properties:
+        decision:
+          type: string
+          enum: [approved, rejected]
+        notes:
+          type: string
+          nullable: true
+          maxLength: 2000
+    FeatureAccessRequestCancel:
+      type: object
+      additionalProperties: false
+      properties:
+        cancellationNote:
+          type: string
+          nullable: true
+          maxLength: 2000
+    NavigationPreference:
+      type: object
+      required: [featureId, favorite, pinned, useCount, updatedAt]
+      properties:
+        featureId:
+          type: string
+        favorite:
+          type: boolean
+        pinned:
+          type: boolean
+        pinOrder:
+          type: integer
+          nullable: true
+          minimum: 0
+        lastVisitedAt:
+          type: string
+          format: date-time
+          nullable: true
+        useCount:
+          type: integer
+          minimum: 0
+        updatedAt:
+          type: string
+          format: date-time
+    NavigationPreferenceUpdate:
+      type: object
+      required: [favorite, pinned]
+      additionalProperties: false
+      properties:
+        favorite:
+          type: boolean
+        pinned:
+          type: boolean
+        pinOrder:
+          type: integer
+          nullable: true
+          minimum: 0
+    OperationsStatus:
+      type: string
+      enum: [new, seen, assigned, in_progress, waiting, resolved, archived]
+    OperationsPriority:
+      type: string
+      enum: [urgent, high, normal, low]
+    OperationsSlaState:
+      type: string
+      enum: [on_track, at_risk, due, breached, paused]
+    OperationsWorkItem:
+      type: object
+      required:
+        - id
+        - organizationId
+        - sourceSystem
+        - sourceChannel
+        - entityType
+        - uncorrelated
+        - correlationKey
+        - titleEs
+        - titleEn
+        - descriptionEs
+        - descriptionEn
+        - status
+        - priority
+        - recommendedPriority
+        - severity
+        - seen
+        - createdAt
+        - updatedAt
+        - waitingExternalDependency
+        - slaState
+        - version
+        - metadata
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string, format: uuid }
+        branchId: { type: string, format: uuid, nullable: true }
+        sourceSystem: { type: string }
+        sourceChannel: { type: string }
+        entityType: { type: string }
+        entityId: { type: string, nullable: true }
+        uncorrelated: { type: boolean }
+        correlationKey: { type: string }
+        titleEs: { type: string }
+        titleEn: { type: string }
+        descriptionEs: { type: string }
+        descriptionEn: { type: string }
+        status: { $ref: '#/components/schemas/OperationsStatus' }
+        priority: { $ref: '#/components/schemas/OperationsPriority' }
+        recommendedPriority: { $ref: '#/components/schemas/OperationsPriority' }
+        severity: { type: string, enum: [critical, error, warning, info] }
+        seen: { type: boolean }
+        firstSeenBy: { type: integer, format: int64, nullable: true }
+        firstSeenAt: { type: string, format: date-time, nullable: true }
+        assigneePartyId: { type: integer, format: int64, nullable: true }
+        responsibleTeam: { type: string, nullable: true }
+        customerPartyId: { type: integer, format: int64, nullable: true }
+        serviceKey: { type: string, nullable: true }
+        amountMinor: { type: integer, format: int64, nullable: true }
+        currency: { type: string, minLength: 3, maxLength: 3, nullable: true }
+        paymentState: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        dueAt: { type: string, format: date-time, nullable: true }
+        snoozedUntil: { type: string, format: date-time, nullable: true }
+        waitingReason: { type: string, nullable: true }
+        waitingExternalDependency: { type: boolean }
+        resumeAt: { type: string, format: date-time, nullable: true }
+        resolvedAt: { type: string, format: date-time, nullable: true }
+        archivedAt: { type: string, format: date-time, nullable: true }
+        slaState: { $ref: '#/components/schemas/OperationsSlaState' }
+        version: { type: integer, format: int64, minimum: 1 }
+        metadata: { type: object, additionalProperties: true }
+    OperationsWorkItemPage:
+      type: object
+      required: [items, hasMore]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/OperationsWorkItem' } }
+        nextCursor: { type: string, nullable: true }
+        hasMore: { type: boolean }
+    OperationsWorkItemEvent:
+      type: object
+      required: [id, eventType, bodyEs, bodyEn, metadata, occurredAt]
+      properties:
+        id: { type: integer, format: int64 }
+        eventType: { type: string }
+        actorPartyId: { type: integer, format: int64, nullable: true }
+        actorRole: { type: string, nullable: true }
+        bodyEs: { type: string }
+        bodyEn: { type: string }
+        metadata: { type: object, additionalProperties: true }
+        occurredAt: { type: string, format: date-time }
+    OperationsNote:
+      type: object
+      required: [id, authorPartyId, body, mentionedPartyIds, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        authorPartyId: { type: integer, format: int64 }
+        body: { type: string }
+        mentionedPartyIds: { type: array, items: { type: integer, format: int64 } }
+        createdAt: { type: string, format: date-time }
+        editedAt: { type: string, format: date-time, nullable: true }
+    OperationsWorkItemDetail:
+      type: object
+      required: [workItem, events, notes, allowedTransitions, quickActions]
+      properties:
+        workItem: { $ref: '#/components/schemas/OperationsWorkItem' }
+        events: { type: array, items: { $ref: '#/components/schemas/OperationsWorkItemEvent' } }
+        notes: { type: array, items: { $ref: '#/components/schemas/OperationsNote' } }
+        allowedTransitions: { type: array, items: { $ref: '#/components/schemas/OperationsStatus' } }
+        sourceRecordUrl: { type: string, nullable: true }
+        quickActions: { type: array, items: { type: string } }
+    OperationsMetrics:
+      type: object
+      required:
+        - newRegistrations
+        - registrationsRequiringAttention
+        - reservationsAwaitingConfirmation
+        - todaySessions
+        - schedulingConflicts
+        - unpaidInvoices
+        - overdueInvoices
+        - paymentsAwaitingVerification
+        - revenueReceivedTodayMinor
+        - unassignedWork
+        - slaBreaches
+        - integrationFailures
+        - currency
+        - calculatedAt
+      properties:
+        newRegistrations: { type: integer, format: int64 }
+        registrationsRequiringAttention: { type: integer, format: int64 }
+        reservationsAwaitingConfirmation: { type: integer, format: int64 }
+        todaySessions: { type: integer, format: int64 }
+        schedulingConflicts: { type: integer, format: int64 }
+        unpaidInvoices: { type: integer, format: int64 }
+        overdueInvoices: { type: integer, format: int64 }
+        paymentsAwaitingVerification: { type: integer, format: int64 }
+        revenueReceivedTodayMinor: { type: integer, format: int64 }
+        unassignedWork: { type: integer, format: int64 }
+        slaBreaches: { type: integer, format: int64 }
+        averageFirstResponseSeconds: { type: number, format: double, nullable: true }
+        averageResolutionSeconds: { type: number, format: double, nullable: true }
+        integrationFailures: { type: integer, format: int64 }
+        currency: { type: string }
+        calculatedAt: { type: string, format: date-time }
+    OperationsVersionedCommand:
+      type: object
+      required: [expectedVersion, requestId, sourceClient]
+      additionalProperties: false
+      properties:
+        expectedVersion: { type: integer, format: int64, minimum: 1 }
+        reason: { type: string, nullable: true }
+        requestId: { type: string, minLength: 1 }
+        sourceClient: { type: string, minLength: 1 }
+    OperationsTransitionCommand:
+      allOf:
+        - $ref: '#/components/schemas/OperationsVersionedCommand'
+        - type: object
+          required: [targetStatus]
+          properties:
+            targetStatus: { $ref: '#/components/schemas/OperationsStatus' }
+            waitingExternalDependency: { type: boolean, nullable: true }
+            resumeAt: { type: string, format: date-time, nullable: true }
+    OperationsAssignmentCommand:
+      allOf:
+        - $ref: '#/components/schemas/OperationsVersionedCommand'
+        - type: object
+          properties:
+            assigneePartyId: { type: integer, format: int64, nullable: true }
+            responsibleTeam: { type: string, nullable: true }
+    OperationsPriorityCommand:
+      type: object
+      required: [expectedVersion, priority, reason, requestId, sourceClient]
+      additionalProperties: false
+      properties:
+        expectedVersion: { type: integer, format: int64, minimum: 1 }
+        priority: { $ref: '#/components/schemas/OperationsPriority' }
+        reason: { type: string, minLength: 1 }
+        requestId: { type: string, minLength: 1 }
+        sourceClient: { type: string, minLength: 1 }
+    OperationsNoteCreate:
+      type: object
+      required: [body, mentionedPartyIds, requestId, sourceClient]
+      additionalProperties: false
+      properties:
+        body: { type: string, minLength: 1, maxLength: 5000 }
+        mentionedPartyIds: { type: array, items: { type: integer, format: int64 } }
+        requestId: { type: string }
+        sourceClient: { type: string }
+    OperationsManualWorkItemCreate:
+      type: object
+      required: [organizationId, entityType, uncorrelated, correlationKey, titleEs, titleEn, descriptionEs, descriptionEn, priority, metadata, requestId, sourceClient]
+      properties:
+        organizationId: { type: string, format: uuid }
+        branchId: { type: string, format: uuid, nullable: true }
+        entityType: { type: string }
+        entityId: { type: string, nullable: true }
+        uncorrelated: { type: boolean }
+        correlationKey: { type: string }
+        titleEs: { type: string }
+        titleEn: { type: string }
+        descriptionEs: { type: string }
+        descriptionEn: { type: string }
+        priority: { $ref: '#/components/schemas/OperationsPriority' }
+        responsibleTeam: { type: string, nullable: true }
+        customerPartyId: { type: integer, format: int64, nullable: true }
+        serviceKey: { type: string, nullable: true }
+        amountMinor: { type: integer, format: int64, nullable: true }
+        currency: { type: string, nullable: true }
+        metadata: { type: object, additionalProperties: true }
+        requestId: { type: string }
+        sourceClient: { type: string }
+    OperationsApprovalCreate:
+      type: object
+      required: [organizationId, actionType, targetEntityType, targetEntityId, reason, idempotencyKey, requestId, sourceClient]
+      properties:
+        organizationId: { type: string, format: uuid }
+        branchId: { type: string, format: uuid, nullable: true }
+        workItemId: { type: string, format: uuid, nullable: true }
+        actionType: { type: string }
+        targetEntityType: { type: string }
+        targetEntityId: { type: string }
+        amountMinor: { type: integer, format: int64, nullable: true }
+        currency: { type: string, nullable: true }
+        reason: { type: string, minLength: 1 }
+        idempotencyKey: { type: string, minLength: 1 }
+        expiresAt: { type: string, format: date-time, nullable: true }
+        requestId: { type: string }
+        sourceClient: { type: string }
+    OperationsApprovalDecision:
+      type: object
+      required: [decision, reason, expectedDecision, requestId, sourceClient]
+      properties:
+        decision: { type: string, enum: [approved, rejected] }
+        reason: { type: string, minLength: 1 }
+        expectedDecision: { type: string, enum: [pending] }
+        requestId: { type: string }
+        sourceClient: { type: string }
+    OperationsApproval:
+      type: object
+      required: [id, organizationId, actionType, targetEntityType, targetEntityId, requesterPartyId, requesterRole, requestReason, requestedAt, decision, executionStatus]
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string, format: uuid }
+        branchId: { type: string, format: uuid, nullable: true }
+        workItemId: { type: string, format: uuid, nullable: true }
+        actionType: { type: string }
+        targetEntityType: { type: string }
+        targetEntityId: { type: string }
+        amountMinor: { type: integer, format: int64, nullable: true }
+        currency: { type: string, nullable: true }
+        requesterPartyId: { type: integer, format: int64 }
+        requesterRole: { type: string }
+        requestReason: { type: string }
+        requestedAt: { type: string, format: date-time }
+        approverPartyId: { type: integer, format: int64, nullable: true }
+        approverRole: { type: string, nullable: true }
+        decision: { type: string }
+        decisionReason: { type: string, nullable: true }
+        decidedAt: { type: string, format: date-time, nullable: true }
+        expiresAt: { type: string, format: date-time, nullable: true }
+        executionStatus: { type: string }
+    OperationsIntegrationFailure:
+      type: object
+      required: [id, organizationId, provider, direction, sourceRecordType, sourceRecordId, failureCode, redactedSummary, retryable, status, attemptCount, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string, format: uuid }
+        branchId: { type: string, format: uuid, nullable: true }
+        provider: { type: string }
+        direction: { type: string }
+        sourceRecordType: { type: string }
+        sourceRecordId: { type: string }
+        failureCode: { type: string }
+        redactedSummary: { type: string }
+        retryable: { type: boolean }
+        status: { type: string }
+        attemptCount: { type: integer }
+        lastAttemptAt: { type: string, format: date-time, nullable: true }
+        nextAttemptAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+    OperationsReplayCommand:
+      type: object
+      required: [reason, requestId, sourceClient]
+      properties:
+        reason: { type: string, minLength: 1 }
+        requestId: { type: string }
+        sourceClient: { type: string }
+    OperationsStreamEvent:
+      type: object
+      required: [id, eventType, payload, createdAt]
+      properties:
+        id: { type: integer, format: int64 }
+        eventType: { type: string }
+        workItemId: { type: string, format: uuid, nullable: true }
+        payload: { type: object, additionalProperties: true }
+        createdAt: { type: string, format: date-time }
+    OperationsStreamBatch:
+      type: object
+      required: [events, retryAfterMs]
+      properties:
+        events: { type: array, items: { $ref: '#/components/schemas/OperationsStreamEvent' } }
+        lastEventId: { type: integer, format: int64, nullable: true }
+        retryAfterMs: { type: integer, minimum: 1000 }
+    OperationsSavedView:
+      type: object
+      required: [id, organizationId, name, shared, filters, columns, widgets, subscribedEventTypes, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string, format: uuid }
+        ownerPartyId: { type: integer, format: int64, nullable: true }
+        name: { type: string }
+        shared: { type: boolean }
+        filters: { type: object, additionalProperties: true }
+        columns: { type: array, items: { type: string } }
+        widgets: { type: array, items: { type: string } }
+        subscribedEventTypes: { type: array, items: { type: string } }
+        updatedAt: { type: string, format: date-time }
+    OperationsSavedViewCreate:
+      type: object
+      required: [organizationId, name, shared, filters, columns, widgets, subscribedEventTypes, requestId, sourceClient]
+      properties:
+        organizationId: { type: string, format: uuid }
+        name: { type: string, minLength: 1, maxLength: 120 }
+        shared: { type: boolean }
+        filters: { type: object, additionalProperties: true }
+        columns: { type: array, items: { type: string } }
+        widgets: { type: array, items: { type: string } }
+        subscribedEventTypes: { type: array, items: { type: string } }
+        requestId: { type: string }
+        sourceClient: { type: string }
+    OperationsPushSubscriptionCreate:
+      type: object
+      required: [organizationId, platform, deviceToken, requestId, sourceClient]
+      properties:
+        organizationId: { type: string, format: uuid }
+        platform: { type: string, enum: [ios, android, web] }
+        deviceToken: { type: string, minLength: 16, maxLength: 4096, writeOnly: true }
+        requestId: { type: string, minLength: 1, maxLength: 200 }
+        sourceClient: { type: string, minLength: 1, maxLength: 100 }
+    OperationsPushSubscription:
+      type: object
+      required: [id, organizationId, platform, active, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string, format: uuid }
+        platform: { type: string }
+        active: { type: boolean }
+        updatedAt: { type: string, format: date-time }

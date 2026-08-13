@@ -86,6 +86,7 @@ import TDF.API.WhatsApp
 import TDF.App.Boot (validateDatabaseStartupSafety, validateSeedDatabaseStartup)
 import qualified TDF.APITypesSpec as APITypesSpec
 import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
+import qualified TDF.Artists.EnrichmentSpec as ArtistEnrichmentSpec
 import TDF.Cors
     ( corsPolicy,
       deriveCorsOriginFromAppBase,
@@ -146,11 +147,20 @@ import TDF.Models.SocialEventsModels
       EventTicketTier (..),
       SocialEvent (..),
       SocialEventId )
-import TDF.Auth (AuthedUser (..), modulesForRoles)
+import TDF.Auth (AuthedUser (..), moduleName, modulesForRoles)
+import TDF.FeatureRegistry
+    ( RegistryFeature(registryFeatureId),
+      allRegistryFeatures,
+      findRegistryFeature,
+      registryFeatureAllows,
+      registryFeatureRequestable,
+      registryReviewerCanDecide )
 import TDF.Models (ArtistProfile (..), Party (..), RoleEnum (..), SocialSyncPost (..), SocialSyncRun (..))
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
+import qualified TDF.Operations.ModelSpec as OperationsModelSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
+import qualified TDF.Server.DDEX as DDEXServer
 import qualified TDF.ServerProposalsSpec as ServerProposalsSpec
 import TDF.ServerRadio
     ( StreamMetadata (..),
@@ -385,6 +395,10 @@ import TDF.Server.SocialEventsHandlers (
     validateInvitationStatusUpdateInput,
     validateEventArtistIds,
     validateArtistName,
+    validateSocialEventsFeatureAction,
+    validateArtistProfileCreateParty,
+    validateArtistProfileWriteAccess,
+    validateAuthenticatedPartyReference,
     validateRsvpStatus,
     validateTicketCheckInLookup,
     validateStoredTicketOrderStatus,
@@ -472,7 +486,7 @@ import TDF.Config
       smtpUseTLS,
       supportedCurrencies )
 import TDF.Version (VersionInfo (..), getVersionInfo)
-import TDF.Seed (seededCredentialSeedingAllowed)
+import TDF.Seed (seededCredentialSeedingAllowed, seededCredentialSecrets)
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
@@ -892,6 +906,19 @@ main = hspec $ do
             seededCredentialSeedingAllowed [("NODE_ENV", "test")]
                 `shouldBe` True
 
+        it "requires strong runtime-only secrets before creating demo credentials" $ do
+            seededCredentialSecrets [] `shouldBe` Nothing
+            seededCredentialSecrets
+                [ ("TDF_SEED_DEMO_PASSWORD", "too-short")
+                , ("TDF_SEED_TOKEN_PREFIX", "also-too-short")
+                ]
+                `shouldBe` Nothing
+            seededCredentialSecrets
+                [ ("TDF_SEED_DEMO_PASSWORD", "isolated-fixture-password")
+                , ("TDF_SEED_TOKEN_PREFIX", "isolated-fixture-token-prefix")
+                ]
+                `shouldBe` Just ("isolated-fixture-password", "isolated-fixture-token-prefix")
+
     describe "validateSeedDatabaseStartup" $ do
         it "allows database seeding in local development" $
             validateSeedDatabaseStartup True []
@@ -925,6 +952,20 @@ main = hspec $ do
             migration <- readFile "sql/002_party_booking_enhancements.sql"
             migration `shouldContain` "UPDATE booking SET title = 'Booking'\nWHERE title IS NULL;"
             migration `shouldNotContain` "UPDATE booking SET title = COALESCE(title, 'Booking');"
+
+    describe "operations control-center migrations" $ do
+        it "limits rollback updates to rows whose enabled state changes" $ do
+            rollback <- readFile "sql/2026-08-09_admin_operations_control_center_rollback.sql"
+            rollback `shouldContain`
+                "UPDATE operations_organization SET operations_enabled = FALSE, updated_at = now()\nWHERE operations_enabled IS DISTINCT FROM FALSE;"
+            rollback `shouldContain`
+                "UPDATE operations_provider_config SET enabled = FALSE, updated_at = now()\nWHERE enabled IS DISTINCT FROM FALSE;"
+
+        it "keeps the backfill record projection explicit" $ do
+            migration <- readFile "sql/2026-08-09_admin_operations_control_center.sql"
+            migration `shouldContain`
+                "SELECT entity_type, entity_id, correlation_key, occurred_at,\n        priority, title_es, title_en, metadata"
+            migration `shouldNotContain` "SELECT * FROM ("
 
     describe "getVersionInfo" $ do
         let clearEnv keys = map (\key -> (key, Nothing)) keys
@@ -12125,10 +12166,11 @@ main = hspec $ do
     describe "internship task update permissions" $ do
         it "allows interns to change status/progress while keeping admin-only task edits available to admins" $ do
             validateInternTaskUpdatePermissions False
-                (InternTaskUpdate Nothing Nothing (Just "doing") (Just 55) Nothing Nothing)
+                (InternTaskUpdate Nothing Nothing Nothing (Just "doing") (Just 55) Nothing Nothing)
                 `shouldBe` Right ()
             validateInternTaskUpdatePermissions True
-                (InternTaskUpdate (Just "Retitle")
+                (InternTaskUpdate (Just "project-2")
+                    (Just "Retitle")
                     (Just (Just "Add checklist"))
                     Nothing
                     Nothing
@@ -12136,19 +12178,20 @@ main = hspec $ do
                     (Just Nothing))
                 `shouldBe` Right ()
 
-        it "rejects non-admin attempts to change title, description, assignee, or due date instead of silently ignoring them" $ do
+        it "rejects non-admin attempts to change project, title, description, assignee, or due date instead of silently ignoring them" $ do
             let assertForbidden payload = case validateInternTaskUpdatePermissions False payload of
                     Left err -> do
                         errHTTPCode err `shouldBe` 403
                         BL.unpack (errBody err)
-                            `shouldContain` "Only admins can update task title, description, assignee, or due date"
+                            `shouldContain` "Only admins can update task project, title, description, assignee, or due date"
                     Right value ->
                         expectationFailure
                             ("Expected non-admin task update to be rejected, got " <> show value)
-            assertForbidden (InternTaskUpdate (Just "Retitle") Nothing Nothing Nothing Nothing Nothing)
-            assertForbidden (InternTaskUpdate Nothing (Just (Just "Details")) Nothing Nothing Nothing Nothing)
-            assertForbidden (InternTaskUpdate Nothing Nothing Nothing Nothing (Just (Just 7)) Nothing)
-            assertForbidden (InternTaskUpdate Nothing Nothing Nothing Nothing Nothing (Just Nothing))
+            assertForbidden (InternTaskUpdate (Just "project-2") Nothing Nothing Nothing Nothing Nothing Nothing)
+            assertForbidden (InternTaskUpdate Nothing (Just "Retitle") Nothing Nothing Nothing Nothing Nothing)
+            assertForbidden (InternTaskUpdate Nothing Nothing (Just (Just "Details")) Nothing Nothing Nothing Nothing)
+            assertForbidden (InternTaskUpdate Nothing Nothing Nothing Nothing Nothing (Just (Just 7)) Nothing)
+            assertForbidden (InternTaskUpdate Nothing Nothing Nothing Nothing Nothing Nothing (Just Nothing))
 
     describe "event finance normalizers" $ do
         it "rejects invalid explicit budget line types instead of silently rewriting them to expense" $ do
@@ -14662,6 +14705,7 @@ main = hspec $ do
                     expectationFailure ("Expected unexpected multipart file to be rejected, got: " <> show payload)
 
     APITypesSpec.spec
+    ArtistEnrichmentSpec.spec
     ArtistPromotionSpec.spec
     CatalogRecordsSpec.spec
     CatalogSecuritySpec.spec

@@ -28,9 +28,9 @@ from typing import Any, Dict, List, Optional
 
 import requests
 
-TDF_API_BASE = os.environ.get("TDF_API_BASE", "https://tdf-hq.fly.dev").rstrip("/")
-TDF_USERNAME = os.environ.get("TDF_USERNAME", "admin")
-TDF_PASSWORD = os.environ.get("TDF_PASSWORD", "password123")
+TDF_API_BASE = os.environ.get("TDF_API_BASE", "http://127.0.0.1:8080").rstrip("/")
+TDF_USERNAME = os.environ.get("TDF_USERNAME", "").strip()
+TDF_PASSWORD = os.environ.get("TDF_PASSWORD", "")
 
 BANDSINTOWN_APP_ID = os.environ.get("BANDSINTOWN_APP_ID", "").strip()
 SONGKICK_API_KEY = os.environ.get("SONGKICK_API_KEY", "").strip()
@@ -43,6 +43,8 @@ session = requests.Session()
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def tdf_login() -> str:
+    if not TDF_USERNAME or not TDF_PASSWORD:
+        raise RuntimeError("Set TDF_USERNAME and TDF_PASSWORD in the runtime secret store.")
     resp = session.post(
         f"{TDF_API_BASE}/login",
         json={"username": TDF_USERNAME, "password": TDF_PASSWORD},

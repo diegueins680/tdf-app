@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMetaTags } from '../hooks/useMetaTags';
 import {
   Alert,
   Avatar,
@@ -26,6 +27,7 @@ import { Fans } from '../api/fans';
 import type { ArtistReleaseDTO } from '../api/types';
 import { useSession } from '../session/SessionContext';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
+import { parseArtistJson, parseArtistTextItems } from '../utils/artistProfileContent';
 import ArtistFansList from '../components/ArtistFansList';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { formatDateForUser } from '../utils/formatters';
@@ -43,6 +45,49 @@ type ArtistPublicPageDisplayContract = Readonly<{
 const ARTIST_PUBLIC_PAGE_DISPLAY_CONTRACTS = {
   releaseDescriptionPreviewChars: 100 + 4 * 10,
 } as const satisfies ArtistPublicPageDisplayContract;
+
+const parseJsonObject = (raw?: string | null): Record<string, unknown> => {
+  if (!raw) return {};
+  const parsed = parseArtistJson(raw);
+  return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+    ? parsed as Record<string, unknown>
+    : {};
+};
+
+const parseOfficialLinks = (raw?: string | null) => Object.entries(parseJsonObject(raw))
+  .filter((entry): entry is [string, string] => typeof entry[1] === 'string' && /^https?:\/\//i.test(entry[1]));
+
+const parseDiscography = (raw?: string | null) => {
+  if (!raw) return [];
+  const parsedDiscography = parseArtistJson(raw);
+  if (Array.isArray(parsedDiscography)) {
+    return parsedDiscography.flatMap((item) => {
+      if (typeof item === 'string') return [{ title: item, detail: '' }];
+      if (!item || typeof item !== 'object') return [];
+      const releaseRecord = item as Record<string, unknown>;
+      if (typeof releaseRecord['title'] !== 'string') return [];
+      const detail = [releaseRecord['type'], releaseRecord['firstReleaseDate']]
+        .filter((part) => typeof part === 'string')
+        .join(' · ');
+      return [{ title: releaseRecord['title'], detail }];
+    });
+  }
+  // Legacy profiles may contain plain text rather than structured releases.
+  return [{ title: raw, detail: '' }];
+};
+
+const responsiveSourceSet = (raw: string | null | undefined, format: 'avif' | 'webp') => {
+  const values = parseJsonObject(raw)[format];
+  if (!Array.isArray(values)) return null;
+  const sourceSet = values.flatMap((sourceCandidate) => {
+    if (!sourceCandidate || typeof sourceCandidate !== 'object') return [];
+    const sourceRecord = sourceCandidate as Record<string, unknown>;
+    return typeof sourceRecord['url'] === 'string' && typeof sourceRecord['width'] === 'number'
+      ? [`${sourceRecord['url']} ${sourceRecord['width']}w`]
+      : [];
+  }).join(', ');
+  return sourceSet || null;
+};
 
 function ReleaseCard({ release }: ReleaseCardProps) {
   const releaseDate = release.arReleaseDate
@@ -64,7 +109,7 @@ function ReleaseCard({ release }: ReleaseCardProps) {
       )}
       <CardContent>
         <Stack spacing={1}>
-          <Typography fontWeight={800}>{release.arTitle}</Typography>
+          <Typography component="h3" fontWeight={800}>{release.arTitle}</Typography>
           {releaseDate && (
             <Typography variant="caption" color="text.secondary">
               {releaseDate}
@@ -77,12 +122,12 @@ function ReleaseCard({ release }: ReleaseCardProps) {
           )}
           <Stack direction="row" spacing={1} flexWrap="wrap">
             {release.arSpotifyUrl && (
-              <Button size="small" component="a" href={release.arSpotifyUrl} target="_blank" rel="noopener noreferrer">
+              <Button size="small" component="a" href={release.arSpotifyUrl} target="_blank" rel="noopener noreferrer" aria-label={`Escuchar ${release.arTitle} en Spotify (abre en nueva pestaña)`}>
                 Spotify
               </Button>
             )}
             {release.arYoutubeUrl && (
-              <Button size="small" component="a" href={release.arYoutubeUrl} target="_blank" rel="noopener noreferrer">
+              <Button size="small" component="a" href={release.arYoutubeUrl} target="_blank" rel="noopener noreferrer" aria-label={`Ver ${release.arTitle} en YouTube (abre en nueva pestaña)`}>
                 YouTube
               </Button>
             )}
@@ -148,6 +193,13 @@ export default function ArtistPublicPage() {
   const artist = artistQuery.data ?? null;
   const releases = releasesQuery.data ?? [];
 
+  useMetaTags({
+    title: artist?.apDisplayName ?? 'Artista',
+    description: artist?.apBio?.slice(0, 160),
+    ogImage: artist?.apHeroImageUrl ?? undefined,
+    ogType: 'profile',
+  });
+
   const profileLink = useMemo(() => {
     if (!artist) return null;
     if (artist.apSlug) return `/a/${artist.apSlug}`;
@@ -196,12 +248,19 @@ export default function ArtistPublicPage() {
     );
   }
 
-  const heroImage = getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug);
+  const heroImage = getArtistHeroImage(artist.apHeroLandscapeUrl ?? artist.apHeroImageUrl, artist.apSlug);
+  const avatarImage = artist.apHeroSquareUrl ?? heroImage;
   const spotifyUrl =
     artist.apSpotifyUrl ?? (artist.apSpotifyArtistId ? `https://open.spotify.com/artist/${artist.apSpotifyArtistId}` : null);
   const youtubeUrl =
     artist.apYoutubeUrl ??
     (artist.apYoutubeChannelId ? `https://www.youtube.com/channel/${artist.apYoutubeChannelId}` : null);
+  const officialLinks = parseOfficialLinks(artist.apSocialLinks);
+  const discography = parseDiscography(artist.apDiscography);
+  const highlights = parseArtistTextItems(artist.apHighlights);
+  const achievements = parseArtistTextItems(artist.apAchievements);
+  const avifSourceSet = responsiveSourceSet(artist.apHeroResponsiveUrls, 'avif');
+  const webpSourceSet = responsiveSourceSet(artist.apHeroResponsiveUrls, 'webp');
 
   const canClaim = artist.apHasUserAccount === false;
   const isSelf = viewerId === artist.apArtistId;
@@ -209,16 +268,27 @@ export default function ArtistPublicPage() {
   return (
     <Box sx={{ maxWidth: 1040, mx: 'auto' }}>
       <Card sx={{ borderRadius: 4, overflow: 'hidden' }} variant="outlined">
+        <section aria-labelledby="artist-hero">
         <Box
           sx={{
             position: 'relative',
             minHeight: { xs: 220, md: 280 },
-            bgcolor: heroImage ? 'transparent' : '#0b1224',
-            backgroundImage: heroImage ? `url(${heroImage})` : undefined,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            bgcolor: '#0b1224',
           }}
         >
+          {heroImage && (
+            <Box component="picture" sx={{ position: 'absolute', inset: 0 }}>
+              {avifSourceSet && <source type="image/avif" srcSet={avifSourceSet} sizes="(max-width: 1040px) 100vw, 1040px" />}
+              {webpSourceSet && <source type="image/webp" srcSet={webpSourceSet} sizes="(max-width: 1040px) 100vw, 1040px" />}
+              <Box
+                component="img"
+                src={heroImage}
+                alt=""
+                aria-hidden="true"
+                sx={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: artist.apHeroFocalPoint ?? 'center' }}
+              />
+            </Box>
+          )}
           <Box
             sx={{
               position: 'absolute',
@@ -239,18 +309,24 @@ export default function ArtistPublicPage() {
           >
             <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
               <Avatar
-                src={heroImage ?? undefined}
+                src={avatarImage ?? undefined}
                 alt={artist.apDisplayName}
                 sx={{ width: 64, height: 64, bgcolor: 'rgba(59,130,246,0.35)', border: '1px solid rgba(148,163,184,0.35)' }}
               >
                 {artist.apDisplayName?.[0]?.toUpperCase() ?? <MusicNoteIcon />}
               </Avatar>
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="h4" fontWeight={900} sx={{ lineHeight: 1.1 }}>
+                <Typography component="h1" variant="h4" fontWeight={900} id="artist-hero" sx={{ lineHeight: 1.1 }}>
                   {artist.apDisplayName}
                 </Typography>
                 <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 1 }}>
-                  {artist.apCity && <Chip size="small" label={artist.apCity} sx={{ bgcolor: 'rgba(148,163,184,0.16)', color: '#e2e8f0' }} />}
+                  {[artist.apCity, artist.apCountry].some((value) => Boolean(value)) && (
+                    <Chip
+                      size="small"
+                      label={[artist.apCity, artist.apCountry].filter(Boolean).join(', ')}
+                      sx={{ bgcolor: 'rgba(148,163,184,0.16)', color: '#e2e8f0' }}
+                    />
+                  )}
                   <Chip size="small" label={`${artist.apFollowerCount ?? 0} fans`} sx={{ bgcolor: 'rgba(148,163,184,0.16)', color: '#e2e8f0' }} />
                   {artist.apGenres && (
                     <Chip
@@ -284,6 +360,7 @@ export default function ArtistPublicPage() {
                     }}
                     startIcon={isFollowing ? <FavoriteIcon /> : <FavoriteBorderIcon />}
                     disabled={followMutation.isPending}
+                    aria-label={isFollowing ? `Dejar de seguir a ${artist.apDisplayName}` : `Seguir a ${artist.apDisplayName}`}
                     sx={{ textTransform: 'none' }}
                   >
                     {isFollowing ? 'Siguiendo' : 'Seguir'}
@@ -308,6 +385,7 @@ export default function ArtistPublicPage() {
             </Stack>
           </Stack>
         </Box>
+        </section>
         <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
           <Stack spacing={2.5}>
             {canClaim && (
@@ -330,7 +408,7 @@ export default function ArtistPublicPage() {
 
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems="flex-start">
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="h6" fontWeight={800}>
+                <Typography component="h2" variant="h6" fontWeight={800}>
                   Bio
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap', mt: 1 }}>
@@ -338,26 +416,36 @@ export default function ArtistPublicPage() {
                 </Typography>
               </Box>
               <Box sx={{ width: { xs: '100%', md: 340 } }}>
-                <Typography variant="h6" fontWeight={800}>
+                <Typography component="h2" variant="h6" fontWeight={800}>
                   Links
                 </Typography>
                 <Stack spacing={1} sx={{ mt: 1 }}>
                   {spotifyUrl && (
-                    <Link href={spotifyUrl} target="_blank" rel="noopener noreferrer" underline="hover">
+                    <Link href={spotifyUrl} target="_blank" rel="noopener noreferrer" underline="hover" aria-label="Spotify (abre en nueva pestaña)">
                       Spotify <LaunchIcon fontSize="inherit" />
                     </Link>
                   )}
                   {youtubeUrl && (
-                    <Link href={youtubeUrl} target="_blank" rel="noopener noreferrer" underline="hover">
+                    <Link href={youtubeUrl} target="_blank" rel="noopener noreferrer" underline="hover" aria-label="YouTube (abre en nueva pestaña)">
                       YouTube <LaunchIcon fontSize="inherit" />
                     </Link>
                   )}
                   {artist.apWebsiteUrl && (
-                    <Link href={artist.apWebsiteUrl} target="_blank" rel="noopener noreferrer" underline="hover">
+                    <Link href={artist.apWebsiteUrl} target="_blank" rel="noopener noreferrer" underline="hover" aria-label="Sitio web (abre en nueva pestaña)">
                       Sitio web <LaunchIcon fontSize="inherit" />
                     </Link>
                   )}
-                  {!spotifyUrl && !youtubeUrl && !artist.apWebsiteUrl && (
+                  {artist.apInstagramUrl && (
+                    <Link href={artist.apInstagramUrl} target="_blank" rel="noopener noreferrer" underline="hover" aria-label="Instagram (abre en nueva pestaña)">
+                      Instagram <LaunchIcon fontSize="inherit" />
+                    </Link>
+                  )}
+                  {officialLinks.map(([label, url]) => (
+                    <Link key={`${label}:${url}`} href={url} target="_blank" rel="noopener noreferrer" underline="hover" aria-label={`${label === 'bandcamp' ? 'Bandcamp' : label} (abre en nueva pestaña)`}>
+                      {label === 'bandcamp' ? 'Bandcamp' : label} <LaunchIcon fontSize="inherit" />
+                    </Link>
+                  ))}
+                  {!spotifyUrl && !youtubeUrl && !artist.apWebsiteUrl && !artist.apInstagramUrl && officialLinks.length === 0 && (
                     <Typography variant="body2" color="text.secondary">
                       Sin links todavía.
                     </Typography>
@@ -366,11 +454,60 @@ export default function ArtistPublicPage() {
               </Box>
             </Stack>
 
+            {highlights.length + achievements.length > 0 && (
+              <>
+                <Divider />
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5 }}>
+                  {highlights.length > 0 && (
+                    <Box>
+                      <Typography component="h2" variant="h6" fontWeight={800}>Highlights</Typography>
+                      <Stack component="ul" spacing={0.75} sx={{ pl: 2.5, mt: 1, mb: 0 }}>
+                        {highlights.map((highlight, index) => (
+                          <Typography component="li" variant="body2" color="text.secondary" key={`${highlight}:${index}`}>
+                            {highlight}
+                          </Typography>
+                        ))}
+                      </Stack>
+                    </Box>
+                  )}
+                  {achievements.length > 0 && (
+                    <Box>
+                      <Typography component="h2" variant="h6" fontWeight={800}>Logros</Typography>
+                      <Stack component="ul" spacing={0.75} sx={{ pl: 2.5, mt: 1, mb: 0 }}>
+                        {achievements.map((achievement, index) => (
+                          <Typography component="li" variant="body2" color="text.secondary" key={`${achievement}:${index}`}>
+                            {achievement}
+                          </Typography>
+                        ))}
+                      </Stack>
+                    </Box>
+                  )}
+                </Box>
+              </>
+            )}
+
+            {discography.length > 0 && (
+              <>
+                <Divider />
+                <Box>
+                  <Typography component="h2" variant="h6" fontWeight={800}>Discografía destacada</Typography>
+                  <Stack component="ul" spacing={0.75} sx={{ pl: 2.5, mt: 1, mb: 0 }}>
+                    {discography.map((release, index) => (
+                      <Typography component="li" variant="body2" color="text.secondary" key={`${release.title}:${index}`}>
+                        <Box component="span" sx={{ color: 'text.primary', fontWeight: 600 }}>{release.title}</Box>
+                        {release.detail ? ` · ${release.detail}` : ''}
+                      </Typography>
+                    ))}
+                  </Stack>
+                </Box>
+              </>
+            )}
+
             {artist.apFollowerCount > 0 && (
               <>
                 <Divider />
                 <Box>
-                  <Typography variant="h6" fontWeight={800} gutterBottom>
+                  <Typography component="h2" variant="h6" fontWeight={800} gutterBottom>
                     Fans ({artist.apFollowerCount})
                   </Typography>
                   <ArtistFansList artistId={artist.apArtistId} />
@@ -382,7 +519,7 @@ export default function ArtistPublicPage() {
               <>
                 <Divider />
                 <Box>
-                  <Typography variant="h6" fontWeight={800} gutterBottom>
+                  <Typography component="h2" variant="h6" fontWeight={800} gutterBottom>
                     Escucha en Spotify
                   </Typography>
                   <Box
@@ -394,6 +531,7 @@ export default function ArtistPublicPage() {
                     allowFullScreen
                     allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                     loading="lazy"
+                    title={`Escuchar a ${artist.apDisplayName} en Spotify`}
                     sx={{ borderRadius: 3, display: 'block' }}
                   />
                 </Box>
@@ -402,9 +540,9 @@ export default function ArtistPublicPage() {
 
             <Divider />
 
-            <Box>
+            <Box component="section" aria-labelledby="artist-releases">
               <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
-                <Typography variant="h6" fontWeight={800}>
+                <Typography component="h2" variant="h6" id="artist-releases" fontWeight={800}>
                   Releases
                 </Typography>
                 {profileLink && (

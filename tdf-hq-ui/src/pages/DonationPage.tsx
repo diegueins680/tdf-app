@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react';
+import { useMetaTags } from '../hooks/useMetaTags';
 import { Alert, Box, Button, Card, CardContent, Divider, Stack, TextField, Typography } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import QrCode2Icon from '@mui/icons-material/QrCode2';
 import { CARDANO_ADDRESS } from '../config/appConfig';
 
 export default function DonationPage() {
+  useMetaTags({
+    title: 'Donaciones',
+    description: 'Apoya a los artistas y proyectos de TDF Records con tu contribución.',
+  });
+
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [copyMsg, setCopyMsg] = useState<string | null>(null);
   const [qrError, setQrError] = useState<string | null>(null);
@@ -69,7 +75,7 @@ export default function DonationPage() {
                     Copiar dirección
                   </Button>
                   {copyMsg && (
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" component="span" role="status" aria-live="polite">
                       {copyMsg}
                     </Typography>
                   )}

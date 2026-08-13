@@ -33,12 +33,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PartyDTO, PartyCreate, PartyUpdate } from '../api/types';
 import { Parties } from '../api/parties';
 import PartyRelatedPopover from '../components/PartyRelatedPopover';
+import PageShell, { SkeletonCards, EmptyState } from '../components/PageShell';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 const STATUS_OPTIONS = ['Nuevo', 'Contactado', 'En progreso', 'Ganado', 'Perdido'] as const;
 type LeadStatus = (typeof STATUS_OPTIONS)[number];
 const isLeadStatus = (value: string): value is LeadStatus =>
   STATUS_OPTIONS.some((status) => status === value);
+
+function normalizeSearch(text: string): string {
+  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
 
 const normalizeLeadFieldValue = (value?: string | null) => {
   const trimmed = value?.trim();
@@ -112,7 +118,7 @@ function LeadCreateDialog({ open, onClose }: LeadCreateDialogProps) {
         <Stack gap={2} sx={{ mt: 1 }}>
           <TextField label="Nombre" value={name} onChange={(e) => setName(e.target.value)} required />
           <TextField label="Correo" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <TextField label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <TextField type="tel" label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
           <TextField label="Fuente (campaña, referidor)" value={source} onChange={(e) => setSource(e.target.value)} />
           <FormControl>
             <InputLabel id="status-label">Estado</InputLabel>
@@ -203,7 +209,7 @@ function LeadEditDialog({ lead, open, onClose }: LeadEditDialogProps) {
         <Stack gap={2} sx={{ mt: 1 }}>
           <TextField label="Nombre" value={name} onChange={(e) => setName(e.target.value)} />
           <TextField label="Correo" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <TextField label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <TextField type="tel" label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
           <TextField
             label="Notas / Estado"
             value={notes}
@@ -225,6 +231,7 @@ function LeadEditDialog({ lead, open, onClose }: LeadEditDialogProps) {
 }
 
 export default function LeadsPage() {
+  useDocumentTitle('CRM / Leads');
   const [search, setSearch] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -240,15 +247,15 @@ export default function LeadsPage() {
   const trimmedSearch = search.trim();
   const allLeads = useMemo(() => (data ?? []).filter((party) => !party.isOrg), [data]);
   const leads = useMemo(() => {
-    const term = trimmedSearch.toLowerCase();
+    const term = normalizeSearch(trimmedSearch);
     return allLeads
       .filter((p) => {
         if (!term) return true;
         return (
-          p.displayName.toLowerCase().includes(term) ||
-          (p.primaryEmail?.toLowerCase().includes(term) ?? false) ||
-          (p.notes?.toLowerCase().includes(term) ?? false) ||
-          (p.primaryPhone?.toLowerCase().includes(term) ?? false)
+          normalizeSearch(p.displayName).includes(term) ||
+          (p.primaryEmail ? normalizeSearch(p.primaryEmail).includes(term) : false) ||
+          (p.notes ? normalizeSearch(p.notes).includes(term) : false) ||
+          (p.primaryPhone ? normalizeSearch(p.primaryPhone).includes(term) : false)
         );
       });
   }, [allLeads, trimmedSearch]);
@@ -275,18 +282,16 @@ export default function LeadsPage() {
     : `Mostrando ${leads.length} de ${allLeads.length} leads para "${trimmedSearch}".`;
 
   return (
-    <Stack gap={3}>
-      <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }} gap={2}>
-        <Stack spacing={0.5}>
-          <Typography variant="h4" fontWeight={800}>CRM / Leads</Typography>
-          <Typography variant="body1" color="text.secondary">
-            Captura y gestiona leads rápido. Usa notas para estado, fuente o siguiente paso.
-          </Typography>
-        </Stack>
+    <PageShell
+      title="CRM / Leads"
+      subtitle="Captura y gestiona leads rápido. Usa notas para estado, fuente o siguiente paso."
+      loading={showInitialLoadingState}
+      actions={(
         <Button variant="contained" startIcon={<PersonAddAltIcon />} onClick={() => setCreateOpen(true)}>
           Nuevo lead
         </Button>
-      </Stack>
+      )}
+    >
 
       <Paper sx={{ p: 2.5, borderRadius: 3, boxShadow: '0 10px 30px rgba(15,23,42,0.12)' }}>
         <Stack spacing={2}>
@@ -324,17 +329,21 @@ export default function LeadsPage() {
 
           {isError && <Alert severity="error">{error?.message ?? 'No se pudieron cargar los leads'}</Alert>}
           {showInitialLoadingState ? (
-            <Alert severity="info" variant="outlined">
-              Cargando leads… El buscador y la tabla aparecerán cuando termine esta primera carga.
-            </Alert>
+            <SkeletonCards count={3} />
           ) : !isLoading && !isError && !hasLeads ? (
-            <Alert severity="info" variant="outlined">
-              Todavía no hay leads. Crea el primero desde Nuevo lead. El primer lead aparecerá aquí como resumen y la tabla volverá cuando exista un segundo para comparar.
-            </Alert>
+            <EmptyState
+              icon={<PersonAddAltIcon />}
+              title="Sin leads"
+              description="Todavía no hay leads. Crea el primero desde Nuevo lead. El primer lead aparecerá aquí como resumen y la tabla volverá cuando exista un segundo para comparar."
+              actionLabel="Nuevo lead"
+              actionOnClick={() => setCreateOpen(true)}
+            />
           ) : showSearchEmptyState ? (
-            <Alert severity="info" variant="outlined">
-              {`No hay leads que coincidan con "${trimmedSearch}". Limpia o ajusta la búsqueda desde el campo de arriba para volver a la lista completa.`}
-            </Alert>
+            <EmptyState
+              icon={<SearchIcon />}
+              title="Sin resultados"
+              description={`No hay leads que coincidan con "${trimmedSearch}". Limpia o ajusta la búsqueda desde el campo de arriba para volver a la lista completa.`}
+            />
           ) : showSingleLeadSummary && singleLead ? (
             <Box
               sx={{
@@ -478,6 +487,6 @@ export default function LeadsPage() {
           setRelatedAnchor(null);
         }}
       />
-    </Stack>
+    </PageShell>
   );
 }

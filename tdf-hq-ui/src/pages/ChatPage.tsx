@@ -28,6 +28,7 @@ import AddCommentIcon from '@mui/icons-material/AddComment';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { EmptyState } from '../components/PageShell';
 import { ChatAPI } from '../api/chat';
 import { Meta } from '../api/meta';
 import { Parties } from '../api/parties';
@@ -493,7 +494,11 @@ export default function ChatPage() {
               </Box>
             ) : threads.length === 0 ? (
               <Box sx={{ p: 2 }}>
-                <Alert severity="info">No tienes conversaciones todavía. Crea una con “Nuevo chat”.</Alert>
+                <EmptyState
+                  icon={<ChatBubbleOutlineIcon />}
+                  title="Sin conversaciones"
+                  description={'No tienes conversaciones todavía. Crea una con "Nuevo chat".'}
+                />
               </Box>
             ) : (
               <LazyPaginatedList
@@ -567,7 +572,11 @@ export default function ChatPage() {
                   {messagesError}
                 </Alert>
               ) : selectedThreadId && messages.length === 0 ? (
-                <Alert severity="info">Aún no hay mensajes. Escribe el primero.</Alert>
+                <EmptyState
+                  icon={<ChatBubbleOutlineIcon />}
+                  title="Sin mensajes"
+                  description="Aún no hay mensajes. Escribe el primero."
+                />
               ) : (
                 <Stack spacing={1.5}>
                   {messages.map((message) => (

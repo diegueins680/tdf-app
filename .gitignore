@@ -12,6 +12,7 @@ neon-env-vars
 .stack-work/
 .stack-root/
 .stack-root-local/
+tdf-hq/.release/
 *.hi
 *.o
 *.dyn_hi

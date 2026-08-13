@@ -4,7 +4,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import type { RefundDTO, RejectionReasonDTO } from '../../api/socialEvents';
-import '../../i18n/index';
+import appI18n from '../../i18n/index';
 
 const listRefunds = jest.fn<(eventId: string) => Promise<RefundDTO[]>>();
 const approveRefund = jest.fn<(eventId: string, refundId: string) => Promise<RefundDTO>>();
@@ -47,6 +47,8 @@ const createWrapper = () => {
 };
 
 describe('RefundManagementPanel', () => {
+  beforeAll(async () => appI18n.changeLanguage('en'));
+  afterAll(async () => appI18n.changeLanguage('es'));
   /**
    * Fixture contract:
    * @precondition refund amounts are cents, not formatted display dollars.
@@ -128,9 +130,7 @@ describe('RefundManagementPanel', () => {
       refundProcessedAt: MUTATED_REFUND_PROCESSED_AT_ISO,
     });
 
-    // Approval is gated behind a window.confirm.
-    global.confirm = jest.fn(() => true);
-
+    // Approval is gated behind a ConfirmDialog.
     render(<RefundManagementPanel eventId="event-1" />, {
       wrapper: createWrapper(),
     });
@@ -141,6 +141,10 @@ describe('RefundManagementPanel', () => {
 
     const confirmApproveButton = screen.getByRole('button', { name: /Approve/i });
     fireEvent.click(confirmApproveButton);
+
+    // Confirm the action in the dialog.
+    const dialogConfirmButton = await screen.findByRole('button', { name: /Confirmar/i });
+    fireEvent.click(dialogConfirmButton);
 
     await waitFor(() => {
       expect(approveRefund).toHaveBeenCalledWith('event-1', 'refund-1');
@@ -207,7 +211,6 @@ describe('RefundManagementPanel', () => {
   it('invokes approval even though the panel has no inline error surface', async () => {
     listRefunds.mockResolvedValue(mockRefunds);
     approveRefund.mockRejectedValue(new Error('Stripe refund failed'));
-    global.confirm = jest.fn(() => true);
 
     render(<RefundManagementPanel eventId="event-1" />, {
       wrapper: createWrapper(),
@@ -219,6 +222,7 @@ describe('RefundManagementPanel', () => {
 
     const rejectedApproveButton = screen.getByRole('button', { name: /Approve/i });
     fireEvent.click(rejectedApproveButton);
+    fireEvent.click(await screen.findByRole('button', { name: /Confirmar/i }));
 
     await waitFor(() => {
       expect(approveRefund).toHaveBeenCalledWith('event-1', 'refund-1');

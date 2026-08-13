@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import {
   Box,
   Card,
@@ -11,6 +11,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TableSortLabel,
   Typography,
   Skeleton,
 } from '@mui/material';
@@ -23,6 +24,10 @@ export interface DataTableColumn<T> {
   width?: string | number;
   align?: 'left' | 'center' | 'right';
   cell: (row: T, index: number) => ReactNode;
+  /** Enable client-side sorting on this column */
+  sortable?: boolean;
+  /** Data field name used for sorting (required when sortable is true) */
+  accessorKey?: string;
 }
 
 export interface DataTableProps<T> {
@@ -44,6 +49,7 @@ export interface DataTableProps<T> {
   initialRowsPerPage?: number;
   rowsPerPageOptions?: readonly number[];
   itemLabel?: string;
+  ariaLabel?: string;
 }
 
 export default function DataTable<T>({
@@ -65,8 +71,37 @@ export default function DataTable<T>({
   initialRowsPerPage = 25,
   rowsPerPageOptions = [10, 25, 50],
   itemLabel = 'registros',
+  ariaLabel = 'Tabla de datos',
 }: DataTableProps<T>) {
-  const showEmpty = !loading && rows.length === 0;
+  const [sort, setSort] = useState<{ key: string; direction: 'asc' | 'desc' | null }>({
+    key: '',
+    direction: null,
+  });
+
+  const handleSort = (accessorKey: string) => {
+    setSort((prev) => {
+      if (prev.key !== accessorKey) return { key: accessorKey, direction: 'asc' };
+      if (prev.direction === 'asc') return { key: accessorKey, direction: 'desc' };
+      return { key: '', direction: null };
+    });
+  };
+
+  const sortedRows = useMemo(() => {
+    if (!sort.key || !sort.direction) return rows;
+    return [...rows].sort((a, b) => {
+      const aVal = (a as Record<string, unknown>)[sort.key];
+      const bVal = (b as Record<string, unknown>)[sort.key];
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+      const cmp =
+        typeof aVal === 'string' && typeof bVal === 'string'
+          ? aVal.localeCompare(bVal)
+          : (aVal as number) - (bVal as number);
+      return sort.direction === 'asc' ? cmp : -cmp;
+    });
+  }, [rows, sort]);
+
+  const showEmpty = !loading && sortedRows.length === 0;
   const renderTable = (visibleRows: readonly T[], startIndex = 0) => (
     <TableContainer
       component={Paper}
@@ -78,7 +113,12 @@ export default function DataTable<T>({
         bgcolor: 'transparent',
       }}
     >
-      <Table size={size} stickyHeader={stickyHeader}>
+      <Table size={size} stickyHeader={stickyHeader} aria-label={ariaLabel}>
+        {caption && (
+          <caption style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>
+            {caption}
+          </caption>
+        )}
         <TableHead>
           <TableRow>
             {columns.map((col) => (
@@ -94,7 +134,19 @@ export default function DataTable<T>({
                   whiteSpace: 'nowrap',
                 }}
               >
-                {col.header}
+                {col.sortable && col.accessorKey ? (
+                  <TableSortLabel
+                    active={sort.key === col.accessorKey && sort.direction !== null}
+                    direction={
+                      sort.key === col.accessorKey && sort.direction ? sort.direction : 'asc'
+                    }
+                    onClick={() => handleSort(col.accessorKey!)}
+                  >
+                    {col.header}
+                  </TableSortLabel>
+                ) : (
+                  col.header
+                )}
               </TableCell>
             ))}
           </TableRow>
@@ -164,10 +216,10 @@ export default function DataTable<T>({
             {emptyAction}
           </EmptyState>
         ) : loading || !pagination ? (
-          renderTable(rows)
+          renderTable(sortedRows)
         ) : (
           <LazyPaginatedList
-            items={rows}
+            items={sortedRows}
             pagination={{ itemLabel, initialRowsPerPage, rowsPerPageOptions }}
             renderItems={(visibleRows, { startIndex }) => renderTable(visibleRows, startIndex)}
           />

@@ -99,13 +99,14 @@ const DdexDocumentPage: React.FC = () => {
           />
         </Stack>
       </Stack>
+      <Alert severity="warning" sx={{ mb: 3 }}>
+        La descarga original, vista previa e importación permanecen deshabilitadas mientras sus operaciones de almacenamiento y confirmación transaccional estén incompletas.
+      </Alert>
 
       <Paper sx={{ mb: 3 }}>
         <Tabs value={tabValue} onChange={handleTabChange}>
           <Tab label="Summary" />
           <Tab label="Validation" />
-          <Tab label="Preview" />
-          <Tab label="History" />
         </Tabs>
       </Paper>
 
@@ -117,15 +118,15 @@ const DdexDocumentPage: React.FC = () => {
                 <Typography variant="h6" gutterBottom>
                   Document Information
                 </Typography>
-                <List dense>
-                  <ListItem>
+                <List component="div" dense>
+                  <ListItem component="div">
                     <ListItemText
                       primary="File Name"
                       secondary={document.ddexDocumentFileName}
                     />
                   </ListItem>
                   <Divider />
-                  <ListItem>
+                  <ListItem component="div">
                     <ListItemText
                       primary="SHA-256"
                       secondary={
@@ -136,21 +137,21 @@ const DdexDocumentPage: React.FC = () => {
                     />
                   </ListItem>
                   <Divider />
-                  <ListItem>
+                  <ListItem component="div">
                     <ListItemText
                       primary="Family"
                       secondary={document.ddexDocumentStandardCode}
                     />
                   </ListItem>
                   <Divider />
-                  <ListItem>
+                  <ListItem component="div">
                     <ListItemText
                       primary="Version"
                       secondary={document.ddexDocumentVersionCode}
                     />
                   </ListItem>
                   <Divider />
-                  <ListItem>
+                  <ListItem component="div">
                     <ListItemText
                       primary="Received"
                       secondary={new Date(document.ddexDocumentCreatedAt).toLocaleString()}
@@ -166,8 +167,8 @@ const DdexDocumentPage: React.FC = () => {
                 <Typography variant="h6" gutterBottom>
                   Message Header
                 </Typography>
-                <List dense>
-                  <ListItem>
+                <List component="div" dense>
+                  <ListItem component="div">
                     <ListItemText
                       primary="Message ID"
                       secondary={
@@ -178,14 +179,14 @@ const DdexDocumentPage: React.FC = () => {
                     />
                   </ListItem>
                   <Divider />
-                  <ListItem>
+                  <ListItem component="div">
                     <ListItemText
                       primary="Sender DPID"
                       secondary={document.ddexDocumentSenderId || '-'}
                     />
                   </ListItem>
                   <Divider />
-                  <ListItem>
+                  <ListItem component="div">
                     <ListItemText
                       primary="Recipient DPID"
                       secondary={document.ddexDocumentRecipientId || '-'}

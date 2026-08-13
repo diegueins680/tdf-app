@@ -3,9 +3,9 @@
 Sync artist shows to the TDF Social Events calendar.
 
 Usage:
-  export TDF_API_BASE=https://tdf-hq.fly.dev
-  export TDF_USERNAME=admin
-  export TDF_PASSWORD=password123
+  export TDF_API_BASE=http://127.0.0.1:8080
+  export TDF_USERNAME='<isolated fixture username>'
+  export TDF_PASSWORD='<runtime secret>'
   export BANDSINTOWN_APP_ID=your_app_id      # optional
   export SONGKICK_API_KEY=your_api_key       # optional
   export TICKETMASTER_API_KEY=your_api_key   # optional
@@ -22,9 +22,9 @@ import requests
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Dict, Any
 
-TDF_API_BASE = os.environ.get("TDF_API_BASE", "https://tdf-hq.fly.dev").rstrip("/")
-TDF_USERNAME = os.environ.get("TDF_USERNAME", "admin")
-TDF_PASSWORD = os.environ.get("TDF_PASSWORD", "password123")
+TDF_API_BASE = os.environ.get("TDF_API_BASE", "http://127.0.0.1:8080").rstrip("/")
+TDF_USERNAME = os.environ.get("TDF_USERNAME", "").strip()
+TDF_PASSWORD = os.environ.get("TDF_PASSWORD", "")
 
 BANDSINTOWN_APP_ID = os.environ.get("BANDSINTOWN_APP_ID", "")
 SONGKICK_API_KEY = os.environ.get("SONGKICK_API_KEY", "")
@@ -35,6 +35,8 @@ session = requests.Session()
 
 def tdf_login() -> str:
     """Authenticate with TDF and return a Bearer token."""
+    if not TDF_USERNAME or not TDF_PASSWORD:
+        raise RuntimeError("Set TDF_USERNAME and TDF_PASSWORD in the runtime secret store.")
     resp = session.post(
         f"{TDF_API_BASE}/login",
         json={"username": TDF_USERNAME, "password": TDF_PASSWORD},

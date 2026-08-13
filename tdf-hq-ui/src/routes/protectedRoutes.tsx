@@ -11,6 +11,7 @@ const AdsInboxPage = lazy(() => import('../pages/AdsInboxPage'));
 const AdminDiagnosticsPage = lazy(() => import('../pages/AdminDiagnosticsPage'));
 const AdminTokenPage = lazy(() => import('../pages/AdminTokenPage'));
 const AdminUsersPage = lazy(() => import('../pages/AdminUsersPage'));
+const ArtistEnrichmentReviewPage = lazy(() => import('../pages/ArtistEnrichmentReviewPage'));
 const BookingsPage = lazy(() => import('../pages/BookingsPage'));
 const BrainAdminPage = lazy(() => import('../pages/BrainAdminPage'));
 const CatalogsPage = lazy(() => import('../pages/CatalogsPage'));
@@ -34,6 +35,7 @@ const FanClubPage = lazy(() => import('../pages/FanClubPage'));
 const FanClubMemberProfilePage = lazy(() => import('../pages/FanClubMemberProfilePage'));
 const InstagramConnectPage = lazy(() => import('../pages/InstagramConnectPage'));
 const InternshipsPage = lazy(() => import('../pages/InternshipsPage'));
+const InternTaskDetailPage = lazy(() => import('../pages/InternTaskDetailPage'));
 const InventoryPage = lazy(() => import('../pages/InventoryPage'));
 const KanbanPage = lazy(() => import('../pages/KanbanPage'));
 const LabelArtistsPage = lazy(() => import('../pages/LabelArtistsPage'));
@@ -51,6 +53,7 @@ const ManualPage = lazy(() => import('../pages/ManualPage'));
 const MarketplaceOrdersPage = lazy(() => import('../pages/MarketplaceOrdersPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 const OrdersPage = lazy(() => import('../pages/OrdersPage'));
+const OperationsControlCenterPage = lazy(() => import('../pages/OperationsControlCenterPage'));
 const PartiesPage = lazy(() => import('../pages/PartiesPage'));
 const PaymentsPage = lazy(() => import('../pages/PaymentsPage'));
 const AppearanceModeCatalogPage = lazy(() => import('../pages/AppearanceModeCatalogPage'));
@@ -80,6 +83,13 @@ const UserRoleManagement = lazy(() => import('../components/UserRoleManagement')
 const UxOptionsPage = lazy(() => import('../pages/UxOptionsPage'));
 const UserActivityPage = lazy(() => import('../pages/UserActivityPage'));
 const WhatsAppConsentPage = lazy(() => import('../pages/WhatsAppConsentPage'));
+const AccessRequestsPage = lazy(() => import('../pages/AccessRequestsPage'));
+const NewAccessRequestPage = lazy(() => import('../pages/AccessRequestsPage').then((module) => ({
+  default: module.NewAccessRequestPage,
+})));
+const AccessRequestReviewPage = lazy(() => import('../pages/AccessRequestsPage').then((module) => ({
+  default: module.AccessRequestReviewPage,
+})));
 
 export function renderProtectedRoutes() {
   return (
@@ -94,8 +104,10 @@ export function renderProtectedRoutes() {
         <Route path="/contactos" element={<Navigate to="/crm/contactos" replace />} />
         <Route path="/system" element={<Navigate to="/configuracion/preferencias" replace />} />
         <Route path="/admin/roles" element={<Navigate to="/configuracion/roles-permisos" replace />} />
+        <Route path="/operacion/control" element={<Navigate to="/dashboard/operations" replace />} />
 
         <Route path="/inicio" element={<FanHubPage />} />
+        <Route path="/dashboard/operations" element={<OperationsControlCenterPage />} />
         <Route path="/mi-profesor" element={<TeacherPortalPage />} />
         <Route path="/perfil/:partyId" element={<PublicProfilePage />} />
         <Route path="/social" element={<SocialPageView />} />
@@ -111,11 +123,17 @@ export function renderProtectedRoutes() {
         <Route path="/manual" element={<ManualPage />} />
         <Route path="/acerca" element={<AboutPage />} />
         <Route path="/seguridad" element={<SecurityPage />} />
+        <Route path="/solicitudes-acceso" element={<AccessRequestsPage />} />
+        <Route path="/solicitudes-acceso/nueva" element={<NewAccessRequestPage />} />
+        <Route path="/solicitudes-acceso/revision" element={<AccessRequestReviewPage />} />
         <Route path="/fans/clubs/:artistId" element={<FanClubPage />} />
         <Route path="/fans/clubs/:artistId/members" element={<FanClubMemberProfilePage />} />
         <Route path="/fans/clubs/:artistId/members/:partyId" element={<FanClubMemberProfilePage />} />
         <Route path="/practicas" element={<InternshipsPage />} />
+        <Route path="/practicas/tareas/:taskId" element={<InternTaskDetailPage />} />
         <Route path="/admin/diagnosticos" element={<AdminDiagnosticsPage />} />
+        <Route path="/admin/artistas-enriquecimiento" element={<ArtistEnrichmentReviewPage />} />
+        <Route path="/admin/artists/enrichment" element={<ArtistEnrichmentReviewPage />} />
         <Route path="/herramientas/chatkit" element={<ChatKitPage />} />
         <Route path="/herramientas/tidal-agent" element={<TidalAgentPage />} />
         <Route path="/herramientas/token-admin" element={<AdminTokenPage />} />

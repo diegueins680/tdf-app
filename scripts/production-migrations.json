@@ -32,9 +32,24 @@
       "introducedBy": "5121f69a7d4535db89d2f6bba432061fc6063190"
     },
     {
+      "id": "2026-07-29_campaign_automation",
+      "path": "tdf-hq/sql/2026-07-29_campaign_automation.sql",
+      "introducedBy": "6fabdb5bd0d728efd4c042d8b6cca438ae73cd48"
+    },
+    {
       "id": "2026-07-30_event_city_subscriptions",
       "path": "tdf-hq/sql/2026-07-30_event_city_subscriptions.sql",
       "introducedBy": "54009732c8ac9d2a4e7b6912b5ec1ed9dd5d945e"
+    },
+    {
+      "id": "2026-08-02_ddex_catalog_core",
+      "path": "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
+      "introducedBy": "185f94510ff6d96e0027b0c699fbde2b11c8deb9"
+    },
+    {
+      "id": "2026-08-04_service_storefront",
+      "path": "tdf-hq/sql/2026-08-04_service_storefront.sql",
+      "introducedBy": "11a6687be"
     },
     {
       "id": "2026-08-05_platform_internationalization",
@@ -45,6 +60,26 @@
       "id": "2026-08-05_artist_promotion_slots",
       "path": "tdf-hq/sql/2026-08-05_artist_promotion_slots.sql",
       "introducedBy": "6f5ef3468c6d8fe3a0f8de754430459b3af66569"
+    },
+    {
+      "id": "2026-08-05_artist_enrichment",
+      "path": "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
+      "introducedBy": "47c9d394fa9255acb2b440e07c32c4597247c3b6"
+    },
+    {
+      "id": "2026-08-06_feature_access_requests",
+      "path": "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
+      "introducedBy": "1e1387d564b2bd9b5b25a7e5f83d8d22ba35983c"
+    },
+    {
+      "id": "2026-08-06_feature_navigation_preferences",
+      "path": "tdf-hq/sql/2026-08-06_feature_navigation_preferences.sql",
+      "introducedBy": "1e1387d564b2bd9b5b25a7e5f83d8d22ba35983c"
+    },
+    {
+      "id": "2026-08-09_admin_operations_control_center",
+      "path": "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
+      "introducedBy": "daffea31e8e90d576fa047dda8aa5831885836ea"
     }
   ]
 }

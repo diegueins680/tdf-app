@@ -13,7 +13,7 @@ DEFAULT_LOCALE=en
 ENABLE_GDPR_COMPLIANCE=true
 ```
 
-The web client mirrors the allowlists with `VITE_DEFAULT_*` and `VITE_SUPPORTED_*`. `VITE_EXCHANGE_RATE_API_BASE` defaults to `https://api.frankfurter.app`; rates are cached for 24 hours. Venue-specific campaign pages may set their own timezone, for example `VITE_DOMO_TIMEZONE`.
+The web client mirrors the allowlists with `VITE_DEFAULT_*` and `VITE_SUPPORTED_*`. `VITE_EXCHANGE_RATE_API_BASE` defaults to `https://api.frankfurter.dev/v1`; rates are cached for 24 hours. Venue-specific campaign pages may set their own timezone, for example `VITE_DOMO_TIMEZONE`.
 
 ## Database rollout
 

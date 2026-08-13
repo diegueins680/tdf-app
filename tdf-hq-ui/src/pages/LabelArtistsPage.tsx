@@ -33,6 +33,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import ConfirmDialog from '../components/ConfirmDialog';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
 import LazyPaginatedList from '../components/LazyPaginatedList';
@@ -195,6 +196,7 @@ function formFromArtist(artist: ArtistProfileDTO): ArtistFormState {
 }
 
 export default function LabelArtistsPage() {
+  useDocumentTitle('Label / Artistas');
   const qc = useQueryClient();
   const { locale, timezone } = useLocalePreferences();
   const [search, setSearch] = useState('');
@@ -211,6 +213,8 @@ export default function LabelArtistsPage() {
   const [promotionForm, setPromotionForm] = useState<PromotionFormState>(buildEmptyPromotionForm);
   const [promotionFormError, setPromotionFormError] = useState<string | null>(null);
   const [editingPromotionId, setEditingPromotionId] = useState<number | null>(null);
+  const [deletePromotionConfirmOpen, setDeletePromotionConfirmOpen] = useState(false);
+  const [pendingDeletePromotionSlot, setPendingDeletePromotionSlot] = useState<ArtistPromoSlotDTO | null>(null);
 
   const artistsQuery = useQuery({
     queryKey: ['admin', 'artists'],
@@ -594,11 +598,23 @@ export default function LabelArtistsPage() {
 
   const handlePromotionDelete = (slot: ArtistPromoSlotDTO) => {
     if (!promotionArtistId) return;
-    const confirmed = window.confirm(
-      `Eliminar el espacio de ${slot.apsStartTime} en ${slot.apsMedium} para ${selectedPromotionArtist?.apDisplayName ?? 'este artista'}?`,
-    );
-    if (!confirmed) return;
-    deletePromotionMutation.mutate({ artistId: promotionArtistId, promotionId: slot.apsPromotionId, day: promotionDay });
+    setPendingDeletePromotionSlot(slot);
+    setDeletePromotionConfirmOpen(true);
+  };
+
+  const handlePromotionDeleteConfirm = () => {
+    if (!pendingDeletePromotionSlot || !promotionArtistId) {
+      setDeletePromotionConfirmOpen(false);
+      setPendingDeletePromotionSlot(null);
+      return;
+    }
+    deletePromotionMutation.mutate({
+      artistId: promotionArtistId,
+      promotionId: pendingDeletePromotionSlot.apsPromotionId,
+      day: promotionDay,
+    });
+    setDeletePromotionConfirmOpen(false);
+    setPendingDeletePromotionSlot(null);
   };
 
   const handlePromotionPreviewRefresh = () => {
@@ -1372,6 +1388,15 @@ export default function LabelArtistsPage() {
           </Button>
         </DialogActions>
       </Dialog>
+      <ConfirmDialog
+        open={deletePromotionConfirmOpen}
+        onClose={() => setDeletePromotionConfirmOpen(false)}
+        onConfirm={handlePromotionDeleteConfirm}
+        title="Eliminar espacio de agenda"
+        description={`Eliminar el espacio de ${pendingDeletePromotionSlot?.apsStartTime ?? ''} en ${pendingDeletePromotionSlot?.apsMedium ?? ''} para ${selectedPromotionArtist?.apDisplayName ?? 'este artista'}?`}
+        severity="danger"
+        confirming={deletePromotionMutation.isPending}
+      />
     </Stack>
     </PageShell>
   );

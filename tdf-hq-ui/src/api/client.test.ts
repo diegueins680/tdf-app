@@ -24,8 +24,10 @@ jest.unstable_mockModule('../utils/logger', () => ({
 }));
 
 const {
+  ApiError,
   get,
   getPendingApiRequestCount,
+  HTTP_STATUS_REQUEST_TIMEOUT,
   post,
   postForm,
   subscribeToApiActivity,
@@ -113,6 +115,18 @@ describe('api client', () => {
     } finally {
       unsubscribe();
     }
+  });
+
+  it('represents an aborted request with the request-timeout status contract', async () => {
+    fetchMock.mockRejectedValueOnce(new DOMException('Request aborted', 'AbortError'));
+
+    const request = get('/slow-report');
+
+    await expect(request).rejects.toMatchObject({
+      name: ApiError.name,
+      status: HTTP_STATUS_REQUEST_TIMEOUT,
+    });
+    expect(getPendingApiRequestCount()).toBe(0);
   });
 
   it('parses JSON when successful responses include a payload', async () => {

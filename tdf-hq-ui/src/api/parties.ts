@@ -8,6 +8,11 @@ const requirePositiveInteger = (value: number, field: string): number => {
   return value;
 };
 
+const omitNullPartyUpdateFields = (body: PartyUpdate): PartyUpdate =>
+  Object.fromEntries(
+    Object.entries(body).filter(([, value]) => value !== null),
+  ) as PartyUpdate;
+
 export const Parties = {
   list: () => get<PartyDTO[]>('/parties'),
   create: (body: PartyCreate) => post<PartyDTO>('/parties', body),

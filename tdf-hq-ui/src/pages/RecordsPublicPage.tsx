@@ -405,6 +405,7 @@ function BookingRequestDialog({
             </Stack>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
+                type="tel"
                 label="Teléfono"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}

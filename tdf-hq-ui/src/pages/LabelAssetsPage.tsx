@@ -28,6 +28,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import QrCodeIcon from '@mui/icons-material/QrCode';
@@ -40,10 +41,12 @@ import { Admin } from '../api/admin';
 import { Inventory, type AssetCheckinRequest, type AssetCheckoutRequest, type AssetQrDTO } from '../api/inventory';
 import { Rooms } from '../api/rooms';
 import { CheckoutDialog, CheckinDialog } from '../components/AssetDialogs';
+import ConfirmDialog from '../components/ConfirmDialog';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { buildInventoryScanUrl } from '../config/appConfig';
 import { buildPublicContentUrl } from '../services/googleDrive';
+import { useToast } from '../contexts/ToastContext';
 import { useSession } from '../session/SessionContext';
 import { buildAccessibleModuleSet } from '../utils/accessControl';
 
@@ -168,8 +171,11 @@ function getAssetMovementState(status: string) {
 }
 
 export default function LabelAssetsPage() {
+  useDocumentTitle('Label / Activos');
   const qc = useQueryClient();
   const { session } = useSession();
+  const { showUndo } = useToast();
+  const deletedAssetRef = useRef<AssetDTO | null>(null);
   const modules = useMemo(
     () => buildAccessibleModuleSet(session?.roles, session?.modules),
     [session?.modules, session?.roles],
@@ -197,6 +203,8 @@ export default function LabelAssetsPage() {
   const [editingAsset, setEditingAsset] = useState<AssetDTO | null>(null);
   const [assetForm, setAssetForm] = useState<AssetFormState>(buildEmptyForm);
   const [assetFormError, setAssetFormError] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [pendingDeleteAsset, setPendingDeleteAsset] = useState<AssetDTO | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [history, setHistory] = useState<AssetCheckoutDTO[]>([]);
   const latestHistoryAssetIdRef = useRef<string | null>(null);
@@ -323,7 +331,19 @@ export default function LabelAssetsPage() {
     mutationFn: (assetId: string) => Inventory.remove(assetId),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['assets'] });
-      setFeedback('Asset eliminado.');
+      const deletedAsset = deletedAssetRef.current;
+      if (deletedAsset) {
+        showUndo('Asset eliminado', () => {
+          void Inventory.create({
+            cName: deletedAsset.name,
+            cCategory: deletedAsset.category,
+            cPhotoUrl: deletedAsset.photoUrl ?? null,
+          }).then(() => {
+            void qc.invalidateQueries({ queryKey: ['assets'] });
+          });
+        });
+      }
+      deletedAssetRef.current = null;
     },
     onError: (err) => setFeedback(err instanceof Error ? err.message : 'No se pudo eliminar el asset.'),
   });
@@ -549,9 +569,17 @@ export default function LabelAssetsPage() {
   };
 
   const handleDelete = (asset: AssetDTO) => {
-    const confirm = window.confirm(`¿Eliminar ${asset.name}? Esta acción no se puede deshacer.`);
-    if (!confirm) return;
-    deleteMutation.mutate(asset.assetId);
+    setPendingDeleteAsset(asset);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (pendingDeleteAsset) {
+      deletedAssetRef.current = pendingDeleteAsset;
+      deleteMutation.mutate(pendingDeleteAsset.assetId);
+    }
+    setDeleteConfirmOpen(false);
+    setPendingDeleteAsset(null);
   };
 
   const clearFilters = () => {
@@ -1204,6 +1232,15 @@ export default function LabelAssetsPage() {
           </CardContent>
         </Card>
       )}
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Eliminar activo"
+        description={`¿Eliminar ${pendingDeleteAsset?.name ?? ''}? Podrás deshacer la acción durante unos segundos.`}
+        severity="danger"
+        confirming={deleteMutation.isPending}
+      />
     </Box>
   );
 }

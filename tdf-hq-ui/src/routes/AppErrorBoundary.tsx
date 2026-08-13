@@ -19,10 +19,27 @@ export default class AppErrorBoundary extends Component<AppErrorBoundaryProps, A
 
   override componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('Unhandled route render failure', error, info.componentStack);
+
+    // Report to error tracking service
+    try {
+      // PostHog error capture (already integrated in the app)
+      if (typeof window !== 'undefined' && (window as any).posthog) {
+        (window as any).posthog.captureException(error, {
+          componentStack: info.componentStack,
+          url: window.location.href,
+        });
+      }
+    } catch {
+      // Silently fail — don't let error reporting crash the error handler
+    }
   }
 
   private handleReload = () => {
     window.location.reload();
+  };
+
+  private handleGoHome = () => {
+    window.location.href = '/inicio';
   };
 
   override render() {
@@ -44,9 +61,14 @@ export default class AppErrorBoundary extends Component<AppErrorBoundaryProps, A
         <Alert
           severity="error"
           action={(
-            <Button color="inherit" size="small" onClick={this.handleReload}>
-              Recargar
-            </Button>
+            <Stack direction="row" spacing={1}>
+              <Button color="inherit" size="small" onClick={this.handleGoHome}>
+                Ir al inicio
+              </Button>
+              <Button color="inherit" size="small" onClick={this.handleReload}>
+                Recargar
+              </Button>
+            </Stack>
           )}
           sx={{ width: '100%', maxWidth: 640 }}
         >
@@ -54,6 +76,9 @@ export default class AppErrorBoundary extends Component<AppErrorBoundaryProps, A
             <Typography fontWeight={800}>No pudimos cargar esta vista.</Typography>
             <Typography variant="body2">
               Recarga la página para usar la versión más reciente de TDF Records.
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Si el problema persiste, vuelve al inicio o contacta a soporte.
             </Typography>
           </Stack>
         </Alert>

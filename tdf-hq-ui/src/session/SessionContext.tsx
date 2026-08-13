@@ -13,6 +13,7 @@ export interface SessionUser {
   roles: string[];
   apiToken?: string | null;
   modules?: string[];
+  featureFlags?: string[];
   partyId?: number;
   preferences?: LocalePreferences;
 }
@@ -92,6 +93,7 @@ const normalizeSessionUser = (
     roles?: unknown;
     apiToken?: unknown;
     modules?: unknown;
+    featureFlags?: unknown;
     partyId?: unknown;
     preferences?: unknown;
   },
@@ -100,6 +102,7 @@ const normalizeSessionUser = (
   const displayName = normalizeNonEmptyString(value.displayName) ?? username;
   const roles = normalizeStringArray(value.roles, { lowerCase: true, dedupeCaseInsensitive: true });
   const modules = normalizeStringArray(value.modules, { lowerCase: true, dedupeCaseInsensitive: true });
+  const featureFlags = normalizeStringArray(value.featureFlags, { dedupeCaseInsensitive: true });
   const apiToken = normalizeApiToken(value.apiToken);
   const partyId = normalizePositivePartyId(value.partyId);
   const preferences = value.preferences && typeof value.preferences === 'object'
@@ -112,6 +115,7 @@ const normalizeSessionUser = (
     roles,
     ...(apiToken ? { apiToken } : {}),
     ...(modules.length > 0 ? { modules } : {}),
+    ...(featureFlags.length > 0 ? { featureFlags } : {}),
     ...(partyId !== undefined ? { partyId } : {}),
     ...(preferences ? { preferences } : {}),
   };
@@ -136,6 +140,7 @@ export const parseStoredSession = (raw: string): SessionUser | null => {
       displayName,
       roles: value['roles'],
       modules: value['modules'],
+      featureFlags: value['featureFlags'],
       partyId: value['partyId'],
       preferences: value['preferences'],
     });
@@ -253,6 +258,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
             displayName: snapshot.displayName,
             roles: snapshot.roles,
             modules: snapshot.modules,
+            featureFlags: snapshot.featureFlags,
             partyId: snapshot.partyId,
             preferences: snapshot.preferences,
             apiToken: prev?.apiToken,

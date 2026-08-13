@@ -105,6 +105,8 @@ import           TDF.API.Admin          ( AdminAPI
                                         , AdminWhatsAppResendRequest(..)
                                         , AdminWhatsAppSendRequest(..)
                                         , AdminWhatsAppSendResponse(..)
+                                        , ArtistEnrichmentOverviewDTO(..)
+                                        , ArtistEnrichmentRunRequest(..)
                                         , BrainEntryCreate(..)
                                         , BrainEntryDTO(..)
                                         , BrainEntryUpdate(..)
@@ -175,6 +177,17 @@ import           TDF.Artists.Promotion  ( createArtistPromoSlotRecord
                                         , listArtistPromoSlotsForDay
                                         , loadArtistPromoDayReport
                                         , updateArtistPromoSlotRecord
+                                        )
+import           TDF.Artists.Enrichment ( createArtistMediaAsset
+                                        , createArtistIdentityCandidate
+                                        , createArtistResearchSource
+                                        , createArtistSuggestion
+                                        , decideArtistIdentityCandidate
+                                        , decideArtistSuggestion
+                                        , decideArtistSuggestionSet
+                                        , loadArtistEnrichmentOverview
+                                        , runArtistEnrichment
+                                        , updateArtistEnrichmentRun
                                         )
 import qualified TDF.Handlers.InputList as InputList
 import           TDF.Profiles.Artist    ( loadAllArtistProfilesDTO
@@ -274,6 +287,74 @@ adminServer user =
       :<|> (createArtistReleaseAdmin :<|> updateArtistReleaseAdmin)
       :<|> artistConnectOnboardingLinkAdmin
       :<|> artistPromotionsRouter
+      :<|> artistEnrichmentRouter
+
+    artistEnrichmentRouter =
+         artistEnrichmentOverviewHandler
+      :<|> (artistEnrichmentRunsHandler :<|> artistEnrichmentRunHandler :<|> artistEnrichmentRunUpdateHandler)
+      :<|> artistEnrichmentRerunHandler
+      :<|> artistResearchSourceCreateHandler
+      :<|> artistSuggestionCreateHandler
+      :<|> artistSuggestionDecisionHandler
+      :<|> artistSuggestionSetDecisionHandler
+      :<|> (artistIdentityCreateHandler :<|> artistIdentityDecisionHandler)
+      :<|> artistMediaCreateHandler
+
+    artistEnrichmentOverviewHandler mStatus mArtistId = do
+      ensureStrictAdmin user
+      withPool (loadArtistEnrichmentOverview mStatus mArtistId)
+
+    artistEnrichmentRunsHandler = do
+      ensureStrictAdmin user
+      aeoRuns <$> withPool (loadArtistEnrichmentOverview Nothing Nothing)
+
+    artistEnrichmentRunHandler request = do
+      ensureStrictAdmin user
+      withPool (runArtistEnrichment enrichmentActor request)
+
+    artistEnrichmentRunUpdateHandler runId request = do
+      ensureStrictAdmin user
+      withPool (updateArtistEnrichmentRun runId request)
+
+    artistEnrichmentRerunHandler rawArtistId request = do
+      ensureStrictAdmin user
+      artistId <- either throwError pure (validatePositiveAdminLookupId "artistId" rawArtistId)
+      let scopedRequest = request { aerrArtistId = Just artistId }
+      withPool (runArtistEnrichment enrichmentActor scopedRequest)
+
+    artistResearchSourceCreateHandler request = do
+      ensureStrictAdmin user
+      now <- liftIO getCurrentTime
+      withPool (createArtistResearchSource now request)
+
+    artistSuggestionCreateHandler request = do
+      ensureStrictAdmin user
+      now <- liftIO getCurrentTime
+      withPool (createArtistSuggestion now request)
+
+    artistSuggestionDecisionHandler suggestionId decision = do
+      ensureStrictAdmin user
+      withPool (decideArtistSuggestion enrichmentActor (auPartyId user) suggestionId decision)
+
+    artistSuggestionSetDecisionHandler artistId decision = do
+      ensureStrictAdmin user
+      withPool (decideArtistSuggestionSet enrichmentActor (auPartyId user) artistId decision)
+
+    artistIdentityCreateHandler request = do
+      ensureStrictAdmin user
+      now <- liftIO getCurrentTime
+      withPool (createArtistIdentityCandidate now request)
+
+    artistIdentityDecisionHandler candidateId decision = do
+      ensureStrictAdmin user
+      withPool (decideArtistIdentityCandidate (auPartyId user) candidateId decision)
+
+    artistMediaCreateHandler request = do
+      ensureStrictAdmin user
+      now <- liftIO getCurrentTime
+      withPool (createArtistMediaAsset now request)
+
+    enrichmentActor = "admin:" <> T.pack (show (fromSqlKey (auPartyId user)))
 
     logsRouter =
       listLogsHandler :<|> clearLogsProtected

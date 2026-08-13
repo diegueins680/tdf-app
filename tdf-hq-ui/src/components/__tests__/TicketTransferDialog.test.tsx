@@ -8,6 +8,7 @@ import type {
   TicketTransferCreateDTO,
   TicketTransferDTO,
 } from '../../api/socialEvents';
+import appI18n from '../../i18n/index';
 
 const createTransfer =
   jest.fn<(eventId: string, ticketId: string, data: TicketTransferCreateDTO) => Promise<TicketTransferDTO>>();
@@ -37,6 +38,9 @@ const createWrapper = () => {
 };
 
 describe('TicketTransferDialog', () => {
+  beforeAll(async () => appI18n.changeLanguage('en'));
+  afterAll(async () => appI18n.changeLanguage('es'));
+
   /**
    * Fixture contract:
    * @precondition tickets passed to the dialog carry a non-empty ticketId.

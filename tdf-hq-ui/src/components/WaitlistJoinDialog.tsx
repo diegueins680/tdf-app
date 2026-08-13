@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Dialog,
@@ -46,10 +47,12 @@ export function WaitlistJoinDialog({ open, onClose, eventId, eventTitle, tierNam
    * invariant: submitted quantity is validated against visible bounds.
    * postcondition: success resets form state.
    */
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [email, setEmail] = useState('');
   const [quantity, setQuantity] = useState(WAITLIST_DEFAULT_QUANTITY);
   const [error, setError] = useState<string | null>(null);
+  const previousFocusRef = useRef<Element | null>(null);
 
   const joinMutation = useMutation({
     mutationFn: () =>
@@ -63,7 +66,7 @@ export function WaitlistJoinDialog({ open, onClose, eventId, eventTitle, tierNam
       handleClose();
     },
     onError: (err) => {
-      setError(err instanceof Error ? err.message : 'Failed to join waitlist');
+      setError(err instanceof Error ? err.message : t('waitlist.errors.joinFailed'));
     },
   });
 
@@ -71,19 +74,19 @@ export function WaitlistJoinDialog({ open, onClose, eventId, eventTitle, tierNam
     e.preventDefault();
 
     if (!email) {
-      setError('Please enter your email');
+      setError(t('waitlist.errors.emailRequired'));
       return;
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address');
+      setError(t('waitlist.errors.invalidEmail'));
       return;
     }
 
     if (quantity < WAITLIST_MIN_QUANTITY || quantity > WAITLIST_MAX_QUANTITY) {
-      setError('Quantity must be between 1 and 10');
+      setError(t('waitlist.errors.invalidQuantity'));
       return;
     }
 
@@ -96,14 +99,28 @@ export function WaitlistJoinDialog({ open, onClose, eventId, eventTitle, tierNam
     setQuantity(WAITLIST_DEFAULT_QUANTITY);
     setError(null);
     onClose();
+    // Restore focus to the element that triggered the dialog
+    if (previousFocusRef.current instanceof HTMLElement) {
+      previousFocusRef.current.focus();
+    }
   };
 
+  const handleOpen = () => {
+    previousFocusRef.current = document.activeElement;
+  };
+
+  useEffect(() => {
+    if (open) {
+      handleOpen();
+    }
+  }, [open]);
+
   const dialogContent = (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth aria-labelledby="waitlist-title">
+      <DialogTitle id="waitlist-title">
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <NotificationsActiveIcon />
-          Join Waitlist
+          {t('waitlist.title')}
         </Box>
       </DialogTitle>
 
@@ -113,30 +130,30 @@ export function WaitlistJoinDialog({ open, onClose, eventId, eventTitle, tierNam
         </Typography>
         {tierName && (
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            Tier: {tierName}
+            {t('waitlist.tier')} {tierName}
           </Typography>
         )}
 
         <Alert severity="info" sx={{ my: 2 }}>
           <Typography variant="body2">
-            We&apos;ll notify you by email when tickets become available. You&apos;ll have {WAITLIST_PURCHASE_WINDOW_HOURS} hours to purchase your tickets.
+            {t('waitlist.info', { hours: WAITLIST_PURCHASE_WINDOW_HOURS })}
           </Typography>
         </Alert>
 
-        <Box component="form" onSubmit={handleSubmit}>
+        <Box component="form" id="waitlist-form" onSubmit={handleSubmit}>
           <TextField
-            label="Email Address"
+            label={t('waitlist.emailLabel')}
             type="email"
             fullWidth
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             margin="normal"
-            placeholder="your@email.com"
-            helperText="We'll send notifications to this email"
+            placeholder={t('waitlist.emailPlaceholder')}
+            helperText={t('waitlist.emailHelper')}
           />
           <TextField
-            label="Number of Tickets"
+            label={t('waitlist.quantityLabel')}
             type="number"
             fullWidth
             required
@@ -144,11 +161,11 @@ export function WaitlistJoinDialog({ open, onClose, eventId, eventTitle, tierNam
             onChange={(e) => setQuantity(parseWaitlistQuantity(e.target.value))}
             margin="normal"
             InputProps={{ inputProps: { min: WAITLIST_MIN_QUANTITY, max: WAITLIST_MAX_QUANTITY } }}
-            helperText="Maximum 10 tickets per request"
+            helperText={t('waitlist.quantityHelper')}
           />
 
           {error && (
-            <Alert severity="error" sx={{ mt: 2 }}>
+            <Alert severity="error" role="alert" sx={{ mt: 2 }}>
               {error}
             </Alert>
           )}
@@ -157,14 +174,15 @@ export function WaitlistJoinDialog({ open, onClose, eventId, eventTitle, tierNam
 
       <DialogActions>
         <Button onClick={handleClose} disabled={joinMutation.isPending}>
-          Cancel
+          {t('waitlist.cancel')}
         </Button>
         <Button
-          onClick={handleSubmit}
+          type="submit"
+          form="waitlist-form"
           variant="contained"
           disabled={joinMutation.isPending}
         >
-          {joinMutation.isPending ? <CircularProgress size={WAITLIST_ACTION_SPINNER_SIZE_PX} /> : 'Join Waitlist'}
+          {joinMutation.isPending ? <CircularProgress size={WAITLIST_ACTION_SPINNER_SIZE_PX} /> : t('waitlist.joinButton')}
         </Button>
       </DialogActions>
     </Dialog>

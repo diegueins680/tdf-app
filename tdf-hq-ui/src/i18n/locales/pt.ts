@@ -1,5 +1,6 @@
 const pt = {
   common: { save: 'Salvar', saving: 'Salvando…', saved: 'Preferências salvas.', error: 'Ocorreu um erro.' },
+  internships: { taskDetail: { instructions: 'Instruções' } },
   pagination: {
     items: 'itens', rowsPerPage: 'Por página', loading: 'Carregando resultados…', updating: 'Atualizando resultados…',
     displayed: '{{from}}–{{to}} de {{count}} {{itemLabel}}', displayedMoreThan: '{{from}}–{{to}} de mais de {{count}} {{itemLabel}}',

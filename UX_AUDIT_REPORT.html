@@ -1,0 +1,604 @@
+<style>
+  :root {
+    --critical: #dc2626; --critical-bg: #fef2f2;
+    --major: #ea580c; --major-bg: #fff7ed;
+    --minor: #2563eb; --minor-bg: #eff6ff;
+    --info: #6b7280; --border: #e5e7eb;
+    --bg: #f9fafb; --surface: #ffffff;
+    --text: #111827; --text-secondary: #6b7280;
+    --accent: #7c3aed;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  header { background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; padding: 48px 24px; text-align: center; }
+  header h1 { font-size: 2rem; font-weight: 800; margin-bottom: 8px; }
+  header p { opacity: 0.9; font-size: 1.1rem; }
+  header .date { margin-top: 12px; font-size: 0.875rem; opacity: 0.7; }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin: -32px 24px 32px; position: relative; z-index: 1; }
+  .summary-card { background: var(--surface); border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
+  .summary-card .number { font-size: 2.5rem; font-weight: 800; }
+  .summary-card .label { font-size: 0.875rem; color: var(--text-secondary); margin-top: 4px; }
+  .summary-card.critical .number { color: var(--critical); }
+  .summary-card.major .number { color: var(--major); }
+  .summary-card.minor .number { color: var(--minor); }
+  .summary-card.total .number { color: var(--accent); }
+  nav.toc { background: var(--surface); border-radius: 12px; padding: 24px; margin-bottom: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  nav.toc h2 { font-size: 1.25rem; margin-bottom: 12px; }
+  nav.toc ol { padding-left: 20px; }
+  nav.toc li { margin-bottom: 6px; }
+  nav.toc a { color: var(--accent); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  section { margin-bottom: 40px; }
+  section h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--accent); }
+  section h3 { font-size: 1.125rem; font-weight: 600; margin: 20px 0 12px; }
+  .issue { background: var(--surface); border-radius: 8px; padding: 16px 20px; margin-bottom: 12px; border-left: 4px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+  .issue.critical { border-left-color: var(--critical); background: var(--critical-bg); }
+  .issue.major { border-left-color: var(--major); background: var(--major-bg); }
+  .issue.minor { border-left-color: var(--minor); background: var(--minor-bg); }
+  .issue-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+  .badge.critical { background: var(--critical); color: white; }
+  .badge.major { background: var(--major); color: white; }
+  .badge.minor { background: var(--minor); color: white; }
+  .badge.category { background: #f3f4f6; color: var(--text-secondary); }
+  .badge.platform { background: #e0e7ff; color: #3730a3; }
+  .issue h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; }
+  .issue p { font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 6px; }
+  .issue .fix { font-size: 0.875rem; color: #059669; }
+  .issue .files { font-size: 0.75rem; color: var(--info); font-family: monospace; margin-top: 6px; }
+  .priority-list { counter-reset: priority; }
+  .priority-item { counter-increment: priority; background: var(--surface); border-radius: 8px; padding: 16px 20px 16px 56px; margin-bottom: 12px; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+  .priority-item::before { content: counter(priority); position: absolute; left: 16px; top: 16px; width: 28px; height: 28px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem; }
+  .priority-item h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+  .priority-item p { font-size: 0.875rem; color: var(--text-secondary); }
+  .strength { background: #f0fdf4; border-left: 4px solid #16a34a; border-radius: 8px; padding: 16px 20px; margin-bottom: 12px; }
+  .strength h4 { color: #15803d; font-size: 0.95rem; margin-bottom: 4px; }
+  .strength p { font-size: 0.875rem; color: var(--text-secondary); }
+  @media (max-width: 768px) {
+    .summary-grid { grid-template-columns: repeat(2, 1fr); margin: -32px 12px 24px; }
+    .container { padding: 16px; }
+    header { padding: 32px 16px; }
+    header h1 { font-size: 1.5rem; }
+  }
+</style>
+
+<header>
+  <h1>TDF Records — UX/UI & Usability Audit</h1>
+  <p>Complete system audit: Web (React + MUI) & Mobile (React Native + Expo)</p>
+  <div class="date">August 12, 2026 · 8 audit dimensions · 100+ files analyzed</div>
+</header>
+
+<div class="summary-grid">
+  <div class="summary-card critical"><div class="number">27</div><div class="label">Critical Issues</div></div>
+  <div class="summary-card major"><div class="number">73</div><div class="label">Major Issues</div></div>
+  <div class="summary-card minor"><div class="number">108+</div><div class="label">Minor Issues</div></div>
+  <div class="summary-card total"><div class="number">208+</div><div class="label">Total Findings</div></div>
+</div>
+
+<div class="container">
+
+<nav class="toc">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#executive">Executive Summary & Top Priorities</a></li>
+    <li><a href="#critical">Critical Issues (Must Fix)</a></li>
+    <li><a href="#accessibility">Accessibility & Inclusion</a></li>
+    <li><a href="#theme">Theme, Design System & Dark Mode</a></li>
+    <li><a href="#navigation">Navigation & Information Architecture</a></li>
+    <li><a href="#forms">Forms & Data Entry</a></li>
+    <li><a href="#feedback">Error Handling, Loading & Feedback</a></li>
+    <li><a href="#cross-platform">Cross-Platform Consistency</a></li>
+    <li><a href="#performance">Performance & Architecture</a></li>
+    <li><a href="#strengths">What's Working Well</a></li>
+  </ol>
+</nav>
+
+<section id="executive">
+  <h2>1. Executive Summary</h2>
+  <p style="margin-bottom:16px; font-size:0.95rem;">This audit examined the TDF Records platform across web and mobile, covering theme/design system, components, navigation, forms, accessibility, error handling, and cross-platform consistency. The codebase shows <strong>strong foundations</strong> — well-structured MUI theme, thoughtful feature registry, good i18n infrastructure on web, and solid API client patterns. However, several systemic gaps create a fragmented user experience.</p>
+
+  <h3>Top 10 Priority Fixes</h3>
+  <div class="priority-list">
+    <div class="priority-item">
+      <h4>Add error boundaries to mobile app</h4>
+      <p>Zero error boundaries exist. Any render crash white-screens the entire app with no recovery. Add a root boundary in <code>_layout.tsx</code> and per-screen boundaries for complex screens.</p>
+    </div>
+    <div class="priority-item">
+      <h4>Add offline detection to both platforms</h4>
+      <p>No connectivity detection exists anywhere. Users on flaky mobile networks (common at live events) get generic errors with no indication of the root cause.</p>
+    </div>
+    <div class="priority-item">
+      <h4>Add request timeouts to API clients</h4>
+      <p>Neither platform configures fetch/Axios timeouts. A hung connection blocks the UI indefinitely with spinners. Add 30s timeouts with clear error messages.</p>
+    </div>
+    <div class="priority-item">
+      <h4>Replace all <code>window.confirm()</code> with styled dialogs</h4>
+      <p>7+ web files use native <code>window.confirm()</code> for destructive actions (deleting assets, approving refunds, changing order status). These are inaccessible and break the design language.</p>
+    </div>
+    <div class="priority-item">
+      <h4>Fix mobile theme adoption — 9 of 12 components ignore the theme</h4>
+      <p>Most mobile components use hardcoded hex colors, breaking dark mode entirely. Migrate all components to <code>useAppTheme().colors</code>.</p>
+    </div>
+    <div class="priority-item">
+      <h4>Add password reset to mobile</h4>
+      <p>Web supports full password reset flow; mobile has no recovery path. Users who forget their password on mobile are locked out.</p>
+    </div>
+    <div class="priority-item">
+      <h4>Add accessibility props to mobile screens</h4>
+      <p>5 mobile screens have interactive elements with zero accessibility annotations. VoiceOver/TalkBack users cannot use these screens.</p>
+    </div>
+    <div class="priority-item">
+      <h4>Implement i18n on mobile</h4>
+      <p>Web supports 5 languages with proper translation files. Mobile is hardcoded Spanish. Same user gets different language on each platform.</p>
+    </div>
+    <div class="priority-item">
+      <h4>Add currency conversion to mobile</h4>
+      <p>Web auto-converts currencies via Frankfurter API. Mobile shows raw USD amounts. Same ticket shows different prices on each platform.</p>
+    </div>
+    <div class="priority-item">
+      <h4>Add analytics events to mobile</h4>
+      <p>All growth/lifecycle events (signup, login, follow, profile saves) are missing on mobile. Product analytics only capture web users.</p>
+    </div>
+  </div>
+</section>
+
+<section id="critical">
+  <h2>2. Critical Issues (Must Fix)</h2>
+
+  <div class="issue critical">
+    <div class="issue-header"><span class="badge critical">Critical</span><span class="badge platform">Mobile</span><span class="badge category">Error Handling</span></div>
+    <h4>No error boundaries anywhere in the mobile app</h4>
+    <p>An unhandled render error crashes the entire app to a white screen with no recovery path. Complex screens like <code>eventDetail.tsx</code> (1920 lines) and <code>ticketCheckout.tsx</code> (1165 lines) are particularly vulnerable.</p>
+    <div class="fix">→ Add root-level <code>ErrorBoundary</code> in <code>_layout.tsx</code> + per-screen boundaries for complex screens.</div>
+    <div class="files">app/_layout.tsx, src/providers/AppProviders.tsx</div>
+  </div>
+
+  <div class="issue critical">
+    <div class="issue-header"><span class="badge critical">Critical</span><span class="badge platform">Both</span><span class="badge category">Error Handling</span></div>
+    <h4>No request timeouts on either platform</h4>
+    <p>Web <code>fetch</code> has no <code>AbortController</code>. Mobile Axios has no <code>timeout</code>. A hung connection shows spinners indefinitely.</p>
+    <div class="fix">→ Web: add <code>AbortController</code> with 30s timeout. Mobile: add <code>timeout: 30000</code> to Axios config.</div>
+    <div class="files">tdf-hq-ui/src/api/client.ts, tdf-mobile/src/api/client.ts</div>
+  </div>
+
+  <div class="issue critical">
+    <div class="issue-header"><span class="badge critical">Critical</span><span class="badge platform">Both</span><span class="badge category">Usability</span></div>
+    <h4>No offline / connectivity detection</h4>
+    <p>No <code>NetInfo</code> on mobile, no <code>navigator.onLine</code> on web, no connectivity banner, no offline queue. Users on flaky connections get generic errors.</p>
+    <div class="fix">→ Add <code>NetInfo</code> (mobile) + <code>navigator.onLine</code> (web) with persistent "No connection" banner.</div>
+  </div>
+
+  <div class="issue critical">
+    <div class="issue-header"><span class="badge critical">Critical</span><span class="badge platform">Web</span><span class="badge category">Usability / A11y</span></div>
+    <h4><code>window.confirm()</code> for destructive financial actions</h4>
+    <p>7+ files use native confirms for: deleting assets, approving refunds, changing order status, deactivating services, deleting tasks/receipts. Cannot be styled, inaccessible, unlocalizable.</p>
+    <div class="fix">→ Create reusable MUI <code>ConfirmDialog</code> with severity styling, keyboard trap, ARIA. Replace all calls.</div>
+    <div class="files">LabelAssetsPage:552, RefundManagementPanel:92, MarketplaceOrdersPage:683, ServiceTypesPage:180, +3 more</div>
+  </div>
+
+  <div class="issue critical">
+    <div class="issue-header"><span class="badge critical">Critical</span><span class="badge platform">Mobile</span><span class="badge category">Usability</span></div>
+    <h4>No unsaved-changes guard on any form screen</h4>
+    <p>Back gesture or tab switch silently discards all form input on createEvent (10+ fields), createVenue (12 fields), artist profile forms.</p>
+    <div class="fix">→ Implement shared <code>useUnsavedChanges</code> hook with <code>usePreventRemove</code> + confirmation dialog.</div>
+  </div>
+
+  <div class="issue critical">
+    <div class="issue-header"><span class="badge critical">Critical</span><span class="badge platform">Mobile</span><span class="badge category">Dark Mode</span></div>
+    <h4>9 of 12 mobile components ignore the theme system</h4>
+    <p>Only FormField, FeatureAccessNotice, and CalendarScreen use <code>useAppTheme()</code>. All others use hardcoded hex colors. Dark mode is completely broken.</p>
+    <div class="fix">→ Migrate all components to <code>useAppTheme().colors</code>.</div>
+    <div class="files">EventCard, ArtistCard, EventMomentCard, EventLiveBroadcastCard, StagePill, PublicLinksSection, TicketOrderCard, TicketPurchaseCard</div>
+  </div>
+
+  <div class="issue critical">
+    <div class="issue-header"><span class="badge critical">Critical</span><span class="badge platform">Mobile</span><span class="badge category">Accessibility</span></div>
+    <h4>5 mobile screens have zero accessibility annotations</h4>
+    <p>social.tsx, bookings.tsx, EventLiveBroadcastCard, EventMomentCard, events.tsx — interactive elements with no accessibilityRole, accessibilityLabel, or accessibilityState.</p>
+    <div class="fix">→ Add a11y props to all interactive elements. Mirror auth.tsx and inventory.tsx patterns.</div>
+  </div>
+
+  <div class="issue critical">
+    <div class="issue-header"><span class="badge critical">Critical</span><span class="badge platform">Mobile</span><span class="badge category">Auth</span></div>
+    <h4>No password reset on mobile</h4>
+    <p>Web supports full password reset. Mobile has no recovery path — users who forget their password are locked out.</p>
+    <div class="fix">→ Implement password reset flow matching web's API calls.</div>
+  </div>
+
+  <div class="issue critical">
+    <div class="issue-header"><span class="badge critical">Critical</span><span class="badge platform">Mobile</span><span class="badge category">i18n</span></div>
+    <h4>No i18n framework — hardcoded Spanish</h4>
+    <p>Web supports 5 languages (en, es, fr, de, pt). Mobile has no i18n, all strings hardcoded Spanish. Some screens mix EN/ES unpredictably.</p>
+    <div class="fix">→ Adopt react-i18next or expo-localization + translation files.</div>
+  </div>
+
+  <div class="issue critical">
+    <div class="issue-header"><span class="badge critical">Critical</span><span class="badge platform">Mobile</span><span class="badge category">Feature Parity</span></div>
+    <h4>No currency conversion on mobile</h4>
+    <p>Web auto-converts currencies. Mobile shows raw USD. Same ticket shows different prices on each platform.</p>
+    <div class="fix">→ Port CurrencyContext logic from web to mobile with AsyncStorage caching.</div>
+  </div>
+
+  <div class="issue critical">
+    <div class="issue-header"><span class="badge critical">Critical</span><span class="badge platform">Mobile</span><span class="badge category">Analytics</span></div>
+    <h4>All growth/lifecycle analytics events missing</h4>
+    <p>Missing: signup_started/completed, login_completed, fan/artist_profile_saved, artist_followed, feature_navigation_selected, etc. Funnel analysis only captures web users.</p>
+    <div class="fix">→ Add PostHog capture() calls for all lifecycle events in mobile.</div>
+  </div>
+
+  <div class="issue critical">
+    <div class="issue-header"><span class="badge critical">Critical</span><span class="badge platform">Mobile</span><span class="badge category">Usability</span></div>
+    <h4>Date/time entry requires manual ISO 8601 string input</h4>
+    <p>createEvent.tsx requires typing "YYYY-MM-DDTHH:mm:ssZ" into TextInput. Users must know ISO format.</p>
+    <div class="fix">→ Replace with @react-native-community/datetimepicker. Keep shortcut buttons.</div>
+  </div>
+</section>
+
+<section id="accessibility">
+  <h2>3. Accessibility & Inclusion</h2>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Web</span><span class="badge category">WCAG 1.4.3</span></div>
+    <h4>Primary/secondary colors fail WCAG AA contrast</h4>
+    <p><code>primary.light</code> (#8b5cf6) on white = ~3.6:1 (fails). <code>secondary.main</code> (#e11d48) = ~4.0:1 (fails). <code>text.secondary</code> (#6b6b74) on #f8f7f5 = ~4.2:1 (fails).</p>
+    <div class="fix">→ Darken primary.light to #7c3aed, secondary.main to #be123c, text.secondary to ~#595963.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Web</span><span class="badge category">WCAG 2.4.3</span></div>
+    <h4>Dialogs missing focus management (WaitlistJoin, TicketTransfer)</h4>
+    <p>No aria-labelledby, no initial focus, no focus restore on close. Submit buttons use onClick instead of type="submit". Error alerts not announced.</p>
+    <div class="fix">→ Mirror StripeCheckoutModal pattern which handles all of these correctly.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Web</span><span class="badge category">WCAG 1.3.1</span></div>
+    <h4>ArtistPublicPage (588 lines) has zero ARIA attributes</h4>
+    <p>Hero images, release cards, follow buttons, external links — no programmatic labeling whatsoever.</p>
+    <div class="fix">→ Audit all images for alt; add aria-label to icon buttons; use semantic landmarks.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Mobile</span><span class="badge category">iOS HIG</span></div>
+    <h4>Touch targets below 44pt minimum</h4>
+    <p>EventCard save (~28pt), broadcast watch/end (~35pt), moment connect (~32pt), reaction chips (~32pt), comment button (~34pt).</p>
+    <div class="fix">→ Add minHeight: 44 to all TouchableOpacity elements.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Mobile</span><span class="badge category">WCAG 1.4.4</span></div>
+    <h4>No Dynamic Type support — hardcoded font sizes everywhere</h4>
+    <p>All StyleSheet.create uses hardcoded px. No maxFontSizeMultiplier set. Layouts break at larger text scales.</p>
+    <div class="fix">→ Set maxFontSizeMultiplier={1.5} on Text/TextInput. Replace fixed heights with minHeight.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Mobile</span><span class="badge category">A11y</span></div>
+    <h4>9pt and 11pt text used in multiple components</h4>
+    <p>EventCard fontSize:9, ArtistCard/TicketOrderCard fontSize:11 — below 12pt minimum for legibility.</p>
+    <div class="fix">→ Establish 12pt minimum. Use uppercase + letterSpacing for visual distinction.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Web</span><span class="badge category">Typography</span></div>
+    <h4>No h1/h2 typography variants defined</h4>
+    <p>Theme defines h3-caption but no h1/h2. Components use inline sx overrides. Caption at 11px is below 12px minimum.</p>
+    <div class="fix">→ Define h1/h2 in typography config. Increase caption to 0.75rem (12px).</div>
+  </div>
+</section>
+
+<section id="theme">
+  <h2>4. Theme, Design System & Dark Mode</h2>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Web</span><span class="badge category">Consistency</span></div>
+    <h4>6+ web components use raw hex/rgba instead of theme tokens</h4>
+    <p>PublicBrandBar, ApiStatusChip, InstagramEntryLinks, RadioWidget, AdminUserCommunicationDialog, BasicFeaturePage all use raw Tailwind-style values.</p>
+    <div class="fix">→ Create lint rule to flag raw hex/rgba in sx props. Route everything through theme tokens.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Mobile</span><span class="badge category">Dark Mode</span></div>
+    <h4>11+ mobile screens use hardcoded colors — dark mode broken</h4>
+    <p>events, social, bookings, parties, pipelines, createEvent, createVenue, artistDetail, venueDetail, venueExplorer, userProfile all use hardcoded hex.</p>
+    <div class="fix">→ Migrate all screens to useAppTheme().colors.</div>
+  </div>
+
+  <div class="issue minor">
+    <div class="issue-header"><span class="badge minor">Minor</span><span class="badge platform">Web</span><span class="badge category">Visual</span></div>
+    <h4>Dividers nearly invisible at 0.06 opacity</h4>
+    <p>rgba(0,0,0,0.06) / rgba(255,255,255,0.06) barely visible on lower-quality displays.</p>
+    <div class="fix">→ Increase to at least 0.09 or 0.10.</div>
+  </div>
+
+  <div class="issue minor">
+    <div class="issue-header"><span class="badge minor">Minor</span><span class="badge platform">Web</span><span class="badge category">Usability</span></div>
+    <h4>Hover transforms on ALL buttons/cards including non-interactive ones</h4>
+    <p>translateY(-1px) on text buttons, translateY(-2px) on static content cards causes jitter.</p>
+    <div class="fix">→ Scope hover to contained/outlined variants and explicitly interactive cards.</div>
+  </div>
+</section>
+
+<section id="navigation">
+  <h2>5. Navigation & Information Architecture</h2>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Web</span><span class="badge category">Usability</span></div>
+    <h4>Every page shows "TDF Records" in browser tab — no per-page titles</h4>
+    <p>Zero usage of document.title or react-helmet. Users with many tabs cannot distinguish pages.</p>
+    <div class="fix">→ Create useDocumentTitle() hook. Call from every page or route config.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Web</span><span class="badge category">Usability</span></div>
+    <h4>DataTable component underutilized — no column sorting anywhere</h4>
+    <p>Most pages build raw MUI tables. No client-side column sorting on any table. Inconsistent pagination, empty states, and styling.</p>
+    <div class="fix">→ Migrate pages to DataTable. Add sortable column headers with TableSortLabel.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Mobile</span><span class="badge category">Usability</span></div>
+    <h4>No pull-to-refresh on events, social, profile, bookings, parties</h4>
+    <p>Only inventory, operations, ddex implement it. Most-visited screens have no manual refresh.</p>
+    <div class="fix">→ Add RefreshControl to every FlatList and ScrollView-based screen.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Mobile</span><span class="badge category">Performance</span></div>
+    <h4>No pagination on events, parties, bookings — loads ALL records</h4>
+    <p>Only operations.tsx uses useInfiniteQuery. Growing catalogs cause long load times and high memory.</p>
+    <div class="fix">→ Convert to useInfiniteQuery with cursor-based pagination + onEndReached.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Web</span><span class="badge category">Usability</span></div>
+    <h4>Sidebar "/" shortcut steals focus from contentEditable elements</h4>
+    <p>Guard checks input/textarea but not isContentEditable. Rich-text editors lose focus when "/" is pressed.</p>
+    <div class="fix">→ Add isContentEditable check to the guard, matching TopBar's implementation.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Mobile</span><span class="badge category">Feature Parity</span></div>
+    <h4>Entire web sections missing from mobile</h4>
+    <p>Finance, School, Label management, Configuration/Admin, CRM, Chat, Docs, Internships, Fan Club management — none available on mobile.</p>
+    <div class="fix">→ If intentional (mobile=consumer, web=admin), document clearly. Otherwise prioritize admin flows.</div>
+  </div>
+</section>
+
+<section id="forms">
+  <h2>6. Forms & Data Entry</h2>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Web</span><span class="badge category">Validation</span></div>
+    <h4>react-hook-form + zod installed but never imported</h4>
+    <p>Both libraries are in package.json but zero source files use them. All validation is hand-rolled imperative if-checks.</p>
+    <div class="fix">→ Adopt react-hook-form + zod for all forms. Define shared Zod schemas.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Web</span><span class="badge category">Usability</span></div>
+    <h4>Validation errors as top-level Alert, never inline per field</h4>
+    <p>Users see generic "Completa todos los campos" and must scan all fields to find which are invalid.</p>
+    <div class="fix">→ Use per-field error + helperText props on MUI TextField.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Mobile</span><span class="badge category">Usability</span></div>
+    <h4>Missing KeyboardAvoidingView on 4+ form screens</h4>
+    <p>createVenue, createEvent, userProfile, artist forms — bottom fields hidden behind keyboard on iOS.</p>
+    <div class="fix">→ Wrap in KeyboardAvoidingView behavior="padding" (iOS).</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Mobile</span><span class="badge category">Usability</span></div>
+    <h4>No focus management / field chaining in forms</h4>
+    <p>createVenue (12 fields), artist forms — no returnKeyType="next", no onSubmitEditing. Users tap each field manually.</p>
+    <div class="fix">→ Add returnKeyType="next" + chain onSubmitEditing to focus next field via refs.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Mobile</span><span class="badge category">Usability</span></div>
+    <h4>Alert.alert() for all validation — blocking, one-at-a-time</h4>
+    <p>Each error pops a system dialog. 12-field form may need 3-4 sequential alert dismissals.</p>
+    <div class="fix">→ Use inline errors via FormField component. Reserve Alert.alert for critical decisions.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Both</span><span class="badge category">Usability</span></div>
+    <h4>No auto-save / drafts on complex forms</h4>
+    <p>Web: invoice, course builder, radio, fan profile. Mobile: all creation forms. Data lost on navigation/background.</p>
+    <div class="fix">→ localStorage (web) / AsyncStorage (mobile) draft saving with debounce for 5+ field forms.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Mobile</span><span class="badge category">A11y</span></div>
+    <h4>FormField component unused by major creation forms</h4>
+    <p>FormField has labels, errors, a11y, theming — but createVenue, createEvent, artist forms use raw TextInput.</p>
+    <div class="fix">→ Migrate all creation/edit forms to FormField. Single highest-impact mobile form change.</div>
+  </div>
+</section>
+
+<section id="feedback">
+  <h2>7. Error Handling, Loading & Feedback</h2>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Web</span><span class="badge category">Feedback</span></div>
+    <h4>No global toast system — each page invents its own</h4>
+    <p>TeacherPortalPage has 4 separate toast state variables. Inconsistent positioning, timing, styling.</p>
+    <div class="fix">→ Adopt notistack or shared context-based toast hook.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Web</span><span class="badge category">Feedback</span></div>
+    <h4>No optimistic UI updates (except SocialInboxPage)</h4>
+    <p>Users wait for server round-trips for RSVP, save, status changes with no immediate feedback.</p>
+    <div class="fix">→ Implement onMutate/onError rollback for high-frequency mutations via React Query.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Web</span><span class="badge category">Feedback</span></div>
+    <h4>Full-viewport loading spinner flash on every route transition</h4>
+    <p>RouteLoadingFallback shows full-screen spinner for all lazy routes, creating jarring flash on fast navigations.</p>
+    <div class="fix">→ Use skeleton/inline loading for known layouts. Reserve full-screen for initial load.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Mobile</span><span class="badge category">Feedback</span></div>
+    <h4>No skeleton loading anywhere — only centered spinners</h4>
+    <p>Every loading state is a bare ActivityIndicator. Creates "blank screen" feeling on slower connections.</p>
+    <div class="fix">→ Implement skeleton screens for events list, ticket orders, event detail.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Mobile</span><span class="badge category">Feedback</span></div>
+    <h4>Blocking Alert.alert() for ALL feedback including success</h4>
+    <p>RSVP, save event, send invitation, publish moment — all require dismissing alert before continuing.</p>
+    <div class="fix">→ Use non-blocking toasts for success/info. Reserve Alert.alert for errors needing decisions.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Web</span><span class="badge category">Usability</span></div>
+    <h4>No undo functionality — destructive actions are immediate</h4>
+    <p>Delete, refund approval, status changes — all immediate with no safety net.</p>
+    <div class="fix">→ Implement "toast with undo" for non-critical actions. Keep confirms for irreversible ops.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Web</span><span class="badge category">Usability</span></div>
+    <h4>Error boundary only offers full page reload — destroys all state</h4>
+    <p>No "Go home" or "Go back" option. Loses unsaved forms, navigation history, preferences.</p>
+    <div class="fix">→ Add "Ir al inicio" button + per-route-section error boundaries.</div>
+  </div>
+</section>
+
+<section id="cross-platform">
+  <h2>8. Cross-Platform Consistency</h2>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Both</span><span class="badge category">Consistency</span></div>
+    <h4>Different font families — Inter (web) vs system fonts (mobile)</h4>
+    <p>Users switching platforms notice different typefaces. Mobile acknowledges: "Until Inter is bundled..."</p>
+    <div class="fix">→ Bundle Inter font in mobile via expo-font.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Both</span><span class="badge category">Architecture</span></div>
+    <h4>Different HTTP clients — fetch (web) vs axios (mobile)</h4>
+    <p>Different error shapes, interceptor patterns, testing approaches. Web has request tracking; mobile lacks it.</p>
+    <div class="fix">→ Standardize on one library or normalize error shapes consistently.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Both</span><span class="badge category">Architecture</span></div>
+    <h4>React Query: extensive on web (~397 uses), minimal on mobile (~8)</h4>
+    <p>Web gets background refetching, cache sharing, optimistic updates. Mobile shows more spinners and stale data.</p>
+    <div class="fix">→ Increase React Query adoption on mobile.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Mobile</span><span class="badge category">Consistency</span></div>
+    <h4>No centralized date formatting — ad-hoc per component</h4>
+    <p>Web has formatters.ts with formatCurrency/formatDate/formatDateTime respecting user prefs. Mobile formats inline.</p>
+    <div class="fix">→ Create shared formatters.ts in mobile mirroring web's API.</div>
+  </div>
+
+  <div class="issue major">
+    <div class="issue-header"><span class="badge major">Major</span><span class="badge platform">Mobile</span><span class="badge category">Feature Parity</span></div>
+    <h4>Signup hardcodes roles: ['Fan'], omits many web fields</h4>
+    <p>Web: phone, internship fields, fanArtistIds, claimArtistId. Mobile: only name/email/password/Fan role.</p>
+    <div class="fix">→ Add missing fields to mobile signup flow.</div>
+  </div>
+
+  <div class="issue minor">
+    <div class="issue-header"><span class="badge minor">Minor</span><span class="badge platform">Both</span><span class="badge category">i18n</span></div>
+    <h4>Validation messages mix English and Spanish unpredictably</h4>
+    <p>createEvent: "Validation" (EN) + "El nombre es obligatorio" (ES). venueDetail: headers EN, errors ES.</p>
+    <div class="fix">→ Centralize all validation messages through i18n.</div>
+  </div>
+</section>
+
+<section id="performance">
+  <h2>9. Performance & Architecture</h2>
+
+  <div class="issue minor">
+    <div class="issue-header"><span class="badge minor">Minor</span><span class="badge platform">Both</span><span class="badge category">Maintainability</span></div>
+    <h4>Several components exceed 1000+ lines</h4>
+    <p>Web: BookingsPage (2072), FanHubPage (1333+), AdminUsersPage (1326+), InventoryPage (1326+), LoginPage (1659). Mobile: eventDetail (1920), ticketCheckout (1165).</p>
+    <div class="fix">→ Extract sub-components: BookingFormDialog, BookingCalendar, EventDetailsTab, EventMomentsTab, etc.</div>
+  </div>
+
+  <div class="issue minor">
+    <div class="issue-header"><span class="badge minor">Minor</span><span class="badge platform">Mobile</span><span class="badge category">Performance</span></div>
+    <h4>Saved events loaded via N+1 pattern (20 events = 20 HTTP requests)</h4>
+    <p>Promise.allSettled with individual getById calls. Need batch endpoint.</p>
+    <div class="fix">→ Add Events.getByIds(ids: string[]) endpoint.</div>
+  </div>
+
+  <div class="issue minor">
+    <div class="issue-header"><span class="badge minor">Minor</span><span class="badge platform">Mobile</span><span class="badge category">Performance</span></div>
+    <h4>Social screen uses ScrollView instead of FlatList</h4>
+    <p>activeData.map() inside ScrollView renders all items without virtualization.</p>
+    <div class="fix">→ Replace with FlatList for proper virtualization.</div>
+  </div>
+</section>
+
+<section id="strengths">
+  <h2>10. What's Working Well</h2>
+
+  <div class="strength">
+    <h4>✦ Web accessibility maturity</h4>
+    <p>TopBar, SidebarNav, NotificationBell, StripeCheckoutModal, ReactionBar all use ARIA correctly. Keyboard navigation, focus restoration, html lang="es" all solid.</p>
+  </div>
+
+  <div class="strength">
+    <h4>✦ Mobile FormField component</h4>
+    <p>Exemplary a11y: accessibilityLabelledBy, accessibilityHint, accessibilityState, error role="alert" + liveRegion="polite", nativeID linkage. Gold standard pattern.</p>
+  </div>
+
+  <div class="strength">
+    <h4>✦ Mobile inventory screen</h4>
+    <p>79 accessibility props: radiogroup/radio, headers, labels, hints, states. Most thoroughly labeled screen in the codebase.</p>
+  </div>
+
+  <div class="strength">
+    <h4>✦ Web i18n infrastructure</h4>
+    <p>Full i18next with 5 locales, translation files, useTranslation(), locale persistence + backend sync. Strong foundation to port to mobile.</p>
+  </div>
+
+  <div class="strength">
+    <h4>✦ Web currency conversion</h4>
+    <p>Frankfurter API + localStorage caching (24h TTL) + formatMoney() auto-conversion + audit trail. User-centric design.</p>
+  </div>
+
+  <div class="strength">
+    <h4>✦ Web error handling components</h4>
+    <p>ApiErrorNotice with retry, ApiLoadingNotice, EmptyState with icon/title/description/action, PageShell skeletons. Should be used more consistently.</p>
+  </div>
+
+  <div class="strength">
+    <h4>✦ Feature registry architecture</h4>
+    <p>Centralized registry with role-based access, bilingual support, nav group organization, evaluation functions. Used consistently by sidebar and top bar.</p>
+  </div>
+
+  <div class="strength">
+    <h4>✦ Design token alignment</h4>
+    <p>Base palette values match between platforms. 4px spacing base consistent. Border radii nearly identical (2px diff on "md").</p>
+  </div>
+
+  <div class="strength">
+    <h4>✦ Mobile auth screen</h4>
+    <p>Proper a11y: role="tab" + selected state, error role="alert" + liveRegion="assertive", busy state on buttons. Good KeyboardAvoidingView.</p>
+  </div>
+
+  <div class="strength">
+    <h4>✦ Web StripeCheckoutModal</h4>
+    <p>Multi-step form with focus management, error refocusing, useReducer, ARIA, focus restoration. Model for complex forms.</p>
+  </div>
+</section>
+
+</div>
+
+<div style="text-align:center; padding:32px; color:var(--text-secondary); font-size:0.8rem; border-top:1px solid var(--border); margin-top:40px;">
+  TDF Records UX/UI Audit · Generated August 12, 2026 · 8 audit dimensions · 100+ files analyzed
+</div>

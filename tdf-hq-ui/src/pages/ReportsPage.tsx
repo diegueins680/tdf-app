@@ -22,6 +22,7 @@ import {
   resolveRuntimeCurrency,
   resolveRuntimeFormatOptions,
 } from '../utils/formatters';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 type CurrencyTotals = Record<string, number>;
 
@@ -65,6 +66,7 @@ const parseTeacherFilter = (raw: string): number | 'all' => {
 };
 
 export default function ReportsPage() {
+  useDocumentTitle('Finanzas / Reportes');
   const bookingsQuery = useQuery({
     queryKey: ['reports-bookings'],
     queryFn: () => Bookings.list(),

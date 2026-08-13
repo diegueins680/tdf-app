@@ -1,7 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
-module TDF.Server.DDEX (ddexServer) where
+module TDF.Server.DDEX (ddexServer, validateDdexAccess) where
 
+import Control.Monad (when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask)
 import Control.Monad (forM, unless, when)

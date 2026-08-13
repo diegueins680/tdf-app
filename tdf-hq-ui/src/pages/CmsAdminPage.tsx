@@ -28,6 +28,7 @@ import { SessionGate } from '../components/SessionGate';
 import { PUBLIC_BASE } from '../config/appConfig';
 import { getCmsVersionListUiState } from './cmsAdminVersionListState';
 import { getCmsVersionRowActions } from './cmsAdminVersionActions';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { getCmsLiveEditorActionState } from './cmsAdminLiveEditorActions';
 
 const STORAGE_KEY = 'tdf-cms-admin:last-selection';
@@ -106,6 +107,7 @@ const fallbackCmsStatusLabel = (value: string) => {
 };
 
 export default function CmsAdminPage() {
+  useDocumentTitle('Configuración / CMS');
   const qc = useQueryClient();
   const [searchParams] = useSearchParams();
   const querySlug = searchParams.get('slug')?.trim() ?? '';

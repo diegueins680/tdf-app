@@ -305,7 +305,9 @@ BEGIN
   IF current_setting('default_transaction_read_only') <> 'off' THEN
     RAISE EXCEPTION 'Production migration target is read-only';
   END IF;
-  IF to_regclass('public.event_ticket_order') IS NULL
+  IF to_regclass('public.party') IS NULL
+     OR to_regclass('public.campaign') IS NULL
+     OR to_regclass('public.event_ticket_order') IS NULL
      OR to_regclass('public.venue') IS NULL
      OR to_regclass('public.social_artist_profile') IS NULL
      OR to_regclass('public.artist_profile') IS NULL
@@ -384,6 +386,38 @@ BEGIN
   ) NOT IN (0, 3) THEN
     RAISE EXCEPTION 'Social-sync runtime tables are partially present';
   END IF;
+  IF (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name IN (
+        'artist_profile_enrichment', 'artist_inventory_reference',
+        'artist_research_source', 'artist_enrichment_suggestion',
+        'artist_field_change', 'artist_enrichment_run',
+        'artist_identity_candidate', 'artist_media_asset'
+      )
+  ) NOT IN (0, 8) THEN
+    RAISE EXCEPTION 'Artist enrichment tables are partially present';
+  END IF;
+  IF (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name IN (
+        'campaign_automation', 'campaign_automation_step',
+        'campaign_enrollment', 'campaign_delivery'
+      )
+  ) NOT IN (0, 4) THEN
+    RAISE EXCEPTION 'Campaign automation tables are partially present';
+  END IF;
+  IF (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name IN (
+        'feature_access_requests', 'feature_access_request_history',
+        'feature_navigation_preferences'
+      )
+  ) NOT IN (0, 3) THEN
+    RAISE EXCEPTION 'Feature discovery tables are partially present';
+  END IF;
 END
 $preflight$;
 ROLLBACK;
@@ -394,9 +428,13 @@ export function buildSchemaVerificationSql(options = {}) {
   const header = options.includePsqlHeader === false ? '' : '\\set ON_ERROR_STOP on\n';
   return `${header}DO $verify$
 DECLARE
+  campaign_table TEXT;
   discovery_table TEXT;
+  ddex_table TEXT;
+  feature_table TEXT;
   social_table TEXT;
   ticketing_table TEXT;
+  enrichment_table TEXT;
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns
@@ -936,6 +974,209 @@ BEGIN
     ) AND contype = 'f' AND convalidated
   ) <> 7 THEN
     RAISE EXCEPTION 'A social-sync foreign key is missing or invalid';
+  END IF;
+
+  FOREACH enrichment_table IN ARRAY ARRAY[
+    'artist_profile_enrichment',
+    'artist_inventory_reference',
+    'artist_research_source',
+    'artist_enrichment_suggestion',
+    'artist_field_change',
+    'artist_enrichment_run',
+    'artist_identity_candidate',
+    'artist_media_asset'
+  ] LOOP
+    IF to_regclass('public.' || enrichment_table) IS NULL THEN
+      RAISE EXCEPTION 'Artist enrichment relation public.% is missing', enrichment_table;
+    END IF;
+  END LOOP;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('artist_profile_enrichment', 'last_verified_at', 'timestamp with time zone', 'YES'),
+        ('artist_profile_enrichment', 'confidence', 'double precision', 'YES'),
+        ('artist_research_source', 'supported_fields', 'text', 'NO'),
+        ('artist_research_source', 'content_hash', 'text', 'YES'),
+        ('artist_enrichment_suggestion', 'decided_at', 'timestamp with time zone', 'YES'),
+        ('artist_enrichment_suggestion', 'decided_by', 'bigint', 'YES'),
+        ('artist_enrichment_suggestion', 'decision_note', 'text', 'YES'),
+        ('artist_identity_candidate', 'decided_at', 'timestamp with time zone', 'YES'),
+        ('artist_identity_candidate', 'decided_by', 'bigint', 'YES'),
+        ('artist_identity_candidate', 'decision_note', 'text', 'YES'),
+        ('artist_media_asset', 'source_content_hash', 'text', 'NO'),
+        ('artist_media_asset', 'source_attribution', 'text', 'NO'),
+        ('artist_media_asset', 'source_width', 'integer', 'NO'),
+        ('artist_media_asset', 'source_height', 'integer', 'NO'),
+        ('artist_media_asset', 'source_mime_type', 'text', 'NO'),
+        ('artist_media_asset', 'source_byte_size', 'bigint', 'NO'),
+        ('artist_media_asset', 'drive_file_id', 'text', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Artist enrichment columns do not match the runtime schema';
+  END IF;
+
+  IF to_regclass('public.uq_artist_profile_slug_ci') IS NULL
+     OR to_regclass('public.uq_artist_enrichment_active_full_run') IS NULL
+     OR to_regclass('public.idx_artist_suggestion_queue') IS NULL
+     OR to_regclass('public.idx_artist_field_change_history') IS NULL
+     OR to_regclass('public.idx_artist_media_asset_hash') IS NULL
+     OR to_regclass('public.unique_artist_media_drive_file') IS NULL THEN
+    RAISE EXCEPTION 'Artist enrichment indexes are incomplete';
+  END IF;
+
+  IF (
+    SELECT COUNT(*) FROM pg_constraint
+    WHERE conrelid IN (
+      'public.artist_profile_enrichment'::regclass,
+      'public.artist_inventory_reference'::regclass,
+      'public.artist_research_source'::regclass,
+      'public.artist_enrichment_suggestion'::regclass,
+      'public.artist_field_change'::regclass,
+      'public.artist_enrichment_run'::regclass,
+      'public.artist_identity_candidate'::regclass,
+      'public.artist_media_asset'::regclass
+    ) AND contype = 'f' AND convalidated
+  ) <> 16 THEN
+    RAISE EXCEPTION 'An artist enrichment foreign key is missing or invalid';
+  END IF;
+
+  FOREACH campaign_table IN ARRAY ARRAY[
+    'campaign_automation',
+    'campaign_automation_step',
+    'campaign_enrollment',
+    'campaign_delivery'
+  ] LOOP
+    IF to_regclass('public.' || campaign_table) IS NULL THEN
+      RAISE EXCEPTION 'Campaign automation relation public.% is missing', campaign_table;
+    END IF;
+  END LOOP;
+
+  IF (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'campaign_automation'
+  ) <> 9 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'campaign_automation_step'
+  ) <> 12 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'campaign_enrollment'
+  ) <> 11 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'campaign_delivery'
+  ) <> 15 THEN
+    RAISE EXCEPTION 'A campaign automation relation has an unexpected column count';
+  END IF;
+
+  FOREACH feature_table IN ARRAY ARRAY[
+    'feature_access_requests',
+    'feature_access_request_history',
+    'feature_navigation_preferences'
+  ] LOOP
+    IF to_regclass('public.' || feature_table) IS NULL THEN
+      RAISE EXCEPTION 'Feature discovery relation public.% is missing', feature_table;
+    END IF;
+  END LOOP;
+
+  IF (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'feature_access_requests'
+  ) <> 16 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'feature_access_request_history'
+  ) <> 8 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'feature_navigation_preferences'
+  ) <> 9 OR EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('party_id', 'bigint', 'NO'),
+        ('feature_id', 'text', 'NO'),
+        ('favorite', 'boolean', 'NO'),
+        ('pinned', 'boolean', 'NO'),
+        ('pin_order', 'integer', 'YES'),
+        ('last_visited_at', 'timestamp with time zone', 'YES'),
+        ('use_count', 'integer', 'NO'),
+        ('updated_at', 'timestamp with time zone', 'NO')
+    ) AS expected(column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = 'feature_navigation_preferences'
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Feature discovery tables do not match the runtime schema';
+  END IF;
+
+  FOREACH ddex_table IN ARRAY ARRAY[
+    'catalog_release',
+    'catalog_resource',
+    'catalog_release_resource',
+    'catalog_identifier',
+    'catalog_credit',
+    'catalog_deal',
+    'catalog_deal_territory',
+    'catalog_asset',
+    'catalog_source_link',
+    'ddex_document',
+    'ddex_message_header',
+    'ddex_validation_run',
+    'ddex_validation_issue',
+    'ddex_import_plan',
+    'ddex_import_run',
+    'ddex_import_change',
+    'ddex_export',
+    'ddex_partner',
+    'ddex_job'
+  ] LOOP
+    IF to_regclass('public.' || ddex_table) IS NULL THEN
+      RAISE EXCEPTION 'DDEX/catalog relation public.% is missing', ddex_table;
+    END IF;
+  END LOOP;
+
+  IF (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'ddex_document'
+  ) <> 15 OR EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('id', 'integer', 'NO'),
+        ('file_name', 'text', 'NO'),
+        ('private_uri', 'text', 'NO'),
+        ('sha256', 'text', 'NO'),
+        ('size_bytes', 'bigint', 'NO'),
+        ('family', 'text', 'NO'),
+        ('version', 'text', 'NO'),
+        ('namespace', 'text', 'YES'),
+        ('message_type', 'text', 'YES'),
+        ('status', 'text', 'NO'),
+        ('uploaded_by', 'integer', 'NO'),
+        ('message_id', 'text', 'YES'),
+        ('sender_id', 'text', 'YES'),
+        ('recipient_id', 'text', 'YES'),
+        ('created_at', 'timestamp with time zone', 'NO')
+    ) AS expected(column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = 'ddex_document'
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'ddex_document does not match the inbox runtime schema';
   END IF;
 END
 $verify$;`;

@@ -864,6 +864,7 @@ export default function DomoVenuePage() {
                     </Grid>
                     <Grid item xs={12} md={6}>
                       <TextField
+                        type="tel"
                         label="WhatsApp"
                         value={form.phone}
                         onChange={(event) => updateForm('phone', event.target.value)}

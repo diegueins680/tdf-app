@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.ServerAdminSpec (spec) where
 
@@ -37,6 +38,7 @@ import TDF.API.Admin
     , ConnectOnboardingLinkRequest
     , ConnectOnboardingLinkResponse
     , EmailTestRequest (..)
+    , ArtistEnrichmentOverviewDTO
     , SocialUnholdRequest (..)
     , UserCommunicationHistoryDTO
     )
@@ -996,6 +998,20 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected multiline broadcast subject to be rejected, got " <> show value)
+
+    describe "artist enrichment route authorization" $ do
+        it "requires the literal Admin role for read-only research and audit data" $ do
+            let assertRejected role = do
+                    result <- runAdminTest (enrichmentOverviewHandlerFor (mkUser [role]) Nothing Nothing)
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 403
+                            BL8.unpack (errBody err) `shouldContain` "Admin role required"
+                        Right value -> expectationFailure
+                            ("Expected enrichment access to be rejected, got " <> show value)
+            assertRejected StudioManager
+            assertRejected Webmaster
+            assertRejected Fan
 
     describe "admin seed route authorization" $ do
         it "requires literal Admin instead of broad Admin-module membership before seeding" $ do
@@ -2117,7 +2133,44 @@ artistsHandlersFor user =
             :<|> _brain
             :<|> _rag
             :<|> _social ->
-                artistsRouter
+                case artistsRouter of
+                    profilesRouter
+                        :<|> releasesRouter
+                        :<|> connectRouter
+                        :<|> promotionsRouter
+                        :<|> _enrichmentRouter ->
+                            profilesRouter
+                                :<|> releasesRouter
+                                :<|> connectRouter
+                                :<|> promotionsRouter
+
+enrichmentOverviewHandlerFor
+    :: AuthedUser
+    -> Maybe T.Text
+    -> Maybe Int64
+    -> AdminTestM ArtistEnrichmentOverviewDTO
+enrichmentOverviewHandlerFor user =
+    case adminServer user of
+        _seed
+            :<|> _dropdowns
+            :<|> _users
+            :<|> _communications
+            :<|> _roles
+            :<|> artistsRouter
+            :<|> _logs
+            :<|> _activity
+            :<|> _emailTest
+            :<|> _brain
+            :<|> _rag
+            :<|> _social ->
+                case artistsRouter of
+                    _profiles
+                        :<|> _releases
+                        :<|> _connect
+                        :<|> _promotions
+                        :<|> enrichmentRouter ->
+                            case enrichmentRouter of
+                                overviewHandler :<|> _rest -> overviewHandler
 
 communicationsHandlersFor
     :: AuthedUser

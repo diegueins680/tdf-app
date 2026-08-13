@@ -2134,6 +2134,7 @@ spec = do
                 Left err ->
                     expectationFailure ("Expected intern task status update to decode, got: " <> err)
                 Right payload -> do
+                    ituProjectId payload `shouldBe` Nothing
                     ituTitle payload `shouldBe` Nothing
                     ituDescription payload `shouldBe` Nothing
                     ituStatus payload `shouldBe` Just "doing"
@@ -2148,6 +2149,12 @@ spec = do
                     ituDescription payload `shouldBe` Just Nothing
                     ituAssignedTo payload `shouldBe` Just Nothing
                     ituDueAt payload `shouldBe` Just Nothing
+
+            case decodeInternTaskUpdate "{\"ituProjectId\":\"project-2\"}" of
+                Left err ->
+                    expectationFailure ("Expected intern task project update to decode, got: " <> err)
+                Right payload ->
+                    ituProjectId payload `shouldBe` Just "project-2"
 
         it "rejects unexpected task update keys instead of silently ignoring intern task intent" $
             decodeInternTaskUpdate

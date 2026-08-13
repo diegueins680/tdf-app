@@ -46,6 +46,7 @@ import {
   type CourseRegistrationReceiptDTO,
 } from '../api/courses';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
+import ConfirmDialog from '../components/ConfirmDialog';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { formatTimestampForDisplay, parseTimestamp } from '../utils/dateTime';
@@ -4926,6 +4927,10 @@ export default function CourseRegistrationsAdminPage() {
   const [showFollowUpDetails, setShowFollowUpDetails] = useState(false);
   const [showFollowUpComposer, setShowFollowUpComposer] = useState(false);
   const [markedPaidRegistrationId, setMarkedPaidRegistrationId] = useState<number | null>(null);
+  const [deleteReceiptConfirmOpen, setDeleteReceiptConfirmOpen] = useState(false);
+  const [pendingDeleteReceipt, setPendingDeleteReceipt] = useState<CourseRegistrationReceiptDTO | null>(null);
+  const [deleteFollowUpConfirmOpen, setDeleteFollowUpConfirmOpen] = useState(false);
+  const [pendingDeleteFollowUp, setPendingDeleteFollowUp] = useState<CourseRegistrationFollowUpDTO | null>(null);
   const selectedSlug = slug.trim();
 
   const listQueryKey = useMemo(
@@ -6879,7 +6884,17 @@ export default function CourseRegistrationsAdminPage() {
   const handleDeleteReceipt = (receipt: CourseRegistrationReceiptDTO) => {
     if (!selectedDossier || selectedDossierId == null) return;
     handleCloseReceiptMenu();
-    if (!window.confirm('¿Eliminar este comprobante?')) return;
+    setPendingDeleteReceipt(receipt);
+    setDeleteReceiptConfirmOpen(true);
+  };
+
+  const handleDeleteReceiptConfirm = () => {
+    if (!pendingDeleteReceipt || !selectedDossier || selectedDossierId == null) {
+      setDeleteReceiptConfirmOpen(false);
+      setPendingDeleteReceipt(null);
+      return;
+    }
+    const receipt = pendingDeleteReceipt;
     setDossierFlash(null);
     void deleteReceiptMutation
       .mutateAsync({
@@ -6895,6 +6910,10 @@ export default function CourseRegistrationsAdminPage() {
       })
       .catch((err: Error) => {
         setDossierFlash({ severity: 'error', message: err.message });
+      })
+      .finally(() => {
+        setDeleteReceiptConfirmOpen(false);
+        setPendingDeleteReceipt(null);
       });
   };
 
@@ -6960,7 +6979,17 @@ export default function CourseRegistrationsAdminPage() {
   const handleDeleteFollowUp = (entry: CourseRegistrationFollowUpDTO) => {
     if (!selectedDossier || selectedDossierId == null) return;
     handleCloseFollowUpMenu();
-    if (!window.confirm('¿Eliminar esta entrada de seguimiento?')) return;
+    setPendingDeleteFollowUp(entry);
+    setDeleteFollowUpConfirmOpen(true);
+  };
+
+  const handleDeleteFollowUpConfirm = () => {
+    if (!pendingDeleteFollowUp || !selectedDossier || selectedDossierId == null) {
+      setDeleteFollowUpConfirmOpen(false);
+      setPendingDeleteFollowUp(null);
+      return;
+    }
+    const entry = pendingDeleteFollowUp;
     setDossierFlash(null);
     void deleteFollowUpMutation
       .mutateAsync({
@@ -6976,6 +7005,10 @@ export default function CourseRegistrationsAdminPage() {
       })
       .catch((err: Error) => {
         setDossierFlash({ severity: 'error', message: err.message });
+      })
+      .finally(() => {
+        setDeleteFollowUpConfirmOpen(false);
+        setPendingDeleteFollowUp(null);
       });
   };
 
@@ -9567,7 +9600,24 @@ export default function CourseRegistrationsAdminPage() {
           </DialogActions>
         )}
       </Dialog>
-
+      <ConfirmDialog
+        open={deleteReceiptConfirmOpen}
+        onClose={() => setDeleteReceiptConfirmOpen(false)}
+        onConfirm={handleDeleteReceiptConfirm}
+        title="Eliminar comprobante"
+        description="¿Eliminar este comprobante?"
+        severity="danger"
+        confirming={deleteReceiptMutation.isPending}
+      />
+      <ConfirmDialog
+        open={deleteFollowUpConfirmOpen}
+        onClose={() => setDeleteFollowUpConfirmOpen(false)}
+        onConfirm={handleDeleteFollowUpConfirm}
+        title="Eliminar entrada de seguimiento"
+        description="¿Eliminar esta entrada de seguimiento?"
+        severity="danger"
+        confirming={deleteFollowUpMutation.isPending}
+      />
     </Stack>
   );
 }

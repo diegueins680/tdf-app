@@ -461,6 +461,20 @@ export interface ArtistProfileDTO {
   apGenres?: string | null;
   apGenreIds: string[];
   apHighlights?: string | null;
+  apOfficialName?: string | null;
+  apCountry?: string | null;
+  apInstagramUrl?: string | null;
+  apSocialLinks?: string | null;
+  apDiscography?: string | null;
+  apAchievements?: string | null;
+  apHeroOriginalUrl?: string | null;
+  apHeroSquareUrl?: string | null;
+  apHeroLandscapeUrl?: string | null;
+  apHeroResponsiveUrls?: string | null;
+  apHeroFocalPoint?: string | null;
+  apLastVerifiedAt?: string | null;
+  apConfidence?: number | null;
+  apReviewStatus?: string | null;
   apFollowerCount: number;
   apHasUserAccount?: boolean;
 }
@@ -694,10 +708,10 @@ export interface InternProjectDTO {
 
 export interface InternProjectCreate {
   ipcTitle: string;
-  ipcDescription?: string | null;
-  ipcStatus?: string | null;
-  ipcStartAt?: string | null;
-  ipcDueAt?: string | null;
+  ipcDescription?: string;
+  ipcStatus?: string;
+  ipcStartAt?: string;
+  ipcDueAt?: string;
 }
 
 export interface InternProjectUpdate {
@@ -726,12 +740,13 @@ export interface InternTaskDTO {
 export interface InternTaskCreate {
   itcProjectId: string;
   itcTitle: string;
-  itcDescription?: string | null;
-  itcAssignedTo?: number | null;
-  itcDueAt?: string | null;
+  itcDescription?: string;
+  itcAssignedTo?: number;
+  itcDueAt?: string;
 }
 
 export interface InternTaskUpdate {
+  ituProjectId?: string | null;
   ituTitle?: string | null;
   ituDescription?: string | null;
   ituStatus?: string | null;

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import DescriptionIcon from '@mui/icons-material/Description';
+import PrintIcon from '@mui/icons-material/Print';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import {
@@ -592,14 +593,25 @@ export default function SessionInvoiceGeneratorCard({ parties }: SessionInvoiceG
           <Typography variant="subtitle1">
             Total estimado: {formatMoney(totalPreview, currency || preferredCurrency)}
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<DescriptionIcon />}
-            onClick={handleGenerate}
-            disabled={generateMutation.isPending}
-          >
-            Generar factura
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Button
+              className="print-keep"
+              onClick={() => window.print()}
+              startIcon={<PrintIcon />}
+              variant="outlined"
+              size="small"
+            >
+              Imprimir
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<DescriptionIcon />}
+              onClick={handleGenerate}
+              disabled={generateMutation.isPending}
+            >
+              Generar factura
+            </Button>
+          </Stack>
         </Stack>
 
         {formError && (

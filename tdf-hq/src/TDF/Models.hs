@@ -379,6 +379,143 @@ ArtistRelease
     youtubeUrl       Text Maybe
     createdAt        UTCTime
     deriving Show Generic
+ArtistProfileEnrichment
+    artistPartyId    PartyId
+    officialName     Text Maybe
+    country          Text Maybe
+    instagramUrl     Text Maybe
+    socialLinks      Text Maybe
+    discography      Text Maybe
+    achievements     Text Maybe
+    heroOriginalUrl  Text Maybe
+    heroSquareUrl    Text Maybe
+    heroLandscapeUrl Text Maybe
+    heroResponsiveUrls Text Maybe
+    heroFocalPoint   Text Maybe
+    lastVerifiedAt   UTCTime Maybe
+    confidence       Double Maybe
+    reviewStatus     Text default='unverified'
+    createdAt        UTCTime
+    updatedAt        UTCTime
+    UniqueArtistProfileEnrichment artistPartyId
+    deriving Show Generic
+ArtistInventoryReference
+    idempotencyKey   Text
+    sourceType       Text
+    sourceRecordId   Text
+    originalName     Text
+    normalizedName   Text
+    artistPartyId    PartyId Maybe
+    socialArtistId   Int64 Maybe
+    aliases          Text Maybe
+    evidence         Text Maybe
+    confidence       Double Maybe
+    disposition      Text default='discovered'
+    firstSeenAt      UTCTime
+    lastSeenAt       UTCTime
+    UniqueArtistInventoryReference idempotencyKey
+    deriving Show Generic
+ArtistResearchSource
+    artistPartyId    PartyId Maybe
+    inventoryReferenceId ArtistInventoryReferenceId Maybe
+    sourceUrl        Text
+    sourceType       Text
+    retrievedAt      UTCTime
+    supportedFields  Text
+    attribution      Text Maybe
+    contentHash      Text Maybe
+    idempotencyKey   Text
+    UniqueArtistResearchSource idempotencyKey
+    deriving Show Generic
+ArtistEnrichmentSuggestion
+    artistPartyId    PartyId Maybe
+    inventoryReferenceId ArtistInventoryReferenceId Maybe
+    fieldName        Text
+    currentValue     Text Maybe
+    proposedValue    Text Maybe
+    confidence       Double
+    status           Text default='pending'
+    autoPublish      Bool default=False
+    evidence         Text
+    idempotencyKey   Text
+    createdAt        UTCTime
+    updatedAt        UTCTime
+    decidedAt        UTCTime Maybe
+    decidedBy        PartyId Maybe
+    decisionNote     Text Maybe
+    UniqueArtistEnrichmentSuggestion idempotencyKey
+    deriving Show Generic
+ArtistFieldChange
+    artistPartyId    PartyId
+    suggestionId     ArtistEnrichmentSuggestionId Maybe
+    fieldName        Text
+    previousValue    Text Maybe
+    newValue         Text Maybe
+    evidence         Text
+    confidence       Double
+    actor             Text
+    changedAt        UTCTime
+    idempotencyKey   Text
+    UniqueArtistFieldChange idempotencyKey
+    deriving Show Generic
+ArtistEnrichmentRun
+    runKey           Text
+    mode             Text
+    scope            Text
+    requestedArtistId PartyId Maybe
+    status           Text
+    phase            Text
+    checkpoint       Text Maybe
+    counters         Text Maybe
+    errorSummary     Text Maybe
+    startedAt        UTCTime
+    heartbeatAt      UTCTime
+    finishedAt       UTCTime Maybe
+    UniqueArtistEnrichmentRun runKey
+    deriving Show Generic
+ArtistIdentityCandidate
+    inventoryReferenceId ArtistInventoryReferenceId
+    artistPartyId    PartyId Maybe
+    provider         Text
+    externalId       Text Maybe
+    candidateUrl     Text Maybe
+    evidence         Text
+    confidence       Double
+    status           Text default='pending'
+    idempotencyKey   Text
+    createdAt        UTCTime
+    updatedAt        UTCTime
+    decidedAt        UTCTime Maybe
+    decidedBy        PartyId Maybe
+    decisionNote     Text Maybe
+    UniqueArtistIdentityCandidate idempotencyKey
+    deriving Show Generic
+ArtistMediaAsset
+    artistPartyId    PartyId
+    assetKind        Text
+    sourceUrl        Text
+    sourceAttribution Text
+    retrievedAt      UTCTime
+    sourceContentHash Text
+    sourceWidth      Int
+    sourceHeight     Int
+    sourceMimeType   Text
+    sourceByteSize   Int64
+    contentHash      Text
+    width            Int
+    height           Int
+    mimeType         Text
+    byteSize         Int64
+    rightsStatus     Text
+    driveFileId      Text
+    publicUrl        Text
+    parentAssetId    ArtistMediaAssetId Maybe
+    focalPoint       Text Maybe
+    idempotencyKey   Text
+    createdAt        UTCTime
+    UniqueArtistMediaAsset idempotencyKey
+    UniqueArtistMediaDriveFile driveFileId
+    deriving Show Generic
 FanProfile
     fanPartyId       PartyId
     displayName      Text Maybe

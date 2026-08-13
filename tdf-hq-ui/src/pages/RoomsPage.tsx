@@ -25,8 +25,10 @@ import { Rooms } from '../api/rooms';
 import type { RoomDTO } from '../api/types';
 import PageShell, { EmptyState } from '../components/PageShell';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function RoomsPage() {
+  useDocumentTitle('Estudio / Salas');
   const qc = useQueryClient();
   const [name, setName] = useState('');
   const [renameId, setRenameId] = useState<string | null>(null);

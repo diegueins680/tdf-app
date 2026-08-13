@@ -170,6 +170,7 @@ const PartnerManagementPage: React.FC = () => {
               onChange={(e) => setFormData({ ...formData, partnerName: e.target.value })}
               fullWidth
               required
+              inputProps={{ maxLength: 160 }}
             />
             <TextField
               label="DPID"
@@ -178,6 +179,7 @@ const PartnerManagementPage: React.FC = () => {
               fullWidth
               placeholder="DPID:XXXXXXXX"
               helperText="DDEX Party Identifier (optional)"
+              inputProps={{ maxLength: 200 }}
             />
             <FormControl fullWidth required>
               <InputLabel id="ddex-standard-version-label">Versiones DDEX permitidas</InputLabel>
@@ -217,7 +219,7 @@ const PartnerManagementPage: React.FC = () => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={handleCloseDialog} sx={{ minHeight: 44 }}>Cancel</Button>
           <Button
             variant="contained"
             onClick={handleSubmit}

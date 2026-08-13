@@ -5979,6 +5979,7 @@ spec = describe "TDF.Server helpers" $ do
                     [ ("folderId", "  folder-123  ")
                     , ("name", "  Contract.pdf  ")
                     , ("accessToken", "  token-123  ")
+                    , ("idempotencyKey", T.replicate 64 "a")
                     ]
                     [mkDriveUploadFile "original.pdf"]
                 ) :: Either String DriveUploadForm of
@@ -5989,6 +5990,16 @@ spec = describe "TDF.Server helpers" $ do
                     duFolderId payload `shouldBe` Just "folder-123"
                     duName payload `shouldBe` Just "Contract.pdf"
                     duAccessToken payload `shouldBe` Just "token-123"
+                    duIdempotencyKey payload `shouldBe` Just (T.replicate 64 "a")
+
+        it "rejects malformed Drive idempotency keys before upload" $ do
+            let multipart = mkDriveMultipart
+                    [("idempotencyKey", "not-a-sha256")]
+                    [mkDriveUploadFile "artist.webp"]
+            case fromMultipart multipart :: Either String DriveUploadForm of
+                Left err -> err `shouldContain` "64-character SHA-256"
+                Right payload -> expectationFailure
+                    ("Expected invalid idempotency key to be rejected, got: " <> show (duIdempotencyKey payload))
 
         it "rejects blank upload overrides instead of silently using fallback folder or filename" $ do
             let assertInvalid :: String -> MultipartData Tmp -> Expectation
@@ -10969,6 +10980,32 @@ spec = describe "TDF.Server helpers" $ do
 
             resolved `shouldBe` [liveRoomId, controlRoomId]
 
+        it "resolves studio-room UUIDs emitted by the room catalog" $ do
+            let startsAt = UTCTime (fromGregorian 2026 8 15) (secondsToDiffTime 54000)
+                endsAt = UTCTime (fromGregorian 2026 8 15) (secondsToDiffTime 59400)
+                studioRoomId = "a0130c03-3527-41b3-b370-a65e66823f77"
+            case (fromPathPiece studioRoomId :: Maybe (Key ME.Room)) of
+                Nothing -> expectationFailure "Expected the production-shaped room UUID to parse"
+                Just studioRoomKey -> do
+                    (liveRoomId, resolved) <- runResourceSqlite $ do
+                        liveRoomId <- insertBookingResourceFixture "Live Room" "live-room"
+                        insertKey studioRoomKey ME.Room
+                            { ME.roomName = "Live Room"
+                            , ME.roomIsBookable = True
+                            , ME.roomCapacity = Nothing
+                            , ME.roomChannelCount = Nothing
+                            , ME.roomDefaultSampleRate = Nothing
+                            , ME.roomPatchbayNotes = Nothing
+                            }
+                        resolved <- resolveResourcesForBooking
+                            (Just "Rehearsal")
+                            [studioRoomId]
+                            startsAt
+                            endsAt
+                        pure (liveRoomId, resolved)
+
+                    resolved `shouldBe` [liveRoomId]
+
         it "rejects unknown explicit room ids instead of silently falling back to default room selection" $ do
             let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
                 endsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 61200)
@@ -14283,6 +14320,11 @@ marketplaceTestConfig seedFlag =
         , googleRoutesApiKey = Nothing
         , googleRoutesApiBase = "https://routes.googleapis.com"
         , eventLogisticsRecheckEnabled = False
+        , artistEnrichmentEnabled = False
+        , artistEnrichmentAutoPublish = False
+        , artistEnrichmentHourLocal = 4
+        , artistEnrichmentBatchSize = 500
+        , artistEnrichmentStaleDays = 90
         , defaultCurrency = "USD"
         , supportedCurrencies = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "BRL"]
         , defaultTimezone = "UTC"
@@ -14721,6 +14763,18 @@ initializeChatSchema = do
 initializeResourceSchema :: SqlPersistT IO ()
 initializeResourceSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"room\" (\
+        \\"id\" VARCHAR PRIMARY KEY,\
+        \\"name\" VARCHAR NOT NULL,\
+        \\"is_bookable\" BOOLEAN NOT NULL,\
+        \\"capacity\" INTEGER NULL,\
+        \\"channel_count\" INTEGER NULL,\
+        \\"default_sample_rate\" INTEGER NULL,\
+        \\"patchbay_notes\" VARCHAR NULL,\
+        \CONSTRAINT \"unique_room_name\" UNIQUE (\"name\")\
+        \)"
+        []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"resource\" (\
         \\"id\" INTEGER PRIMARY KEY,\

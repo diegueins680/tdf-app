@@ -1,4 +1,5 @@
 import { useEffect, useReducer, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogTitle,
@@ -79,48 +80,9 @@ const BUYER_FORM_ID = 'stripe-checkout-buyer-details-form';
 const CHECKOUT_ACTION_SPINNER_SIZE_PX = 2 * 10 + 4;
 const CHECKOUT_SUCCESS_AUTO_CLOSE_DELAY_MS = 2 * 1000;
 
-const CHECKOUT_COPY = {
-  title: 'Purchase Tickets',
-  steps: {
-    buyer: 'Buyer Details',
-    payment: 'Payment',
-    confirmation: 'Confirmation',
-  },
-  labels: {
-    name: 'Your Name',
-    email: 'Email',
-    quantity: 'Quantity',
-  },
-  helpers: {
-    email: 'Tickets will be sent to this email',
-    promoPending: 'Promo code will be applied at checkout',
-  },
-  actions: {
-    back: 'Back',
-    cancel: 'Cancel',
-    continue: 'Continue to Payment',
-    close: 'Close',
-  },
-  errors: {
-    requiredFields: 'Please fill in all required fields',
-    stripeMissing: 'Stripe not initialized',
-    paymentSubmit: 'Payment submission failed',
-    paymentFailed: 'Payment failed',
-    paymentUnclear: 'Payment status unclear. Please contact support.',
-    paymentIntent: 'Failed to create payment intent',
-    unexpected: 'An unexpected error occurred',
-  },
-  status: {
-    buyer: 'Buyer',
-    quantity: 'Quantity',
-    promoApplied: 'Promo code applied',
-    total: 'Total',
-    success: 'Payment Successful!',
-    sent: 'Your tickets have been sent to',
-  },
-};
 
 function CheckoutForm({ tier, buyerDetails, promoCode, orderId, onSuccess, onBack }: CheckoutFormProps) {
+  const { t } = useTranslation();
   const stripe = useStripe();
   const elements = useElements();
   const [state, dispatch] = useReducer(checkoutFormReducer, initialCheckoutFormState);
@@ -139,7 +101,7 @@ function CheckoutForm({ tier, buyerDetails, promoCode, orderId, onSuccess, onBac
 
   const submitPayment = async () => {
     if (!stripe || !elements) {
-      dispatch({ type: 'submitFailed', error: CHECKOUT_COPY.errors.stripeMissing });
+      dispatch({ type: 'submitFailed', error: t('checkout.errors.stripeMissing') });
       window.requestAnimationFrame(() => paymentErrorRef.current?.focus());
       return;
     }
@@ -149,7 +111,7 @@ function CheckoutForm({ tier, buyerDetails, promoCode, orderId, onSuccess, onBac
     try {
       const { error: submitError } = await elements.submit();
       if (submitError) {
-        dispatch({ type: 'submitFailed', error: submitError.message ?? CHECKOUT_COPY.errors.paymentSubmit });
+        dispatch({ type: 'submitFailed', error: submitError.message ?? t('checkout.errors.paymentSubmit') });
         return;
       }
 
@@ -159,7 +121,7 @@ function CheckoutForm({ tier, buyerDetails, promoCode, orderId, onSuccess, onBac
       });
 
       if (confirmError) {
-        dispatch({ type: 'submitFailed', error: confirmError.message ?? CHECKOUT_COPY.errors.paymentFailed });
+        dispatch({ type: 'submitFailed', error: confirmError.message ?? t('checkout.errors.paymentFailed') });
         return;
       }
 
@@ -173,9 +135,9 @@ function CheckoutForm({ tier, buyerDetails, promoCode, orderId, onSuccess, onBac
         return;
       }
 
-      dispatch({ type: 'submitFailed', error: CHECKOUT_COPY.errors.paymentUnclear });
+      dispatch({ type: 'submitFailed', error: t('checkout.errors.paymentUnclear') });
     } catch (err) {
-      dispatch({ type: 'submitFailed', error: err instanceof Error ? err.message : CHECKOUT_COPY.errors.unexpected });
+      dispatch({ type: 'submitFailed', error: err instanceof Error ? err.message : t('checkout.errors.unexpected') });
     }
   };
 
@@ -188,14 +150,14 @@ function CheckoutForm({ tier, buyerDetails, promoCode, orderId, onSuccess, onBac
     <form onSubmit={handlePaymentFormSubmit} data-focus-management="payment-errors">
       <Box ref={paymentSummaryRef} tabIndex={-1} sx={{ mb: 3, outline: 'none' }}>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          {CHECKOUT_COPY.status.buyer}: {buyerDetails.name} ({buyerDetails.email})
+          {t('checkout.status.buyer')}: {buyerDetails.name} ({buyerDetails.email})
         </Typography>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          {CHECKOUT_COPY.status.quantity}: {buyerDetails.quantity} x {tier.ticketTierName}
+          {t('checkout.status.quantity')}: {buyerDetails.quantity} x {tier.ticketTierName}
         </Typography>
         {promoCode && (
           <Typography variant="body2" color="success.main" gutterBottom>
-            {CHECKOUT_COPY.status.promoApplied}: {promoCode}
+            {t('checkout.status.promoApplied')}: {promoCode}
           </Typography>
         )}
       </Box>
@@ -221,7 +183,7 @@ function CheckoutForm({ tier, buyerDetails, promoCode, orderId, onSuccess, onBac
           data-focus-management="buyer-details"
           fullWidth
         >
-          {CHECKOUT_COPY.actions.back}
+          {t('checkout.actions.back')}
         </Button>
         <Button
           type="submit"
@@ -255,6 +217,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
    * invariant: activeStep follows the checkout step constants.
    * postcondition: close resets state.
    */
+  const { t } = useTranslation();
   const [state, dispatch] = useReducer(checkoutModalReducer, initialCheckoutModalState);
   const returnFocusRef = useRef(null) as HTMLElementRef;
   const nameInputRef = useRef(null) as InputRef;
@@ -309,7 +272,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
           : null;
 
     if (invalidField) {
-      dispatch({ type: 'buyerSubmitFailed', error: CHECKOUT_COPY.errors.requiredFields });
+      dispatch({ type: 'buyerSubmitFailed', error: t('checkout.errors.requiredFields') });
       window.requestAnimationFrame(() => invalidField.current?.focus());
       return;
     }
@@ -334,7 +297,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
     } catch (err) {
       dispatch({
         type: 'buyerSubmitFailed',
-        error: err instanceof Error ? err.message : CHECKOUT_COPY.errors.paymentIntent,
+        error: err instanceof Error ? err.message : t('checkout.errors.paymentIntent'),
       });
     }
   };
@@ -393,7 +356,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
   const modalContent = (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth aria-labelledby="stripe-checkout-title">
       <DialogTitle id="stripe-checkout-title">
-        {CHECKOUT_COPY.title} - {eventTitle}
+        {t('checkout.title')} - {eventTitle}
         <Typography variant="body2" color="text.secondary">
           {tier.ticketTierName}
         </Typography>
@@ -402,13 +365,13 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
       <DialogContent>
         <Stepper activeStep={state.activeStep} sx={{ mb: 3 }}>
           <Step>
-            <StepLabel>{CHECKOUT_COPY.steps.buyer}</StepLabel>
+            <StepLabel>{t('checkout.steps.buyer')}</StepLabel>
           </Step>
           <Step>
-            <StepLabel>{CHECKOUT_COPY.steps.payment}</StepLabel>
+            <StepLabel>{t('checkout.steps.payment')}</StepLabel>
           </Step>
           <Step>
-            <StepLabel>{CHECKOUT_COPY.steps.confirmation}</StepLabel>
+            <StepLabel>{t('checkout.steps.confirmation')}</StepLabel>
           </Step>
         </Stepper>
 
@@ -420,7 +383,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
             data-focus-management="buyer-details-errors"
           >
             <TextField
-              label={CHECKOUT_COPY.labels.name}
+              label={t('checkout.labels.name')}
               fullWidth
               required
               inputRef={nameInputRef}
@@ -429,7 +392,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
               margin="normal"
             />
             <TextField
-              label={CHECKOUT_COPY.labels.email}
+              label={t('checkout.labels.email')}
               type="email"
               fullWidth
               required
@@ -437,10 +400,10 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
               value={state.buyerDetails.email}
               onChange={(e) => dispatch({ type: 'buyerFieldChanged', field: 'email', value: e.target.value })}
               margin="normal"
-              helperText={CHECKOUT_COPY.helpers.email}
+              helperText={t('checkout.helpers.email')}
             />
             <TextField
-              label={CHECKOUT_COPY.labels.quantity}
+              label={t('checkout.labels.quantity')}
               type="number"
               fullWidth
               required
@@ -463,11 +426,11 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
 
             <Box sx={{ mt: 3 }}>
               <Typography variant="h6">
-                {CHECKOUT_COPY.status.total}: {formatTicketTierPrice(tier, state.buyerDetails.quantity)}
+                {t('checkout.status.total')}: {formatTicketTierPrice(tier, state.buyerDetails.quantity)}
               </Typography>
               {state.promoCode && (
                 <Typography variant="body2" color="success.main">
-                  {CHECKOUT_COPY.helpers.promoPending}
+                  {t('checkout.helpers.promoPending')}
                 </Typography>
               )}
             </Box>
@@ -496,10 +459,10 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
         {state.activeStep === CHECKOUT_STEP_CONFIRMATION && (
           <Box ref={successSummaryRef} tabIndex={-1} sx={{ textAlign: 'center', py: 4, outline: 'none' }}>
             <Typography variant="h5" gutterBottom color="success.main">
-              {CHECKOUT_COPY.status.success}
+              {t('checkout.status.success')}
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              {CHECKOUT_COPY.status.sent} {state.buyerDetails.email}
+              {t('checkout.status.sent')} {state.buyerDetails.email}
             </Typography>
             <CircularProgress sx={{ mt: 2 }} />
           </Box>
@@ -521,7 +484,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
               }}
               data-focus-management="dialog-restore"
             >
-              {CHECKOUT_COPY.actions.cancel}
+              {t('checkout.actions.cancel')}
             </Button>
             <Button
               type="submit"
@@ -529,7 +492,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
               variant="contained"
               disabled={state.loading}
             >
-              {state.loading ? <CircularProgress size={CHECKOUT_ACTION_SPINNER_SIZE_PX} /> : CHECKOUT_COPY.actions.continue}
+              {state.loading ? <CircularProgress size={CHECKOUT_ACTION_SPINNER_SIZE_PX} /> : t('checkout.actions.continue')}
             </Button>
           </>
         )}
@@ -547,7 +510,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
             data-focus-management="dialog-restore"
             variant="contained"
           >
-            {CHECKOUT_COPY.actions.close}
+            {t('checkout.actions.close')}
           </Button>
         )}
       </DialogActions>

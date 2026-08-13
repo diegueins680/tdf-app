@@ -255,6 +255,20 @@ emptyDto artistKey hasAccount = ArtistProfileDTO
   , apGenres           = Nothing
   , apGenreIds         = []
   , apHighlights       = Nothing
+  , apOfficialName     = Nothing
+  , apCountry          = Nothing
+  , apInstagramUrl     = Nothing
+  , apSocialLinks      = Nothing
+  , apDiscography      = Nothing
+  , apAchievements     = Nothing
+  , apHeroOriginalUrl  = Nothing
+  , apHeroSquareUrl    = Nothing
+  , apHeroLandscapeUrl = Nothing
+  , apHeroResponsiveUrls = Nothing
+  , apHeroFocalPoint   = Nothing
+  , apLastVerifiedAt   = Nothing
+  , apConfidence       = Nothing
+  , apReviewStatus     = Nothing
   , apFollowerCount    = 0
   , apHasUserAccount   = hasAccount
   }
@@ -432,6 +446,16 @@ fetchArtistProfileMap ids
       profiles <- selectList [ArtistProfileArtistPartyId <-. ids] []
       pure $ Map.fromList [ (artistProfileArtistPartyId (entityVal ap), entityVal ap) | ap <- profiles ]
 
+fetchArtistEnrichmentMap :: MonadIO m => [PartyId] -> SqlPersistT m (Map.Map PartyId ArtistProfileEnrichment)
+fetchArtistEnrichmentMap ids
+  | null ids = pure Map.empty
+  | otherwise = do
+      rows <- selectList [ArtistProfileEnrichmentArtistPartyId <-. ids] []
+      pure $ Map.fromList
+        [ (artistProfileEnrichmentArtistPartyId (entityVal row), entityVal row)
+        | row <- rows
+        ]
+
 artistProfileEntityToDTO
   :: Map.Map PartyId Text
   -> Map.Map PartyId Int
@@ -466,6 +490,20 @@ artistProfileEntityToDTO nameMap followMap accountMap genreSelectionMap (Entity 
       , apGenres           = displayGenres
       , apGenreIds         = map fst genreSelections
       , apHighlights       = artistProfileHighlights prof
+      , apOfficialName     = enrichment >>= artistProfileEnrichmentOfficialName
+      , apCountry          = enrichment >>= artistProfileEnrichmentCountry
+      , apInstagramUrl     = enrichment >>= artistProfileEnrichmentInstagramUrl
+      , apSocialLinks      = enrichment >>= artistProfileEnrichmentSocialLinks
+      , apDiscography      = enrichment >>= artistProfileEnrichmentDiscography
+      , apAchievements     = enrichment >>= artistProfileEnrichmentAchievements
+      , apHeroOriginalUrl  = enrichment >>= artistProfileEnrichmentHeroOriginalUrl
+      , apHeroSquareUrl    = enrichment >>= artistProfileEnrichmentHeroSquareUrl
+      , apHeroLandscapeUrl = enrichment >>= artistProfileEnrichmentHeroLandscapeUrl
+      , apHeroResponsiveUrls = enrichment >>= artistProfileEnrichmentHeroResponsiveUrls
+      , apHeroFocalPoint   = enrichment >>= artistProfileEnrichmentHeroFocalPoint
+      , apLastVerifiedAt   = enrichment >>= artistProfileEnrichmentLastVerifiedAt
+      , apConfidence       = enrichment >>= artistProfileEnrichmentConfidence
+      , apReviewStatus     = artistProfileEnrichmentReviewStatus <$> enrichment
       , apFollowerCount    = followerCount
       , apHasUserAccount   = hasAccount
       }

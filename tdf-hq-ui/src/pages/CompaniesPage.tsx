@@ -268,7 +268,7 @@ function EditCompanyDialog({ company, open, onClose }: EditCompanyDialogProps) {
           <TextField label="Nombre comercial" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
           <TextField label="Razón social" value={legalName} onChange={(e) => setLegalName(e.target.value)} />
           <TextField label="Correo" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <TextField label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <TextField type="tel" label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
           <TextField label="RUC / Tax ID" value={taxId} onChange={(e) => setTaxId(e.target.value)} />
           <TextField
             label="Notas"

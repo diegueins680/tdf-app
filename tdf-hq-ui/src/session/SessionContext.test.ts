@@ -53,6 +53,7 @@ describe('parseStoredSession', () => {
         displayName: '  Alice Doe ',
         roles: [' Admin ', '', 'Admin', 'admin', 'fan', ' Fan '],
         modules: [' bookings ', '', 'bookings', 'Reports', 'reports', 9],
+        featureFlags: [' EVENT_DISCOVERY_ENABLED ', '', 'event_discovery_enabled'],
         apiToken: '  token-123  ',
         partyId: '42',
       }),
@@ -63,6 +64,7 @@ describe('parseStoredSession', () => {
       displayName: 'Alice Doe',
       roles: ['admin', 'fan'],
       modules: ['bookings', 'reports'],
+      featureFlags: ['EVENT_DISCOVERY_ENABLED'],
       partyId: 42,
     });
   });

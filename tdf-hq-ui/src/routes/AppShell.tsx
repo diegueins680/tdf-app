@@ -5,12 +5,19 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import ApiActivityIndicator from '../components/ApiActivityIndicator';
 import ApiStatusChip from '../components/ApiStatusChip';
 import ChatKitLauncher from '../components/ChatKitLauncher';
+import { OfflineBanner } from '../components/OfflineBanner';
+import RegistryBreadcrumbs from '../components/RegistryBreadcrumbs';
+import RouteErrorBoundary from '../components/RouteErrorBoundary';
 import SidebarNav from '../components/SidebarNav';
 import TopBar from '../components/TopBar';
 import { useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
 import { buildLoginRedirectPath, pickLandingPath } from '../utils/loginRouting';
 import RouteLoadingFallback from './RouteLoadingFallback';
+import ForbiddenPage from '../pages/ForbiddenPage';
+import { evaluatePathAccess } from '../features/featureRegistry';
+import { useNavigationPreferences } from '../hooks/useNavigationPreferences';
+import { getAnalyticsClient } from '../analytics/posthog';
 
 const DESKTOP_NAV_MIN_WIDTH = 1024;
 
@@ -20,6 +27,8 @@ export function Shell() {
   const { session, loading } = useSession();
   const location = useLocation();
   const sidebarToggleRef = useRef<HTMLButtonElement | null>(null);
+  const recordedPathRef = useRef('');
+  const navigationPreferences = useNavigationPreferences(Boolean(session));
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false;
     return window.innerWidth < DESKTOP_NAV_MIN_WIDTH;
@@ -48,8 +57,7 @@ export function Shell() {
   useEffect(() => {
     if (sidebarCollapsed) return;
     const handler = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      if (!isDesktop) {
+      if (event.key === 'Escape' && !sidebarCollapsed) {
         setSidebarCollapsed(true);
       }
     };
@@ -95,6 +103,33 @@ export function Shell() {
     };
   }, [isDesktop, sidebarCollapsed]);
 
+  useEffect(() => {
+    if (!session || loading) return;
+    const decision = evaluatePathAccess(location.pathname, {
+      authenticated: true,
+      roles: session.roles,
+      modules: session.modules,
+      featureFlags: session.featureFlags,
+    });
+    const key = `${location.pathname}:${decision?.feature.id ?? 'unregistered'}:${decision?.state ?? 'unknown'}`;
+    if (recordedPathRef.current === key) return;
+    recordedPathRef.current = key;
+    if (decision?.state === 'allowed' && decision.feature.recentBehavior !== 'none') {
+      navigationPreferences.visit.mutate(decision.feature.id);
+    } else if (decision && decision.state !== 'allowed') {
+      getAnalyticsClient().capture('feature_403_shown', {
+        feature_id: decision.feature.id,
+        platform: 'web',
+        reason: decision.reason,
+      });
+    } else if (!decision) {
+      getAnalyticsClient().capture('feature_destination_unresolved', {
+        platform: 'web',
+        route_registered: false,
+      });
+    }
+  }, [loading, location.pathname, navigationPreferences.visit, session]);
+
   if (loading) {
     return <RouteLoadingFallback />;
   }
@@ -104,14 +139,13 @@ export function Shell() {
     return <Navigate to={loginPath} replace />;
   }
 
-  if (!canAccessPath(location.pathname, session.roles ?? [], session.modules)) {
-    const landingPath = pickLandingPath(session.roles ?? [], session.modules);
-    const fallbackPath =
-      landingPath !== location.pathname && canAccessPath(landingPath, session.roles ?? [], session.modules)
-        ? landingPath
-        : '/inicio';
-    return <Navigate to={fallbackPath} replace />;
-  }
+  const accessDecision = evaluatePathAccess(location.pathname, {
+    authenticated: true,
+    roles: session.roles,
+    modules: session.modules,
+    featureFlags: session.featureFlags,
+  });
+  const forbiddenDecision = accessDecision?.state !== 'allowed' ? accessDecision : null;
 
   const hideFloatingAssistants =
     location.pathname === '/inicio'
@@ -199,6 +233,7 @@ export function Shell() {
           sidebarOpen={!sidebarCollapsed}
           toggleButtonRef={sidebarToggleRef}
         />
+        <OfflineBanner />
         <ApiActivityIndicator />
         <Box
           component="main"
@@ -214,9 +249,10 @@ export function Shell() {
           }}
         >
           <Container maxWidth="xl" sx={{ pt: { xs: 3, md: 4 }, pb: 6 }}>
-            <Outlet />
+            <RegistryBreadcrumbs />
+            {forbiddenDecision ? <ForbiddenPage decision={forbiddenDecision} /> : <RouteErrorBoundary><Outlet /></RouteErrorBoundary>}
           </Container>
-          {!hideFloatingAssistants && (
+          {!forbiddenDecision && !hideFloatingAssistants && (
             <Box
               sx={(theme) => ({
                 position: 'fixed',

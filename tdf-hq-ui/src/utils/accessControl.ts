@@ -1,3 +1,5 @@
+import { evaluatePathAccess, getFeatureByPath } from '../features/featureRegistry';
+
 const INTERNAL_MANAGER_MODULE_KEYS = [
   'admin',
   'crm',
@@ -80,7 +82,6 @@ export function normalizeAccessRoles(roles: readonly string[] | undefined): stri
 
   return normalized;
 }
-
 export function buildAccessibleModuleSet(
   _roles: readonly string[] | undefined,
   modules: readonly string[] | undefined,
@@ -219,6 +220,9 @@ export function pathRequiresSchoolStaff(path: string): boolean {
 }
 
 export function pathRequiresModule(path: string): string | null {
+  const registeredFeature = getFeatureByPath(path);
+  const registeredModule = registeredFeature?.requiredModules[0];
+  if (registeredModule) return registeredModule.toLowerCase();
   if (path.startsWith('/crm')) return 'crm';
   if (path.startsWith('/social/inbox')) return 'crm';
   if (path.startsWith('/estudio')) return 'scheduling';

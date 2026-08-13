@@ -481,7 +481,7 @@ export default function EventLogisticsPage() {
             <TextField label="Longitud" type="number" value={placeDraft.longitude} onChange={(event) => setPlaceDraft({ ...placeDraft, longitude: event.target.value })} />
             <TextField label="Instrucciones de acceso" value={placeDraft.instructions} onChange={(event) => setPlaceDraft({ ...placeDraft, instructions: event.target.value })} />
             <TextField label="Contacto" value={placeDraft.contactName} onChange={(event) => setPlaceDraft({ ...placeDraft, contactName: event.target.value })} />
-            <TextField label="Teléfono" value={placeDraft.contactPhone} onChange={(event) => setPlaceDraft({ ...placeDraft, contactPhone: event.target.value })} />
+            <TextField type="tel" label="Teléfono" value={placeDraft.contactPhone} onChange={(event) => setPlaceDraft({ ...placeDraft, contactPhone: event.target.value })} />
           </Box>
           <Stack direction="row" spacing={1}><Button variant="contained" startIcon={<AddLocationAltIcon />} onClick={() => placeMutation.mutate()} disabled={placeMutation.isPending}>{editingPlaceId ? 'Actualizar lugar' : 'Guardar lugar'}</Button>{editingPlaceId && <Button onClick={() => { setEditingPlaceId(''); setPlaceDraft(emptyPlace()); }}>Cancelar</Button>}</Stack>
         </Stack></CardContent></Card>}
@@ -513,7 +513,7 @@ export default function EventLogisticsPage() {
             </> : <TextField select label="Lugar" value={activityDraft.placeId} onChange={(event) => setActivityDraft({ ...activityDraft, placeId: event.target.value })}><MenuItem value="">Sin lugar</MenuItem>{plan?.elgPlaces.map((place) => <MenuItem key={place.elpId} value={place.elpId ?? ''}>{place.elpLabel}</MenuItem>)}</TextField>}
             <TextField label="ID responsable TDF" value={activityDraft.assigneePartyId} onChange={(event) => setActivityDraft({ ...activityDraft, assigneePartyId: event.target.value, externalName: event.target.value ? '' : activityDraft.externalName })} />
             <TextField label="Responsable externo" value={activityDraft.externalName} onChange={(event) => setActivityDraft({ ...activityDraft, externalName: event.target.value, assigneePartyId: event.target.value ? '' : activityDraft.assigneePartyId })} />
-            <TextField label="Teléfono externo" value={activityDraft.externalPhone} onChange={(event) => setActivityDraft({ ...activityDraft, externalPhone: event.target.value })} />
+            <TextField type="tel" label="Teléfono externo" value={activityDraft.externalPhone} onChange={(event) => setActivityDraft({ ...activityDraft, externalPhone: event.target.value })} />
             <TextField label="Email externo" value={activityDraft.externalEmail} onChange={(event) => setActivityDraft({ ...activityDraft, externalEmail: event.target.value })} />
             <TextField label="Dependencias (IDs separados por coma)" value={activityDraft.dependencyIds} onChange={(event) => setActivityDraft({ ...activityDraft, dependencyIds: event.target.value })} />
             <TextField label="Notas e instrucciones" multiline minRows={2} value={activityDraft.notes} onChange={(event) => setActivityDraft({ ...activityDraft, notes: event.target.value })} sx={{ gridColumn: { md: 'span 2' } }} />

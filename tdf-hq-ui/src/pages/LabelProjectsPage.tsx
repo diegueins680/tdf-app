@@ -21,6 +21,7 @@ import { Label } from '../api/label';
 import type { LabelProjectNoteDTO } from '../api/types';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import PageShell from '../components/PageShell';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 interface ProjectNote {
   id: string;
@@ -227,6 +228,7 @@ function ProjectNotesList({ notes, onToggle, onDelete }: ProjectNotesListProps) 
 }
 
 export default function LabelProjectsPage() {
+  useDocumentTitle('Label / Proyectos');
   const qc = useQueryClient();
   const [input, setInput] = useState('');
 

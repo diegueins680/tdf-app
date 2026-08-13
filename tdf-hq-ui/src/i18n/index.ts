@@ -30,15 +30,9 @@ function initialLocale(): SupportedLocale {
     const stored = normalizeLocale(window.localStorage.getItem(LOCALE_STORAGE_KEY));
     if (stored) return stored;
   }
-  if (typeof navigator !== 'undefined') {
-    for (const candidate of navigator.languages ?? [navigator.language]) {
-      const detected = normalizeLocale(candidate);
-      if (detected) return detected;
-    }
-  }
   const envDefault = normalizeLocale(VITE_ENV.VITE_DEFAULT_LOCALE);
   if (envDefault) return envDefault;
-  return 'en';
+  return 'es';
 }
 
 const detectedLocale = initialLocale();

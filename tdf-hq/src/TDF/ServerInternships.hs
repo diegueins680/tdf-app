@@ -3,6 +3,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeOperators #-}
 
 module TDF.ServerInternships where
 
@@ -314,12 +315,13 @@ isUnsafeInternTitleChar ch =
 validateInternTaskUpdatePermissions :: Bool -> InternTaskUpdate -> Either ServerError ()
 validateInternTaskUpdatePermissions isAdminUser InternTaskUpdate{..}
   | isAdminUser = Right ()
-  | isJust ituTitle
+  | isJust ituProjectId
+      || isJust ituTitle
       || isJust ituDescription
       || isJust ituAssignedTo
       || isJust ituDueAt =
       Left err403
-        { errBody = "Only admins can update task title, description, assignee, or due date" }
+        { errBody = "Only admins can update task project, title, description, assignee, or due date" }
   | otherwise = Right ()
 
 validatePositiveInternPartyId :: Text -> Int64 -> Either ServerError Int64
@@ -359,7 +361,7 @@ internshipsServer user =
   :<|> (listProjectsH :<|> createProjectH)
   :<|> updateProjectH
   :<|> (listTasksH :<|> createTaskH)
-  :<|> updateTaskH
+  :<|> taskByIdH
   :<|> (listTodosH :<|> createTodoH :<|> updateTodoH :<|> deleteTodoH)
   :<|> listTimeEntriesH
   :<|> clockInH
@@ -380,6 +382,13 @@ internshipsServer user =
 
     isIntern :: AuthedUser -> Bool
     isIntern AuthedUser{..} = M.Intern `elem` auRoles
+
+    taskByIdH
+      :: (MonadReader Env m, MonadIO m, MonadError ServerError m)
+      => Text
+      -> (InternTaskUpdate -> m InternTaskDTO) :<|> m NoContent
+    taskByIdH requestedTaskId =
+      updateTaskH requestedTaskId :<|> deleteTaskH requestedTaskId
 
     listInternsH :: (MonadReader Env m, MonadIO m, MonadError ServerError m) => m [InternSummaryDTO]
     listInternsH = do
@@ -592,6 +601,16 @@ internshipsServer user =
       unless (isAdminUser || isOwner) $
         throwError err403 { errBody = "Only admins or assignees can update tasks" }
       either throwError pure (validateInternTaskUpdatePermissions isAdminUser InternTaskUpdate{..})
+      projectUpdate <-
+        if isAdminUser
+          then case ituProjectId of
+            Nothing -> pure Nothing
+            Just projectId -> do
+              projectKey <- parseKey @ME.InternProject projectId
+              mProject <- withPool $ getEntity projectKey
+              _ <- maybe (throwError err404) pure mProject
+              pure (Just projectKey)
+          else pure Nothing
       titleUpdate <- either throwError pure (validateInternTaskTitleUpdate ituTitle)
       statusUpdate <- either throwError pure (validateOptionalInternTaskStatusInput ituStatus)
       progressUpdate <- either throwError pure (validateInternTaskProgressUpdate ituProgress)
@@ -601,7 +620,8 @@ internshipsServer user =
           else pure Nothing
       let
           adminUpdates =
-            [ fmap (ME.InternTaskTitle =.) titleUpdate
+            [ fmap (ME.InternTaskProjectId =.) projectUpdate
+            , fmap (ME.InternTaskTitle =.) titleUpdate
             , fmap (ME.InternTaskDescription =.) ituDescription
             , fmap (ME.InternTaskAssignedTo =.) (fmap (fmap toSqlKey) assignedToUpdate)
             , fmap (ME.InternTaskDueAt =.) ituDueAt
@@ -623,6 +643,17 @@ internshipsServer user =
       projectMap <- loadProjectMap [projectKey]
       partyMap <- loadPartyMap (maybe [] pure assigned)
       pure (toTaskDTO projectMap partyMap entUpdated)
+
+    deleteTaskH :: (MonadReader Env m, MonadIO m, MonadError ServerError m) => Text -> m NoContent
+    deleteTaskH rawId = do
+      ensureAdmin
+      taskKey <- parseKey @ME.InternTask rawId
+      mEntity <- withPool $ getEntity taskKey
+      case mEntity of
+        Nothing -> throwError err404
+        Just _ -> do
+          withPool $ delete taskKey
+          pure NoContent
 
     listTodosH :: (MonadReader Env m, MonadIO m, MonadError ServerError m) => m [InternTodoDTO]
     listTodosH = do

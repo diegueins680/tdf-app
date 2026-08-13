@@ -391,12 +391,15 @@ async function reservePort() {
   });
 }
 
-async function waitForJson(url, timeoutMs = 60_000) {
+async function waitForJson(url, timeoutMs = 60_000, headers = undefined) {
   const deadline = Date.now() + timeoutMs;
   let lastError;
   while (Date.now() < deadline) {
     try {
-      const response = await fetch(url, { signal: AbortSignal.timeout(3_000) });
+      const response = await fetch(url, {
+        headers,
+        signal: AbortSignal.timeout(3_000),
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
@@ -438,13 +441,16 @@ async function smokeMachine(context, machineId, expectedSha = context.sha) {
     // even while the Machine's own Fly health check and public service are healthy.
     // The deploy command still waits for each selected Machine's HTTP health check;
     // this fallback preserves a version/health smoke check without treating that
-    // control-plane tunnel outage as an application failure.
+    // control-plane tunnel outage as an application failure. Pin public
+    // requests to the selected Machine so a canary smoke check cannot be
+    // satisfied by, or fail because of, an untouched fleet member.
     console.error(`Per-Machine proxy smoke check failed for ${machineId}; using public fallback: ${error.message}`);
-    const health = await waitForJson(`https://${context.app}.fly.dev/health`);
+    const headers = { 'fly-force-instance-id': machineId };
+    const health = await waitForJson(`https://${context.app}.fly.dev/health`, 60_000, headers);
     if (health.status !== 'ok' || health.db !== 'ok') {
       throw new Error(`Public fallback health payload is not ready after Machine ${machineId} update.`);
     }
-    const version = await waitForJson(`https://${context.app}.fly.dev/version`);
+    const version = await waitForJson(`https://${context.app}.fly.dev/version`, 60_000, headers);
     let runningSha;
     try {
       runningSha = normalizeFullSha(version.commit);

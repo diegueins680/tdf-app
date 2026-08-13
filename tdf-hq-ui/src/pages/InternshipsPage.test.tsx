@@ -2,6 +2,7 @@ import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { MemoryRouter } from 'react-router-dom';
 
 const listInternsMock = jest.fn<() => Promise<unknown[]>>();
 const getProfileMock = jest.fn<() => Promise<Record<string, unknown> | null>>();
@@ -87,7 +88,9 @@ const renderPage = async (container: HTMLElement) => {
   await act(async () => {
     root?.render(
       <QueryClientProvider client={qc}>
-        <InternshipsPage />
+        <MemoryRouter>
+          <InternshipsPage />
+        </MemoryRouter>
       </QueryClientProvider>,
     );
     await flushPromises();
@@ -292,6 +295,63 @@ describe('InternshipsPage', () => {
         expect(hasLabel(container, 'Asignar plan a')).toBe(false);
         expect(getButtonsByText(container, 'Generar plan base sin asignar')).toHaveLength(1);
       });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('uses the task title as the single, uncluttered link to its canonical ID route', async () => {
+    listTasksMock.mockResolvedValue([
+      buildTask({ itId: '7e1f7364-8e02-453e-bdf9-b3f17a165fa2' }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const expectedPath = '/practicas/tareas/7e1f7364-8e02-453e-bdf9-b3f17a165fa2';
+        const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a'))
+          .filter((link) => link.getAttribute('href') === expectedPath);
+
+        expect(links).toHaveLength(1);
+        expect(links[0]?.textContent?.trim()).toBe('Armar calendario editorial');
+        expect(container.textContent).not.toContain('Ver detalle');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('omits unset optional fields when generating the playbook project and tasks', async () => {
+    createProjectMock.mockResolvedValue({ ipId: 'playbook-project' });
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getButtonsByText(container, 'Generar plan base sin asignar')).toHaveLength(1);
+      });
+
+      await clickButton(getButtonsByText(container, 'Generar plan base sin asignar')[0]!);
+
+      await waitForExpectation(() => {
+        expect(createProjectMock).toHaveBeenCalledWith({
+          ipcTitle: 'Plan de prácticas',
+          ipcDescription: 'Plan base de prácticas con rotaciones, proyecto estrella y rituales de seguimiento.',
+          ipcStatus: 'active',
+        });
+        expect(createTaskMock).toHaveBeenCalledTimes(12);
+      });
+
+      for (const [payload] of createTaskMock.mock.calls) {
+        expect(payload).toEqual(expect.objectContaining({ itcProjectId: 'playbook-project' }));
+        expect(payload).not.toHaveProperty('itcAssignedTo');
+        expect(payload).not.toHaveProperty('itcDueAt');
+      }
     } finally {
       await cleanup();
     }

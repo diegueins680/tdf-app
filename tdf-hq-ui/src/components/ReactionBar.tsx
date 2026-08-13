@@ -79,6 +79,8 @@ export default function ReactionBar({ reactions, onReact, disabled, loading = fa
               aria-label={count > 0 ? `${label} (${count})` : label}
               aria-pressed={isActive}
               sx={{
+                minWidth: 44,
+                minHeight: 44,
                 borderRadius: '16px',
                 px: 1,
                 py: 0.25,

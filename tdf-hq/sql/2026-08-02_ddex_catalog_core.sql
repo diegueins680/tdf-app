@@ -2,9 +2,6 @@
 -- Date: 2026-08-02
 -- Description: Foundation tables for DDEX Gateway and Canonical Catalog
 
--- Enable UUID extension if not already enabled
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 -- =========================================================
 -- CATALOG CORE TABLES
 -- =========================================================
@@ -144,8 +141,18 @@ CREATE TABLE IF NOT EXISTS ddex_document (
     message_type TEXT,
     status TEXT NOT NULL DEFAULT 'received' CHECK (status IN ('received', 'quarantined', 'queued', 'validating', 'invalid', 'valid', 'mapping_required', 'ready_to_import', 'importing', 'imported', 'import_failed', 'superseded')),
     uploaded_by INTEGER NOT NULL, -- FK to app_user
+    message_id TEXT,
+    sender_id TEXT,
+    recipient_id TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- CREATE TABLE IF NOT EXISTS does not repair an older, partially-applied copy.
+-- These columns are selected by the DDEX inbox handler even when the table is
+-- empty, so keep the migration forward-compatible with that early schema.
+ALTER TABLE ddex_document ADD COLUMN IF NOT EXISTS message_id TEXT;
+ALTER TABLE ddex_document ADD COLUMN IF NOT EXISTS sender_id TEXT;
+ALTER TABLE ddex_document ADD COLUMN IF NOT EXISTS recipient_id TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_ddex_document_status ON ddex_document(status);
 CREATE INDEX IF NOT EXISTS idx_ddex_document_sha256 ON ddex_document(sha256);

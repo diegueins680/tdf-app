@@ -159,6 +159,7 @@ export default function NotificationBell() {
         onKeyDown={focus.afterOpenKeyDown}
         aria-label={copy.title}
         aria-busy={countQuery.isLoading ? true : undefined}
+        sx={{ minWidth: 44, minHeight: 44 }}
       >
         <Badge badgeContent={unreadCount} color="error" max={NOTIFICATION_BELL_CONTRACTS.badgeMaxDisplayCount}>
           {countQuery.isLoading ? (

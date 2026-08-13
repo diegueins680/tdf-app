@@ -22,6 +22,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { Admin } from '../api/admin';
 import { formatTimestampForDisplay } from '../utils/dateTime';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import { EmptyState } from '../components/PageShell';
+import SubjectIcon from '@mui/icons-material/Subject';
 
 interface LogEntry {
   logTimestamp: string;
@@ -165,9 +167,11 @@ export default function LogsPage() {
       )}
 
       {!logsQuery.isLoading && !logsQuery.isError && !hasLogs && (
-        <Alert severity="info" variant="outlined" data-testid="server-logs-empty-state">
-          Todavía no hay logs disponibles. Esta vista se actualiza automáticamente y mostrará filtros cuando exista el primer registro.
-        </Alert>
+        <EmptyState
+          icon={<SubjectIcon />}
+          title="Sin logs"
+          description="Todavía no hay logs disponibles. Esta vista se actualiza automáticamente y mostrará filtros cuando exista el primer registro."
+        />
       )}
 
       {showLogsTable && (

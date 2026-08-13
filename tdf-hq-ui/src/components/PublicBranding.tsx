@@ -165,6 +165,7 @@ export default function PublicBranding({
                       key={item.to}
                       component={RouterLink}
                       to={item.to}
+                      aria-current={isActiveNavItem(item.to) ? 'page' : undefined}
                       sx={{
                         textTransform: 'none',
                         color: isActiveNavItem(item.to) ? 'text.primary' : 'text.secondary',
@@ -320,6 +321,7 @@ export default function PublicBranding({
                     size="small"
                     component={RouterLink}
                     to={item.to}
+                    aria-current={isActiveNavItem(item.to) ? 'page' : undefined}
                     sx={{
                       textTransform: 'none',
                       color: isActiveNavItem(item.to) ? 'text.primary' : 'text.secondary',
