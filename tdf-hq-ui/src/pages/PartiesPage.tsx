@@ -490,7 +490,10 @@ export default function PartiesPage() {
         {partiesQuery.error && <Alert severity="error">{partiesQuery.error.message}</Alert>}
 
         {showInitialLoadingState ? (
-          <SkeletonCards count={3} />
+          <SkeletonCards
+            count={3}
+            label="Cargando contactos… El buscador y la tabla aparecerán cuando esta primera carga termine."
+          />
         ) : !partiesQuery.error && !hasContacts ? (
           <EmptyState
             title="Sin contactos aún"

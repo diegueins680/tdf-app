@@ -621,7 +621,10 @@ export default function OrdersPage() {
             </Button>
           </Stack>
         ) : showInitialLoadingState ? (
-          <SkeletonCards count={3} />
+          <SkeletonCards
+            count={3}
+            label="Cargando sesiones… La tabla aparecerá cuando termine esta primera carga para que puedas comparar horario, servicio, booking, recursos y estado desde una sola vista."
+          />
         ) : showFirstSessionEmptyState ? (
           <Stack spacing={1} sx={{ p: 3 }}>
             <Typography variant="h6" fontWeight={700}>
