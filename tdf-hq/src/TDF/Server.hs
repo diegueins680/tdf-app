@@ -165,7 +165,7 @@ import           TDF.Server.ServiceStorefront (serviceStorefrontPublicServer, se
 import           TDF.ServerFeedback (feedbackServer)
 import qualified TDF.Contracts.Server as Contracts
 import           TDF.ServerProposals (proposalsServer)
-import           TDF.ServerFanClub (fanClubPublicGetClub, fanClubPublicGetEvents, fanClubSecureListMyClubs, fanClubSecureArtistHandlers)
+import           TDF.ServerFanClub (fanClubPublicGetClub, fanClubPublicGetEvents, fanClubSecureListMyClubs, fanClubSecureArtistHandlers, buildFanClubPostReactionSummary)
 import           TDF.Trials.API (TrialsAPI)
 import qualified TDF.Trials.Server as TrialsServer
   ( hasAmbiguousPublicUrlPath
@@ -8115,7 +8115,7 @@ discoveryFeed user mLimit = do
           case mPost of
             Nothing -> pure Nothing
             Just p -> do
-              reactions <- buildReactionSummaryServer "post" (boostedContentTargetId bc) (auPartyId user)
+              reactions <- buildFanClubPostReactionSummary postKey (auPartyId user)
               mParty <- get (fanClubPostFanPartyId p)
               let authorName = maybe "Desconocido" M.partyDisplayName mParty
               pure $ Just FanClubFeedItemDTO
@@ -8135,31 +8135,6 @@ discoveryFeed user mLimit = do
                 }
         _ -> pure Nothing
     pure (catMaybes items)
-
-buildReactionSummaryServer :: Text -> Int -> PartyId -> SqlPersistT IO ReactionSummaryDTO
-buildReactionSummaryServer targetType targetId viewerPartyId = do
-  reactions <- selectList
-    [ ContentReactionTargetType ==. targetType
-    , ContentReactionTargetId ==. targetId
-    ] []
-  let countReaction t = length $ filter (\(Entity _ r) -> contentReactionReaction r == t) reactions
-      myReaction = case filter (\(Entity _ r) -> contentReactionReactorPartyId r == viewerPartyId) reactions of
-        (Entity _ r : _) -> Just (contentReactionReaction r)
-        [] -> Nothing
-      fire = countReaction "fire"
-      heart = countReaction "heart"
-      clap = countReaction "clap"
-      micDrop = countReaction "mic_drop"
-      skull = countReaction "skull"
-  pure ReactionSummaryDTO
-    { rsFire = fire
-    , rsHeart = heart
-    , rsClap = clap
-    , rsMicDrop = micDrop
-    , rsSkull = skull
-    , rsTotal = fire + heart + clap + micDrop + skull
-    , rsMyReaction = myReaction
-    }
 
 loadFanProfileDTO :: PartyId -> SqlPersistT IO FanProfileDTO
 loadFanProfileDTO fanId = do

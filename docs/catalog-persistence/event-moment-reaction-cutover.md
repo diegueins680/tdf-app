@@ -24,9 +24,9 @@ Bootstrap adds only the three values required to map the previous mobile moment 
 
 An existing row with the same unique code keeps its established UUID; the migration records that
 resolved target. Existing published reaction types such as `like`, `celebrate`, or `insightful`
-are preserved rather than silently deleted. The separate Fan Club content-reaction aggregate is
-still an outstanding consumer with its own storage contract; it is not silently treated as the
-same domain by this migration.
+are preserved rather than silently deleted. Fan Club reactions deliberately use their own
+`content_reaction_type` catalog and typed post/memory junctions; the follow-up cutover is documented
+in `content-reaction-cutover.md` and does not silently widen this event-moment domain.
 
 ## Contracts and administration
 

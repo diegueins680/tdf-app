@@ -539,6 +539,7 @@ seedCatalogDefinitions =
       , technical "ddex-validation-results" "ddex_validation_result" "Resultados de validación DDEX" "DDEX validation results"
       , technical "ddex-validation-severities" "ddex_validation_severity" "Severidades de validación DDEX" "DDEX validation severities"
       , technical "ddex-validation-layers" "ddex_validation_layer" "Capas de validación DDEX" "DDEX validation layers"
+      , dynamic "content-reaction-types" "content_reaction_type" "Reacciones de contenido" "Content reactions" True
       ]
     dynamic code entityKind nameEs nameEn publicRead = (code, "dynamic-business-catalog", entityKind, nameEs, nameEn, publicRead, False, "catalog-publication")
     governed code entityKind nameEs nameEn publicRead = (code, "governed-reference-data", entityKind, nameEs, nameEn, publicRead, True, "governed-import")
@@ -729,6 +730,10 @@ seedDomainFoundation = do
     rawExecute
       "INSERT INTO reaction_type (id, catalog_id, code, emoji, name_es, name_en, current_slug, sort_order, active, workflow_state_id, version) SELECT ?::uuid, c.id, ?, ?, ?, ?, ?, ?, TRUE, ws.id, 1 FROM catalog_definition c JOIN workflow_state ws ON ws.workflow_id=c.workflow_id AND ws.code='published' WHERE c.code='reaction-types' ON CONFLICT (code) DO UPDATE SET emoji=EXCLUDED.emoji, name_es=EXCLUDED.name_es, name_en=EXCLUDED.name_en WHERE reaction_type.id=EXCLUDED.id AND reaction_type.version=1"
       [PersistText identifier, PersistText code, PersistText emoji, PersistText nameEs, PersistText nameEn, PersistText code, PersistInt64 (fromIntegral position)]
+  forM_ (zip [0 :: Int ..] contentReactions) $ \(position, (identifier, code, emoji, nameEs, nameEn)) ->
+    rawExecute
+      "INSERT INTO content_reaction_type (id, catalog_id, code, emoji, name_es, name_en, current_slug, sort_order, active, workflow_state_id, version) SELECT ?::uuid, c.id, ?, ?, ?, ?, ?, ?, TRUE, ws.id, 1 FROM catalog_definition c JOIN workflow_state ws ON ws.workflow_id=c.workflow_id AND ws.code='published' WHERE c.code='content-reaction-types' ON CONFLICT (code) DO UPDATE SET emoji=EXCLUDED.emoji, name_es=EXCLUDED.name_es, name_en=EXCLUDED.name_en WHERE content_reaction_type.id=EXCLUDED.id AND content_reaction_type.version=1"
+      [PersistText identifier, PersistText code, PersistText emoji, PersistText nameEs, PersistText nameEn, PersistText code, PersistInt64 (fromIntegral position)]
   where
     releaseTypes =
       [ ("album", "Álbum", "Album"), ("single", "Sencillo", "Single"), ("ep", "EP", "EP")
@@ -779,6 +784,13 @@ seedDomainFoundation = do
       [ ("50800000-0000-4000-8000-000000000001", "fire", "🔥", "Fuego", "Fire")
       , ("50800000-0000-4000-8000-000000000002", "love", "❤️", "Me encanta", "Love")
       , ("50800000-0000-4000-8000-000000000003", "applause", "👏", "Aplauso", "Applause")
+      ]
+    contentReactions =
+      [ ("50900000-0000-4000-8000-000000000001", "fire", "🔥", "Fuego", "Fire")
+      , ("50900000-0000-4000-8000-000000000002", "heart", "❤️", "Me encanta", "Love")
+      , ("50900000-0000-4000-8000-000000000003", "clap", "👏", "Aplauso", "Applause")
+      , ("50900000-0000-4000-8000-000000000004", "mic_drop", "🎤", "Mic drop", "Mic drop")
+      , ("50900000-0000-4000-8000-000000000005", "skull", "💀", "Me muero", "I'm dead")
       ]
 
 -- These launch stations used to be a frontend constant. They are now
@@ -1124,6 +1136,26 @@ validateCatalogRuntimeRegistries = do
     [Single countValue] -> liftIO . ioError . userError $
       "Event moment reactions require canonical reaction_type_id without copied reaction strings before cutover: " <> show countValue
     _ -> liftIO $ ioError (userError "Unable to validate canonical event-moment reaction references")
+  invalidContentReactionReferences <-
+    ( rawSql
+        "SELECT (SELECT COUNT(*) FROM fan_club_post_reaction reaction LEFT JOIN content_reaction_type item ON item.id=reaction.reaction_type_id LEFT JOIN catalog_definition catalog ON catalog.id=item.catalog_id LEFT JOIN workflow_state state ON state.id=item.workflow_state_id WHERE item.id IS NULL OR item.active IS DISTINCT FROM TRUE OR item.deprecated_at IS NOT NULL OR catalog.code IS DISTINCT FROM 'content-reaction-types' OR catalog.active IS DISTINCT FROM TRUE OR state.code IS DISTINCT FROM 'published' OR state.active IS DISTINCT FROM TRUE OR state.workflow_id IS DISTINCT FROM catalog.workflow_id) + (SELECT COUNT(*) FROM fan_club_memory_reaction reaction LEFT JOIN content_reaction_type item ON item.id=reaction.reaction_type_id LEFT JOIN catalog_definition catalog ON catalog.id=item.catalog_id LEFT JOIN workflow_state state ON state.id=item.workflow_state_id WHERE item.id IS NULL OR item.active IS DISTINCT FROM TRUE OR item.deprecated_at IS NOT NULL OR catalog.code IS DISTINCT FROM 'content-reaction-types' OR catalog.active IS DISTINCT FROM TRUE OR state.code IS DISTINCT FROM 'published' OR state.active IS DISTINCT FROM TRUE OR state.workflow_id IS DISTINCT FROM catalog.workflow_id)"
+        []
+        :: SqlPersistT IO [Single Int]
+    )
+  case invalidContentReactionReferences of
+    [Single 0] -> pure ()
+    [Single countValue] -> liftIO . ioError . userError $
+      "Fan club content reactions require specialized canonical reaction type references: " <> show countValue
+    _ -> liftIO $ ioError (userError "Unable to validate canonical content reaction references")
+  rawExecute
+    "DO $$ DECLARE legacy_rows bigint; BEGIN IF to_regclass('public.content_reaction') IS NOT NULL THEN EXECUTE 'SELECT COUNT(*) FROM content_reaction' INTO legacy_rows; IF legacy_rows<>0 THEN RAISE EXCEPTION 'legacy content_reaction rows must pass the guarded foreign-key cutover before startup: %',legacy_rows USING ERRCODE='23514'; END IF; END IF; END $$"
+    []
+  rawExecute
+    "WITH counts AS (SELECT item_id,COUNT(*)::bigint AS usage_count FROM (SELECT reaction_type_id AS item_id FROM fan_club_post_reaction UNION ALL SELECT reaction_type_id FROM fan_club_memory_reaction) usage_refs GROUP BY item_id) UPDATE content_reaction_type item SET usage_count=COALESCE(counts.usage_count,0) FROM counts WHERE item.id=counts.item_id AND item.usage_count IS DISTINCT FROM counts.usage_count"
+    []
+  rawExecute
+    "UPDATE content_reaction_type item SET usage_count=0 WHERE item.usage_count<>0 AND NOT EXISTS (SELECT 1 FROM fan_club_post_reaction reaction WHERE reaction.reaction_type_id=item.id) AND NOT EXISTS (SELECT 1 FROM fan_club_memory_reaction reaction WHERE reaction.reaction_type_id=item.id)"
+    []
   lifecycleStateRows <-
     ( rawSql
         "SELECT state.code FROM workflow_state state JOIN workflow_definition workflow ON workflow.id=state.workflow_id WHERE workflow.code='social-event-lifecycle' AND workflow.active=TRUE AND state.active=TRUE ORDER BY state.code"

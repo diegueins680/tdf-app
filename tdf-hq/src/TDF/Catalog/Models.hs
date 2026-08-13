@@ -1307,6 +1307,28 @@ ReactionType sql=reaction_type
     UniqueReactionTypeCode code
     UniqueReactionTypeSlug currentSlug !force
     deriving Show Generic
+ContentReactionType sql=content_reaction_type
+    Id UUID default=gen_random_uuid()
+    catalogId CatalogDefinitionId
+    code Text
+    emoji Text
+    nameEs Text
+    nameEn Text
+    descriptionEs Text Maybe
+    descriptionEn Text Maybe
+    currentSlug Text Maybe
+    sortOrder Int default=0
+    active Bool default=True
+    workflowStateId WorkflowStateId
+    createdAt UTCTime default=CURRENT_TIMESTAMP
+    updatedAt UTCTime default=CURRENT_TIMESTAMP
+    deprecatedAt UTCTime Maybe
+    replacementId ContentReactionTypeId Maybe
+    usageCount Int64 default=0
+    version Int default=1
+    UniqueContentReactionTypeCode code
+    UniqueContentReactionTypeSlug currentSlug !force
+    deriving Show Generic
 ContentType sql=content_type
     Id UUID default=gen_random_uuid()
     code Text

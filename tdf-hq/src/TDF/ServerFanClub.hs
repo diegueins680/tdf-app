@@ -8,6 +8,7 @@ module TDF.ServerFanClub
   , fanClubPublicGetEvents
   , fanClubSecureListMyClubs
   , fanClubSecureArtistHandlers
+  , buildFanClubPostReactionSummary
   , validateFanClubArtistPathId
   , validateFanClubPostPathId
   , validateFanClubPostAccess
@@ -38,51 +39,46 @@ module TDF.ServerFanClub
   , validateFanClubEventTimeRange
   ) where
 
-import           Control.Arrow          ((&&&))
 import           Control.Monad          (forM, forM_, when, unless, void)
 import           Control.Monad.Except   (throwError)
 import           Control.Monad.IO.Class (liftIO)
-import           Control.Monad.Reader   (ask)
+import           Control.Monad.Reader   (ReaderT, ask)
 import           Data.Char              (GeneralCategory (Format, LineSeparator, ParagraphSeparator)
                                          , generalCategory, isControl, isSpace)
 import           Data.Int               (Int64)
 import           Data.List              (nub, sortOn, partition)
-import           Data.Map               (Map)
 import qualified Data.Map               as Map
 import           Data.Maybe             (isJust, mapMaybe, catMaybes, fromMaybe, listToMaybe)
 import           Data.Ord               (Down(..))
 import           Data.Text              (Text)
 import qualified Data.Text              as T
+import qualified Data.UUID              as UUID
 import qualified Data.Text.Encoding     as TE
 import qualified Data.ByteString.Lazy   as BL
 import           Data.Time              (UTCTime, getCurrentTime)
 
-import           Database.Persist       (Entity(..), Key, (=.), (==.), (<-.), SelectOpt(Asc, Desc, LimitTo)
+import           Database.Persist       (Entity(..), Key, (=.), (==.), (+=.), (<-.), SelectOpt(Asc, Desc)
                                          , get, getBy, insert, insertUnique, selectFirst, selectList, update, count
-                                         , delete, deleteWhere, upsert, insert_)
-import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey, rawSql, Single(..))
-import           Servant                (NoContent(..), ServerError, (:<|>)(..), err400, err403, err404, errBody)
+                                         , delete, insert_)
+import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
+import           Servant                (NoContent(..), ServerError, (:<|>)(..), err400, err403, err404, err422, errBody)
 
-import           Control.Monad.Reader   (ReaderT, ask)
-import           Servant                (Handler, throwError)
-import qualified Data.Text.Encoding     as TE
-import qualified Data.ByteString.Lazy   as BL
+import           Servant                (Handler)
 
 import           TDF.Auth               (AuthedUser(..))
 import           TDF.DB                 (Env(..))
 import           TDF.DTO
-import qualified TDF.DTO                as DTO
 import           TDF.Models             (FanClub(..), FanClubId, FanClubOfficer(..), FanClubElection(..)
                                          , FanClubCandidacy(..), FanClubVote(..), FanClubPost(..), FanClubPostId
                                          , FanClubEvent(..), FanClubOfficerRole(..), ElectionStatus(..)
-                                         , Party(..), PartyId, FanFollow(..), FanProfile(..)
-                                         , FanClubMemberProfile(..), FanClubMemory(..), FanClubMemoryReport(..)
+                                         , PartyId, FanFollow(..), FanProfile(..)
+                                         , FanClubMemberProfile(..), FanClubMemory(..), FanClubMemoryId, FanClubMemoryReport(..)
                                          , FanClubInboxMessage(..), FanClubInboxMessageId
-                                         , ContentReaction(..)
-                                         , Notification(..), BoostedContent(..), CreatorBadge(..)
-                                         , RoleEnum(..)
+                                         , FanClubPostReaction(..), FanClubMemoryReaction(..)
+                                         , CreatorBadge(..)
                                          , Unique(..), FanClubElectionId, FanClubCandidacyId, artistProfileHeroImageUrl)
 import qualified TDF.Models             as M
+import qualified TDF.Catalog.Models     as Catalog
 import           Data.Time.Clock        (diffUTCTime)
 
 type AppM = ReaderT Env Handler
@@ -91,9 +87,6 @@ runDB :: SqlPersistT IO a -> AppM a
 runDB action = do
   Env{..} <- ask
   liftIO $ runSqlPool action envPool
-
-throwBadRequest :: Text -> AppM a
-throwBadRequest msg = throwError Servant.err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
 badRequestText :: Text -> ServerError
 badRequestText msg =
@@ -279,7 +272,7 @@ fanClubSecureArtistHandlers user artistId =
             postItems <- forM posts $ \(Entity pid p) -> do
               author <- getAuthorDTO (fanClubPostFanPartyId p)
               let isOfficer = fromSqlKey (fanClubPostFanPartyId p) `elem` officerIds
-              reactions <- buildReactionSummary "post" (fromIntegral (fromSqlKey pid)) (auPartyId user)
+              reactions <- buildFanClubPostReactionSummary pid (auPartyId user)
               pure FanClubFeedItemDTO
                 { fcfId = fromSqlKey pid
                 , fcfKind = "post"
@@ -302,7 +295,7 @@ fanClubSecureArtistHandlers user artistId =
                 Just mp -> do
                   author <- getAuthorDTO (fanClubMemberProfilePartyId mp)
                   let isOfficer = fromSqlKey (fanClubMemberProfilePartyId mp) `elem` officerIds
-                  reactions <- buildReactionSummary "memory" (fromIntegral (fromSqlKey mid)) (auPartyId user)
+                  reactions <- buildFanClubMemoryReactionSummary mid (auPartyId user)
                   pure $ Just FanClubFeedItemDTO
                     { fcfId = fromSqlKey mid
                     , fcfKind = "memory"
@@ -336,7 +329,7 @@ fanClubSecureArtistHandlers user artistId =
             forM posts $ \(Entity pid p) -> do
               replies <- count [M.FanClubPostParentId ==. Just pid]
               author <- getAuthorDTO (fanClubPostFanPartyId p)
-              reactions <- buildReactionSummary "post" (fromIntegral (fromSqlKey pid)) (auPartyId user)
+              reactions <- buildFanClubPostReactionSummary pid (auPartyId user)
               pure $ postToDTO pid p (fromIntegral replies) author reactions
 
     createClubPost aId req = do
@@ -387,7 +380,8 @@ fanClubSecureArtistHandlers user artistId =
                     False
                     now
                     Nothing
-            pure $ postToDTO pid post 0 author emptyReactionSummary
+            reactions <- buildFanClubPostReactionSummary pid (auPartyId user)
+            pure $ postToDTO pid post 0 author reactions
 
     resolveParentKey :: FanClubId -> Maybe Int64 -> AppM (Maybe FanClubPostId)
     resolveParentKey _ Nothing = pure Nothing
@@ -602,15 +596,14 @@ fanClubSecureArtistHandlers user artistId =
             let memberIds = map (fanClubMemoryMemberProfileId . entityVal) memories
             memberProfiles <- selectList [M.FanClubMemberProfileId <-. memberIds] []
             let profileMap = foldl (\m (Entity mpid mp) -> Map.insert mpid mp m) Map.empty memberProfiles
-            let validMemories = filter (\(Entity _ mem) ->
+            let validMemories = mapMaybe (\memory@(Entity _ mem) ->
                   case Map.lookup (fanClubMemoryMemberProfileId mem) profileMap of
-                    Just mp -> fanClubMemberProfileClubId mp == cid
-                    Nothing -> False
+                    Just mp | fanClubMemberProfileClubId mp == cid -> Just (memory, mp)
+                    _ -> Nothing
                   ) memories
-            forM validMemories $ \(Entity mid m) -> do
-              let Just mp = Map.lookup (fanClubMemoryMemberProfileId m) profileMap
+            forM validMemories $ \(Entity mid m, mp) -> do
               author <- getAuthorDTO (fanClubMemberProfilePartyId mp)
-              reactions <- buildReactionSummary "memory" (fromIntegral (fromSqlKey mid)) (auPartyId user)
+              reactions <- buildFanClubMemoryReactionSummary mid (auPartyId user)
               pure FanClubMemoryDTO
                 { fcmId = fromSqlKey mid
                 , fcmMemberProfileId = fromSqlKey (fanClubMemoryMemberProfileId m)
@@ -643,9 +636,6 @@ fanClubSecureArtistHandlers user artistId =
             Just (Entity pid _) -> pure pid
             Nothing -> do
               mFanProfile <- getBy (UniqueFanProfile (auPartyId user))
-              let displayName = case mFanProfile of
-                    Just (Entity _ fp) -> fanProfileDisplayName fp
-                    Nothing -> Nothing
               let avatarUrl = case mFanProfile of
                     Just (Entity _ fp) -> fanProfileAvatarUrl fp
                     Nothing -> Nothing
@@ -670,6 +660,7 @@ fanClubSecureArtistHandlers user artistId =
             , fanClubMemoryCreatedAt = now
             }
           author <- getAuthorDTO (auPartyId user)
+          reactions <- buildFanClubMemoryReactionSummary mid (auPartyId user)
           pure FanClubMemoryDTO
             { fcmId = fromSqlKey mid
             , fcmMemberProfileId = fromSqlKey profileId
@@ -680,7 +671,7 @@ fanClubSecureArtistHandlers user artistId =
             , fcmMediaUrls = fcmReqMediaUrls req
             , fcmIsHidden = False
             , fcmIsDeleted = False
-            , fcmReactions = emptyReactionSummary
+            , fcmReactions = reactions
             , fcmCreatedAt = now
             }
 
@@ -1050,20 +1041,30 @@ fanClubSecureArtistHandlers user artistId =
           maybe (throwError err404 { errBody = "Mensaje no encontrado" }) pure mDto
 
     reactToPost aId postId ContentReactionReq{..} = do
-      _ <- requireArtistKey aId
-      reaction <- validateReaction crrReaction
+      artistKey <- requireArtistKey aId
+      requireFanClubPostAccess user artistKey
+      postKey <- either throwError pure (validateFanClubPostPathId postId)
+      target <- runDB $ lookupFanClubPostMutationTarget artistKey postKey
+      _ <- either throwError pure target
+      reactionTypeId <- runDB (loadSelectableContentReactionTypeId crrReactionTypeId) >>= either throwError pure
       now <- liftIO getCurrentTime
       runDB $ do
-        toggleReaction "post" (fromIntegral postId) (auPartyId user) reaction now
-        buildReactionSummary "post" (fromIntegral postId) (auPartyId user)
+        toggleFanClubPostReaction postKey (auPartyId user) reactionTypeId now
+        buildFanClubPostReactionSummary postKey (auPartyId user)
 
     reactToMemory aId memoryId ContentReactionReq{..} = do
-      _ <- requireArtistKey aId
-      reaction <- validateReaction crrReaction
+      artistKey <- requireArtistKey aId
+      requireFanClubPostAccess user artistKey
+      memoryKey <- either throwError pure (validateFanClubMemoryPathId memoryId)
+      mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
+      clubKey <- maybe (throwError err404 { errBody = "Club no encontrado" }) (pure . entityKey) mClub
+      target <- runDB $ lookupFanClubMemoryMutationTarget clubKey memoryKey
+      _ <- either throwError pure target
+      reactionTypeId <- runDB (loadSelectableContentReactionTypeId crrReactionTypeId) >>= either throwError pure
       now <- liftIO getCurrentTime
       runDB $ do
-        toggleReaction "memory" (fromIntegral memoryId) (auPartyId user) reaction now
-        buildReactionSummary "memory" (fromIntegral memoryId) (auPartyId user)
+        toggleFanClubMemoryReaction memoryKey (auPartyId user) reactionTypeId now
+        buildFanClubMemoryReactionSummary memoryKey (auPartyId user)
 
     getLeaderboard aId _mPeriod = do
       artistKey <- requireArtistKey aId
@@ -1073,15 +1074,12 @@ fanClubSecureArtistHandlers user artistId =
           Nothing -> pure []
           Just (Entity cid _) -> do
             posts <- selectList [M.FanClubPostClubId ==. cid, M.FanClubPostParentId ==. Nothing] []
-            let postIds = map (fromSqlKey . entityKey) posts
-            let postAuthorMap = Map.fromList $ map (\(Entity pid p) -> (fromSqlKey pid, fanClubPostFanPartyId p)) posts
+            let postIds = map entityKey posts
+            let postAuthorMap = Map.fromList $ map (\(Entity pid p) -> (pid, fanClubPostFanPartyId p)) posts
             allReactions <- selectList
-              [ M.ContentReactionTargetType ==. "post"
-              , M.ContentReactionTargetId <-. map fromIntegral postIds
-              ] []
+              [M.FanClubPostReactionPostId <-. postIds] []
             let reactionsByAuthor = foldl (\acc (Entity _ r) ->
-                  let targetId = contentReactionTargetId r
-                      mAuthor = Map.lookup (fromIntegral targetId) postAuthorMap
+                  let mAuthor = Map.lookup (fanClubPostReactionPostId r) postAuthorMap
                   in case mAuthor of
                        Just authorId -> Map.insertWith (+) authorId (1 :: Int) acc
                        Nothing -> acc
@@ -1112,19 +1110,17 @@ fanClubSecureArtistHandlers user artistId =
               , M.FanClubPostParentId ==. Nothing
               , M.FanClubPostIsHidden ==. False
               ] [Desc M.FanClubPostCreatedAt]
-            let postIds = map (fromSqlKey . entityKey) posts
+            let postIds = map entityKey posts
             allReactions <- selectList
-              [ M.ContentReactionTargetType ==. "post"
-              , M.ContentReactionTargetId <-. map fromIntegral postIds
-              ] []
+              [M.FanClubPostReactionPostId <-. postIds] []
             let reactionCounts = foldl (\acc (Entity _ r) ->
-                  Map.insertWith (+) (contentReactionTargetId r) (1 :: Int) acc
+                  Map.insertWith (+) (fanClubPostReactionPostId r) (1 :: Int) acc
                   ) Map.empty allReactions
             let topPostId = fst <$> listToMaybe (sortOn (Down . snd) (Map.toList reactionCounts))
             case topPostId of
               Nothing -> pure Nothing
               Just tid -> do
-                let mPost = filter (\(Entity pid _) -> fromSqlKey pid == fromIntegral tid) posts
+                let mPost = filter (\(Entity pid _) -> pid == tid) posts
                 case mPost of
                   [] -> pure Nothing
                   (Entity pid p : _) -> do
@@ -1132,7 +1128,7 @@ fanClubSecureArtistHandlers user artistId =
                     let officerIds = map (fromSqlKey . fanClubOfficerFanPartyId . entityVal) officers
                     author <- getAuthorDTO (fanClubPostFanPartyId p)
                     let isOfficer = fromSqlKey (fanClubPostFanPartyId p) `elem` officerIds
-                    reactions <- buildReactionSummary "post" (fromIntegral (fromSqlKey pid)) (auPartyId user)
+                    reactions <- buildFanClubPostReactionSummary pid (auPartyId user)
                     pure $ Just FanClubFeedItemDTO
                       { fcfId = fromSqlKey pid
                       , fcfKind = "post"
@@ -1157,76 +1153,150 @@ fanClubSecureArtistHandlers user artistId =
 -- Content Engagement Helpers
 -- ============================================================================
 
-emptyReactionSummary :: ReactionSummaryDTO
-emptyReactionSummary = ReactionSummaryDTO 0 0 0 0 0 0 Nothing
+loadSelectableContentReactionTypeId
+  :: UUID.UUID
+  -> SqlPersistT IO (Either ServerError UUID.UUID)
+loadSelectableContentReactionTypeId reactionTypeId = do
+  mReactionType <- get (Catalog.ContentReactionTypeKey reactionTypeId)
+  case mReactionType of
+    Nothing -> pure (Left invalidReference)
+    Just reactionType -> do
+      catalog <- get (Catalog.contentReactionTypeCatalogId reactionType)
+      workflowState <- get (Catalog.contentReactionTypeWorkflowStateId reactionType)
+      let selectable = case (catalog, workflowState) of
+            (Just catalogRow, Just stateRow) ->
+              Catalog.contentReactionTypeActive reactionType
+                && Catalog.contentReactionTypeDeprecatedAt reactionType == Nothing
+                && Catalog.catalogDefinitionActive catalogRow
+                && Catalog.catalogDefinitionCode catalogRow == "content-reaction-types"
+                && Catalog.workflowStateActive stateRow
+                && Catalog.workflowStateCode stateRow == "published"
+                && Catalog.workflowStateWorkflowId stateRow == Catalog.catalogDefinitionWorkflowId catalogRow
+            _ -> False
+      pure (if selectable then Right reactionTypeId else Left invalidReference)
+  where
+    invalidReference = err422 { errBody = "crrReactionTypeId must identify an active published content reaction type" }
 
-validReactions :: [Text]
-validReactions = ["fire", "heart", "clap", "mic_drop", "skull"]
-
-validateReaction :: Text -> AppM Text
-validateReaction r
-  | r `elem` validReactions = pure r
-  | otherwise = throwBadRequest "Reacción inválida. Opciones: fire, heart, clap, mic_drop, skull"
-
-toggleReaction :: Text -> Int -> PartyId -> Text -> UTCTime -> SqlPersistT IO ()
-toggleReaction targetType targetId reactorId reaction now = do
+toggleFanClubPostReaction :: FanClubPostId -> PartyId -> UUID.UUID -> UTCTime -> SqlPersistT IO ()
+toggleFanClubPostReaction postId reactorId reactionTypeId now = do
   existing <- selectFirst
-    [ M.ContentReactionTargetType ==. targetType
-    , M.ContentReactionTargetId ==. targetId
-    , M.ContentReactionReactorPartyId ==. reactorId
+    [ M.FanClubPostReactionPostId ==. postId
+    , M.FanClubPostReactionReactorPartyId ==. reactorId
     ] []
   case existing of
-    Just (Entity _ r) | contentReactionReaction r == reaction ->
-      deleteWhere
-        [ M.ContentReactionTargetType ==. targetType
-        , M.ContentReactionTargetId ==. targetId
-        , M.ContentReactionReactorPartyId ==. reactorId
-        ]
-    Just _ -> do
-      deleteWhere
-        [ M.ContentReactionTargetType ==. targetType
-        , M.ContentReactionTargetId ==. targetId
-        , M.ContentReactionReactorPartyId ==. reactorId
-        ]
-      insert_ ContentReaction
-        { contentReactionTargetType = targetType
-        , contentReactionTargetId = targetId
-        , contentReactionReactorPartyId = reactorId
-        , contentReactionReaction = reaction
-        , contentReactionCreatedAt = now
+    Just (Entity reactionId reaction) | fanClubPostReactionReactionTypeId reaction == reactionTypeId ->
+      do
+        delete reactionId
+        update (Catalog.ContentReactionTypeKey reactionTypeId)
+          [Catalog.ContentReactionTypeUsageCount +=. (-1)]
+    Just (Entity reactionId reaction) ->
+      do
+        update reactionId
+          [ M.FanClubPostReactionReactionTypeId =. reactionTypeId
+          , M.FanClubPostReactionCreatedAt =. now
+          ]
+        update (Catalog.ContentReactionTypeKey (fanClubPostReactionReactionTypeId reaction))
+          [Catalog.ContentReactionTypeUsageCount +=. (-1)]
+        update (Catalog.ContentReactionTypeKey reactionTypeId)
+          [Catalog.ContentReactionTypeUsageCount +=. 1]
+    Nothing -> do
+      insert_ FanClubPostReaction
+        { fanClubPostReactionPostId = postId
+        , fanClubPostReactionReactorPartyId = reactorId
+        , fanClubPostReactionReactionTypeId = reactionTypeId
+        , fanClubPostReactionCreatedAt = now
         }
-    Nothing ->
-      insert_ ContentReaction
-        { contentReactionTargetType = targetType
-        , contentReactionTargetId = targetId
-        , contentReactionReactorPartyId = reactorId
-        , contentReactionReaction = reaction
-        , contentReactionCreatedAt = now
-        }
+      update (Catalog.ContentReactionTypeKey reactionTypeId)
+        [Catalog.ContentReactionTypeUsageCount +=. 1]
 
-buildReactionSummary :: Text -> Int -> PartyId -> SqlPersistT IO ReactionSummaryDTO
-buildReactionSummary targetType targetId viewerPartyId = do
-  reactions <- selectList
-    [ M.ContentReactionTargetType ==. targetType
-    , M.ContentReactionTargetId ==. targetId
+toggleFanClubMemoryReaction :: FanClubMemoryId -> PartyId -> UUID.UUID -> UTCTime -> SqlPersistT IO ()
+toggleFanClubMemoryReaction memoryId reactorId reactionTypeId now = do
+  existing <- selectFirst
+    [ M.FanClubMemoryReactionMemoryId ==. memoryId
+    , M.FanClubMemoryReactionReactorPartyId ==. reactorId
     ] []
-  let countReaction t = length $ filter (\(Entity _ r) -> contentReactionReaction r == t) reactions
-      myReaction = case filter (\(Entity _ r) -> contentReactionReactorPartyId r == viewerPartyId) reactions of
-        (Entity _ r : _) -> Just (contentReactionReaction r)
-        [] -> Nothing
-      fire = countReaction "fire"
-      heart = countReaction "heart"
-      clap = countReaction "clap"
-      micDrop = countReaction "mic_drop"
-      skull = countReaction "skull"
+  case existing of
+    Just (Entity reactionId reaction) | fanClubMemoryReactionReactionTypeId reaction == reactionTypeId -> do
+      delete reactionId
+      update (Catalog.ContentReactionTypeKey reactionTypeId)
+        [Catalog.ContentReactionTypeUsageCount +=. (-1)]
+    Just (Entity reactionId reaction) ->
+      do
+        update reactionId
+          [ M.FanClubMemoryReactionReactionTypeId =. reactionTypeId
+          , M.FanClubMemoryReactionCreatedAt =. now
+          ]
+        update (Catalog.ContentReactionTypeKey (fanClubMemoryReactionReactionTypeId reaction))
+          [Catalog.ContentReactionTypeUsageCount +=. (-1)]
+        update (Catalog.ContentReactionTypeKey reactionTypeId)
+          [Catalog.ContentReactionTypeUsageCount +=. 1]
+    Nothing -> do
+      insert_ FanClubMemoryReaction
+        { fanClubMemoryReactionMemoryId = memoryId
+        , fanClubMemoryReactionReactorPartyId = reactorId
+        , fanClubMemoryReactionReactionTypeId = reactionTypeId
+        , fanClubMemoryReactionCreatedAt = now
+        }
+      update (Catalog.ContentReactionTypeKey reactionTypeId)
+        [Catalog.ContentReactionTypeUsageCount +=. 1]
+
+buildFanClubPostReactionSummary :: FanClubPostId -> PartyId -> SqlPersistT IO ReactionSummaryDTO
+buildFanClubPostReactionSummary postId viewerPartyId = do
+  reactions <- selectList
+    [M.FanClubPostReactionPostId ==. postId] []
+  buildContentReactionSummary
+    [(fanClubPostReactionReactionTypeId reaction, fanClubPostReactionReactorPartyId reaction) | Entity _ reaction <- reactions]
+    viewerPartyId
+
+buildFanClubMemoryReactionSummary :: FanClubMemoryId -> PartyId -> SqlPersistT IO ReactionSummaryDTO
+buildFanClubMemoryReactionSummary memoryId viewerPartyId = do
+  reactions <- selectList
+    [M.FanClubMemoryReactionMemoryId ==. memoryId] []
+  buildContentReactionSummary
+    [(fanClubMemoryReactionReactionTypeId reaction, fanClubMemoryReactionReactorPartyId reaction) | Entity _ reaction <- reactions]
+    viewerPartyId
+
+buildContentReactionSummary :: [(UUID.UUID, PartyId)] -> PartyId -> SqlPersistT IO ReactionSummaryDTO
+buildContentReactionSummary reactions viewerPartyId = do
+  mCatalog <- getBy (Catalog.UniqueCatalogDefinitionCode "content-reaction-types")
+  catalog <- maybe (liftIO (ioError (userError "Content reaction catalog is missing"))) pure mCatalog
+  let catalogId = entityKey catalog
+      catalogRow = entityVal catalog
+  reactionTypes <- selectList
+    [ Catalog.ContentReactionTypeCatalogId ==. catalogId
+    , Catalog.ContentReactionTypeActive ==. True
+    , Catalog.ContentReactionTypeDeprecatedAt ==. Nothing
+    ] [Asc Catalog.ContentReactionTypeSortOrder, Asc Catalog.ContentReactionTypeCode]
+  workflowStates <- selectList
+    [Catalog.WorkflowStateId <-. map (Catalog.contentReactionTypeWorkflowStateId . entityVal) reactionTypes] []
+  let stateMap = Map.fromList [(entityKey state, entityVal state) | state <- workflowStates]
+      published (Entity _ reactionType) = case Map.lookup (Catalog.contentReactionTypeWorkflowStateId reactionType) stateMap of
+        Just state -> Catalog.workflowStateActive state
+          && Catalog.workflowStateCode state == "published"
+          && Catalog.workflowStateWorkflowId state == Catalog.catalogDefinitionWorkflowId catalogRow
+        Nothing -> False
+      options = filter published reactionTypes
+      counts = Map.fromListWith (+) [(reactionTypeId, 1 :: Int) | (reactionTypeId, _) <- reactions]
+      knownIds = map entityKey options
+      unknownIds = filter (`notElem` knownIds) (map (Catalog.ContentReactionTypeKey . fst) reactions)
+      mine = listToMaybe [reactionTypeId | (reactionTypeId, partyId) <- reactions, partyId == viewerPartyId]
+  unless (Catalog.catalogDefinitionActive catalogRow && null unknownIds) $
+    liftIO (ioError (userError "Content reaction is missing its active published reaction type"))
+  let items =
+        [ ReactionSummaryItemDTO
+            { rsiReactionTypeId = reactionTypeId
+            , rsiCode = Catalog.contentReactionTypeCode reactionType
+            , rsiNameEs = Catalog.contentReactionTypeNameEs reactionType
+            , rsiNameEn = Catalog.contentReactionTypeNameEn reactionType
+            , rsiDisplaySymbol = Catalog.contentReactionTypeEmoji reactionType
+            , rsiCount = Map.findWithDefault 0 reactionTypeId counts
+            }
+        | Entity (Catalog.ContentReactionTypeKey reactionTypeId) reactionType <- options
+        ]
   pure ReactionSummaryDTO
-    { rsFire = fire
-    , rsHeart = heart
-    , rsClap = clap
-    , rsMicDrop = micDrop
-    , rsSkull = skull
-    , rsTotal = fire + heart + clap + micDrop + skull
-    , rsMyReaction = myReaction
+    { rsItems = items
+    , rsTotal = length reactions
+    , rsMyReactionTypeId = mine
     }
 
 sortFeedItems :: Text -> UTCTime -> [FanClubFeedItemDTO] -> [FanClubFeedItemDTO]

@@ -166,6 +166,7 @@ catalogTableSpec entityKind =
     "content_category" -> Just (hierarchy "content_category" False)
     "tag" -> Just (flatCatalog "tag" True)
     "reaction_type" -> Just ((flatCatalog "reaction_type" True) { ctsDisplaySymbolExpr = "emoji" })
+    "content_reaction_type" -> Just ((flatCatalog "content_reaction_type" True) { ctsDisplaySymbolExpr = "emoji" })
     "record_release" -> Just (readOnlyRecords "record_release")
     "recording" -> Just (readOnlyRecords "recording")
     "recording_session" -> Just (readOnlyRecords "recording_session")
@@ -1618,10 +1619,10 @@ publishSql spec =
         <> "VALUES (?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?::uuid, ?, ?, ?, ?, TRUE, ?::uuid, ?) "
         <> "ON CONFLICT (id) DO UPDATE SET code=EXCLUDED.code, name_es=EXCLUDED.name_es, name_en=EXCLUDED.name_en, description_es=EXCLUDED.description_es, description_en=EXCLUDED.description_en, sort_order=EXCLUDED.sort_order, workflow_state_id=EXCLUDED.workflow_state_id, updated_at=EXCLUDED.updated_at, version=EXCLUDED.version, parent_id=EXCLUDED.parent_id, current_slug=EXCLUDED.current_slug WHERE " <> ctsTable spec <> ".version=? RETURNING 1"
     FlatCatalogFamily
-      | ctsTable spec == "reaction_type" ->
-          "INSERT INTO reaction_type (id, catalog_id, code, name_es, name_en, description_es, description_en, sort_order, workflow_state_id, created_at, updated_at, version, active, current_slug, emoji) "
+      | ctsTable spec `elem` ["reaction_type", "content_reaction_type"] ->
+          "INSERT INTO " <> ctsTable spec <> " (id, catalog_id, code, name_es, name_en, description_es, description_en, sort_order, workflow_state_id, created_at, updated_at, version, active, current_slug, emoji) "
             <> "VALUES (?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?::uuid, ?, ?, ?, TRUE, ?, ?) "
-            <> "ON CONFLICT (id) DO UPDATE SET code=EXCLUDED.code, name_es=EXCLUDED.name_es, name_en=EXCLUDED.name_en, description_es=EXCLUDED.description_es, description_en=EXCLUDED.description_en, sort_order=EXCLUDED.sort_order, workflow_state_id=EXCLUDED.workflow_state_id, updated_at=EXCLUDED.updated_at, version=EXCLUDED.version, current_slug=EXCLUDED.current_slug, emoji=EXCLUDED.emoji WHERE reaction_type.version=? RETURNING 1"
+            <> "ON CONFLICT (id) DO UPDATE SET code=EXCLUDED.code, name_es=EXCLUDED.name_es, name_en=EXCLUDED.name_en, description_es=EXCLUDED.description_es, description_en=EXCLUDED.description_en, sort_order=EXCLUDED.sort_order, workflow_state_id=EXCLUDED.workflow_state_id, updated_at=EXCLUDED.updated_at, version=EXCLUDED.version, current_slug=EXCLUDED.current_slug, emoji=EXCLUDED.emoji WHERE " <> ctsTable spec <> ".version=? RETURNING 1"
       | otherwise ->
           "INSERT INTO " <> ctsTable spec <> " (id, catalog_id, code, name_es, name_en, description_es, description_en, sort_order, workflow_state_id, created_at, updated_at, version, active, current_slug) "
             <> "VALUES (?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?::uuid, ?, ?, ?, TRUE, ?) "
@@ -1647,7 +1648,7 @@ publishFamilyParams spec draft parentUuid =
     HierarchyFamily -> [maybe PersistNull (PersistText . UUID.toText) parentUuid, maybe PersistNull PersistText (cdrCurrentSlug draft)]
     FlatCatalogFamily ->
       [maybe PersistNull PersistText (cdrCurrentSlug draft)]
-        <> [maybe PersistNull PersistText (cdrDisplaySymbol draft) | ctsTable spec == "reaction_type"]
+        <> [maybe PersistNull PersistText (cdrDisplaySymbol draft) | ctsTable spec `elem` ["reaction_type", "content_reaction_type"]]
     ServiceOfferingFamily ->
       case cdrServiceOffering draft of
         Nothing -> []
@@ -2301,7 +2302,7 @@ validateCatalogSpecificDraft spec draft =
           { errBody = "Appearance modes use their typed default field, not generic parent, external, service, or Radio fields" }
       unless (cdrCode draft `elem` ["system", "light", "dark"]) $
         throwError err400 { errBody = "appearance mode code is not recognized by the application renderer" }
-    FlatCatalogFamily | ctsTable spec == "reaction_type" -> do
+    FlatCatalogFamily | ctsTable spec `elem` ["reaction_type", "content_reaction_type"] -> do
       symbol <- maybe
         (throwError err400 { errBody = "displaySymbol is required for reaction types" })
         pure

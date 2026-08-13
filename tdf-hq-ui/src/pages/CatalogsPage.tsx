@@ -21,6 +21,7 @@ export const catalogEditorPath = (entityKind: string): string | undefined => {
     case 'feedback_category':
     case 'feedback_severity': return '/configuracion/catalogos/feedback';
     case 'reaction_type': return '/configuracion/catalogos/reacciones';
+    case 'content_reaction_type': return '/configuracion/catalogos/reacciones-contenido';
     default: return undefined;
   }
 };

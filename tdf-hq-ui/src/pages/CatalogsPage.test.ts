@@ -7,6 +7,7 @@ describe('catalog administration routing', () => {
     expect(catalogEditorPath('feedback_category')).toBe('/configuracion/catalogos/feedback');
     expect(catalogEditorPath('feedback_severity')).toBe('/configuracion/catalogos/feedback');
     expect(catalogEditorPath('reaction_type')).toBe('/configuracion/catalogos/reacciones');
+    expect(catalogEditorPath('content_reaction_type')).toBe('/configuracion/catalogos/reacciones-contenido');
     expect(catalogEditorPath('unknown_business_list')).toBeUndefined();
   });
 });

@@ -199,7 +199,7 @@ function specializedModel(candidate, classification) {
     return 'navigation_item, navigation_item_permission';
   }
   if (/reaction/i.test(value) && !/(?:capabilit|grant|module|permission|role|security)/i.test(value)) {
-    return 'reaction_type, content_reaction';
+    return 'reaction_type, content_reaction_type, fan_club_post_reaction, fan_club_memory_reaction';
   }
   if (SECURITY_PATTERN.test(value)) {
     if (/role/i.test(value)) return 'security_role, party_security_role, role_permission';

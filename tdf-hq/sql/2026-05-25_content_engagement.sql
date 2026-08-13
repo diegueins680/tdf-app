@@ -2,9 +2,14 @@
 -- Adds reactions, notifications, creator badges, and content boosting
 
 -- ============================================================================
--- Phase 1: Content Reactions
+-- Phase 1: Content Reactions (historical pre-cutover schema)
 -- ============================================================================
 
+-- Existing installations may still contain this table as source evidence. It is
+-- not the current runtime schema and must be converted with the guarded
+-- 2026-08-12_content_reaction_cutover_{dry_run,apply,rollback}.sql scripts.
+-- New installations receive the typed content_reaction_type,
+-- fan_club_post_reaction, and fan_club_memory_reaction models from Persistent.
 CREATE TABLE IF NOT EXISTS content_reaction (
     target_type TEXT NOT NULL CHECK (target_type IN ('post', 'memory', 'release')),
     target_id BIGINT NOT NULL,

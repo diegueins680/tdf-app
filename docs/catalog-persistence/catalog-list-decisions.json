@@ -604,26 +604,6 @@
       "reviewed": true
     },
     {
-      "id": "1c6e4ef52fe25b6f3772",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "reaction_type, content_reaction",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "fc256421895bab1f233e",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "reaction_type, content_reaction",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
       "id": "915967d05f3593fea628",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -1684,7 +1664,7 @@
       "reviewed": true
     },
     {
-      "id": "7285cd32e312828a3a24",
+      "id": "e05ccd4faf225e9a85bf",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -2667,7 +2647,7 @@
       "id": "3a46e6e0a56cea3d212d",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "reaction_type, content_reaction",
+      "specializedModel": "reaction_type, content_reaction_type, fan_club_post_reaction, fan_club_memory_reaction",
       "priority": "P0-cutover",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
@@ -3838,7 +3818,7 @@
       "classification": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
+      "priority": "P2-schema-history",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true
@@ -3847,7 +3827,7 @@
       "id": "a91a9a79cfcb069c24c1",
       "classification": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "reaction_type, content_reaction",
+      "specializedModel": "reaction_type, content_reaction_type, fan_club_post_reaction, fan_club_memory_reaction",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
@@ -3877,7 +3857,7 @@
       "id": "7d48cac5967a8aa86b6c",
       "classification": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "reaction_type, content_reaction",
+      "specializedModel": "reaction_type, content_reaction_type, fan_club_post_reaction, fan_club_memory_reaction",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
@@ -4734,16 +4714,6 @@
       "reviewed": true
     },
     {
-      "id": "d1cda0985a589248fc58",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "reaction_type, content_reaction",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
       "id": "7fb1cc0633af158cc1a5",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -5084,7 +5054,7 @@
       "reviewed": true
     },
     {
-      "id": "35483acd9608847486e2",
+      "id": "45cac5dfa00854fa1180",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",

@@ -1323,18 +1323,24 @@ instance FromJSON FanClubInboxStatusReq where
 -- ============================================================================
 
 data ReactionSummaryDTO = ReactionSummaryDTO
-  { rsFire       :: Int
-  , rsHeart      :: Int
-  , rsClap       :: Int
-  , rsMicDrop    :: Int
-  , rsSkull      :: Int
-  , rsTotal      :: Int
-  , rsMyReaction :: Maybe Text
+  { rsItems            :: [ReactionSummaryItemDTO]
+  , rsTotal            :: Int
+  , rsMyReactionTypeId :: Maybe UUID
   } deriving (Show, Generic)
 instance ToJSON ReactionSummaryDTO
 
+data ReactionSummaryItemDTO = ReactionSummaryItemDTO
+  { rsiReactionTypeId :: UUID
+  , rsiCode           :: Text
+  , rsiNameEs         :: Text
+  , rsiNameEn         :: Text
+  , rsiDisplaySymbol  :: Text
+  , rsiCount          :: Int
+  } deriving (Show, Generic)
+instance ToJSON ReactionSummaryItemDTO
+
 data ContentReactionReq = ContentReactionReq
-  { crrReaction :: Text
+  { crrReactionTypeId :: UUID
   } deriving (Show, Generic)
 instance FromJSON ContentReactionReq where
   parseJSON = genericParseJSON strictDecodeOptions

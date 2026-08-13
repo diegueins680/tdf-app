@@ -25,9 +25,17 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Catalogs, type CatalogDraft, type CatalogItem, type CatalogRevision } from '../api/catalogs';
 import PageShell from '../components/PageShell';
 
-const CATALOG_CODE = 'reaction-types';
-const ITEMS_QUERY_KEY = ['catalog', CATALOG_CODE, 'admin-items'] as const;
-const REVISIONS_QUERY_KEY = ['catalog', CATALOG_CODE, 'revisions'] as const;
+const catalogConfiguration = (catalogCode: string | undefined) => catalogCode === 'content-reaction-types'
+  ? {
+    code: 'content-reaction-types',
+    title: 'Reacciones de contenido',
+    subtitle: 'Opciones persistidas para publicaciones y recuerdos del club de fans.',
+  }
+  : {
+    code: 'reaction-types',
+    title: 'Reacciones de momentos',
+    subtitle: 'Opciones persistidas para momentos de eventos.',
+  };
 
 export interface ReactionTypeForm {
   entityId?: string;
@@ -101,21 +109,24 @@ const itemForm = (item: CatalogItem): ReactionTypeForm => ({
   reason: '',
 });
 
-export default function ReactionTypesCatalogPage() {
+export default function ReactionTypesCatalogPage({ catalogCode }: { catalogCode?: string }) {
+  const catalog = catalogConfiguration(catalogCode);
+  const itemsQueryKey = useMemo(() => ['catalog', catalog.code, 'admin-items'] as const, [catalog.code]);
+  const revisionsQueryKey = useMemo(() => ['catalog', catalog.code, 'revisions'] as const, [catalog.code]);
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [form, setForm] = useState<ReactionTypeForm | null>(null);
   const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
 
   const itemsQuery = useQuery({
-    queryKey: [...ITEMS_QUERY_KEY, search],
-    queryFn: () => Catalogs.listItems(CATALOG_CODE, {
+    queryKey: [...itemsQueryKey, search],
+    queryFn: () => Catalogs.listItems(catalog.code, {
       locale: 'es', q: search || undefined, includeInactive: true, pageSize: 100,
     }),
   });
   const revisionsQuery = useQuery<CatalogRevision[]>({
-    queryKey: REVISIONS_QUERY_KEY,
-    queryFn: () => Catalogs.listRevisions(CATALOG_CODE, 1, 100),
+    queryKey: revisionsQueryKey,
+    queryFn: () => Catalogs.listRevisions(catalog.code, 1, 100),
   });
   const items = useMemo(() => itemsQuery.data?.items ?? [], [itemsQuery.data?.items]);
   const nextSortOrder = useMemo(
@@ -125,13 +136,13 @@ export default function ReactionTypesCatalogPage() {
 
   const refresh = async () => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ITEMS_QUERY_KEY }),
-      queryClient.invalidateQueries({ queryKey: REVISIONS_QUERY_KEY }),
-      queryClient.invalidateQueries({ queryKey: ['catalogs', CATALOG_CODE] }),
+      queryClient.invalidateQueries({ queryKey: itemsQueryKey }),
+      queryClient.invalidateQueries({ queryKey: revisionsQueryKey }),
+      queryClient.invalidateQueries({ queryKey: ['catalogs', catalog.code] }),
     ]);
   };
   const createRevision = useMutation({
-    mutationFn: (draft: CatalogDraft) => Catalogs.createRevision(CATALOG_CODE, draft),
+    mutationFn: (draft: CatalogDraft) => Catalogs.createRevision(catalog.code, draft),
     onSuccess: async () => { setForm(null); await refresh(); },
   });
   const submitRevision = useMutation({ mutationFn: Catalogs.submitRevision, onSuccess: refresh });
@@ -162,8 +173,8 @@ export default function ReactionTypesCatalogPage() {
 
   return (
     <PageShell
-      title="Tipos de reacción"
-      subtitle="Opciones bilingües persistidas para momentos de eventos; UUID, símbolo, orden y publicación son canónicos."
+      title={catalog.title}
+      subtitle={catalog.subtitle}
     >
       <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1.5} mb={2}>
         <Button component={RouterLink} to="/configuracion/catalogos" sx={{ minHeight: 44 }}>

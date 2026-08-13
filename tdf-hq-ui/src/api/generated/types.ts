@@ -774,6 +774,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/fans/me/clubs/{artistId}/posts/{postId}/react": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Toggle a persisted Fan Club post reaction
+         * @description Accepts only the canonical UUID of an active, published item in the `content-reaction-types` catalog.
+         */
+        post: operations["reactToFanClubPost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fans/me/clubs/{artistId}/memories/{memoryId}/react": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Toggle a persisted Fan Club memory reaction
+         * @description Accepts only the canonical UUID of an active, published item in the `content-reaction-types` catalog.
+         */
+        post: operations["reactToFanClubMemory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/parties": {
         parameters: {
             query?: never;
@@ -2635,6 +2675,28 @@ export interface components {
              * @description Canonical UUID of an active published item in the `reaction-types` catalog.
              */
             emrrReactionTypeId: string;
+        };
+        ContentReactionRequest: {
+            /**
+             * Format: uuid
+             * @description Canonical UUID of an active published item in the `content-reaction-types` catalog.
+             */
+            crrReactionTypeId: string;
+        };
+        ContentReactionSummaryItem: {
+            /** Format: uuid */
+            rsiReactionTypeId: string;
+            readonly rsiCode: string;
+            readonly rsiNameEs: string;
+            readonly rsiNameEn: string;
+            readonly rsiDisplaySymbol: string;
+            readonly rsiCount: number;
+        };
+        ContentReactionSummary: {
+            rsItems: components["schemas"]["ContentReactionSummaryItem"][];
+            readonly rsTotal: number;
+            /** Format: uuid */
+            readonly rsMyReactionTypeId: string | null;
         };
         EventMomentReaction: {
             /** Format: uuid */
@@ -5257,6 +5319,102 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ArtistProfile"];
                 };
+            };
+        };
+    };
+    reactToFanClubPost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+                postId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentReactionRequest"];
+            };
+        };
+        responses: {
+            /** @description Current canonical reaction summary */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentReactionSummary"];
+                };
+            };
+            /** @description Malformed UUID or obsolete string reaction field */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist club or post not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reaction UUID is unknown, inactive, deprecated, or unpublished */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reactToFanClubMemory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+                memoryId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentReactionRequest"];
+            };
+        };
+        responses: {
+            /** @description Current canonical reaction summary */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentReactionSummary"];
+                };
+            };
+            /** @description Malformed UUID or obsolete string reaction field */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist club or memory not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reaction UUID is unknown, inactive, deprecated, or unpublished */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

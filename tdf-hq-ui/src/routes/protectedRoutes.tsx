@@ -179,6 +179,7 @@ export function renderProtectedRoutes() {
           <Route path="catalogos/apariencia" element={<AppearanceModeCatalogPage />} />
           <Route path="catalogos/feedback" element={<FeedbackCatalogPage />} />
           <Route path="catalogos/reacciones" element={<ReactionTypesCatalogPage />} />
+          <Route path="catalogos/reacciones-contenido" element={<ReactionTypesCatalogPage catalogCode="content-reaction-types" />} />
           <Route path="inscripciones-curso" element={<CourseRegistrationsAdminPage />} />
           <Route path="cursos" element={<CourseBuilderPage />} />
           <Route path="usuarios-admin" element={<AdminUsersPage />} />

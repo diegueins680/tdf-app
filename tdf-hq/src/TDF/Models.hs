@@ -978,13 +978,22 @@ FanClubInboxMessage
     updatedAt        UTCTime Maybe
     deriving Show Generic
 
-ContentReaction
-    targetType       Text
-    targetId         Int
+FanClubPostReaction sql=fan_club_post_reaction
+    Id UUID default=gen_random_uuid()
+    postId           FanClubPostId
     reactorPartyId   PartyId
-    reaction         Text
+    reactionTypeId   UUID
     createdAt        UTCTime default=now()
-    Primary targetType targetId reactorPartyId
+    UniqueFanClubPostReaction postId reactorPartyId
+    deriving Show Generic
+
+FanClubMemoryReaction sql=fan_club_memory_reaction
+    Id UUID default=gen_random_uuid()
+    memoryId         FanClubMemoryId
+    reactorPartyId   PartyId
+    reactionTypeId   UUID
+    createdAt        UTCTime default=now()
+    UniqueFanClubMemoryReaction memoryId reactorPartyId
     deriving Show Generic
 
 Notification

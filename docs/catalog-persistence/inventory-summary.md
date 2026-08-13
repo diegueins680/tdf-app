@@ -165,6 +165,23 @@ Notable migration evidence includes:
   distinct values still require a current read-only dry-run. Full evidence is in
   `event-moment-reaction-cutover.md`.
 
+## Candidate cutover status for Fan Club content reactions
+
+- The hardcoded five-option web list and copied reaction request string are removed. The
+  `content_reaction_type` catalog owns the UUID, code, bilingual presentation, symbol, order, and
+  lifecycle under the shared publication workflow.
+- Polymorphic `target_type`/`target_id` runtime relationships are replaced by
+  `fan_club_post_reaction` and `fan_club_memory_reaction`, each with target, actor, and reaction-type
+  foreign keys. Post, memory, discovery, leaderboard, and spotlight consumers use these canonical
+  tables.
+- Web renders the ordered response catalog and sends only UUIDs. Both admin surfaces recognize the
+  specialized type. Mobile snapshot schema 8 batches and validates the catalog with no emergency
+  options; generated clients share the strict OpenAPI schemas.
+- The two-row fixture mapped case-normalized `FIRE` and exact `mic_drop`; apply, no-op rerun, exact
+  rollback, reapply, and four negative integrity guards passed. Unknown/unsupported legacy target
+  types abort without guessing. Production distinct values still require the current read-only
+  dry-run. Full evidence is in `content-reaction-cutover.md`.
+
 ## Candidate cutover status for DDEX references and lifecycle
 
 - Governed `ddex_standard_version`, `ddex_standard_support`, `ddex_message_type`,

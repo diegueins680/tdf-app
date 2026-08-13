@@ -265,6 +265,11 @@ standard, source, effective date, deprecation, and last synchronization time.
   expose code, symbol, and both names as read-only presentation. Web and mobile administer the
   specialized symbol through the normal draft/review/publication workflow; mobile snapshot schema
   v7 synchronizes the catalog and stores offline selections keyed by UUID.
+- Authenticated Fan Club post/memory reaction writes accept only a published
+  `content-reaction-types` UUID. The former polymorphic target has been split into typed post and
+  memory foreign-key tables; responses expose ordered persisted bilingual option metadata. Mobile
+  snapshot schema v8 synchronizes this separate catalog without bundling an emergency reaction
+  list.
 - `/radio/auto-stop-options` returns a strict locale-aware envelope containing the catalog UUID,
   cache revision, typed option UUIDs, durations, and the single effective default. The web timer
   uses the selected UUID and never parses a code or label. Administrative writes use the common
@@ -286,7 +291,8 @@ standard, source, effective date, deprecation, and last synchronization time.
   submits emergency snapshot identities. Snapshot schema v3 added countries; schema v4 added
   appearance modes and defaults; schema v5 adds published event types plus the required
   `social-event/global` UUID default; schema v6 adds a separately versioned and ETagged public
-  workflow snapshot, and schema v7 adds published reaction types. Valid older snapshots upgrade in
+  workflow snapshot, schema v7 adds published event-moment reaction types, and schema v8 adds Fan
+  Club content-reaction types. Valid older snapshots upgrade in
   memory with their ETags cleared so the next successful synchronization cannot return a false 304
   for a partial cache. Emergency data contains no invented workflow state or reaction type.
 - Batched public retrieval accepts catalog codes but returns a discriminated union of strict typed

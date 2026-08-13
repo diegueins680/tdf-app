@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-13T01:52:50.815Z",
+  "generatedAt": "2026-08-13T14:14:43.218Z",
   "repositoryRoot": ".",
-  "filesScanned": 863,
-  "candidateCount": 524,
+  "filesScanned": 868,
+  "candidateCount": 521,
   "byClassification": {
-    "dynamic-business-catalog": 335,
+    "dynamic-business-catalog": 334,
     "genuine-technical-constant": 36,
     "governed-reference-data": 48,
-    "security-system-registry": 105
+    "security-system-registry": 103
   },
-  "exactDuplicateGroupCount": 57,
+  "exactDuplicateGroupCount": 56,
   "normalizedVariantGroupCount": 89,
   "normalizedVariants": [
     {
@@ -783,8 +783,8 @@
         {
           "value": "feedback_category",
           "candidateIds": [
-            "7285cd32e312828a3a24",
-            "35483acd9608847486e2"
+            "e05ccd4faf225e9a85bf",
+            "45cac5dfa00854fa1180"
           ]
         },
         {
@@ -802,8 +802,8 @@
         {
           "value": "feedback_severity",
           "candidateIds": [
-            "7285cd32e312828a3a24",
-            "35483acd9608847486e2"
+            "e05ccd4faf225e9a85bf",
+            "45cac5dfa00854fa1180"
           ]
         },
         {
@@ -1446,8 +1446,8 @@
         {
           "value": "reaction_type",
           "candidateIds": [
-            "7285cd32e312828a3a24",
-            "35483acd9608847486e2"
+            "e05ccd4faf225e9a85bf",
+            "45cac5dfa00854fa1180"
           ]
         },
         {
@@ -1919,7 +1919,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 375,
+      "consumerCount": 379,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -1967,10 +1967,10 @@
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql"
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_rollback.sql",
+        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -2180,7 +2180,7 @@
       "lines": [
         695
       ],
-      "consumerCount": 375,
+      "consumerCount": 379,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -2228,10 +2228,10 @@
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql"
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_rollback.sql",
+        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -2445,7 +2445,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 375,
+      "consumerCount": 379,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -2493,10 +2493,10 @@
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql"
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_rollback.sql",
+        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -2745,7 +2745,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 125,
+      "consumerCount": 127,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-11_feedback_catalog_cutover_dry_run.sql",
@@ -2758,6 +2758,7 @@
         "tdf-hq/src/TDF/Seed.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs",
         "tdf-hq/src/TDF/ServerFuture.hs",
         "tdf-hq/src/TDF/ServerRadio.hs",
         "tdf-hq/test/Spec.hs",
@@ -2779,6 +2780,7 @@
         "tdf-hq-ui/src/components/BasicFeaturePage.tsx",
         "tdf-hq-ui/src/components/LazyPaginatedList.tsx",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx",
         "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
         "tdf-hq-ui/src/components/SidebarNav.test.tsx",
@@ -2813,8 +2815,7 @@
         "tdf-hq-ui/src/pages/LabelProjectsPage.tsx",
         "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
         "tdf-hq-ui/src/pages/LabelTracksPage.tsx",
-        "tdf-hq-ui/src/pages/LeadsPage.test.tsx",
-        "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx"
+        "tdf-hq-ui/src/pages/LeadsPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -2968,7 +2969,7 @@
       "lines": [
         214
       ],
-      "consumerCount": 87,
+      "consumerCount": 88,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -3038,6 +3039,7 @@
         "tdf-hq-ui/src/components/PageShell.test.tsx",
         "tdf-hq-ui/src/components/PageShell.tsx",
         "tdf-hq-ui/src/components/PromoCodeField.tsx",
+        "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/ReactionBar.tsx",
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/components/UserRoleManagement.tsx",
@@ -3288,7 +3290,7 @@
       "lines": [
         136
       ],
-      "consumerCount": 106,
+      "consumerCount": 108,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-11_feedback_catalog_cutover_dry_run.sql",
@@ -3304,6 +3306,7 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/ServerAdmin.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs",
         "tdf-hq/src/TDF/ServerFuture.hs",
         "tdf-hq/src/TDF/ServerRadio.hs",
         "tdf-hq/test/Spec.hs",
@@ -3323,6 +3326,7 @@
         "tdf-hq-ui/src/components/AssetDialogs.tsx",
         "tdf-hq-ui/src/components/LazyPaginatedList.tsx",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
@@ -3359,8 +3363,7 @@
         "tdf-hq-ui/src/react-router.d.ts",
         "tdf-hq-ui/src/session/SessionContext.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
-        "tdf-hq-ui/src/utils/chatkit.ts",
-        "tdf-hq-ui/src/utils/formatters.ts"
+        "tdf-hq-ui/src/utils/chatkit.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -3515,7 +3518,7 @@
       "lines": [
         73
       ],
-      "consumerCount": 103,
+      "consumerCount": 105,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-11_feedback_catalog_cutover_dry_run.sql",
@@ -3528,6 +3531,7 @@
         "tdf-hq/src/TDF/Seed.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs",
         "tdf-hq/src/TDF/ServerFuture.hs",
         "tdf-hq/src/TDF/ServerRadio.hs",
         "tdf-hq/test/Spec.hs",
@@ -3547,6 +3551,7 @@
         "tdf-hq-ui/src/components/AssetDialogs.tsx",
         "tdf-hq-ui/src/components/LazyPaginatedList.tsx",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
@@ -3583,8 +3588,7 @@
         "tdf-hq-ui/src/react-router.d.ts",
         "tdf-hq-ui/src/session/SessionContext.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
-        "tdf-hq-ui/src/utils/chatkit.ts",
-        "tdf-hq-ui/src/utils/formatters.ts"
+        "tdf-hq-ui/src/utils/chatkit.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -3744,7 +3748,7 @@
       "lines": [
         24
       ],
-      "consumerCount": 125,
+      "consumerCount": 127,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-11_feedback_catalog_cutover_dry_run.sql",
@@ -3757,6 +3761,7 @@
         "tdf-hq/src/TDF/Seed.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs",
         "tdf-hq/src/TDF/ServerFuture.hs",
         "tdf-hq/src/TDF/ServerRadio.hs",
         "tdf-hq/test/Spec.hs",
@@ -3778,6 +3783,7 @@
         "tdf-hq-ui/src/components/BasicFeaturePage.tsx",
         "tdf-hq-ui/src/components/LazyPaginatedList.tsx",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx",
         "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
         "tdf-hq-ui/src/components/SidebarNav.test.tsx",
@@ -3812,8 +3818,7 @@
         "tdf-hq-ui/src/pages/LabelProjectsPage.tsx",
         "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
         "tdf-hq-ui/src/pages/LabelTracksPage.tsx",
-        "tdf-hq-ui/src/pages/LeadsPage.test.tsx",
-        "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx"
+        "tdf-hq-ui/src/pages/LeadsPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -6553,89 +6558,6 @@
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
-    },
-    {
-      "id": "1c6e4ef52fe25b6f3772",
-      "file": "tdf-hq-ui/src/components/ReactionBar.tsx",
-      "sourceKind": "production",
-      "surface": "web",
-      "domain": "fan-social",
-      "kind": "array",
-      "name": "REACTIONS",
-      "line": 5,
-      "values": [
-        "{key=fire, emoji=🔥, label=Fuego}",
-        "{key=heart, emoji=❤️, label=Me encanta}",
-        "{key=clap, emoji=👏, label=Aplauso}",
-        "{key=mic_drop, emoji=🎤, label=Mic drop}",
-        "{key=skull, emoji=💀, label=Me muero}"
-      ],
-      "valueCount": 5,
-      "recommendedClassification": "security-system-registry",
-      "lines": [
-        5
-      ],
-      "consumerCount": 0,
-      "backendConsumers": [],
-      "webConsumers": [],
-      "mobileConsumers": [],
-      "automationConsumers": [],
-      "apiAndIntegrationConsumers": [],
-      "decision": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "reaction_type, content_reaction",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "exactDuplicateIds": [],
-      "similarCandidateIds": []
-    },
-    {
-      "id": "fc256421895bab1f233e",
-      "file": "tdf-hq-ui/src/components/ReactionBar.tsx",
-      "sourceKind": "production",
-      "surface": "web",
-      "domain": "fan-social",
-      "kind": "switch-cases",
-      "name": "key",
-      "line": 44,
-      "values": [
-        "fire",
-        "heart",
-        "clap",
-        "mic_drop",
-        "skull"
-      ],
-      "valueCount": 5,
-      "recommendedClassification": "dynamic-business-catalog",
-      "lines": [
-        44
-      ],
-      "consumerCount": 5,
-      "backendConsumers": [
-        "tdf-hq/sql/2026-05-25_content_engagement.sql",
-        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_dry_run.sql",
-        "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/ServerFanClub.hs"
-      ],
-      "webConsumers": [],
-      "mobileConsumers": [],
-      "automationConsumers": [],
-      "apiAndIntegrationConsumers": [],
-      "decision": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "reaction_type, content_reaction",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "exactDuplicateIds": [
-        "3e2f9a129ebecf483e27",
-        "d1cda0985a589248fc58"
-      ],
-      "similarCandidateIds": [
-        "d1cda0985a589248fc58"
-      ]
     },
     {
       "id": "915967d05f3593fea628",
@@ -15173,7 +15095,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 227,
+      "consumerCount": 232,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -15211,6 +15133,9 @@
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_rollback.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
@@ -15221,10 +15146,7 @@
         "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_dry_run.sql",
-        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_rollback.sql",
-        "tdf-hq/sql/init_schema.sql",
-        "tdf-hq/sql/preflight_security_emergency_readiness.sql"
+        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_dry_run.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -15642,7 +15564,7 @@
       ]
     },
     {
-      "id": "7285cd32e312828a3a24",
+      "id": "e05ccd4faf225e9a85bf",
       "file": "tdf-hq-ui/src/pages/CatalogsPage.tsx",
       "sourceKind": "production",
       "surface": "web",
@@ -15655,16 +15577,18 @@
         "appearance_mode_option",
         "feedback_category",
         "feedback_severity",
-        "reaction_type"
+        "reaction_type",
+        "content_reaction_type"
       ],
-      "valueCount": 5,
+      "valueCount": 6,
       "recommendedClassification": "security-system-registry",
       "lines": [
         18
       ],
-      "consumerCount": 18,
+      "consumerCount": 19,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
         "tdf-hq/src/TDF/Catalog/Integrity.hs",
         "tdf-hq/src/TDF/Catalog/Models.hs",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
@@ -15701,10 +15625,10 @@
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "This closed dispatch selects strict web editor components for code-recognized entity schemas; protected catalog_definition rows remain authoritative for the visible catalog list and unsupported schemas stay read-only.",
       "exactDuplicateIds": [
-        "35483acd9608847486e2"
+        "45cac5dfa00854fa1180"
       ],
       "similarCandidateIds": [
-        "35483acd9608847486e2"
+        "45cac5dfa00854fa1180"
       ]
     },
     {
@@ -16004,13 +15928,14 @@
       "lines": [
         65
       ],
-      "consumerCount": 7,
+      "consumerCount": 8,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_dry_run.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
         "tdf-hq/src/TDF/Server/DDEX.hs",
-        "tdf-hq/src/TDF/ServerExtra.hs"
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/pages/CmsAdminPage.tsx"
@@ -16343,7 +16268,7 @@
       "lines": [
         54
       ],
-      "consumerCount": 99,
+      "consumerCount": 100,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -16417,6 +16342,7 @@
         "tdf-hq-ui/src/components/PageShell.test.tsx",
         "tdf-hq-ui/src/components/PageShell.tsx",
         "tdf-hq-ui/src/components/PromoCodeField.tsx",
+        "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/ReactionBar.tsx",
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/components/UserRoleManagement.tsx",
@@ -17602,7 +17528,7 @@
       "lines": [
         4440
       ],
-      "consumerCount": 98,
+      "consumerCount": 99,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -17676,6 +17602,7 @@
         "tdf-hq-ui/src/components/PageShell.test.tsx",
         "tdf-hq-ui/src/components/PageShell.tsx",
         "tdf-hq-ui/src/components/PromoCodeField.tsx",
+        "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/ReactionBar.tsx",
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/components/UserRoleManagement.tsx",
@@ -18216,7 +18143,7 @@
       "lines": [
         381
       ],
-      "consumerCount": 376,
+      "consumerCount": 380,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -18264,10 +18191,10 @@
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql"
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_rollback.sql",
+        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -18637,7 +18564,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 227,
+      "consumerCount": 232,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -18675,6 +18602,9 @@
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_rollback.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
@@ -18685,10 +18615,7 @@
         "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_dry_run.sql",
-        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_rollback.sql",
-        "tdf-hq/sql/init_schema.sql",
-        "tdf-hq/sql/preflight_security_emergency_readiness.sql"
+        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_dry_run.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -19233,7 +19160,7 @@
       "lines": [
         43
       ],
-      "consumerCount": 66,
+      "consumerCount": 67,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2025-11-04_academy.sql",
@@ -19261,6 +19188,7 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/ServerAdmin.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs",
         "tdf-hq/src/TDF/ServerLiveSessions.hs",
         "tdf-hq/src/TDF/ServerRadio.hs",
         "tdf-hq/test/Spec.hs",
@@ -20248,7 +20176,7 @@
       "lines": [
         873
       ],
-      "consumerCount": 149,
+      "consumerCount": 150,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
@@ -20258,6 +20186,7 @@
         "tdf-hq/sql/2026-08-11_feedback_catalog_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_type_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_apply.sql",
@@ -20298,8 +20227,7 @@
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
         "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
         "tdf-hq/test/integration/catalog_backfill_postgres.sql",
-        "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
-        "tdf-hq/test/integration/ddex_reference_cutover_postgres.sql"
+        "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
@@ -20995,7 +20923,7 @@
         203,
         212
       ],
-      "consumerCount": 96,
+      "consumerCount": 97,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -21014,6 +20942,7 @@
         "tdf-hq/sql/2026-08-11_pipeline_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_pipeline_workflow_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-11_social_event_type_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
         "tdf-hq/sql/init_schema.sql",
         "tdf-hq/sql/preflight_security_emergency_readiness.sql",
         "tdf-hq/src/TDF/API/ServiceStorefrontTypes.hs",
@@ -22110,7 +22039,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 227,
+      "consumerCount": 232,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -22148,6 +22077,9 @@
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_rollback.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
@@ -22158,10 +22090,7 @@
         "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_dry_run.sql",
-        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_rollback.sql",
-        "tdf-hq/sql/init_schema.sql",
-        "tdf-hq/sql/preflight_security_emergency_readiness.sql"
+        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_dry_run.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -22335,7 +22264,7 @@
       "domain": "music-catalog-cms",
       "kind": "switch-cases",
       "name": "state",
-      "line": 82,
+      "line": 90,
       "values": [
         "review",
         "published",
@@ -22345,9 +22274,9 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        82
+        90
       ],
-      "consumerCount": 227,
+      "consumerCount": 232,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -22385,6 +22314,9 @@
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_rollback.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
@@ -22395,10 +22327,7 @@
         "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_dry_run.sql",
-        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_rollback.sql",
-        "tdf-hq/sql/init_schema.sql",
-        "tdf-hq/sql/preflight_security_emergency_readiness.sql"
+        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_dry_run.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -22547,7 +22476,7 @@
       ],
       "decision": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "reaction_type, content_reaction",
+      "specializedModel": "reaction_type, content_reaction_type, fan_club_post_reaction, fan_club_memory_reaction",
       "priority": "P0-cutover",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
@@ -23066,7 +22995,7 @@
       "lines": [
         138
       ],
-      "consumerCount": 227,
+      "consumerCount": 232,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -23104,6 +23033,9 @@
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_rollback.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
@@ -23114,10 +23046,7 @@
         "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_dry_run.sql",
-        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_rollback.sql",
-        "tdf-hq/sql/init_schema.sql",
-        "tdf-hq/sql/preflight_security_emergency_readiness.sql"
+        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_dry_run.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -29092,7 +29021,7 @@
       "lines": [
         61
       ],
-      "consumerCount": 104,
+      "consumerCount": 106,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-11_feedback_catalog_cutover_dry_run.sql",
@@ -29105,6 +29034,7 @@
         "tdf-hq/src/TDF/Seed.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs",
         "tdf-hq/src/TDF/ServerFuture.hs",
         "tdf-hq/src/TDF/ServerRadio.hs",
         "tdf-hq/test/Spec.hs",
@@ -29124,6 +29054,7 @@
         "tdf-hq-ui/src/components/AssetDialogs.tsx",
         "tdf-hq-ui/src/components/LazyPaginatedList.tsx",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
@@ -29160,8 +29091,7 @@
         "tdf-hq-ui/src/react-router.d.ts",
         "tdf-hq-ui/src/session/SessionContext.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
-        "tdf-hq-ui/src/utils/chatkit.ts",
-        "tdf-hq-ui/src/utils/formatters.ts"
+        "tdf-hq-ui/src/utils/chatkit.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -29443,7 +29373,7 @@
         541,
         643
       ],
-      "consumerCount": 95,
+      "consumerCount": 97,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -29451,6 +29381,7 @@
         "tdf-hq/sql/001_multi_role_migration.sql",
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2025-11-05_refactor_students_teachers_to_parties.sql",
+        "tdf-hq/sql/2026-05-25_content_engagement.sql",
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-05-28_course_registration_stripe_pi.sql",
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
@@ -29467,6 +29398,7 @@
         "tdf-hq/sql/2026-08-11_instrument_input_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_type_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_dry_run.sql",
@@ -29492,8 +29424,7 @@
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
         "tdf-hq/test/integration/catalog_backfill_postgres.sql",
-        "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
-        "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql"
+        "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/auth.ts",
@@ -29741,7 +29672,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "status",
-      "line": 3910,
+      "line": 4016,
       "values": [
         "ok",
         "degraded"
@@ -29749,9 +29680,9 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        3910
+        4016
       ],
-      "consumerCount": 375,
+      "consumerCount": 379,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -29798,11 +29729,11 @@
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_rollback.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_ddex_reference_cutover_dry_run.sql"
+        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -30007,7 +29938,7 @@
       "domain": "security-authorization",
       "kind": "openapi-enum",
       "name": "Role",
-      "line": 4092,
+      "line": 4198,
       "values": [
         "Admin",
         "Manager",
@@ -30043,9 +29974,9 @@
       "valueCount": 30,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        4092
+        4198
       ],
-      "consumerCount": 143,
+      "consumerCount": 144,
       "backendConsumers": [
         "tdf-hq/docs/openapi/user-roles.yaml",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -30111,6 +30042,7 @@
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.test.tsx",
         "tdf-hq-ui/src/components/PartyRelatedPopover.test.tsx",
         "tdf-hq-ui/src/components/PartyRelatedPopover.tsx",
+        "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/SessionMenu.tsx",
         "tdf-hq-ui/src/components/SidebarNav.test.tsx",
         "tdf-hq-ui/src/components/SidebarNav.tsx",
@@ -30147,8 +30079,7 @@
         "tdf-hq-ui/src/pages/PartiesPage.test.tsx",
         "tdf-hq-ui/src/pages/PartiesPage.tsx",
         "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
-        "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
-        "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx"
+        "tdf-hq-ui/src/pages/ResetPasswordPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/bookings.tsx",
@@ -30227,7 +30158,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "status",
-      "line": 4148,
+      "line": 4254,
       "values": [
         "Active",
         "Inactive"
@@ -30235,9 +30166,9 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        4148
+        4254
       ],
-      "consumerCount": 376,
+      "consumerCount": 380,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -30284,11 +30215,11 @@
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_rollback.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_ddex_reference_cutover_dry_run.sql"
+        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -30494,7 +30425,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "sdrSelectionMode",
-      "line": 4883,
+      "line": 4989,
       "values": [
         "all",
         "first-available"
@@ -30502,7 +30433,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        4883
+        4989
       ],
       "consumerCount": 15,
       "backendConsumers": [
@@ -30550,7 +30481,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "kind",
-      "line": 5102,
+      "line": 5208,
       "values": [
         "artist",
         "group",
@@ -30560,9 +30491,9 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        5102
+        5208
       ],
-      "consumerCount": 110,
+      "consumerCount": 111,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/sql/2025-11-04_academy.sql",
@@ -30581,6 +30512,7 @@
         "tdf-hq/sql/2026-08-11_pipeline_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_pipeline_workflow_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-11_social_event_type_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
         "tdf-hq/sql/init_schema.sql",
         "tdf-hq/sql/preflight_security_emergency_readiness.sql",
         "tdf-hq/src/TDF/API/Types.hs",
@@ -30710,7 +30642,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "kind",
-      "line": 5117,
+      "line": 5223,
       "values": [
         "audio-track",
         "video",
@@ -30720,9 +30652,9 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        5117
+        5223
       ],
-      "consumerCount": 101,
+      "consumerCount": 102,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/sql/2026-07-12_notification_table.sql",
@@ -30741,6 +30673,7 @@
         "tdf-hq/sql/2026-08-11_pipeline_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_pipeline_workflow_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-11_social_event_type_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
         "tdf-hq/sql/init_schema.sql",
         "tdf-hq/sql/preflight_security_emergency_readiness.sql",
         "tdf-hq/src/TDF/API.hs",
@@ -30862,7 +30795,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "kind",
-      "line": 5149,
+      "line": 5255,
       "values": [
         "release",
         "recording",
@@ -30871,9 +30804,9 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        5149
+        5255
       ],
-      "consumerCount": 100,
+      "consumerCount": 101,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/sql/2026-05-25_content_engagement.sql",
@@ -30892,6 +30825,7 @@
         "tdf-hq/sql/2026-08-11_pipeline_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_pipeline_workflow_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-11_social_event_type_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
         "tdf-hq/sql/init_schema.sql",
         "tdf-hq/sql/preflight_security_emergency_readiness.sql",
         "tdf-hq/src/TDF/API.hs",
@@ -31010,7 +30944,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "approvalMode",
-      "line": 5363,
+      "line": 5469,
       "values": [
         "normal",
         "emergency",
@@ -31020,7 +30954,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        5363
+        5469
       ],
       "consumerCount": 31,
       "backendConsumers": [
@@ -31084,7 +31018,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "changeKind",
-      "line": 5458,
+      "line": 5564,
       "values": [
         "party-role",
         "role-permission"
@@ -31092,7 +31026,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        5458
+        5564
       ],
       "consumerCount": 9,
       "backendConsumers": [
@@ -31132,7 +31066,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "status",
-      "line": 6226,
+      "line": 6332,
       "values": [
         "pending_payment",
         "paid",
@@ -31141,10 +31075,10 @@
       "valueCount": 3,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        6226,
-        6233
+        6332,
+        6339
       ],
-      "consumerCount": 375,
+      "consumerCount": 379,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -31191,11 +31125,11 @@
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_rollback.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_ddex_reference_cutover_dry_run.sql"
+        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -32036,7 +31970,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 9,
+      "line": 14,
       "values": [
         "post",
         "memory",
@@ -32045,13 +31979,16 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9
+        14
       ],
-      "consumerCount": 18,
+      "consumerCount": 22,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_dry_run.sql",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_source.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_rollback.sql",
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/Cron.hs",
         "tdf-hq/src/TDF/Seed.hs",
@@ -32059,7 +31996,8 @@
         "tdf-hq/src/TDF/Server/SocialSync.hs",
         "tdf-hq/src/TDF/ServerFanClub.hs",
         "tdf-hq/test/Spec.hs",
-        "tdf-hq/test/TDF/Catalog/RecordsSpec.hs"
+        "tdf-hq/test/TDF/Catalog/RecordsSpec.hs",
+        "tdf-hq/test/integration/content_reaction_cutover_postgres.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/cms.test.ts",
@@ -32096,7 +32034,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 12,
+      "line": 17,
       "values": [
         "fire",
         "heart",
@@ -32107,17 +32045,19 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        12
+        17
       ],
-      "consumerCount": 6,
+      "consumerCount": 8,
       "backendConsumers": [
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_dry_run.sql",
-        "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/ServerFanClub.hs"
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
+        "tdf-hq/test/integration/content_reaction_cutover_postgres.sql"
       ],
       "webConsumers": [
-        "tdf-hq-ui/src/components/ReactionBar.tsx"
+        "tdf-hq-ui/src/components/ReactionBar.test.tsx"
       ],
       "mobileConsumers": [],
       "automationConsumers": [
@@ -32127,13 +32067,10 @@
       "decision": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
+      "priority": "P2-schema-history",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "exactDuplicateIds": [
-        "fc256421895bab1f233e",
-        "d1cda0985a589248fc58"
-      ],
+      "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
     {
@@ -32144,7 +32081,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 28,
+      "line": 33,
       "values": [
         "reaction_received",
         "post_trending",
@@ -32154,7 +32091,7 @@
       "valueCount": 4,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        28
+        33
       ],
       "consumerCount": 3,
       "backendConsumers": [
@@ -32169,7 +32106,7 @@
       "apiAndIntegrationConsumers": [],
       "decision": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "reaction_type, content_reaction",
+      "specializedModel": "reaction_type, content_reaction_type, fan_club_post_reaction, fan_club_memory_reaction",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
@@ -32188,7 +32125,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 47,
+      "line": 52,
       "values": [
         "trendsetter",
         "regular",
@@ -32197,7 +32134,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        47
+        52
       ],
       "consumerCount": 2,
       "backendConsumers": [],
@@ -32306,7 +32243,7 @@
       "apiAndIntegrationConsumers": [],
       "decision": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "reaction_type, content_reaction",
+      "specializedModel": "reaction_type, content_reaction_type, fan_club_post_reaction, fan_club_memory_reaction",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
@@ -36703,54 +36640,6 @@
       ]
     },
     {
-      "id": "d1cda0985a589248fc58",
-      "file": "tdf-hq/src/TDF/ServerFanClub.hs",
-      "sourceKind": "production",
-      "surface": "backend",
-      "domain": "fan-social",
-      "kind": "haskell-list",
-      "name": "validReactions",
-      "line": 1164,
-      "values": [
-        "fire",
-        "heart",
-        "clap",
-        "mic_drop",
-        "skull"
-      ],
-      "valueCount": 5,
-      "recommendedClassification": "security-system-registry",
-      "lines": [
-        1164
-      ],
-      "consumerCount": 5,
-      "backendConsumers": [
-        "tdf-hq/sql/2026-05-25_content_engagement.sql",
-        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_dry_run.sql",
-        "tdf-hq/src/TDF/Server.hs"
-      ],
-      "webConsumers": [
-        "tdf-hq-ui/src/components/ReactionBar.tsx"
-      ],
-      "mobileConsumers": [],
-      "automationConsumers": [],
-      "apiAndIntegrationConsumers": [],
-      "decision": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "reaction_type, content_reaction",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "exactDuplicateIds": [
-        "fc256421895bab1f233e",
-        "3e2f9a129ebecf483e27"
-      ],
-      "similarCandidateIds": [
-        "fc256421895bab1f233e"
-      ]
-    },
-    {
       "id": "7fb1cc0633af158cc1a5",
       "file": "tdf-hq/src/TDF/ServerFanClub.hs",
       "sourceKind": "production",
@@ -36758,7 +36647,7 @@
       "domain": "fan-social",
       "kind": "haskell-list",
       "name": "allowedFanClubInboxStatuses",
-      "line": 1611,
+      "line": 1685,
       "values": [
         "unread",
         "opened",
@@ -36768,7 +36657,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1611
+        1685
       ],
       "consumerCount": 15,
       "backendConsumers": [
@@ -37595,7 +37484,7 @@
       "lines": [
         20
       ],
-      "consumerCount": 103,
+      "consumerCount": 105,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-11_feedback_catalog_cutover_dry_run.sql",
@@ -37608,6 +37497,7 @@
         "tdf-hq/src/TDF/Seed.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs",
         "tdf-hq/src/TDF/ServerFuture.hs",
         "tdf-hq/src/TDF/ServerRadio.hs",
         "tdf-hq/test/Spec.hs",
@@ -37627,6 +37517,7 @@
         "tdf-hq-ui/src/components/AssetDialogs.tsx",
         "tdf-hq-ui/src/components/LazyPaginatedList.tsx",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
@@ -37663,8 +37554,7 @@
         "tdf-hq-ui/src/react-router.d.ts",
         "tdf-hq-ui/src/session/SessionContext.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
-        "tdf-hq-ui/src/utils/chatkit.ts",
-        "tdf-hq-ui/src/utils/formatters.ts"
+        "tdf-hq-ui/src/utils/chatkit.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -37963,7 +37853,7 @@
       "lines": [
         39
       ],
-      "consumerCount": 153,
+      "consumerCount": 156,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -37986,6 +37876,8 @@
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_rollback.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
@@ -38012,9 +37904,7 @@
         "tdf-hq/src/TDF/DTO.hs",
         "tdf-hq/src/TDF/Handlers/InputList.hs",
         "tdf-hq/src/TDF/Internationalization.hs",
-        "tdf-hq/src/TDF/Leads/Model.hs",
-        "tdf-hq/src/TDF/RagStore.hs",
-        "tdf-hq/src/TDF/Seed.hs"
+        "tdf-hq/src/TDF/Leads/Model.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/.env.example",
@@ -38205,7 +38095,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 227,
+      "consumerCount": 232,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -38243,6 +38133,9 @@
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_rollback.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
@@ -38253,10 +38146,7 @@
         "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_rollback.sql",
         "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_dry_run.sql",
-        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_rollback.sql",
-        "tdf-hq/sql/init_schema.sql",
-        "tdf-hq/sql/preflight_security_emergency_readiness.sql"
+        "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_dry_run.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -38435,9 +38325,10 @@
       "lines": [
         48
       ],
-      "consumerCount": 16,
+      "consumerCount": 17,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
         "tdf-hq/src/TDF/Catalog/Integrity.hs",
         "tdf-hq/src/TDF/Catalog/Models.hs",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
@@ -38843,7 +38734,7 @@
       "lines": [
         1012
       ],
-      "consumerCount": 375,
+      "consumerCount": 379,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -38891,10 +38782,10 @@
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
-        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_rollback.sql",
-        "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql"
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_rollback.sql",
+        "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -39336,7 +39227,7 @@
       ]
     },
     {
-      "id": "35483acd9608847486e2",
+      "id": "45cac5dfa00854fa1180",
       "file": "tdf-mobile/src/lib/catalogAdmin.ts",
       "sourceKind": "production",
       "surface": "mobile",
@@ -39349,16 +39240,18 @@
         "radio_auto_stop_option",
         "feedback_category",
         "feedback_severity",
-        "reaction_type"
+        "reaction_type",
+        "content_reaction_type"
       ],
-      "valueCount": 5,
+      "valueCount": 6,
       "recommendedClassification": "security-system-registry",
       "lines": [
         27
       ],
-      "consumerCount": 18,
+      "consumerCount": 19,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
         "tdf-hq/src/TDF/Catalog/Integrity.hs",
         "tdf-hq/src/TDF/Catalog/Models.hs",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
@@ -39395,10 +39288,10 @@
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "These closed discriminants select strict native form components for code-recognized entity schemas; persisted catalog definitions and items remain authoritative and unsupported types are deny-by-default read-only.",
       "exactDuplicateIds": [
-        "7285cd32e312828a3a24"
+        "e05ccd4faf225e9a85bf"
       ],
       "similarCandidateIds": [
-        "7285cd32e312828a3a24"
+        "e05ccd4faf225e9a85bf"
       ]
     },
     {

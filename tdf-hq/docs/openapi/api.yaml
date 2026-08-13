@@ -1036,6 +1036,78 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ArtistProfile'
+  /fans/me/clubs/{artistId}/posts/{postId}/react:
+    post:
+      tags: [FanHub]
+      summary: Toggle a persisted Fan Club post reaction
+      description: Accepts only the canonical UUID of an active, published item in the `content-reaction-types` catalog.
+      operationId: reactToFanClubPost
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: artistId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+        - name: postId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentReactionRequest'
+      responses:
+        '200':
+          description: Current canonical reaction summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentReactionSummary'
+        '400':
+          description: Malformed UUID or obsolete string reaction field
+        '404':
+          description: Artist club or post not found
+        '422':
+          description: Reaction UUID is unknown, inactive, deprecated, or unpublished
+  /fans/me/clubs/{artistId}/memories/{memoryId}/react:
+    post:
+      tags: [FanHub]
+      summary: Toggle a persisted Fan Club memory reaction
+      description: Accepts only the canonical UUID of an active, published item in the `content-reaction-types` catalog.
+      operationId: reactToFanClubMemory
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: artistId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+        - name: memoryId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentReactionRequest'
+      responses:
+        '200':
+          description: Current canonical reaction summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentReactionSummary'
+        '400':
+          description: Malformed UUID or obsolete string reaction field
+        '404':
+          description: Artist club or memory not found
+        '422':
+          description: Reaction UUID is unknown, inactive, deprecated, or unpublished
   /parties:
     get:
       tags: [CRM]
@@ -3755,6 +3827,40 @@ components:
           type: string
           format: uuid
           description: Canonical UUID of an active published item in the `reaction-types` catalog.
+    ContentReactionRequest:
+      type: object
+      additionalProperties: false
+      required: [crrReactionTypeId]
+      properties:
+        crrReactionTypeId:
+          type: string
+          format: uuid
+          description: Canonical UUID of an active published item in the `content-reaction-types` catalog.
+    ContentReactionSummaryItem:
+      type: object
+      additionalProperties: false
+      required: [rsiReactionTypeId, rsiCode, rsiNameEs, rsiNameEn, rsiDisplaySymbol, rsiCount]
+      properties:
+        rsiReactionTypeId: { type: string, format: uuid }
+        rsiCode: { type: string, readOnly: true }
+        rsiNameEs: { type: string, readOnly: true }
+        rsiNameEn: { type: string, readOnly: true }
+        rsiDisplaySymbol: { type: string, readOnly: true }
+        rsiCount: { type: integer, minimum: 0, readOnly: true }
+    ContentReactionSummary:
+      type: object
+      additionalProperties: false
+      required: [rsItems, rsTotal, rsMyReactionTypeId]
+      properties:
+        rsItems:
+          type: array
+          items: { $ref: '#/components/schemas/ContentReactionSummaryItem' }
+        rsTotal: { type: integer, minimum: 0, readOnly: true }
+        rsMyReactionTypeId:
+          type: string
+          format: uuid
+          nullable: true
+          readOnly: true
     EventMomentReaction:
       type: object
       additionalProperties: false

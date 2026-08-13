@@ -8844,6 +8844,28 @@ main = hspec $ do
                 Right parsed ->
                     expectationFailure ("Expected unexpected moment comment key to be rejected, got " <> show parsed)
 
+    describe "fan club content reaction request parsing" $ do
+        it "accepts only the canonical content-reaction UUID field" $ do
+            case eitherDecode
+                "{\"crrReactionTypeId\":\"50900000-0000-4000-8000-000000000004\"}"
+                :: Either String DTO.ContentReactionReq of
+                Left err ->
+                    expectationFailure ("Expected canonical content reaction payload to decode, got " <> err)
+                Right parsed ->
+                    DTO.crrReactionTypeId parsed
+                        `shouldBe` UUID.fromWords 0x50900000 0x00004000 0x80000000 0x00000004
+
+            case eitherDecode
+                "{\"crrReactionTypeId\":\"50900000-0000-4000-8000-000000000001\",\"crrReaction\":\"fire\"}"
+                :: Either String DTO.ContentReactionReq of
+                Left err -> err `shouldContain` "unknown fields"
+                Right parsed ->
+                    expectationFailure ("Expected obsolete content reaction strings to be rejected, got " <> show parsed)
+
+            (eitherDecode "{\"crrReactionTypeId\":\"fire\"}"
+                :: Either String DTO.ContentReactionReq)
+                `shouldSatisfy` isLeft
+
     describe "inventory asset image upload multipart parsing" $ do
         it "rejects Unicode space lookalikes before storage filename fallbacks sanitize them" $ do
             let assertInvalid :: String -> MultipartData Tmp -> Expectation

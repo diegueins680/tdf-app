@@ -147,6 +147,12 @@ const es = {
     resetDialog: { title: 'Recuperar acceso' },
     signupDialog: { title: 'Crear cuenta' },
   },
+  fanClub: {
+    reactions: {
+      empty: 'Sin reacciones disponibles',
+      loading: 'Guardando reacción',
+    },
+  },
   tdfPlatform: {
     cta: {
       createAccount: 'Crear cuenta',

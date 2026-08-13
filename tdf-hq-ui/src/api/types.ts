@@ -944,13 +944,18 @@ export interface FanClubMemoryReportDTO {
 }
 
 export interface ReactionSummaryDTO {
-  rsFire: number;
-  rsHeart: number;
-  rsClap: number;
-  rsMicDrop: number;
-  rsSkull: number;
+  rsItems: ReactionSummaryItemDTO[];
   rsTotal: number;
-  rsMyReaction: string | null;
+  rsMyReactionTypeId: string | null;
+}
+
+export interface ReactionSummaryItemDTO {
+  rsiReactionTypeId: string;
+  rsiCode: string;
+  rsiNameEs: string;
+  rsiNameEn: string;
+  rsiDisplaySymbol: string;
+  rsiCount: number;
 }
 
 export interface FanClubFeedItemDTO {
@@ -1014,7 +1019,7 @@ export interface FanClubInboxStatusReq {
 }
 
 export interface ContentReactionReq {
-  crrReaction: string;
+  crrReactionTypeId: string;
 }
 
 export interface NotificationDTO {

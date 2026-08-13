@@ -126,16 +126,16 @@ three code-recognized rows and one active published default, while database cons
 unknown codes, competing defaults, default deactivation, and hard deletion. Web exposes a central
 `/configuracion/catalogos` index and a typed Appearance draft/review interface. Mobile snapshot
 schema v4 introduced appearance in the boot batch; schema v5 added event types; schema v6 added the
-persisted social-event workflow. The current schema v7 additionally synchronizes published event
-moment reaction types, keeps a last-known-good snapshot, and uses a marked emergency set only while
-upgrading an older cache or when no valid cache exists. An older snapshot clears its ETags and must
-obtain missing data before catalog-dependent writes are enabled.
+persisted social-event workflow; schema v7 added event-moment reaction types; and current schema v8
+adds the separate Fan Club content-reaction catalog. It keeps a last-known-good snapshot and uses a
+marked emergency set only while upgrading an older cache or when no valid cache exists. An older
+snapshot clears its ETags and must obtain missing data before catalog-dependent writes are enabled.
 
 The authenticated web and mobile applications now populate their central Catalogs surfaces from
 protected `catalog_definition` rows rather than treating a compiled menu as the definition list.
 They provide locale-aware discovery for every authorized definition. Strict native editors cover
-Appearance, Radio auto-stop, Feedback categories, Feedback severities, and event-moment reaction
-types: they use canonical
+Appearance, Radio auto-stop, Feedback categories, Feedback severities, event-moment reaction types,
+and Fan Club content-reaction types: they use canonical
 item/revision UUIDs, remote item search, bilingual fields, scoped defaults, optimistic base
 versions, and the same draft/submit/approve/reject endpoints. Unsupported `entity_kind` values deny
 writes and stay read-only until a typed editor exists. Backend capabilities and distinct-approver
@@ -273,6 +273,13 @@ Directed verification after the latest changes:
   example, web/mobile typechecks, regenerated clients, 3 focused web tests, and 24 focused mobile
   tests passed. A first Hspec invocation used a hyphenated matcher and selected zero examples; the
   corrected quoted matcher selected and passed the intended example.
+- Latest Fan Club reaction checks: the polymorphic target/string table was replaced by typed post
+  and memory foreign-key tables plus the separate five-item `content_reaction_type` catalog. A
+  two-row disposable PostgreSQL fixture passed dry-run, apply, no-op rerun, exact rollback,
+  reapply, and unknown-ID/referenced-deactivation/hard-delete/evidence-deletion guards. Backend fast build,
+  strict request parsing, web typecheck and 7 focused tests, mobile lint/typecheck and 21 focused
+  tests passed; generated OpenAPI clients are byte-identical. Full evidence is in
+  `content-reaction-cutover.md`.
 - Backend Records contract and validation tests: 5/5 passed; Haskell fast build passed.
 - Latest genre contract checks: Haskell executable and test suite compiled; 15 focused artist/fan
   examples passed. Web genre/API/editor checks passed 17 focused tests, both generated clients were
