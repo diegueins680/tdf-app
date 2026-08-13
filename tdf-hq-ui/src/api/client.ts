@@ -183,9 +183,10 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
 }
 
-export const get = <T>(p: string) => api<T>(p, { method: 'GET' });
-export const post = <T>(p: string, body: unknown) =>
-  api<T>(p, { method: 'POST', body: JSON.stringify(body) });
+export const get = <T>(p: string, init: RequestInit = {}) =>
+  api<T>(p, { ...init, method: 'GET' });
+export const post = <T>(p: string, body: unknown, init: RequestInit = {}) =>
+  api<T>(p, { ...init, method: 'POST', body: JSON.stringify(body) });
 export const postEmpty = <T>(p: string) => api<T>(p, { method: 'POST' });
 export const postText = <T>(p: string, body: string) =>
   api<T>(p, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body });
