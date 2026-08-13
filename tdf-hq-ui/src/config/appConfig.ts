@@ -15,10 +15,29 @@ const parseList = (raw?: string): string[] =>
         .filter(Boolean)
     : [];
 
-const env: Record<string, unknown> =
-  (import.meta as unknown as { env?: Record<string, unknown> }).env ?? {};
-const envString = (key: string): string | undefined => {
-  const value = env[key];
+// Explicit references prevent Vite from serializing unrelated VITE_* values.
+const appConfigEnv = {
+  VITE_API_DEMO_TOKEN: import.meta.env?.VITE_API_DEMO_TOKEN,
+  VITE_CARDANO_ADDRESS: import.meta.env?.VITE_CARDANO_ADDRESS,
+  VITE_COURSE_COHORTS: import.meta.env?.VITE_COURSE_COHORTS,
+  VITE_COURSE_INSTRUCTOR_AVATAR: import.meta.env?.VITE_COURSE_INSTRUCTOR_AVATAR,
+  VITE_COURSE_MAP_URL: import.meta.env?.VITE_COURSE_MAP_URL,
+  VITE_COURSE_SLUG: import.meta.env?.VITE_COURSE_SLUG,
+  VITE_COURSE_WHATSAPP_URL: import.meta.env?.VITE_COURSE_WHATSAPP_URL,
+  VITE_DEFAULT_DEMO_TOKEN: import.meta.env?.VITE_DEFAULT_DEMO_TOKEN,
+  VITE_DEMO_TOKEN_HOSTS: import.meta.env?.VITE_DEMO_TOKEN_HOSTS,
+  VITE_GOOGLE_MAPS_BROWSER_API_KEY: import.meta.env?.VITE_GOOGLE_MAPS_BROWSER_API_KEY,
+  VITE_INVENTORY_SCAN_BASE: import.meta.env?.VITE_INVENTORY_SCAN_BASE,
+  VITE_PUBLIC_BASE: import.meta.env?.VITE_PUBLIC_BASE,
+  VITE_PUBLIC_COURSE_BASE: import.meta.env?.VITE_PUBLIC_COURSE_BASE,
+  VITE_STUDIO_MAP_URL: import.meta.env?.VITE_STUDIO_MAP_URL,
+  VITE_STUDIO_WHATSAPP_URL: import.meta.env?.VITE_STUDIO_WHATSAPP_URL,
+  VITE_TRIALS_WHATSAPP_URL: import.meta.env?.VITE_TRIALS_WHATSAPP_URL,
+} as const;
+type AppConfigEnvKey = keyof typeof appConfigEnv;
+
+const envString = (key: AppConfigEnvKey): string | undefined => {
+  const value = appConfigEnv[key];
   return typeof value === 'string' ? value : undefined;
 };
 const envTrimmedOrUndefined = (raw?: string): string | undefined => {

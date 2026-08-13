@@ -63,8 +63,7 @@ export function resolveRuntimeFormatOptions(): FormatOptions {
 }
 
 export function resolveRuntimeCurrency(): string {
-  const runtimeEnv = (import.meta.env ?? {}) as Record<string, string | undefined>;
-  const fallbackCurrency = (runtimeEnv['VITE_DEFAULT_CURRENCY'] ?? 'USD').trim().toUpperCase() || 'USD';
+  const fallbackCurrency = (import.meta.env?.VITE_DEFAULT_CURRENCY ?? 'USD').trim().toUpperCase() || 'USD';
   const storedCurrencyPreferences = readStoredLocalePreferences();
   return typeof storedCurrencyPreferences?.currency === 'string'
       && /^[A-Za-z]{3}$/.test(storedCurrencyPreferences.currency.trim())

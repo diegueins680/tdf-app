@@ -18,7 +18,6 @@ const resources = {
 } as const;
 type SupportedLocale = keyof typeof resources;
 export const LOCALE_STORAGE_KEY = 'tdf-hq-ui/locale';
-const VITE_ENV = (import.meta as ImportMeta & { env?: ImportMetaEnv }).env ?? {};
 
 export function normalizeLocale(value: string | null | undefined): SupportedLocale | null {
   const base = value?.trim().toLowerCase().split(/[-_]/)[0];
@@ -30,7 +29,7 @@ function initialLocale(): SupportedLocale {
     const stored = normalizeLocale(window.localStorage.getItem(LOCALE_STORAGE_KEY));
     if (stored) return stored;
   }
-  const envDefault = normalizeLocale(VITE_ENV.VITE_DEFAULT_LOCALE);
+  const envDefault = normalizeLocale(import.meta.env?.VITE_DEFAULT_LOCALE);
   if (envDefault) return envDefault;
   return 'es';
 }
