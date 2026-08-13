@@ -85,6 +85,11 @@
       "id": "2026-08-13_service_storefront_phase0_hardening",
       "path": "tdf-hq/sql/2026-08-13_service_storefront_phase0_hardening.sql",
       "introducedBy": "588fdef6ace56ffe077eb85063ad82d583130f48"
+    },
+    {
+      "id": "2026-08-13_unified_checkout_core",
+      "path": "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
+      "introducedBy": "c79d22d3e150d9a492ee5eafad7e3052426e0c2b"
     }
   ]
 }
