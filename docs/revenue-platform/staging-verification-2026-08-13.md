@@ -22,7 +22,9 @@ The final command transcript is summarized here after the branch-wide verificati
 | Backend build | `stack build --fast` at the backend implementation head | Pass; later default/fast rebuilds were stopped after flag churn, not a compiler failure |
 | Web regression/accessibility | Jest: five changed suites | Pass: 16 tests, zero failures |
 | Web type safety | `npm run typecheck` | Pass |
+| Web production build | `npm run build` | Pass: 12,382 modules; bundle/secret gate 5 preloads and 399,972 gzip bytes |
 | Release/CI contracts | `npm run test:production-release`; `npm run test:ci-pipeline` | Pass: 21 + 12 tests |
+| Registered production batch | Render preflight; apply twice; schema verification against PostgreSQL 17 | Pass: 21/21 migrations, second run idempotent |
 | Mobile type safety | `npm --prefix tdf-mobile run typecheck` | Not valid locally: submodule dependencies are absent; CI must install and run it |
 
 The focused backend groups were: service storefront (5), checkout state machine (6), distribution
