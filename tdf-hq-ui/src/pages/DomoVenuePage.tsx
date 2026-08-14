@@ -36,39 +36,18 @@ import { DateTime } from 'luxon';
 import { Bookings } from '../api/bookings';
 import { Services } from '../api/services';
 import { PUBLIC_BASE } from '../config/appConfig';
+import {
+  calculateQuote,
+  clampNumber,
+  EVENT_TYPES,
+  MAX_QUOTE_GUESTS,
+  type BookingFormState,
+  type EventType,
+} from './domoVenueQuote';
 
 const DOMO_TIMEZONE = import.meta.env.VITE_DOMO_TIMEZONE ?? 'UTC';
 
-type EventType = 'wedding' | 'corporate' | 'retreat' | 'concert' | 'workshop' | 'photo';
 type DomoExperienceKey = 'naturaleza' | 'eventos' | 'musica' | 'ceremonias';
-
-interface EventTypeConfig {
-  label: string;
-  baseCents: number;
-  perGuestCents: number;
-  minimumHours: number;
-  includedGuests: number;
-}
-
-interface BookingFormState {
-  fullName: string;
-  email: string;
-  phone: string;
-  eventType: EventType;
-  guests: number;
-  startsAt: string;
-  durationHours: number;
-  setupHours: number;
-  catering: boolean;
-  production: boolean;
-  transport: boolean;
-  notes: string;
-}
-
-interface QuoteLine {
-  label: string;
-  amountCents: number;
-}
 
 interface DomoExperience {
   navLabel: string;
@@ -94,9 +73,7 @@ interface DomoExperience {
 }
 
 const DOMO_IMAGE_URL = `${PUBLIC_BASE}/assets/tdf-ui/domo-pululahua-hero-cozy.jpg`;
-const TAX_RATE = 0.12;
 const CURRENCY = 'USD';
-const MAX_QUOTE_GUESTS = 220;
 
 const DOMO_EXPERIENCE_ORDER: readonly DomoExperienceKey[] = ['naturaleza', 'eventos', 'musica', 'ceremonias'];
 
@@ -265,51 +242,6 @@ const DOMO_EXPERIENCES: Record<DomoExperienceKey, DomoExperience> = {
   },
 };
 
-const EVENT_TYPES: Record<EventType, EventTypeConfig> = {
-  wedding: {
-    label: 'Boda',
-    baseCents: 180000,
-    perGuestCents: 800,
-    minimumHours: 8,
-    includedGuests: 60,
-  },
-  corporate: {
-    label: 'Evento corporativo',
-    baseCents: 120000,
-    perGuestCents: 600,
-    minimumHours: 6,
-    includedGuests: 40,
-  },
-  retreat: {
-    label: 'Retiro o taller',
-    baseCents: 95000,
-    perGuestCents: 500,
-    minimumHours: 6,
-    includedGuests: 25,
-  },
-  concert: {
-    label: 'Concierto',
-    baseCents: 150000,
-    perGuestCents: 700,
-    minimumHours: 7,
-    includedGuests: 80,
-  },
-  workshop: {
-    label: 'Taller',
-    baseCents: 70000,
-    perGuestCents: 450,
-    minimumHours: 4,
-    includedGuests: 20,
-  },
-  photo: {
-    label: 'Sesión fotográfica',
-    baseCents: 45000,
-    perGuestCents: 300,
-    minimumHours: 3,
-    includedGuests: 8,
-  },
-};
-
 const initialStart = () =>
   DateTime.now()
     .setZone(DOMO_TIMEZONE)
@@ -338,46 +270,6 @@ const money = (amountCents: number) =>
     currency: CURRENCY,
     maximumFractionDigits: 0,
   }).format(amountCents / 100);
-
-const clampNumber = (value: number, min: number, max: number) => {
-  if (!Number.isFinite(value)) return min;
-  return Math.min(max, Math.max(min, Math.round(value)));
-};
-
-const calculateQuote = (form: BookingFormState) => {
-  const config = EVENT_TYPES[form.eventType];
-  const guests = clampNumber(form.guests, 1, MAX_QUOTE_GUESTS);
-  const billableHours = Math.max(config.minimumHours, clampNumber(form.durationHours, 1, 24));
-  const setupHours = clampNumber(form.setupHours, 0, 12);
-  const extraGuests = Math.max(0, guests - config.includedGuests);
-  const lines: QuoteLine[] = [
-    { label: `${config.label} en Domo del Pululahua`, amountCents: config.baseCents },
-    { label: `Uso del espacio por ${billableHours} horas`, amountCents: billableHours * 18000 },
-  ];
-
-  if (setupHours > 0) {
-    lines.push({ label: `Montaje y desmontaje (${setupHours} horas)`, amountCents: setupHours * 7000 });
-  }
-  if (extraGuests > 0) {
-    lines.push({ label: `${extraGuests} invitados adicionales`, amountCents: extraGuests * config.perGuestCents });
-  }
-  if (form.catering) {
-    lines.push({ label: 'Catering y barra operados por Domo', amountCents: Math.max(35000, guests * 650) });
-  }
-  if (form.production) {
-    lines.push({ label: 'Sonido e iluminación base', amountCents: 42000 });
-  }
-  if (form.transport) {
-    lines.push({ label: 'Coordinación de transporte Quito - Pululahua', amountCents: 30000 });
-  }
-
-  const subtotalCents = lines.reduce((sum, line) => sum + line.amountCents, 0);
-  const taxCents = Math.round(subtotalCents * TAX_RATE);
-  const totalCents = subtotalCents + taxCents;
-  const depositCents = Math.round(totalCents * 0.4);
-
-  return { lines, subtotalCents, taxCents, totalCents, depositCents, billableHours, guests };
-};
 
 const toBookingIso = (value: string) => {
   const parsed = DateTime.fromFormat(value, "yyyy-LL-dd'T'HH:mm", { zone: DOMO_TIMEZONE });

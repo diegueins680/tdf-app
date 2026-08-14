@@ -1,0 +1,334 @@
+- generic [ref=f33e4]:
+  - generic [ref=f33e18]:
+    - generic [ref=f33e21]:
+      - link [ref=f33e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f33e31]
+      - generic [ref=f33e34]:
+        - link [ref=f33e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f33e44]
+        - link [ref=f33e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f33e54]
+        - link [ref=f33e61] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f33e66]
+        - link [ref=f33e72] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f33e77]
+        - link [ref=f33e84] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f33e89]
+        - link [ref=f33e95] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f33e100]
+        - link [ref=f33e105] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f33e110]
+        - link [ref=f33e117] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f33e122]:
+            - img "tdf.records.label's profile picture" [ref=f33e123]
+      - generic [ref=f33e124]:
+        - link [ref=f33e127] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f33e132]
+        - link [ref=f33e135] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f33e140]
+    - generic [ref=f33e143]:
+      - main [ref=f33e144]:
+        - generic [ref=f33e146]:
+          - generic [ref=f33e147]:
+            - generic [ref=f33e148]:
+              - button [ref=f33e153] [cursor=pointer]:
+                - link [ref=f33e155]:
+                  - img "kinocavalier's profile picture" [ref=f33e156]
+              - generic [ref=f33e157]:
+                - generic [ref=f33e158]:
+                  - generic [ref=f33e159]:
+                    - link [ref=f33e161] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "kinocavalier" [level=2] [ref=f33e162]
+                    - button [ref=f33e164] [cursor=pointer]:
+                      - img "Options" [ref=f33e166]
+                  - generic [ref=f33e170]: ▪️ KINO CAVALIER▫️▪️
+                  - generic [ref=f33e172]:
+                    - generic [ref=f33e174]:
+                      - generic [ref=f33e175]: 1,901
+                      - text: posts
+                    - link "6,136 followers" [ref=f33e177] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f33e178]:
+                        - generic "6,136" [ref=f33e179]
+                        - text: followers
+                    - link "5,857 following" [ref=f33e181] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f33e182]:
+                        - generic [ref=f33e183]: 5,857
+                        - text: following
+                - generic [ref=f33e184]:
+                  - generic [ref=f33e185]:
+                    - generic [ref=f33e186]: Artist
+                    - generic [ref=f33e188]:
+                      - button [ref=f33e189] [cursor=pointer]:
+                        - generic [ref=f33e190]:
+                          - text: roberto israel montenegro 🔻
+                          - link "@neonkino_______" [ref=f33e191]:
+                            - /url: /neonkino_______/
+                          - text: ⚡️€lectric shock survivor⚡️🎥
+                      - generic [ref=f33e192]:
+                        - text: ...
+                        - button "more" [ref=f33e193] [cursor=pointer]
+                    - generic [ref=f33e195]:
+                      - button "Link icon linktr.ee/kinocavalier and 3 more" [ref=f33e196] [cursor=pointer]:
+                        - generic [ref=f33e197]:
+                          - img "Link icon" [ref=f33e199]
+                          - generic [ref=f33e202]: linktr.ee/kinocavalier and 3 more
+                      - link "Threads kinocavalier" [ref=f33e204] [cursor=pointer]:
+                        - /url: https://www.threads.com/@kinocavalier?xmt=AQG0EhfNkNi1FbPP9KcN3lWsotWUB65495mDpKWiFFl2acs
+                        - img "Threads" [ref=f33e206]
+                        - generic [ref=f33e208]: kinocavalier
+                  - link "Followed by joelduenasc, skankafe + 61 more" [ref=f33e210] [cursor=pointer]:
+                    - /url: /kinocavalier/followers/mutualOnly
+                    - generic [ref=f33e212]:
+                      - generic [ref=f33e214]:
+                        - button [ref=f33e215]:
+                          - link [ref=f33e216]
+                        - button [ref=f33e217]:
+                          - link [ref=f33e218]
+                        - button [ref=f33e219]:
+                          - link [ref=f33e220]
+                      - generic [ref=f33e221]: Followed by joelduenasc, skankafe + 61 more
+            - generic [ref=f33e226]:
+              - button "Follow Back" [ref=f33e228] [cursor=pointer]
+              - button "Message" [ref=f33e232] [cursor=pointer]
+              - button [ref=f33e234] [cursor=pointer]:
+                - img "Similar accounts" [ref=f33e236]
+            - menu [ref=f33e240]:
+              - generic [ref=f33e242]:
+                - list [ref=f33e244]:
+                  - listitem [ref=f33e245]
+                  - listitem [ref=f33e246]
+                  - listitem [ref=f33e247]:
+                    - link "View Machaka highlight" [ref=f33e250] [cursor=pointer]:
+                      - /url: /stories/highlights/17977678865977707/
+                      - button "kinocavalier's highlight story picture Machaka" [ref=f33e251]:
+                        - button [ref=f33e252]:
+                          - img "kinocavalier's highlight story picture" [ref=f33e255]
+                        - generic [ref=f33e256]: Machaka
+                  - listitem [ref=f33e259]:
+                    - link "View Virus mortal highlight" [ref=f33e262] [cursor=pointer]:
+                      - /url: /stories/highlights/18093870544768020/
+                      - button "kinocavalier's highlight story picture Virus mortal" [ref=f33e263]:
+                        - button [ref=f33e264]:
+                          - img "kinocavalier's highlight story picture" [ref=f33e267]
+                        - generic [ref=f33e268]: Virus mortal
+                  - listitem [ref=f33e271]:
+                    - link "View Shortfilm highlight" [ref=f33e274] [cursor=pointer]:
+                      - /url: /stories/highlights/18355610695165971/
+                      - button "kinocavalier's highlight story picture Shortfilm" [ref=f33e275]:
+                        - button [ref=f33e276]:
+                          - img "kinocavalier's highlight story picture" [ref=f33e279]
+                        - generic [ref=f33e280]: Shortfilm
+                  - listitem [ref=f33e283]:
+                    - link "View Rimas deformes highlight" [ref=f33e286] [cursor=pointer]:
+                      - /url: /stories/highlights/18096331408892370/
+                      - button "kinocavalier's highlight story picture Rimas deformes" [ref=f33e287]:
+                        - button [ref=f33e288]:
+                          - img "kinocavalier's highlight story picture" [ref=f33e291]
+                        - generic [ref=f33e292]: Rimas deformes
+                  - listitem [ref=f33e295]:
+                    - link "View 🤍 highlight" [ref=f33e298] [cursor=pointer]:
+                      - /url: /stories/highlights/17865957906265839/
+                      - button "kinocavalier's highlight story picture 🤍" [ref=f33e299]:
+                        - button [ref=f33e300]:
+                          - img "kinocavalier's highlight story picture" [ref=f33e303]
+                        - generic [ref=f33e304]: 🤍
+                  - listitem [ref=f33e307]:
+                    - link "View Hombre pez highlight" [ref=f33e310] [cursor=pointer]:
+                      - /url: /stories/highlights/17868508188320723/
+                      - button "kinocavalier's highlight story picture Hombre pez" [ref=f33e311]:
+                        - button [ref=f33e312]:
+                          - img "kinocavalier's highlight story picture" [ref=f33e315]
+                        - generic [ref=f33e316]: Hombre pez
+                  - listitem [ref=f33e319]:
+                    - link "View Art kitchens highlight" [ref=f33e322] [cursor=pointer]:
+                      - /url: /stories/highlights/18058810630997898/
+                      - button "kinocavalier's highlight story picture Art kitchens" [ref=f33e323]:
+                        - button [ref=f33e324]:
+                          - img "kinocavalier's highlight story picture" [ref=f33e327]
+                        - generic [ref=f33e328]: Art kitchens
+                  - listitem [ref=f33e331]:
+                    - link "View Guanaco highlight" [ref=f33e334] [cursor=pointer]:
+                      - /url: /stories/highlights/18024142520357241/
+                      - button "kinocavalier's highlight story picture Guanaco" [ref=f33e335]:
+                        - button [ref=f33e336]:
+                          - img "kinocavalier's highlight story picture" [ref=f33e339]
+                        - generic [ref=f33e340]: Guanaco
+                  - listitem [ref=f33e343]:
+                    - link "View my love highlight" [ref=f33e346] [cursor=pointer]:
+                      - /url: /stories/highlights/17954670313892083/
+                      - button "kinocavalier's highlight story picture my love" [ref=f33e347]:
+                        - button [ref=f33e348]:
+                          - img "kinocavalier's highlight story picture" [ref=f33e351]
+                        - generic [ref=f33e352]: my love
+                  - listitem [ref=f33e355]:
+                    - link "View Clips Art Dir highlight" [ref=f33e358] [cursor=pointer]:
+                      - /url: /stories/highlights/17882275992057795/
+                      - button "kinocavalier's highlight story picture Clips Art Dir" [ref=f33e359]:
+                        - button [ref=f33e360]:
+                          - img "kinocavalier's highlight story picture" [ref=f33e363]
+                        - generic [ref=f33e364]: Clips Art Dir
+                  - listitem [ref=f33e367]:
+                    - link "View Art director IV highlight" [ref=f33e370] [cursor=pointer]:
+                      - /url: /stories/highlights/18136776517343503/
+                      - button "kinocavalier's highlight story picture Art director IV" [ref=f33e371]:
+                        - button [ref=f33e372]:
+                          - img "kinocavalier's highlight story picture" [ref=f33e375]
+                        - generic [ref=f33e376]: Art director IV
+                  - listitem [ref=f33e379]:
+                    - link "View Crews highlight" [ref=f33e382] [cursor=pointer]:
+                      - /url: /stories/highlights/17923657463943274/
+                      - button "kinocavalier's highlight story picture Crews" [ref=f33e383]:
+                        - button [ref=f33e384]:
+                          - img "kinocavalier's highlight story picture" [ref=f33e387]
+                        - generic [ref=f33e388]: Crews
+                  - listitem [ref=f33e391]:
+                    - link "View Misic video 2 highlight" [ref=f33e394] [cursor=pointer]:
+                      - /url: /stories/highlights/17882171724021400/
+                      - button "kinocavalier's highlight story picture Misic video 2" [ref=f33e395]:
+                        - button [ref=f33e396]:
+                          - img "kinocavalier's highlight story picture" [ref=f33e399]
+                        - generic [ref=f33e400]: Misic video 2
+                  - listitem [ref=f33e403]:
+                    - link "View Conciertos 2023 highlight" [ref=f33e406] [cursor=pointer]:
+                      - /url: /stories/highlights/17982769292109572/
+                      - button "kinocavalier's highlight story picture Conciertos 2023" [ref=f33e407]:
+                        - button [ref=f33e408]:
+                          - img "kinocavalier's highlight story picture" [ref=f33e411]
+                        - generic [ref=f33e412]: Conciertos 2023
+                - button "Next" [ref=f33e415] [cursor=pointer]
+          - generic [ref=f33e417]:
+            - tablist [ref=f33e418]:
+              - link [ref=f33e420] [cursor=pointer]:
+                - /url: /kinocavalier/
+                - img "Posts" [ref=f33e422]
+              - link [ref=f33e433] [cursor=pointer]:
+                - /url: /kinocavalier/reels/
+                - img "Reels" [ref=f33e435]
+              - link [ref=f33e438] [cursor=pointer]:
+                - /url: /kinocavalier/reposts/
+                - img "Reposts" [ref=f33e440]
+              - link [ref=f33e443] [cursor=pointer]:
+                - /url: /kinocavalier/tagged/
+                - img "Tagged" [ref=f33e445]
+            - tabpanel
+          - progressbar [ref=f33e449]:
+            - img "Loading..." [ref=f33e450]
+      - contentinfo [ref=f33e463]:
+        - generic [ref=f33e464]:
+          - generic [ref=f33e466]:
+            - link "Meta" [ref=f33e468] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f33e471] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f33e474] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f33e477] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f33e480] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f33e483] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f33e486] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f33e489] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f33e492] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f33e495] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f33e498] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f33e501] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f33e504] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f33e507] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f33e510] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f33e512]:
+            - generic [ref=f33e513] [cursor=pointer]:
+              - generic [ref=f33e514]:
+                - generic [ref=f33e515]: English
+                - img "Down chevron icon" [ref=f33e518]
+              - combobox "Switch Display Language" [ref=f33e520]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f33e521]: © 2026 Instagram from Meta
+  - button [ref=f33e524] [cursor=pointer]:
+    - generic "Messages" [ref=f33e525]:
+      - generic [ref=f33e526]:
+        - img "Messages" [ref=f33e529]
+        - generic [ref=f33e532]: Messages
+      - generic [ref=f33e533]:
+        - button "User avatar Beto" [ref=f33e535]:
+          - img "User avatar" [ref=f33e538]
+        - button "User avatar KIRMANA RECORDS" [ref=f33e540]:
+          - img "User avatar" [ref=f33e543]
+        - button "User avatar George Molina" [ref=f33e545]:
+          - img "User avatar" [ref=f33e548]
