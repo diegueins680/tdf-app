@@ -16,7 +16,9 @@ docker run --rm -d \
   postgres:16-alpine >/dev/null
 
 attempt=0
-until docker exec "$TDF_EVENT_REFUND_CONTAINER" pg_isready -U postgres -d tdf_event_refund_test >/dev/null 2>&1; do
+until docker exec "$TDF_EVENT_REFUND_CONTAINER" \
+  psql -v ON_ERROR_STOP=1 -U postgres -d tdf_event_refund_test -Atqc 'SELECT 1' \
+  >/dev/null 2>&1; do
   attempt=$((attempt + 1))
   if [ "$attempt" -ge 30 ]; then
     echo "Checkout event/refund migration database did not become ready" >&2
