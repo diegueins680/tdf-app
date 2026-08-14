@@ -4,6 +4,9 @@ Status: implementation in progress. This directory records the immutable baselin
 migration evidence, verification results, and rollout decisions for the repository-wide catalog
 persistence cutover.
 
+The production schema gap, authoritative migration order, CI rehearsal, deployment gates, and
+rollback boundary are documented in `production-schema-cutover.md`.
+
 ## Baselines
 
 - Root repository: `ce0c3bc19e2d9030e871480e9e93790940c9eb12`

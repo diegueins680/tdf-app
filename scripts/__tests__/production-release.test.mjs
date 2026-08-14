@@ -292,6 +292,7 @@ test('buildMigrationBatchSql enables psql fail-fast behavior and preserves migra
   const sql = buildMigrationBatchSql([ticketMigration, discoveryMigration]);
 
   assert.match(sql, /\\set\s+ON_ERROR_STOP\s+(?:on|1)/i);
+  assert.match(sql, /\\set\s+candidate_revision\s+0{40}/i);
   assert.match(sql, /pg_try_advisory_lock/i);
   assert.match(sql, /\\quit\s+3/i);
   assert.doesNotMatch(sql, /SELECT\s+pg_advisory_lock\s*\(/i);
@@ -355,6 +356,16 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     'feature_access_requests',
     'feature_access_request_history',
     'feature_navigation_preferences',
+    'catalog_definition',
+    'catalog_backfill_run',
+    'security_permission',
+    'party_security_role',
+    'country_reference',
+    'record_release',
+    'ddex_standard_version',
+    'standard_version_id',
+    'workflow_state_id',
+    'allowed_versions',
   ]) {
     assert.match(sql, new RegExp(requiredObject), `verification must inspect ${requiredObject}`);
   }
