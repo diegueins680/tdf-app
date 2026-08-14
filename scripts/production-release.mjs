@@ -13,6 +13,7 @@ import {
   buildMigrationBatchSql,
   buildSchemaPreflightSql,
   buildSchemaVerificationSql,
+  expandMigrationIncludes,
   normalizeFullSha,
   parseSecurityEmergencyReadinessOutput,
   securityEmergencyReadinessBlocker,
@@ -179,7 +180,10 @@ async function resolveReleaseContext(options) {
       else throw error;
     }
     if (!included) continue;
-    const content = await readGitBlob(sha, relativePath);
+    const content = await expandMigrationIncludes(
+      { path: relativePath, content: await readGitBlob(sha, relativePath) },
+      (includedPath) => readGitBlob(sha, includedPath),
+    );
     migrations.push({
       ...entry,
       id,

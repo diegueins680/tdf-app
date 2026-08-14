@@ -34,7 +34,9 @@ seed is produced by running `SeedCatalogFoundation.hs` in an empty canonical
 database, exporting only the allowlisted seed tables, and ordering that
 data-only dump with `order-catalog-foundation-seed.mjs`.
 
-The checked-in CI baseline is a schema-only, no-row dump. It intentionally
+The checked-in CI baseline is a schema-only, no-row dump. A separate synthetic
+fixture contributes one release, one recording, and one session so the Records
+fail-closed source gate is exercised without copying production content. It intentionally
 contains column names such as `password_hash` and `token`, but contains no
 credentials, hashes, tokens, business rows, or personal data.
 
@@ -64,6 +66,13 @@ scripts/test-catalog-production-cutover.sh
 ```
 
 The integration helper refuses every non-localhost database URL.
+
+The 2026-08-14 disposable rehearsal restored the schema-only production fixture, loaded three
+synthetic Records rows, and applied all 35 authoritative manifest entries. A second manifest run
+was a complete no-op; all 14 dry-runs, apply scripts, and raw idempotency reruns passed; 13 distinct
+backfill run codes completed; and all three Records rows received canonical mappings. The
+machine-readable evidence and fixture digests are in
+`reports/production-schema-cutover-local-2026-08-14.json`.
 
 ## Production sequence
 

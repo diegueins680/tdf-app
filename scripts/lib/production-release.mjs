@@ -28,6 +28,43 @@ export function validateMigrationRelativePath(value) {
   return normalized;
 }
 
+export async function expandMigrationIncludes(migration, readFile, ancestors = new Set()) {
+  const relativePath = validateMigrationRelativePath(migration?.path);
+  const content = String(migration?.content ?? '');
+  if (!content.trim()) throw new Error(`Migration ${relativePath} has no SQL content.`);
+  if (typeof readFile !== 'function') throw new Error('Migration include expansion requires a reader.');
+  if (ancestors.has(relativePath)) {
+    throw new Error(`Recursive migration include detected at ${relativePath}.`);
+  }
+
+  const nextAncestors = new Set(ancestors).add(relativePath);
+  const output = [];
+  for (const line of content.split(/\r?\n/u)) {
+    const include = line.match(/^\s*\\ir\s+([a-zA-Z0-9][a-zA-Z0-9._-]*\.sql)\s*$/u);
+    if (!include) {
+      if (/^\s*\\i(?:r)?\s+/u.test(line)) {
+        throw new Error(`Unsupported migration include syntax in ${relativePath}: ${line.trim()}`);
+      }
+      output.push(line);
+      continue;
+    }
+
+    const includedPath = validateMigrationRelativePath(
+      path.posix.join(path.posix.dirname(relativePath), include[1]),
+    );
+    const includedContent = await readFile(includedPath);
+    const expanded = await expandMigrationIncludes(
+      { path: includedPath, content: includedContent },
+      readFile,
+      nextAncestors,
+    );
+    output.push(`-- begin inlined migration include: ${includedPath}`);
+    output.push(expanded);
+    output.push(`-- end inlined migration include: ${includedPath}`);
+  }
+  return output.join('\n');
+}
+
 export function parseSecurityEmergencyReadinessOutput(output) {
   const records = String(output ?? '')
     .split(/\r?\n/)
@@ -215,6 +252,9 @@ function migrationSource(migration) {
   if (typeof migration.content !== 'string' || !migration.content.trim()) {
     throw new Error(`Migration ${migration.path ?? migration.id ?? '<unknown>'} has no SQL content.`);
   }
+  if (/^\s*\\i(?:r)?\s+/mu.test(migration.content)) {
+    throw new Error(`Migration ${migration.path ?? migration.id ?? '<unknown>'} contains an unexpanded include.`);
+  }
   return migration.content.trim();
 }
 
@@ -248,6 +288,11 @@ export function buildMigrationBatchSql(migrations, options = {}) {
   const body = entries.map((entry, index) => {
     const applyVariable = `apply_migration_${index + 1}`;
     return [
+      '\\unset run_code',
+      '\\unset safety_threshold',
+      '\\unset batch_size',
+      '\\unset backfill_run_id',
+      '\\unset records_backfill_run_id',
       `\\echo Checking ${entry.id}`,
       'DO $checksum$',
       'BEGIN',
@@ -431,6 +476,7 @@ export function buildSchemaVerificationSql(options = {}) {
 DECLARE
   campaign_table TEXT;
   catalog_table TEXT;
+  cutover_code TEXT;
   discovery_table TEXT;
   ddex_table TEXT;
   feature_table TEXT;
@@ -531,6 +577,29 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'A canonical catalog cutover did not complete';
   END IF;
+
+  FOREACH cutover_code IN ARRAY ARRAY[
+    'catalog-cutover-2026-08-07',
+    'records-cms-cutover-2026-08-07',
+    'instrument-input-cutover-2026-08-11',
+    'feedback-catalog-cutover-2026-08-11',
+    'pipeline-workflow-cutover-2026-08-11',
+    'social-event-type-cutover-2026-08-11',
+    'social-event-workflow-cutover-2026-08-11',
+    'event-moment-reaction-cutover-2026-08-12',
+    'content-reaction-cutover-2026-08-12',
+    'creator-badge-cutover-2026-08-12',
+    'ddex-reference-cutover-2026-08-12',
+    'ddex-validation-reference-cutover-2026-08-12',
+    'ddex-operational-cutover-2026-08-12'
+  ] LOOP
+    IF NOT EXISTS (
+      SELECT 1 FROM catalog_backfill_run
+      WHERE run_code = cutover_code AND NOT dry_run AND status = 'completed'
+    ) THEN
+      RAISE EXCEPTION 'Canonical catalog cutover % has no completed run', cutover_code;
+    END IF;
+  END LOOP;
 
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns

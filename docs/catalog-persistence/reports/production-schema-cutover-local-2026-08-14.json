@@ -1,0 +1,73 @@
+{
+  "reportVersion": 1,
+  "generatedOn": "2026-08-14",
+  "environment": {
+    "kind": "disposable-local-production-schema-rehearsal",
+    "postgresql": "17 with pgvector",
+    "productionWritesPerformed": false,
+    "containsProductionRows": false,
+    "containsSecretsOrCredentials": false
+  },
+  "candidate": {
+    "baselineRevision": "14ef28bb0d7ce61cb1bb78b5c202ed81aa221e70",
+    "foundationCommit": "15d0d0b607344e62025f39208861c313c08b7eaa",
+    "productionSchemaFixtureSha256": "7843bab95b3e49a076f4eca219ee8a24d6704d4488f16b696406753be3e2c38a",
+    "syntheticSourceFixtureSha256": "f76f4a99192db71530a00e8f6caeb80aca79688b5723e34d65c240d00bb62769"
+  },
+  "sourceFixture": {
+    "cmsRows": 3,
+    "recordsReleases": 1,
+    "recordsRecordings": 1,
+    "recordsSessions": 1,
+    "description": "Synthetic rows exercise the fail-closed Records source gate; no production content is included."
+  },
+  "results": {
+    "readOnlyPreflight": "passed",
+    "authoritativeManifestFirstRun": "passed",
+    "authoritativeManifestRerun": "passed-no-op",
+    "manifestEntriesApplied": 35,
+    "catalogBackfillRuns": 13,
+    "distinctCompletedRunCodes": 13,
+    "recordsMappingsCreated": 3,
+    "cutoverDryRunsPassed": 14,
+    "cutoverApplyScriptsPassed": 14,
+    "cutoverRawIdempotencyRerunsPassed": 14,
+    "finalSchemaVerification": "passed",
+    "duplicateLedgerEntries": 0,
+    "unresolvedIdentityConflicts": 0,
+    "brokenForeignKeys": 0
+  },
+  "interruptionAndResume": {
+    "verified": true,
+    "attempts": [
+      {
+        "stopReason": "unexpanded psql include detected",
+        "transactionRolledBack": true,
+        "resumeSkippedPreviouslyAppliedLedgerEntries": true,
+        "resolution": "Migration includes are recursively expanded from the immutable candidate revision before checksumming and execution."
+      },
+      {
+        "stopReason": "Records source rows absent from schema-only fixture",
+        "transactionRolledBack": true,
+        "resumeSkippedPreviouslyAppliedLedgerEntries": true,
+        "resolution": "A separate non-production synthetic fixture now exercises all three typed Records mappings."
+      }
+    ]
+  },
+  "automatedChecks": {
+    "productionReleaseUnitTests": "27 passed, 0 failed",
+    "repositoryQuality": "passed; 7956 audit findings, 0 critical, 0 error",
+    "backendQuality": "running when this report was created",
+    "diffCheck": "passed"
+  },
+  "productionGate": {
+    "status": "blocked",
+    "reason": "Juan must independently confirm a fresh emergency-administrator login before any production write.",
+    "requiredNextActions": [
+      "Obtain Juan's independent login confirmation.",
+      "Capture and record a fresh production volume snapshot.",
+      "Repeat read-only preflight and dry-run against the exact merged candidate.",
+      "Apply the manifest, verify security and schema gates, and deploy one canary before full rollout."
+    ]
+  }
+}
