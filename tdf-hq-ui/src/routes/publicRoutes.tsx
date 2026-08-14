@@ -6,8 +6,10 @@ import PublicBranding from '../components/PublicBranding';
 const ArtistOnboardingPage = lazy(() => import('../pages/ArtistOnboardingPage'));
 const ArtistPublicPage = lazy(() => import('../pages/ArtistPublicPage'));
 const CourseProductionLandingPage = lazy(() => import('../pages/CourseProductionLandingPage'));
+const CommerceHubPage = lazy(() => import('../pages/CommerceHubPage'));
 const DatafastReturnPage = lazy(() => import('../pages/DatafastReturnPage'));
 const DonationPage = lazy(() => import('../pages/DonationPage'));
+const DistributionLandingPage = lazy(() => import('../pages/DistributionLandingPage'));
 const DomoVenuePage = lazy(() => import('../pages/DomoVenuePage'));
 const FanClubPage = lazy(() => import('../pages/FanClubPage'));
 const FanHubPage = lazy(() => import('../pages/FanHubPage'));
@@ -39,6 +41,10 @@ export function renderPublicRoutes() {
       <Route path="/instagram" element={<Navigate to="/tdf?utm_source=instagram&utm_medium=social&utm_campaign=instagram_profile" replace />} />
       <Route path="/ig" element={<Navigate to="/tdf?utm_source=instagram&utm_medium=social&utm_campaign=instagram_profile" replace />} />
       <Route path="/tdf" element={<PublicBranding><TdfPlatformPage /></PublicBranding>} />
+      <Route path="/comercio" element={<PublicBranding><CommerceHubPage /></PublicBranding>} />
+      <Route path="/commerce" element={<Navigate to="/comercio" replace />} />
+      <Route path="/distribucion" element={<PublicBranding><DistributionLandingPage /></PublicBranding>} />
+      <Route path="/distribution" element={<Navigate to="/distribucion" replace />} />
       <Route path="/sobre-tdf" element={<Navigate to="/tdf" replace />} />
       <Route path="/fans" element={<PublicBranding><FanHubPage /></PublicBranding>} />
       <Route path="/fans/clubs/:artistId" element={<PublicBranding><FanClubPage /></PublicBranding>} />

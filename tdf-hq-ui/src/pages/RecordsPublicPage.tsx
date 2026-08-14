@@ -43,7 +43,7 @@ import { Admin } from '../api/admin';
 import { Services } from '../api/services';
 import { Engineers } from '../api/engineers';
 import LazyPaginatedList from '../components/LazyPaginatedList';
-import { setTransientApiToken, useSession } from '../session/SessionContext';
+import { useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
 import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import EditIcon from '@mui/icons-material/Edit';
@@ -62,7 +62,7 @@ const parseDurationMinutes = (raw: string, fallback: number): number => {
 const overlap = (startA: DateTime, endA: DateTime, startB: DateTime, endB: DateTime) =>
   endA > startB && startA < endB;
 
-function BookingRequestDialog({
+function _BookingRequestDialog({
   open,
   onClose,
   hasToken,
@@ -1002,29 +1002,11 @@ export default function RecordsPublicPage() {
     queryFn: () => Records.getFeed('es'),
     staleTime: 5 * 60 * 1000,
   });
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const bookingToken = import.meta.env?.VITE_PUBLIC_BOOKING_TOKEN ?? import.meta.env?.VITE_API_DEMO_TOKEN ?? '';
-  const hasBookingToken = Boolean(bookingToken);
   const { session } = useSession();
   const canManageReleases = useMemo(
     () => canAccessPath('/label/releases', session?.roles, session?.modules),
     [session?.modules, session?.roles],
   );
-
-  useEffect(() => {
-    if (session) {
-      setTransientApiToken(null);
-      return undefined;
-    }
-    if (!bookingToken) {
-      setTransientApiToken(null);
-      return undefined;
-    }
-    setTransientApiToken(String(bookingToken));
-    return () => {
-      setTransientApiToken(null);
-    };
-  }, [bookingToken, session]);
 
   const sessions = useMemo(
     () => sortSessions((recordsFeedQuery.data?.sessions ?? []).map(mapRecordsSession).filter((item): item is SessionItem => item != null)),
@@ -1049,10 +1031,9 @@ export default function RecordsPublicPage() {
   const heroEyebrow = 'TDF Records · Estudio y lanzamientos';
   const heroSubtitle =
     'Descubre lo que suena y se graba en TDF: sesiones recientes, lanzamientos oficiales y videos en vivo desde un solo lugar.';
-  const heroSupportText = hasBookingToken
-    ? 'Cuéntanos qué quieres grabar y te mostraremos disponibilidad, salas e ingenieros desde aquí.'
-    : 'La reserva directa no está disponible ahora mismo. Escríbenos por WhatsApp y coordinamos tu sesión manualmente.';
-  const heroCta = hasBookingToken ? 'Reservar sesión' : 'Coordinar por WhatsApp';
+  const heroSupportText =
+    'Cuéntanos qué quieres grabar mediante el formulario público seguro. El equipo confirmará disponibilidad antes de cualquier pago.';
+  const heroCta = 'Reservar sesión';
   const heroSecondaryCta = 'Ver lanzamientos';
   const recordingsIntro =
     'Videos recientes del canal TDF Records que muestran el ambiente, el sonido y la energía del estudio.';
@@ -1080,7 +1061,6 @@ export default function RecordsPublicPage() {
             'linear-gradient(135deg, rgba(12,18,28,0.9), rgba(12,18,28,0.6)), url(https://images.unsplash.com/photo-1483412033650-1015ddeb83d1?auto=format&fit=crop&w=1800&q=80) center/cover',
         }}
       >
-        <BookingRequestDialog open={dialogOpen} onClose={() => setDialogOpen(false)} hasToken={hasBookingToken} />
         <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
             <PublicBrandBar tagline="TDF Records · Estudio · Lanzamientos · Sesiones" />
@@ -1118,42 +1098,22 @@ export default function RecordsPublicPage() {
             </Typography>
             <Stack spacing={1.5}>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                {hasBookingToken ? (
-                  <Button
-                    variant="contained"
-                    size="large"
-                    sx={{
-                      bgcolor: '#7c3aed',
-                      color: '#f8fafc',
-                      fontWeight: 800,
-                      px: 3,
-                      textTransform: 'none',
-                      '&:hover': { bgcolor: '#6d28d9' },
-                    }}
-                    onClick={() => setDialogOpen(true)}
-                  >
-                    {heroCta}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="contained"
-                    size="large"
-                    component="a"
-                    href={STUDIO_WHATSAPP_URL}
-                    target="_blank"
-                    rel="noreferrer"
-                    sx={{
-                      bgcolor: '#22c55e',
-                      color: '#08110d',
-                      fontWeight: 800,
-                      px: 3,
-                      textTransform: 'none',
-                      '&:hover': { bgcolor: '#16a34a' },
-                    }}
-                  >
-                    {heroCta}
-                  </Button>
-                )}
+                <Button
+                  variant="contained"
+                  size="large"
+                  component={RouterLink}
+                  to="/reservar"
+                  sx={{
+                    bgcolor: '#7c3aed',
+                    color: '#f8fafc',
+                    fontWeight: 800,
+                    px: 3,
+                    textTransform: 'none',
+                    '&:hover': { bgcolor: '#6d28d9' },
+                  }}
+                >
+                  {heroCta}
+                </Button>
                 <Button
                   variant="outlined"
                   size="large"
