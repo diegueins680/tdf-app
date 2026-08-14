@@ -23,12 +23,12 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 const isLegacyServiceCatalogItem = (value: unknown): value is LegacyServiceCatalogItem =>
   isRecord(value)
-  && typeof value.scId === 'number'
-  && typeof value.scName === 'string'
-  && typeof value.scKind === 'string'
-  && typeof value.scPricingModel === 'string'
-  && typeof value.scCurrency === 'string'
-  && typeof value.scActive === 'boolean';
+  && typeof value['scId'] === 'number'
+  && typeof value['scName'] === 'string'
+  && typeof value['scKind'] === 'string'
+  && typeof value['scPricingModel'] === 'string'
+  && typeof value['scCurrency'] === 'string'
+  && typeof value['scActive'] === 'boolean';
 
 const serviceCode = (name: string) => {
   const normalized = name
@@ -80,7 +80,7 @@ export const normalizePublicServiceCatalogResponse = (
   response: unknown,
   locale = 'es',
 ): ServiceCatalogEnvelope => {
-  if (isRecord(response) && Array.isArray(response.sceItems)) {
+  if (isRecord(response) && Array.isArray(response['sceItems'])) {
     return response as ServiceCatalogEnvelope;
   }
   if (Array.isArray(response)) {
