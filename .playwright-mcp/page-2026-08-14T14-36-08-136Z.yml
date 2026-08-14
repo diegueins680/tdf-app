@@ -1,0 +1,233 @@
+- generic [ref=f9e9]:
+  - generic [ref=f9e12]:
+    - link [ref=f9e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f9e22]
+    - generic [ref=f9e25]:
+      - link [ref=f9e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f9e35]
+      - link [ref=f9e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f9e45]
+      - link [ref=f9e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=f9e57]
+      - link [ref=f9e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f9e67]
+      - link [ref=f9e272] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f9e277]
+      - link [ref=f9e85] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f9e90]
+      - link [ref=f9e95] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f9e100]
+      - link [ref=f9e107] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f9e112]:
+          - img "tdf.records.label's profile picture" [ref=f9e113]
+    - generic [ref=f9e114]:
+      - link [ref=f9e117] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f9e122]
+      - link [ref=f9e125] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f9e130]
+  - main [ref=f9e134]:
+    - generic [ref=f9e139]:
+      - navigation "Thread list" [ref=f9e140]:
+        - generic [ref=f9e141]:
+          - generic [ref=f9e142]:
+            - button [ref=f9e143] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f9e145]
+              - img "Down chevron icon" [ref=f9e148]
+            - button [ref=f9e152] [cursor=pointer]:
+              - img "New message" [ref=f9e154]
+          - tablist [ref=f9e159]:
+            - tab "Primary" [ref=f9e160] [cursor=pointer]
+            - tab "General" [ref=f9e163] [cursor=pointer]
+            - tab "From ads" [active] [selected] [ref=f9e166] [cursor=pointer]
+            - tab "Requests" [ref=f9e170] [cursor=pointer]
+          - generic [ref=f9e176]:
+            - img "Search" [ref=f9e178]
+            - textbox "Search" [ref=f9e181]
+          - generic [ref=f9e182]:
+            - generic [ref=f9e280]:
+              - list [ref=f9e282]:
+                - listitem [ref=f9e283]
+                - listitem [ref=f9e284]:
+                  - button "Share your thoughts... Your note" [ref=f9e286] [cursor=pointer]:
+                    - generic [ref=f9e287]:
+                      - generic [ref=f9e288]: Share your thoughts...
+                      - generic [ref=f9e294]:
+                        - link [ref=f9e296]
+                        - generic [ref=f9e297]: Your note
+                - listitem [ref=f9e299]:
+                  - button "No dormí ni vrg:( naoenpatines's profile picture nao✨" [ref=f9e302] [cursor=pointer]:
+                    - generic [ref=f9e303]:
+                      - generic [ref=f9e304]: No dormí ni vrg:(
+                      - generic [ref=f9e311]:
+                        - link [ref=f9e313]:
+                          - img "naoenpatines's profile picture" [ref=f9e314]
+                        - generic [ref=f9e315]: nao✨
+                - listitem [ref=f9e318]:
+                  - button "Mi casa, en el centro, está disponible para quien necesite de algo, strange_soul.col's profile picture Strange Soul Dj" [ref=f9e321] [cursor=pointer]:
+                    - generic [ref=f9e322]:
+                      - generic [ref=f9e323]: Mi casa, en el centro, está disponible para quien necesite de algo,
+                      - generic [ref=f9e330]:
+                        - link [ref=f9e332]:
+                          - img "strange_soul.col's profile picture" [ref=f9e333]
+                        - generic [ref=f9e334]: Strange Soul Dj
+                - listitem [ref=f9e337]:
+                  - button "8horas déjenme dormir x dios dimeabiluuu____'s profile picture ✹ emilia ✹" [ref=f9e340] [cursor=pointer]:
+                    - generic [ref=f9e341]:
+                      - generic [ref=f9e342]: 8horas déjenme dormir x dios
+                      - generic [ref=f9e349]:
+                        - link [ref=f9e351]:
+                          - img "dimeabiluuu____'s profile picture" [ref=f9e352]
+                        - generic [ref=f9e353]: ✹ emilia ✹
+                - listitem [ref=f9e356]:
+                  - button "🌀 gabunogabriela's profile picture Gabu Córdova (NO Gabriela)" [ref=f9e359] [cursor=pointer]:
+                    - generic [ref=f9e360]:
+                      - generic [ref=f9e361]: 🌀
+                      - generic [ref=f9e368]:
+                        - link [ref=f9e370]:
+                          - img "gabunogabriela's profile picture" [ref=f9e371]
+                        - generic [ref=f9e372]: Gabu Córdova (NO Gabriela)
+                - listitem [ref=f9e375]:
+                  - button "Hic et nunc danyrivadeneira7's profile picture Dany Rivadeneira López" [ref=f9e378] [cursor=pointer]:
+                    - generic [ref=f9e379]:
+                      - generic [ref=f9e380]: Hic et nunc
+                      - generic [ref=f9e387]:
+                        - link [ref=f9e389]:
+                          - img "danyrivadeneira7's profile picture" [ref=f9e390]
+                        - generic [ref=f9e391]: Dany Rivadeneira López
+                - listitem [ref=f9e394]:
+                  - button "😮‍💨😍🎸 stevelopezok's profile picture Steve Lopez" [ref=f9e397] [cursor=pointer]:
+                    - generic [ref=f9e398]:
+                      - generic [ref=f9e399]: 😮‍💨😍🎸
+                      - generic [ref=f9e406]:
+                        - link [ref=f9e408]:
+                          - img "stevelopezok's profile picture" [ref=f9e409]
+                        - generic [ref=f9e410]: Steve Lopez
+                - listitem [ref=f9e413]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Perro Fiel (feat. Nicky Jam) Shakira 😅 soley.fino's profile picture Soley Fino" [ref=f9e416] [cursor=pointer]:
+                    - generic [ref=f9e417]:
+                      - generic [ref=f9e423]:
+                        - generic [ref=f9e424]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f9e426]
+                          - generic [ref=f9e430]: Perro Fiel (feat. Nicky Jam)
+                        - generic [ref=f9e431]: Shakira
+                        - generic [ref=f9e432]: 😅
+                      - generic [ref=f9e433]:
+                        - link [ref=f9e435]:
+                          - img "soley.fino's profile picture" [ref=f9e436]
+                        - generic [ref=f9e437]: Soley Fino
+                - listitem [ref=f9e440]:
+                  - button "Mañana barra libre en @collide.party de 8 a 10! Ven a previar😋⭐️ anajusegovia's profile picture Ana Julia/ DJ JU🫧" [ref=f9e443] [cursor=pointer]:
+                    - generic [ref=f9e444]:
+                      - generic [ref=f9e452]:
+                        - text: Mañana barra libre en
+                        - link "@collide.party" [ref=f9e453]:
+                          - /url: /collide.party/
+                        - text: de 8 a 10! Ven a previar😋⭐️
+                      - generic [ref=f9e454]:
+                        - link [ref=f9e456]:
+                          - img "anajusegovia's profile picture" [ref=f9e457]
+                        - generic [ref=f9e458]: Ana Julia/ DJ JU🫧
+              - button "Next" [ref=f9e461] [cursor=pointer]
+            - generic [ref=f9e464]:
+              - button "user-profile-picture George Molina Liked a message 12 hours ago" [ref=f9e1004] [cursor=pointer]:
+                - generic [ref=f9e1006]:
+                  - img "user-profile-picture" [ref=f9e1010]
+                  - generic [ref=f9e1013]:
+                    - generic [ref=f9e1014]: George Molina
+                    - generic [ref=f9e1020]:
+                      - generic [ref=f9e1021]: Liked a message
+                      - generic [ref=f9e1023]:
+                        - generic [ref=f9e1024]: ·
+                        - generic "12 hours ago" [ref=f9e1029]: 12h
+              - 'button "user-profile-picture Fabro Alomìa Torres You: Hola, Fabro 👋 Vimos tus fechas electrónicas en Las Abejas y Cumbayá, además del grupo reciente conectado con TDF. Tu escena necesita un espacio propio: en TDF puedes armar tu perfil y encontrarte con artistas, lanzamientos y experiencias de Quito. Te invitamos a probarlo: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a Si no te interesa, todo bien: no volvemos a escribir. — TDF Records a day ago" [ref=f9e1033] [cursor=pointer]':
+                - generic [ref=f9e1035]:
+                  - img "user-profile-picture" [ref=f9e1039]
+                  - generic [ref=f9e1042]:
+                    - generic [ref=f9e1043]: Fabro Alomìa Torres
+                    - generic [ref=f9e1049]:
+                      - generic [ref=f9e1050]: "You: Hola, Fabro 👋 Vimos tus fechas electrónicas en Las Abejas y Cumbayá, además del grupo reciente conectado con TDF. Tu escena necesita un espacio propio: en TDF puedes armar tu perfil y encontrarte con artistas, lanzamientos y experiencias de Quito. Te invitamos a probarlo: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f9e1052]:
+                        - generic [ref=f9e1053]: ·
+                        - generic "a day ago" [ref=f9e1058]: 1d
+              - 'button "user-profile-picture el Rovlex You: Hola, Rovlex 👋 Nos pediste información sobre TDF y vimos tu contenido de trap, rap y drill vinculado a Quito. Tu escena necesita un espacio propio: aquí puedes crear tu perfil público, mostrar música y conectar con la comunidad. Te invitamos a probarlo: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a Si no te interesa, todo bien: no volvemos a escribir. — TDF Records a day ago" [ref=f9e1062] [cursor=pointer]':
+                - generic [ref=f9e1064]:
+                  - img "user-profile-picture" [ref=f9e1068]
+                  - generic [ref=f9e1071]:
+                    - generic [ref=f9e1072]: el Rovlex
+                    - generic [ref=f9e1078]:
+                      - generic [ref=f9e1079]: "You: Hola, Rovlex 👋 Nos pediste información sobre TDF y vimos tu contenido de trap, rap y drill vinculado a Quito. Tu escena necesita un espacio propio: aquí puedes crear tu perfil público, mostrar música y conectar con la comunidad. Te invitamos a probarlo: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f9e1081]:
+                        - generic [ref=f9e1082]: ·
+                        - generic "a day ago" [ref=f9e1087]: 1d
+              - 'button "user-profile-picture La T de Teez You: Hola, Teez 👋 Nos escribiste por el anuncio y vimos tu trabajo urbano desde Quitumbe. En TDF puedes reunir tu perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Aquí puedes crear tu cuenta: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records a day ago" [ref=f9e1091] [cursor=pointer]':
+                - generic [ref=f9e1093]:
+                  - img "user-profile-picture" [ref=f9e1097]
+                  - generic [ref=f9e1100]:
+                    - generic [ref=f9e1101]: La T de Teez
+                    - generic [ref=f9e1107]:
+                      - generic [ref=f9e1108]: "You: Hola, Teez 👋 Nos escribiste por el anuncio y vimos tu trabajo urbano desde Quitumbe. En TDF puedes reunir tu perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Aquí puedes crear tu cuenta: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f9e1110]:
+                        - generic [ref=f9e1111]: ·
+                        - generic "a day ago" [ref=f9e1116]: 1d
+              - 'button "user-profile-picture Sakaro.LGS You: ¡Hola, Sakaro! 👋 Claro, el anuncio corresponde a nuestro Curso Intensivo de Producción Musical, una formación presencial y principalmente práctica dentro de un estudio de grabación profesional. 🎛️ Duración: 16 horas 📅 Fechas: sábados 8, 15, 22 y 29 de agosto 🕗 Horario: de 08:00 a 12:00 💵 Valor total: $150 📍 Lugar: TDF Records, sector El Bosque–Pinar Bajo, Quito 👥 Cupos reducidos: máximo 10 participantes Durante el curso aprenderás a convertir una idea en una producción: creación de ritmos y arreglos, manejo de audio y MIDI, grabación, edición, instrumentos virtuales, efectos y fundamentos de mezcla. Puedes participar aunque empieces desde cero. Aquí puedes revisar todos los detalles e inscribirte: https://tdf-app.pages.dev/curso/produccion-musical ¿Ya has producido música antes o sería tu primera experiencia? a week ago" [ref=f9e1120] [cursor=pointer]':
+                - generic [ref=f9e1122]:
+                  - img "user-profile-picture" [ref=f9e1126]
+                  - generic [ref=f9e1129]:
+                    - generic [ref=f9e1130]: Sakaro.LGS
+                    - generic [ref=f9e1136]:
+                      - generic [ref=f9e1137]: "You: ¡Hola, Sakaro! 👋 Claro, el anuncio corresponde a nuestro Curso Intensivo de Producción Musical, una formación presencial y principalmente práctica dentro de un estudio de grabación profesional. 🎛️ Duración: 16 horas 📅 Fechas: sábados 8, 15, 22 y 29 de agosto 🕗 Horario: de 08:00 a 12:00 💵 Valor total: $150 📍 Lugar: TDF Records, sector El Bosque–Pinar Bajo, Quito 👥 Cupos reducidos: máximo 10 participantes Durante el curso aprenderás a convertir una idea en una producción: creación de ritmos y arreglos, manejo de audio y MIDI, grabación, edición, instrumentos virtuales, efectos y fundamentos de mezcla. Puedes participar aunque empieces desde cero. Aquí puedes revisar todos los detalles e inscribirte: https://tdf-app.pages.dev/curso/produccion-musical ¿Ya has producido música antes o sería tu primera experiencia?"
+                      - generic [ref=f9e1139]:
+                        - generic [ref=f9e1140]: ·
+                        - generic "a week ago" [ref=f9e1145]: 1w
+              - button "user-profile-picture Diego Saa You sent an attachment. a week ago Unread" [ref=f9e1149] [cursor=pointer]:
+                - generic [ref=f9e1151]:
+                  - img "user-profile-picture" [ref=f9e1155]
+                  - generic [ref=f9e1158]:
+                    - generic [ref=f9e1159]: Diego Saa
+                    - generic [ref=f9e1165]:
+                      - generic [ref=f9e1166]: You sent an attachment.
+                      - generic [ref=f9e1168]:
+                        - generic [ref=f9e1169]: ·
+                        - generic "a week ago" [ref=f9e1174]: 1w
+                  - generic [ref=f9e1175]: Unread
+              - button "user-profile-picture Jazz𓆪 Gracias por la información a week ago" [ref=f9e1182] [cursor=pointer]:
+                - generic [ref=f9e1184]:
+                  - img "user-profile-picture" [ref=f9e1188]
+                  - generic [ref=f9e1191]:
+                    - generic [ref=f9e1192]: Jazz𓆪
+                    - generic [ref=f9e1198]:
+                      - generic [ref=f9e1199]: Gracias por la información
+                      - generic [ref=f9e1201]:
+                        - generic [ref=f9e1202]: ·
+                        - generic "a week ago" [ref=f9e1207]: 1w
+              - button "user-profile-picture Georgi-L El Dragón 🐉 Dorado? https://youtube.com/watch?v=lu8lOHsqcoY&si=hem1ViRkirHIJNJU a week ago" [ref=f9e1211] [cursor=pointer]:
+                - generic [ref=f9e1213]:
+                  - img "user-profile-picture" [ref=f9e1217]
+                  - generic [ref=f9e1220]:
+                    - generic [ref=f9e1221]: Georgi-L El Dragón 🐉 Dorado?
+                    - generic [ref=f9e1227]:
+                      - generic [ref=f9e1228]: https://youtube.com/watch?v=lu8lOHsqcoY&si=hem1ViRkirHIJNJU
+                      - generic [ref=f9e1230]:
+                        - generic [ref=f9e1231]: ·
+                        - generic "a week ago" [ref=f9e1236]: 1w
+              - button [ref=f9e723] [cursor=pointer]:
+                - generic [ref=f9e725]:
+                  - status "Loading..." [ref=f9e728]
+                  - generic [ref=f9e731]:
+                    - status "Loading..." [ref=f9e733]
+                    - status "Loading..." [ref=f9e735]
+      - generic [ref=f9e258]:
+        - heading "Your messages" [level=2] [ref=f9e265]
+        - generic [ref=f9e266]: Send a message to start a chat.
+        - button "Send message" [ref=f9e270] [cursor=pointer]

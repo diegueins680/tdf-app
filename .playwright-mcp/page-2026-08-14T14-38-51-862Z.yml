@@ -1,0 +1,83 @@
+- generic [active] [ref=f3e1]:
+  - link "Saltar al contenido principal" [ref=f3e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=f3e4]:
+    - link "Saltar al contenido principal" [ref=f3e5] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f3e6]:
+      - generic [ref=f3e8]:
+        - generic [ref=f3e9]:
+          - link "Ir a TDF" [ref=f3e10] [cursor=pointer]:
+            - /url: /tdf
+            - img "TDF Records logo"
+          - navigation "Navegación principal" [ref=f3e11]:
+            - link "TDF" [ref=f3e12] [cursor=pointer]:
+              - /url: /tdf
+            - link "Comunidad" [ref=f3e13] [cursor=pointer]:
+              - /url: /fans
+            - link "Tienda" [ref=f3e14] [cursor=pointer]:
+              - /url: /marketplace
+            - link "Domo" [ref=f3e15] [cursor=pointer]:
+              - /url: /domo-del-pululahua
+            - link "Reservar" [ref=f3e16] [cursor=pointer]:
+              - /url: /reservar
+            - link "DJ Booth" [ref=f3e17] [cursor=pointer]:
+              - /url: /dj-booth
+            - link "Lanzamientos" [ref=f3e18] [cursor=pointer]:
+              - /url: /records
+        - button "Más opciones" [ref=f3e20] [cursor=pointer]
+    - main [ref=f3e23]:
+      - generic "Opciones para visitantes desde Instagram" [ref=f3e24]:
+        - generic [ref=f3e25]:
+          - generic [ref=f3e26]:
+            - generic [ref=f3e27]: TDF desde Instagram
+            - paragraph [ref=f3e31]: Reservas, cursos y clases en un solo lugar.
+          - generic [ref=f3e32]:
+            - link [ref=f3e33] [cursor=pointer]:
+              - /url: /reservar?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links
+            - link [ref=f3e37] [cursor=pointer]:
+              - /url: /dj-booth?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links
+            - link [ref=f3e41] [cursor=pointer]:
+              - /url: /curso/produccion-musical?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links
+            - link [ref=f3e45] [cursor=pointer]:
+              - /url: /trials?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links
+            - link [ref=f3e49] [cursor=pointer]:
+              - /url: /curso/produccion-musical-jun-2026?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links
+    - contentinfo [ref=f3e53]:
+      - generic [ref=f3e55]:
+        - generic [ref=f3e56]:
+          - heading "TDF Records" [level=6] [ref=f3e57]
+          - paragraph [ref=f3e58]: Si te atoras, te dejamos una salida clara desde esta página para que sigas avanzando.
+          - generic [ref=f3e59]:
+            - link "Crear cuenta" [ref=f3e60] [cursor=pointer]:
+              - /url: /login?signup=1&redirect=/fans
+            - link "WhatsApp" [ref=f3e61] [cursor=pointer]:
+              - /url: https://wa.me/593984755301?text=Hola%20quiero%20reservar%20un%20servicio%20en%20TDF%20Records
+        - navigation "Explorar TDF" [ref=f3e62]:
+          - generic [ref=f3e63]: Explorar
+          - generic [ref=f3e64]:
+            - link "TDF" [ref=f3e65] [cursor=pointer]:
+              - /url: /tdf
+            - link "Comunidad" [ref=f3e66] [cursor=pointer]:
+              - /url: /fans
+            - link "Tienda" [ref=f3e67] [cursor=pointer]:
+              - /url: /marketplace
+            - link "Domo" [ref=f3e68] [cursor=pointer]:
+              - /url: /domo-del-pululahua
+            - link "Reservar" [ref=f3e69] [cursor=pointer]:
+              - /url: /reservar
+            - link "DJ Booth" [ref=f3e70] [cursor=pointer]:
+              - /url: /dj-booth
+            - link "Lanzamientos" [ref=f3e71] [cursor=pointer]:
+              - /url: /records
+            - link "Sugerencias" [ref=f3e72] [cursor=pointer]:
+              - /url: /feedback
+            - link "Donar" [ref=f3e73] [cursor=pointer]:
+              - /url: /donar
+        - generic [ref=f3e74]:
+          - generic [ref=f3e75]: Gestión de mensajes
+          - generic [ref=f3e76]:
+            - link "Consentimiento WhatsApp" [ref=f3e77] [cursor=pointer]:
+              - /url: /whatsapp/consentimiento
+            - link "Confirmación WhatsApp" [ref=f3e78] [cursor=pointer]:
+              - /url: /whatsapp/ok

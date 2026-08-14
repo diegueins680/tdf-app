@@ -1,0 +1,243 @@
+- generic [ref=f24e4]:
+  - generic [ref=f24e9]:
+    - generic [ref=f24e12]:
+      - link [ref=f24e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f24e22]
+      - generic [ref=f24e25]:
+        - link [ref=f24e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f24e35]
+        - link [ref=f24e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f24e45]
+        - link [ref=f24e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f24e57]
+        - link [ref=f24e63] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f24e68]
+        - link [ref=f24e75] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f24e80]
+        - link [ref=f24e86] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f24e91]
+        - link [ref=f24e96] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f24e101]
+        - link [ref=f24e108] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f24e113]:
+            - img "tdf.records.label's profile picture" [ref=f24e114]
+      - generic [ref=f24e115]:
+        - link [ref=f24e118] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f24e123]
+        - link [ref=f24e126] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f24e131]
+    - generic [ref=f24e134]:
+      - main [ref=f24e135]:
+        - generic [ref=f24e137]:
+          - generic [ref=f24e138]:
+            - generic [ref=f24e139]:
+              - button [ref=f24e144] [cursor=pointer]:
+                - link [ref=f24e146]:
+                  - img "kinocavalier's profile picture" [ref=f24e147]
+              - generic [ref=f24e148]:
+                - generic [ref=f24e149]:
+                  - generic [ref=f24e150]:
+                    - link [ref=f24e152] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "kinocavalier" [level=2] [ref=f24e153]
+                    - button [ref=f24e155] [cursor=pointer]:
+                      - img "Options" [ref=f24e157]
+                  - generic [ref=f24e161]: ▪️ KINO CAVALIER▫️▪️
+                  - generic [ref=f24e163]:
+                    - generic [ref=f24e165]:
+                      - generic [ref=f24e166]: 1,901
+                      - text: posts
+                    - link "6,136 followers" [ref=f24e168] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f24e169]:
+                        - generic "6,136" [ref=f24e170]
+                        - text: followers
+                    - link "5,857 following" [ref=f24e172] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f24e173]:
+                        - generic [ref=f24e174]: 5,857
+                        - text: following
+                - generic [ref=f24e175]:
+                  - generic [ref=f24e176]:
+                    - generic [ref=f24e177]: Artist
+                    - generic [ref=f24e179]:
+                      - button [ref=f24e180] [cursor=pointer]:
+                        - generic [ref=f24e181]:
+                          - text: roberto israel montenegro 🔻
+                          - link "@neonkino_______" [ref=f24e182]:
+                            - /url: /neonkino_______/
+                          - text: ⚡️€lectric shock survivor⚡️🎥
+                      - generic [ref=f24e183]:
+                        - text: ...
+                        - button "more" [ref=f24e184] [cursor=pointer]
+                    - generic [ref=f24e186]:
+                      - button "Link icon linktr.ee/kinocavalier and 3 more" [ref=f24e187] [cursor=pointer]:
+                        - generic [ref=f24e188]:
+                          - img "Link icon" [ref=f24e190]
+                          - generic [ref=f24e193]: linktr.ee/kinocavalier and 3 more
+                      - link "Threads kinocavalier" [ref=f24e195] [cursor=pointer]:
+                        - /url: https://www.threads.com/@kinocavalier?xmt=AQG02NheCIK8_FaYf6yqKLJTHWUGVc6PfPT7323uoXBxqsI
+                        - img "Threads" [ref=f24e197]
+                        - generic [ref=f24e199]: kinocavalier
+                  - link "Followed by rockincrueles, lasabejasclubdevinilos + 61 more" [ref=f24e201] [cursor=pointer]:
+                    - /url: /kinocavalier/followers/mutualOnly
+                    - generic [ref=f24e203]:
+                      - generic [ref=f24e205]:
+                        - button [ref=f24e206]:
+                          - link [ref=f24e207]
+                        - button [ref=f24e208]:
+                          - link [ref=f24e209]
+                        - button [ref=f24e210]:
+                          - link [ref=f24e211]
+                      - generic [ref=f24e212]: Followed by rockincrueles, lasabejasclubdevinilos + 61 more
+            - generic [ref=f24e217]:
+              - status "Loading..." [ref=f24e219]
+              - status "Loading..." [ref=f24e221]
+            - menu [ref=f24e223]:
+              - generic [ref=f24e225]:
+                - generic [ref=f24e227]:
+                  - status "Loading..." [ref=f24e229]
+                  - status "Loading..." [ref=f24e231]
+                - generic [ref=f24e233]:
+                  - status "Loading..." [ref=f24e235]
+                  - status "Loading..." [ref=f24e237]
+                - generic [ref=f24e239]:
+                  - status "Loading..." [ref=f24e241]
+                  - status "Loading..." [ref=f24e243]
+                - generic [ref=f24e245]:
+                  - status "Loading..." [ref=f24e247]
+                  - status "Loading..." [ref=f24e249]
+                - generic [ref=f24e251]:
+                  - status "Loading..." [ref=f24e253]
+                  - status "Loading..." [ref=f24e255]
+                - generic [ref=f24e257]:
+                  - status "Loading..." [ref=f24e259]
+                  - status "Loading..." [ref=f24e261]
+                - generic [ref=f24e263]:
+                  - status "Loading..." [ref=f24e265]
+                  - status "Loading..." [ref=f24e267]
+          - generic [ref=f24e268]:
+            - tablist [ref=f24e269]:
+              - link [ref=f24e271] [cursor=pointer]:
+                - /url: /kinocavalier/
+                - img "Posts" [ref=f24e273]
+              - link [ref=f24e284] [cursor=pointer]:
+                - /url: /kinocavalier/reels/
+                - img "Reels" [ref=f24e286]
+              - link [ref=f24e289] [cursor=pointer]:
+                - /url: /kinocavalier/reposts/
+                - img "Reposts" [ref=f24e291]
+              - link [ref=f24e294] [cursor=pointer]:
+                - /url: /kinocavalier/tagged/
+                - img "Tagged" [ref=f24e296]
+            - tabpanel
+          - progressbar [ref=f24e300]:
+            - img "Loading..." [ref=f24e301]
+      - contentinfo [ref=f24e314]:
+        - generic [ref=f24e315]:
+          - generic [ref=f24e317]:
+            - link "Meta" [ref=f24e319] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f24e322] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f24e325] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f24e328] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f24e331] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f24e334] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f24e337] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f24e340] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f24e343] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f24e346] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f24e349] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f24e352] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f24e355] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f24e358] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f24e361] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f24e363]:
+            - generic [ref=f24e364] [cursor=pointer]:
+              - generic [ref=f24e365]:
+                - generic [ref=f24e366]: English
+                - img "Down chevron icon" [ref=f24e369]
+              - combobox "Switch Display Language" [ref=f24e371]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f24e372]: © 2026 Instagram from Meta
+  - button "Messages Messages" [ref=f24e375] [cursor=pointer]:
+    - generic [ref=f24e377]:
+      - img "Messages" [ref=f24e379]
+      - generic [ref=f24e382]: Messages
