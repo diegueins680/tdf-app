@@ -94,7 +94,7 @@ const toFiniteNumber = (value: unknown): number | null => {
 const overlap = (startA: DateTime, endA: DateTime, startB: DateTime, endB: DateTime) =>
   endA > startB && startA < endB;
 
-function BookingRequestDialog({
+function _BookingRequestDialog({
   open,
   onClose,
   hasToken,
