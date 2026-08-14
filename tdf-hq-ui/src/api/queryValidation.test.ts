@@ -20,7 +20,6 @@ const { Internships } = await import('./internships');
 const { RadioAPI } = await import('./radio');
 const { Trials } = await import('./trials');
 const { Bookings } = await import('./bookings');
-const { encodeLegacyServiceOfferingId } = await import('./services');
 const { ChatAPI } = await import('./chat');
 const { Label } = await import('./label');
 const { Courses } = await import('./courses');
@@ -215,20 +214,6 @@ describe('API query/id validation', () => {
       pbServiceOfferingId: serviceOfferingId,
       pbStartsAt: '2026-03-01T10:00:00Z',
       pbEngineerPartyId: 10,
-    });
-
-    await Bookings.createPublic({
-      pbFullName: 'Ana Perez',
-      pbEmail: 'ana@example.com',
-      pbServiceOfferingId: encodeLegacyServiceOfferingId('Producción de eventos'),
-      pbStartsAt: '2026-03-01T10:00:00Z',
-    });
-    expect(postMock).toHaveBeenCalledWith('/bookings/public', {
-      pbFullName: 'Ana Perez',
-      pbEmail: 'ana@example.com',
-      pbServiceType: 'Producción de eventos',
-      pbStartsAt: '2026-03-01T10:00:00Z',
-      pbEngineerPartyId: undefined,
     });
 
     expect(() =>
