@@ -7112,26 +7112,6 @@
       "risk": "An unknown environment discriminator could allow sandbox evidence to affect production records.",
       "justification": "Sandbox and production are protocol-level security partitions enforced exhaustively in code and constraints, not selectable business catalog values.",
       "reviewed": true
-    },
-    {
-      "id": "4dbf6436c5135a864130",
-      "classification": "dynamic-business-catalog",
-      "disposition": "consumer-update",
-      "specializedModel": "venue_event_type, approved_rate_card_version",
-      "priority": "P1-cross-platform",
-      "risk": "A client-only event-type union can diverge from the approved Domo rate card and accept quotes the server cannot price authoritatively.",
-      "justification": "This legacy compatibility type must be replaced by event types returned from the active approved server rate card before Domo checkout is enabled.",
-      "reviewed": true
-    },
-    {
-      "id": "5234eba2ceff6e9b12a0",
-      "classification": "dynamic-business-catalog",
-      "disposition": "consumer-update",
-      "specializedModel": "venue_event_type, approved_rate_card_version",
-      "priority": "P1-cross-platform",
-      "risk": "A client-only event-type array can diverge from the approved Domo rate card and accept quotes the server cannot price authoritatively.",
-      "justification": "This legacy compatibility list must be replaced by event types returned from the active approved server rate card before Domo checkout is enabled.",
-      "reviewed": true
     }
   ]
 }
