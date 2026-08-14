@@ -110,6 +110,11 @@
       "id": "2026-08-14_service_storefront_checkout_runtime",
       "path": "tdf-hq/sql/2026-08-14_service_storefront_checkout_runtime.sql",
       "introducedBy": "b52f48534ec196b03223f2f5203cf35f98a68278"
+    },
+    {
+      "id": "2026-08-14_checkout_event_refund_runtime",
+      "path": "tdf-hq/sql/2026-08-14_checkout_event_refund_runtime.sql",
+      "introducedBy": "df8b615cf4780d450550db6a93bb94a1fc21e968"
     }
   ]
 }

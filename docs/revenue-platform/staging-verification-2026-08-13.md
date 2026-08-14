@@ -26,7 +26,7 @@ The final command transcript is summarized here after the branch-wide verificati
 | Web type safety | `npm run typecheck:ui` | Pass |
 | Web production build | `npm run build` | Pass: 12,382 modules; bundle/secret gate 5 preloads and 399,972 gzip bytes |
 | Release/CI contracts | `npm run test:production-release`; `npm run test:ci-pipeline` | Pass: 25 + 12 tests |
-| Registered production batch | Render preflight; apply twice; schema verification against PostgreSQL 17 | Pass: 22/22 migrations, second run idempotent, service runtime view/index/FK contract verified |
+| Registered production batch | Render preflight; apply twice; schema verification against PostgreSQL 17 | Pass: 23/23 migrations, second run idempotent, service checkout/event/refund runtime contracts verified |
 | OpenAPI/generated clients | `npm run generate:api` | Pass: canonical service-storefront contract generated for web and mobile |
 | Mobile type safety | `npm run typecheck:mobile` | Pass |
 | Formal-method audit | `npm run verify:formal` | Pass: 0 critical, 0 errors; repository warnings remain advisory |
@@ -43,10 +43,10 @@ property cases, with zero failures. `stack test --no-run-tests --fast` compiled 
 and test suite after the runtime integration. This is local database/application evidence only: no
 Datafast or PayPal sandbox request was made and no provider success was asserted.
 
-After registering the runtime migration with its immutable feature commit, the exact production
-batch applied twice in a fresh PostgreSQL 17 container. All 22 manifest entries were recorded, the
-release schema verifier passed, the mixing/mastering production flag remained disabled, and the
-legacy classification view contained no invented rows in the pristine fixture.
+After registering the runtime migrations with their immutable feature commits, the exact production
+batch applied twice in fresh PostgreSQL 17 containers. All 23 manifest entries were recorded, the
+release schema verifier passed, checkout/refund production flags remained disabled, and the legacy
+classification view contained no invented rows in the pristine fixture.
 
 The 2026-08-14 PayPal event/refund follow-up passed 19 focused examples, including 400 property
 cases, with zero failures. The executable and all 155 test modules compiled under the repository's
