@@ -1,7 +1,7 @@
 # Emergency-administrator rollout gate
 
-Status: blocked. This is a read-only readiness assessment, not authorization to create, activate,
-or modify a production credential or security assignment.
+Status: pre-migration database gate ready; independent operator exercise pending. This document
+records privacy-safe rollout evidence and does not contain credential material.
 
 ## Gate definition
 
@@ -25,10 +25,10 @@ persisted permission graph, so it always reports `databaseReady=false`. The rele
 the check after schema migration and refuses to deploy application Machines unless canonical mode
 then reports two coherent paths.
 
-## Production observation
+## Production observations
 
-The aggregate query was executed on 2026-08-12 inside a read-only transaction against the current
-Fly.io PostgreSQL deployment. It returned:
+The initial aggregate query was executed on 2026-08-12 inside a read-only transaction against the
+current Fly.io PostgreSQL deployment. It returned:
 
 ```json
 {
@@ -42,27 +42,65 @@ Fly.io PostgreSQL deployment. It returned:
 }
 ```
 
-No party IDs, names, usernames, emails, hashes, tokens, or credentials were selected or recorded.
-The result proves that two active `Admin` rows do not currently provide two independently
-authenticatable recovery paths.
+On 2026-08-14, after explicit owner authorization of the second operator, production was protected
+by Fly volume snapshot `vs_LRqNAqabQP5UoV2lo3JRqy`. A bounded transaction then:
+
+- preserved the single credential deterministically tied to the account's unique primary email;
+- reversibly deactivated one duplicate active credential;
+- activated the account's unique legacy `Admin` assignment; and
+- wrote two audit events with a shared production-only correlation ID and the snapshot ID.
+
+The transaction asserted both the reviewed before-state and the expected after-state, including
+exactly two distinct authenticatable administrators, and was first exercised with `ROLLBACK` before
+the identical committed run. A recovery request then returned HTTP 200, produced exactly one active
+reset token for the designated account, and produced no password-reset failure in the available Fly
+log buffer.
+
+The reusable read-only preflight was rerun at `2026-08-14T00:12:43Z` and returned:
+
+```json
+{
+  "schemaMode": "legacy",
+  "activeEmergencyAssignments": 3,
+  "distinctAssignedParties": 3,
+  "authenticatableParties": 2,
+  "databaseCoherentPaths": null,
+  "preMigrationReady": true,
+  "databaseReady": false,
+  "manualIndependentLoginVerificationRequired": true
+}
+```
+
+The extra legacy assignment is an inactive-credential marker and does not count as an
+authenticatable path. No names, usernames, emails, password hashes, tokens, or credential material
+are recorded in this evidence. The legacy result satisfies the pre-migration gate only; canonical
+permission coherence must still pass after the security-registry migration.
 
 ## Exact action required
 
-Before rollout, an authorized security administrator must use the existing reviewed account and
-role-governance process to establish an active credential for a second distinct emergency
-administrator (or approve a different second eligible account), without sharing credentials.
-Then:
+Before rollout, the designated second operator must personally open the recovery email, choose a
+new private password, and complete an independent login/recovery exercise without sharing the
+credential. This step cannot be performed or attested by the release operator. Then:
 
-1. rerun the preflight after the canonical security cutover and require
+1. record the two operators' pass/fail results, timestamp, exact candidate revision, and approving
+   reviewer without credential material;
+2. rerun the preflight after the canonical security cutover and require
    `databaseCoherentPaths >= 2` and `databaseReady=true`;
-2. have each of the two operators independently authenticate and exercise the documented recovery
-   path against the exact candidate revision;
-3. record only the verification result, timestamp, candidate revision, and approving reviewer—no
-   credential material—in the rollout evidence; and
-4. abort rollout if either path fails or if the paths are not independently controlled.
+3. deploy application Machines only after the post-migration canonical check passes; and
+4. abort or roll back if either operator exercise fails, if the paths are not independently
+   controlled, or if canonical permission coherence reports fewer than two paths.
 
-Creating or activating that production credential is a security-sensitive external mutation and
-is not performed by this candidate worktree.
+## Recovery and rollback
+
+The preferred rollback before canonical cutover is the reviewed row-level reversal identified by
+the production audit correlation: deactivate the added legacy `Admin` assignment, restore the
+duplicate credential's prior active flag only if the security reviewer explicitly requires the
+exact legacy state, and deactivate any unused recovery token created by this exercise. Run those
+updates in one transaction with the same before/after assertions and append compensating audit
+events; do not delete the role, credential, token, or audit rows. If row-level reversal cannot be
+proven safe, restore snapshot `vs_LRqNAqabQP5UoV2lo3JRqy` into a new Fly volume, verify its counts,
+and perform the documented database-volume replacement rather than overwriting the live volume in
+place.
 
 ## Candidate verification
 
