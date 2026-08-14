@@ -1,0 +1,209 @@
+- generic [ref=f75e4]:
+  - generic [ref=f75e9]:
+    - generic [ref=f75e12]:
+      - link [ref=f75e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f75e22]
+      - generic [ref=f75e25]:
+        - link [ref=f75e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f75e35]
+        - link [ref=f75e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f75e45]
+        - link [ref=f75e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f75e55]:
+            - img "Messages" [ref=f75e57]
+            - generic "Direct messaging - 3 new notifications link" [ref=f75e60]: "3"
+        - link [ref=f75e66] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f75e71]
+        - link [ref=f75e78] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f75e83]
+        - link [ref=f75e89] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f75e94]
+        - link [ref=f75e99] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f75e104]
+        - link [ref=f75e111] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f75e116]:
+            - img "tdf.records.label's profile picture" [ref=f75e117]
+      - generic [ref=f75e118]:
+        - link [ref=f75e121] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f75e126]
+        - link [ref=f75e129] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f75e134]
+    - generic [ref=f75e137]:
+      - main [ref=f75e138]:
+        - generic [ref=f75e140]:
+          - generic [ref=f75e141]:
+            - generic [ref=f75e142]:
+              - link [ref=f75e148] [cursor=pointer]:
+                - /url: /backroom_session/
+                - img "backroom_session's profile picture" [ref=f75e149]
+              - generic [ref=f75e150]:
+                - generic [ref=f75e151]:
+                  - generic [ref=f75e152]:
+                    - link [ref=f75e154] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "backroom_session" [level=2] [ref=f75e155]
+                    - button [ref=f75e157] [cursor=pointer]:
+                      - img "Options" [ref=f75e159]
+                  - generic [ref=f75e163]: BACKROOM SESSIONS
+                  - generic [ref=f75e165]:
+                    - generic [ref=f75e167]:
+                      - generic [ref=f75e168]: "2"
+                      - text: posts
+                    - link "81 followers" [ref=f75e170] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f75e171]:
+                        - generic "81" [ref=f75e172]
+                        - text: followers
+                    - link "74 following" [ref=f75e174] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f75e175]:
+                        - generic [ref=f75e176]: "74"
+                        - text: following
+                - generic [ref=f75e177]:
+                  - button [ref=f75e180] [cursor=pointer]:
+                    - generic [ref=f75e181]: Underground live sessions 🇪🇨Minimal · Electro · Acid · House Live + archived
+                  - link "Followed by semiazas354, everaldho_ + 6 more" [ref=f75e182] [cursor=pointer]:
+                    - /url: /backroom_session/followers/mutualOnly
+                    - generic [ref=f75e184]:
+                      - generic [ref=f75e186]:
+                        - button [ref=f75e187]:
+                          - link [ref=f75e188]
+                        - button [ref=f75e189]:
+                          - link [ref=f75e190]
+                        - button [ref=f75e191]:
+                          - link [ref=f75e192]
+                      - generic [ref=f75e193]: Followed by semiazas354, everaldho_ + 6 more
+            - generic [ref=f75e198]:
+              - button "Follow" [ref=f75e200] [cursor=pointer]
+              - button [ref=f75e204] [cursor=pointer]:
+                - img "Similar accounts" [ref=f75e206]
+            - generic:
+              - menu
+          - generic [ref=f75e209]:
+            - tablist [ref=f75e210]:
+              - link [ref=f75e212] [cursor=pointer]:
+                - /url: /backroom_session/
+                - img "Posts" [ref=f75e214]
+              - link [ref=f75e225] [cursor=pointer]:
+                - /url: /backroom_session/tagged/
+                - img "Tagged" [ref=f75e227]
+            - tabpanel
+          - generic [ref=f75e235]:
+            - link [ref=f75e237] [cursor=pointer]:
+              - /url: /julieth__thenoirkult/p/DXCQNs3lUE4/
+              - 'img "@interdit_____ @backroom_session & @etheric.ec Presentaron. Federico Molinari . . @planet_303 @julieth__thenoirkult @its_moobi @everaldho_ @emmanu__music @momo.estevez Gracias por una noche de resistencia y amor en la pista a todos! 🖤 . . . . #clubculture #thisisnottrend #electronicresistance" [ref=f75e240]'
+              - generic:
+                - generic:
+                  - generic:
+                    - img "Carousel"
+            - link [ref=f75e243] [cursor=pointer]:
+              - /url: /backroom_session/p/DWl7XMEEVAX/
+              - img "Photo by BACKROOM SESSIONS in Cumbaya, Quito with @julieth__thenoirkult, @its_moobi, @everaldho_, @emmanu__music, and @planet_303." [ref=f75e246]
+      - contentinfo [ref=f75e249]:
+        - generic [ref=f75e250]:
+          - generic [ref=f75e252]:
+            - link "Meta" [ref=f75e254] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f75e257] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f75e260] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f75e263] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f75e266] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f75e269] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f75e272] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f75e275] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f75e278] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f75e281] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f75e284] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f75e287] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f75e290] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f75e293] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f75e296] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f75e298]:
+            - generic [ref=f75e299] [cursor=pointer]:
+              - generic [ref=f75e300]:
+                - generic [ref=f75e301]: English
+                - img "Down chevron icon" [ref=f75e304]
+              - combobox "Switch Display Language" [ref=f75e306]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f75e307]: © 2026 Instagram from Meta
+  - button "Messages Messages" [ref=f75e310] [cursor=pointer]:
+    - generic [ref=f75e312]:
+      - img "Messages" [ref=f75e314]
+      - generic [ref=f75e317]: Messages

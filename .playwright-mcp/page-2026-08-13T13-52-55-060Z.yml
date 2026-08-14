@@ -1,0 +1,50 @@
+- generic [ref=f46e2]:
+  - generic [ref=f46e3]:
+    - link "Saltar al contenido principal" [ref=f46e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - generic [ref=f46e5]:
+      - banner [ref=f46e6]:
+        - generic [ref=f46e7]:
+          - button "Mostrar menú lateral" [ref=f46e8] [cursor=pointer]
+          - link "Ir al inicio" [ref=f46e11] [cursor=pointer]:
+            - /url: /inicio
+            - img "TDF Records logo"
+          - button "Buscar sección" [ref=f46e13] [cursor=pointer]:
+            - generic [ref=f46e18]: ⌘K
+          - generic [ref=f46e19]:
+            - button "Creación rápida" [ref=f46e20] [cursor=pointer]:
+              - generic [ref=f46e24]: Crear
+            - button "Notificaciones" [ref=f46e25] [cursor=pointer]:
+              - generic [ref=f46e26]:
+                - progressbar "Cargando notificaciones" [ref=f46e27]
+                - generic: "0"
+            - button "Abrir menú de sesión" [ref=f46e30] [cursor=pointer]:
+              - generic [ref=f46e31]: D
+      - status [ref=f46e32]:
+        - progressbar "Cargando datos" [ref=f46e33]
+      - main [ref=f46e35]:
+        - generic [ref=f46e37]:
+          - generic [ref=f46e39]:
+            - generic [ref=f46e40]:
+              - heading "Contactos" [level=3] [ref=f46e41]
+              - paragraph [ref=f46e42]: Gestiona personas, empresas y roles en un solo lugar.
+            - button [ref=f46e44] [cursor=pointer]
+          - alert [ref=f46e51]:
+            - generic [ref=f46e55]: Cargando contactos… El buscador y la tabla aparecerán cuando esta primera carga termine.
+        - generic [ref=f46e57]:
+          - status [ref=f46e58]:
+            - generic [ref=f46e61]: "API: online"
+          - button "Abrir ChatKit" [ref=f46e62] [cursor=pointer]
+  - generic "Control de radio":
+    - generic [ref=f46e65]:
+      - button "Reproducir radio" [ref=f46e66] [cursor=pointer]
+      - generic "Saltar al anterior" [ref=f46e69]:
+        - button "Saltar a la estación anterior" [ref=f46e70] [cursor=pointer]
+      - generic "Saltar al siguiente" [ref=f46e73]:
+        - button "Saltar a la siguiente estación" [ref=f46e74] [cursor=pointer]
+      - button "Silenciar radio" [ref=f46e77] [cursor=pointer]
+      - button "Ocultar barra de radio" [ref=f46e80] [cursor=pointer]
+      - button "Expandir radio" [ref=f46e83] [cursor=pointer]
+      - generic [ref=f46e86]:
+        - generic [ref=f46e87]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient

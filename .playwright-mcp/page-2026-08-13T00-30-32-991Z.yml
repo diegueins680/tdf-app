@@ -1,0 +1,444 @@
+- generic [ref=f23e4]:
+  - generic [ref=f23e18]:
+    - generic [ref=f23e21]:
+      - link [ref=f23e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f23e31]
+      - generic [ref=f23e34]:
+        - link [ref=f23e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f23e44]
+        - link [ref=f23e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f23e54]
+        - link [ref=f23e61] [cursor=pointer]:
+          - /url: /direct/t/109251637139253
+          - generic [ref=f23e64]:
+            - img "Messages" [ref=f23e66]
+            - generic "Direct messaging - 3 new notifications link" [ref=f23e69]: "3"
+        - link [ref=f23e75] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f23e80]
+        - link [ref=f23e87] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f23e92]
+        - link [ref=f23e98] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f23e103]
+        - link [ref=f23e108] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f23e113]
+        - link [ref=f23e120] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f23e125]:
+            - img "tdf.records.label's profile picture" [ref=f23e126]
+      - generic [ref=f23e127]:
+        - link [ref=f23e130] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f23e135]
+        - link [ref=f23e138] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f23e143]
+    - generic [ref=f23e146]:
+      - main [ref=f23e147]:
+        - generic [ref=f23e149]:
+          - generic [ref=f23e150]:
+            - generic [ref=f23e151]:
+              - link [ref=f23e157] [cursor=pointer]:
+                - /url: /el_rovlex/
+                - img "el_rovlex's profile picture" [ref=f23e158]
+              - generic [ref=f23e159]:
+                - generic [ref=f23e160]:
+                  - generic [ref=f23e161]:
+                    - link [ref=f23e163] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "el_rovlex" [level=2] [ref=f23e164]
+                    - button [ref=f23e166] [cursor=pointer]:
+                      - img "Options" [ref=f23e168]
+                  - generic [ref=f23e172]: el Rovlex
+                  - generic [ref=f23e174]:
+                    - generic [ref=f23e176]:
+                      - generic [ref=f23e177]: "22"
+                      - text: posts
+                    - link "145 followers" [ref=f23e179] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f23e180]:
+                        - generic "145" [ref=f23e181]
+                        - text: followers
+                    - link "104 following" [ref=f23e183] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f23e184]:
+                        - generic [ref=f23e185]: "104"
+                        - text: following
+                - generic [ref=f23e187]:
+                  - button [ref=f23e189] [cursor=pointer]:
+                    - generic [ref=f23e190]:
+                      - text: "@elRovlexmiusic"
+                      - link "#trap" [ref=f23e191]:
+                        - /url: /explore/tags/trap/
+                      - link "#rap" [ref=f23e192]:
+                        - /url: /explore/tags/rap/
+                      - link "#drill" [ref=f23e193]:
+                        - /url: /explore/tags/drill/
+                  - heading [level=1]
+                  - link "Threads el_rovlex" [ref=f23e196] [cursor=pointer]:
+                    - /url: https://www.threads.com/@el_rovlex?xmt=AQG0_Yy-7tryo7vQcClpgg5AgKwmPQnSPtgomPYW0nZzhD0
+                    - img "Threads" [ref=f23e198]
+                    - generic [ref=f23e200]: el_rovlex
+            - generic [ref=f23e206]:
+              - button "Follow" [ref=f23e208] [cursor=pointer]
+              - button "Message" [ref=f23e212] [cursor=pointer]
+              - button [ref=f23e214] [cursor=pointer]:
+                - img "Similar accounts" [ref=f23e216]
+            - menu [ref=f23e220]:
+              - list [ref=f23e224]:
+                - listitem [ref=f23e225]
+                - listitem [ref=f23e226]
+                - listitem [ref=f23e227]:
+                  - link "View Pon ese 🍑pa tra highlight" [ref=f23e230] [cursor=pointer]:
+                    - /url: /stories/highlights/17888950341517160/
+                    - button "el_rovlex's highlight story picture Pon ese 🍑pa tra" [ref=f23e231]:
+                      - button [ref=f23e232]:
+                        - img "el_rovlex's highlight story picture" [ref=f23e235]
+                      - generic [ref=f23e236]: Pon ese 🍑pa tra
+                - listitem [ref=f23e239]:
+                  - link "View Rovlex highlight" [ref=f23e242] [cursor=pointer]:
+                    - /url: /stories/highlights/17857965048063608/
+                    - button "el_rovlex's highlight story picture Rovlex" [ref=f23e243]:
+                      - button [ref=f23e244]:
+                        - img "el_rovlex's highlight story picture" [ref=f23e247]
+                      - generic [ref=f23e248]: Rovlex
+          - generic [ref=f23e251]:
+            - tablist [ref=f23e252]:
+              - link [ref=f23e254] [cursor=pointer]:
+                - /url: /el_rovlex/
+                - img "Posts" [ref=f23e256]
+              - link [ref=f23e267] [cursor=pointer]:
+                - /url: /el_rovlex/reels/
+                - img "Reels" [ref=f23e269]
+              - link [ref=f23e272] [cursor=pointer]:
+                - /url: /el_rovlex/reposts/
+                - img "Reposts" [ref=f23e274]
+              - link [ref=f23e277] [cursor=pointer]:
+                - /url: /el_rovlex/tagged/
+                - img "Tagged" [ref=f23e279]
+            - tabpanel
+          - generic [ref=f23e390]:
+            - generic [ref=f23e391]:
+              - link [ref=f23e393] [cursor=pointer]:
+                - /url: /tendenciaurbana_593/p/DZD9uCcjtSS/
+                - img "Photo shared by TENDENCIA URBANA +593 🇪🇨 on June 01, 2026 tagging @eppromotions_ec, @leo_one_ec, @el_rovlex, @jandriu_777, and @la.verdadera.movie_ec." [ref=f23e396]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f23e399] [cursor=pointer]:
+                - /url: /gold.sativa.studio/reel/DY3fHDAN_lp/
+                - 'img "eeey! Desde polo norte🥶 Dímelo @el_rovlex @jandriu_777 @leo_one_ec Mueve Ese Cu’ Pa Tras🔥 Video Oficial este 29 de mayo en todos lados😛 • • • • • Dirección: @serpiente_de_oro Fotografía: @sativa_films593 Gaffer: @tibo.ec • • • • #quitoecuador #music #videoclip #vídeo #ecuador" [ref=f23e402]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f23e405] [cursor=pointer]:
+                - /url: /el_rovlex/reel/DYBB50SKGpI/
+                - 'img "gracias a Dios 👏🏻 por aprobar este proyecto musical 🎶🎥🥵 pon ese 🍑pa tras “. Video oficial en pocos días gracias por el apoyo de ustedes 🫂 #patraschallenge #tendencia #musica #dancehall vamos a utilizar el audio “””" [ref=f23e408]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f23e410]:
+              - link [ref=f23e412] [cursor=pointer]:
+                - /url: /el_rovlex/reel/DXh36Gritbe/
+                - 'img "Trabajando pa el futuro se viene música nueva pronto pronto pronto 🎥🎶💕🎹#musica #tendencia #trap" [ref=f23e415]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f23e418] [cursor=pointer]:
+                - /url: /el_rovlex/reel/DVRA9Y1ijTT/
+                - 'img "#lonely #musica #tendencia #trap #venezuela LONELY ya disponible el Rovlex 🔥✏️🎥 disfruten ese cover compartir comentar like gracias 🙏👌🏻👍🏻📝" [ref=f23e421]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f23e424] [cursor=pointer]:
+                - /url: /el_rovlex/reel/DUlrcJhEWld/
+                - 'img "La sensación de callejón presenta LONELY 💿 si fueras un premio ya me saqué la lotto y en esa nave cuando entro me siento un piloto 👨‍✈️ #trap #lonely #tumusica #tendencia" [ref=f23e427]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f23e429]:
+              - link [ref=f23e431] [cursor=pointer]:
+                - /url: /el_rovlex/reel/DThIflZDMB_/
+                - 'img "Les presento un proyecto 🎹🎥🎞️pronto salimos con el video seguimos trabajando la musica desde el ❤️💿el RoVlex miusic #tendencia #musica #bolero la sensación del callejón" [ref=f23e434]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f23e437] [cursor=pointer]:
+                - /url: /tendenciaurbana_593/p/DSwH866jsSx/
+                - img "Photo shared by TENDENCIA URBANA +593 🇪🇨 on December 26, 2025 tagging @eppromotions_ec, @leo_one_ec, @el_rovlex, and @jandriu_777." [ref=f23e440]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f23e443] [cursor=pointer]:
+                - /url: /gold.sativa.studio/reel/DR5ZTEmEo1x/
+                - 'img "Pégate Lento 😈🔥 @el_rovlex @leo_one_ec @jandriu_777 Atentos este 10 de diciembre 🔥 @andykilohertz prod. musical • • • #quitoecuador #music #videoclip #reggaeton #denbow #artist #audioviral" [ref=f23e446]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f23e448]:
+              - link [ref=f23e450] [cursor=pointer]:
+                - /url: /el_rovlex/reel/DQyD3gojI3L/
+                - 'img "Pégate lento un proyecto de ecuador 🇪🇨 para Venezuela 🇻🇪 🎤💿🎹🎹#musica #tendencia #tumusica" [ref=f23e453]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f23e456] [cursor=pointer]:
+                - /url: /el_rovlex/p/DP2jV-jjDJK/
+                - img "Photo by el Rovlex on October 15, 2025." [ref=f23e459]
+              - link [ref=f23e462] [cursor=pointer]:
+                - /url: /el_rovlex/p/DPAO28QEaLX/
+                - img "Photo by el Rovlex on September 24, 2025." [ref=f23e465]
+            - generic [ref=f23e624]:
+              - link [ref=f23e626] [cursor=pointer]:
+                - /url: /el_rovlex/reel/DMy62_8sJNu/
+                - 'img "La vibra es una el Rovlex music #tendencia" [ref=f23e629]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f23e632] [cursor=pointer]:
+                - /url: /el_rovlex/reel/DMO_U68MaRH/
+                - 'img "La vida es un proceso #versos #tendencia #musica el Rovlex music https://youtu.be/NGE_R_u996w?si=_UE_6RUggDqGzEgQ" [ref=f23e635]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f23e638] [cursor=pointer]:
+                - /url: /el_rovlex/reel/DLblnrOsivs/
+                - img "https://youtu.be/NGE_R_u996w?si=hyPpu3qKBlZcEtip. Por aquí les dejo el link de (la vida es un proceso )🎙️💽🔥" [ref=f23e641]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f23e643]:
+              - link [ref=f23e645] [cursor=pointer]:
+                - /url: /el_rovlex/reel/DLBzg7YNC-E/
+                - img "Pronto salimos con el video oficial comparte rap conciencia 💽🔥🎙️🎙️la vida es un proceso" [ref=f23e648]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f23e651] [cursor=pointer]:
+                - /url: /tendenciaurbana_593/p/DJX5UyWOtPC/
+                - img "Photo shared by TENDENCIA URBANA +593 🇪🇨 on May 07, 2025 tagging @eppromotions_ec, @leo_one_ec, and @el_rovlex." [ref=f23e654]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f23e657] [cursor=pointer]:
+                - /url: /el_rovlex/reel/DJA4KNOxPBS/
+                - img "Todas son malas" [ref=f23e660]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f23e662]:
+              - link [ref=f23e664] [cursor=pointer]:
+                - /url: /el_rovlex/reel/DIzaXxOyWHQ/
+                - 'img "🔥🔥Yo no logro olvidar 🔥🔥primer video gracias a Dios vamos pa en cima 💯 humildad #afro #amor https://youtu.be/Leow3tr_8Pw?si=ikOD34AAi9YHN5Og" [ref=f23e667]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f23e670] [cursor=pointer]:
+                - /url: /el_rovlex/reel/DHC1gN-s9SQ/
+                - img "El Rovlex miusic pronto en la calle rap conciencia 🔥🔥🎛️💽💽" [ref=f23e673]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f23e676] [cursor=pointer]:
+                - /url: /el_rovlex/reel/DHANrsiM6eG/
+                - img "Esperando el momento para soltar este palo 🤯🔥🔥💽el padre es Dios 🙏🏼la barrera es fuerte asta que empiezas a romperla" [ref=f23e679]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - link [ref=f23e683] [cursor=pointer]:
+              - /url: /el_rovlex/reel/DGA6lLWgNnM/
+              - img "Rap desde el corazón" [ref=f23e686]
+              - generic:
+                - generic:
+                  - generic:
+                    - img "Clip"
+      - contentinfo [ref=f23e297]:
+        - generic [ref=f23e298]:
+          - generic [ref=f23e300]:
+            - link "Meta" [ref=f23e302] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f23e305] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f23e308] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f23e311] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f23e314] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f23e317] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f23e320] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f23e323] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f23e326] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f23e329] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f23e332] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f23e335] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f23e338] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f23e341] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f23e344] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f23e346]:
+            - generic [ref=f23e347] [cursor=pointer]:
+              - generic [ref=f23e348]:
+                - generic [ref=f23e349]: English
+                - img "Down chevron icon" [ref=f23e352]
+              - combobox "Switch Display Language" [ref=f23e354]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f23e355]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f23e358] [cursor=pointer]:
+              - generic "Messages - 3 new notifications" [ref=f23e359]:
+                - generic [ref=f23e360]:
+                  - generic [ref=f23e362]:
+                    - img "Messages" [ref=f23e363]
+                    - generic "Direct messaging - 3 new notifications link" [ref=f23e366]: "3"
+                  - generic [ref=f23e369]: Messages
+                - generic [ref=f23e370]:
+                  - button "User avatar Santiii" [ref=f23e691]:
+                    - img "User avatar" [ref=f23e694]
+                  - button "User avatar Diego Saa" [ref=f23e377]:
+                    - img "User avatar" [ref=f23e380]
+                  - button "User avatar Martini 🍸" [ref=f23e382]:
+                    - img "User avatar" [ref=f23e385]
+            - generic [ref=f23e512]:
+              - generic [ref=f23e514]:
+                - generic [ref=f23e515]:
+                  - button [ref=f23e517] [cursor=pointer]:
+                    - img "Go back" [ref=f23e519]
+                  - link "Open the profile page of el_rovlex" [ref=f23e522] [cursor=pointer]:
+                    - /url: /el_rovlex/
+                    - generic [ref=f23e523]:
+                      - img "user-profile-picture" [ref=f23e526]
+                      - heading "el Rovlex" [level=2] [ref=f23e530]
+                  - generic [ref=f23e532]:
+                    - button [ref=f23e533] [cursor=pointer]:
+                      - img "Expand" [ref=f23e535]
+                    - button [ref=f23e537] [cursor=pointer]:
+                      - img "Close" [ref=f23e539]
+                - separator [ref=f23e542]
+              - generic "el Rovlex" [ref=f23e543]:
+                - generic [ref=f23e545]:
+                  - generic [ref=f23e549]:
+                    - generic [ref=f23e550]:
+                      - img "user-profile-picture" [ref=f23e554]
+                      - generic [ref=f23e555]:
+                        - heading "el Rovlex" [level=2] [ref=f23e558]
+                        - generic [ref=f23e560]: el_rovlex · Instagram
+                        - link "View profile" [ref=f23e563] [cursor=pointer]:
+                          - /url: /el_rovlex/
+                    - generic [ref=f23e697]:
+                      - generic [ref=f23e698]: 7:30 PM
+                      - group [ref=f23e701]:
+                        - generic [ref=f23e706]:
+                          - generic [ref=f23e709]:
+                            - text: Hola, Rovlex
+                            - img "👋" [ref=f23e711]
+                            - text: "Nos pediste información sobre TDF y vimos tu contenido de trap, rap y drill vinculado a Quito. Tu escena necesita un espacio propio: aquí puedes crear tu perfil público, mostrar música y conectar con la comunidad. Te invitamos a probarlo:"
+                            - link "https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a" [ref=f23e713] [cursor=pointer]:
+                              - /url: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+                            - text: "Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                          - link "TDF Records" [ref=f23e714] [cursor=pointer]:
+                            - /url: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+                  - generic [ref=f23e593]:
+                    - button [ref=f23e596] [cursor=pointer]:
+                      - img "Choose an emoji" [ref=f23e598]
+                    - generic [ref=f23e600]:
+                      - textbox [active] [ref=f23e601]:
+                        - paragraph [ref=f23e719]
+                      - generic: Message...
+                    - generic [ref=f23e603]:
+                      - button [ref=f23e720] [cursor=pointer]:
+                        - img "Voice Clip" [ref=f23e722]
+                      - button [ref=f23e725] [cursor=pointer]:
+                        - img "Add Photo or Video" [ref=f23e727]
+                      - button [ref=f23e732] [cursor=pointer]:
+                        - img "Choose a GIF or sticker" [ref=f23e734]

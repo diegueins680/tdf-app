@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Alert,
   Box,
@@ -33,6 +34,7 @@ import NaturePeopleIcon from '@mui/icons-material/NaturePeople';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import { DateTime } from 'luxon';
 import { Bookings } from '../api/bookings';
+import { Services } from '../api/services';
 import { PUBLIC_BASE } from '../config/appConfig';
 import { useMetaTags } from '../hooks/useMetaTags';
 
@@ -359,6 +361,14 @@ export default function DomoVenuePage() {
   const [form, setForm] = useState<BookingFormState>(initialForm);
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<{ severity: 'success' | 'error'; message: string } | null>(null);
+  const serviceCatalogQuery = useQuery({
+    queryKey: ['service-catalog', 'public'],
+    queryFn: () => Services.listPublic(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const eventProductionOffering = serviceCatalogQuery.data?.find(
+    (service) => service.scCode === 'event-production' && service.scActive,
+  );
   const activeExperience = DOMO_EXPERIENCES[activeExperienceKey];
   const requestSummary = useMemo(() => summarizeRequest(form), [form]);
   const bookingIso = toBookingIso(form.startsAt);
@@ -381,6 +391,10 @@ export default function DomoVenuePage() {
       setStatus({ severity: 'error', message: 'Elige una fecha y hora válida para la reserva.' });
       return;
     }
+    if (!eventProductionOffering) {
+      setStatus({ severity: 'error', message: 'El servicio de producción de eventos no está publicado. Intenta nuevamente más tarde.' });
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -388,7 +402,7 @@ export default function DomoVenuePage() {
         pbFullName: form.fullName.trim(),
         pbEmail: form.email.trim(),
         pbPhone: form.phone.trim() || null,
-        pbServiceType: EVENT_TYPES[form.eventType].serviceType,
+        pbServiceOfferingId: eventProductionOffering.scId,
         pbStartsAt: bookingIso,
         pbDurationMinutes: requestSummary.billableHours * 60,
         pbNotes: buildBookingNotes(form, requestSummary),

@@ -41,13 +41,18 @@ import           Servant.Server.Experimental.Auth (AuthHandler)
 import           Database.Persist.Sql hiding (loadConfig)
 
 import           TDF.Auth             (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
+import qualified TDF.Catalog.Models   as Catalog
+import           TDF.Catalog.Security
+  ( applySecurityRoleAssignmentPolicy
+  , hasCanonicalPartyRole
+  , selectCanonicalPartyIdsByRole
+  )
 import           TDF.Config          (loadConfig)
 import           TDF.Models          ( Party(..)
                                       , PartyId
                                       , ResourceId
                                       , partyDisplayName
                                       , RoleEnum(..)
-                                      , PartyRole(..)
                                       )
 import qualified TDF.Models          as Models
 import qualified TDF.Email           as Email
@@ -64,6 +69,24 @@ statusRequested, statusAssigned, statusScheduled :: Text
 statusRequested = "Requested"
 statusAssigned  = "Assigned"
 statusScheduled = "Scheduled"
+
+requireAutomaticSecurityPolicy
+  :: Text
+  -> PartyId
+  -> Maybe PartyId
+  -> Text
+  -> Text
+  -> UTCTime
+  -> AppM ()
+requireAutomaticSecurityPolicy policyCode partyKey actorId sourcePlatform correlationId now = do
+  result <- applySecurityRoleAssignmentPolicy
+    policyCode partyKey False actorId sourcePlatform correlationId now
+  case result of
+    Right _ -> pure ()
+    Left message ->
+      liftIO $ throwIO err503
+        { errBody = BL8.fromStrict (TE.encodeUtf8 message)
+        }
 
 entityKeyInt :: ToBackendKey SqlBackend record => Key record -> Int
 entityKeyInt = fromIntegral . fromSqlKey
@@ -1297,6 +1320,8 @@ createOrFetchParty mName mEmail mPhone now = do
       , partyEmergencyContact = Nothing
       , partyNotes           = Nothing
       , partyStripeCustomerId = Nothing
+      , partyCountryCode      = Nothing
+      , partyCountryId        = Nothing
       , partyCreatedAt       = now
       }
     _ ->
@@ -1347,6 +1372,8 @@ ensurePublicLeadParty now = do
         , partyEmergencyContact = Nothing
         , partyNotes = Just publicLeadFallbackNotes
         , partyStripeCustomerId = Nothing
+        , partyCountryCode = Nothing
+        , partyCountryId = Nothing
         , partyCreatedAt = now
         }
     _ ->
@@ -1394,7 +1421,7 @@ validatePublicLeadFallbackRelations partyId = do
       ]
       []
   mTrialRequest <- selectFirst [TrialRequestPartyId ==. partyId] []
-  mRole <- selectFirst [Models.PartyRolePartyId ==. partyId] []
+  mRole <- selectFirst [Catalog.PartySecurityRolePartyId ==. partyId] []
   mCred <- selectFirst [Models.UserCredentialPartyId ==. partyId] []
   mToken <- selectFirst [Models.ApiTokenPartyId ==. partyId] []
   when (isJust mArtistProfile) $
@@ -1425,8 +1452,14 @@ ensureUserAccountForParty partyId mName emailVal = do
         , Models.userCredentialPasswordHash = hashed
         , Models.userCredentialActive = True
         }
-      void $ upsert (PartyRole partyId Customer True) [Models.PartyRoleActive =. True]
-      void $ upsert (PartyRole partyId Fan True) [Models.PartyRoleActive =. True]
+      now <- liftIO getCurrentTime
+      requireAutomaticSecurityPolicy
+        "account.generated.customer"
+        partyId
+        Nothing
+        "trial-generated-account"
+        ("trial-generated-account:" <> T.pack (show (fromSqlKey partyId)))
+        now
       pure (Just (username, tempPassword))
 
 privateTrialsServer :: AuthedUser -> ServerT PrivateTrialsAPI AppM
@@ -1829,11 +1862,7 @@ privateTrialsServer user@AuthedUser{..} =
       case mTeacher of
         Nothing -> liftIO $ throwIO err404 { errBody = "Profesor no encontrado" }
         Just _  -> do
-          hasTeacherRole <- recordExists
-            [ Models.PartyRolePartyId ==. teacherKey
-            , Models.PartyRoleRole ==. Teacher
-            , Models.PartyRoleActive ==. True
-            ]
+          hasTeacherRole <- hasCanonicalPartyRole teacherKey Teacher
           unless hasTeacherRole $
             liftIO $ throwIO err422 { errBody = "La persona seleccionada no está registrada como profesor" }
 
@@ -2147,9 +2176,7 @@ privateTrialsServer user@AuthedUser{..} =
     teachersH :: AppM [TeacherDTO]
     teachersH = do
       ensureSchoolAccess
-      -- Show any party that has the Teacher role, regardless of the active flag on the PartyRole entry.
-      teacherRoles <- selectList [Models.PartyRoleRole ==. Teacher] []
-      let teacherIds = map (Models.partyRolePartyId . entityVal) teacherRoles
+      teacherIds <- selectCanonicalPartyIdsByRole Teacher
 
       parties <- if null teacherIds
         then pure Map.empty
@@ -2297,8 +2324,15 @@ privateTrialsServer user@AuthedUser{..} =
               , teacherSubjectLevelMax  = Nothing
               }
 
-          when (not (null desiredKeys) || not (null existingIds)) $
-            void $ upsert (PartyRole teacherKey Teacher True) [Models.PartyRoleActive =. True]
+          when (not (null desiredKeys) || not (null existingIds)) $ do
+            now <- liftIO getCurrentTime
+            requireAutomaticSecurityPolicy
+              "trial.teacher-subject.teacher"
+              teacherKey
+              (Just auPartyId)
+              "trials-admin"
+              ("teacher-subject:" <> T.pack (show (fromSqlKey teacherKey)))
+              now
 
           let subjectMap = Map.fromList [ (entityKey s, entityVal s) | s <- subjectEntities ]
               subjectsDTO =
@@ -2345,7 +2379,13 @@ privateTrialsServer user@AuthedUser{..} =
       mStudent <- get studentKey
       when (isNothing mStudent) $
         liftIO $ throwIO err404
-      void $ upsert (PartyRole studentKey Student True) [Models.PartyRoleActive =. True]
+      requireAutomaticSecurityPolicy
+        "trial.teacher-student.student"
+        studentKey
+        (Just auPartyId)
+        "trials-admin"
+        ("teacher-student:" <> T.pack (show (fromSqlKey teacherKey)) <> ":" <> T.pack (show (fromSqlKey studentKey)))
+        now
       void $ upsert (TeacherStudent teacherKey studentKey True now) [TeacherStudentActive =. True]
       pure NoContent
 
@@ -2386,8 +2426,7 @@ privateTrialsServer user@AuthedUser{..} =
       ensureSchoolAccess
       if isSchoolStaff
         then do
-          studentRoles <- selectList [Models.PartyRoleRole ==. Student, Models.PartyRoleActive ==. True] []
-          let ids = map (Models.partyRolePartyId . entityVal) studentRoles
+          ids <- selectCanonicalPartyIdsByRole Student
           studentsByIds ids
         else do
           ids <- teacherStudentIdsFor auPartyId
@@ -2402,7 +2441,13 @@ privateTrialsServer user@AuthedUser{..} =
       notesValue <- either (liftIO . throwIO) pure (validateOptionalPublicTextField "notes" 2000 notes)
       now <- liftIO getCurrentTime
       partyId <- createOrFetchParty (Just fullNameVal) (Just email) phone now
-      void $ upsert (PartyRole partyId Student True) [Models.PartyRoleActive =. True]
+      requireAutomaticSecurityPolicy
+        "trial.student-created.student"
+        partyId
+        (Just auPartyId)
+        "trials-admin"
+        ("student-created:" <> T.pack (show (fromSqlKey partyId)))
+        now
       unless isSchoolStaff $
         void $ upsert (TeacherStudent auPartyId partyId True now) [TeacherStudentActive =. True]
       forM_ notesValue $ \txt ->

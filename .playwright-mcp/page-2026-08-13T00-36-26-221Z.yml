@@ -1,0 +1,361 @@
+- generic [ref=f35e1]:
+  - generic [ref=f35e612]:
+    - generic [ref=f35e615]:
+      - link [ref=f35e1290] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f35e628]:
+        - link [ref=f35e1292] [cursor=pointer]:
+          - /url: /
+        - link [ref=f35e1294] [cursor=pointer]:
+          - /url: /reels/
+        - link [ref=f35e1296] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f35e656]: "3"
+        - link [ref=f35e1299] [cursor=pointer]:
+          - /url: /explore/
+        - link [ref=f35e1301] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f35e1303] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f35e1305] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f35e1307] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f35e1308]
+      - generic [ref=f35e720]:
+        - link [ref=f35e1310] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f35e1312] [cursor=pointer]:
+          - /url: "#"
+    - main [ref=f35e740]:
+      - generic [ref=f35e745]:
+        - navigation [ref=f35e1314]:
+          - generic [ref=f35e747]:
+            - generic [ref=f35e748]:
+              - button [ref=f35e1315] [cursor=pointer]:
+                - heading [level=2] [ref=f35e1316]:
+                  - generic [ref=f35e752]: tdf.records.label
+              - button [ref=f35e1318] [cursor=pointer]
+            - tablist [ref=f35e765]:
+              - tab [selected] [ref=f35e1320] [cursor=pointer]:
+                - generic [ref=f35e767]: Primary
+              - tab [ref=f35e1321] [cursor=pointer]:
+                - generic [ref=f35e770]: General
+              - tab [ref=f35e1322] [cursor=pointer]:
+                - generic [ref=f35e773]: From ads
+              - tab [ref=f35e1323] [cursor=pointer]:
+                - generic [ref=f35e777]: Requests
+            - textbox [ref=f35e1325]:
+              - /placeholder: Search
+            - generic [ref=f35e788]:
+              - generic [ref=f35e790]:
+                - list [ref=f35e792]:
+                  - listitem [ref=f35e793]
+                  - listitem [ref=f35e794]:
+                    - button [ref=f35e1326] [cursor=pointer]:
+                      - generic [ref=f35e797]:
+                        - generic [ref=f35e798]: Current obsession...
+                        - generic [ref=f35e804]:
+                          - link [ref=f35e806]
+                          - generic [ref=f35e807]: Your note
+                  - listitem [ref=f35e809]:
+                    - button [ref=f35e1327] [cursor=pointer]:
+                      - generic [ref=f35e813]:
+                        - generic [ref=f35e814]: a q hora perdemos la gravedad?😂para vestirme y estar redi pa volar 🫨🐦‍🔥
+                        - generic [ref=f35e821]:
+                          - link [ref=f35e1328]
+                          - generic [ref=f35e825]: Cami Mantilla
+                  - listitem [ref=f35e828]:
+                    - button [ref=f35e1330] [cursor=pointer]:
+                      - generic [ref=f35e832]:
+                        - generic [ref=f35e833]: Toca la nota Así me gustan las perritas, obedientes
+                        - generic [ref=f35e842]:
+                          - link [ref=f35e1331]
+                          - generic [ref=f35e846]: Ana Julia/ DJ JU🫧
+                  - listitem [ref=f35e849]:
+                    - button [ref=f35e1333] [cursor=pointer]:
+                      - generic [ref=f35e853]:
+                        - generic [ref=f35e854]: show en cdmx hoy 12/08
+                        - generic [ref=f35e861]:
+                          - link [ref=f35e1334]
+                          - generic [ref=f35e865]: Zoe Moff
+                  - listitem [ref=f35e868]:
+                    - button [ref=f35e1336] [cursor=pointer]:
+                      - generic [ref=f35e872]:
+                        - generic [ref=f35e878]:
+                          - generic [ref=f35e879]: Fearless
+                          - generic [ref=f35e886]: Pink Floyd
+                          - generic [ref=f35e887]: Reinventarse las veces que sean necesarias ✨❤️‍🔥
+                        - generic [ref=f35e888]:
+                          - link [ref=f35e1338]
+                          - generic [ref=f35e892]: Sara King
+                  - listitem [ref=f35e895]:
+                    - button [ref=f35e1340] [cursor=pointer]:
+                      - generic [ref=f35e899]:
+                        - generic [ref=f35e905]:
+                          - generic [ref=f35e906]: Si No Estás
+                          - generic [ref=f35e913]: Penyair
+                        - generic [ref=f35e914]:
+                          - link [ref=f35e1342]
+                          - generic [ref=f35e918]: Soley Fino
+                  - listitem [ref=f35e921]:
+                    - button [ref=f35e1344] [cursor=pointer]:
+                      - generic [ref=f35e925]:
+                        - generic [ref=f35e931]:
+                          - generic [ref=f35e932]: Senorita Tristeza
+                          - generic [ref=f35e939]: Scsi-9
+                        - generic [ref=f35e940]:
+                          - link [ref=f35e1346]
+                          - generic [ref=f35e944]: Daniela Cadena Dávila
+                  - listitem [ref=f35e947]:
+                    - button [ref=f35e1348] [cursor=pointer]:
+                      - generic [ref=f35e951]:
+                        - generic [ref=f35e957]:
+                          - generic [ref=f35e958]: Action League Now
+                          - generic [ref=f35e965]: ASTU
+                        - generic [ref=f35e966]:
+                          - link [ref=f35e1350]
+                          - generic [ref=f35e970]: Blue Records
+                  - listitem [ref=f35e973]:
+                    - button [ref=f35e1352] [cursor=pointer]:
+                      - generic [ref=f35e977]:
+                        - generic [ref=f35e983]:
+                          - generic [ref=f35e984]: Mi lanza es este Ska (Live)
+                          - generic [ref=f35e991]: Cálmese Banda Brava
+                          - generic [ref=f35e992]: Nos hemos preparado 7 años para este momento 😎
+                        - generic [ref=f35e993]:
+                          - link [ref=f35e1354]
+                          - generic [ref=f35e997]: Quito Bohemio
+                - button [ref=f35e1356] [cursor=pointer]
+              - generic [ref=f35e1005]:
+                - button [ref=f35e1357] [cursor=pointer]:
+                  - generic [ref=f35e1018]:
+                    - generic [ref=f35e1019]: Federico Molinari
+                    - generic [ref=f35e1025]:
+                      - generic [ref=f35e1026]: "You: Hola, Federico 👋 Vimos tu fecha en Cumbayá y la conversación grupal reciente conectada con TDF. En TDF puedes reunir perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Te invitamos a recorrerlo: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f35e1028]:
+                        - generic [ref=f35e1029]: ·
+                        - generic [ref=f35e1032]: 1m
+                - button [ref=f35e1360] [cursor=pointer]:
+                  - generic [ref=f35e1047]:
+                    - generic [ref=f35e1048]: Fabro Alomìa Torres
+                    - generic [ref=f35e1054]:
+                      - generic [ref=f35e1055]: "You: Hola, Fabro 👋 Vimos tus fechas electrónicas en Las Abejas y Cumbayá, además del grupo reciente conectado con TDF. Tu escena necesita un espacio propio: en TDF puedes armar tu perfil y encontrarte con artistas, lanzamientos y experiencias de Quito. Te invitamos a probarlo: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f35e1057]:
+                        - generic [ref=f35e1058]: ·
+                        - generic [ref=f35e1061]: 2m
+                - button [ref=f35e1363] [cursor=pointer]:
+                  - generic [ref=f35e1076]:
+                    - generic [ref=f35e1077]: Llama Este Pez
+                    - generic [ref=f35e1083]:
+                      - generic [ref=f35e1084]: "You: Hola, Llama Este Pez 👋 Vimos tu interacción reciente con TDF y tus fechas electrónicas en Plaza Belmonte y Quito. En TDF puedes reunir perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Te invitamos a recorrerlo: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f35e1086]:
+                        - generic [ref=f35e1087]: ·
+                        - generic [ref=f35e1090]: 4m
+                - button [ref=f35e1366] [cursor=pointer]:
+                  - generic [ref=f35e1105]:
+                    - generic [ref=f35e1106]: el Rovlex
+                    - generic [ref=f35e1112]:
+                      - generic [ref=f35e1113]: "You: Hola, Rovlex 👋 Nos pediste información sobre TDF y vimos tu contenido de trap, rap y drill vinculado a Quito. Tu escena necesita un espacio propio: aquí puedes crear tu perfil público, mostrar música y conectar con la comunidad. Te invitamos a probarlo: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f35e1115]:
+                        - generic [ref=f35e1116]: ·
+                        - generic [ref=f35e1119]: 5m
+                - button [ref=f35e1369] [cursor=pointer]:
+                  - generic [ref=f35e1134]:
+                    - generic [ref=f35e1135]: La T de Teez
+                    - generic [ref=f35e1141]:
+                      - generic [ref=f35e1142]: "You: Hola, Teez 👋 Nos escribiste por el anuncio y vimos tu trabajo urbano desde Quitumbe. En TDF puedes reunir tu perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Aquí puedes crear tu cuenta: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f35e1144]:
+                        - generic [ref=f35e1145]: ·
+                        - generic [ref=f35e1148]: 7m
+                - button [ref=f35e1372] [cursor=pointer]:
+                  - generic [ref=f35e1163]:
+                    - generic [ref=f35e1164]: HNO
+                    - generic [ref=f35e1170]:
+                      - generic [ref=f35e1171]: Ya le hago
+                      - generic [ref=f35e1173]:
+                        - generic [ref=f35e1174]: ·
+                        - generic [ref=f35e1177]: 9m
+                - button [ref=f35e1375] [cursor=pointer]:
+                  - generic [ref=f35e1192]:
+                    - generic [ref=f35e1193]: Blue Records
+                    - generic [ref=f35e1199]:
+                      - generic [ref=f35e1200]: Listo :)
+                      - generic [ref=f35e1202]:
+                        - generic [ref=f35e1203]: ·
+                        - generic [ref=f35e1206]: 2h
+                - button [ref=f35e1378] [cursor=pointer]:
+                  - generic [ref=f35e1221]:
+                    - generic [ref=f35e1222]: InmoDesarrollo - Enríquez & Arquitectos | IDEA ∴
+                    - generic [ref=f35e1228]:
+                      - generic [ref=f35e1229]: InmoDesarrollo sent an attachment.
+                      - generic [ref=f35e1231]:
+                        - generic [ref=f35e1232]: ·
+                        - generic [ref=f35e1235]: 1d
+                - button [ref=f35e1381] [cursor=pointer]:
+                  - generic [ref=f35e1262]:
+                    - status [ref=f35e1382]
+                    - generic [ref=f35e1268]:
+                      - status [ref=f35e1383]
+                      - status [ref=f35e1384]
+        - generic [ref=f35e1277]:
+          - heading [level=2] [ref=f35e1385]: Your messages
+          - generic [ref=f35e1285]: Send a message to start a chat.
+          - button [ref=f35e1386] [cursor=pointer]: Send message
+  - dialog "New message" [ref=f35e1393]:
+    - generic [ref=f35e1395]:
+      - generic [ref=f35e1396]:
+        - heading [level=2] [ref=f35e1397]:
+          - generic "Title text for new message dialog" [ref=f35e1398]: New message
+        - button [ref=f35e1402] [cursor=pointer]:
+          - img "Close" [ref=f35e1404]
+      - generic [ref=f35e1407]:
+        - generic [ref=f35e1408]:
+          - generic [ref=f35e1409]: "To:"
+          - textbox "To:" [active] [ref=f35e1412]:
+            - /placeholder: Search...
+        - separator [ref=f35e1413]
+        - listbox [ref=f35e1415]:
+          - option "User avatar Space Trip Fest spacetripfest Radio selection" [ref=f35e1416] [cursor=pointer]:
+            - generic [ref=f35e1419]:
+              - img "User avatar" [ref=f35e1424]
+              - generic [ref=f35e1427]:
+                - generic [ref=f35e1428]: Space Trip Fest
+                - generic [ref=f35e1431]: spacetripfest
+              - checkbox "Radio selection" [ref=f35e1437]
+          - option "User avatar Valentina Viteri valenvitec Radio selection" [ref=f35e1438] [cursor=pointer]:
+            - generic [ref=f35e1441]:
+              - img "User avatar" [ref=f35e1446]
+              - generic [ref=f35e1449]:
+                - generic [ref=f35e1450]: Valentina Viteri
+                - generic [ref=f35e1453]: valenvitec
+              - checkbox "Radio selection" [ref=f35e1459]
+          - option "User avatar Diego Saa 0iego.saa Radio selection" [ref=f35e1460] [cursor=pointer]:
+            - generic [ref=f35e1463]:
+              - img "User avatar" [ref=f35e1468]
+              - generic [ref=f35e1471]:
+                - generic [ref=f35e1472]: Diego Saa
+                - generic [ref=f35e1475]: 0iego.saa
+              - checkbox "Radio selection" [ref=f35e1481]
+          - option "User avatar El Domo del Pululahua domo.pululahua Radio selection" [ref=f35e1482] [cursor=pointer]:
+            - generic [ref=f35e1485]:
+              - img "User avatar" [ref=f35e1490]
+              - generic [ref=f35e1493]:
+                - generic [ref=f35e1494]: El Domo del Pululahua
+                - generic [ref=f35e1497]: domo.pululahua
+              - checkbox "Radio selection" [ref=f35e1503]
+          - option "User avatar NiQuito Urbano niquito.urbano Radio selection" [ref=f35e1504] [cursor=pointer]:
+            - generic [ref=f35e1507]:
+              - img "User avatar" [ref=f35e1512]
+              - generic [ref=f35e1515]:
+                - generic [ref=f35e1516]: NiQuito Urbano
+                - generic [ref=f35e1519]: niquito.urbano
+              - checkbox "Radio selection" [ref=f35e1525]
+          - option "User avatar Emanuele Pilo-Pais L. deal3ma Radio selection" [ref=f35e1526] [cursor=pointer]:
+            - generic [ref=f35e1529]:
+              - img "User avatar" [ref=f35e1534]
+              - generic [ref=f35e1537]:
+                - generic [ref=f35e1538]: Emanuele Pilo-Pais L.
+                - generic [ref=f35e1541]: deal3ma
+              - checkbox "Radio selection" [ref=f35e1547]
+          - option "User avatar Llama Este Pez jam_estepez Radio selection" [ref=f35e1548] [cursor=pointer]:
+            - generic [ref=f35e1551]:
+              - img "User avatar" [ref=f35e1556]
+              - generic [ref=f35e1559]:
+                - generic [ref=f35e1560]: Llama Este Pez
+                - generic [ref=f35e1563]: jam_estepez
+              - checkbox "Radio selection" [ref=f35e1569]
+          - option "User avatar Stoned interfacerandom Radio selection" [ref=f35e1570] [cursor=pointer]:
+            - generic [ref=f35e1573]:
+              - img "User avatar" [ref=f35e1578]
+              - generic [ref=f35e1581]:
+                - generic [ref=f35e1582]: Stoned
+                - generic [ref=f35e1585]: interfacerandom
+              - checkbox "Radio selection" [ref=f35e1591]
+          - option "User avatar Cesar Galarza cesargalarza.music Radio selection" [ref=f35e1592] [cursor=pointer]:
+            - generic [ref=f35e1595]:
+              - img "User avatar" [ref=f35e1600]
+              - generic [ref=f35e1603]:
+                - generic [ref=f35e1604]: Cesar Galarza
+                - generic [ref=f35e1607]: cesargalarza.music
+              - checkbox "Radio selection" [ref=f35e1613]
+          - option "User avatar Skankafe skankafe Radio selection" [ref=f35e1614] [cursor=pointer]:
+            - generic [ref=f35e1617]:
+              - img "User avatar" [ref=f35e1622]
+              - generic [ref=f35e1625]:
+                - generic [ref=f35e1626]: Skankafe
+                - generic [ref=f35e1629]: skankafe
+              - checkbox "Radio selection" [ref=f35e1635]
+          - option "User avatar 130.dB Desiree 130.db Radio selection" [ref=f35e1636] [cursor=pointer]:
+            - generic [ref=f35e1639]:
+              - img "User avatar" [ref=f35e1644]
+              - generic [ref=f35e1647]:
+                - generic [ref=f35e1648]: 130.dB Desiree
+                - generic [ref=f35e1651]: 130.db
+              - checkbox "Radio selection" [ref=f35e1657]
+          - option "User avatar David E. Drums davidedrums.drummer Radio selection" [ref=f35e1658] [cursor=pointer]:
+            - generic [ref=f35e1661]:
+              - img "User avatar" [ref=f35e1666]
+              - generic [ref=f35e1669]:
+                - generic [ref=f35e1670]: David E. Drums
+                - generic [ref=f35e1673]: davidedrums.drummer
+              - checkbox "Radio selection" [ref=f35e1679]
+          - option "User avatar Jossefina Gándara josefinagandara Radio selection" [ref=f35e1680] [cursor=pointer]:
+            - generic [ref=f35e1683]:
+              - img "User avatar" [ref=f35e1688]
+              - generic [ref=f35e1691]:
+                - generic [ref=f35e1692]: Jossefina Gándara
+                - generic [ref=f35e1695]: josefinagandara
+              - checkbox "Radio selection" [ref=f35e1701]
+          - option "User avatar El Espíritu de la Diabla elespiritudeladiabla Radio selection" [ref=f35e1702] [cursor=pointer]:
+            - generic [ref=f35e1705]:
+              - img "User avatar" [ref=f35e1710]
+              - generic [ref=f35e1713]:
+                - generic [ref=f35e1714]: El Espíritu de la Diabla
+                - generic [ref=f35e1717]: elespiritudeladiabla
+              - checkbox "Radio selection" [ref=f35e1723]
+          - option "User avatar BlackPalacio blackpalacio_music Radio selection" [ref=f35e1724] [cursor=pointer]:
+            - generic [ref=f35e1727]:
+              - img "User avatar" [ref=f35e1732]
+              - generic [ref=f35e1735]:
+                - generic [ref=f35e1736]: BlackPalacio
+                - generic [ref=f35e1739]: blackpalacio_music
+              - checkbox "Radio selection" [ref=f35e1745]
+          - option "User avatar J. F. jotaefe.life Radio selection" [ref=f35e1746] [cursor=pointer]:
+            - generic [ref=f35e1749]:
+              - img "User avatar" [ref=f35e1754]
+              - generic [ref=f35e1757]:
+                - generic [ref=f35e1758]: J. F.
+                - generic [ref=f35e1761]: jotaefe.life
+              - checkbox "Radio selection" [ref=f35e1767]
+          - option "User avatar Sara King saraking30 Radio selection" [ref=f35e1768] [cursor=pointer]:
+            - generic [ref=f35e1771]:
+              - img "User avatar" [ref=f35e1776]
+              - generic [ref=f35e1779]:
+                - generic [ref=f35e1780]: Sara King
+                - generic [ref=f35e1783]: saraking30
+              - checkbox "Radio selection" [ref=f35e1789]
+          - option "User avatar Blue Records blue_records333 Radio selection" [ref=f35e1790] [cursor=pointer]:
+            - generic [ref=f35e1793]:
+              - img "User avatar" [ref=f35e1798]
+              - generic [ref=f35e1801]:
+                - generic [ref=f35e1802]: Blue Records
+                - generic [ref=f35e1805]: blue_records333
+              - checkbox "Radio selection" [ref=f35e1811]
+          - option "User avatar San🌿Arte san.arte.222 Radio selection" [ref=f35e1812] [cursor=pointer]:
+            - generic [ref=f35e1815]:
+              - img "User avatar" [ref=f35e1820]
+              - generic [ref=f35e1823]:
+                - generic [ref=f35e1824]: San🌿Arte
+                - generic [ref=f35e1827]: san.arte.222
+              - checkbox "Radio selection" [ref=f35e1833]
+          - option "User avatar J juano_music Radio selection" [ref=f35e1834] [cursor=pointer]:
+            - generic [ref=f35e1837]:
+              - img "User avatar" [ref=f35e1842]
+              - generic [ref=f35e1845]:
+                - generic [ref=f35e1846]: J
+                - generic [ref=f35e1849]: juano_music
+              - checkbox "Radio selection" [ref=f35e1855]
+        - separator [ref=f35e1856]
+        - generic [ref=f35e1857]:
+          - button "Chat" [disabled]

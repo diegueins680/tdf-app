@@ -1,125 +1,57 @@
 import type { ServiceCatalogDTO } from '../api/types';
-import { resolveRuntimeCurrency } from './formatters';
 
 export interface ServiceType {
   id: string;
+  code: string;
   name: string;
+  categoryId: string;
   priceCents: number | null;
   currency: string;
   billingUnit?: string | null;
   kind?: string;
   pricingModel?: string;
+  pricingModelId: string;
   taxBps?: number | null;
+  taxRateCode?: string | null;
+  taxRateId?: string | null;
+  currencyId: string;
+  defaultDurationMinutes?: number | null;
+  requiresEngineer: boolean;
+  defaultResources: ServiceCatalogDTO['scDefaultResources'];
+  sortOrder: number;
   active: boolean;
 }
 
-const defaultCurrency = resolveRuntimeCurrency();
-
-export const defaultServiceTypes: ServiceType[] = [
-  {
-    id: 'band-rec',
-    name: 'Grabación de Banda',
-    priceCents: 25 * 100,
-    currency: defaultCurrency,
-    billingUnit: 'hora',
-    kind: 'Recording',
-    pricingModel: 'Hourly',
-    taxBps: 1200,
-    active: true,
-  },
-  {
-    id: 'vocal-rec',
-    name: 'Grabación de Voz',
-    priceCents: 35 * 100,
-    currency: defaultCurrency,
-    billingUnit: 'hora',
-    kind: 'Recording',
-    pricingModel: 'Hourly',
-    taxBps: 1200,
-    active: true,
-  },
-  {
-    id: 'podcast',
-    name: 'Podcast',
-    priceCents: 80 * 100,
-    currency: defaultCurrency,
-    billingUnit: 'episodio',
-    kind: 'EventProduction',
-    pricingModel: 'PerSong',
-    taxBps: 1200,
-    active: true,
-  },
-  {
-    id: 'ensayo',
-    name: 'Ensayo',
-    priceCents: 30 * 100,
-    currency: defaultCurrency,
-    billingUnit: 'hora',
-    kind: 'Rehearsal',
-    pricingModel: 'Hourly',
-    taxBps: 1200,
-    active: true,
-  },
-  {
-    id: 'dj-practice',
-    name: 'Práctica en DJ Booth',
-    priceCents: 15 * 100,
-    currency: defaultCurrency,
-    billingUnit: 'hora',
-    kind: 'Rehearsal',
-    pricingModel: 'Hourly',
-    taxBps: 1200,
-    active: true,
-  },
-  {
-    id: 'mix',
-    name: 'Mezcla',
-    priceCents: 120 * 100,
-    currency: defaultCurrency,
-    billingUnit: 'canción',
-    kind: 'Mixing',
-    pricingModel: 'PerSong',
-    taxBps: 1200,
-    active: true,
-  },
-  {
-    id: 'master',
-    name: 'Mastering',
-    priceCents: 70 * 100,
-    currency: defaultCurrency,
-    billingUnit: 'canción',
-    kind: 'Mastering',
-    pricingModel: 'PerSong',
-    taxBps: 1200,
-    active: true,
-  },
-];
-
 export const mapServiceCatalogDto = (dto: ServiceCatalogDTO): ServiceType => ({
   id: String(dto.scId),
+  code: dto.scCode,
   name: dto.scName,
+  categoryId: dto.scCategoryId,
   priceCents: dto.scRateCents ?? null,
   currency: dto.scCurrency,
   billingUnit: dto.scBillingUnit ?? null,
   kind: dto.scKind,
   pricingModel: dto.scPricingModel,
-  taxBps: dto.scTaxBps ?? null,
+  pricingModelId: dto.scPricingModelId,
+  taxBps: null,
+  taxRateCode: dto.scTaxRateCode ?? null,
+  taxRateId: dto.scTaxRateId ?? null,
+  currencyId: dto.scCurrencyId,
+  defaultDurationMinutes: dto.scDefaultDurationMinutes ?? null,
+  requiresEngineer: dto.scRequiresEngineer,
+  defaultResources: dto.scDefaultResources,
+  sortOrder: dto.scSortOrder,
   active: dto.scActive,
 });
-
-const cloneServiceType = (svc: ServiceType): ServiceType => ({ ...svc });
-
-const cloneDefaultServiceTypes = (): ServiceType[] => defaultServiceTypes.map(cloneServiceType);
 
 export const mergeServiceTypes = (
   items?: ServiceCatalogDTO[] | null,
   opts: { includeInactive?: boolean; sort?: boolean } = {},
 ): ServiceType[] => {
-  if (!items) return cloneDefaultServiceTypes();
-  if (items.length === 0) return cloneDefaultServiceTypes();
+  if (!items || items.length === 0) return [];
   const filtered = opts.includeInactive ? items : items.filter((svc) => svc.scActive);
   if (filtered.length === 0) return [];
   const mapped = filtered.map(mapServiceCatalogDto);
   if (opts.sort === false) return mapped;
-  return mapped.sort((a, b) => a.name.localeCompare(b.name));
+  return mapped.sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
 };

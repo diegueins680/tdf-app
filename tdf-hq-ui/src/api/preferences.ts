@@ -1,20 +1,8 @@
+import type { components } from './generated/types';
 import { get, post, put } from './client';
 
-export interface LocalePreferences {
-  locale: string;
-  currency: string;
-  timezone: string;
-  countryCode: string | null;
-  supportedLocales: string[];
-  supportedCurrencies: string[];
-}
-
-export interface LocalePreferencesUpdate {
-  locale: string;
-  currency: string;
-  timezone: string;
-  countryCode: string | null;
-}
+export type LocalePreferences = components['schemas']['LocalePreferences'];
+export type LocalePreferencesUpdate = components['schemas']['LocalePreferencesUpdate'];
 
 export const Preferences = {
   get: () => get<LocalePreferences>('/session/preferences'),

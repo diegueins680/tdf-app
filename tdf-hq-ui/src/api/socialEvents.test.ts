@@ -63,13 +63,13 @@ describe('SocialEventsAPI', () => {
     await SocialEventsAPI.listEvents({
       city: '  Quito  ',
       startAfter: '   ',
-      eventType: ' concert ',
-      eventStatus: '',
+      eventTypeId: '31000000-0000-4000-8000-000000000001',
+      workflowStateId: ' 00000000-0000-4000-8000-000000000233 ',
       artistId: ' 42 ',
       venueId: '   ',
     });
 
-    expect(getMock).toHaveBeenCalledWith('/social-events/events?city=Quito&event_type=concert&artistId=42');
+    expect(getMock).toHaveBeenCalledWith('/social-events/events?city=Quito&event_type_id=31000000-0000-4000-8000-000000000001&workflow_state_id=00000000-0000-4000-8000-000000000233&artistId=42');
   });
 
   it('removes waitlist entries through the shared API client', async () => {

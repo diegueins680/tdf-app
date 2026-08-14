@@ -7,7 +7,7 @@ const emptyFanProfileDraft: FanProfileUpdate = {
   fpuDisplayName: '',
   fpuBio: '',
   fpuCity: '',
-  fpuFavoriteGenres: '',
+  fpuFavoriteGenreIds: [],
   fpuAvatarUrl: '',
 };
 
@@ -34,7 +34,7 @@ export function useFanProfile({
         fpuDisplayName: profileQuery.data.fpDisplayName ?? '',
         fpuBio: profileQuery.data.fpBio ?? '',
         fpuCity: profileQuery.data.fpCity ?? '',
-        fpuFavoriteGenres: profileQuery.data.fpFavoriteGenres ?? '',
+        fpuFavoriteGenreIds: profileQuery.data.fpFavoriteGenreIds ?? [],
         fpuAvatarUrl: profileQuery.data.fpAvatarUrl ?? '',
       });
     }

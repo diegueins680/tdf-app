@@ -621,7 +621,10 @@ export default function OrdersPage() {
             </Button>
           </Stack>
         ) : showInitialLoadingState ? (
-          <SkeletonCards count={3} />
+          <SkeletonCards
+            count={3}
+            label="Cargando sesiones… La tabla aparecerá cuando termine esta primera carga para que puedas comparar horario, servicio, booking, recursos y estado desde una sola vista."
+          />
         ) : showFirstSessionEmptyState ? (
           <Stack spacing={1} sx={{ p: 3 }}>
             <Typography variant="h6" fontWeight={700}>
@@ -867,7 +870,6 @@ interface OrderEditDialogProps {
 
 const buildOrderEditFormState = (booking: BookingDTO | null) => ({
   title: booking?.title ?? '',
-  serviceType: booking?.serviceType ?? '',
   status: normalizeStatusValue(booking?.status),
   notes: booking?.notes ?? '',
 });
@@ -877,7 +879,6 @@ function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessag
   const [form, setForm] = useState(() => buildOrderEditFormState(null));
   const hasChanges =
     form.title !== initialForm.title
-    || form.serviceType !== initialForm.serviceType
     || form.status !== initialForm.status
     || form.notes !== initialForm.notes;
 
@@ -890,7 +891,7 @@ function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessag
     return null;
   }
 
-  const handleFieldChange = (field: 'title' | 'serviceType' | 'notes') =>
+  const handleFieldChange = (field: 'title' | 'notes') =>
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       setForm((prev) => ({ ...prev, [field]: event.target.value }));
     };
@@ -904,7 +905,6 @@ function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessag
     if (!hasChanges) return;
     const payload: BookingUpdatePayload = {
       ubTitle: form.title,
-      ubServiceType: form.serviceType,
       ubStatus: form.status,
       ubNotes: form.notes,
     };
@@ -934,9 +934,9 @@ function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessag
             />
             <TextField
               label="Servicio"
-              value={form.serviceType}
-              onChange={handleFieldChange('serviceType')}
-              disabled={saving}
+              value={booking.serviceType ?? '—'}
+              helperText="El servicio se cambia desde Agenda usando una oferta publicada."
+              disabled
             />
             <FormControl fullWidth disabled={saving}>
               <InputLabel id="booking-status-label">Estado</InputLabel>

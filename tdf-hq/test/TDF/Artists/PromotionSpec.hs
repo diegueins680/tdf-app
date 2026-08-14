@@ -135,6 +135,8 @@ initializeArtistPromotionSchema = do
         \\"emergency_contact\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL,\
         \\"stripe_customer_id\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
         \)"
         []
@@ -171,6 +173,8 @@ insertParty name =
             , partyEmergencyContact = Nothing
             , partyNotes = Nothing
             , partyStripeCustomerId = Nothing
+            , partyCountryCode = Nothing
+            , partyCountryId = Nothing
             , partyCreatedAt = mkUtc 2026 4 23
             }
 

@@ -4,41 +4,25 @@
  */
 
 export interface paths {
-    "/services/storefront": {
+    "/social-events/events": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List active mixing and mastering packages */
-        get: operations["listServiceStorefrontPackages"];
+        /** List social events using canonical catalog identifiers */
+        get: operations["listSocialEvents"];
         put?: never;
-        post?: never;
+        /** Create a social event using a canonical event type identifier */
+        post: operations["createSocialEvent"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/services/storefront/{packageId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get an active service package */
-        get: operations["getServiceStorefrontPackage"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/services/storefront/order": {
+    "/social-events/events/{eventId}/moments/{momentId}/reactions": {
         parameters: {
             query?: never;
             header?: never;
@@ -47,113 +31,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create an unpaid service order from an authoritative package */
-        post: operations["createServiceStorefrontOrder"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/services/storefront/order/{orderNumber}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read a guest service order using its private lookup capability */
-        get: operations["getServiceStorefrontOrder"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/services/storefront/order/{orderNumber}/datafast/checkout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Create or resume an idempotent Datafast checkout resource */
-        post: operations["createServiceDatafastCheckout"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/services/storefront/datafast/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Verify Datafast status server-to-server
-         * @description Browser return alone never marks an order paid. Amount, currency, checkout resource, payment ID, and merchant reference are bound on the server.
-         */
-        get: operations["verifyServiceDatafastPayment"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/services/storefront/order/{orderNumber}/paypal/create": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Create or resume a PayPal Order */
-        post: operations["createServicePayPalOrder"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/services/storefront/paypal/capture": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Capture and bind a PayPal Order server-to-server */
-        post: operations["captureServicePayPalOrder"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/services/storefront/order/{orderNumber}/manual-payment": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Select a manual payment rail without confirming payment */
-        post: operations["selectServiceManualPayment"];
+        /** Toggle a persisted reaction type on an event moment */
+        post: operations["reactToSocialEventMoment"];
         delete?: never;
         options?: never;
         head?: never;
@@ -935,6 +814,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/artists/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search public artist profiles
+         * @description Filters public artists by free text and canonical persisted genre ID.
+         */
+        get: operations["searchPublicArtists"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/fans/artists/{artistId}": {
         parameters: {
             query?: never;
@@ -1073,6 +972,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/fans/me/clubs/{artistId}/posts/{postId}/react": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Toggle a persisted Fan Club post reaction
+         * @description Accepts only the canonical UUID of an active, published item in the `content-reaction-types` catalog.
+         */
+        post: operations["reactToFanClubPost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fans/me/clubs/{artistId}/memories/{memoryId}/react": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Toggle a persisted Fan Club memory reaction
+         * @description Accepts only the canonical UUID of an active, published item in the `content-reaction-types` catalog.
+         */
+        post: operations["reactToFanClubMemory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fans/me/clubs/{artistId}/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the Fan Club reaction leaderboard
+         * @description Returns creator badges as canonical persisted UUID relationships with bilingual read-only presentation.
+         */
+        get: operations["getFanClubLeaderboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/parties": {
         parameters: {
             query?: never;
@@ -1123,26 +1082,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/parties/{partyId}/roles": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Add party role
-         * @description Activates a single role for the provided party id. Useful to grant extra capabilities (Artist, Student, etc.).
-         */
-        post: operations["addPartyRole"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/users": {
         parameters: {
             query?: never;
@@ -1163,7 +1102,100 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/users/{userId}/roles": {
+    "/label/project-notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active operational project notes */
+        get: operations["listLabelProjectNotes"];
+        put?: never;
+        /** Create an operational project note */
+        post: operations["createLabelProjectNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/label/project-notes/{projectNoteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectNoteId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Deactivate an operational project note */
+        delete: operations["deactivateLabelProjectNote"];
+        options?: never;
+        head?: never;
+        /** Update an operational project note with optimistic locking */
+        patch: operations["updateLabelProjectNote"];
+        trace?: never;
+    };
+    "/cms/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Resolve published authored content by persisted URL slug
+         * @description The slug is a public URL alias resolver only; it is never accepted by administrative writes as canonical identity.
+         */
+        get: operations["getPublicCmsContent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/contents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List published CMS content for URL resolution */
+        get: operations["listPublicCmsContent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/admin/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List CMS versions by canonical authored-content UUID */
+        get: operations["listAdminCmsContent"];
+        put?: never;
+        /** Create a CMS draft for canonical authored content */
+        post: operations["createCmsDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/admin/content/{cmsContentId}/publish": {
         parameters: {
             query?: never;
             header?: never;
@@ -1171,12 +1203,741 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
+        put?: never;
         /**
-         * Replace roles for a user
-         * @description Assigns the provided set of roles to the credential identified by `userId`.
+         * Publish an eligible CMS draft
+         * @description The draft must have a canonical authored-content ID and its author cannot approve it.
          */
-        put: operations["updateUserRoles"];
+        post: operations["publishCmsDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/admin/content/{cmsContentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
         post?: never;
+        /** Archive an unpublished CMS version */
+        delete: operations["archiveCmsDraft"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/catalog/public": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List published canonical service offerings */
+        get: operations["listPublicServiceOfferings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List canonical service offerings for scheduling administration */
+        get: operations["listServiceOfferings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pipelines/snapshot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fetch a versioned canonical pipeline snapshot
+         * @description Returns every active pipeline definition and canonical card in one request for offline clients and bounded prefetching.
+         */
+        get: operations["getPipelineSnapshot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pipelines/definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List persisted pipeline definitions
+         * @description Returns internal workflow UUIDs, bilingual labels, bound service offerings, and ordered persisted states. There is no slug or service-kind relationship.
+         */
+        get: operations["listPipelineDefinitions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pipelines/{workflowId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships. */
+                workflowId: components["parameters"]["PipelineWorkflowId"];
+            };
+            cookie?: never;
+        };
+        /** List cards in a persisted pipeline workflow */
+        get: operations["listPipelineCards"];
+        put?: never;
+        /** Create a card with canonical service and state IDs */
+        post: operations["createPipelineCard"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pipelines/{workflowId}/stages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List ordered states for a persisted pipeline workflow */
+        get: operations["listPipelineStages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pipelines/{workflowId}/{cardId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships. */
+                workflowId: components["parameters"]["PipelineWorkflowId"];
+                cardId: string;
+            };
+            cookie?: never;
+        };
+        /** Get one canonical pipeline card */
+        get: operations["getPipelineCard"];
+        put?: never;
+        post?: never;
+        /** Delete an unreferenced operational card */
+        delete: operations["deletePipelineCard"];
+        options?: never;
+        head?: never;
+        /** Update a card or move it by workflow-state UUID */
+        patch: operations["updatePipelineCard"];
+        trace?: never;
+    };
+    "/catalogs/definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List public catalog definitions */
+        get: operations["listPublicCatalogDefinitions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalogs/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Batch-load public catalogs */
+        get: operations["batchPublicCatalogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalogs/{catalogCode}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search published items in one public catalog */
+        get: operations["listPublicCatalogItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalogs/{catalogCode}/items/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resolve a published public catalog item by canonical UUID */
+        get: operations["getPublicCatalogItem"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalogs/workflows/{workflowCode}/states": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a public persisted workflow and its effective behavior metadata
+         * @description Only active, non-sensitive workflow definitions explicitly marked for public reading are exposed. Defaults, capabilities, and transitions remain database-authoritative.
+         */
+        get: operations["getPublicWorkflowStates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List catalog definitions visible to an administrator */
+        get: operations["listAdminCatalogDefinitions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/content-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List persisted, governed content types and strict schemas */
+        get: operations["listContentTypes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/workflow-states": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List persisted workflow states and localized labels */
+        get: operations["listWorkflowStates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/authored-contents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List canonical authored-content definitions
+         * @description Returns persisted URL aliases, explicit routes, and their governed content-type schemas. Structured Records entities are not CMS content.
+         */
+        get: operations["listAuthoredContents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Batch-load catalogs for administration */
+        get: operations["batchAdminCatalogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/{catalogCode}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search catalog items for administration */
+        get: operations["listAdminCatalogItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/{catalogCode}/items/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resolve an administrable catalog item by canonical UUID */
+        get: operations["getAdminCatalogItem"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/{catalogCode}/revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List catalog revisions */
+        get: operations["listCatalogRevisions"];
+        put?: never;
+        /** Create a catalog draft revision */
+        post: operations["createCatalogRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/revisions/{revisionId}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit a catalog revision for review */
+        post: operations["submitCatalogRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/revisions/{revisionId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve and publish a catalog revision */
+        post: operations["approveCatalogRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/revisions/{revisionId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject a catalog revision */
+        post: operations["rejectCatalogRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/{catalogCode}/items/{itemId}/activation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Activate or deactivate a catalog item */
+        patch: operations["setCatalogItemActivation"];
+        trace?: never;
+    };
+    "/catalog/{catalogCode}/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reorder catalog items by canonical UUID */
+        post: operations["reorderCatalogItems"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/{catalogCode}/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a reversible, audited catalog merge revision */
+        post: operations["mergeCatalogItems"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/{catalogCode}/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Load privacy-conscious aggregate catalog usage */
+        get: operations["getCatalogUsage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/{catalogCode}/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export a catalog as CSV */
+        get: operations["exportCatalogCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/{catalogCode}/import.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Validate or import catalog CSV */
+        post: operations["importCatalogCsv"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/records/feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Load the typed public Records feed
+         * @description Returns published releases, recordings, sessions, editorial collections, credits, and external resources using canonical persisted IDs and explicit relationships.
+         */
+        get: operations["getPublicRecordsFeed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/security/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List persisted security roles */
+        get: operations["listSecurityRoles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/security/party-role-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List canonical party-role assignments */
+        get: operations["listPartyRoleAssignments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/security/revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List security grant revisions */
+        get: operations["listSecurityGrantRevisions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/security/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List immutable security audit events */
+        get: operations["listSecurityAuditEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/security/party-role-revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a party-role grant draft */
+        post: operations["createPartyRoleGrantRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/security/role-permission-revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a role-permission grant draft */
+        post: operations["createRolePermissionGrantRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/security/revisions/{revisionId}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit a security revision for review */
+        post: operations["submitSecurityGrantRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/security/revisions/{revisionId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve and publish a security revision
+         * @description Normal approval requires a different actor. Documented emergency self-approval is capability-gated and audited.
+         */
+        post: operations["approveSecurityGrantRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/security/revisions/{revisionId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject a security revision */
+        post: operations["rejectSecurityGrantRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fans/me/role-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request the persisted Fan role for the authenticated account
+         * @description Creates a submitted security revision for the caller only. It does not grant access until a distinct authorized reviewer approves it.
+         */
+        post: operations["requestMyFanRole"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1342,6 +2103,103 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/radio/auto-stop-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List published browser-broadcast auto-stop options
+         * @description Returns the specialized persisted options in deterministic order. Exactly one active global option is marked as the broadcast default.
+         */
+        get: operations["listRadioAutoStopOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/radio/streams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search active radio streams
+         * @description Returns active streams. Country and genre filtering use immutable UUIDs of active persisted references.
+         */
+        get: operations["searchRadioStreams"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/radio/streams/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register or reactivate a radio stream */
+        post: operations["upsertActiveRadioStream"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/radio/streams/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import radio stream sources
+         * @description Provider country and genre text are retained as review evidence and mapped only when exactly one active persisted reference matches.
+         */
+        post: operations["importRadioStreams"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/radio/streams/refresh-metadata": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh radio metadata
+         * @description Refreshes station names and observes provider genre text without storing it as a relationship.
+         */
+        post: operations["refreshRadioStreamMetadata"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/radio/streams/now-playing": {
         parameters: {
             query?: never;
@@ -1362,36 +2220,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/access-requests": {
+    "/radio/transmissions": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List the current user's feature access requests */
-        get: operations["listFeatureAccessRequests"];
+        get?: never;
         put?: never;
         /**
-         * Request one feature action
-         * @description Creates a scoped, auditable request. Approval does not grant a broader role or module.
+         * Create a radio transmission
+         * @description Creates ingest and listening endpoints. The optional genre is referenced only by canonical UUID.
          */
-        post: operations["createFeatureAccessRequest"];
+        post: operations["createRadioTransmission"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/access-requests/review": {
+    "/radio/presence": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List requests within the reviewer's exact grant scope */
-        get: operations["listFeatureAccessRequestsForReview"];
+        /** Get current user's radio presence */
+        get: operations["getRadioPresence"];
+        put?: never;
+        /** Set current user's radio presence */
+        post: operations["setRadioPresence"];
+        /** Clear current user's radio presence */
+        delete: operations["clearRadioPresence"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/radio/presence/{partyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a party's radio presence */
+        get: operations["getPartyRadioPresence"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1400,7 +2276,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/access-requests/{requestId}/decision": {
+    "/live-sessions/intake": {
         parameters: {
             query?: never;
             header?: never;
@@ -1409,15 +2285,18 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post?: never;
+        /**
+         * Submit a Live Session intake
+         * @description Creates a Live Session intake using canonical persisted genre and instrument UUIDs. Musicians and setlist are JSON-encoded strings inside the multipart form. Copied genre, instrument, role, label, code, and slug fields are rejected.
+         */
+        post: operations["createLiveSessionIntake"];
         delete?: never;
         options?: never;
         head?: never;
-        /** Approve or reject one requested feature action */
-        patch: operations["decideFeatureAccessRequest"];
+        patch?: never;
         trace?: never;
     };
-    "/access-requests/{requestId}/cancel": {
+    "/feedback": {
         parameters: {
             query?: never;
             header?: never;
@@ -1426,23 +2305,29 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post?: never;
+        /**
+         * Submit product feedback
+         * @description Creates feedback using canonical persisted category and severity UUIDs. Legacy category, severity, copied label, code, and slug fields are rejected. Authentication is optional.
+         */
+        post: operations["submitFeedback"];
         delete?: never;
         options?: never;
         head?: never;
-        /** Cancel one of the current user's pending requests */
-        patch: operations["cancelFeatureAccessRequest"];
+        patch?: never;
         trace?: never;
     };
-    "/navigation/preferences": {
+    "/ddex/references": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List the current user's authorized navigation preferences */
-        get: operations["listNavigationPreferences"];
+        /**
+         * Read the governed DDEX runtime registry
+         * @description Returns active persisted standard versions, executable message types, deployment support, document and operational workflow states, and technical operation registries. IDs are canonical; labels, ordering, and codes are read-only database-authoritative metadata.
+         */
+        get: operations["getDdexReferences"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1451,49 +2336,35 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/navigation/preferences/{featureId}": {
+    "/ddex/documents": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        /** Update favorite and pin state for one currently authorized feature */
-        put: operations["updateNavigationPreference"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/navigation/preferences/{featureId}/visit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
+        /** List DDEX documents by canonical workflow state */
+        get: operations["listDdexDocuments"];
         put?: never;
-        /** Record an authorized feature visit */
-        post: operations["recordNavigationVisit"];
+        /** Upload a DDEX document */
+        post: operations["uploadDdexDocument"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/operations/metrics": {
+    "/ddex/documents/{documentId}": {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
             cookie?: never;
         };
-        /** Get organization-scoped operational KPIs */
-        get: operations["getOperationsMetrics"];
+        /** Read one DDEX document with canonical references */
+        get: operations["getDdexDocument"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1502,33 +2373,17 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/operations/work-items": {
+    "/ddex/documents/{documentId}/raw": {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
             cookie?: never;
         };
-        /** Search and filter the operational inbox */
-        get: operations["listOperationsWorkItems"];
-        put?: never;
-        /** Create a manual correlated or explicitly uncorrelated work item */
-        post: operations["createOperationsWorkItem"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/operations/work-items/{workItemId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get an authorized work-item thread */
-        get: operations["getOperationsWorkItem"];
+        /** Download the private source document */
+        get: operations["downloadDdexRawDocument"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1537,113 +2392,89 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/operations/work-items/{workItemId}/seen": {
+    "/ddex/documents/{documentId}/validation-runs": {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
             cookie?: never;
         };
         get?: never;
         put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Mark shared first-seen state without mutating the source entity */
-        patch: operations["markOperationsWorkItemSeen"];
-        trace?: never;
-    };
-    "/operations/work-items/{workItemId}/transition": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Apply an audited lifecycle transition only */
-        patch: operations["transitionOperationsWorkItem"];
-        trace?: never;
-    };
-    "/operations/work-items/{workItemId}/assignment": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Assign a scoped staff member or team */
-        patch: operations["assignOperationsWorkItem"];
-        trace?: never;
-    };
-    "/operations/work-items/{workItemId}/priority": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Override recommended priority with a required reason */
-        patch: operations["prioritizeOperationsWorkItem"];
-        trace?: never;
-    };
-    "/operations/work-items/{workItemId}/notes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Add an internal note with scoped mentions */
-        post: operations["addOperationsWorkItemNote"];
+        /** Start governed validation for a DDEX document */
+        post: operations["validateDdexDocument"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/operations/approvals": {
+    "/ddex/documents/{documentId}/validation-runs/latest": {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
             cookie?: never;
         };
-        get?: never;
+        /** Read the latest validation report for a DDEX document */
+        get: operations["getLatestDdexValidationReport"];
         put?: never;
-        /** Request a consequential action requiring a second person */
-        post: operations["createOperationsApproval"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/operations/approvals/{approvalId}/decision": {
+    "/ddex/documents/{documentId}/preview": {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        /** Preview a DDEX import */
+        get: operations["previewDdexDocument"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ddex/documents/{documentId}/import-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create the persisted DDEX import preview */
+        post: operations["createDdexImportPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ddex/import-plans/{importPlanId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                importPlanId: components["parameters"]["DdexImportPlanId"];
+            };
             cookie?: never;
         };
         get?: never;
@@ -1652,28 +2483,30 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Approve or reject with a distinct authorized person */
-        patch: operations["decideOperationsApproval"];
+        /** Resolve typed DDEX import conflicts */
+        patch: operations["resolveDdexImportPlan"];
         trace?: never;
     };
-    "/operations/integration-failures": {
+    "/ddex/import-plans/{importPlanId}/commit": {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                importPlanId: components["parameters"]["DdexImportPlanId"];
+            };
             cookie?: never;
         };
-        /** List the admin-visible provider and dead-letter failure queue */
-        get: operations["listOperationsIntegrationFailures"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** Commit an approved DDEX import plan */
+        post: operations["commitDdexImportPlan"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/operations/integration-failures/{failureId}/replay": {
+    "/ddex/exports": {
         parameters: {
             query?: never;
             header?: never;
@@ -1682,23 +2515,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Audit and schedule an idempotent manual replay */
-        post: operations["replayOperationsIntegrationFailure"];
+        /** Request an export using a canonical governed standard version */
+        post: operations["createDdexExport"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/operations/events": {
+    "/ddex/exports/{exportId}/download": {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                exportId: components["parameters"]["DdexExportId"];
+            };
             cookie?: never;
         };
-        /** Replay missed authorized real-time effects and provide bounded polling fallback */
-        get: operations["listOperationsStreamEvents"];
+        /** Download a rendered DDEX export */
+        get: operations["downloadDdexExport"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1707,35 +2542,18 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/operations/saved-views": {
+    "/ddex/partners": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List personal and shared operational views */
-        get: operations["listOperationsSavedViews"];
+        /** List partners and canonical standard-version policies */
+        get: operations["listDdexPartners"];
         put?: never;
-        /** Persist or replace an operational view */
-        post: operations["createOperationsSavedView"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/operations/push-subscriptions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Register an encrypted staff push token */
-        post: operations["createOperationsPushSubscription"];
+        /** Create a partner with canonical standard-version policies */
+        post: operations["createDdexPartner"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1746,96 +2564,455 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        ServiceStorefrontPackage: {
+        DdexStandardVersion: {
             /** Format: uuid */
-            sspId: string;
-            /** @enum {string} */
-            sspServiceKind: "Mixing" | "Mastering" | "Bundle";
-            sspTier: string;
-            sspName: string;
-            sspDescription?: string | null;
-            sspPriceUsdCents: number;
-            /** @enum {string} */
-            sspCurrency: "USD";
-            sspMinSongCount: number;
-            sspMaxSongCount: number;
-            sspTurnaroundDays: number;
-            sspRevisionCount: number;
-            sspDeliverables?: string[] | null;
-            sspFeatures?: string[] | null;
-            sspActive: boolean;
-            sspSortOrder: number;
-        };
-        ServiceStorefrontOrderCreate: {
-            /** Format: uuid */
-            ssocPackageId: string;
-            ssocBuyerName: string;
-            /** Format: email */
-            ssocBuyerEmail: string;
-            ssocBuyerPhone?: string | null;
-            ssocArtistName?: string | null;
-            ssocGenre?: string | null;
-            ssocSongCount?: number | null;
-            ssocNotes?: string | null;
+            ddexStandardVersionId: string;
+            readonly ddexStandardCode: string;
+            readonly ddexVersionCode: string;
+            readonly ddexStandardVersionName: string;
+            readonly ddexStandardVersionNameEs: string;
+            readonly ddexStandardVersionNameEn: string;
+            readonly ddexStandardSourceVersion: string;
             /** Format: uri */
-            ssocReferenceTrackUrl?: string | null;
-            /** Format: date */
-            ssocDeadline?: string | null;
+            readonly ddexStandardSourceUri: string;
+            readonly ddexStandardDetectionEnabled: boolean;
+            readonly ddexStandardValidationEnabled: boolean;
+            readonly ddexStandardImportEnabled: boolean;
+            readonly ddexStandardExportEnabled: boolean;
+            readonly ddexStandardVersionRevision: number;
         };
-        ServiceStorefrontOrder: {
+        DdexMessageType: {
             /** Format: uuid */
-            ssoId: string;
-            ssoOrderNumber: string;
-            ssoBuyerName: string;
-            /** Format: email */
-            ssoBuyerEmail: string;
-            ssoBuyerPhone?: string | null;
-            ssoArtistName?: string | null;
+            ddexMessageTypeId: string;
             /** Format: uuid */
-            ssoPackageId: string;
-            ssoServiceKind: string;
-            ssoTier: string;
-            ssoPriceUsdCents: number;
-            ssoCurrency: string;
-            ssoStatus: string;
-            ssoPaymentProvider?: string | null;
-            /** @description Returned only in the create response. */
-            ssoLookupToken?: string | null;
-            /** Format: date-time */
-            ssoPaidAt?: string | null;
-            ssoGenre?: string | null;
-            ssoSongCount: number;
-            ssoNotes?: string | null;
-            ssoReferenceTrackUrl?: string | null;
-            /** Format: date */
-            ssoDeadline?: string | null;
-            ssoDeliverablesUrl?: string | null;
-            /** Format: date-time */
-            ssoCreatedAt: string;
-            /** Format: date-time */
-            ssoUpdatedAt: string;
+            ddexMessageTypeStandardVersionId: string;
+            readonly ddexMessageTypeCode: string;
+            readonly ddexMessageTypeName: string;
+            readonly ddexMessageTypeNameEs: string;
+            readonly ddexMessageTypeNameEn: string;
+            readonly ddexMessageTypeRuntimeSupported: boolean;
+            readonly ddexMessageTypeRevision: number;
         };
-        DatafastCheckout: {
-            dcOrderId: string;
-            dcCheckoutId: string;
-            /** Format: uri */
-            dcWidgetUrl: string;
-            dcAmount: string;
-            dcCurrency: string;
+        DdexDocumentState: {
+            /** Format: uuid */
+            ddexDocumentStateId: string;
+            readonly ddexDocumentStateCode: string;
+            readonly ddexDocumentStateName: string;
+            readonly ddexDocumentStateNameEs: string;
+            readonly ddexDocumentStateNameEn: string;
+            readonly ddexDocumentStateSortOrder: number;
+            readonly ddexDocumentStateTerminal: boolean;
+            readonly ddexDocumentStateRevision: number;
         };
-        PayPalOrderCreate: {
-            pcOrderId: string;
-            pcPaypalOrderId: string;
-            /** Format: uri */
-            pcApprovalUrl?: string | null;
+        DdexOperationalState: {
+            /** Format: uuid */
+            ddexOperationalStateId: string;
+            readonly ddexOperationalStateCode: string;
+            readonly ddexOperationalStateName: string;
+            readonly ddexOperationalStateNameEs: string;
+            readonly ddexOperationalStateNameEn: string;
+            readonly ddexOperationalStateSortOrder: number;
+            readonly ddexOperationalStateTerminal: boolean;
+            readonly ddexOperationalStateRevision: number;
         };
-        PayPalCaptureRequest: {
-            pcCaptureOrderId: string;
-            pcCapturePaypalId: string;
+        DdexOperationalWorkflow: {
+            /** Format: uuid */
+            ddexOperationalWorkflowId: string;
+            readonly ddexOperationalWorkflowCode: string;
+            readonly ddexOperationalWorkflowName: string;
+            readonly ddexOperationalWorkflowNameEs: string;
+            readonly ddexOperationalWorkflowNameEn: string;
+            readonly ddexOperationalWorkflowSensitive: boolean;
+            /** Format: int64 */
+            readonly ddexOperationalWorkflowRevision: number;
+            ddexOperationalWorkflowStates: components["schemas"]["DdexOperationalState"][];
         };
-        ServiceManualPaymentCreate: {
+        DdexOperation: {
+            /** Format: uuid */
+            ddexOperationId: string;
+            readonly ddexOperationCode: string;
+            readonly ddexOperationName: string;
+            readonly ddexOperationNameEs: string;
+            readonly ddexOperationNameEn: string;
+            readonly ddexOperationDescription: string | null;
+            readonly ddexOperationDescriptionEs: string | null;
+            readonly ddexOperationDescriptionEn: string | null;
+            readonly ddexOperationSortOrder: number;
+            readonly ddexOperationRevision: number;
+        };
+        DdexValidationReference: {
+            /** Format: uuid */
+            ddexValidationReferenceId: string;
+            readonly ddexValidationReferenceCode: string;
+            readonly ddexValidationReferenceName: string;
+            readonly ddexValidationReferenceNameEs: string;
+            readonly ddexValidationReferenceNameEn: string;
+            readonly ddexValidationReferenceDescription: string | null;
+            readonly ddexValidationReferenceDescriptionEs: string | null;
+            readonly ddexValidationReferenceDescriptionEn: string | null;
+            readonly ddexValidationReferenceSortOrder: number;
+            readonly ddexValidationReferenceRevision: number;
+        };
+        DdexReferenceSnapshot: {
+            /** Format: int64 */
+            ddexReferenceRevision: number;
             /** @enum {string} */
-            ssmPaymentMethod: "bank_transfer" | "cash" | "pos";
+            ddexReferenceLocale: "es" | "en";
+            ddexReferenceStandardVersions: components["schemas"]["DdexStandardVersion"][];
+            ddexReferenceMessageTypes: components["schemas"]["DdexMessageType"][];
+            ddexReferenceDocumentStates: components["schemas"]["DdexDocumentState"][];
+            ddexReferenceOperationalWorkflows: components["schemas"]["DdexOperationalWorkflow"][];
+            ddexReferenceJobOperations: components["schemas"]["DdexOperation"][];
+            ddexReferenceImportOperations: components["schemas"]["DdexOperation"][];
+            ddexReferenceValidationResults: components["schemas"]["DdexValidationReference"][];
+            ddexReferenceValidationSeverities: components["schemas"]["DdexValidationReference"][];
+            ddexReferenceValidationLayers: components["schemas"]["DdexValidationReference"][];
+        };
+        DdexDocument: {
+            /** Format: int64 */
+            ddexDocumentId: number;
+            ddexDocumentFileName: string;
+            readonly ddexDocumentSha256: string;
+            /** Format: uuid */
+            ddexDocumentStandardVersionId: string;
+            readonly ddexDocumentStandardCode: string;
+            readonly ddexDocumentVersionCode: string;
+            /** Format: uuid */
+            ddexDocumentMessageTypeId: string | null;
+            readonly ddexDocumentMessageTypeCode: string | null;
+            /** Format: uuid */
+            ddexDocumentWorkflowStateId: string;
+            readonly ddexDocumentWorkflowStateCode: string;
+            readonly ddexDocumentWorkflowStateNameEs: string;
+            readonly ddexDocumentWorkflowStateNameEn: string;
+            ddexDocumentMessageId: string | null;
+            ddexDocumentSenderId: string | null;
+            ddexDocumentRecipientId: string | null;
+            /** Format: date-time */
+            ddexDocumentCreatedAt: string;
+        };
+        DdexUploadRequest: {
+            uploadFileName: string;
+            uploadContentType: string;
+            /** Format: byte */
+            uploadContentBase64: string;
+        };
+        DdexValidationRun: {
+            /** Format: int64 */
+            validationRunId: number;
+            /** Format: int64 */
+            validationRunDocumentId: number;
+            /** Format: uuid */
+            validationRunWorkflowStateId: string;
+            readonly validationRunWorkflowStateCode: string;
+            readonly validationRunWorkflowStateNameEs: string;
+            readonly validationRunWorkflowStateNameEn: string;
+            /** Format: date-time */
+            validationRunStartedAt: string;
+            /** Format: date-time */
+            validationRunFinishedAt: string | null;
+        };
+        DdexValidationIssue: {
+            /** Format: uuid */
+            readonly issueSeverityId: string;
+            readonly issueSeverityCode: string;
+            readonly issueSeverityNameEs: string;
+            readonly issueSeverityNameEn: string;
+            /** Format: uuid */
+            readonly issueLayerId: string;
+            readonly issueLayerCode: string;
+            readonly issueLayerNameEs: string;
+            readonly issueLayerNameEn: string;
+            readonly issueCode: string;
+            readonly issueMessage: string;
+            readonly issueLine: number | null;
+            readonly issueColumn: number | null;
+        };
+        DdexValidationReport: {
+            /** Format: int64 */
+            reportRunId: number;
+            reportIssues: components["schemas"]["DdexValidationIssue"][];
+            readonly reportIsValid: boolean;
+        };
+        DdexImportConflict: {
+            /** Format: int64 */
+            conflictId: number;
+            readonly conflictEntityType: string;
+            readonly conflictIdentifier: string;
+            readonly conflictDescription: string;
+        };
+        DdexImportPlan: {
+            /** Format: int64 */
+            importPlanId: number;
+            /** Format: int64 */
+            importPlanDocumentId: number;
+            /** Format: uuid */
+            importPlanWorkflowStateId: string;
+            readonly importPlanWorkflowStateCode: string;
+            readonly importPlanWorkflowStateNameEs: string;
+            readonly importPlanWorkflowStateNameEn: string;
+            importPlanConflicts: components["schemas"]["DdexImportConflict"][];
+            importPlanChanges: string[];
+        };
+        DdexConflictResolution: {
+            /** Format: int64 */
+            resolutionConflictId: number;
+            /** @description Parser discriminant for the currently unavailable resolution operation. */
+            resolutionAction: string;
+            /** Format: int64 */
+            resolutionTargetId: number | null;
+        };
+        DdexImportPlanResolution: {
+            /** Format: int64 */
+            resolutionPlanId: number;
+            resolutionConflicts: components["schemas"]["DdexConflictResolution"][];
+        };
+        DdexDownloadResponse: {
+            downloadFileName: string;
+            downloadContentType: string;
+            /** Format: byte */
+            downloadContentBase64: string;
+        };
+        DdexExportRequest: {
+            /** Format: int64 */
+            exportReleaseId: number;
+            /** Format: int64 */
+            exportPartnerId: number;
+            /**
+             * Format: uuid
+             * @description Canonical governed standard-version relationship; version strings and slugs are rejected.
+             */
+            exportStandardVersionId: string;
+        };
+        DdexExport: {
+            /** Format: int64 */
+            ddexExportId: number;
+            /** Format: int64 */
+            ddexExportReleaseId: number;
+            /** Format: int64 */
+            ddexExportPartnerId: number;
+            /** Format: uuid */
+            ddexExportWorkflowStateId: string;
+            readonly ddexExportWorkflowStateCode: string;
+            readonly ddexExportWorkflowStateNameEs: string;
+            readonly ddexExportWorkflowStateNameEn: string;
+            readonly ddexExportXmlChecksum: string;
+            /** Format: date-time */
+            ddexExportCreatedAt: string;
+        };
+        DdexPartner: {
+            /** Format: int64 */
+            ddexPartnerId: number;
+            ddexPartnerName: string;
+            ddexPartnerDpid: string | null;
+            ddexPartnerAllowedStandardVersions: components["schemas"]["DdexStandardVersion"][];
+        };
+        DdexPartnerCreateRequest: {
+            partnerName: string;
+            partnerDpid: string | null;
+            partnerAllowedStandardVersionIds: string[];
+        };
+        PipelineStage: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            nameEs: string;
+            nameEn: string;
+            sortOrder: number;
+            terminal: boolean;
+        };
+        PipelineServiceOffering: {
+            /** Format: uuid */
+            id: string;
+            readonly code: string;
+            readonly nameEs: string;
+            readonly nameEn: string;
+        };
+        PipelineDefinition: {
+            /** Format: uuid */
+            workflowId: string;
+            readonly code: string;
+            nameEs: string;
+            nameEn: string;
+            /** Format: int64 */
+            revision: number;
+            serviceOfferings: components["schemas"]["PipelineServiceOffering"][];
+            stages: components["schemas"]["PipelineStage"][];
+        };
+        PipelineSnapshot: {
+            /** Format: int64 */
+            revision: number;
+            definitions: components["schemas"]["PipelineDefinition"][];
+            cards: components["schemas"]["PipelineCard"][];
+        };
+        PipelineCard: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            artist?: string | null;
+            /** Format: uuid */
+            serviceOfferingId: string;
+            readonly serviceOfferingCode: string;
+            /** Format: uuid */
+            workflowId: string;
+            /** Format: uuid */
+            workflowStateId: string;
+            readonly workflowStateCode: string;
+            readonly workflowStateNameEs: string;
+            readonly workflowStateNameEn: string;
+            sortOrder: number;
+            notes?: string | null;
+        };
+        PipelineCardCreate: {
+            title: string;
+            artist?: string;
+            /** Format: uuid */
+            serviceOfferingId: string;
+            /**
+             * Format: uuid
+             * @description Omit to use the one persisted active initial state.
+             */
+            workflowStateId?: string;
+            sortOrder?: number;
+            notes?: string;
+        };
+        PipelineCardUpdate: {
+            title?: string;
+            artist?: string | null;
+            /**
+             * Format: uuid
+             * @description The backend enforces the persisted transition relation.
+             */
+            workflowStateId?: string;
+            sortOrder?: number;
+            notes?: string | null;
+        };
+        EventMomentReactionRequest: {
+            /**
+             * Format: uuid
+             * @description Canonical UUID of an active published item in the `reaction-types` catalog.
+             */
+            emrrReactionTypeId: string;
+        };
+        ContentReactionRequest: {
+            /**
+             * Format: uuid
+             * @description Canonical UUID of an active published item in the `content-reaction-types` catalog.
+             */
+            crrReactionTypeId: string;
+        };
+        ContentReactionSummaryItem: {
+            /** Format: uuid */
+            rsiReactionTypeId: string;
+            readonly rsiCode: string;
+            readonly rsiNameEs: string;
+            readonly rsiNameEn: string;
+            readonly rsiDisplaySymbol: string;
+            readonly rsiCount: number;
+        };
+        ContentReactionSummary: {
+            rsItems: components["schemas"]["ContentReactionSummaryItem"][];
+            readonly rsTotal: number;
+            /** Format: uuid */
+            readonly rsMyReactionTypeId: string | null;
+        };
+        CreatorBadge: {
+            /** Format: uuid */
+            cbBadgeTypeId: string;
+            readonly cbCode: string;
+            readonly cbNameEs: string;
+            readonly cbNameEn: string;
+            /** Format: date-time */
+            readonly cbAwardedAt: string;
+            /** Format: date-time */
+            readonly cbExpiresAt?: string | null;
+        };
+        LeaderboardEntry: {
+            /** Format: int64 */
+            lbPartyId: number;
+            lbDisplayName: string;
+            lbAvatarUrl?: string | null;
+            lbTotalReactions: number;
+            lbBadges: components["schemas"]["CreatorBadge"][];
+            lbRank: number;
+        };
+        EventMomentReaction: {
+            /** Format: uuid */
+            emrReactionTypeId: string;
+            readonly emrReactionCode: string;
+            readonly emrReactionNameEs: string;
+            readonly emrReactionNameEn: string;
+            readonly emrReactionEmoji: string;
+            emrPartyId: string;
+            /** Format: date-time */
+            emrCreatedAt?: string | null;
+        };
+        EventMomentComment: {
+            emcId?: string | null;
+            emcMomentId?: string | null;
+            emcAuthorPartyId?: string | null;
+            emcAuthorName: string;
+            emcBody: string;
+            /** Format: date-time */
+            emcCreatedAt?: string | null;
+            /** Format: date-time */
+            emcUpdatedAt?: string | null;
+        };
+        EventMoment: {
+            emId?: string | null;
+            emEventId?: string | null;
+            emAuthorPartyId?: string | null;
+            emAuthorName: string;
+            emCaption?: string | null;
+            emMediaUrl: string;
+            emMediaType: string;
+            emMediaWidth?: number | null;
+            emMediaHeight?: number | null;
+            emMediaDurationMs?: number | null;
+            /** Format: date-time */
+            emCreatedAt?: string | null;
+            /** Format: date-time */
+            emUpdatedAt?: string | null;
+            emReactions: components["schemas"]["EventMomentReaction"][];
+            emComments: components["schemas"]["EventMomentComment"][];
+        };
+        SocialEvent: {
+            eventId?: string | null;
+            eventOrganizerPartyId?: string | null;
+            eventTitle: string;
+            eventDescription?: string | null;
+            /** Format: date-time */
+            eventStart: string;
+            /** Format: date-time */
+            eventEnd: string;
+            eventVenueId?: string | null;
+            eventPriceCents?: number | null;
+            eventCapacity?: number | null;
+            /**
+             * Format: uuid
+             * @description Canonical relationship to the persisted `event-types` catalog.
+             */
+            eventTypeId: string;
+            /**
+             * Format: uuid
+             * @description Canonical social-event workflow relationship. Creation may omit it to use the persisted initial default.
+             */
+            eventWorkflowStateId?: string | null;
+            readonly eventWorkflowStateCode?: string | null;
+            readonly eventWorkflowStateNameEs?: string | null;
+            readonly eventWorkflowStateNameEn?: string | null;
+            readonly eventPublicListable?: boolean | null;
+            readonly eventTicketPurchaseEnabled?: boolean | null;
+            eventCurrency?: string | null;
+            eventBudgetCents?: number | null;
+            /** Format: uri */
+            eventTicketUrl?: string | null;
+            /** Format: uri */
+            eventImageUrl?: string | null;
+            eventIsPublic?: boolean | null;
+            eventArtists: {
+                [key: string]: unknown;
+            }[];
         };
         Version: {
             /** @description Application name. */
@@ -1881,15 +3058,16 @@ export interface components {
             email: string;
             /** @example +1 415 555 2671 */
             phone?: string | null;
-            /** Format: password */
+            /**
+             * Format: password
+             * @example changeme123
+             */
             password: string;
-            /** @description Optional roles (non-admin) to assign during signup. */
-            roles?: components["schemas"]["Role"][];
-            /** @description Artist or band ids the fan wants to follow immediately after signup. */
+            /** @description Artist or band ids to follow after account creation; this does not assign a security role. */
             fanArtistIds?: number[];
             /**
              * Format: int64
-             * @description Optional existing artist profile to claim when it is not already assigned to a user.
+             * @description Optional existing artist profile to claim when it is not already assigned to a user. A verified email match applies the persisted artist-claim policy server-side.
              */
             claimArtistId?: number | null;
         };
@@ -1913,21 +3091,53 @@ export interface components {
             preferences: components["schemas"]["LocalePreferences"];
         };
         LocalePreferences: {
-            /** @example en */
-            locale: string;
-            /** @example USD */
-            currency: string;
+            /**
+             * Format: uuid
+             * @description Canonical persisted locale identity.
+             */
+            localeId: string;
+            /**
+             * @description Presentation code resolved from localeId; never accepted as write identity.
+             * @example en
+             */
+            readonly locale: string;
+            /**
+             * Format: uuid
+             * @description Canonical persisted currency identity.
+             */
+            currencyId: string;
+            /**
+             * @description ISO presentation code resolved from currencyId; never accepted as write identity.
+             * @example USD
+             */
+            readonly currency: string;
             /** @example Europe/Berlin */
             timezone: string;
-            countryCode?: string | null;
-            supportedLocales: string[];
-            supportedCurrencies: string[];
+            /**
+             * Format: uuid
+             * @description Canonical persisted country identity selected by the user.
+             */
+            countryId?: string | null;
+            /** @description Presentation and external-wire code resolved from countryId; legacy rows may use preserved migration evidence until backfilled. */
+            readonly countryCode?: string | null;
         };
         LocalePreferencesUpdate: {
-            locale: string;
-            currency: string;
+            /**
+             * Format: uuid
+             * @description Canonical active deployment-enabled locale identity.
+             */
+            localeId: string;
+            /**
+             * Format: uuid
+             * @description Canonical active deployment-enabled currency identity.
+             */
+            currencyId: string;
             timezone: string;
-            countryCode?: string | null;
+            /**
+             * Format: uuid
+             * @description Canonical active country identity. Null explicitly clears the preference.
+             */
+            countryId?: string | null;
         };
         CurrencyConversionAuditCreate: {
             sourceCurrency: string;
@@ -1947,20 +3157,672 @@ export interface components {
         Role: "Admin" | "Manager" | "Studio Manager" | "Intern" | "Engineer" | "Teacher" | "Reception" | "Accounting" | "Live Sessions Producer" | "Webmaster" | "Artist" | "Artista" | "Promotor" | "Promoter" | "Producer" | "Songwriter" | "DJ" | "Publicist" | "TourManager" | "LabelRep" | "StageManager" | "RoadCrew" | "Photographer" | "A&R" | "Student" | "ReadOnly" | "Vendor" | "Customer" | "Fan" | "Maintenance";
         UserRoleSummary: {
             /** Format: int64 */
-            id?: number;
-            name?: string;
+            id: number;
+            /** Format: int64 */
+            partyId: number;
+            name: string;
             /** Format: email */
             email?: string | null;
             phone?: string | null;
-            roles?: components["schemas"]["Role"][];
-            /** @enum {string} */
-            status?: "Active" | "Inactive";
-            /** Format: date-time */
-            createdAt?: string;
-        };
-        UserRoleUpdate: {
-            /** @description Complete list of roles that should remain active. */
             roles: components["schemas"]["Role"][];
+            /** @enum {string} */
+            status: "Active" | "Inactive";
+            /** Format: date-time */
+            createdAt: string;
+        };
+        CmsContentDraft: {
+            /** Format: uuid */
+            contentId: string;
+            locale: string;
+            title?: string;
+            /** @description May be omitted; new CMS writes always enter the draft workflow state. */
+            status?: string;
+            /** @description Validated against the strict, versioned schema of the referenced persisted content type. */
+            payload?: Record<string, never>;
+        };
+        CmsContent: {
+            id: number;
+            /**
+             * Format: uuid
+             * @description Canonical authored-content relationship. Null/omitted only on preserved legacy rows.
+             */
+            contentId?: string;
+            /** @description Persisted presentation alias copied into the immutable historical version; never a write identifier. */
+            slug: string;
+            locale: string;
+            version: number;
+            status: string;
+            title?: string;
+            payload?: Record<string, never>;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            publishedAt?: string;
+        };
+        LabelProjectNote: {
+            /** Format: uuid */
+            lpnId: string;
+            lpnText: string;
+            lpnCompleted: boolean;
+            /** Format: date-time */
+            lpnCreatedAt: string;
+            /** Format: date-time */
+            lpnUpdatedAt: string;
+            lpnVersion: number;
+        };
+        LabelProjectNoteCreate: {
+            lpncText: string;
+        };
+        LabelProjectNoteUpdate: {
+            lpnuText?: string;
+            lpnuCompleted?: boolean;
+            lpnuExpectedVersion: number;
+        };
+        CatalogDefinition: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            classification: string;
+            entityKind: string;
+            name: string;
+            description?: string;
+            publicRead: boolean;
+            sensitive: boolean;
+            orderingMode: string;
+            sourceName?: string;
+            sourceVersion?: string;
+            /** Format: date */
+            sourceEffectiveDate?: string;
+            /** Format: date-time */
+            lastSyncedAt?: string;
+            /** Format: int64 */
+            cacheRevision: number;
+            active: boolean;
+            version: number;
+        };
+        CatalogItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            catalogId: string;
+            catalogCode: string;
+            kind: string;
+            code: string;
+            name: string;
+            nameEs: string;
+            nameEn: string;
+            description?: string;
+            descriptionEs?: string;
+            descriptionEn?: string;
+            searchAliases: string[];
+            currentSlug?: string;
+            /** Format: uuid */
+            parentId?: string;
+            sortOrder: number;
+            active: boolean;
+            workflowState: string;
+            /** Format: date-time */
+            deprecatedAt?: string;
+            /** Format: uuid */
+            replacementId?: string;
+            externalCode?: string;
+            sourceVersion?: string;
+            /** @description Persisted short visual marker supplied only by typed catalogs such as reaction types. */
+            displaySymbol?: string;
+            /** Format: int64 */
+            usageCount: number;
+            version: number;
+        };
+        CatalogPage: {
+            catalog: components["schemas"]["CatalogDefinition"];
+            items: components["schemas"]["CatalogItem"][];
+            /** @description Effective persisted defaults for this catalog, scoped explicitly and related by canonical entity UUID. */
+            defaults: components["schemas"]["CatalogDefault"][];
+            page: number;
+            pageSize: number;
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            revision: number;
+            locale: string;
+        };
+        CatalogDefault: {
+            /** Format: uuid */
+            entityId: string;
+            scopeKind: string;
+            scopeId: string;
+            /** Format: uuid */
+            localeId?: string;
+            /** Format: date-time */
+            effectiveFrom?: string;
+            /** Format: date-time */
+            effectiveUntil?: string;
+            version: number;
+        };
+        CatalogBatch: {
+            catalogs: components["schemas"]["CatalogPage"][];
+            /** Format: int64 */
+            revision: number;
+            locale: string;
+        };
+        ContentType: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            entityKind: string;
+            name: string;
+            nameEs: string;
+            nameEn: string;
+            description?: string;
+            descriptionEs?: string;
+            descriptionEn?: string;
+            /** @description Strict, versioned schema metadata owned by the persisted content type. */
+            schema: {
+                [key: string]: unknown;
+            };
+            schemaVersion: number;
+            publicRoutePattern?: string;
+            adminRoutePattern?: string;
+            publicRead: boolean;
+            active: boolean;
+            workflowState: string;
+            version: number;
+        };
+        WorkflowState: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workflowId: string;
+            workflowCode: string;
+            code: string;
+            name: string;
+            nameEs: string;
+            nameEn: string;
+            sortOrder: number;
+            terminal: boolean;
+            active: boolean;
+            initialContexts: string[];
+            capabilities: string[];
+            transitions: components["schemas"]["WorkflowTransition"][];
+            version: number;
+        };
+        WorkflowTransition: {
+            /** Format: uuid */
+            toStateId: string;
+            /** @description True only when the backend may execute this transition directly without a permission-bound review flow. */
+            directExecutionAllowed: boolean;
+            requiresReview: boolean;
+            requiresDistinctApprover: boolean;
+            /** Format: date-time */
+            effectiveFrom?: string;
+            /** Format: date-time */
+            effectiveUntil?: string;
+            version: number;
+        };
+        WorkflowStates: {
+            workflowCode: string;
+            locale: string;
+            /** Format: int64 */
+            revision: number;
+            states: components["schemas"]["WorkflowState"][];
+        };
+        AuthoredContent: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            /** Format: uuid */
+            contentTypeId: string;
+            contentTypeCode: string;
+            entityKind: string;
+            name: string;
+            nameEs: string;
+            nameEn: string;
+            description?: string;
+            descriptionEs?: string;
+            descriptionEn?: string;
+            /** @description Persisted current URL alias; never a canonical relationship identifier. */
+            currentSlug: string;
+            publicRoute?: string;
+            schema: {
+                [key: string]: unknown;
+            };
+            schemaVersion: number;
+            sortOrder: number;
+            active: boolean;
+            workflowState: string;
+            revision: number;
+            version: number;
+        };
+        CatalogDraft: {
+            /** Format: uuid */
+            entityId?: string;
+            baseVersion?: number;
+            code: string;
+            nameEs: string;
+            nameEn: string;
+            descriptionEs?: string;
+            descriptionEn?: string;
+            searchAliasesEs: string[];
+            searchAliasesEn: string[];
+            /** @description Presentation-only URL alias; never a relationship or canonical identifier. */
+            currentSlug?: string;
+            /** Format: uuid */
+            parentId?: string;
+            sortOrder: number;
+            externalCode?: string;
+            sourceVersion?: string;
+            serviceOffering?: components["schemas"]["ServiceOfferingDraft"];
+            radioAutoStop?: components["schemas"]["RadioAutoStopDraft"];
+            appearanceMode?: components["schemas"]["AppearanceModeDraft"];
+            /** @description Typed persisted visual marker. Currently accepted only by the reaction-types adapter. */
+            displaySymbol?: string;
+            /** @description Reassigns the explicitly scoped global default when true. Accepted only by catalogs whose typed adapter declares a global default scope. */
+            globalDefault?: boolean;
+            reason: string;
+            sourcePlatform: string;
+            correlationId: string;
+        };
+        ServiceOfferingDraft: {
+            /** Format: uuid */
+            categoryId: string;
+            /** Format: uuid */
+            pricingModelId: string;
+            rateCents?: number;
+            /** Format: uuid */
+            currencyId: string;
+            billingUnitEs?: string;
+            billingUnitEn?: string;
+            /** Format: uuid */
+            taxRateId?: string;
+            defaultDurationMinutes?: number;
+            requiresEngineer: boolean;
+            defaultResources: components["schemas"]["ServiceOfferingDefaultResourceDraft"][];
+        };
+        RadioAutoStopDraft: {
+            durationMinutes: number;
+            defaultForBroadcast: boolean;
+        };
+        AppearanceModeDraft: {
+            defaultForApplication: boolean;
+        };
+        ServiceOfferingDefaultResourceDraft: {
+            resourceId: string;
+            /** Format: uuid */
+            selectionModeId: string;
+            sortOrder: number;
+        };
+        ServiceOffering: {
+            /** Format: uuid */
+            scId: string;
+            scCode: string;
+            scName: string;
+            scNameEs: string;
+            scNameEn: string;
+            /** Format: uuid */
+            scCategoryId: string;
+            /** @description Persisted service category code for display; category relations use IDs in writes. */
+            scKind: string;
+            /** @description Persisted pricing-model code for display; draft relations use pricingModelId. */
+            scPricingModel: string;
+            /** Format: uuid */
+            scPricingModelId: string;
+            scRateCents?: number | null;
+            scCurrency: string;
+            /** Format: uuid */
+            scCurrencyId: string;
+            scBillingUnit?: string | null;
+            scTaxRateCode?: string | null;
+            /** Format: uuid */
+            scTaxRateId?: string | null;
+            scDefaultDurationMinutes?: number | null;
+            scRequiresEngineer: boolean;
+            scDefaultResources: components["schemas"]["ServiceDefaultResource"][];
+            scSortOrder: number;
+            scActive: boolean;
+        };
+        ServiceCatalogEnvelope: {
+            sceSchemaVersion: number;
+            /** Format: int64 */
+            sceRevision: number;
+            sceLocale: string;
+            sceItems: components["schemas"]["ServiceOffering"][];
+        };
+        ServiceDefaultResource: {
+            sdrResourceId: string;
+            sdrResourceName: string;
+            /** Format: uuid */
+            sdrSelectionModeId: string;
+            /** @enum {string} */
+            sdrSelectionMode: "all" | "first-available";
+            sdrSortOrder: number;
+        };
+        CatalogRevision: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            catalogId: string;
+            catalogCode: string;
+            /** Format: uuid */
+            entityId: string;
+            workflowState: string;
+            baseVersion: number;
+            proposedVersion: number;
+            draft: components["schemas"]["CatalogDraft"];
+            /** Format: int64 */
+            createdBy: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            submittedAt?: string;
+            /** Format: int64 */
+            reviewedBy?: number;
+            /** Format: date-time */
+            reviewedAt?: string;
+            /** Format: int64 */
+            approvedBy?: number;
+            /** Format: date-time */
+            approvedAt?: string;
+            reviewerNotes?: string;
+            rejectionReason?: string;
+            /** Format: date-time */
+            scheduledPublishAt?: string;
+            /** Format: date-time */
+            publishedAt?: string;
+        };
+        CatalogReview: {
+            notes: string;
+            /** Format: date-time */
+            scheduledPublishAt?: string;
+            emergencyOverride: boolean;
+        };
+        CatalogActivation: {
+            active: boolean;
+            /** Format: uuid */
+            replacementId?: string;
+            reason: string;
+            expectedVersion: number;
+            correlationId: string;
+        };
+        CatalogReorder: {
+            orderedItemIds: string[];
+            /** Format: int64 */
+            expectedCatalogRevision: number;
+            reason: string;
+            correlationId: string;
+        };
+        CatalogMerge: {
+            /** Format: uuid */
+            sourceItemId: string;
+            /** Format: uuid */
+            targetItemId: string;
+            reason: string;
+            correlationId: string;
+        };
+        CatalogUsage: {
+            /** Format: uuid */
+            itemId?: string;
+            /** Format: date */
+            day: string;
+            /** Format: int64 */
+            selectionCount: number;
+            /** Format: int64 */
+            historicalReferenceCount: number;
+            /** Format: int64 */
+            replacementCount: number;
+            /** Format: int64 */
+            noResultSearchCount: number;
+            /** Format: int64 */
+            formFailureCount: number;
+        };
+        CatalogImportResult: {
+            /** Format: uuid */
+            importJobId: string;
+            dryRun: boolean;
+            status: string;
+            totalRows: number;
+            acceptedRows: number;
+            rejectedRows: number;
+            ambiguousRows: number;
+            errors: string[];
+        };
+        RecordsContributor: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            /** @enum {string} */
+            kind: "artist" | "group" | "credited-ensemble" | "guest";
+            name: string;
+        };
+        RecordsResource: {
+            /** Format: uuid */
+            id: string;
+            providerCode: string;
+            /** @enum {string} */
+            kind: "audio-track" | "video" | "playlist" | "channel";
+            externalCode: string;
+            /** Format: uri */
+            url: string;
+            label?: string;
+            durationMs?: number;
+            /** Format: uri */
+            thumbnailUrl?: string;
+            relationKind: string;
+            primary: boolean;
+            sortOrder: number;
+        };
+        RecordsCollection: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            /** @enum {string} */
+            kind: "release" | "recording" | "session";
+            name: string;
+            description?: string;
+            publicRoute?: string;
+            resources: components["schemas"]["RecordsResource"][];
+            revision: number;
+        };
+        RecordsRelease: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            /** @description Presentation-only current URL alias; never a canonical relationship. */
+            slug?: string;
+            title: string;
+            description?: string;
+            /** Format: uuid */
+            releaseTypeId: string;
+            /** Format: date */
+            releaseDate?: string;
+            contributors: components["schemas"]["RecordsContributor"][];
+            resources: components["schemas"]["RecordsResource"][];
+            sortOrder: number;
+            revision: number;
+        };
+        RecordsRecording: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            /** @description Presentation-only current URL alias; never a canonical relationship. */
+            slug?: string;
+            title: string;
+            description?: string;
+            /** Format: uuid */
+            recordingTypeId: string;
+            durationMs?: number;
+            contributors: components["schemas"]["RecordsContributor"][];
+            resources: components["schemas"]["RecordsResource"][];
+            sortOrder: number;
+            revision: number;
+        };
+        RecordsSession: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            /** @description Presentation-only current URL alias; never a canonical relationship. */
+            slug?: string;
+            title: string;
+            description?: string;
+            /** Format: uuid */
+            sessionTypeId: string;
+            /** Format: date-time */
+            recordedAt?: string;
+            contributors: components["schemas"]["RecordsContributor"][];
+            resources: components["schemas"]["RecordsResource"][];
+            sortOrder: number;
+            revision: number;
+        };
+        RecordsFeed: {
+            locale: string;
+            /** Format: int64 */
+            revision: number;
+            collections: components["schemas"]["RecordsCollection"][];
+            releases: components["schemas"]["RecordsRelease"][];
+            recordings: components["schemas"]["RecordsRecording"][];
+            sessions: components["schemas"]["RecordsSession"][];
+        };
+        SecurityRole: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            nameEs: string;
+            nameEn: string;
+            descriptionEs?: string;
+            descriptionEn?: string;
+            emergencyAdministrator: boolean;
+            systemRole: boolean;
+            selfAssignable: boolean;
+            automaticAssignable: boolean;
+            active: boolean;
+            moduleCodes: string[];
+            permissionCodes: string[];
+            version: number;
+        };
+        SecurityPartyRoleAssignment: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            partyId: number;
+            /** Format: uuid */
+            roleId: string;
+            roleCode: string;
+            roleNameEs: string;
+            active: boolean;
+            /** Format: int64 */
+            grantedBy?: number;
+            /** Format: int64 */
+            approvedBy?: number;
+            /** @enum {string} */
+            approvalMode: "normal" | "emergency" | "bootstrap" | "system-policy";
+            /** Format: uuid */
+            sourceRevisionId?: string;
+            /** Format: uuid */
+            sourcePolicyId?: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            revokedAt?: string;
+            version: number;
+        };
+        PartyRoleGrantDraft: {
+            /** Format: int64 */
+            partyId: number;
+            /** Format: uuid */
+            roleId: string;
+            desiredActive: boolean;
+            expectedVersion: number;
+            reason: string;
+            sourcePlatform: string;
+            correlationId: string;
+        };
+        RolePermissionGrantDraft: {
+            /** Format: uuid */
+            roleId: string;
+            /** Format: uuid */
+            permissionId: string;
+            desiredActive: boolean;
+            expectedVersion: number;
+            reason: string;
+            sourcePlatform: string;
+            correlationId: string;
+        };
+        SecurityGrantReview: {
+            notes: string;
+            emergencyOverrideReason?: string;
+        };
+        SecurityGrantRevision: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            changeKind: "party-role" | "role-permission";
+            /** Format: int64 */
+            partyId?: number;
+            /** Format: uuid */
+            roleId: string;
+            /** Format: uuid */
+            permissionId?: string;
+            desiredActive: boolean;
+            expectedVersion: number;
+            workflowState: string;
+            /** Format: int64 */
+            createdBy: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            submittedAt?: string;
+            /** Format: int64 */
+            reviewedBy?: number;
+            /** Format: date-time */
+            reviewedAt?: string;
+            /** Format: int64 */
+            approvedBy?: number;
+            /** Format: date-time */
+            approvedAt?: string;
+            reviewerNotes?: string;
+            rejectionReason?: string;
+            approvalMode: string;
+            emergencyReason?: string;
+            sourcePlatform: string;
+            correlationId: string;
+            reason: string;
+            result?: string;
+            version: number;
+        };
+        SecurityAuditEvent: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            revisionId?: string;
+            /** Format: uuid */
+            sourcePolicyId?: string;
+            entityKind: string;
+            /** Format: int64 */
+            partyId?: number;
+            /** Format: uuid */
+            roleId: string;
+            /** Format: uuid */
+            permissionId?: string;
+            operation: string;
+            previousActive?: boolean;
+            newActive?: boolean;
+            /** Format: int64 */
+            actorId?: number;
+            /** Format: int64 */
+            reviewerId?: number;
+            /** Format: int64 */
+            approverId?: number;
+            /** Format: date-time */
+            occurredAt: string;
+            sourcePlatform: string;
+            reason?: string;
+            correlationId: string;
+            approvalMode: string;
+            result: string;
+        };
+        SelfFanRoleRequest: {
+            reason: string;
+            sourcePlatform: string;
+            correlationId: string;
         };
         Party: {
             /** Format: int64 */
@@ -2081,9 +3943,6 @@ export interface components {
             uEmergencyContact?: string | null;
             uNotes?: string | null;
         };
-        RoleAssignmentRequest: {
-            role: components["schemas"]["Role"];
-        };
         UserAccount: {
             /** Format: int64 */
             userId?: number;
@@ -2109,19 +3968,17 @@ export interface components {
              */
             uacPassword?: string | null;
             uacActive?: boolean | null;
-            uacRoles?: components["schemas"]["Role"][] | null;
         };
         UpdateUserAccountRequest: {
             uauUsername?: string | null;
             /** Format: password */
             uauPassword?: string | null;
             uauActive?: boolean | null;
-            uauRoles?: components["schemas"]["Role"][] | null;
         };
         ArtistProfile: {
             /** Format: int64 */
-            apArtistId?: number;
-            apDisplayName?: string;
+            apArtistId: number;
+            apDisplayName: string;
             apOfficialName?: string | null;
             apSlug?: string | null;
             apBio?: string | null;
@@ -2139,7 +3996,10 @@ export interface components {
             apWebsiteUrl?: string | null;
             /** Format: uri */
             apFeaturedVideoUrl?: string | null;
-            apGenres?: string | null;
+            /** @description Presentation-only Spanish labels resolved from apGenreIds; historical text may be returned for an unmapped legacy record. */
+            readonly apGenres?: string | null;
+            /** @description Canonical persisted genre identifiers in display order. */
+            apGenreIds: string[];
             apHighlights?: string | null;
             /** Format: uri */
             apInstagramUrl?: string | null;
@@ -2167,9 +4027,9 @@ export interface components {
              * Format: int64
              * @description Total followers captured in the Fan Hub.
              */
-            apFollowerCount?: number;
+            apFollowerCount: number;
             /** @description Whether this artist is already assigned to a user account. */
-            apHasUserAccount?: boolean;
+            apHasUserAccount: boolean;
         };
         ArtistEnrichmentRunRequest: {
             /** @enum {string} */
@@ -2473,6 +4333,7 @@ export interface components {
         ArtistProfileUpsert: {
             /** Format: int64 */
             apuArtistId: number;
+            apuDisplayName?: string | null;
             apuSlug?: string | null;
             apuBio?: string | null;
             apuCity?: string | null;
@@ -2488,7 +4349,8 @@ export interface components {
             apuWebsiteUrl?: string | null;
             /** Format: uri */
             apuFeaturedVideoUrl?: string | null;
-            apuGenres?: string | null;
+            /** @description Canonical active published genre identifiers. Copied labels and slugs are rejected. */
+            apuGenreIds: string[];
             apuHighlights?: string | null;
         };
         ArtistRelease: {
@@ -2509,11 +4371,13 @@ export interface components {
         };
         FanProfile: {
             /** Format: int64 */
-            fpArtistId?: number;
+            fpArtistId: number;
             fpDisplayName?: string | null;
             /** Format: uri */
             fpAvatarUrl?: string | null;
-            fpFavoriteGenres?: string | null;
+            /** @description Localized presentation labels derived from canonical genre memberships; legacy labels are returned only for unmigrated historical rows. */
+            readonly fpFavoriteGenres?: string | null;
+            fpFavoriteGenreIds: string[];
             fpBio?: string | null;
             fpCity?: string | null;
         };
@@ -2521,7 +4385,7 @@ export interface components {
             fpuDisplayName?: string | null;
             /** Format: uri */
             fpuAvatarUrl?: string | null;
-            fpuFavoriteGenres?: string | null;
+            fpuFavoriteGenreIds: string[];
             fpuBio?: string | null;
             fpuCity?: string | null;
         };
@@ -2614,6 +4478,201 @@ export interface components {
             expiresIn: number;
             tokenType?: string | null;
         };
+        FeedbackMultipart: {
+            title: string;
+            description: string;
+            /**
+             * Format: uuid
+             * @description Canonical ID from the published feedback-categories catalog.
+             */
+            categoryId: string;
+            /**
+             * Format: uuid
+             * @description Canonical ID from the published feedback-severities catalog.
+             */
+            severityId: string;
+            /** Format: email */
+            contactEmail?: string;
+            consent: boolean;
+            /** Format: binary */
+            attachment?: string;
+        };
+        LiveSessionMusician: {
+            /** Format: int64 */
+            partyId?: number | null;
+            name: string;
+            /** Format: email */
+            email?: string | null;
+            /**
+             * Format: uuid
+             * @description Canonical UUID of an active published instrument.
+             */
+            instrumentId?: string | null;
+            notes?: string | null;
+            /** @description Must agree with whether partyId is supplied. */
+            isExisting: boolean;
+        };
+        LiveSessionSong: {
+            title: string;
+            bpm?: number | null;
+            songKey?: string | null;
+            lyrics?: string | null;
+            sortOrder?: number | null;
+        };
+        LiveSessionIntakeMultipart: {
+            bandName: string;
+            bandDescription?: string | null;
+            /**
+             * Format: uuid
+             * @description Canonical UUID of an active published genre.
+             */
+            primaryGenreId?: string | null;
+            inputList?: string | null;
+            /** Format: email */
+            contactEmail?: string | null;
+            contactPhone?: string | null;
+            /** Format: date */
+            sessionDate?: string | null;
+            availability?: string | null;
+            /** @enum {boolean} */
+            acceptedTerms: true;
+            termsVersion: string;
+            /**
+             * @description JSON-encoded array of 1 to 50 LiveSessionMusician objects. Only instrumentId is accepted for the instrument relationship; instrument and role are invalid fields.
+             * @example [{"name":"Ana","instrumentId":"5f710f45-ca5d-450f-a7da-6c7de20b3a4d","isExisting":false}]
+             */
+            musicians: string;
+            /**
+             * @description JSON-encoded array of at most 100 LiveSessionSong objects.
+             * @example [{"title":"Canción uno","bpm":120,"sortOrder":0}]
+             */
+            setlist?: string | null;
+            /**
+             * Format: binary
+             * @description Optional rider file, limited by the backend to 10 MiB.
+             */
+            rider?: string | null;
+        };
+        RadioAutoStopOptions: {
+            /** Format: uuid */
+            catalogId: string;
+            /** Format: int64 */
+            revision: number;
+            options: components["schemas"]["RadioAutoStopOption"][];
+        };
+        RadioAutoStopOption: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            label: string;
+            description?: string;
+            durationMinutes: number;
+            defaultForBroadcast: boolean;
+            version: number;
+        };
+        RadioStream: {
+            /** Format: int64 */
+            rsId: number;
+            rsName: string | null;
+            /** Format: uri */
+            rsStreamUrl: string;
+            /**
+             * Format: uuid
+             * @description Immutable canonical country UUID.
+             */
+            rsCountryId: string | null;
+            /** @description Spanish presentation label resolved exclusively from rsCountryId. Retained legacy text is never exposed as a canonical country. */
+            readonly rsCountry: string | null;
+            /**
+             * Format: uuid
+             * @description Immutable canonical genre UUID.
+             */
+            rsGenreId: string | null;
+            /** @description Spanish presentation label resolved exclusively from rsGenreId. Retained legacy text is never exposed as a canonical genre. */
+            readonly rsGenre: string | null;
+            rsActive: boolean;
+            /** Format: date-time */
+            rsLastCheckedAt: string | null;
+        };
+        RadioStreamUpsert: {
+            /** Format: uri */
+            rsuStreamUrl: string;
+            rsuName?: string;
+            /**
+             * Format: uuid
+             * @description Immutable UUID of an active country reference. Codes, labels, and slugs are rejected.
+             */
+            rsuCountryId?: string;
+            /** @description Explicitly clears an existing country relation. It cannot be combined with rsuCountryId; omission preserves the existing relation. */
+            rsuClearCountry?: boolean;
+            /**
+             * Format: uuid
+             * @description Immutable UUID of an active published genre. Labels and slugs are rejected.
+             */
+            rsuGenreId?: string;
+            /** @description Explicitly clears an existing genre relation. It cannot be combined with rsuGenreId; omission preserves the existing relation. */
+            rsuClearGenre?: boolean;
+        };
+        RadioImportRequest: {
+            rirSources?: string[];
+            rirLimit?: number;
+        };
+        RadioImportResult: {
+            rirProcessed: number;
+            rirInserted: number;
+            rirUpdated: number;
+            rirSources: string[];
+            rirFailed: number;
+            rirFailedSources: string[];
+        };
+        RadioMetadataRefreshRequest: {
+            rmrLimit?: number;
+            rmrOnlyMissing?: boolean;
+        };
+        RadioMetadataRefreshResult: {
+            rmrProcessed: number;
+            rmrUpdated: number;
+            rmrFailed: number;
+        };
+        RadioTransmissionRequest: {
+            rtrName?: string;
+            /**
+             * Format: uuid
+             * @description Immutable UUID of an active published genre. Labels and slugs are rejected.
+             */
+            rtrGenreId?: string;
+            /**
+             * Format: uuid
+             * @description Immutable UUID of an active country reference. Codes, labels, and slugs are rejected.
+             */
+            rtrCountryId?: string;
+        };
+        RadioTransmissionInfo: {
+            /** Format: int64 */
+            rtiStreamId: number;
+            /** Format: uri */
+            rtiStreamUrl: string;
+            rtiIngestUrl: string;
+            rtiStreamKey: string;
+            /** Format: uri */
+            rtiWhipUrl: string;
+        };
+        RadioPresence: {
+            /** Format: int64 */
+            rpPartyId: number;
+            /** Format: uri */
+            rpStreamUrl: string;
+            rpStationName: string | null;
+            rpStationId: string | null;
+            /** Format: date-time */
+            rpUpdatedAt: string;
+        };
+        RadioPresenceUpsert: {
+            /** Format: uri */
+            rpuStreamUrl: string;
+            rpuStationName?: string;
+            rpuStationId?: string;
+        };
         RadioNowPlayingRequest: {
             /**
              * @description Stream URL to inspect (http/https).
@@ -2623,11 +4682,11 @@ export interface components {
         };
         RadioNowPlayingResult: {
             /** @description Current StreamTitle metadata when available. */
-            rnpTitle?: string | null;
+            rnpTitle: string | null;
             /** @description Parsed artist name when StreamTitle includes a separator. */
-            rnpArtist?: string | null;
+            rnpArtist: string | null;
             /** @description Parsed track title when StreamTitle includes a separator. */
-            rnpTrack?: string | null;
+            rnpTrack: string | null;
         };
         /** @enum {string} */
         FeatureAccessRequestStatus: "pending" | "approved" | "rejected" | "cancelled" | "expired";
@@ -3057,11 +5116,20 @@ export interface components {
     };
     responses: never;
     parameters: {
-        /** @description Opaque guest capability returned only when the order is created. */
-        OrderLookupToken: string;
-        AccessRequestId: number;
-        FeatureId: string;
-        OperationsWorkItemId: string;
+        CatalogCode: string;
+        /** @description Immutable canonical UUID of a persisted catalog item. */
+        CatalogItemId: string;
+        /** @description Immutable UUID of a persisted catalog revision. */
+        CatalogRevisionId: string;
+        /** @description Positive numeric identifier of one immutable CMS version. */
+        CmsContentId: number;
+        /** @description Immutable UUID of the persisted security grant revision. */
+        SecurityRevisionId: string;
+        /** @description Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships. */
+        PipelineWorkflowId: string;
+        DdexDocumentId: number;
+        DdexImportPlanId: number;
+        DdexExportId: number;
     };
     requestBodies: never;
     headers: never;
@@ -3069,309 +5137,96 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    listServiceStorefrontPackages: {
+    listSocialEvents: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Stable UUID of a persisted event type. Codes, labels, and slugs are not accepted as relationships. */
+                event_type_id?: string;
+                /** @description Stable UUID of an active state in the persisted `social-event-lifecycle` workflow. */
+                workflow_state_id?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Server-authoritative active packages */
+            /** @description Matching events */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ServiceStorefrontPackage"][];
+                    "application/json": components["schemas"]["SocialEvent"][];
                 };
+            };
+            /** @description Unknown event type identifier */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
-    getServiceStorefrontPackage: {
+    createSocialEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SocialEvent"];
+            };
+        };
+        responses: {
+            /** @description Event created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialEvent"];
+                };
+            };
+            /** @description Event type is unknown, inactive, ineffective, deprecated, or unpublished */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reactToSocialEventMoment: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                packageId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Package */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ServiceStorefrontPackage"];
-                };
-            };
-            /** @description Package is absent or inactive */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    createServiceStorefrontOrder: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Opaque retry key. Reuse with a different request is rejected. */
-                "Idempotency-Key": string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ServiceStorefrontOrderCreate"];
-            };
-        };
-        responses: {
-            /** @description Unpaid order. The lookup token is returned only in this response. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
-                };
-            };
-            /** @description Invalid customer or package quantity */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Idempotency key was reused with a different request */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getServiceStorefrontOrder: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Opaque guest capability returned only when the order is created. */
-                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
-            };
-            path: {
-                orderNumber: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Customer-safe order */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
-                };
-            };
-            /** @description Order or lookup capability not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    createServiceDatafastCheckout: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Opaque guest capability returned only when the order is created. */
-                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
-            };
-            path: {
-                orderNumber: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Hosted Datafast widget resource */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DatafastCheckout"];
-                };
-            };
-            /** @description Order is not payable */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Provider request failed closed */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    verifyServiceDatafastPayment: {
-        parameters: {
-            query: {
-                orderId: string;
-                resourcePath: string;
-            };
-            header: {
-                /** @description Opaque guest capability returned only when the order is created. */
-                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Verified current order state */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
-                };
-            };
-            /** @description Resource binding failed */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Provider response failed verification */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    createServicePayPalOrder: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Opaque guest capability returned only when the order is created. */
-                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
-            };
-            path: {
-                orderNumber: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description PayPal order reference */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PayPalOrderCreate"];
-                };
-            };
-            /** @description Provider request failed closed */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    captureServicePayPalOrder: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Opaque guest capability returned only when the order is created. */
-                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PayPalCaptureRequest"];
-            };
-        };
-        responses: {
-            /** @description Verified order state */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
-                };
-            };
-            /** @description PayPal reference mismatch */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Capture response failed verification */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    selectServiceManualPayment: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Opaque guest capability returned only when the order is created. */
-                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
-            };
-            path: {
-                orderNumber: string;
+                eventId: string;
+                momentId: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ServiceManualPaymentCreate"];
+                "application/json": components["schemas"]["EventMomentReactionRequest"];
             };
         };
         responses: {
-            /** @description Order awaiting staff verification */
+            /** @description Moment with canonical reaction references */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                    "application/json": components["schemas"]["EventMoment"];
                 };
             };
-            /** @description Order is not awaiting payment */
-            409: {
+            /** @description Reaction type UUID is unknown, inactive, deprecated, or unpublished */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4514,6 +6369,36 @@ export interface operations {
             };
         };
     };
+    searchPublicArtists: {
+        parameters: {
+            query?: {
+                q?: string;
+                genreId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Matching artist profiles */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistProfile"][];
+                };
+            };
+            /** @description Invalid UUID or obsolete text genre parameter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getFanArtist: {
         parameters: {
             query?: never;
@@ -4729,6 +6614,133 @@ export interface operations {
             };
         };
     };
+    reactToFanClubPost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+                postId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentReactionRequest"];
+            };
+        };
+        responses: {
+            /** @description Current canonical reaction summary */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentReactionSummary"];
+                };
+            };
+            /** @description Malformed UUID or obsolete string reaction field */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist club or post not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reaction UUID is unknown, inactive, deprecated, or unpublished */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reactToFanClubMemory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+                memoryId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentReactionRequest"];
+            };
+        };
+        responses: {
+            /** @description Current canonical reaction summary */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentReactionSummary"];
+                };
+            };
+            /** @description Malformed UUID or obsolete string reaction field */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist club or memory not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reaction UUID is unknown, inactive, deprecated, or unpublished */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getFanClubLeaderboard: {
+        parameters: {
+            query?: {
+                period?: string;
+            };
+            header?: never;
+            path: {
+                artistId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ranked Fan Club members */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaderboardEntry"][];
+                };
+            };
+            /** @description Artist club not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listParties: {
         parameters: {
             query?: never;
@@ -4835,37 +6847,6 @@ export interface operations {
             };
         };
     };
-    addPartyRole: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                partyId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RoleAssignmentRequest"];
-            };
-        };
-        responses: {
-            /** @description Role assigned */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Party not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     listUsers: {
         parameters: {
             query?: never;
@@ -4886,30 +6867,1671 @@ export interface operations {
             };
         };
     };
-    updateUserRoles: {
+    listLabelProjectNotes: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                userId: number;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active notes in deterministic status and update order. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LabelProjectNote"][];
+                };
             };
+            /** @description Administrator or webmaster access is required. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createLabelProjectNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UserRoleUpdate"];
+                "application/json": components["schemas"]["LabelProjectNoteCreate"];
             };
         };
         responses: {
-            /** @description Roles replaced */
+            /** @description Persisted project note. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LabelProjectNote"];
+                };
+            };
+            /** @description Invalid or empty text. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Administrator or webmaster access is required. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deactivateLabelProjectNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectNoteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Note deactivated without hard deletion. */
             204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description User not found */
+            /** @description The note was already deactivated. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateLabelProjectNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectNoteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LabelProjectNoteUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated project note. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LabelProjectNote"];
+                };
+            };
+            /** @description The expected version is stale. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The note was already deactivated. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicCmsContent: {
+        parameters: {
+            query: {
+                slug: string;
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published content or the existing missing sentinel response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CmsContent"];
+                };
+            };
+        };
+    };
+    listPublicCmsContent: {
+        parameters: {
+            query?: {
+                locale?: string;
+                /** @description URL-compatibility search only; it does not determine an entity type. */
+                slugPrefix?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published authored content versions. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CmsContent"][];
+                };
+            };
+        };
+    };
+    listAdminCmsContent: {
+        parameters: {
+            query?: {
+                contentId?: string;
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Historical versions, including inactive versions. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CmsContent"][];
+                };
+            };
+        };
+    };
+    createCmsDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CmsContentDraft"];
+            };
+        };
+        responses: {
+            /** @description Draft created after persisted content-type schema validation. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CmsContent"];
+                };
+            };
+            /** @description Direct publication, inactive content, or an invalid governed relationship was rejected. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    publishCmsDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Positive numeric identifier of one immutable CMS version. */
+                cmsContentId: components["parameters"]["CmsContentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published revision. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CmsContent"];
+                };
+            };
+            /** @description Prohibited author self-approval. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Legacy slug-only or structured Records content was rejected. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    archiveCmsDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Positive numeric identifier of one immutable CMS version. */
+                cmsContentId: components["parameters"]["CmsContentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Draft archived without hard deletion. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Published, legacy slug-only, or structured Records content cannot be deleted. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPublicServiceOfferings: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Versioned published offerings with persisted operational defaults. */
+            200: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceCatalogEnvelope"];
+                };
+            };
+            /** @description The client already holds this service catalog revision. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listServiceOfferings: {
+        parameters: {
+            query?: {
+                includeInactive?: boolean;
+                locale?: string;
+            };
+            header?: {
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Permission-aware versioned offerings; writes use catalog revisions. */
+            200: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceCatalogEnvelope"];
+                };
+            };
+            /** @description The client already holds this service catalog revision. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Scheduling access is required. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPipelineSnapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Permission-aware pipeline registry and cards. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineSnapshot"];
+                };
+            };
+            /** @description The caller lacks the persisted `pipeline.read` capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPipelineDefinitions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active pipeline workflows available to the caller. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineDefinition"][];
+                };
+            };
+            /** @description The caller lacks the persisted `pipeline.read` capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPipelineCards: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships. */
+                workflowId: components["parameters"]["PipelineWorkflowId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Canonical cards ordered for the board. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineCard"][];
+                };
+            };
+            /** @description The caller lacks the persisted `pipeline.read` capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown, inactive, or unbound workflow UUID. */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPipelineCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships. */
+                workflowId: components["parameters"]["PipelineWorkflowId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PipelineCardCreate"];
+            };
+        };
+        responses: {
+            /** @description Card created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineCard"];
+                };
+            };
+            /** @description A copied service kind, stage string, inactive ID, or cross-workflow ID was rejected. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The caller lacks the persisted `pipeline.create` capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPipelineStages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships. */
+                workflowId: components["parameters"]["PipelineWorkflowId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active bilingual workflow states. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineStage"][];
+                };
+            };
+            /** @description The caller lacks the persisted `pipeline.read` capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPipelineCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships. */
+                workflowId: components["parameters"]["PipelineWorkflowId"];
+                cardId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Card details. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineCard"];
+                };
+            };
+            /** @description The caller lacks the persisted `pipeline.read` capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deletePipelineCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships. */
+                workflowId: components["parameters"]["PipelineWorkflowId"];
+                cardId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Card removed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The caller lacks the persisted `pipeline.delete` capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updatePipelineCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships. */
+                workflowId: components["parameters"]["PipelineWorkflowId"];
+                cardId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PipelineCardUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated card. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineCard"];
+                };
+            };
+            /** @description Invalid state UUID, disallowed transition, copied stage string, or empty patch. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The caller lacks the persisted `pipeline.update` capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPublicCatalogDefinitions: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public, active catalog definitions visible in the requested locale. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDefinition"][];
+                };
+            };
+        };
+    };
+    batchPublicCatalogs: {
+        parameters: {
+            query: {
+                code: string[];
+                locale?: string;
+                q?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: {
+                /** @description Previously received catalog ETag. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Versioned catalog batch suitable for client caching. */
+            200: {
+                headers: {
+                    /** @description Revision token for conditional refresh. */
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogBatch"];
+                };
+            };
+            /** @description The requested catalog revision is already cached by the client. */
+            304: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPublicCatalogItems: {
+        parameters: {
+            query?: {
+                locale?: string;
+                q?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: {
+                /** @description Previously received catalog ETag. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deterministically ordered published items. */
+            200: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogPage"];
+                };
+            };
+            /** @description The requested catalog revision is already cached by the client. */
+            304: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicCatalogItem: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published catalog item. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogItem"];
+                };
+            };
+            /** @description Catalog or item not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicWorkflowStates: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                "If-None-Match"?: string;
+            };
+            path: {
+                workflowCode: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Versioned public workflow-state snapshot. */
+            200: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowStates"];
+                };
+            };
+            /** @description The caller already has the current workflow revision. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The workflow is missing, inactive, sensitive, or not marked for public reading. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listAdminCatalogDefinitions: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active public and protected catalog definitions. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDefinition"][];
+                };
+            };
+            /** @description Missing persisted catalog.read capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listContentTypes: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active content types with localized labels, route metadata, and versioned schemas. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentType"][];
+                };
+            };
+            /** @description Missing persisted catalog.read capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listWorkflowStates: {
+        parameters: {
+            query?: {
+                /** @description Optional persisted workflow definition code. */
+                workflowCode?: string;
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active workflow states ordered by their persisted sort order. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowState"][];
+                };
+            };
+            /** @description Missing persisted catalog.read capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listAuthoredContents: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active authored content ordered by persisted sort order. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthoredContent"][];
+                };
+            };
+            /** @description Missing persisted catalog.read capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    batchAdminCatalogs: {
+        parameters: {
+            query?: {
+                code?: string[];
+                locale?: string;
+                q?: string;
+                page?: number;
+                pageSize?: number;
+                includeInactive?: boolean;
+            };
+            header?: {
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Permission-filtered catalog batch. */
+            200: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogBatch"];
+                };
+            };
+            /** @description The requested catalog revision is already cached. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listAdminCatalogItems: {
+        parameters: {
+            query?: {
+                locale?: string;
+                q?: string;
+                page?: number;
+                pageSize?: number;
+                includeInactive?: boolean;
+            };
+            header?: {
+                "If-None-Match"?: string;
+            };
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deterministically ordered active and optionally inactive items. */
+            200: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogPage"];
+                };
+            };
+            /** @description The requested catalog revision is already cached. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getAdminCatalogItem: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+                /** @description Immutable canonical UUID of a persisted catalog item. */
+                itemId: components["parameters"]["CatalogItemId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Catalog item including administrative lifecycle metadata. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogItem"];
+                };
+            };
+            /** @description Catalog or item not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listCatalogRevisions: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revisions ordered newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogRevision"][];
+                };
+            };
+        };
+    };
+    createCatalogRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogDraft"];
+            };
+        };
+        responses: {
+            /** @description Draft revision created without changing the published item. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogRevision"];
+                };
+            };
+            /** @description Duplicate open revision, correlation, or optimistic-lock conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitCatalogRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of a persisted catalog revision. */
+                revisionId: components["parameters"]["CatalogRevisionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revision entered review. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogRevision"];
+                };
+            };
+        };
+    };
+    approveCatalogRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of a persisted catalog revision. */
+                revisionId: components["parameters"]["CatalogRevisionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogReview"];
+            };
+        };
+        responses: {
+            /** @description Revision approved and published. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogRevision"];
+                };
+            };
+            /** @description Missing approval capability or prohibited self-approval. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid workflow state or optimistic-lock conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    rejectCatalogRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of a persisted catalog revision. */
+                revisionId: components["parameters"]["CatalogRevisionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogReview"];
+            };
+        };
+        responses: {
+            /** @description Revision rejected without mutating the published item. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogRevision"];
+                };
+            };
+        };
+    };
+    setCatalogItemActivation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+                /** @description Immutable canonical UUID of a persisted catalog item. */
+                itemId: components["parameters"]["CatalogItemId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogActivation"];
+            };
+        };
+        responses: {
+            /** @description Updated catalog item. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogItem"];
+                };
+            };
+            /** @description Invalid replacement or optimistic-lock conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reorderCatalogItems: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogReorder"];
+            };
+        };
+        responses: {
+            /** @description Ordering updated. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Incomplete item set or stale catalog revision. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    mergeCatalogItems: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogMerge"];
+            };
+        };
+        responses: {
+            /** @description Merge revision created for governed review. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogRevision"];
+                };
+            };
+            /** @description Invalid or identical merge targets. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getCatalogUsage: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Aggregate usage rows without personal data. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogUsage"][];
+                };
+            };
+        };
+    };
+    exportCatalogCsv: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bilingual catalog export. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+        };
+    };
+    importCatalogCsv: {
+        parameters: {
+            query?: {
+                dryRun?: boolean;
+            };
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "text/plain": string;
+            };
+        };
+        responses: {
+            /** @description Import validation or execution summary. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogImportResult"];
+                };
+            };
+        };
+    };
+    getPublicRecordsFeed: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                /** @description Previously received Records feed ETag. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The deterministically ordered, localized Records feed. */
+            200: {
+                headers: {
+                    /** @description Revision token for conditional refresh. */
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecordsFeed"];
+                };
+            };
+            /** @description The requested Records feed revision is already cached by the client. */
+            304: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listSecurityRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active roles visible to an authorized security administrator. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityRole"][];
+                };
+            };
+            /** @description Missing persisted security.read capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPartyRoleAssignments: {
+        parameters: {
+            query?: {
+                partyId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current active and inactive versioned assignments. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityPartyRoleAssignment"][];
+                };
+            };
+            /** @description Missing persisted security.read capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listSecurityGrantRevisions: {
+        parameters: {
+            query?: {
+                workflowState?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Security revisions ordered newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityGrantRevision"][];
+                };
+            };
+        };
+    };
+    listSecurityAuditEvents: {
+        parameters: {
+            query?: {
+                partyId?: number;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Immutable audit events ordered newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityAuditEvent"][];
+                };
+            };
+        };
+    };
+    createPartyRoleGrantRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PartyRoleGrantDraft"];
+            };
+        };
+        responses: {
+            /** @description Draft created; it grants no access until separately approved. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityGrantRevision"];
+                };
+            };
+            /** @description Version conflict, duplicate correlation id, or no effective change. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createRolePermissionGrantRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RolePermissionGrantDraft"];
+            };
+        };
+        responses: {
+            /** @description Draft created; it grants no access until separately approved. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityGrantRevision"];
+                };
+            };
+        };
+    };
+    submitSecurityGrantRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of the persisted security grant revision. */
+                revisionId: components["parameters"]["SecurityRevisionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revision entered review. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityGrantRevision"];
+                };
+            };
+        };
+    };
+    approveSecurityGrantRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of the persisted security grant revision. */
+                revisionId: components["parameters"]["SecurityRevisionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SecurityGrantReview"];
+            };
+        };
+        responses: {
+            /** @description Revision published and canonical grant updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityGrantRevision"];
+                };
+            };
+            /** @description Missing approval capability or prohibited self-approval. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid state or optimistic-lock conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    rejectSecurityGrantRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of the persisted security grant revision. */
+                revisionId: components["parameters"]["SecurityRevisionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SecurityGrantReview"];
+            };
+        };
+        responses: {
+            /** @description Revision rejected without changing the canonical grant. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityGrantRevision"];
+                };
+            };
+        };
+    };
+    requestMyFanRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelfFanRoleRequest"];
+            };
+        };
+        responses: {
+            /** @description Request entered the security review queue. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityGrantRevision"];
+                };
+            };
+            /** @description The role is already active or an equivalent request is already pending. */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5230,6 +8852,161 @@ export interface operations {
             };
         };
     };
+    listRadioAutoStopOptions: {
+        parameters: {
+            query?: {
+                /** @description Preferred label locale. Spanish is used unless the locale starts with `en`. */
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published auto-stop options and the canonical default */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadioAutoStopOptions"];
+                };
+            };
+            /** @description Catalog, publication state, or its single effective default is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    searchRadioStreams: {
+        parameters: {
+            query?: {
+                /** @description Canonical persisted country UUID; copied codes, labels, and slugs are not accepted. */
+                countryId?: string;
+                /** @description Canonical persisted genre UUID; copied labels and slugs are not accepted. */
+                genreId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active radio streams in deterministic update order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadioStream"][];
+                };
+            };
+            /** @description Unknown or inactive country UUID, or unknown/inactive/unpublished genre UUID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    upsertActiveRadioStream: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RadioStreamUpsert"];
+            };
+        };
+        responses: {
+            /** @description Canonical radio stream */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadioStream"];
+                };
+            };
+            /** @description Invalid stream metadata, unknown/inactive country UUID, or unknown/inactive/unpublished genre UUID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    importRadioStreams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RadioImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Import batch result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadioImportResult"];
+                };
+            };
+            /** @description Invalid source list or batch limit */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    refreshRadioStreamMetadata: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RadioMetadataRefreshRequest"];
+            };
+        };
+        responses: {
+            /** @description Refresh batch result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadioMetadataRefreshResult"];
+                };
+            };
+            /** @description Invalid refresh limit */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getRadioNowPlaying: {
         parameters: {
             query?: never;
@@ -5261,7 +9038,38 @@ export interface operations {
             };
         };
     };
-    listFeatureAccessRequests: {
+    createRadioTransmission: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RadioTransmissionRequest"];
+            };
+        };
+        responses: {
+            /** @description Transmission endpoints */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadioTransmissionInfo"];
+                };
+            };
+            /** @description Invalid metadata, unknown/inactive country UUID, or unknown/inactive/unpublished genre UUID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getRadioPresence: {
         parameters: {
             query?: never;
             header?: never;
@@ -5270,13 +9078,185 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Access requests created by the authenticated user */
+            /** @description Current presence or null */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FeatureAccessRequest"][];
+                    "application/json": components["schemas"]["RadioPresence"] | null;
+                };
+            };
+        };
+    };
+    setRadioPresence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RadioPresenceUpsert"];
+            };
+        };
+        responses: {
+            /** @description Updated presence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadioPresence"];
+                };
+            };
+            /** @description Invalid presence metadata */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    clearRadioPresence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Presence cleared */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPartyRadioPresence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Party presence or null */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadioPresence"] | null;
+                };
+            };
+            /** @description Invalid party identifier */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createLiveSessionIntake: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["LiveSessionIntakeMultipart"];
+            };
+        };
+        responses: {
+            /** @description Intake created */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid multipart data, canonical reference, or terms acceptance */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A supplied musician identity is ambiguous */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["FeedbackMultipart"];
+            };
+        };
+        responses: {
+            /** @description Feedback accepted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid multipart data, catalog reference, consent, or attachment */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getDdexReferences: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Permission-aware governed DDEX snapshot */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexReferenceSnapshot"];
                 };
             };
             /** @description Authentication required */
@@ -5286,67 +9266,43 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Missing persisted `catalog.read` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
-    createFeatureAccessRequest: {
+    listDdexDocuments: {
         parameters: {
-            query?: never;
+            query?: {
+                workflowStateId?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FeatureAccessRequestCreate"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            /** @description Created request */
+            /** @description Matching DDEX documents */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FeatureAccessRequest"];
+                    "application/json": components["schemas"]["DdexDocument"][];
                 };
             };
-            /** @description Invalid, unavailable, or already-authorized feature action */
+            /** @description The workflow state identifier is not a canonical lowercase UUID */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description An equivalent pending request already exists */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    listFeatureAccessRequestsForReview: {
-        parameters: {
-            query?: {
-                status?: components["schemas"]["FeatureAccessRequestStatus"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Reviewable requests without protected record contents */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FeatureAccessRequest"][];
-                };
-            };
-            /** @description Reviewer privileges are absent or incoherent */
+            /** @description Missing persisted `catalog.read` capability */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5355,160 +9311,253 @@ export interface operations {
             };
         };
     };
-    decideFeatureAccessRequest: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                requestId: components["parameters"]["AccessRequestId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FeatureAccessRequestDecision"];
-            };
-        };
-        responses: {
-            /** @description Updated request and audit history */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FeatureAccessRequest"];
-                };
-            };
-            /** @description The reviewer cannot grant this exact action */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Request not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Request is no longer pending */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    cancelFeatureAccessRequest: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                requestId: components["parameters"]["AccessRequestId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FeatureAccessRequestCancel"];
-            };
-        };
-        responses: {
-            /** @description Cancelled request and audit history */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FeatureAccessRequest"];
-                };
-            };
-            /** @description Only the requester may cancel the request */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Request not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Request is no longer pending */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    listNavigationPreferences: {
+    uploadDdexDocument: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DdexUploadRequest"];
+            };
+        };
+        responses: {
+            /** @description Missing persisted `catalog.import` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Storage integration is not implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getDdexDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
         requestBody?: never;
         responses: {
-            /** @description Preferences filtered against current effective access */
+            /** @description DDEX document */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["NavigationPreference"][];
+                    "application/json": components["schemas"]["DdexDocument"];
                 };
+            };
+            /** @description Document not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
-    updateNavigationPreference: {
+    downloadDdexRawDocument: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                featureId: components["parameters"]["FeatureId"];
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Missing persisted `catalog.read` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Private file storage integration is not implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    validateDdexDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Missing persisted `catalog.import` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Document not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Governed validation execution is not implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getLatestDdexValidationReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Latest persisted validation report */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexValidationReport"];
+                };
+            };
+            /** @description Missing persisted `catalog.read` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Document not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    previewDdexDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Missing persisted `catalog.read` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Typed import preview generation is not implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createDdexImportPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Missing persisted `catalog.import` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Document not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Typed import planning is not implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    resolveDdexImportPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                importPlanId: components["parameters"]["DdexImportPlanId"];
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["NavigationPreferenceUpdate"];
+                "application/json": components["schemas"]["DdexImportPlanResolution"];
             };
         };
         responses: {
-            /** @description Updated preference */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NavigationPreference"];
-                };
-            };
-            /** @description Favorite or pin is not supported by this feature */
+            /** @description Unknown or malformed request properties */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description The feature is not currently authorized */
+            /** @description Missing persisted `catalog.import` capability */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description Unknown or concealed feature */
-            404: {
+            /** @description Conflict resolution is not implemented */
+            501: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5516,35 +9565,26 @@ export interface operations {
             };
         };
     };
-    recordNavigationVisit: {
+    commitDdexImportPlan: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                featureId: components["parameters"]["FeatureId"];
+                importPlanId: components["parameters"]["DdexImportPlanId"];
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Updated privacy-conscious preference aggregate */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NavigationPreference"];
-                };
-            };
-            /** @description The feature is not currently authorized */
+            /** @description Missing persisted `catalog.import` capability */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description Unknown, concealed, or non-recent feature */
-            404: {
+            /** @description Import commit execution is not implemented */
+            501: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5552,77 +9592,7 @@ export interface operations {
             };
         };
     };
-    getOperationsMetrics: {
-        parameters: {
-            query?: {
-                organizationId?: string;
-                branchId?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Authorized operational metrics */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationsMetrics"];
-                };
-            };
-            /** @description No enabled operations scope */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    listOperationsWorkItems: {
-        parameters: {
-            query?: {
-                cursor?: string;
-                limit?: number;
-                q?: string;
-                seen?: boolean;
-                entityType?: string;
-                status?: components["schemas"]["OperationsStatus"];
-                priority?: components["schemas"]["OperationsPriority"];
-                slaState?: components["schemas"]["OperationsSlaState"];
-                assigneePartyId?: number;
-                customerPartyId?: number;
-                service?: string;
-                from?: string;
-                to?: string;
-                minAmountMinor?: number;
-                maxAmountMinor?: number;
-                paymentState?: string;
-                organizationId?: string;
-                branchId?: string;
-                sourceChannel?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scope-filtered page; restricted fields and records are omitted server-side */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationsWorkItemPage"];
-                };
-            };
-        };
-    };
-    createOperationsWorkItem: {
+    createDdexExport: {
         parameters: {
             query?: never;
             header?: never;
@@ -5631,272 +9601,60 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["OperationsManualWorkItemCreate"];
+                "application/json": components["schemas"]["DdexExportRequest"];
             };
         };
         responses: {
-            /** @description Durable work item */
-            201: {
+            /** @description Unknown properties or malformed canonical UUID */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["OperationsWorkItem"];
-                };
+                content?: never;
             };
-            /** @description Correlation or entity-reference invariant failed */
+            /** @description Missing persisted `catalog.export` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Partner is inactive or does not allow the export-enabled version */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
+            /** @description Export rendering and private storage are not implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
-    getOperationsWorkItem: {
+    downloadDdexExport: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                workItemId: components["parameters"]["OperationsWorkItemId"];
+                exportId: components["parameters"]["DdexExportId"];
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Work item, immutable domain history, notes, and authorized actions */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationsWorkItemDetail"];
-                };
-            };
-            /** @description Missing or concealed work item */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    markOperationsWorkItemSeen: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workItemId: components["parameters"]["OperationsWorkItemId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["OperationsVersionedCommand"];
-            };
-        };
-        responses: {
-            /** @description Updated work item */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationsWorkItem"];
-                };
-            };
-            /** @description Optimistic-concurrency conflict */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    transitionOperationsWorkItem: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workItemId: components["parameters"]["OperationsWorkItemId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["OperationsTransitionCommand"];
-            };
-        };
-        responses: {
-            /** @description Updated work item */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationsWorkItem"];
-                };
-            };
-            /** @description Optimistic-concurrency conflict */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description State-machine guard rejected the transition */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    assignOperationsWorkItem: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workItemId: components["parameters"]["OperationsWorkItemId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["OperationsAssignmentCommand"];
-            };
-        };
-        responses: {
-            /** @description Updated work item */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationsWorkItem"];
-                };
-            };
-            /** @description Assignee is outside the organization and branch scope */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    prioritizeOperationsWorkItem: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workItemId: components["parameters"]["OperationsWorkItemId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["OperationsPriorityCommand"];
-            };
-        };
-        responses: {
-            /** @description Updated work item */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationsWorkItem"];
-                };
-            };
-            /** @description Manager permission required */
+            /** @description Missing persisted `catalog.export` capability */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-        };
-    };
-    addOperationsWorkItemNote: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workItemId: components["parameters"]["OperationsWorkItemId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["OperationsNoteCreate"];
-            };
-        };
-        responses: {
-            /** @description Created note */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationsNote"];
-                };
-            };
-        };
-    };
-    createOperationsApproval: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["OperationsApprovalCreate"];
-            };
-        };
-        responses: {
-            /** @description Pending approval */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationsApproval"];
-                };
-            };
-        };
-    };
-    decideOperationsApproval: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                approvalId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["OperationsApprovalDecision"];
-            };
-        };
-        responses: {
-            /** @description Decided approval */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationsApproval"];
-                };
-            };
-            /** @description Changed */
-            409: {
+            /** @description Export rendering and private storage are not implemented */
+            501: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5904,103 +9662,27 @@ export interface operations {
             };
         };
     };
-    listOperationsIntegrationFailures: {
-        parameters: {
-            query?: {
-                organizationId?: string;
-                status?: string;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Redacted failure summaries */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationsIntegrationFailure"][];
-                };
-            };
-        };
-    };
-    replayOperationsIntegrationFailure: {
+    listDdexPartners: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                failureId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["OperationsReplayCommand"];
-            };
-        };
-        responses: {
-            /** @description Replay scheduled */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationsIntegrationFailure"];
-                };
-            };
-        };
-    };
-    listOperationsStreamEvents: {
-        parameters: {
-            query?: {
-                afterId?: number;
-                limit?: number;
-                organizationId?: string;
-            };
-            header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Ordered resumable event batch */
+            /** @description DDEX partners */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["OperationsStreamBatch"];
+                    "application/json": components["schemas"]["DdexPartner"][];
                 };
             };
         };
     };
-    listOperationsSavedViews: {
-        parameters: {
-            query?: {
-                organizationId?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Authorized saved views */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationsSavedView"][];
-                };
-            };
-        };
-    };
-    createOperationsSavedView: {
+    createDdexPartner: {
         parameters: {
             query?: never;
             header?: never;
@@ -6009,45 +9691,35 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["OperationsSavedViewCreate"];
+                "application/json": components["schemas"]["DdexPartnerCreateRequest"];
             };
         };
         responses: {
-            /** @description Saved view */
-            201: {
+            /** @description Partner created */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["OperationsSavedView"];
+                    "application/json": components["schemas"]["DdexPartner"];
                 };
             };
-        };
-    };
-    createOperationsPushSubscription: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["OperationsPushSubscriptionCreate"];
-            };
-        };
-        responses: {
-            /** @description Push subscription metadata */
-            201: {
+            /** @description Unknown properties */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["OperationsPushSubscription"];
-                };
+                content?: never;
             };
-            /** @description Token encryption key is not configured */
-            503: {
+            /** @description Missing persisted `catalog.import` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A supplied standard version is inactive or not detection-enabled */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

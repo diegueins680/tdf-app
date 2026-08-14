@@ -21,7 +21,7 @@ export interface CollaborativeEventDraft {
   startAt: string;
   durationMinutes: number;
   venueId: string;
-  eventType: 'party' | 'concert' | 'festival' | 'showcase' | 'meeting' | 'other';
+  eventTypeId: string;
   price: string;
   capacity: string;
   ticketUrl: string;
@@ -62,7 +62,7 @@ export function buildInitialCollaborativeEventDraft(
     startAt: startAt.toFormat(LOCAL_DATE_TIME_FORMAT),
     durationMinutes: 120,
     venueId: '',
-    eventType: 'party',
+    eventTypeId: '',
     price: '',
     capacity: '',
     ticketUrl: '',
@@ -135,6 +135,8 @@ export function buildCollaborativeEventPayload(
   const startIso = start.toUTC().toISO();
   const endIso = end.toUTC().toISO();
   if (!startIso || !endIso) throw new Error('No se pudo interpretar la fecha del evento.');
+  const eventTypeId = draft.eventTypeId.trim();
+  if (!eventTypeId) throw new Error('Selecciona un tipo de evento publicado.');
 
   return {
     eventTitle: title,
@@ -144,8 +146,7 @@ export function buildCollaborativeEventPayload(
     eventVenueId: draft.venueId.trim() || null,
     eventPriceCents: parseOptionalPriceCents(draft.price),
     eventCapacity: parseOptionalCapacity(draft.capacity),
-    eventType: draft.eventType,
-    eventStatus: 'planning',
+    eventTypeId,
     eventCurrency: resolveRuntimeCurrency(),
     eventBudgetCents: null,
     eventTicketUrl: normalizeTicketUrl(draft.ticketUrl),

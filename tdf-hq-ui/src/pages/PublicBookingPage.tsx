@@ -34,13 +34,11 @@ import { DateTime } from 'luxon';
 import { Bookings } from '../api/bookings';
 import { API_BASE_URL } from '../api/client';
 import { Meta } from '../api/meta';
-import type { BookingDTO, RoomDTO, ServiceCatalogDTO } from '../api/types';
+import type { BookingDTO, ServiceCatalogDTO } from '../api/types';
 import { Engineers, type PublicEngineer } from '../api/engineers';
 import { Services } from '../api/services';
-import { Rooms } from '../api/rooms';
 import { STUDIO_MAP_URL, STUDIO_WHATSAPP_URL } from '../config/appConfig';
-import { defaultRoomsForService, sameRooms } from '../utils/publicBookingRooms';
-import { defaultServiceTypes, mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
+import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
 import { env } from '../utils/env';
 import { useSession } from '../session/SessionContext';
 import { resolveRuntimeCurrency } from '../utils/formatters';
@@ -49,6 +47,7 @@ interface FormState {
   fullName: string;
   email: string;
   phone: string;
+  serviceOfferingId: string;
   serviceType: string;
   startsAt: string;
   durationMinutes: number;
@@ -79,17 +78,14 @@ const PROFILE_STORAGE_KEY = 'tdf-public-booking-profile';
 const OPEN_HOURS = { start: 8, end: 22 }; // 24h local time
 const MAX_DURATION_MINUTES = (OPEN_HOURS.end - OPEN_HOURS.start) * 60;
 const QUICK_SLOT_STEP_MINUTES = 30;
-const ROOM_FALLBACKS = ['Live Room', 'Control Room', 'Vocal Booth', 'DJ Booth'] as const;
 const BOOKING_STEPS = ['Contacto', 'Horario', 'Confirmación'] as const;
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
-const DJ_BOOTH_SERVICE_LABEL = 'Práctica en DJ Booth';
 
 const PUBLIC_BOOKING_PRESETS: Record<
   PublicBookingPreset,
   {
     path: string;
-    serviceTokens: string[];
-    fallbackServiceName: string;
+    serviceCode: string;
     eyebrow: string;
     title: string;
     description: string;
@@ -103,8 +99,7 @@ const PUBLIC_BOOKING_PRESETS: Record<
 > = {
   'dj-booth': {
     path: '/dj-booth',
-    serviceTokens: [DJ_BOOTH_SERVICE_LABEL, 'dj booth', 'dj-booth', 'dj practice', 'practica dj booth'],
-    fallbackServiceName: DJ_BOOTH_SERVICE_LABEL,
+    serviceCode: 'dj-booth-practice',
     eyebrow: 'DJ Booth',
     title: 'Reserva práctica en DJ Booth',
     description:
@@ -145,10 +140,8 @@ const normalizeServiceToken = (value: string) => {
 const resolveServiceFromToken = (raw: string, list: ServiceType[]): ServiceType | null => {
   const trimmed = raw.trim();
   if (!trimmed) return null;
-  if (/^\d+$/.test(trimmed)) {
-    const matchById = list.find((svc) => svc.id === trimmed);
-    if (matchById) return matchById;
-  }
+  const matchByIdentity = list.find((svc) => svc.id === trimmed || svc.code === trimmed);
+  if (matchByIdentity) return matchByIdentity;
   const token = normalizeServiceToken(trimmed);
   if (!token) return null;
   const exact = list.find((svc) => normalizeServiceToken(svc.name) === token);
@@ -163,28 +156,10 @@ const resolveServiceFromToken = (raw: string, list: ServiceType[]): ServiceType 
 const resolvePresetService = (
   presetConfig: (typeof PUBLIC_BOOKING_PRESETS)[PublicBookingPreset],
   list: ServiceType[],
-): ServiceType => {
-  for (const token of presetConfig.serviceTokens) {
-    const match = resolveServiceFromToken(token, list);
-    if (match) return match;
-  }
-  const fallback =
-    defaultServiceTypes.find((svc) => svc.name === presetConfig.fallbackServiceName) ??
-    defaultServiceTypes.find((svc) => resolveServiceFromToken(presetConfig.fallbackServiceName, [svc]));
-  return (
-    fallback ?? {
-      id: 'dj-practice',
-      name: presetConfig.fallbackServiceName,
-      priceCents: 15 * 100,
-      currency: resolveRuntimeCurrency(),
-      billingUnit: 'hora',
-      kind: 'Rehearsal',
-      pricingModel: 'Hourly',
-      taxBps: 1200,
-      active: true,
-    }
-  );
-};
+): ServiceType | null => list.find((service) => service.code === presetConfig.serviceCode) ?? null;
+
+const serviceResourceLabels = (service: ServiceType | null | undefined): string[] =>
+  (service?.defaultResources ?? []).map((resource) => resource.sdrResourceName);
 
 const ensureDiegoOption = (list: PublicEngineer[]): PublicEngineer[] => {
   return list;
@@ -229,20 +204,20 @@ export const resolveFirstAvailableShortcut = ({
   return limitedStudio.setZone(userTimeZone);
 };
 
-const buildInitialForm = (defaultService: string, roomOptions: string[]) => {
+const buildInitialForm = () => {
   const start = alignToStepMinutes(DateTime.now().plus({ minutes: 90 }));
-  const initialRooms = defaultRoomsForService(defaultService, roomOptions);
   return {
     fullName: '',
     email: '',
     phone: '',
-    serviceType: defaultService,
+    serviceOfferingId: '',
+    serviceType: '',
     startsAt: toLocalInputValue(start.toJSDate()),
     durationMinutes: 60,
     notes: '',
     engineerId: null,
     engineerName: '',
-    resourceLabels: initialRooms,
+    resourceLabels: [],
   };
 };
 
@@ -336,34 +311,14 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     queryFn: () => Services.listPublic(),
     staleTime: 5 * 60 * 1000,
   });
-  const roomsQuery = useQuery<RoomDTO[]>({
-    queryKey: ['rooms', 'public'],
-    queryFn: () => Rooms.listPublic(),
-    staleTime: 5 * 60 * 1000,
-  });
-  const publicRooms = useMemo<RoomDTO[]>(
-    () => (roomsQuery.data ?? []).filter((room) => room.roomId.trim() !== '' && room.rName.trim() !== ''),
-    [roomsQuery.data],
-  );
   const baseServices = useMemo<ServiceType[]>(() => {
-    const merged = mergeServiceTypes(serviceCatalogQuery.data, { sort: false });
-    return merged.filter((svc) => svc.priceCents != null);
+    return mergeServiceTypes(serviceCatalogQuery.data, { sort: false });
   }, [serviceCatalogQuery.data]);
   const presetService = useMemo(
     () => (presetConfig ? resolvePresetService(presetConfig, baseServices) : null),
     [baseServices, presetConfig],
   );
-  const services = useMemo<ServiceType[]>(() => {
-    if (!presetService) return baseServices;
-    const exists = baseServices.some((svc) => svc.name === presetService.name);
-    return exists ? baseServices : [presetService, ...baseServices];
-  }, [baseServices, presetService]);
-  const roomOptions = useMemo<string[]>(() => {
-    const apiRooms = publicRooms.map((r) => r.rName).filter(Boolean);
-    const unique = Array.from(new Set(apiRooms));
-    return unique.length ? unique : [...ROOM_FALLBACKS];
-  }, [publicRooms]);
-  const defaultService = presetService?.name ?? services[0]?.name ?? 'Reserva';
+  const services = baseServices;
   const publicRoutePath = presetConfig?.path ?? '/reservar';
   const loginPath = `/login?redirect=${encodeURIComponent(publicRoutePath)}`;
   const signupPath = `/login?signup=1&redirect=${encodeURIComponent(publicRoutePath)}`;
@@ -382,13 +337,10 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   const studioZoneLabel = useMemo(() => zoneLabel(studioTimeZone), [studioTimeZone]);
   const userZoneLabel = useMemo(() => zoneLabel(userTimeZone), [userTimeZone]);
   const studioCurrency = useMemo(() => services[0]?.currency ?? resolveRuntimeCurrency(), [services]);
-  const usingFallbackServices =
+  const serviceCatalogUnavailable =
     serviceCatalogQuery.isFetched && (serviceCatalogQuery.isError || (serviceCatalogQuery.data?.length ?? 0) === 0);
-  const usingFallbackRooms =
-    roomsQuery.isFetched && (roomsQuery.isError || (roomsQuery.data?.length ?? 0) === 0);
   const requiresManualConfirmation =
-    usingFallbackServices ||
-    usingFallbackRooms ||
+    serviceCatalogUnavailable ||
     healthQuery.isError ||
     (Boolean(healthQuery.data?.status) && String(healthQuery.data?.status).toLowerCase() !== 'ok');
   const bookingStatusChip = useMemo(() => {
@@ -405,11 +357,11 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   }, [healthQuery.data, healthQuery.isLoading, requiresManualConfirmation]);
   const bookingReadinessNote = useMemo(() => {
     if (!requiresManualConfirmation) return null;
-    if (usingFallbackServices || usingFallbackRooms) {
-      return 'Estamos mostrando la agenda base mientras reconectamos el estudio. Si no ves el servicio exacto o la sala final, envía la solicitud igual y confirmamos los detalles contigo por correo o WhatsApp.';
+    if (serviceCatalogUnavailable) {
+      return 'No pudimos cargar el catálogo de servicios. Reintenta en unos minutos; no enviaremos una reserva sin un servicio canónico.';
     }
     return 'Puedes dejar la solicitud ahora mismo. Confirmaremos disponibilidad y recursos contigo por correo o WhatsApp antes de bloquear la sesión.';
-  }, [requiresManualConfirmation, usingFallbackRooms, usingFallbackServices]);
+  }, [requiresManualConfirmation, serviceCatalogUnavailable]);
   const pageEyebrow = presetConfig?.eyebrow ?? 'Agenda pública';
   const pageTitle = presetConfig?.title ?? 'Reserva un servicio con TDF';
   const pageDescription =
@@ -428,7 +380,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   const durationNote = presetConfig?.durationNote ?? 'Duración estándar de 1h (ajústala si necesitas más tiempo).';
   const notesPlaceholder =
     presetConfig?.notesPlaceholder ?? 'Cuéntanos qué necesitas (ej: grabación de voz, mezcla, etc.)';
-  const [form, setForm] = useState<FormState>(() => buildInitialForm(defaultService, roomOptions));
+  const [form, setForm] = useState<FormState>(buildInitialForm);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<BookingDTO | null>(null);
@@ -447,21 +399,27 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   useEffect(() => {
     if (!services.length) return;
     setForm((prev) => {
-      if (presetService?.name) {
-        if (prev.serviceType === presetService.name) return prev;
+      if (presetService) {
+        if (prev.serviceOfferingId === presetService.id) return prev;
         return {
           ...prev,
+          serviceOfferingId: presetService.id,
           serviceType: presetService.name,
-          resourceLabels: defaultRoomsForService(presetService.name, roomOptions),
+          resourceLabels: serviceResourceLabels(presetService),
         };
       }
-      const serviceStillValid = services.some((svc) => svc.name === prev.serviceType);
+      const serviceStillValid = services.some((svc) => svc.id === prev.serviceOfferingId);
       if (serviceStillValid) return prev;
-      const nextService = services[0]?.name ?? prev.serviceType;
-      if (!nextService || nextService === prev.serviceType) return prev;
-      return { ...prev, serviceType: nextService, resourceLabels: defaultRoomsForService(nextService, roomOptions) };
+      const nextService = services[0];
+      if (!nextService) return prev;
+      return {
+        ...prev,
+        serviceOfferingId: nextService.id,
+        serviceType: nextService.name,
+        resourceLabels: serviceResourceLabels(nextService),
+      };
     });
-  }, [presetService?.name, services, roomOptions]);
+  }, [presetService, services]);
 
   useEffect(() => {
     if (appliedStoredProfile.current) return;
@@ -471,28 +429,28 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
       const raw = window.localStorage.getItem(PROFILE_STORAGE_KEY);
       if (!raw) return;
       const stored = JSON.parse(raw) as Partial<FormState>;
-      const allowedServices = new Set(services.map((s) => s.name));
-      const storedService = stored.serviceType ?? defaultService;
       const nextService =
-        presetService?.name ??
-        (services.length === 0 || allowedServices.has(storedService) ? storedService : defaultService);
+        presetService ??
+        services.find((service) => service.id === stored.serviceOfferingId) ??
+        services[0];
       setForm((prev) => ({
         ...prev,
         fullName: stored.fullName ?? prev.fullName,
         email: stored.email ?? prev.email,
         phone: stored.phone ?? prev.phone,
-        serviceType: nextService,
-        resourceLabels: defaultRoomsForService(nextService, roomOptions),
+        serviceOfferingId: nextService?.id ?? '',
+        serviceType: nextService?.name ?? '',
+        resourceLabels: serviceResourceLabels(nextService),
       }));
       setRememberProfile(true);
     } catch {
       // ignore parsing issues
     }
-  }, [defaultService, presetService?.name, services, roomOptions]);
+  }, [presetService, services]);
 
   useEffect(() => {
     if (appliedServiceQuery.current) return;
-    if (presetService?.name) return;
+    if (presetService) return;
     if (!services.length) return;
     const params = new URLSearchParams(location.search);
     const rawToken = params.get('service') ?? params.get('servicio');
@@ -502,10 +460,11 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     appliedServiceQuery.current = true;
     setForm((prev) => ({
       ...prev,
+      serviceOfferingId: match.id,
       serviceType: match.name,
-      resourceLabels: defaultRoomsForService(match.name, roomOptions),
+      resourceLabels: serviceResourceLabels(match),
     }));
-  }, [location.search, presetService?.name, roomOptions, services]);
+  }, [location.search, presetService, services]);
 
   useEffect(() => {
     if (!session?.displayName) return;
@@ -534,10 +493,10 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
       fullName: form.fullName.trim(),
       email: form.email.trim(),
       phone: form.phone.trim(),
-      serviceType: form.serviceType,
+      serviceOfferingId: form.serviceOfferingId,
     };
     window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(payload));
-  }, [rememberProfile, form.fullName, form.email, form.phone, form.serviceType]);
+  }, [rememberProfile, form.fullName, form.email, form.phone, form.serviceOfferingId]);
 
   useEffect(() => {
     setEngineersLoading(true);
@@ -554,7 +513,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
       .finally(() => setEngineersLoading(false));
   }, []);
 
-  const formDisabled = submitting || Boolean(success);
+  const formDisabled = submitting || Boolean(success) || serviceCatalogUnavailable;
 
   const sanitizeStart = useCallback(
     (candidate: DateTime, durationMinutes: number) => {
@@ -584,9 +543,15 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     setError(null);
     setSubmitting(false);
     setActiveStep(0);
-    setForm(buildInitialForm(defaultService, roomOptions));
+    const nextService = presetService ?? services[0];
+    setForm({
+      ...buildInitialForm(),
+      serviceOfferingId: nextService?.id ?? '',
+      serviceType: nextService?.name ?? '',
+      resourceLabels: serviceResourceLabels(nextService),
+    });
     setAssignEngineerLater(false);
-  }, [defaultService, roomOptions]);
+  }, [presetService, services]);
 
   useEffect(() => {
     const parsed = DateTime.fromISO(form.startsAt, { zone: userTimeZone });
@@ -651,7 +616,8 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   };
 
   const validateScheduleStep = () => {
-    if (!form.serviceType.trim()) return 'Selecciona un tipo de servicio.';
+    const selectedService = services.find((service) => service.id === form.serviceOfferingId);
+    if (!selectedService) return 'Selecciona un servicio publicado.';
     const parsedStartLocal = DateTime.fromISO(form.startsAt, { zone: userTimeZone });
     if (!parsedStartLocal.isValid) return 'Selecciona una fecha y hora válida.';
     const now = DateTime.now().setZone(userTimeZone);
@@ -672,7 +638,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
       const remaining = Math.max(0, Math.floor(closeStudio.diff(startStudio, 'minutes').minutes));
       return `La cita debe terminar antes de las ${closeStudio.toFormat('HH:mm')} (${studioZoneLabel}). Con esa hora, el máximo es ${remaining} min.`;
     }
-    if (requiresEngineer(form.serviceType) && !assignEngineerLater && !form.engineerId && !form.engineerName.trim()) {
+    if (selectedService.requiresEngineer && !assignEngineerLater && !form.engineerId && !form.engineerName.trim()) {
       return 'Selecciona un ingeniero para grabación/mezcla/mastering.';
     }
     if (availabilityStatus === 'unavailable') {
@@ -724,14 +690,11 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     }
 
     setSubmitting(true);
-    const autoRooms = defaultRoomsForService(form.serviceType, roomOptions);
-    const roomsToSend =
-      autoRooms.length > 0 ? autoRooms : roomOptions.length > 0 ? roomOptions.slice(0, 1) : [];
-    const roomReferencesToSend = publicRooms.length > 0
-      ? roomsToSend.map((label) => label.trim()).filter(Boolean)
-      : null;
-    if (roomsToSend.length > 0) {
-      setForm((prev) => (sameRooms(prev.resourceLabels, roomsToSend) ? prev : { ...prev, resourceLabels: roomsToSend }));
+    const selectedService = services.find((service) => service.id === form.serviceOfferingId);
+    if (!selectedService) {
+      setError('El servicio seleccionado ya no está disponible. Elige otro servicio publicado.');
+      setSubmitting(false);
+      return;
     }
     const engineerPartyId = assignEngineerLater ? null : form.engineerId;
     const engineerName = assignEngineerLater ? null : form.engineerName.trim() || null;
@@ -741,13 +704,13 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
         pbFullName: form.fullName.trim(),
         pbEmail: form.email.trim(),
         pbPhone: form.phone.trim() || null,
-        pbServiceType: form.serviceType.trim(),
+        pbServiceOfferingId: selectedService.id,
         pbStartsAt: startsAtIso,
         pbDurationMinutes: durationMinutes,
         pbNotes: form.notes.trim() || null,
         pbEngineerPartyId: engineerPartyId,
         pbEngineerName: engineerName,
-        pbResourceIds: roomReferencesToSend,
+        pbResourceIds: null,
       });
       setSuccess(dto);
     } catch (err) {
@@ -790,12 +753,12 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
       if (svc.priceCents == null) return;
       const display = `${svc.currency} ${(svc.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
       const unit = svc.billingUnit ? ` / ${svc.billingUnit}` : '';
-      map.set(svc.name, `${display}${unit}`);
+      map.set(svc.id, `${display}${unit}`);
     });
     return map;
   }, [services]);
   const estimatePriceLabel = useMemo(() => {
-    const svc = services.find((s) => s.name === form.serviceType);
+    const svc = services.find((service) => service.id === form.serviceOfferingId);
     if (svc?.priceCents == null) return null;
     const base = `${svc.currency} ${(svc.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
     if (svc.billingUnit?.toLowerCase().includes('hora')) {
@@ -804,8 +767,8 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
       return `${svc.currency} ${total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} aprox (${hours.toFixed(1)}h)`;
     }
     return `${base}${svc.billingUnit ? ` / ${svc.billingUnit}` : ''}`;
-  }, [form.durationMinutes, form.serviceType, services]);
-  const selectedPrice = servicePriceLookup.get(form.serviceType);
+  }, [form.durationMinutes, form.serviceOfferingId, services]);
+  const selectedPrice = servicePriceLookup.get(form.serviceOfferingId);
 
   const priceBanner = useMemo(() => {
     if (!form.serviceType) return null;
@@ -846,14 +809,11 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     return bookingWindow.startLocal.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY);
   }, [bookingWindow]);
   const suggestedRooms = useMemo(
-    () => defaultRoomsForService(form.serviceType, roomOptions),
-    [form.serviceType, roomOptions],
+    () => serviceResourceLabels(services.find((service) => service.id === form.serviceOfferingId)),
+    [form.serviceOfferingId, services],
   );
-
-  const requiresEngineer = (service: string) => {
-    const lowered = service.toLowerCase();
-    return lowered.includes('graba') || lowered.includes('mezcl') || lowered.includes('master');
-  };
+  const selectedServiceRequiresEngineer =
+    services.find((service) => service.id === form.serviceOfferingId)?.requiresEngineer ?? false;
 
   const buildSummary = useCallback(
     (booking?: BookingDTO | null) => {
@@ -919,7 +879,10 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
 
   useEffect(() => {
     setForm((prev) => {
-      if (sameRooms(prev.resourceLabels, suggestedRooms)) return prev;
+      if (
+        prev.resourceLabels.length === suggestedRooms.length
+        && prev.resourceLabels.every((room, index) => room === suggestedRooms[index])
+      ) return prev;
       return { ...prev, resourceLabels: suggestedRooms };
     });
   }, [suggestedRooms]);
@@ -1494,13 +1457,15 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                             <TextField
                               label={presetService ? 'Servicio DJ Booth' : 'Servicio'}
                               select
-                              value={form.serviceType}
+                              value={form.serviceOfferingId}
                               onChange={(e) => {
-                                const nextService = e.target.value;
+                                const nextService = services.find((service) => service.id === e.target.value);
+                                if (!nextService) return;
                                 setForm((prev) => ({
                                   ...prev,
-                                  serviceType: nextService,
-                                  resourceLabels: defaultRoomsForService(nextService, roomOptions),
+                                  serviceOfferingId: nextService.id,
+                                  serviceType: nextService.name,
+                                  resourceLabels: serviceResourceLabels(nextService),
                                 }));
                               }}
                               fullWidth
@@ -1519,16 +1484,16 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                               }
                             >
                               {services.map((svc) => (
-                                <MenuItem key={svc.id} value={svc.name}>
+                                <MenuItem key={svc.id} value={svc.id}>
                                   <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
                                     <Typography>{svc.name}</Typography>
                                     <Typography variant="body2" color="text.secondary">
-                                      {servicePriceLookup.get(svc.name)}
+                                      {servicePriceLookup.get(svc.id)}
                                     </Typography>
                                   </Stack>
                                 </MenuItem>
                               ))}
-                              {services.length === 0 && <MenuItem value={defaultService}>{defaultService}</MenuItem>}
+                              {services.length === 0 && <MenuItem value="" disabled>Catálogo no disponible</MenuItem>}
                             </TextField>
                           </Grid>
                           <Grid item xs={12} sm={7}>
@@ -1696,7 +1661,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                               </Stack>
                             </Grid>
                           )}
-                          {requiresEngineer(form.serviceType) && (
+                          {selectedServiceRequiresEngineer && (
                             <Grid item xs={12}>
                               <Stack spacing={1}>
                                 <Stack direction="row" spacing={1} alignItems="center">
@@ -1875,7 +1840,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                                       size="small"
                                       variant="outlined"
                                     />
-                                    {requiresEngineer(form.serviceType) && (
+                                    {selectedServiceRequiresEngineer && (
                                       <Chip
                                         label={
                                           form.engineerName.trim()

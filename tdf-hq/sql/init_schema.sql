@@ -837,18 +837,20 @@ CREATE INDEX IF NOT EXISTS idx_label_track_status ON label_track(status);
 
 CREATE TABLE IF NOT EXISTS pipeline_card (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    service_kind TEXT NOT NULL,
+    service_kind TEXT,
+    service_offering_id UUID,
     title        TEXT NOT NULL,
     artist       TEXT,
-    stage        TEXT NOT NULL,
+    stage        TEXT,
+    workflow_state_id UUID,
     sort_order   INT NOT NULL DEFAULT 0,
     notes        TEXT,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_pipeline_card_kind ON pipeline_card(service_kind);
-CREATE INDEX idx_pipeline_card_stage ON pipeline_card(service_kind, stage, sort_order);
+CREATE INDEX idx_pipeline_card_service_offering ON pipeline_card(service_offering_id, sort_order);
+CREATE INDEX idx_pipeline_card_workflow_state ON pipeline_card(workflow_state_id, sort_order);
 
 -- ============================================================================
 -- PROPOSALS

@@ -12,6 +12,7 @@ module TDF.Handlers.InputList
   , fetchSessionInputRowsByIndex
   , fetchSessionInputRowsByKey
   , renderInputListLatex
+  , renderInputListLatexWithAssets
   , generateInputListPdf
   , generateInputListPdfWithAssets
   , sanitizeFileName
@@ -157,7 +158,14 @@ loadLatestInputRows sessionKey = do
             [ Asc ME.InputRowChannelNumber ]
 
 renderInputListLatex :: Text -> [Entity InputListEntry] -> Text
-renderInputListLatex title rows =
+renderInputListLatex title = renderInputListLatexWithAssets title Map.empty
+
+renderInputListLatexWithAssets
+  :: Text
+  -> Map.Map ME.AssetId Text
+  -> [Entity InputListEntry]
+  -> Text
+renderInputListLatexWithAssets title assetNames rows =
   let escapedTitle = latexEscape title
       bodyLines    = map renderRow rows
   in T.unlines $
@@ -190,7 +198,7 @@ renderInputListLatex title rows =
           cells =
             [ showText (ME.inputRowChannelNumber row)
             , maybe "-" id (ME.inputRowTrackName row)
-            , maybe "-" id (ME.inputRowInstrument row)
+            , maybe "-" id (ME.inputRowMicId row >>= (`Map.lookup` assetNames))
             , maybe "-" id medusaVal
             , maybe "-" id preampVal
             , maybe "-" id interfaceVal

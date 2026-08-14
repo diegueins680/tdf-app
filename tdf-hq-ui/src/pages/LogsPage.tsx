@@ -168,6 +168,7 @@ export default function LogsPage() {
 
       {!logsQuery.isLoading && !logsQuery.isError && !hasLogs && (
         <EmptyState
+          testId="server-logs-empty-state"
           icon={<SubjectIcon />}
           title="Sin logs"
           description="Todavía no hay logs disponibles. Esta vista se actualiza automáticamente y mostrará filtros cuando exista el primer registro."

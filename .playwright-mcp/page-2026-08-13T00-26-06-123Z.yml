@@ -1,0 +1,68 @@
+- generic [ref=f43e1]:
+  - generic [ref=f43e2]:
+    - generic [ref=f43e3]:
+      - link [ref=f43e936] [cursor=pointer]:
+        - /url: "#main-content"
+        - text: Saltar al contenido principal
+      - generic [ref=f43e5]:
+        - banner [ref=f43e6]:
+          - generic [ref=f43e7]:
+            - button [ref=f43e937] [cursor=pointer]
+            - link [ref=f43e938] [cursor=pointer]:
+              - /url: /inicio
+            - button [ref=f43e939] [cursor=pointer]:
+              - generic [ref=f43e17]: Buscar sección
+              - generic [ref=f43e18]: ⌘K
+            - generic [ref=f43e19]:
+              - button [ref=f43e940] [cursor=pointer]:
+                - generic [ref=f43e24]: Crear
+              - button [ref=f43e941] [cursor=pointer]
+              - button [ref=f43e942] [cursor=pointer]:
+                - generic [ref=f43e31]: D
+        - status [ref=f43e32]
+        - main [ref=f43e35]:
+          - generic [ref=f43e37]:
+            - generic [ref=f43e39]:
+              - generic [ref=f43e40]:
+                - heading [level=3] [ref=f43e943]: Contactos
+                - paragraph [ref=f43e42]: Gestiona personas, empresas y roles en un solo lugar.
+              - button [ref=f43e944] [cursor=pointer]: Nuevo contacto
+            - generic [ref=f43e50]:
+              - generic [ref=f43e93]:
+                - textbox [ref=f43e946]:
+                  - /placeholder: Buscar por nombre, email o Instagram
+                  - text: hno613613
+                - button [ref=f43e947] [cursor=pointer]
+                - group
+              - alert [ref=f43e931]:
+                - generic [ref=f43e935]: No hay contactos que coincidan con "hno613613". Limpia la búsqueda desde el buscador para volver a ver toda la lista.
+          - generic [ref=f43e57]:
+            - status [ref=f43e58]:
+              - generic [ref=f43e62]: "API: online"
+            - button [ref=f43e950] [cursor=pointer]
+    - generic [ref=f43e66]:
+      - button [ref=f43e951] [cursor=pointer]
+      - button [ref=f43e953] [cursor=pointer]
+      - button [ref=f43e955] [cursor=pointer]
+      - button [ref=f43e956] [cursor=pointer]
+      - button [ref=f43e957] [cursor=pointer]
+      - button [ref=f43e958] [cursor=pointer]
+      - generic [ref=f43e87]:
+        - generic [ref=f43e88]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient
+  - dialog [ref=f43e961]:
+    - heading "Nuevo contacto" [level=2] [ref=f43e962]
+    - generic [ref=f43e964]:
+      - generic [ref=f43e965]:
+        - generic:
+          - text: Nombre / Display
+          - generic: "*"
+        - generic [ref=f43e966]:
+          - textbox "Nombre / Display" [ref=f43e967]
+          - group:
+            - generic: Nombre / Display *
+      - paragraph [ref=f43e968]: "Tipo actual: Empresa. Usa Persona para individuos y Empresa para bandas, sellos o negocios."
+      - button "Cambiar a persona" [ref=f43e969] [cursor=pointer]
+    - generic [ref=f43e970]:
+      - button "Cancelar" [ref=f43e971] [cursor=pointer]
+      - button "Crear" [disabled]

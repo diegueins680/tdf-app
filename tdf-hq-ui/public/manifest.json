@@ -1,0 +1,19 @@
+{
+  "name": "TDF Records",
+  "short_name": "TDF",
+  "description": "Plataforma de gestión para estudios de grabación, sellos discográficos y artistas",
+  "start_url": "/inicio",
+  "display": "standalone",
+  "background_color": "#f8f7f5",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["business", "music", "productivity"],
+  "lang": "es"
+}

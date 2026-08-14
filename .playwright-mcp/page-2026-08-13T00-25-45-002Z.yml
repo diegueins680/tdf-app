@@ -1,0 +1,389 @@
+- generic [ref=f17e4]:
+  - generic [ref=f17e18]:
+    - generic [ref=f17e21]:
+      - link [ref=f17e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f17e31]
+      - generic [ref=f17e34]:
+        - link [ref=f17e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f17e44]
+        - link [ref=f17e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f17e54]
+        - link [ref=f17e61] [cursor=pointer]:
+          - /url: /direct/t/17844979758655945
+          - generic [ref=f17e64]:
+            - img "Messages" [ref=f17e66]
+            - generic "Direct messaging - 3 new notifications link" [ref=f17e69]: "3"
+        - link [ref=f17e75] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f17e80]
+        - link [ref=f17e87] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f17e92]
+        - link [ref=f17e100] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f17e105]
+        - link [ref=f17e110] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f17e115]
+        - link [ref=f17e122] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f17e127]:
+            - img "tdf.records.label's profile picture" [ref=f17e128]
+      - generic [ref=f17e129]:
+        - link [ref=f17e132] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f17e137]
+        - link [ref=f17e140] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f17e145]
+    - generic [ref=f17e148]:
+      - main [ref=f17e149]:
+        - generic [ref=f17e151]:
+          - generic [ref=f17e152]:
+            - generic [ref=f17e153]:
+              - generic [ref=f17e157]:
+                - button "Mi vida a la Magia" [ref=f17e160] [cursor=pointer]
+                - button [ref=f17e171] [cursor=pointer]:
+                  - link [ref=f17e173]:
+                    - img "hno613613's profile picture" [ref=f17e174]
+              - generic [ref=f17e175]:
+                - generic [ref=f17e176]:
+                  - generic [ref=f17e177]:
+                    - link [ref=f17e179] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "hno613613" [level=2] [ref=f17e180]
+                    - button [ref=f17e182] [cursor=pointer]:
+                      - img "Options" [ref=f17e184]
+                  - generic [ref=f17e188]: HNO
+                  - generic [ref=f17e190]:
+                    - generic [ref=f17e192]:
+                      - generic [ref=f17e193]: "64"
+                      - text: posts
+                    - link "250 followers" [ref=f17e195] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f17e196]:
+                        - generic "250" [ref=f17e197]
+                        - text: followers
+                    - link "739 following" [ref=f17e199] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f17e200]:
+                        - generic [ref=f17e201]: "739"
+                        - text: following
+                - generic [ref=f17e202]:
+                  - generic [ref=f17e203]:
+                    - generic [ref=f17e204]: Artist
+                    - generic [ref=f17e206]:
+                      - button [ref=f17e207] [cursor=pointer]:
+                        - generic [ref=f17e208]: HNOEl vocalista conocido por Químika SoulPresenta su nuevo proyecto solistaLo-fi · Rap · Hip Hop · Boom bap
+                      - generic [ref=f17e209]:
+                        - text: ...
+                        - button "more" [ref=f17e210] [cursor=pointer]
+                    - button "Link icon open.spotify.com/artist/0gyNkkSGNkdQzzK6gdCmYI?si=RRM2CNNDT9iquEpCILVZfw and 1 more" [ref=f17e213] [cursor=pointer]:
+                      - generic [ref=f17e214]:
+                        - img "Link icon" [ref=f17e216]
+                        - generic [ref=f17e219]: open.spotify.com/artist/0gyNkkSGNkdQzzK6gdCmYI?si=RRM2CNNDT9iquEpCILVZfw and 1 more
+                  - link "Followed by lunaleahguerra, kamaksustentable + 22 more" [ref=f17e220] [cursor=pointer]:
+                    - /url: /hno613613/followers/mutualOnly
+                    - generic [ref=f17e222]:
+                      - generic [ref=f17e224]:
+                        - button [ref=f17e225]:
+                          - link [ref=f17e226]
+                        - button [ref=f17e227]:
+                          - link [ref=f17e228]
+                        - button [ref=f17e229]:
+                          - link [ref=f17e230]
+                      - generic [ref=f17e231]: Followed by lunaleahguerra, kamaksustentable + 22 more
+            - generic [ref=f17e236]:
+              - button "Following Down chevron icon" [ref=f17e238] [cursor=pointer]:
+                - generic [ref=f17e239]:
+                  - generic [ref=f17e240]: Following
+                  - img "Down chevron icon" [ref=f17e243]
+              - button "Message" [ref=f17e246] [cursor=pointer]
+              - button [ref=f17e248] [cursor=pointer]:
+                - img "Similar accounts" [ref=f17e250]
+            - menu [ref=f17e254]:
+              - list [ref=f17e258]:
+                - listitem [ref=f17e259]
+                - listitem [ref=f17e260]
+                - listitem [ref=f17e261]:
+                  - link "View Repaso highlight" [ref=f17e264] [cursor=pointer]:
+                    - /url: /stories/highlights/18382045099155435/
+                    - button "hno613613's highlight story picture Repaso" [ref=f17e265]:
+                      - button [ref=f17e266]:
+                        - img "hno613613's highlight story picture" [ref=f17e269]
+                      - generic [ref=f17e270]: Repaso
+                - listitem [ref=f17e273]:
+                  - link "View Historia highlight" [ref=f17e276] [cursor=pointer]:
+                    - /url: /stories/highlights/18088141499128556/
+                    - button "hno613613's highlight story picture Historia" [ref=f17e277]:
+                      - button [ref=f17e278]:
+                        - img "hno613613's highlight story picture" [ref=f17e281]
+                      - generic [ref=f17e282]: Historia
+                - listitem [ref=f17e285]:
+                  - link "View Clases highlight" [ref=f17e288] [cursor=pointer]:
+                    - /url: /stories/highlights/17909691165323422/
+                    - button "hno613613's highlight story picture Clases" [ref=f17e289]:
+                      - button [ref=f17e290]:
+                        - img "hno613613's highlight story picture" [ref=f17e293]
+                      - generic [ref=f17e294]: Clases
+                - listitem [ref=f17e297]:
+                  - link "View 2026 tracks highlight" [ref=f17e300] [cursor=pointer]:
+                    - /url: /stories/highlights/17932256820035870/
+                    - button "hno613613's highlight story picture 2026 tracks" [ref=f17e301]:
+                      - button [ref=f17e302]:
+                        - img "hno613613's highlight story picture" [ref=f17e305]
+                      - generic [ref=f17e306]: 2026 tracks
+                - listitem [ref=f17e309]:
+                  - link "View new records highlight" [ref=f17e312] [cursor=pointer]:
+                    - /url: /stories/highlights/18324211069168205/
+                    - button "hno613613's highlight story picture new records" [ref=f17e313]:
+                      - button [ref=f17e314]:
+                        - img "hno613613's highlight story picture" [ref=f17e317]
+                      - generic [ref=f17e318]: new records
+                - listitem [ref=f17e321]:
+                  - link "View Eventos highlight" [ref=f17e324] [cursor=pointer]:
+                    - /url: /stories/highlights/18063829043289265/
+                    - button "hno613613's highlight story picture Eventos" [ref=f17e325]:
+                      - button [ref=f17e326]:
+                        - img "hno613613's highlight story picture" [ref=f17e329]
+                      - generic [ref=f17e330]: Eventos
+          - generic [ref=f17e333]:
+            - tablist [ref=f17e334]:
+              - link [ref=f17e336] [cursor=pointer]:
+                - /url: /hno613613/
+                - img "Posts" [ref=f17e338]
+              - link [ref=f17e349] [cursor=pointer]:
+                - /url: /hno613613/reels/
+                - img "Reels" [ref=f17e351]
+              - link [ref=f17e354] [cursor=pointer]:
+                - /url: /hno613613/reposts/
+                - img "Reposts" [ref=f17e356]
+              - link [ref=f17e359] [cursor=pointer]:
+                - /url: /hno613613/tagged/
+                - img "Tagged" [ref=f17e361]
+            - tabpanel
+          - generic [ref=f17e368]:
+            - generic [ref=f17e369]:
+              - link [ref=f17e371] [cursor=pointer]:
+                - /url: /hno613613/reel/DbBdf1KuFIS/
+                - 'img "💊 Escucha \"Funkacil Forte\". La única droga que necesitas contiene dos ingredientes: Dios y música. Spotify y todas las plataformas. Link en bio. #FunkacilForte #HNO #StoneLoco #MusicaNueva #NuevoLanzamiento Spotify LinkEnBio MusicaUrbana LatinMusic Funk HipHop Rap LatinRap TrapLatino UrbanLatino MusicTok TikTokMusic Reels Viral ParaTi FYP Dios Fe MusicaEsVida NuevaEra" [ref=f17e374]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f17e377] [cursor=pointer]:
+                - /url: /hno613613/reel/Dbobv87sKOt/
+                - 'img "HNO – DESPERTAR 🔥 ESTRENO • Escúchalo completo. Link en bio. \"Y hoy no pienso más... Tablas... jazz... paz... Déjame el boom bap, que el camino es pa'' allá... Llega madrugada, de una quinta dimensión que luego me ametralla. Ya salta la valla, calle si se rayan. No calaña, ni cizaña, quita el trip con malas mañas. Ensaya un flow de Super Saiyan, deja en mute al universo mientras vibrarán tus alas...\" #HNO #Despertar #Estreno #LinkInBio #BoomBap JazzRap HipHop RapConsciente HipHopLatino RapEcuador MusicaNueva NuevoLanzamiento BlueRecords Underground Ecuador RealHipHop" [ref=f17e380]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f17e383] [cursor=pointer]:
+                - /url: /hno613613/reel/Da25SbUOJI_/
+                - img "🔥 Fire fly ya está disponible. Un tema de HNO (aka Juano Ledessma) junto a Stone Loco, incluido en el nuevo álbum Hecho a Mano. Diez canciones cargadas de identidad, ritmo y esencia. 🎧 Ponte pilas, escucha Hecho a Mano. El link está en la biografía. ¡Apoya la música independiente ecuatoriana!" [ref=f17e386]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f17e388]:
+              - link [ref=f17e390] [cursor=pointer]:
+                - /url: /urbandproec/reel/Da6aRQ9JwmS/
+                - 'img "🅄🅁🄱🄰🄽🄽🄴🅆🅂 Conoce\"Hecho a Mano\" el nuevo disco de @hno613613 y @mcstoneloco 🔥 PONLE PLAY ▶ #orgullosamenterapecuatoriano #Ecuador #RapEcuatoriano #nuevodisco #urbandpro" [ref=f17e393]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f17e396] [cursor=pointer]:
+                - /url: /republicaurbana/p/DYieUKxxHuF/
+                - img "Photo by República Urbana in Ecuador with @hno613613, and @mcstoneloco." [ref=f17e399]
+              - link [ref=f17e402] [cursor=pointer]:
+                - /url: /hno613613/reel/DbLk-SmukBc/
+                - 'img "🎙️ Cantando un poco en el estudio, sin reverb, sin autotune, sin filtros. HNO – Quimika Soul 🎶 Producción: Daniel Mena. ✍️ Letra: HNO. Disponible en todas las plataformas digitales. 🔗 Escúchala en el link de mi bio." [ref=f17e405]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f17e407]:
+              - link [ref=f17e409] [cursor=pointer]:
+                - /url: /hno613613/reel/Das7rvOxMrb/
+                - 'img "Domingo de inspiración. ✍️🎶 Escribiendo un poco… Se viene un nuevo feat con Cruz de Hueso, a.k.a. Don Bone. 🔥 Desde Quito, Ecuador, preparando música nueva para ustedes. Muy pronto. 👀 HNO — Síguenos y no te pierdas lo que viene. #HNO #CruzDeHueso #DonBone #Quito #Ecuador HipHop Rap RapEcuador HipHopLatino MusicaNueva NuevoFeat Estudio Underground Independiente Proximamente" [ref=f17e412]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f17e415] [cursor=pointer]:
+                - /url: /hno613613/reel/DbirK2bOe5O/
+                - 'img "🚨 ¡Ya casi está listo! 🎶 Escribiendo los últimos detalles de \"Despertar\" y grabando las últimas cositas. 🙌🔥 En los próximos días estará disponible en todas las plataformas digitales. ¡No te lo pierdas! Espéralo, HNO. 💯🎧 #Despertar #HNO #NuevaMúsica #Próximamente #Estreno MúsicaNueva LatinMusic ArtistaIndependiente Estudio Grabación MusicRelease Streaming Spotify AppleMusic YouTubeMusic Deezer AmazonMusic MusicaLatina Talento NuevoLanzamiento" [ref=f17e418]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f17e421] [cursor=pointer]:
+                - /url: /juano_music/reel/DbObmu6i6rj/
+                - img "Un poco de “Triología” feat. Mystica 🎙️🔥 Hip hop ecuatoriano, directo desde el estudio, sin autotune y con la esencia real del rap. Grabando, creando y dejando que la música hable. 🇪🇨🎧 🔗 Link in bio." [ref=f17e424]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f17e426]:
+              - link [ref=f17e428] [cursor=pointer]:
+                - /url: /hno613613/reel/DZiiaYJMldF/
+                - 'img "🔥 GRAN ESTRENO 🔥 Ya disponible en todas las plataformas digitales 🎧 🎵 Verso Crudo 🎤 Murē Lefuh feat. HNO Se vuelve a oír. Hip-hop ecuatoriano directo, real y sin filtros. 🇪🇨🔥 Corre al link de la biografía y escucha Verso Crudo en tu plataforma favorita. Gracias por el apoyo. Comparte, comenta y ayúdanos a que este sonido llegue más lejos. #VersoCrudo #MureLefuh #HNO #GranEstreno #Estreno HipHopEcuatoriano RapEcuatoriano HipHopLatino RapLatino MusicaNueva NuevaMusica Ecuador HipHop Rap UndergroundHipHop ArtistaIndependiente DisponibleYa LinkEnBio" [ref=f17e431]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f17e434] [cursor=pointer]:
+                - /url: /hno613613/reel/Da3URerxJvw/
+                - 'img "Escribiendo nuevos temas. 🎶 Jazz, lo-fi y rock ecuatoriano en proceso. 🇪🇨 HNO en la casa. 🔥 ¿Qué género quieres escuchar primero? #HNO #JuanOledezma #BlueRecords #MusicaNueva #NuevaMusica Jazz LoFi RockEcuatoriano Rock HipHop Rap Beatmaker Songwriter MusicProducer Estudio StudioSession IndieMusic UndergroundMusic MusicaIndependiente HechoAMano Quito Ecuador TikTokMusic ParaTi FYP Viral EnTendencia Musicos Compositor ProduccionMusical" [ref=f17e437]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f17e440] [cursor=pointer]:
+                - /url: /mystica_music22/reel/Dbnbo8UvBxg/
+                - 'img "Disfrútalo mucho 🎧 SANDALFON Video Oficial Mystica ft.HNO Magia Rap #magiarap #nuevamusica #hiphoplatino #bluerecords #rapconsciente" [ref=f17e443]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+      - contentinfo [ref=f17e445]:
+        - generic [ref=f17e446]:
+          - generic [ref=f17e448]:
+            - link "Meta" [ref=f17e450] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f17e453] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f17e456] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f17e459] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f17e462] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f17e465] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f17e468] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f17e471] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f17e474] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f17e477] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f17e480] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f17e483] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f17e486] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f17e489] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f17e492] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f17e494]:
+            - generic [ref=f17e495] [cursor=pointer]:
+              - generic [ref=f17e496]:
+                - generic [ref=f17e497]: English
+                - img "Down chevron icon" [ref=f17e500]
+              - combobox "Switch Display Language" [ref=f17e502]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f17e503]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f17e506] [cursor=pointer]:
+              - generic "Messages - 3 new notifications" [ref=f17e507]:
+                - generic [ref=f17e508]:
+                  - generic [ref=f17e510]:
+                    - img "Messages" [ref=f17e511]
+                    - generic "Direct messaging - 3 new notifications link" [ref=f17e514]: "3"
+                  - generic [ref=f17e517]: Messages
+                - generic [ref=f17e518]:
+                  - button "User avatar Santiii" [ref=f17e520]:
+                    - img "User avatar" [ref=f17e523]
+                  - button "User avatar Diego Saa" [ref=f17e525]:
+                    - img "User avatar" [ref=f17e528]
+                  - button "User avatar Martini 🍸" [ref=f17e530]:
+                    - img "User avatar" [ref=f17e533]
+            - generic [ref=f17e534]:
+              - generic [ref=f17e535]:
+                - generic [ref=f17e536]:
+                  - generic [ref=f17e538]:
+                    - status "Loading..." [ref=f17e540]
+                    - status "Loading..." [ref=f17e542]
+                  - button [active] [ref=f17e544] [cursor=pointer]:
+                    - img "Close" [ref=f17e546]
+                - separator [ref=f17e549]
+              - generic [ref=f17e550]:
+                - generic [ref=f17e551]:
+                  - status "Loading..." [ref=f17e553]
+                  - status "Loading..." [ref=f17e555]
+                - status "Loading..." [ref=f17e558]
+                - generic [ref=f17e559]:
+                  - status "Loading..." [ref=f17e561]
+                  - status "Loading..." [ref=f17e563]
+                - generic [ref=f17e564]:
+                  - status "Loading..." [ref=f17e566]
+                  - status "Loading..." [ref=f17e568]
+                - status "Loading..." [ref=f17e571]
+                - generic [ref=f17e572]:
+                  - status "Loading..." [ref=f17e574]
+                  - status "Loading..." [ref=f17e576]
+                - status "Loading..." [ref=f17e578]

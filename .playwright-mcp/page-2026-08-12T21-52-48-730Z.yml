@@ -1,0 +1,18 @@
+- generic [ref=e2]:
+  - status [ref=e3]:
+    - generic [ref=e4]:
+      - progressbar [ref=e5]
+      - paragraph [ref=e8]: Cargando…
+  - generic "Control de radio":
+    - generic [ref=e9]:
+      - button "Reproducir radio" [ref=e10] [cursor=pointer]
+      - generic "Saltar al anterior" [ref=e13]:
+        - button "Saltar a la estación anterior" [ref=e14] [cursor=pointer]
+      - generic "Saltar al siguiente" [ref=e17]:
+        - button "Saltar a la siguiente estación" [ref=e18] [cursor=pointer]
+      - button "Silenciar radio" [ref=e21] [cursor=pointer]
+      - button "Ocultar barra de radio" [ref=e24] [cursor=pointer]
+      - button "Expandir radio" [ref=e27] [cursor=pointer]
+      - generic [ref=e30]:
+        - generic [ref=e31]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient

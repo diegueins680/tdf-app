@@ -329,7 +329,10 @@ export default function LeadsPage() {
 
           {isError && <Alert severity="error">{error?.message ?? 'No se pudieron cargar los leads'}</Alert>}
           {showInitialLoadingState ? (
-            <SkeletonCards count={3} />
+            <SkeletonCards
+              count={3}
+              label="Cargando leads… El buscador y la tabla aparecerán cuando termine esta primera carga."
+            />
           ) : !isLoading && !isError && !hasLeads ? (
             <EmptyState
               icon={<PersonAddAltIcon />}

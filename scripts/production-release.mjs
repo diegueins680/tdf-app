@@ -14,6 +14,8 @@ import {
   buildSchemaPreflightSql,
   buildSchemaVerificationSql,
   normalizeFullSha,
+  parseSecurityEmergencyReadinessOutput,
+  securityEmergencyReadinessBlocker,
   validateFlyConfig,
   validateMigrationRelativePath,
   validateSafeName,
@@ -23,6 +25,12 @@ const execFileAsync = promisify(execFile);
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const manifestPath = path.join(rootDir, 'scripts', 'production-migrations.json');
 const flyConfigPath = path.join(rootDir, 'fly.toml');
+const securityEmergencyPreflightPath = path.join(
+  rootDir,
+  'tdf-hq',
+  'sql',
+  'preflight_security_emergency_readiness.sql',
+);
 const defaultImageRepo = 'diegueins680/tdf-hq';
 const productionProfile = Object.freeze({
   app: 'tdf-hq',
@@ -185,8 +193,22 @@ async function resolveReleaseContext(options) {
   }
 
   const flyConfig = await readGitBlob(sha, path.relative(rootDir, flyConfigPath));
+  const securityEmergencyPreflightSql = await readGitBlob(
+    sha,
+    path.relative(rootDir, securityEmergencyPreflightPath),
+  );
   validateFlyConfig(flyConfig);
-  return { ...options, sha, app, dbApp, database, image, flyConfig, migrations };
+  return {
+    ...options,
+    sha,
+    app,
+    dbApp,
+    database,
+    image,
+    flyConfig,
+    migrations,
+    securityEmergencyPreflightSql,
+  };
 }
 
 async function readMachines(app) {
@@ -254,6 +276,15 @@ async function runDatabaseSql(context, sql, options = {}) {
   ]);
 }
 
+async function readSecurityEmergencyReadiness(context) {
+  const { stdout } = await runDatabaseSql(
+    context,
+    context.securityEmergencyPreflightSql,
+    { tuplesOnly: true },
+  );
+  return parseSecurityEmergencyReadinessOutput(stdout);
+}
+
 async function verifyImageExists(image, sha) {
   if (!(await commandExists('docker'))) throw new Error('docker CLI is required to inspect the release image.');
   const { stdout } = await run([
@@ -319,6 +350,9 @@ async function remotePreflight(context) {
     if (!secrets.has(required)) blockers.push(`Required Fly secret is missing: ${required}`);
   }
   const { stdout } = await runDatabaseSql(context, buildSchemaPreflightSql());
+  const securityEmergencyReadiness = await readSecurityEmergencyReadiness(context);
+  const securityBlocker = securityEmergencyReadinessBlocker(securityEmergencyReadiness);
+  if (securityBlocker) blockers.push(`Security emergency readiness: ${securityBlocker}.`);
   const health = await waitForJson(`https://${context.app}.fly.dev/health`);
   const version = await waitForJson(`https://${context.app}.fly.dev/version`);
   if (health.status !== 'ok' || health.db !== 'ok') {
@@ -339,6 +373,7 @@ async function remotePreflight(context) {
     runtimeEnv,
     ticketmasterConfigured: secrets.has('TICKETMASTER_API_KEY'),
     databasePreflight: stdout.trim().split('\n').slice(-3),
+    securityEmergencyReadiness,
     currentVersion: version.commit,
     resolvedImage: context.resolvedImage,
     acceptableImageDigests: [...context.acceptableImageDigests],
@@ -720,6 +755,14 @@ async function executeRelease(context) {
       buildMigrationBatchSql(context.migrations, { sourceCommit: context.sha }),
     );
     await runDatabaseSql(context, buildSchemaVerificationSql());
+    report.securityEmergencyReadiness = await readSecurityEmergencyReadiness(context);
+    const securityBlocker = securityEmergencyReadinessBlocker(
+      report.securityEmergencyReadiness,
+      { requireCanonical: true },
+    );
+    if (securityBlocker) {
+      throw new Error(`Security emergency readiness: ${securityBlocker}.`);
+    }
     await heartbeatReleaseLease(context, leaseToken);
 
     await assertUntouchedSnapshots(context, originalMachines, touchedMachines);
@@ -816,6 +859,7 @@ async function main() {
       machines: preflight.machines.map(({ id, region, state }) => ({ id, region, state })),
       runtimeEnv: preflight.runtimeEnv,
       ticketmasterConfigured: preflight.ticketmasterConfigured,
+      securityEmergencyReadiness: preflight.securityEmergencyReadiness,
       currentVersion: preflight.currentVersion,
       resolvedImage: preflight.resolvedImage,
     }, null, 2));

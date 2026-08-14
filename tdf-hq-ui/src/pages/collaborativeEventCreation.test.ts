@@ -10,6 +10,7 @@ import {
 } from './collaborativeEventCreation';
 
 describe('collaborative event creation', () => {
+  const eventTypeId = '41000000-0000-4000-8000-000000000001';
   const draft = (): CollaborativeEventDraft => ({
     ...buildInitialCollaborativeEventDraft(
       DateTime.fromISO('2026-07-28T10:15:00', { zone: 'America/Guayaquil' }),
@@ -19,6 +20,7 @@ describe('collaborative event creation', () => {
     price: '12.50',
     capacity: '250',
     ticketUrl: 'https://tickets.example.com/tdf',
+    eventTypeId,
   });
 
   it('starts one hour ahead with a private two-hour planning draft', () => {
@@ -27,7 +29,7 @@ describe('collaborative event creation', () => {
     )).toMatchObject({
       startAt: '2026-07-28T11:00',
       durationMinutes: 120,
-      eventType: 'party',
+      eventTypeId: '',
       isPublic: false,
       collaborators: [],
     });
@@ -45,8 +47,7 @@ describe('collaborative event creation', () => {
       eventVenueId: null,
       eventPriceCents: 1250,
       eventCapacity: 250,
-      eventType: 'party',
-      eventStatus: 'planning',
+      eventTypeId,
       eventCurrency: 'USD',
       eventBudgetCents: null,
       eventTicketUrl: 'https://tickets.example.com/tdf',

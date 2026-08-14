@@ -31,8 +31,8 @@ import { Fans } from '../api/fans';
 import { useAnalytics } from '../analytics/useAnalytics';
 import { captureGrowthAttribution, captureGrowthEvent } from '../analytics/growthAttribution';
 import type { ArtistProfileDTO } from '../api/types';
+import { Records, type RecordsResourceDTO } from '../api/records';
 import { STUDIO_MAP_URL } from '../config/appConfig';
-import { recordings, releases } from '../constants/recordsContent';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
 import { formatNumberForUser } from '../utils/formatters';
 
@@ -340,20 +340,18 @@ const artistBenefits = [
   'Herramientas para publicar actividad, activar experiencias y convertir comunidad en tracción.',
 ];
 
-const fallbackImages = [
-  releases[0]?.cover,
-  recordings[0]?.image,
-  recordings[1]?.image,
-  releases[1]?.cover,
-].filter(Boolean) as string[];
-
 const formatFollowerCount = (value: number) =>
   value === 1 ? '1 seguidor' : `${formatNumberForUser(value)} seguidores`;
 
-const artistImageFor = (artist: ArtistProfileDTO, index: number) =>
+const artistImageFor = (artist: ArtistProfileDTO, index: number, recordsImages: string[]) =>
   getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug) ??
-  fallbackImages[index % Math.max(fallbackImages.length, 1)] ??
+  recordsImages[index % Math.max(recordsImages.length, 1)] ??
   FALLBACK_ARTIST_IMAGE.url;
+
+const primaryRecordsImage = (resources: RecordsResourceDTO[]): string | null =>
+  resources.find((resource) => resource.primary && resource.thumbnailUrl)?.thumbnailUrl ??
+  resources.find((resource) => resource.thumbnailUrl)?.thumbnailUrl ??
+  null;
 
 const artistSummaryFor = (artist: ArtistProfileDTO) => {
   if (artist.apBio?.trim()) return artist.apBio;
@@ -501,12 +499,14 @@ function ArtistCarousel({
   error,
   emptyMessage,
   profileAction,
+  recordsImages,
 }: {
   artists: ArtistProfileDTO[];
   loading: boolean;
   error: boolean;
   emptyMessage: string;
   profileAction: string;
+  recordsImages: string[];
 }) {
   if (loading) {
     return (
@@ -559,7 +559,7 @@ function ArtistCarousel({
         >
           <Box
             component="img"
-            src={artistImageFor(artist, index)}
+            src={artistImageFor(artist, index, recordsImages)}
             alt={`Imagen de ${artist.apDisplayName}`}
             loading="lazy"
             decoding="async"
@@ -667,6 +667,20 @@ export default function TdfPlatformPage() {
     queryFn: Fans.listPublicArtists,
     staleTime: TDF_PLATFORM_DISPLAY.publicArtistsStaleTimeMs,
   });
+  const recordsFeedQuery = useQuery({
+    queryKey: ['records', 'feed', 'es'],
+    queryFn: () => Records.getFeed('es'),
+    staleTime: TDF_PLATFORM_DISPLAY.publicArtistsStaleTimeMs,
+  });
+  const recordsImages = useMemo(() => {
+    const feed = recordsFeedQuery.data;
+    if (!feed) return [];
+    return [
+      ...feed.releases.map((release) => primaryRecordsImage(release.resources)),
+      ...feed.recordings.map((recording) => primaryRecordsImage(recording.resources)),
+      ...feed.sessions.map((sessionItem) => primaryRecordsImage(sessionItem.resources)),
+    ].filter((image): image is string => Boolean(image));
+  }, [recordsFeedQuery.data]);
 
   const topArtists = useMemo(() => {
     const artists = artistsQuery.data ?? [];
@@ -970,6 +984,7 @@ export default function TdfPlatformPage() {
               error={artistsQuery.isError}
               emptyMessage={copy.artistsEmpty}
               profileAction={copy.viewArtistProfile}
+              recordsImages={recordsImages}
             />
           </Stack>
         </Container>
@@ -1010,23 +1025,25 @@ export default function TdfPlatformPage() {
                 </Stack>
               </Stack>
             </Grid>
-            <Grid item xs={GRID_FULL_SPAN} md={GRID_HALF_SPAN}>
-              <Box
-                component="img"
-                src={recordings[1]?.image ?? recordings[0]?.image}
-                alt="Sesión musical en estudio"
-                loading="lazy"
-                decoding="async"
-                sx={{
-                  width: '100%',
-                  aspectRatio: '4 / 3',
-                  objectFit: 'cover',
-                  borderRadius: 2,
-                  border: BORDER_STRONG,
-                  display: 'block',
-                }}
-              />
-            </Grid>
+            {recordsImages[0] && (
+              <Grid item xs={GRID_FULL_SPAN} md={GRID_HALF_SPAN}>
+                <Box
+                  component="img"
+                  src={recordsImages[0]}
+                  alt="Contenido editorial publicado por TDF Records"
+                  loading="lazy"
+                  decoding="async"
+                  sx={{
+                    width: '100%',
+                    aspectRatio: '4 / 3',
+                    objectFit: 'cover',
+                    borderRadius: 2,
+                    border: BORDER_STRONG,
+                    display: 'block',
+                  }}
+                />
+              </Grid>
+            )}
           </Grid>
         </Container>
       </Box>

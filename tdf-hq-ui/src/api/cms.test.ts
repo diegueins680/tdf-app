@@ -37,6 +37,7 @@ describe('Cms API', () => {
     expect(getMock).toHaveBeenCalledWith('/cms/content?slug=records-sessions&locale=es');
     expect(content).toEqual({
       ccdId: 12,
+      ccdContentId: null,
       ccdSlug: 'records-sessions',
       ccdLocale: 'es',
       ccdVersion: 3,
@@ -69,6 +70,7 @@ describe('Cms API', () => {
     expect(contents).toEqual([
       {
         ccdId: 1,
+        ccdContentId: null,
         ccdSlug: 'records-release-1',
         ccdLocale: 'es',
         ccdVersion: 1,
@@ -84,7 +86,8 @@ describe('Cms API', () => {
   it('sends admin create payloads with backend wire field names', async () => {
     postMock.mockResolvedValueOnce({
       id: 2,
-      slug: 'records-sessions',
+      contentId: '20000000-0000-4000-8000-000000000001',
+      slug: 'fan-hub',
       locale: 'es',
       version: 1,
       status: 'draft',
@@ -95,7 +98,7 @@ describe('Cms API', () => {
     });
 
     const content = await Cms.create({
-      cciSlug: 'records-sessions',
+      cciContentId: '20000000-0000-4000-8000-000000000001',
       cciLocale: 'es',
       cciTitle: 'TDF Live Sessions',
       cciStatus: 'draft',
@@ -103,7 +106,7 @@ describe('Cms API', () => {
     });
 
     expect(postMock).toHaveBeenCalledWith('/cms/admin/content', {
-      slug: 'records-sessions',
+      contentId: '20000000-0000-4000-8000-000000000001',
       locale: 'es',
       title: 'TDF Live Sessions',
       status: 'draft',

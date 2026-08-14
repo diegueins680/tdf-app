@@ -1,0 +1,436 @@
+- generic [ref=f29e4]:
+  - generic [ref=f29e9]:
+    - generic [ref=f29e12]:
+      - link [ref=f29e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f29e22]
+      - generic [ref=f29e25]:
+        - link [ref=f29e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f29e35]
+        - link [ref=f29e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f29e45]
+        - link [ref=f29e52] [cursor=pointer]:
+          - /url: /direct/t/114460876611568
+          - generic [ref=f29e55]:
+            - img "Messages" [ref=f29e57]
+            - generic "Direct messaging - 3 new notifications link" [ref=f29e60]: "3"
+        - link [ref=f29e66] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f29e71]
+        - link [ref=f29e252] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f29e257]
+        - link [ref=f29e89] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f29e94]
+        - link [ref=f29e99] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f29e104]
+        - link [ref=f29e111] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f29e116]:
+            - img "tdf.records.label's profile picture" [ref=f29e117]
+      - generic [ref=f29e118]:
+        - link [ref=f29e121] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f29e126]
+        - link [ref=f29e129] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f29e134]
+    - generic [ref=f29e137]:
+      - main [ref=f29e138]:
+        - generic [ref=f29e140]:
+          - generic [ref=f29e259]:
+            - generic [ref=f29e260]:
+              - button [ref=f29e265] [cursor=pointer]:
+                - link [ref=f29e267]:
+                  - img "planet_303's profile picture" [ref=f29e268]
+              - generic [ref=f29e269]:
+                - generic [ref=f29e270]:
+                  - generic [ref=f29e271]:
+                    - link [ref=f29e273] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "planet_303" [level=2] [ref=f29e274]
+                    - button [ref=f29e276] [cursor=pointer]:
+                      - img "Options" [ref=f29e278]
+                  - generic [ref=f29e282]: Fabro Alomìa Torres
+                  - generic [ref=f29e284]:
+                    - generic [ref=f29e286]:
+                      - generic [ref=f29e287]: "579"
+                      - text: posts
+                    - link "1,672 followers" [ref=f29e289] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f29e290]:
+                        - generic "1,672" [ref=f29e291]
+                        - text: followers
+                    - link "4,717 following" [ref=f29e293] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f29e294]:
+                        - generic [ref=f29e295]: 4,717
+                        - text: following
+                - generic [ref=f29e296]:
+                  - generic [ref=f29e297]:
+                    - button [ref=f29e299] [cursor=pointer]:
+                      - generic [ref=f29e300]:
+                        - link "@interdit_____" [ref=f29e301]:
+                          - /url: /interdit_____/
+                        - link "@artesoscurass" [ref=f29e302]:
+                          - /url: /artesoscurass/
+                    - generic [ref=f29e303]:
+                      - button "Link icon www.deejay.de/Various_Analog_Travellers_Ep_YAY017_Vinyl__1107902 and 1 more" [ref=f29e304] [cursor=pointer]:
+                        - generic [ref=f29e305]:
+                          - img "Link icon" [ref=f29e307]
+                          - generic [ref=f29e310]: www.deejay.de/Various_Analog_Travellers_Ep_YAY017_Vinyl__1107902 and 1 more
+                      - link "Threads planet_303" [ref=f29e312] [cursor=pointer]:
+                        - /url: https://www.threads.com/@planet_303?xmt=AQG04NpmEBLzCqrpbroagUaoJke1Ycm9g8icbY-wuf7Ppqk
+                        - img "Threads" [ref=f29e314]
+                        - generic [ref=f29e316]: planet_303
+                  - link "Followed by g_a_a_a_b__, cabreririjilla + 52 more" [ref=f29e318] [cursor=pointer]:
+                    - /url: /planet_303/followers/mutualOnly
+                    - generic [ref=f29e320]:
+                      - generic [ref=f29e322]:
+                        - button [ref=f29e323]:
+                          - link [ref=f29e324]
+                        - button [ref=f29e325]:
+                          - link [ref=f29e326]
+                        - button [ref=f29e327]:
+                          - link [ref=f29e328]
+                      - generic [ref=f29e329]: Followed by g_a_a_a_b__, cabreririjilla + 52 more
+            - generic [ref=f29e334]:
+              - button "Following Down chevron icon" [ref=f29e336] [cursor=pointer]:
+                - generic [ref=f29e337]:
+                  - generic [ref=f29e338]: Following
+                  - img "Down chevron icon" [ref=f29e341]
+              - button "Message" [ref=f29e344] [cursor=pointer]
+              - button [ref=f29e346] [cursor=pointer]:
+                - img "Similar accounts" [ref=f29e348]
+            - menu [ref=f29e352]:
+              - generic [ref=f29e354]:
+                - list [ref=f29e356]:
+                  - listitem [ref=f29e357]
+                  - listitem [ref=f29e358]
+                  - listitem [ref=f29e359]:
+                    - link "View 🥷🏻 highlight" [ref=f29e362] [cursor=pointer]:
+                      - /url: /stories/highlights/17923991154155714/
+                      - button "planet_303's highlight story picture 🥷🏻" [ref=f29e363]:
+                        - button [ref=f29e364]:
+                          - img "planet_303's highlight story picture" [ref=f29e367]
+                        - generic [ref=f29e368]: 🥷🏻
+                  - listitem [ref=f29e371]:
+                    - link "View 🛰️ highlight" [ref=f29e374] [cursor=pointer]:
+                      - /url: /stories/highlights/17867438165196851/
+                      - button "planet_303's highlight story picture 🛰️" [ref=f29e375]:
+                        - button [ref=f29e376]:
+                          - img "planet_303's highlight story picture" [ref=f29e379]
+                        - generic [ref=f29e380]: 🛰️
+                  - listitem [ref=f29e383]:
+                    - link "View Destacada highlight" [ref=f29e386] [cursor=pointer]:
+                      - /url: /stories/highlights/17867602615305772/
+                      - button "planet_303's highlight story picture Destacada" [ref=f29e387]:
+                        - button [ref=f29e388]:
+                          - img "planet_303's highlight story picture" [ref=f29e391]
+                        - generic [ref=f29e392]: Destacada
+                  - listitem [ref=f29e395]:
+                    - link "View Destacada highlight" [ref=f29e398] [cursor=pointer]:
+                      - /url: /stories/highlights/17930567131257578/
+                      - button "planet_303's highlight story picture Destacada" [ref=f29e399]:
+                        - button [ref=f29e400]:
+                          - img "planet_303's highlight story picture" [ref=f29e403]
+                        - generic [ref=f29e404]: Destacada
+                  - listitem [ref=f29e407]:
+                    - link "View Destacada highlight" [ref=f29e410] [cursor=pointer]:
+                      - /url: /stories/highlights/17946824545222370/
+                      - button "planet_303's highlight story picture Destacada" [ref=f29e411]:
+                        - button [ref=f29e412]:
+                          - img "planet_303's highlight story picture" [ref=f29e415]
+                        - generic [ref=f29e416]: Destacada
+                  - listitem [ref=f29e419]:
+                    - link "View Destacada highlight" [ref=f29e422] [cursor=pointer]:
+                      - /url: /stories/highlights/17959447288226168/
+                      - button "planet_303's highlight story picture Destacada" [ref=f29e423]:
+                        - button [ref=f29e424]:
+                          - img "planet_303's highlight story picture" [ref=f29e427]
+                        - generic [ref=f29e428]: Destacada
+                  - listitem [ref=f29e431]:
+                    - link "View Destacada highlight" [ref=f29e434] [cursor=pointer]:
+                      - /url: /stories/highlights/18031601995044361/
+                      - button "planet_303's highlight story picture Destacada" [ref=f29e435]:
+                        - button [ref=f29e436]:
+                          - img "planet_303's highlight story picture" [ref=f29e439]
+                        - generic [ref=f29e440]: Destacada
+                  - listitem [ref=f29e443]:
+                    - link "View Destacada highlight" [ref=f29e446] [cursor=pointer]:
+                      - /url: /stories/highlights/18018045097106045/
+                      - button "planet_303's highlight story picture Destacada" [ref=f29e447]:
+                        - button [ref=f29e448]:
+                          - img "planet_303's highlight story picture" [ref=f29e451]
+                        - generic [ref=f29e452]: Destacada
+                  - listitem [ref=f29e455]:
+                    - link "View PLANET 303 highlight" [ref=f29e458] [cursor=pointer]:
+                      - /url: /stories/highlights/17855497663741165/
+                      - button "planet_303's highlight story picture PLANET 303" [ref=f29e459]:
+                        - button [ref=f29e460]:
+                          - img "planet_303's highlight story picture" [ref=f29e463]
+                        - generic [ref=f29e464]: PLANET 303
+                  - listitem [ref=f29e467]:
+                    - link "View Dumb highlight" [ref=f29e470] [cursor=pointer]:
+                      - /url: /stories/highlights/18089762782030013/
+                      - button "planet_303's highlight story picture Dumb" [ref=f29e471]:
+                        - button [ref=f29e472]:
+                          - img "planet_303's highlight story picture" [ref=f29e475]
+                        - generic [ref=f29e476]: Dumb
+                - button "Next" [ref=f29e479] [cursor=pointer]
+          - generic [ref=f29e481]:
+            - tablist [ref=f29e482]:
+              - link [ref=f29e484] [cursor=pointer]:
+                - /url: /planet_303/
+                - img "Posts" [ref=f29e486]
+              - link [ref=f29e497] [cursor=pointer]:
+                - /url: /planet_303/reels/
+                - img "Reels" [ref=f29e499]
+              - link [ref=f29e502] [cursor=pointer]:
+                - /url: /planet_303/reposts/
+                - img "Reposts" [ref=f29e504]
+              - link [ref=f29e507] [cursor=pointer]:
+                - /url: /planet_303/tagged/
+                - img "Tagged" [ref=f29e509]
+            - tabpanel
+          - generic [ref=f29e516]:
+            - generic [ref=f29e517]:
+              - link [ref=f29e519] [cursor=pointer]:
+                - /url: /planet_303/p/DLFVppYsJKX/
+                - img "Photo by Fabro Alomìa Torres on June 19, 2025." [ref=f29e522]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f29e525] [cursor=pointer]:
+                - /url: /planet_303/p/DG6gnM6pM-A/
+                - img "Photo by Fabro Alomìa Torres on March 07, 2025." [ref=f29e528]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f29e531] [cursor=pointer]:
+                - /url: /planet_303/p/DZ0s-U0pqNC/
+                - img "Photo shared by Fabro Alomìa Torres on June 20, 2026 tagging @lasabejasclubdevinilos. May be an image of record player, poster, record and text that says 'EST-1970- EST 1970 D LAS aBDJAS sábado 20 música electrónica FABRO'." [ref=f29e534]
+            - generic [ref=f29e536]:
+              - link [ref=f29e538] [cursor=pointer]:
+                - /url: /lacuadra.uio/p/DXYI-J3Dq3C/
+                - img "Photo shared by LA CUADRA on April 20, 2026 tagging @anajusegovia, @planet_303, @glassineuio, and @morademarte77." [ref=f29e541]
+              - link [ref=f29e544] [cursor=pointer]:
+                - /url: /backroom_session/p/DWl7XMEEVAX/
+                - img "Photo by BACKROOM SESSIONS in Cumbaya, Quito with @julieth__thenoirkult, @its_moobi, @everaldho_, @emmanu__music, and @planet_303." [ref=f29e547]
+              - link [ref=f29e550] [cursor=pointer]:
+                - /url: /interdit_____/p/DWiE2BfDye2/
+                - img "Photo shared by Interdit on March 30, 2026 tagging @julieth__thenoirkult, @its_moobi, @everaldho_, @emmanu__music, @ritualofbackwards, @planet_303, @federico__molinari_, @etheric.ec, @la_eclectica_, and @backroom_session." [ref=f29e553]
+            - generic [ref=f29e555]:
+              - link [ref=f29e557] [cursor=pointer]:
+                - /url: /interdit_____/p/DWPsqq5iYtP/
+                - img "Photo shared by Interdit on March 23, 2026 tagging @julieth__thenoirkult, and @planet_303." [ref=f29e560]
+              - link [ref=f29e563] [cursor=pointer]:
+                - /url: /lacuadra.uio/p/DT0kerDDqS-/
+                - img "Photo shared by LA CUADRA on January 22, 2026 tagging @la.clau__, @el_donlopez, @lysergicman_music, @planet_303, @rollingdisco_ec, @nicojervistatuajes, and @mr.b.uio." [ref=f29e566]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f29e569] [cursor=pointer]:
+                - /url: /sonicabeats/reel/DTym-TWDa9_/
+                - 'img "Este sábado 24 celebramos Social Spirits y todo lo que ha sido: un punto de encuentro, música, noches memorables y buena vibra. Desde el sunset hasta la madrugada, una selección especial de talentos de la escena nacional, música de alto nivel y una atmósfera íntima y elegante. 🖤 LEGIT MUSIC 🎧 Artistas invitados 📍 Social Spirits 🕔 Sábado · desde las 5PM ( drinks free 5/7 ) Birthday Juan pro 🥳 ✨ INVITACIÓN ABIERTA ✨ Pls comparte este post en tu historia e invita a tus amigos para este sábado — la vamos a pasar súper chévere 🖤🎶 Para estar en lista, solo sigue estos pasos: 1️⃣ Comparte este post en tu historia 2️⃣ Toma un screenshot 3️⃣ Envíalo por DM al Instagram de @SONICABeats 4️⃣ Incluye tu nombre completo y número de cédula Y listo ✔️ quedas registrado en lista. Si ya sabes, de esto No te lo pierdas.⚡️✌️ #music #dj #legit #birthdayparty quitoecuador" [ref=f29e572]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f29e574]:
+              - link [ref=f29e576] [cursor=pointer]:
+                - /url: /planet_303/p/DTvUG1ilSqD/
+                - img "Photo by Fabro Alomìa Torres on January 20, 2026." [ref=f29e579]
+              - link [ref=f29e582] [cursor=pointer]:
+                - /url: /acidnightec/p/DTLaqdWjyNp/
+                - img "Photo shared by Acid Night on January 06, 2026 tagging @murraycarole, @otxoa.ec, @planet_303, @cosmicjd, and @iuniversal_." [ref=f29e585]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f29e588] [cursor=pointer]:
+                - /url: /planet_303/p/DQhGW_EETSP/
+                - img "Photo by Fabro Alomìa Torres on November 01, 2025." [ref=f29e591]
+      - contentinfo [ref=f29e182]:
+        - generic [ref=f29e183]:
+          - generic [ref=f29e185]:
+            - link "Meta" [ref=f29e187] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f29e190] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f29e193] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f29e196] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f29e199] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f29e202] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f29e205] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f29e208] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f29e211] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f29e214] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f29e217] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f29e220] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f29e223] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f29e226] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f29e229] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f29e231]:
+            - generic [ref=f29e232] [cursor=pointer]:
+              - generic [ref=f29e233]:
+                - generic [ref=f29e234]: English
+                - img "Down chevron icon" [ref=f29e237]
+              - combobox "Switch Display Language" [ref=f29e239]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f29e240]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f29e594] [cursor=pointer]:
+              - generic "Messages - 3 new notifications" [ref=f29e595]:
+                - generic [ref=f29e596]:
+                  - generic [ref=f29e598]:
+                    - img "Messages" [ref=f29e599]
+                    - generic "Direct messaging - 3 new notifications link" [ref=f29e602]: "3"
+                  - generic [ref=f29e605]: Messages
+                - generic [ref=f29e606]:
+                  - button "User avatar Santiii" [ref=f29e608]:
+                    - img "User avatar" [ref=f29e611]
+                  - button "User avatar Diego Saa" [ref=f29e613]:
+                    - img "User avatar" [ref=f29e616]
+                  - button "User avatar Martini 🍸" [ref=f29e618]:
+                    - img "User avatar" [ref=f29e621]
+            - generic [ref=f29e667]:
+              - generic [ref=f29e669]:
+                - generic [ref=f29e670]:
+                  - button [ref=f29e672] [cursor=pointer]:
+                    - img "Go back" [ref=f29e674]
+                  - link "Open the profile page of planet_303" [ref=f29e677] [cursor=pointer]:
+                    - /url: /planet_303/
+                    - generic [ref=f29e678]:
+                      - img "user-profile-picture" [ref=f29e681]
+                      - heading "Fabro Alomìa Torres" [level=2] [ref=f29e685]
+                  - generic [ref=f29e687]:
+                    - button [ref=f29e688] [cursor=pointer]:
+                      - img "Expand" [ref=f29e690]
+                    - button [ref=f29e692] [cursor=pointer]:
+                      - img "Close" [ref=f29e694]
+                - separator [ref=f29e697]
+              - generic "Fabro Alomìa Torres" [ref=f29e698]:
+                - generic [ref=f29e700]:
+                  - generic [ref=f29e705]:
+                    - progressbar [ref=f29e708]:
+                      - img "Loading..." [ref=f29e709]
+                    - generic [ref=f29e750]:
+                      - generic [ref=f29e751]: 6/25/25, 8:36 PM
+                      - group [ref=f29e754]:
+                        - generic [ref=f29e755]:
+                          - button [ref=f29e759] [cursor=pointer]:
+                            - link "tdf.records.label" [ref=f29e763]:
+                              - /url: /tdf.records.label/
+                            - img "Clip" [ref=f29e768]
+                          - button "❤️" [ref=f29e771] [cursor=pointer]
+                    - group [ref=f29e777]:
+                      - generic [ref=f29e778]: En la descripción está con un pequeño error
+                    - group [ref=f29e788]:
+                      - generic [ref=f29e789]: No es radio Hostel
+                    - group [ref=f29e799]:
+                      - generic [ref=f29e801]:
+                        - link "Open the profile page of planet_303" [ref=f29e804] [cursor=pointer]:
+                          - /url: /planet_303
+                          - img "user-profile-picture" [ref=f29e807]
+                        - generic [ref=f29e808]: Es Rio Hostel
+                    - generic [ref=f29e815]:
+                      - generic [ref=f29e816]: 11/22/25, 8:50 AM
+                      - group [ref=f29e819]:
+                        - generic [ref=f29e820]:
+                          - generic [ref=f29e821]: Mentioned you in their story
+                          - generic [ref=f29e825]:
+                            - link "Open the profile page of planet_303" [ref=f29e828] [cursor=pointer]:
+                              - /url: /planet_303
+                              - img "user-profile-picture" [ref=f29e831]
+                            - generic [ref=f29e832]: Story unavailable
+                  - generic [ref=f29e846]:
+                    - button [ref=f29e849] [cursor=pointer]:
+                      - img "Choose an emoji" [ref=f29e851]
+                    - generic [ref=f29e853]:
+                      - textbox [active] [ref=f29e854]:
+                        - paragraph [ref=f29e855]
+                      - generic: Message...
+                    - generic [ref=f29e856]:
+                      - button [ref=f29e857] [cursor=pointer]:
+                        - img "Voice Clip" [ref=f29e859]
+                      - button [ref=f29e862] [cursor=pointer]:
+                        - img "Add Photo or Video" [ref=f29e864]
+                      - button [ref=f29e869] [cursor=pointer]:
+                        - img "Choose a GIF or sticker" [ref=f29e871]

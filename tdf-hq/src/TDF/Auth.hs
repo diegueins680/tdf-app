@@ -15,6 +15,8 @@ module TDF.Auth
   , hasModuleAccess
   , validateModuleAccess
   , moduleName
+  , moduleRegistryCode
+  , moduleFromRegistryCode
   , modulesForRoles
   , loadAuthedUser
   , lookupUsernameFromToken
@@ -27,7 +29,7 @@ module TDF.Auth
   ) where
 
 import           Control.Applicative        ((<|>))
-import           Control.Monad              (forM_, guard)
+import           Control.Monad              (forM, guard)
 import           Control.Monad.IO.Class     (liftIO)
 import qualified Data.ByteString.Lazy       as BL
 import           Data.Char
@@ -36,7 +38,6 @@ import           Data.Char
   , isControl
   , isSpace
   )
-import           Data.List                  (foldl')
 import           Data.Maybe                 (maybeToList)
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
@@ -46,19 +47,20 @@ import qualified Data.Text.Encoding         as TE
 import           Database.Persist
   ( Entity(..)
   , SelectOpt(LimitTo)
+  , get
   , getBy
   , selectList
-  , upsert
+  , toPersistValue
   , (==.)
-  , (=.)
   )
-import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool)
+import           Database.Persist.Sql       (Single (..), SqlPersistT, fromSqlKey, rawSql, runSqlPool)
 import           Network.Wai                (Request, requestHeaders)
 import           Servant
 import           Servant.Server.Experimental.Auth (AuthHandler, mkAuthHandler, AuthServerData)
 
 import           TDF.DB                     (Env(..))
 import           TDF.Config                 (AppConfig(..))
+import qualified TDF.Catalog.Models         as Catalog
 import           TDF.Models
 
 -- | Enumeration of major application modules.
@@ -83,6 +85,25 @@ moduleName ModuleInternships = "Internships"
 moduleName ModuleOps        = "Ops"
 moduleName ModuleCatalog    = "Catalog"
 
+-- Stable identifiers are the compile-time authorization boundary. Display
+-- names, ordering and grants remain database-authoritative.
+moduleRegistryCode :: ModuleAccess -> Text
+moduleRegistryCode moduleTag = case moduleTag of
+  ModuleCRM -> "crm"
+  ModuleScheduling -> "scheduling"
+  ModulePackages -> "packages"
+  ModuleInvoicing -> "invoicing"
+  ModuleAdmin -> "admin"
+  ModuleInternships -> "internships"
+  ModuleOps -> "ops"
+  ModuleCatalog -> "catalog"
+
+moduleFromRegistryCode :: Text -> Maybe ModuleAccess
+moduleFromRegistryCode rawCode =
+  lookup
+    (T.toLower (T.strip rawCode))
+    [(moduleRegistryCode moduleTag, moduleTag) | moduleTag <- [minBound .. maxBound]]
+
 -- | Authenticated user with associated module access.
 data AuthedUser = AuthedUser
   { auPartyId :: PartyId
@@ -105,8 +126,6 @@ validateModuleAccess moduleTag user@AuthedUser{..}
       Left err403 { errBody = "Valid authenticated party required" }
   | not (rolesAreUnique auRoles) =
       Left err403 { errBody = "Role grants must be unique" }
-  | auModules /= modulesForRoles auRoles =
-      Left err403 { errBody = "Module grants must match roles" }
   | hasModuleAccess moduleTag user =
       Right ()
   | otherwise =
@@ -122,9 +141,8 @@ hasStrictAdminAccess user@AuthedUser{..} =
     && hasCoherentRoleGrants user
 
 hasOperationsAccess :: AuthedUser -> Bool
-hasOperationsAccess user@AuthedUser{..} =
-  hasCoherentRoleGrants user
-    && (hasModuleAccess ModuleAdmin user || any (`elem` auRoles) [Manager, Maintenance])
+hasOperationsAccess user =
+  hasModuleAccess ModuleOps user || hasModuleAccess ModuleAdmin user
 
 hasAiToolingAccess :: AuthedUser -> Bool
 hasAiToolingAccess = hasOperationsAccess
@@ -173,14 +191,17 @@ loadAuthedUser token = do
       | not (apiTokenActive tok) -> pure Nothing
       | not (isAuthenticatableApiTokenLabel (apiTokenLabel tok)) -> pure Nothing
       | otherwise -> do
-          roles <- selectList [PartyRolePartyId ==. apiTokenPartyId tok, PartyRoleActive ==. True] []
-          roleList <- ensureDefaultRoles (apiTokenPartyId tok) (map (partyRoleRole . entityVal) roles)
-          let modules  = modulesForRoles roleList
-          pure $ Just AuthedUser
-            { auPartyId = apiTokenPartyId tok
-            , auRoles   = roleList
-            , auModules = modules
-            }
+          canonicalRoles <- loadCanonicalRoles (apiTokenPartyId tok)
+          canonicalModules <- loadCanonicalModules (apiTokenPartyId tok)
+          pure $ do
+            roleList <- canonicalRoles
+            modules <- canonicalModules
+            guard (rolesAreUnique roleList)
+            pure AuthedUser
+              { auPartyId = apiTokenPartyId tok
+              , auRoles = roleList
+              , auModules = modules
+              }
 
 isAuthenticatableApiTokenLabel :: Maybe Text -> Bool
 isAuthenticatableApiTokenLabel Nothing = True
@@ -239,7 +260,7 @@ invalidResolvedUsernameLabelChar ch =
     || ch `elem` (":/\\?#" :: String)
 
 modulesForRoles :: [RoleEnum] -> Set ModuleAccess
-modulesForRoles = foldl' (flip (Set.union . modulesForRole)) Set.empty
+modulesForRoles = Set.unions . map modulesForRole
 
 rolesAreUnique :: [RoleEnum] -> Bool
 rolesAreUnique roles =
@@ -247,7 +268,7 @@ rolesAreUnique roles =
 
 hasCoherentRoleGrants :: AuthedUser -> Bool
 hasCoherentRoleGrants user@AuthedUser{..} =
-  hasValidAuthPartyId user && rolesAreUnique auRoles && auModules == modulesForRoles auRoles
+  hasValidAuthPartyId user && rolesAreUnique auRoles
 
 hasValidAuthPartyId :: AuthedUser -> Bool
 hasValidAuthPartyId AuthedUser{..} =
@@ -290,17 +311,29 @@ modulesForRole ReadOnly   = Set.fromList [ModuleCRM, ModuleCatalog]
 modulesForRole Fan        = Set.empty
 modulesForRole Maintenance = Set.fromList [ModulePackages, ModuleScheduling, ModuleOps]
 
--- Ensure every authenticated user has baseline Fan and Customer roles active.
-defaultRoles :: [RoleEnum]
-defaultRoles = [Fan, Customer]
+loadCanonicalRoles :: PartyId -> SqlPersistT IO (Maybe [RoleEnum])
+loadCanonicalRoles pid = do
+  assignments <- selectList
+    [ Catalog.PartySecurityRolePartyId ==. pid
+    , Catalog.PartySecurityRoleActive ==. True
+    ]
+    []
+  decoded <- forM assignments $ \(Entity _ assignment) -> do
+    role <- get (Catalog.partySecurityRoleRoleId assignment)
+    pure $ do
+      persisted <- role
+      guard (Catalog.securityRoleActive persisted)
+      roleFromRegistryCode (Catalog.securityRoleCode persisted)
+  pure (Set.toAscList . Set.fromList <$> sequence decoded)
 
-ensureDefaultRoles :: PartyId -> [RoleEnum] -> SqlPersistT IO [RoleEnum]
-ensureDefaultRoles pid roles = do
-  let existing = Set.fromList roles
-      missing  = filter (`Set.notMember` existing) defaultRoles
-  forM_ missing $ \r ->
-    upsert (PartyRole pid r True) [PartyRoleActive =. True]
-  pure (roles ++ missing)
+loadCanonicalModules :: PartyId -> SqlPersistT IO (Maybe (Set ModuleAccess))
+loadCanonicalModules pid = do
+  rows <- rawSql
+    "SELECT DISTINCT m.code FROM party_security_role psr JOIN security_role r ON r.id=psr.role_id JOIN role_permission rp ON rp.role_id=r.id JOIN security_permission p ON p.id=rp.permission_id JOIN security_action a ON a.id=p.action_id JOIN security_module m ON m.id=p.module_id WHERE psr.party_id=? AND psr.active=TRUE AND r.active=TRUE AND rp.active=TRUE AND p.active=TRUE AND a.active=TRUE AND m.active=TRUE AND p.resource_scope='module' AND a.code='access' ORDER BY m.code"
+    [toPersistValue pid]
+  pure (Set.fromList <$> traverse (moduleFromRegistryCode . unSingle) rows)
+  where
+    unSingle (Single value) = value
 
 extractToken :: AppConfig -> Request -> Either Text Text
 extractToken cfg req =

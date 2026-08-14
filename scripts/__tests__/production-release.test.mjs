@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import {
   buildDeployPlan,
@@ -8,6 +9,8 @@ import {
   buildSchemaPreflightSql,
   buildSchemaVerificationSql,
   normalizeFullSha,
+  parseSecurityEmergencyReadinessOutput,
+  securityEmergencyReadinessBlocker,
   validateFlyConfig,
   validateMigrationRelativePath,
 } from '../lib/production-release.mjs';
@@ -94,6 +97,19 @@ test('normalizeFullSha rejects mutable tags, abbreviated SHAs, and malformed val
   }
 });
 
+test('production migration manifest uses immutable full commit SHAs', () => {
+  const manifest = JSON.parse(readFileSync(
+    new URL('../production-migrations.json', import.meta.url),
+    'utf8',
+  ));
+
+  assert.equal(manifest.schemaVersion, 1);
+  assert.ok(Array.isArray(manifest.migrations));
+  for (const migration of manifest.migrations) {
+    assert.equal(normalizeFullSha(migration.introducedBy), migration.introducedBy);
+  }
+});
+
 test('validateMigrationRelativePath accepts a dated SQL migration inside tdf-hq/sql', () => {
   assert.equal(validateMigrationRelativePath(ticketMigration), ticketMigration);
 });
@@ -113,6 +129,96 @@ test('validateMigrationRelativePath rejects traversal, absolute, nested, and non
       `expected ${JSON.stringify(invalid)} to be rejected`,
     );
   }
+});
+
+test('security emergency readiness parser accepts only aggregate read-only gate reports', () => {
+  const report = parseSecurityEmergencyReadinessOutput([
+    'psql connection notice',
+    JSON.stringify({
+      kind: 'security-emergency-readiness',
+      schemaMode: 'legacy',
+      transactionReadOnly: 'on',
+      requiredIndependentPaths: 2,
+      activeEmergencyAssignments: 2,
+      distinctAssignedParties: 2,
+      authenticatableParties: 1,
+      databaseCoherentPaths: null,
+      preMigrationReady: false,
+      databaseReady: false,
+    }),
+  ].join('\n'));
+
+  assert.equal(report.schemaMode, 'legacy');
+  assert.equal(report.authenticatableParties, 1);
+  assert.equal(
+    securityEmergencyReadinessBlocker(report),
+    'emergency recovery has 1 independently authenticatable parties; 2 are required before migration',
+  );
+});
+
+test('security emergency readiness requires canonical coherence after migration', () => {
+  const report = parseSecurityEmergencyReadinessOutput(JSON.stringify({
+    kind: 'security-emergency-readiness',
+    schemaMode: 'canonical',
+    transactionReadOnly: 'on',
+    requiredIndependentPaths: 2,
+    activeEmergencyAssignments: 2,
+    distinctAssignedParties: 2,
+    authenticatableParties: 2,
+    databaseCoherentPaths: 2,
+    preMigrationReady: true,
+    databaseReady: true,
+  }));
+
+  assert.equal(securityEmergencyReadinessBlocker(report), undefined);
+  assert.equal(
+    securityEmergencyReadinessBlocker(report, { requireCanonical: true }),
+    undefined,
+  );
+  assert.match(
+    securityEmergencyReadinessBlocker(
+      { ...report, schemaMode: 'legacy', databaseReady: false },
+      { requireCanonical: true },
+    ),
+    /post-migration.*legacy/i,
+  );
+  assert.match(
+    securityEmergencyReadinessBlocker(
+      { ...report, databaseCoherentPaths: 1, databaseReady: false },
+      { requireCanonical: true },
+    ),
+    /1 coherent paths; 2 are required/i,
+  );
+});
+
+test('security emergency readiness parser rejects missing, writable, and malformed reports', () => {
+  assert.throws(
+    () => parseSecurityEmergencyReadinessOutput('not-json'),
+    /no report/i,
+  );
+  assert.throws(
+    () => parseSecurityEmergencyReadinessOutput(JSON.stringify({
+      kind: 'security-emergency-readiness',
+      schemaMode: 'legacy',
+      transactionReadOnly: 'off',
+      requiredIndependentPaths: 2,
+      preMigrationReady: false,
+      databaseReady: false,
+    })),
+    /not read-only/i,
+  );
+  assert.throws(
+    () => parseSecurityEmergencyReadinessOutput(JSON.stringify({
+      kind: 'security-emergency-readiness',
+      schemaMode: 'canonical',
+      transactionReadOnly: 'on',
+      requiredIndependentPaths: 2,
+      activeEmergencyAssignments: -1,
+      preMigrationReady: true,
+      databaseReady: true,
+    })),
+    /activeEmergencyAssignments/i,
+  );
 });
 
 test('validateFlyConfig accepts an explicit migration-free staged rolling release', () => {

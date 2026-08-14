@@ -29,7 +29,13 @@ import { Link as RouterLink } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DateTime } from 'luxon';
 import PublicBrandBar from '../components/PublicBrandBar';
-import { useCmsContent, useCmsContents } from '../hooks/useCmsContent';
+import {
+  Records,
+  type RecordsRecordingDTO,
+  type RecordsReleaseDTO,
+  type RecordsResourceDTO,
+  type RecordsSessionDTO,
+} from '../api/records';
 import { Bookings } from '../api/bookings';
 import { Rooms } from '../api/rooms';
 import { Parties } from '../api/parties';
@@ -40,55 +46,17 @@ import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
 import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
-import { extractYoutubeVideoId } from '../utils/media';
 import EditIcon from '@mui/icons-material/Edit';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 
 const BOOKING_ZONE = 'America/Bogota';
 const DEFAULT_DURATION = 120;
-const FALLBACK_SERVICE_OPTIONS = [
-  { value: 'Vocal recording', label: 'Grabación vocal' },
-  { value: 'Band recording', label: 'Grabación de banda' },
-  { value: 'Band rehearsal', label: 'Ensayo de banda' },
-  { value: 'DJ booth rental', label: 'Cabina DJ' },
-  { value: 'Podcast / Voiceover', label: 'Podcast / Locución' },
-  { value: 'Producción musical', label: 'Producción musical' },
-  { value: 'Mezcla / Post', label: 'Mezcla / Post' },
-] as const;
-const FALLBACK_SERVICE_LABELS = Object.fromEntries(
-  FALLBACK_SERVICE_OPTIONS.map((option) => [option.value, option.label]),
-) as Record<string, string>;
 
 const parseDurationMinutes = (raw: string, fallback: number): number => {
   const parsed = Number(raw);
   if (!Number.isFinite(parsed)) return fallback;
   const rounded = Math.round(parsed);
   return Math.max(30, rounded);
-};
-
-const toObject = (value: unknown): Record<string, unknown> | null =>
-  value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
-
-const toText = (value: unknown): string | null => {
-  if (typeof value === 'string') return value;
-  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
-  return null;
-};
-
-const toNonEmptyText = (value: unknown): string | null => {
-  const text = toText(value);
-  if (!text) return null;
-  const trimmed = text.trim();
-  return trimmed.length > 0 ? trimmed : null;
-};
-
-const toFiniteNumber = (value: unknown): number | null => {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  const parsed = Number(trimmed);
-  return Number.isFinite(parsed) ? parsed : null;
 };
 
 const overlap = (startA: DateTime, endA: DateTime, startB: DateTime, endB: DateTime) =>
@@ -107,27 +75,27 @@ function _BookingRequestDialog({
   const [contactName, setContactName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [serviceType, setServiceType] = useState<string>('');
+  const [serviceOfferingId, setServiceOfferingId] = useState<string>('');
   const serviceCatalogQuery = useQuery({
     queryKey: ['service-catalog-public'],
     queryFn: () => Services.listPublic(),
     staleTime: 5 * 60 * 1000,
   });
-  const serviceOptions = useMemo(() => {
-    const names = (serviceCatalogQuery.data ?? [])
-      .filter((svc) => svc.scActive !== false)
-      .map((svc) => svc.scName);
-    return names.length > 0 ? names : FALLBACK_SERVICE_OPTIONS.map((option) => option.value);
-  }, [serviceCatalogQuery.data]);
-  const defaultServiceType = serviceOptions[0] ?? FALLBACK_SERVICE_OPTIONS[0]?.value ?? 'Recording';
-  const selectedServiceLabel = FALLBACK_SERVICE_LABELS[serviceType] ?? serviceType;
+  const serviceOptions = useMemo(
+    () => (serviceCatalogQuery.data ?? []).filter((service) => service.scActive),
+    [serviceCatalogQuery.data],
+  );
+  const defaultServiceOfferingId = serviceOptions[0]?.scId ?? '';
+  const selectedService = serviceOptions.find((service) => service.scId === serviceOfferingId) ?? null;
+  const selectedServiceLabel = selectedService?.scName ?? '';
   useEffect(() => {
-    if (!serviceType && defaultServiceType) {
-      setServiceType(defaultServiceType);
-    } else if (serviceOptions.length > 0 && serviceType && !serviceOptions.includes(serviceType)) {
-      setServiceType(defaultServiceType);
+    if (!serviceOfferingId && defaultServiceOfferingId) {
+      setServiceOfferingId(defaultServiceOfferingId);
+      setDuration(serviceOptions[0]?.scDefaultDurationMinutes ?? DEFAULT_DURATION);
+    } else if (serviceOptions.length > 0 && serviceOfferingId && !selectedService) {
+      setServiceOfferingId(defaultServiceOfferingId);
     }
-  }, [serviceOptions, serviceType, defaultServiceType]);
+  }, [defaultServiceOfferingId, selectedService, serviceOfferingId, serviceOptions]);
   const initialStartValue = useMemo(
     () =>
       DateTime.now()
@@ -251,11 +219,11 @@ function _BookingRequestDialog({
           notes ||
           selectedRoomId ||
           engineerName ||
-          serviceType !== defaultServiceType ||
+          serviceOfferingId !== defaultServiceOfferingId ||
           startInput !== initialStartValue ||
           duration !== DEFAULT_DURATION,
       ),
-    [contactName, email, phone, notes, selectedRoomId, engineerName, serviceType, startInput, duration, initialStartValue, defaultServiceType],
+    [contactName, email, phone, notes, selectedRoomId, engineerName, serviceOfferingId, startInput, duration, initialStartValue, defaultServiceOfferingId],
   );
 
   const formatRange = (isoStart: string, isoEnd: string) =>
@@ -270,6 +238,9 @@ function _BookingRequestDialog({
       }
       if (!contactName.trim() || !email.trim()) {
         throw new Error('Agrega nombre y correo para continuar.');
+      }
+      if (!selectedService) {
+        throw new Error('Selecciona un servicio publicado para continuar.');
       }
       const party = await Parties.create({
         cDisplayName: contactName.trim(),
@@ -293,7 +264,6 @@ function _BookingRequestDialog({
           await Admin.createUser({
             partyId: party.partyId,
             username: email.trim(),
-            roles: ['Customer'],
           });
         } catch (err) {
           logger.warn('No se pudo crear el usuario, continuando con la reserva', err);
@@ -309,7 +279,7 @@ function _BookingRequestDialog({
         cbEndsAt: endIso ?? '',
         cbStatus: 'Tentative',
         cbNotes: augmentedNotes || null,
-        cbServiceType: serviceType,
+        cbServiceOfferingId: selectedService.scId,
         cbPartyId: party.partyId,
         cbEngineerPartyId: selectedEngineerPartyId,
         cbEngineerName: engineerName.trim() || null,
@@ -444,14 +414,19 @@ function _BookingRequestDialog({
               <TextField
                 label="Servicio"
                 select
-                value={serviceType}
-                onChange={(e) => setServiceType(e.target.value)}
+                value={serviceOfferingId}
+                onChange={(e) => {
+                  const nextId = e.target.value;
+                  setServiceOfferingId(nextId);
+                  const nextService = serviceOptions.find((service) => service.scId === nextId);
+                  if (nextService?.scDefaultDurationMinutes) setDuration(nextService.scDefaultDurationMinutes);
+                }}
                 fullWidth
                 helperText="Elige la opción que mejor describe tu sesión para prepararla mejor."
               >
-                {serviceOptions.map((opt) => (
-                  <MenuItem key={opt} value={opt}>
-                    {FALLBACK_SERVICE_LABELS[opt] ?? opt}
+                {serviceOptions.map((service) => (
+                  <MenuItem key={service.scId} value={service.scId}>
+                    {service.scName}
                   </MenuItem>
                 ))}
               </TextField>
@@ -673,149 +648,82 @@ interface SessionItem {
   sortOrder: number;
 }
 
-const mapCmsSessionPayload = (
-  payload: unknown,
-  fallbackTitle: string | null,
-  fallbackSortOrder: number,
-): SessionItem | null => {
-  const data = toObject(payload);
-  if (!data) return null;
-  const explicitId =
-    toNonEmptyText(data['youtubeId']) ??
-    toNonEmptyText(data['youtubeID']) ??
-    toNonEmptyText(data['id']);
-  const url = toNonEmptyText(data['url']) ?? toNonEmptyText(data['youtubeUrl']);
-  const youtubeId = explicitId ?? extractYoutubeVideoId(url);
-  if (!youtubeId) return null;
-  const sessionUrl = url ?? `https://www.youtube.com/watch?v=${youtubeId}`;
-  return {
-    youtubeId,
-    embedUrl: `https://www.youtube.com/embed/${youtubeId}`,
-    title: toNonEmptyText(data['title']) ?? fallbackTitle ?? 'Sesión en vivo TDF',
-    duration: toText(data['duration']) ?? '',
-    guests: toText(data['guests']) ?? toText(data['artist']) ?? '',
-    description: toText(data['description']) ?? '',
-    url: sessionUrl,
-    sortOrder: toFiniteNumber(data['sortOrder']) ?? toFiniteNumber(data['order']) ?? fallbackSortOrder,
-  };
-};
-
 const sortSessions = (items: SessionItem[]): SessionItem[] =>
   [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
 
 const youtubeThumbnail = (youtubeId: string): string =>
   `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
 
-const mapCmsRecordingPayload = (
-  payload: unknown,
-  fallbackTitle: string | null,
-  fallbackSortOrder: number,
-): RecordingItem | null => {
-  const data = toObject(payload);
-  if (!data) return null;
-  const explicitId =
-    toNonEmptyText(data['youtubeId']) ??
-    toNonEmptyText(data['youtubeID']) ??
-    toNonEmptyText(data['videoId']) ??
-    toNonEmptyText(data['id']);
-  const url = toNonEmptyText(data['url']) ?? toNonEmptyText(data['youtubeUrl']);
-  const youtubeId = explicitId ?? extractYoutubeVideoId(url);
-  const title = toNonEmptyText(data['title']) ?? toNonEmptyText(data['name']) ?? fallbackTitle;
-  const image =
-    toNonEmptyText(data['image']) ??
-    toNonEmptyText(data['thumbnail']) ??
-    toNonEmptyText(data['thumbnailUrl']) ??
-    (youtubeId ? youtubeThumbnail(youtubeId) : null);
-  if (!title || !image) return null;
-  return {
-    title,
-    artist: toText(data['artist']) ?? toText(data['guests']) ?? toText(data['channel']) ?? '',
-    recordedAt:
-      toText(data['recordedAt']) ??
-      toText(data['date']) ??
-      toText(data['publishedAt']) ??
-      toText(data['duration']) ??
-      '',
-    duration: toText(data['duration']) ?? undefined,
-    vibe: toText(data['vibe']) ?? toText(data['tag']) ?? toText(data['series']) ?? 'Video',
-    description: toText(data['description']) ?? '',
-    image,
-    youtubeId: youtubeId ?? undefined,
-    url: url ?? (youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : undefined),
-    sortOrder: toFiniteNumber(data['sortOrder']) ?? toFiniteNumber(data['order']) ?? fallbackSortOrder,
-  };
-};
-
 const sortRecordings = (items: RecordingItem[]): RecordingItem[] =>
   [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
 
-const formatDurationMs = (value: unknown): string | null => {
-  const ms = toFiniteNumber(value);
-  if (ms == null || ms < 0) return null;
+const formatDurationMs = (ms?: number): string => {
+  if (ms == null || ms < 0) return '';
   const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+    : `${minutes}:${String(seconds).padStart(2, '0')}`;
 };
 
-const withSpotifyLink = (links: ReleaseLink[], url: string | null): ReleaseLink[] => {
-  if (!url) return links;
-  if (links.some((link) => link.url === url || link.platform.toLowerCase() === 'spotify')) return links;
-  return [{ platform: 'Spotify', url, accent: '#1db954' }, ...links];
-};
+const primaryResource = (resources: RecordsResourceDTO[], kind?: RecordsResourceDTO['kind']) =>
+  resources.find((resource) => resource.primary && (!kind || resource.kind === kind))
+    ?? resources.find((resource) => !kind || resource.kind === kind);
 
-const mapCmsReleasePayload = (
-  payload: unknown,
-  fallbackTitle: string | null,
-  fallbackSortOrder: number,
-  fallbackCover: string,
-): ReleaseItem | null => {
-  const data = toObject(payload);
-  if (!data) return null;
-  const linksRaw = Array.isArray(data['links']) ? data['links'] : [];
-  const mappedLinks: ReleaseLink[] = linksRaw.flatMap((item) => {
-    const link = toObject(item);
-    if (!link) return [];
-    const url = toNonEmptyText(link['url']);
-    if (!url) return [];
-    return [{
-      platform: toNonEmptyText(link['platform']) ?? 'Enlace',
-      url,
-      accent: toNonEmptyText(link['accent']) ?? '#a5b4fc',
-    }];
-  });
-  const title = toNonEmptyText(data['title']) ?? toNonEmptyText(data['name']) ?? fallbackTitle;
-  if (!title) return null;
-  const spotifyUrl =
-    toNonEmptyText(data['spotifyUrl']) ??
-    toNonEmptyText(data['url']) ??
-    toNonEmptyText(data['trackUrl']);
-  const links = withSpotifyLink(mappedLinks, spotifyUrl);
+const resourceLink = (resource: RecordsResourceDTO): ReleaseLink => ({
+  platform: resource.label ?? (resource.providerCode === 'spotify' ? 'Spotify' : resource.providerCode === 'youtube' ? 'YouTube' : resource.providerCode),
+  url: resource.url,
+  accent: resource.providerCode === 'spotify' ? '#1db954' : resource.providerCode === 'youtube' ? '#ff0033' : '#a5b4fc',
+});
+
+const mapRecordsRelease = (release: RecordsReleaseDTO): ReleaseItem => {
+  const resource = primaryResource(release.resources, 'audio-track');
+  const duration = formatDurationMs(resource?.durationMs);
   return {
-    title,
-    artist: toNonEmptyText(data['artist']) ?? toNonEmptyText(data['subtitle']) ?? 'TDF Records',
-    releasedOn:
-      toText(data['releasedOn']) ??
-      toText(data['date']) ??
-      toText(data['releaseDate']) ??
-      formatDurationMs(data['durationMs']) ??
-      toText(data['duration']) ??
-      '',
-    duration: toText(data['duration']) ?? formatDurationMs(data['durationMs']) ?? undefined,
-    blurb:
-      toText(data['description']) ??
-      toText(data['blurb']) ??
-      toText(data['album']) ??
-      '',
-    cover:
-      toNonEmptyText(data['cover']) ??
-      toNonEmptyText(data['image']) ??
-      toNonEmptyText(data['coverUrl']) ??
-      toNonEmptyText(data['artworkUrl']) ??
-      fallbackCover,
-    links,
-    primaryUrl: spotifyUrl ?? links[0]?.url,
-    sortOrder: toFiniteNumber(data['sortOrder']) ?? toFiniteNumber(data['order']) ?? fallbackSortOrder,
+    title: release.title,
+    artist: release.contributors.map((contributor) => contributor.name).join(', ') || 'TDF Records',
+    releasedOn: release.releaseDate ?? duration,
+    duration: duration.length > 0 ? duration : undefined,
+    blurb: release.description ?? '',
+    cover: resource?.thumbnailUrl ?? '',
+    links: release.resources.map(resourceLink),
+    primaryUrl: resource?.url ?? release.resources[0]?.url,
+    sortOrder: release.sortOrder,
+  };
+};
+
+const mapRecordsRecording = (recording: RecordsRecordingDTO): RecordingItem | null => {
+  const resource = primaryResource(recording.resources, 'video');
+  if (!resource) return null;
+  const duration = formatDurationMs(recording.durationMs ?? resource.durationMs);
+  return {
+    title: recording.title,
+    artist: recording.contributors.map((contributor) => contributor.name).join(', '),
+    description: recording.description ?? '',
+    image: resource.thumbnailUrl ?? youtubeThumbnail(resource.externalCode),
+    recordedAt: duration,
+    vibe: 'Video',
+    youtubeId: resource.providerCode === 'youtube' ? resource.externalCode : undefined,
+    url: resource.url,
+    duration: duration || undefined,
+    sortOrder: recording.sortOrder,
+  };
+};
+
+const mapRecordsSession = (session: RecordsSessionDTO): SessionItem | null => {
+  const resource = primaryResource(session.resources, 'video');
+  if (resource?.providerCode !== 'youtube') return null;
+  return {
+    title: session.title,
+    guests: session.contributors.map((contributor) => contributor.name).join(', '),
+    youtubeId: resource.externalCode,
+    embedUrl: `https://www.youtube.com/embed/${resource.externalCode}`,
+    duration: formatDurationMs(resource.durationMs),
+    description: session.description ?? '',
+    url: resource.url,
+    sortOrder: session.sortOrder,
   };
 };
 
@@ -867,7 +775,7 @@ const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
           <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             <Stack direction="row" spacing={1} alignItems="center">
               <Chip label={item.vibe} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
-              {(item.duration || item.recordedAt) && (
+              {(item.duration ?? item.recordedAt) && (
                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                   {item.duration ?? item.recordedAt}
                 </Typography>
@@ -1089,140 +997,43 @@ const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
 );
 
 export default function RecordsPublicPage() {
-  const sessionsCollectionQuery = useCmsContent('records-sessions', 'es');
-  const sessionsQuery = useCmsContents('records-session-', 'es');
-  const releasesCollectionQuery = useCmsContent('records-releases', 'es');
-  const legacyReleasesQuery = useCmsContents('records-release-', 'es');
-  const recordingsCollectionQuery = useCmsContent('records-recordings', 'es');
-  const legacyRecordingsQuery = useCmsContents('records-recording-', 'es');
+  const recordsFeedQuery = useQuery({
+    queryKey: ['records-feed', 'es'],
+    queryFn: () => Records.getFeed('es'),
+    staleTime: 5 * 60 * 1000,
+  });
   const { session } = useSession();
-  const canMaintainCms = useMemo(
-    () => canAccessPath('/configuracion/cms', session?.roles, session?.modules),
+  const canManageReleases = useMemo(
+    () => canAccessPath('/label/releases', session?.roles, session?.modules),
     [session?.modules, session?.roles],
   );
 
-  const collectionSessions: SessionItem[] = useMemo(() => {
-    const payload = sessionsCollectionQuery.data?.ccdPayload;
-    const payloadObject = toObject(payload);
-    const rawVideos = Array.isArray(payload)
-      ? payload
-      : Array.isArray(payloadObject?.['videos'])
-        ? payloadObject['videos']
-        : [];
-    return sortSessions(
-      rawVideos
-        .map((item, index) => mapCmsSessionPayload(item, null, index + 1))
-        .filter((item): item is SessionItem => item != null),
-    );
-  }, [sessionsCollectionQuery.data]);
-
-  const sessions: SessionItem[] = useMemo(() => {
-    if (collectionSessions.length > 0) return collectionSessions;
-    const mapped =
-      sessionsQuery.data
-        ?.map((entry): SessionItem | null => {
-          const slugOrder = toFiniteNumber(entry.ccdSlug.split('-').at(-1));
-          return mapCmsSessionPayload(entry.ccdPayload, toNonEmptyText(entry.ccdTitle), slugOrder ?? 999);
-        })
-        .filter((item): item is SessionItem => item != null) ?? [];
-    return sortSessions(mapped);
-  }, [collectionSessions, sessionsQuery.data]);
-  const sessionsLoading = sessionsCollectionQuery.isLoading || (collectionSessions.length === 0 && sessionsQuery.isLoading);
-  const sessionsError = sessionsCollectionQuery.isError && sessionsQuery.isError;
-
-  const collectionReleases: ReleaseItem[] = useMemo(() => {
-    const payload = releasesCollectionQuery.data?.ccdPayload;
-    const payloadObject = toObject(payload);
-    const collectionCover =
-      toNonEmptyText(payloadObject?.['cover']) ??
-      toNonEmptyText(payloadObject?.['playlistCover']) ??
-      toNonEmptyText(payloadObject?.['image']) ??
-      '';
-    const rawItems = Array.isArray(payload)
-      ? payload
-      : Array.isArray(payloadObject?.['tracks'])
-        ? payloadObject['tracks']
-        : Array.isArray(payloadObject?.['songs'])
-          ? payloadObject['songs']
-          : Array.isArray(payloadObject?.['releases'])
-            ? payloadObject['releases']
-            : [];
-    return sortReleases(
-      rawItems
-        .map((item, index) => mapCmsReleasePayload(item, null, index + 1, collectionCover))
-        .filter((item): item is ReleaseItem => item != null),
-    );
-  }, [releasesCollectionQuery.data]);
-
-  const legacyReleases: ReleaseItem[] = useMemo(() => {
-    const mapped =
-      legacyReleasesQuery.data
-        ?.map((entry): ReleaseItem | null => {
-          const slugOrder = toFiniteNumber(entry.ccdSlug.split('-').at(-1));
-          return mapCmsReleasePayload(entry.ccdPayload, toNonEmptyText(entry.ccdTitle), slugOrder ?? 999, '');
-        })
-        .filter((item): item is ReleaseItem => item != null) ?? [];
-    return sortReleases(mapped);
-  }, [legacyReleasesQuery.data]);
-
-  const releases: ReleaseItem[] = useMemo(
-    () => (collectionReleases.length > 0 ? collectionReleases : legacyReleases),
-    [collectionReleases, legacyReleases],
+  const sessions = useMemo(
+    () => sortSessions((recordsFeedQuery.data?.sessions ?? []).map(mapRecordsSession).filter((item): item is SessionItem => item != null)),
+    [recordsFeedQuery.data?.sessions],
   );
-  const releasesLoading =
-    releasesCollectionQuery.isLoading || (collectionReleases.length === 0 && legacyReleasesQuery.isLoading);
-  const releasesError = releasesCollectionQuery.isError && legacyReleasesQuery.isError;
-
-  const sessionVideoIds = useMemo(
-    () => new Set(sessions.map((sessionItem) => sessionItem.youtubeId).filter(Boolean)),
-    [sessions],
+  const releases = useMemo(
+    () => sortReleases((recordsFeedQuery.data?.releases ?? []).map(mapRecordsRelease)),
+    [recordsFeedQuery.data?.releases],
   );
-
-  const collectionRecordings: RecordingItem[] = useMemo(() => {
-    const payload = recordingsCollectionQuery.data?.ccdPayload;
-    const payloadObject = toObject(payload);
-    const rawItems = Array.isArray(payload)
-      ? payload
-      : Array.isArray(payloadObject?.['videos'])
-        ? payloadObject['videos']
-        : Array.isArray(payloadObject?.['recordings'])
-          ? payloadObject['recordings']
-          : Array.isArray(payloadObject?.['items'])
-            ? payloadObject['items']
-            : [];
-    return sortRecordings(
-      rawItems
-        .map((item, index) => mapCmsRecordingPayload(item, null, index + 1))
-        .filter((item): item is RecordingItem => item != null),
-    );
-  }, [recordingsCollectionQuery.data]);
-
-  const legacyRecordings: RecordingItem[] = useMemo(() => {
-    const mapped =
-      legacyRecordingsQuery.data
-        ?.map((entry): RecordingItem | null => {
-          const slugOrder = toFiniteNumber(entry.ccdSlug.split('-').at(-1));
-          return mapCmsRecordingPayload(entry.ccdPayload, toNonEmptyText(entry.ccdTitle), slugOrder ?? 999);
-        })
-        .filter((item): item is RecordingItem => item != null) ?? [];
-    return sortRecordings(mapped);
-  }, [legacyRecordingsQuery.data]);
-
-  const recordings: RecordingItem[] = useMemo(() => {
-    const source = collectionRecordings.length > 0 ? collectionRecordings : legacyRecordings;
-    return source.filter((item) => !item.youtubeId || !sessionVideoIds.has(item.youtubeId));
-  }, [collectionRecordings, legacyRecordings, sessionVideoIds]);
-  const recordingsLoading =
-    recordingsCollectionQuery.isLoading || (collectionRecordings.length === 0 && legacyRecordingsQuery.isLoading);
-  const recordingsError = recordingsCollectionQuery.isError && legacyRecordingsQuery.isError;
+  const recordings = useMemo(
+    () => sortRecordings((recordsFeedQuery.data?.recordings ?? []).map(mapRecordsRecording).filter((item): item is RecordingItem => item != null)),
+    [recordsFeedQuery.data?.recordings],
+  );
+  const sessionsLoading = recordsFeedQuery.isLoading;
+  const releasesLoading = recordsFeedQuery.isLoading;
+  const recordingsLoading = recordsFeedQuery.isLoading;
+  const sessionsError = recordsFeedQuery.isError;
+  const releasesError = recordsFeedQuery.isError;
+  const recordingsError = recordsFeedQuery.isError;
 
   const heroTitle = 'Historias desde el estudio, lanzamientos y sesiones en vivo de TDF en un solo lugar.';
-  const heroEyebrow = canMaintainCms ? 'TDF Records — CMS público' : 'TDF Records · Estudio y lanzamientos';
+  const heroEyebrow = 'TDF Records · Estudio y lanzamientos';
   const heroSubtitle =
     'Descubre lo que suena y se graba en TDF: sesiones recientes, lanzamientos oficiales y videos en vivo desde un solo lugar.';
   const heroSupportText =
-    'Cuéntanos qué quieres grabar mediante el formulario público. La solicitud queda pendiente hasta que TDF confirme disponibilidad.';
-  const heroCta = 'Solicitar reserva';
+    'Cuéntanos qué quieres grabar mediante el formulario público seguro. El equipo confirmará disponibilidad antes de cualquier pago.';
+  const heroCta = 'Reservar sesión';
   const heroSecondaryCta = 'Ver lanzamientos';
   const recordingsIntro =
     'Videos recientes del canal TDF Records que muestran el ambiente, el sonido y la energía del estudio.';
@@ -1264,20 +1075,8 @@ export default function RecordsPublicPage() {
                 fontWeight: 700,
               }}
             />
-            {canMaintainCms && (
+            {canManageReleases && (
               <Stack direction="row" spacing={1}>
-                <Tooltip title="Abrir CMS (records-*)">
-                  <Button
-                    component={RouterLink}
-                    to="/configuracion/cms"
-                    variant="outlined"
-                    size="small"
-                    startIcon={<EditIcon />}
-                    sx={{ borderColor: 'rgba(255,255,255,0.2)', color: '#e5e7eb' }}
-                  >
-                    Gestionar CMS
-                  </Button>
-                </Tooltip>
                 <Tooltip title="Ir a CRUD de lanzamientos">
                   <Button
                     component={RouterLink}
@@ -1349,31 +1148,12 @@ export default function RecordsPublicPage() {
           >
             <GradientCard
               title="Videos recientes"
-              actions={
-                canMaintainCms ? (
-                  <Tooltip title="Editar videos recientes (CMS records-recordings)">
-                    <IconButton
-                      component={RouterLink}
-                      to="/configuracion/cms?slug=records-recordings"
-                      aria-label="Editar videos recientes en CMS"
-                      size="small"
-                      sx={{ color: 'rgba(229,231,235,0.9)' }}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                ) : null
-              }
+              actions={null}
             >
               <Stack spacing={0.75} sx={{ mb: 1 }}>
                 <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.82)' }}>
                   Explora sesiones, DJ sets y momentos del canal TDF Records sin repetir videos ya destacados.
                 </Typography>
-                {canMaintainCms && (
-                  <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)' }}>
-                    Edita este bloque desde Configuración → CMS con el slug `records-recordings`.
-                  </Typography>
-                )}
               </Stack>
               <Stack direction="row" spacing={1} alignItems="center">
                 {recordings.slice(0, 3).map((item) => (
@@ -1388,21 +1168,7 @@ export default function RecordsPublicPage() {
             </GradientCard>
             <GradientCard
               title="Sesiones en vivo TDF"
-              actions={
-                canMaintainCms ? (
-                  <Tooltip title="Editar sesiones (CMS records-sessions)">
-                    <IconButton
-                      component={RouterLink}
-                      to="/configuracion/cms?slug=records-sessions"
-                      aria-label="Editar sesiones en vivo TDF en CMS"
-                      size="small"
-                      sx={{ color: 'rgba(229,231,235,0.9)' }}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                ) : null
-              }
+              actions={null}
             >
               <Stack spacing={1}>
                 {sessions.slice(0, 2).map((video) => {
@@ -1425,28 +1191,12 @@ export default function RecordsPublicPage() {
                   );
                 })}
               </Stack>
-              {canMaintainCms && (
-                <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)', mt: 1.5 }}>
-                  Edita este bloque desde Configuración → CMS con el slug `records-sessions`.
-                </Typography>
-              )}
             </GradientCard>
             <GradientCard
               title="Lanzamientos"
               actions={
-                canMaintainCms ? (
+                canManageReleases ? (
                   <Stack direction="row" spacing={0.5}>
-                    <Tooltip title="Editar canciones (CMS records-releases)">
-                      <IconButton
-                        component={RouterLink}
-                        to="/configuracion/cms?slug=records-releases"
-                        aria-label="Editar canciones en CMS"
-                        size="small"
-                        sx={{ color: 'rgba(229,231,235,0.9)' }}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
                     <Tooltip title="Ir a CRUD de lanzamientos">
                       <IconButton
                         component={RouterLink}
@@ -1486,15 +1236,10 @@ export default function RecordsPublicPage() {
                 })}
                 {releases.length === 0 && (
                   <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.82)' }}>
-                    Publica canciones en CMS para activar este resumen.
+                    Publica lanzamientos aprobados para activar este resumen.
                   </Typography>
                 )}
               </Stack>
-              {canMaintainCms && (
-                <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)', mt: 1.5 }}>
-                  Edita este bloque desde Configuración → CMS con el slug `records-releases`.
-                </Typography>
-              )}
             </GradientCard>
           </Stack>
         </Container>
@@ -1505,56 +1250,25 @@ export default function RecordsPublicPage() {
           <SectionTitle
             title="Grabaciones recientes"
             kicker="Estudio"
-            actions={
-              canMaintainCms && (
-                <Button
-                  component={RouterLink}
-                  to="/configuracion/cms?slug=records-recordings"
-                  size="small"
-                  variant="outlined"
-                  startIcon={<EditIcon />}
-                >
-                  Gestionar CMS
-                </Button>
-              )
-            }
+            actions={null}
           />
           <Stack spacing={0.75} sx={{ maxWidth: 760, mb: 3 }}>
             <Typography variant="body1" sx={{ color: 'text.secondary' }}>
               {recordingsIntro}
             </Typography>
-            {canMaintainCms && (
-              <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)' }}>
-                Mantén el arreglo `videos[]` desde el slug `records-recordings`; también se aceptan slugs legacy `records-recording-*`.
-              </Typography>
-            )}
           </Stack>
           {recordingsLoading ? (
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
               <CircularProgress size={20} color="inherit" />
-              <Typography variant="body2">Cargando videos desde CMS…</Typography>
+              <Typography variant="body2">Cargando grabaciones publicadas…</Typography>
             </Stack>
           ) : recordingsError ? (
-            <Alert severity="warning">No pudimos cargar los videos publicados desde el CMS.</Alert>
+            <Alert severity="warning">No pudimos cargar las grabaciones publicadas.</Alert>
           ) : recordings.length > 0 ? (
             <RecordingsGrid items={recordings} />
           ) : (
-            <Alert
-              severity={canMaintainCms ? 'info' : 'warning'}
-              action={
-                canMaintainCms ? (
-                  <Button
-                    component={RouterLink}
-                    to="/configuracion/cms?slug=records-recordings"
-                    size="small"
-                    color="inherit"
-                  >
-                    Abrir CMS
-                  </Button>
-                ) : undefined
-              }
-            >
-              No hay videos recientes publicados en CMS todavía.
+            <Alert severity="info">
+              No hay grabaciones publicadas en esta colección todavía.
             </Alert>
           )}
         </Box>
@@ -1564,17 +1278,8 @@ export default function RecordsPublicPage() {
             title="Lanzamientos TDF Records"
             kicker="Sello"
             actions={
-              canMaintainCms && (
+              canManageReleases && (
                 <Stack direction="row" spacing={1}>
-                  <Button
-                    component={RouterLink}
-                    to="/configuracion/cms?slug=records-releases"
-                    size="small"
-                    variant="outlined"
-                    startIcon={<EditIcon />}
-                  >
-                    CMS
-                  </Button>
                   <Button
                     component={RouterLink}
                     to="/label/releases"
@@ -1591,38 +1296,33 @@ export default function RecordsPublicPage() {
             <Typography variant="body1" sx={{ color: 'text.secondary' }}>
               {releasesIntro}
             </Typography>
-            {canMaintainCms && (
-              <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)' }}>
-                Mantén el arreglo `tracks[]` desde el slug `records-releases`; también se aceptan slugs legacy `records-release-*`.
-              </Typography>
-            )}
           </Stack>
           {releasesLoading ? (
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
               <CircularProgress size={20} color="inherit" />
-              <Typography variant="body2">Cargando canciones desde CMS…</Typography>
+              <Typography variant="body2">Cargando lanzamientos publicados…</Typography>
             </Stack>
           ) : releasesError ? (
-            <Alert severity="warning">No pudimos cargar las canciones publicadas desde el CMS.</Alert>
+            <Alert severity="warning">No pudimos cargar los lanzamientos publicados.</Alert>
           ) : releases.length > 0 ? (
             <ReleasesGrid items={releases} />
           ) : (
             <Alert
-              severity={canMaintainCms ? 'info' : 'warning'}
+              severity={canManageReleases ? 'info' : 'warning'}
               action={
-                canMaintainCms ? (
+                canManageReleases ? (
                   <Button
                     component={RouterLink}
-                    to="/configuracion/cms?slug=records-releases"
+                    to="/label/releases"
                     size="small"
                     color="inherit"
                   >
-                    Abrir CMS
+                    Gestionar lanzamientos
                   </Button>
                 ) : undefined
               }
             >
-              No hay canciones publicadas en CMS todavía.
+              No hay lanzamientos publicados todavía.
             </Alert>
           )}
         </Box>
@@ -1631,80 +1331,29 @@ export default function RecordsPublicPage() {
           <SectionTitle
             title="Sesiones en vivo TDF"
             kicker="YouTube"
-            actions={
-              canMaintainCms && (
-                <Button
-                  component={RouterLink}
-                  to="/configuracion/cms?slug=records-sessions"
-                  size="small"
-                  variant="outlined"
-                  startIcon={<EditIcon />}
-                >
-                  Gestionar CMS
-                </Button>
-              )
-            }
+            actions={null}
           />
           <Stack spacing={0.75} sx={{ maxWidth: 760, mb: 3 }}>
             <Typography variant="body1" sx={{ color: 'text.secondary' }}>
               {sessionsIntro}
             </Typography>
-            {canMaintainCms && (
-              <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)' }}>
-                Mantén el arreglo `videos[]` desde el slug `records-sessions`; también se aceptan slugs legacy `records-session-*`.
-              </Typography>
-            )}
           </Stack>
           {sessionsLoading ? (
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
               <CircularProgress size={20} color="inherit" />
-              <Typography variant="body2">Cargando sesiones desde CMS…</Typography>
+              <Typography variant="body2">Cargando sesiones publicadas…</Typography>
             </Stack>
           ) : sessionsError ? (
-            <Alert severity="warning">No pudimos cargar las sesiones publicadas desde el CMS.</Alert>
+            <Alert severity="warning">No pudimos cargar las sesiones publicadas.</Alert>
           ) : sessions.length > 0 ? (
             <SessionsGrid items={sessions} />
           ) : (
-            <Alert
-              severity={canMaintainCms ? 'info' : 'warning'}
-              action={
-                canMaintainCms ? (
-                  <Button
-                    component={RouterLink}
-                    to="/configuracion/cms?slug=records-sessions"
-                    size="small"
-                    color="inherit"
-                  >
-                    Abrir CMS
-                  </Button>
-                ) : undefined
-              }
-            >
-              No hay sesiones publicadas en CMS todavía.
+            <Alert severity="info">
+              No hay sesiones publicadas en esta colección todavía.
             </Alert>
           )}
         </Box>
 
-        {canMaintainCms && (
-          <GradientCard
-            title="Atajos de CMS"
-            actions={
-              <Button
-                component={RouterLink}
-                to="/configuracion/cms"
-                size="small"
-                variant="outlined"
-                startIcon={<EditIcon />}
-              >
-                Abrir CMS
-              </Button>
-            }
-          >
-            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-              Usa el panel en Configuración → CMS con los slugs `records-releases`, `records-sessions` y `records-recordings` para crear borradores, publicar y versionar contenido en es/en.
-            </Typography>
-          </GradientCard>
-        )}
       </Container>
     </Box>
   );

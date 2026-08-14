@@ -32,8 +32,8 @@ type FeedbackAPI =
 data FeedbackPayload = FeedbackPayload
   { fpTitle        :: Text
   , fpDescription  :: Text
-  , fpCategory     :: Maybe Text
-  , fpSeverity     :: Maybe Text
+  , fpCategoryId   :: Text
+  , fpSeverityId   :: Text
   , fpContactEmail :: Maybe Text
   , fpConsent      :: Bool
   , fpAttachment   :: Maybe (FileData Tmp)
@@ -45,15 +45,15 @@ instance FromMultipart Tmp FeedbackPayload where
     title <- lookupText "title" multipart
     description <- lookupText "description" multipart
     consent <- optionalBool "consent" multipart
-    category <- optionalText "category" multipart
-    severity <- optionalText "severity" multipart
+    categoryId <- lookupText "categoryId" multipart
+    severityId <- lookupText "severityId" multipart
     contact <- optionalText "contactEmail" multipart
     attachment <- lookupFile "attachment" multipart
     pure FeedbackPayload
       { fpTitle        = T.strip title
       , fpDescription  = T.strip description
-      , fpCategory     = category
-      , fpSeverity     = severity
+      , fpCategoryId   = T.strip categoryId
+      , fpSeverityId   = T.strip severityId
       , fpContactEmail = contact
       , fpConsent      = consent
       , fpAttachment   = attachment
@@ -109,8 +109,8 @@ instance FromMultipart Tmp FeedbackPayload where
           expectedInputs =
             [ "title"
             , "description"
-            , "category"
-            , "severity"
+            , "categoryId"
+            , "severityId"
             , "contactEmail"
             , "consent"
             ]

@@ -26,18 +26,21 @@ import {
   Typography,
   Stack,
   ButtonBase,
+  TextField,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
-import type { Role } from '../api/generated/client';
+import type {
+  SecurityPartyRoleAssignment,
+  SecurityRole,
+} from '../api/generated/client';
 import { apiClient } from '../api/generated/client';
-import { ALL_ROLES } from '../constants/roles';
-import { normalizeRolesInput } from '../utils/roles';
 import LazyPaginatedList from './LazyPaginatedList';
 
-type RoleValue = Role | (string & Record<never, never>);
+type RoleValue = string;
 
 interface NormalizedUser {
   id: number;
+  partyId: number;
   name: string;
   email: string | null | undefined;
   phone: string | null | undefined;
@@ -54,33 +57,11 @@ const STATUS_LABELS: Record<'Active' | 'Inactive', string> = {
   Inactive: 'Inactivo',
 };
 
-const ROLE_COLORS: Partial<Record<RoleValue, 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info' | 'default'>> = {
-  Admin: 'error',
-  Manager: 'primary',
-  Engineer: 'info',
-  Teacher: 'success',
-  Reception: 'secondary',
-  Accounting: 'warning',
-  Artist: 'primary',
-  Student: 'default',
-  ReadOnly: 'default',
-  Fan: 'info',
-  Artista: 'primary',
-  Promotor: 'secondary',
-  Promoter: 'secondary',
-  'A&R': 'warning',
-  Producer: 'primary',
-  Songwriter: 'default',
-  DJ: 'info',
-  Publicist: 'success',
-  TourManager: 'warning',
-  LabelRep: 'warning',
-  StageManager: 'warning',
-  RoadCrew: 'secondary',
-  Photographer: 'info',
+const getRoleColor = (role?: SecurityRole): 'error' | 'primary' | 'default' => {
+  if (role?.emergencyAdministrator) return 'error';
+  if (role?.systemRole) return 'primary';
+  return 'default';
 };
-
-const getRoleColor = (role: RoleValue) => ROLE_COLORS[role] ?? 'default';
 const EDITABLE_ROLES_LABEL = 'Roles editables';
 const EMPTY_ROLES_LABEL = 'Sin roles';
 const EMPTY_CONTACT_LABEL = 'Sin email ni teléfono';
@@ -88,7 +69,8 @@ const INLINE_ROLE_CHIP_LIMIT = 3;
 
 const normalizeContactValue = (value?: string | null) => {
   const trimmed = value?.trim();
-  return trimmed ? trimmed : null;
+  if (!trimmed) return null;
+  return trimmed;
 };
 
 const getContactSummary = (user: Pick<NormalizedUser, 'email' | 'phone'>) => {
@@ -174,10 +156,6 @@ const buildEditRolesLabel = (
     : `${actionLabel} de ${user.name}`;
 };
 
-const CANONICAL_ROLES_BY_KEY = new Map(
-  ALL_ROLES.map((role) => [role.toLocaleLowerCase('es'), role as RoleValue]),
-);
-
 const normalizeRoleSelection = (roles?: readonly RoleValue[] | null) => {
   const rolesByKey = new Map<string, RoleValue>();
 
@@ -188,7 +166,7 @@ const normalizeRoleSelection = (roles?: readonly RoleValue[] | null) => {
     const roleKey = trimmedRole.toLocaleLowerCase('es');
     if (rolesByKey.has(roleKey)) return;
 
-    rolesByKey.set(roleKey, CANONICAL_ROLES_BY_KEY.get(roleKey) ?? trimmedRole);
+    rolesByKey.set(roleKey, trimmedRole);
   });
 
   return [...rolesByKey.values()]
@@ -220,12 +198,15 @@ const hasRoleSelectionChanged = (
   return normalizedCurrentRoles.some((role, index) => role !== normalizedNextRoles[index]);
 };
 
-const sortRolesForEditor = (currentRoles?: readonly RoleValue[] | null) => {
+const sortRolesForEditor = (
+  availableRoles: readonly RoleValue[],
+  currentRoles?: readonly RoleValue[] | null,
+) => {
   const currentRoleKeys = new Set(
     normalizeRoleSelection(currentRoles).map((role) => role.toLocaleLowerCase('es')),
   );
 
-  return [...ALL_ROLES].sort((left, right) => {
+  return normalizeRoleSelection(availableRoles).sort((left, right) => {
     const leftPinned = currentRoleKeys.has(left.toLocaleLowerCase('es'));
     const rightPinned = currentRoleKeys.has(right.toLocaleLowerCase('es'));
 
@@ -266,19 +247,26 @@ const buildPendingRoleChangesSummary = (
 
 const buildRoleButtonTitle = ({
   roles,
+  roleByCode,
   user,
   showIdentityDisambiguator,
 }: {
   roles: readonly RoleValue[];
+  roleByCode: ReadonlyMap<string, SecurityRole>;
   user: Pick<NormalizedUser, 'id' | 'name'>;
   showIdentityDisambiguator: boolean;
 }) => {
   const normalizedRoles = normalizeRoleSelection(roles);
-  const rolesSummary = normalizedRoles.length === 0 ? EMPTY_ROLES_LABEL : normalizedRoles.join(', ');
+  const rolesSummary = normalizedRoles.length === 0
+    ? EMPTY_ROLES_LABEL
+    : normalizedRoles.map((role) => roleByCode.get(role.toLocaleLowerCase('es'))?.nameEs ?? role).join(', ');
   return `${buildEditRolesLabel(user, showIdentityDisambiguator, roles)}. Roles actuales: ${rolesSummary}.`;
 };
 
-const renderInlineRoleChips = (roles: readonly RoleValue[]) => {
+const renderInlineRoleChips = (
+  roles: readonly RoleValue[],
+  roleByCode: ReadonlyMap<string, SecurityRole>,
+) => {
   const normalizedRoles = normalizeRoleSelection(roles);
 
   if (normalizedRoles.length === 0) {
@@ -291,7 +279,12 @@ const renderInlineRoleChips = (roles: readonly RoleValue[]) => {
   return (
     <>
       {visibleRoles.map((role) => (
-        <Chip key={role} label={role} color={getRoleColor(role)} size="small" />
+        <Chip
+          key={role}
+          label={roleByCode.get(role.toLocaleLowerCase('es'))?.nameEs ?? role}
+          color={getRoleColor(roleByCode.get(role.toLocaleLowerCase('es')))}
+          size="small"
+        />
       ))}
       {hiddenRoles.length > 0 && (
         <Chip
@@ -343,23 +336,35 @@ const buildRoleManagementSummary = ({
   return `Vista compacta: ${summaryParts.join('. ')}.`;
 };
 
-const renderRoleEditButtonContents = (roles: readonly RoleValue[]) => (
+const renderRoleEditButtonContents = (
+  roles: readonly RoleValue[],
+  roleByCode: ReadonlyMap<string, SecurityRole>,
+) => (
   <Box display="inline-flex" alignItems="center" gap={0.75} flexWrap="wrap">
     <Box display="flex" gap={0.5} flexWrap="wrap">
-      {renderInlineRoleChips(roles)}
+      {renderInlineRoleChips(roles, roleByCode)}
     </Box>
   </Box>
 );
 
 export default function UserRoleManagement() {
   const [users, setUsers] = useState<NormalizedUser[]>([]);
+  const [securityRoles, setSecurityRoles] = useState<SecurityRole[]>([]);
+  const [roleAssignments, setRoleAssignments] = useState<SecurityPartyRoleAssignment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingAssignments, setLoadingAssignments] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [submissionSuccess, setSubmissionSuccess] = useState<string | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<NormalizedUser | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<RoleValue[]>([]);
   const [saving, setSaving] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
+  const [changeReason, setChangeReason] = useState('');
+  const roleByCode = new Map(
+    securityRoles.map((role) => [role.code.toLocaleLowerCase('es'), role]),
+  );
+  const availableRoleCodes = securityRoles.map((role) => role.code);
   const showContactColumn = users.some((user) => getContactSummary(user) != null);
   const inactiveUsersCount = users.filter((user) => user.status === 'Inactive').length;
   const activeUsersCount = users.length - inactiveUsersCount;
@@ -382,7 +387,7 @@ export default function UserRoleManagement() {
   const pendingRoleChangesSummary = selectedUser
     ? buildPendingRoleChangesSummary(selectedUser.roles, selectedRoles)
     : null;
-  const roleOptionsForEditor = sortRolesForEditor(selectedUser?.roles);
+  const roleOptionsForEditor = sortRolesForEditor(availableRoleCodes, selectedUser?.roles);
   const currentRoleKeysForEditor = new Set(
     normalizeRoleSelection(selectedUser?.roles).map((role) => role.toLocaleLowerCase('es')),
   );
@@ -401,9 +406,13 @@ export default function UserRoleManagement() {
     try {
       setLoading(true);
       setError(null);
-      const data = await apiClient.getUsers();
+      const [data, persistedRoles] = await Promise.all([
+        apiClient.getUsers(),
+        apiClient.getSecurityRoles(),
+      ]);
       const normalized: NormalizedUser[] = data.map((u) => ({
         id: u.id ?? 0,
+        partyId: u.partyId ?? 0,
         name: u.name ?? 'Sin nombre',
         email: u.email,
         phone: u.phone,
@@ -411,6 +420,7 @@ export default function UserRoleManagement() {
         roles: normalizeRoleSelection((u.roles ?? []) as RoleValue[]),
       })).filter(isRenderableNormalizedUser);
       setUsers(dedupeNormalizedUsers(normalized));
+      setSecurityRoles(persistedRoles.filter((role) => role.active));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudieron cargar los usuarios');
     } finally {
@@ -418,40 +428,89 @@ export default function UserRoleManagement() {
     }
   };
 
-  const handleEditClick = (user: NormalizedUser) => {
+  const handleEditClick = async (user: NormalizedUser) => {
     setSelectedUser(user);
     setSelectedRoles(normalizeRoleSelection(user.roles));
+    setRoleAssignments([]);
+    setChangeReason('');
     setDialogError(null);
     setEditDialogOpen(true);
+    if (!Number.isSafeInteger(user.partyId) || user.partyId <= 0) {
+      setDialogError('El usuario no tiene un identificador canónico de contacto válido.');
+      return;
+    }
+    try {
+      setLoadingAssignments(true);
+      setRoleAssignments(await apiClient.getPartyRoleAssignments(user.partyId));
+    } catch (err) {
+      setDialogError(err instanceof Error ? err.message : 'No se pudieron cargar las asignaciones versionadas');
+    } finally {
+      setLoadingAssignments(false);
+    }
   };
 
   const handleCloseDialog = () => {
     setEditDialogOpen(false);
     setSelectedUser(null);
     setSelectedRoles([]);
+    setRoleAssignments([]);
+    setChangeReason('');
     setDialogError(null);
   };
 
-  const normalizeRoles = (value: string | string[]): RoleValue[] =>
-    normalizeRolesInput(value, ALL_ROLES);
-
   const handleRoleChange = (event: SelectChangeEvent<RoleValue[]>) => {
     setDialogError(null);
-    setSelectedRoles(normalizeRoles(event.target.value));
+    const value = event.target.value;
+    setSelectedRoles(normalizeRoleSelection(typeof value === 'string' ? value.split(',') : value));
   };
 
   const handleSaveRoles = async () => {
     if (!selectedUser || !hasPendingRoleChanges) return;
+    const reason = changeReason.trim();
+    if (!reason) {
+      setDialogError('Explica el motivo del cambio antes de enviarlo a revisión.');
+      return;
+    }
 
     try {
       setSaving(true);
       setDialogError(null);
       const normalizedRoles = normalizeRoleSelection(selectedRoles);
-      await apiClient.updateUserRoles(selectedUser.id, normalizedRoles);
-      setUsers((prev) => prev.map((u) => (u.id === selectedUser.id ? { ...u, roles: normalizedRoles } : u)));
+      const selectedKeys = new Set(normalizedRoles.map((role) => role.toLocaleLowerCase('es')));
+      const currentKeys = new Set(
+        normalizeRoleSelection(selectedUser.roles).map((role) => role.toLocaleLowerCase('es')),
+      );
+      const changedRoles = securityRoles.filter((role) => (
+        selectedKeys.has(role.code.toLocaleLowerCase('es'))
+        !== currentKeys.has(role.code.toLocaleLowerCase('es'))
+      ));
+      const assignmentByRoleId = new Map(roleAssignments.map((assignment) => [assignment.roleId, assignment]));
+      let submittedCount = 0;
+
+      for (const [index, role] of changedRoles.entries()) {
+        const desiredActive = selectedKeys.has(role.code.toLocaleLowerCase('es'));
+        const assignment = assignmentByRoleId.get(role.id);
+        const correlationId = `web-security-${selectedUser.partyId}-${Date.now()}-${index}-${role.id}`;
+        const revision = await apiClient.createPartyRoleRevision({
+          partyId: selectedUser.partyId,
+          roleId: role.id,
+          desiredActive,
+          expectedVersion: assignment?.version ?? 0,
+          reason,
+          sourcePlatform: 'web',
+          correlationId,
+        });
+        await apiClient.submitSecurityRevision(revision.id);
+        submittedCount += 1;
+      }
+
+      setSubmissionSuccess(
+        `${submittedCount === 1 ? 'Se envió 1 cambio' : `Se enviaron ${submittedCount} cambios`} a revisión. `
+        + 'Los roles actuales no cambiarán hasta que otra persona autorizada los apruebe.',
+      );
       handleCloseDialog();
     } catch (err) {
-      setDialogError(err instanceof Error ? err.message : 'No se pudieron actualizar los roles');
+      setDialogError(err instanceof Error ? err.message : 'No se pudieron enviar los cambios de roles a revisión');
     } finally {
       setSaving(false);
     }
@@ -475,6 +534,11 @@ export default function UserRoleManagement() {
 
   return (
     <Box p={3}>
+      {submissionSuccess && (
+        <Alert severity="success" onClose={() => setSubmissionSuccess(null)} sx={{ mb: 2 }}>
+          {submissionSuccess}
+        </Alert>
+      )}
       {users.length === 0 ? (
         <Paper variant="outlined" sx={{ p: 3 }}>
           <Stack spacing={1}>
@@ -541,7 +605,7 @@ export default function UserRoleManagement() {
                         {EDITABLE_ROLES_LABEL}
                       </Typography>
                       <ButtonBase
-                        onClick={() => handleEditClick(singleUser)}
+                        onClick={() => void handleEditClick(singleUser)}
                         aria-label={buildEditRolesLabel(
                           singleUser,
                           userIdsRequiringIdentityDisambiguator.has(singleUser.id),
@@ -549,6 +613,7 @@ export default function UserRoleManagement() {
                         )}
                         title={buildRoleButtonTitle({
                           roles: singleUser.roles,
+                          roleByCode,
                           user: singleUser,
                           showIdentityDisambiguator: userIdsRequiringIdentityDisambiguator.has(singleUser.id),
                         })}
@@ -560,7 +625,7 @@ export default function UserRoleManagement() {
                           textAlign: 'left',
                         }}
                       >
-                        {renderRoleEditButtonContents(singleUser.roles)}
+                        {renderRoleEditButtonContents(singleUser.roles, roleByCode)}
                       </ButtonBase>
                     </Stack>
                   </Stack>
@@ -623,10 +688,11 @@ export default function UserRoleManagement() {
                             )}
                             <TableCell>
                               <ButtonBase
-                                onClick={() => handleEditClick(user)}
+                                onClick={() => void handleEditClick(user)}
                                 aria-label={buildEditRolesLabel(user, showIdentityDisambiguator, user.roles)}
                                 title={buildRoleButtonTitle({
                                   roles: user.roles,
+                                  roleByCode,
                                   user,
                                   showIdentityDisambiguator,
                                 })}
@@ -638,7 +704,7 @@ export default function UserRoleManagement() {
                                   textAlign: 'left',
                                 }}
                               >
-                                {renderRoleEditButtonContents(user.roles)}
+                                {renderRoleEditButtonContents(user.roles, roleByCode)}
                               </ButtonBase>
                             </TableCell>
                           </TableRow>
@@ -661,6 +727,12 @@ export default function UserRoleManagement() {
               {dialogError}
             </Alert>
           )}
+          {loadingAssignments && (
+            <Box display="flex" alignItems="center" gap={1} sx={{ mt: 2 }} role="status">
+              <CircularProgress size={20} />
+              <Typography variant="body2">Cargando asignaciones y versiones vigentes…</Typography>
+            </Box>
+          )}
           <FormControl fullWidth sx={{ mt: 2 }}>
             <InputLabel id="roles-label" shrink>Roles</InputLabel>
             <Select<RoleValue[]>
@@ -668,6 +740,7 @@ export default function UserRoleManagement() {
               multiple
               value={selectedRoles}
               onChange={handleRoleChange}
+              disabled={loadingAssignments || Boolean(dialogError)}
               input={<OutlinedInput label="Roles" />}
               displayEmpty
               renderValue={(selected) => (
@@ -676,7 +749,12 @@ export default function UserRoleManagement() {
                     <Chip label={EMPTY_ROLES_LABEL} size="small" variant="outlined" />
                   ) : (
                     selected.map((role) => (
-                      <Chip key={role} label={role} size="small" color={getRoleColor(role)} />
+                      <Chip
+                        key={role}
+                        label={roleByCode.get(role.toLocaleLowerCase('es'))?.nameEs ?? role}
+                        size="small"
+                        color={getRoleColor(roleByCode.get(role.toLocaleLowerCase('es')))}
+                      />
                     ))
                   )}
                 </Box>
@@ -694,9 +772,15 @@ export default function UserRoleManagement() {
                   ? currentRoleKeysForEditor.has(previousRole.toLocaleLowerCase('es'))
                   : false;
                 const startsAvailableRoles = !isCurrentRole && (index === 0 || previousWasCurrentRole);
+                const persistedRole = roleByCode.get(role.toLocaleLowerCase('es'));
                 const optionItem = (
                   <MenuItem key={role} value={role}>
-                    {role}
+                    <Stack spacing={0}>
+                      <Typography variant="body2">{persistedRole?.nameEs ?? role}</Typography>
+                      {persistedRole && persistedRole.nameEs !== persistedRole.code && (
+                        <Typography variant="caption" color="text.secondary">{persistedRole.code}</Typography>
+                      )}
+                    </Stack>
                   </MenuItem>
                 );
 
@@ -718,18 +802,42 @@ export default function UserRoleManagement() {
             </Select>
             <FormHelperText>
               {hasPendingRoleChanges
-                ? (pendingRoleChangesSummary ?? 'Listo para guardar esta actualización de permisos.')
-                : 'Sin cambios pendientes. Modifica la selección para mostrar Guardar cambios.'}
+                ? (pendingRoleChangesSummary ?? 'Listo para enviar esta actualización a revisión.')
+                : 'Sin cambios pendientes. Modifica la selección para preparar una revisión.'}
             </FormHelperText>
           </FormControl>
+          {hasPendingRoleChanges && (
+            <TextField
+              label="Motivo del cambio"
+              value={changeReason}
+              onChange={(event) => {
+                setChangeReason(event.target.value);
+                setDialogError(null);
+              }}
+              helperText="Quedará registrado en el historial inmutable y será visible para quien revise."
+              multiline
+              minRows={3}
+              required
+              fullWidth
+              inputProps={{ maxLength: 2000 }}
+              sx={{ mt: 2 }}
+            />
+          )}
+          <Alert severity="info" sx={{ mt: 2 }}>
+            Enviar no modifica permisos de inmediato. Otra persona con autorización debe aprobar cada cambio.
+          </Alert>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} disabled={saving}>
             {hasPendingRoleChanges ? 'Descartar cambios' : 'Cerrar'}
           </Button>
           {hasPendingRoleChanges && (
-            <Button onClick={() => void handleSaveRoles()} variant="contained" disabled={saving}>
-              {saving ? 'Guardando...' : 'Guardar cambios'}
+            <Button
+              onClick={() => void handleSaveRoles()}
+              variant="contained"
+              disabled={saving || loadingAssignments || !changeReason.trim()}
+            >
+              {saving ? 'Enviando…' : 'Enviar a revisión'}
             </Button>
           )}
         </DialogActions>

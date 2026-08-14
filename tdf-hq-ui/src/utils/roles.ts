@@ -1,15 +1,4 @@
 import type { SignupPayload } from '../api/auth';
-import { SELF_SIGNUP_ROLES, type SignupRole } from '../constants/roles';
-
-const codePointPattern = (codePoints: readonly number[]) =>
-  new RegExp(codePoints.map((codePoint) => String.fromCodePoint(codePoint)).join('|'), 'gu');
-
-const CONTROL_CHARACTER_PATTERN = new RegExp(
-  `[${String.fromCodePoint(0)}-${String.fromCodePoint(31)}${String.fromCodePoint(127)}-${String.fromCodePoint(159)}]`,
-  'gu',
-);
-const FORMAT_CHARACTER_PATTERN = codePointPattern([0x200B, 0x200C, 0x200D, 0x200E, 0x200F, 0xFEFF, 0x00AD, 0x2060, 0xFE0E, 0xFE0F]);
-const LINE_SEPARATOR_PATTERN = codePointPattern([0x2028, 0x2029]);
 
 export function normalizeRolesInput<T extends string>(
   value: string | string[],
@@ -34,39 +23,13 @@ export function normalizeRolesInput<T extends string>(
   return unique;
 }
 
-export function normalizeSignupRoles(value: string | string[]): SignupRole[] {
-  return normalizeRolesInput(value, SELF_SIGNUP_ROLES);
-}
-
 export interface SignupFormState {
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
   password: string;
-  internshipStartAt: string;
-  internshipEndAt: string;
-  internshipRequiredHours: string;
-  internshipSkills: string;
-  internshipAreas: string;
 }
-
-const stripControlAndFormatChars = (value: string): string => {
-  return value
-    .replace(CONTROL_CHARACTER_PATTERN, '')
-    .replace(FORMAT_CHARACTER_PATTERN, '')
-    .replace(LINE_SEPARATOR_PATTERN, '');
-};
-
-const parseOptionalInt = (value: string): number | undefined => {
-  const trimmed = value.trim();
-  if (trimmed === '') return undefined;
-  if (!/^\d+$/.test(trimmed)) return undefined;
-  const parsed = Number(trimmed);
-  if (!Number.isSafeInteger(parsed)) return undefined;
-  if (parsed < 0) return undefined;
-  return parsed;
-};
 
 const parsePositiveSafeInt = (value: unknown): number | undefined => {
   if (typeof value === 'number') {
@@ -96,18 +59,11 @@ const normalizePositiveSafeIntList = (values: readonly number[]): number[] => {
 
 export function buildSignupPayload(
   form: SignupFormState,
-  signupRoles: SignupRole[],
   favoriteArtistIds: number[],
   claimArtistId?: number | null,
 ): SignupPayload {
-  const roles = normalizeSignupRoles(signupRoles);
-  const wantsFanRole = roles.includes('Fan');
-  const wantsInternRole = roles.includes('Intern');
   const normalizedClaimId = parsePositiveSafeInt(claimArtistId);
-  const normalizedFavoriteArtistIds = wantsFanRole
-    ? normalizePositiveSafeIntList(favoriteArtistIds)
-    : [];
-  const requiredHours = wantsInternRole ? parseOptionalInt(form.internshipRequiredHours) : undefined;
+  const normalizedFavoriteArtistIds = normalizePositiveSafeIntList(favoriteArtistIds);
 
   return {
     firstName: form.firstName.trim(),
@@ -115,12 +71,6 @@ export function buildSignupPayload(
     email: form.email.trim(),
     phone: form.phone.trim() || undefined,
     password: form.password,
-    internshipStartAt: wantsInternRole && form.internshipStartAt.trim() ? form.internshipStartAt.trim() : undefined,
-    internshipEndAt: wantsInternRole && form.internshipEndAt.trim() ? form.internshipEndAt.trim() : undefined,
-    internshipRequiredHours: requiredHours,
-    internshipSkills: wantsInternRole && form.internshipSkills.trim() ? stripControlAndFormatChars(form.internshipSkills.trim()) : undefined,
-    internshipAreas: wantsInternRole && form.internshipAreas.trim() ? stripControlAndFormatChars(form.internshipAreas.trim()) : undefined,
-    roles: roles.length ? roles : undefined,
     fanArtistIds: normalizedFavoriteArtistIds.length ? normalizedFavoriteArtistIds : undefined,
     claimArtistId: normalizedClaimId,
   };
@@ -140,15 +90,6 @@ const normalizeRoleTokens = (roles: readonly string[]): string[] => {
 
 export function deriveEffectiveRoles(
   apiRoles: string[] | undefined,
-  selectedRoles: SignupRole[],
-  defaultRole = 'fan',
 ): string[] {
-  const apiNormalized = normalizeRoleTokens(apiRoles ?? []);
-  if (apiNormalized.length) return apiNormalized;
-
-  const selectedNormalized = normalizeRoleTokens(normalizeSignupRoles(selectedRoles));
-  if (selectedNormalized.length) return selectedNormalized;
-
-  const fallbackRole = defaultRole.trim().toLowerCase();
-  return [fallbackRole || 'fan'];
+  return normalizeRoleTokens(apiRoles ?? []);
 }

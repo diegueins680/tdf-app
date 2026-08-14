@@ -27,7 +27,7 @@ const setOptionalPositiveIntParam = (
 
 export interface BookingUpdatePayload {
   ubTitle?: string;
-  ubServiceType?: string;
+  ubServiceOfferingId?: string;
   ubStatus?: string;
   ubNotes?: string;
   ubStartsAt?: string;
@@ -53,7 +53,7 @@ export const Bookings = {
     cbEndsAt: string;
     cbStatus: string;
     cbNotes?: string | null;
-    cbServiceType?: string | null;
+    cbServiceOfferingId: string;
     cbPartyId?: number | null;
     cbResourceIds?: string[] | null;
     cbEngineerPartyId?: number | null;
@@ -70,7 +70,7 @@ export const Bookings = {
     pbFullName: string;
     pbEmail: string;
     pbPhone?: string | null;
-    pbServiceType: string;
+    pbServiceOfferingId: string;
     pbStartsAt: string;
     pbDurationMinutes?: number | null;
     pbNotes?: string | null;
