@@ -1,5 +1,6 @@
 import { get, post, put } from './client';
 import type { BookingDTO } from './types';
+import { decodeLegacyServiceOfferingId } from './services';
 
 const requirePositiveInteger = (value: number, field: string): number => {
   if (!Number.isSafeInteger(value) || value <= 0) {
@@ -77,9 +78,15 @@ export const Bookings = {
     pbEngineerPartyId?: number | null;
     pbEngineerName?: string | null;
     pbResourceIds?: string[] | null;
-  }) =>
-    post<BookingDTO>('/bookings/public', {
-      ...body,
+  }) => {
+    const { pbServiceOfferingId, ...rest } = body;
+    const legacyServiceType = decodeLegacyServiceOfferingId(pbServiceOfferingId);
+    return post<BookingDTO>('/bookings/public', {
+      ...rest,
+      ...(legacyServiceType
+        ? { pbServiceType: legacyServiceType }
+        : { pbServiceOfferingId }),
       pbEngineerPartyId: normalizeOptionalPositiveInteger(body.pbEngineerPartyId, 'pbEngineerPartyId'),
-    }),
+    });
+  },
 };
