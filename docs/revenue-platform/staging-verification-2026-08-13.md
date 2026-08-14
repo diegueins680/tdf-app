@@ -15,6 +15,7 @@ The final command transcript is summarized here after the branch-wide verificati
 |---|---|---|
 | Service phase 0 migration | `./scripts/test-service-storefront-phase0-migration.sh` | Pass: forward, constraints, rollback, reapply |
 | Checkout core migration | `./scripts/test-unified-checkout-migration.sh` | Pass: dry-run, rollback, binding, inbox, hold, ledger |
+| Service checkout runtime migration | `./scripts/test-service-storefront-checkout-runtime-migration.sh` | Pass: rerun, pre-use rollback, legacy classification, one checkout link, one succeeded attempt, reconciliation deduplication, manual evidence and receipt constraints; rollback correctly refused after a live link |
 | Distribution accounting migration | `./scripts/test-distribution-accounting-migration.sh` | Pass: rollback, lifecycle, splits, package/evidence, royalty, separation of duties, payout gates |
 | Versioned revenue products | `./scripts/test-versioned-revenue-products-migration.sh` | Pass: inactive legacy Domo rate, approval/immutability, production flag |
 | Distribution pricing seeds | `./scripts/test-distribution-product-seeds-migration.sh` | Pass: 14 inactive bilingual seeds, activation/mutation/rollback gates |
@@ -32,6 +33,11 @@ state machine (5), DDEX intake truthfulness (3), ERN parser (20), and business r
 web run performed concurrently with GHC compilation had one 5-second timeout; the exact five-suite
 command was rerun without contention and all 16 tests passed. No assertion failed in the timed-out
 run.
+
+Follow-up verification for the service checkout runtime passed 10 focused examples, including 200
+property cases, with zero failures. `stack test --no-run-tests --fast` compiled both the executable
+and test suite after the runtime integration. This is local database/application evidence only: no
+Datafast or PayPal sandbox request was made and no provider success was asserted.
 
 ## Required staging exercise
 

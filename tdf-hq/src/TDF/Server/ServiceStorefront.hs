@@ -7,10 +7,17 @@ module TDF.Server.ServiceStorefront
   , serviceStorefrontAdminServer
   , validatePackageOrder
   , validateDatafastOrderResourcePath
+  , validateDatafastEnvironmentBase
+  , isDatafastCheckoutCreationSuccess
+  , isDatafastPaymentSuccess
   , validateIdempotencyKey
+  , validateServiceFulfillmentTransition
+  , ServicePaypalCaptureOutcome(..)
+  , parsePaypalCaptureOutcome
   ) where
 
 import           Control.Monad (when, unless)
+import           Control.Monad.Except (catchError)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask)
 import           Crypto.Hash (Digest, SHA256, hash)
@@ -24,16 +31,17 @@ import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import           Data.Char (isAsciiLower, isAsciiUpper, isDigit)
+import           Data.Int (Int64)
 import           Data.Maybe (fromMaybe)
 import           Control.Applicative ((<|>))
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import           Data.Time (getCurrentTime)
-import           Data.UUID (UUID, toText)
+import           Data.Time (UTCTime, addUTCTime, defaultTimeLocale, formatTime, getCurrentTime)
+import           Data.UUID (UUID, fromText, toText)
 import           Data.UUID.V4 (nextRandom)
 import           Database.Persist (selectList, get, insert, insertUnique, getBy, replace, update, Entity(..), (==.), (=.), SelectOpt(..))
-import           Database.Persist.Sql (runSqlPool)
+import           Database.Persist.Sql (SqlPersistT, runSqlPool)
 import           Network.HTTP.Client (httpLbs, parseRequest, responseBody, responseStatus, method, requestBody, requestHeaders, Request(..), RequestBody(..), Manager)
 import           Network.HTTP.Client.TLS (newTlsManager)
 import           Network.HTTP.Types (statusCode)
@@ -44,6 +52,8 @@ import           Web.PathPieces (fromPathPiece, toPathPiece)
 import           TDF.API.ServiceStorefront (ServiceStorefrontPublicAPI, ServiceStorefrontAdminAPI)
 import           TDF.API.ServiceStorefrontTypes
 import           TDF.API.Types (DatafastCheckoutDTO(..), PaypalCreateDTO(..))
+import           TDF.Auth (AuthedUser, hasStrictAdminAccess)
+import qualified TDF.Commerce.CheckoutStore as Checkout
 import           TDF.Config (defaultCurrency, defaultLocale, supportedCurrencies)
 import           TDF.DB (Env(..))
 import           TDF.Internationalization (formatMinorUnitsDecimal, formatMoney, normalizeCurrencyCode)
@@ -68,13 +78,16 @@ serviceStorefrontPublicServer =
   :<|> createRevisionHandler
 
 -- | Admin server for the service storefront.
-serviceStorefrontAdminServer :: ServerT ServiceStorefrontAdminAPI AppM
-serviceStorefrontAdminServer =
-       listOrdersAdminHandler
-  :<|> updateOrderAdminHandler
-  :<|> listPackagesAdminHandler
-  :<|> createPackageAdminHandler
-  :<|> updatePackageAdminHandler
+serviceStorefrontAdminServer :: AuthedUser -> ServerT ServiceStorefrontAdminAPI AppM
+serviceStorefrontAdminServer user =
+       (\status limit offset -> requireAccess *> listOrdersAdminHandler status limit offset)
+  :<|> (\orderId request -> requireAccess *> updateOrderAdminHandler orderId request)
+  :<|> (requireAccess *> listPackagesAdminHandler)
+  :<|> (\request -> requireAccess *> createPackageAdminHandler request)
+  :<|> (\packageId request -> requireAccess *> updatePackageAdminHandler packageId request)
+  where
+    requireAccess = unless (hasStrictAdminAccess user) $
+      throwError err403 { errBody = "Strict Admin access required" }
 
 -- ============================================================================
 -- Public Handlers
@@ -114,6 +127,12 @@ createOrderHandler mIdempotencyKey request@ServiceStorefrontOrderCreate{..} = do
   where
     createNewOrder now idempotencyKey requestHash = do
       Env{..} <- ask
+      checkoutEnvironment <- loadConfiguredCheckoutEnvironment
+      domainEnabled <- liftIO $ flip runSqlPool envPool $
+        Checkout.domainEnabledForEnvironment checkoutEnvironment "mixing_mastering"
+      unless domainEnabled $
+        throwError err503
+          { errBody = "Mixing/mastering checkout is disabled for this environment" }
       let buyerName = T.strip ssocBuyerName
           buyerEmail = T.toLower (T.strip ssocBuyerEmail)
       when (T.null buyerName) $
@@ -166,6 +185,7 @@ createOrderHandler mIdempotencyKey request@ServiceStorefrontOrderCreate{..} = do
                 , ME.serviceStorefrontOrderLookupTokenHash = Just (hashLookupToken lookupToken)
                 , ME.serviceStorefrontOrderCreateIdempotencyKey = Just idempotencyKey
                 , ME.serviceStorefrontOrderCreateRequestSha256 = Just requestHash
+                , ME.serviceStorefrontOrderCheckoutId = Nothing
                 , ME.serviceStorefrontOrderPaidAt = Nothing
                 , ME.serviceStorefrontOrderGenre = fmap T.strip ssocGenre
                 , ME.serviceStorefrontOrderSongCount = songCount
@@ -179,22 +199,68 @@ createOrderHandler mIdempotencyKey request@ServiceStorefrontOrderCreate{..} = do
                 , ME.serviceStorefrontOrderUpdatedAt = now
                 }
 
-          mOrderIdKey <- liftIO $ flip runSqlPool envPool $ insertUnique order
-          case mOrderIdKey of
+              checkoutSnapshot = object
+                [ "domain" .= ("mixing_mastering" :: Text)
+                , "package_id" .= toPathPiece packageId
+                , "package_name" .= ME.serviceStorefrontPackageName pkg
+                , "service_kind" .= ME.serviceStorefrontPackageServiceKind pkg
+                , "tier" .= ME.serviceStorefrontPackageTier pkg
+                , "song_count" .= songCount
+                , "price_minor" .= ME.serviceStorefrontPackagePriceUsdCents pkg
+                , "currency" .= ME.serviceStorefrontPackageCurrency pkg
+                , "turnaround_days" .= ME.serviceStorefrontPackageTurnaroundDays pkg
+                , "included_revisions" .= ME.serviceStorefrontPackageRevisionCount pkg
+                ]
+              productVersion =
+                T.pack (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S%QZ"
+                  (ME.serviceStorefrontPackageUpdatedAt pkg))
+              checkoutExpiry = addUTCTime (24 * 60 * 60) now
+
+          creationResult <- liftIO $ flip runSqlPool envPool $ do
+            mOrderIdKey <- insertUnique order
+            case mOrderIdKey of
+              Nothing -> pure Nothing
+              Just orderIdKey -> do
+                checkout <- Checkout.createCheckout Checkout.CheckoutCreation
+                  { Checkout.ccDomainType = "mixing_mastering"
+                  , Checkout.ccDomainOrderId = toPathPiece orderIdKey
+                  , Checkout.ccEnvironment = checkoutEnvironment
+                  , Checkout.ccCurrency = ME.serviceStorefrontPackageCurrency pkg
+                  , Checkout.ccAmountMinor = fromIntegral (ME.serviceStorefrontPackagePriceUsdCents pkg)
+                  , Checkout.ccCustomerEmail = buyerEmail
+                  , Checkout.ccLookupTokenHash = hashLookupToken lookupToken
+                  , Checkout.ccIdempotencyKey = idempotencyKey
+                  , Checkout.ccExpiresAt = checkoutExpiry
+                  , Checkout.ccProductType = "service_storefront_package"
+                  , Checkout.ccProductId = toPathPiece packageId
+                  , Checkout.ccProductVersion = productVersion
+                  , Checkout.ccDescription = ME.serviceStorefrontPackageName pkg
+                  , Checkout.ccSnapshot = checkoutSnapshot
+                  , Checkout.ccCorrelationId = "service-order-create:" <> orderNumber
+                  }
+                checkoutUuid <- maybe
+                  (fail "Checkout store generated an invalid UUID")
+                  pure
+                  (fromText (Checkout.checkoutReferenceId checkout))
+                update orderIdKey
+                  [ME.ServiceStorefrontOrderCheckoutId =. Just checkoutUuid]
+                _ <- insert ME.ServiceStorefrontOrderStatusChange
+                  { ME.serviceStorefrontOrderStatusChangeOrderId = orderIdKey
+                  , ME.serviceStorefrontOrderStatusChangeStatus = "awaiting_payment"
+                  , ME.serviceStorefrontOrderStatusChangeNotes = Just "Order and canonical checkout created"
+                  , ME.serviceStorefrontOrderStatusChangeChangedBy = Just "system"
+                  , ME.serviceStorefrontOrderStatusChangeCreatedAt = now
+                  }
+                pure (Just (orderIdKey, checkoutUuid))
+          case creationResult of
             Nothing -> do
               raced <- liftIO $ flip runSqlPool envPool $
                 getBy (ME.UniqueServiceStorefrontOrderCreateIdempotency (Just idempotencyKey))
               maybe (throwError err409 { errBody = "Order creation conflicted; retry with the same idempotency key" })
                 (replayExistingOrder requestHash) raced
-            Just orderIdKey -> do
-              _ <- liftIO $ flip runSqlPool envPool $ insert ME.ServiceStorefrontOrderStatusChange
-                { ME.serviceStorefrontOrderStatusChangeOrderId = orderIdKey
-                , ME.serviceStorefrontOrderStatusChangeStatus = "awaiting_payment"
-                , ME.serviceStorefrontOrderStatusChangeNotes = Just "Order created"
-                , ME.serviceStorefrontOrderStatusChangeChangedBy = Just "system"
-                , ME.serviceStorefrontOrderStatusChangeCreatedAt = now
-                }
-              pure (orderToDTOWithLookupToken (Just lookupToken) orderIdKey order)
+            Just (orderIdKey, checkoutUuid) ->
+              pure (orderToDTOWithLookupToken (Just lookupToken) orderIdKey
+                order { ME.serviceStorefrontOrderCheckoutId = Just checkoutUuid })
 
     replayExistingOrder requestHash (Entity oid existing)
       | ME.serviceStorefrontOrderCreateRequestSha256 existing == Just requestHash =
@@ -235,7 +301,7 @@ createDatafastCheckoutHandler orderIdText mLookupToken = do
       requireOrderLookupToken mLookupToken order
       -- Verify order is in a payable state
       let status = ME.serviceStorefrontOrderStatus order
-      when (status `notElem` ["awaiting_payment", "pending_payment", "payment_failed"]) $
+      when (status `notElem` ["awaiting_payment", "pending_payment", "payment_failed", "datafast_pending"]) $
         throwError err400 { errBody = "Order is not in a payable state" }
       
       let totalCents = ME.serviceStorefrontOrderPriceUsdCents order
@@ -243,22 +309,49 @@ createDatafastCheckoutHandler orderIdText mLookupToken = do
           buyerName = ME.serviceStorefrontOrderBuyerName order
           buyerEmail = ME.serviceStorefrontOrderBuyerEmail order
           buyerPhone = ME.serviceStorefrontOrderBuyerPhone order
+
+      dfEnv <- loadServiceDatafastEnv
+      (checkout, attempt) <- beginCanonicalPaymentAttempt
+        oid order (sdfEnvironment dfEnv) Checkout.ProviderDatafast
+        Checkout.OperationCreate (sdfEntityId dfEnv) "create"
       
       (checkoutId, widgetUrl) <- case (status, ME.serviceStorefrontOrderDatafastCheckoutId order) of
         ("datafast_pending", Just existingCheckoutId) -> do
-          dfEnv <- loadServiceDatafastEnv
           let baseUrlClean = stripTrailingSlash (sdfBaseUrl dfEnv)
           pure (existingCheckoutId, baseUrlClean ++ "/v1/paymentWidgets.js?checkoutId=" ++ T.unpack existingCheckoutId)
         _ -> requestDatafastCheckoutForService
           (toPathPiece oid) totalCents currency buyerName buyerEmail buyerPhone
+          `catchError` failCanonicalPaymentAttempt
+            checkout attempt Checkout.ProviderDatafast "datafast_checkout_create"
       
-      -- Update order with Datafast info
-      liftIO $ flip runSqlPool envPool $ update oid
-        [ ME.ServiceStorefrontOrderStatus =. "datafast_pending"
-        , ME.ServiceStorefrontOrderPaymentProvider =. Just "datafast"
-        , ME.ServiceStorefrontOrderDatafastCheckoutId =. Just checkoutId
-        , ME.ServiceStorefrontOrderUpdatedAt =. now
-        ]
+      bindingResult <- liftIO $ flip runSqlPool envPool $ do
+        result <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
+          { Checkout.pbcAttempt = attempt
+          , Checkout.pbcCheckout = checkout
+          , Checkout.pbcProvider = Checkout.ProviderDatafast
+          , Checkout.pbcEnvironment = sdfEnvironment dfEnv
+          , Checkout.pbcMerchantRef = sdfEntityId dfEnv
+          , Checkout.pbcResourceType = "checkout"
+          , Checkout.pbcProviderResource = checkoutId
+          , Checkout.pbcResourcePath = Just ("/v1/checkouts/" <> checkoutId)
+          , Checkout.pbcOrderReference = toPathPiece oid
+          , Checkout.pbcAmountMinor = fromIntegral totalCents
+          , Checkout.pbcCurrency = currency
+          , Checkout.pbcStage = Checkout.AttemptRequiresCustomerAction
+          , Checkout.pbcOccurredAt = now
+          , Checkout.pbcCorrelationId = paymentCorrelationId oid "datafast" "create"
+          }
+        case result of
+          Left message -> pure (Left message)
+          Right () -> do
+            update oid
+              [ ME.ServiceStorefrontOrderStatus =. "datafast_pending"
+              , ME.ServiceStorefrontOrderPaymentProvider =. Just "datafast"
+              , ME.ServiceStorefrontOrderDatafastCheckoutId =. Just checkoutId
+              , ME.ServiceStorefrontOrderUpdatedAt =. now
+              ]
+            pure (Right ())
+      either (throwError . providerValidationError) pure bindingResult
       
       pure DatafastCheckoutDTO
         { dcOrderId    = ME.serviceStorefrontOrderOrderNumber order
@@ -285,50 +378,126 @@ confirmDatafastStatusHandler mOrderId mResourcePath mLookupToken = do
         validateDatafastOrderResourcePath
           (ME.serviceStorefrontOrderDatafastCheckoutId order)
           resourcePathTxt
-      paymentStatus <- checkDatafastPaymentStatus resourcePath
-      now <- liftIO getCurrentTime
-      let resultCode = sdfpsResultCode paymentStatus
-          providerSuccess = isDatafastPaymentSuccess resultCode
-          providerPending = resultCode == "000.200.000"
-      when providerSuccess $
-        either (throwError . providerValidationError) pure $
-          validateDatafastSuccessfulPayment
-            (toPathPiece oid)
-            (ME.serviceStorefrontOrderPriceUsdCents order)
-            (ME.serviceStorefrontOrderCurrency order)
-            paymentStatus
-      let alreadyPaid = ME.serviceStorefrontOrderStatus order == "paid"
-          newStatus
-            | alreadyPaid = "paid"
-            | providerSuccess = "paid"
-            | providerPending = "datafast_pending"
-            | otherwise = "payment_failed"
-          paidAt
-            | alreadyPaid = ME.serviceStorefrontOrderPaidAt order
-            | providerSuccess = Just now
-            | otherwise = Nothing
-          providerPaymentId = sdfpsPaymentId paymentStatus
-      liftIO $ flip runSqlPool envPool $ update oid
-        [ ME.ServiceStorefrontOrderStatus =. newStatus
-        , ME.ServiceStorefrontOrderDatafastResourcePath =. Just resourcePath
-        , ME.ServiceStorefrontOrderDatafastPaymentId =. (providerPaymentId <|> ME.serviceStorefrontOrderDatafastPaymentId order)
-        , ME.ServiceStorefrontOrderPaidAt =. paidAt
-        , ME.ServiceStorefrontOrderUpdatedAt =. now
-        ]
-      when (newStatus /= ME.serviceStorefrontOrderStatus order) $ do
-        let statusChange = ME.ServiceStorefrontOrderStatusChange
-              { ME.serviceStorefrontOrderStatusChangeOrderId = oid
-              , ME.serviceStorefrontOrderStatusChangeStatus = newStatus
-              , ME.serviceStorefrontOrderStatusChangeNotes = Just $ "Datafast server verification result: " <> resultCode
-              , ME.serviceStorefrontOrderStatusChangeChangedBy = Just "datafast_server_verification"
-              , ME.serviceStorefrontOrderStatusChangeCreatedAt = now
-              }
-        _ <- liftIO $ flip runSqlPool envPool $ insert statusChange
-        pure ()
-      mUpdated <- liftIO $ flip runSqlPool envPool $ get oid
-      case mUpdated of
-        Nothing -> throwError err500 { errBody = "Failed to load updated order" }
-        Just updated -> pure (orderToDTO oid updated)
+      if isServicePaymentConfirmed order
+        then pure (orderToDTO oid order)
+        else do
+          dfEnv <- loadServiceDatafastEnv
+          paymentStatus <- checkDatafastPaymentStatus resourcePath
+          now <- liftIO getCurrentTime
+          let resultCode = sdfpsResultCode paymentStatus
+              providerSuccess = isDatafastPaymentSuccess (sdfEnvironment dfEnv) resultCode
+              providerPending = resultCode == "000.200.000"
+              totalCents = ME.serviceStorefrontOrderPriceUsdCents order
+              currency = ME.serviceStorefrontOrderCurrency order
+          result <- if providerSuccess
+            then do
+              let validation = validateDatafastSuccessfulPayment
+                    (toPathPiece oid) totalCents currency paymentStatus
+                  actualAmount = sdfpsAmount paymentStatus >>= either (const Nothing) Just . parseDatafastCents
+              paymentId <- maybe
+                (pure resourcePath)
+                pure
+                (sdfpsPaymentId paymentStatus)
+              (checkout, attempt) <- beginCanonicalPaymentAttempt
+                oid order (sdfEnvironment dfEnv) Checkout.ProviderDatafast
+                Checkout.OperationCapture (sdfEntityId dfEnv) "capture"
+              case validation of
+                Left message -> providerVerificationMismatch
+                  checkout attempt Checkout.ProviderDatafast (sdfEnvironment dfEnv)
+                  (sdfEntityId dfEnv) (toPathPiece oid) paymentId
+                  (fromIntegral totalCents) (fromIntegral <$> actualAmount)
+                  currency message
+                Right () -> pure ()
+              liftIO $ flip runSqlPool envPool $ do
+                binding <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
+                  { Checkout.pbcAttempt = attempt
+                  , Checkout.pbcCheckout = checkout
+                  , Checkout.pbcProvider = Checkout.ProviderDatafast
+                  , Checkout.pbcEnvironment = sdfEnvironment dfEnv
+                  , Checkout.pbcMerchantRef = sdfEntityId dfEnv
+                  , Checkout.pbcResourceType = "payment"
+                  , Checkout.pbcProviderResource = paymentId
+                  , Checkout.pbcResourcePath = Just resourcePath
+                  , Checkout.pbcOrderReference = toPathPiece oid
+                  , Checkout.pbcAmountMinor = fromIntegral totalCents
+                  , Checkout.pbcCurrency = currency
+                  , Checkout.pbcStage = Checkout.AttemptProcessing
+                  , Checkout.pbcOccurredAt = now
+                  , Checkout.pbcCorrelationId = paymentCorrelationId oid "datafast" "capture"
+                  }
+                case binding of
+                  Left message -> pure (Left message)
+                  Right () -> do
+                    verified <- Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+                      { Checkout.vpAttempt = attempt
+                      , Checkout.vpCheckout = checkout
+                      , Checkout.vpProvider = Checkout.ProviderDatafast
+                      , Checkout.vpEnvironment = sdfEnvironment dfEnv
+                      , Checkout.vpMerchantRef = sdfEntityId dfEnv
+                      , Checkout.vpResourceType = "payment"
+                      , Checkout.vpProviderResource = paymentId
+                      , Checkout.vpOrderReference = toPathPiece oid
+                      , Checkout.vpAmountMinor = fromIntegral totalCents
+                      , Checkout.vpCurrency = currency
+                      , Checkout.vpEvidence = "server_to_server"
+                      , Checkout.vpOccurredAt = now
+                      , Checkout.vpCorrelationId = paymentCorrelationId oid "datafast" "capture"
+                      }
+                    case verified of
+                      Left message -> pure (Left message)
+                      Right newlyPaid -> do
+                        when newlyPaid $ do
+                          update oid
+                            [ ME.ServiceStorefrontOrderStatus =. "paid"
+                            , ME.ServiceStorefrontOrderDatafastResourcePath =. Just resourcePath
+                            , ME.ServiceStorefrontOrderDatafastPaymentId =. Just paymentId
+                            , ME.ServiceStorefrontOrderPaidAt =. Just now
+                            , ME.ServiceStorefrontOrderUpdatedAt =. now
+                            ]
+                          insertServiceStatusChange oid "paid"
+                            ("Datafast server verification result: " <> resultCode)
+                            "datafast_server_verification" now
+                        pure (Right ())
+            else if providerPending
+              then do
+                (checkout, attempt) <- beginCanonicalPaymentAttempt
+                  oid order (sdfEnvironment dfEnv) Checkout.ProviderDatafast
+                  Checkout.OperationCreate (sdfEntityId dfEnv) "create"
+                liftIO $ flip runSqlPool envPool $ do
+                  Checkout.recordPaymentProcessing checkout attempt Checkout.ProviderDatafast
+                    (paymentCorrelationId oid "datafast" "status") now
+                  update oid
+                    [ ME.ServiceStorefrontOrderStatus =. "datafast_pending"
+                    , ME.ServiceStorefrontOrderDatafastResourcePath =. Just resourcePath
+                    , ME.ServiceStorefrontOrderUpdatedAt =. now
+                    ]
+                  pure (Right ())
+              else do
+                (checkout, attempt) <- beginCanonicalPaymentAttempt
+                  oid order (sdfEnvironment dfEnv) Checkout.ProviderDatafast
+                  Checkout.OperationCapture (sdfEntityId dfEnv) "capture"
+                liftIO $ flip runSqlPool envPool $ do
+                  Checkout.recordPaymentFailure checkout attempt Checkout.ProviderDatafast
+                    ("datafast_" <> resultCode)
+                    (paymentCorrelationId oid "datafast" "status") now
+                  update oid
+                    [ ME.ServiceStorefrontOrderStatus =. "payment_failed"
+                    , ME.ServiceStorefrontOrderDatafastResourcePath =. Just resourcePath
+                    , ME.ServiceStorefrontOrderDatafastPaymentId =.
+                        (sdfpsPaymentId paymentStatus <|>
+                          ME.serviceStorefrontOrderDatafastPaymentId order)
+                    , ME.ServiceStorefrontOrderUpdatedAt =. now
+                    ]
+                  when (ME.serviceStorefrontOrderStatus order /= "payment_failed") $
+                    insertServiceStatusChange oid "payment_failed"
+                      ("Datafast server verification result: " <> resultCode)
+                      "datafast_server_verification" now
+                  pure (Right ())
+          either (throwError . providerValidationError) pure result
+          mUpdated <- liftIO $ flip runSqlPool envPool $ get oid
+          case mUpdated of
+            Nothing -> throwError err500 { errBody = "Failed to load updated order" }
+            Just updated -> pure (orderToDTO oid updated)
 
 createPaypalOrderHandler :: Text -> Maybe Text -> AppM PaypalCreateDTO
 createPaypalOrderHandler orderIdText mLookupToken = do
@@ -344,29 +513,56 @@ createPaypalOrderHandler orderIdText mLookupToken = do
       requireOrderLookupToken mLookupToken order
       -- Verify order is in a payable state
       let status = ME.serviceStorefrontOrderStatus order
-      when (status `notElem` ["awaiting_payment", "pending_payment", "payment_failed"]) $
+      when (status `notElem` ["awaiting_payment", "pending_payment", "payment_failed", "paypal_pending"]) $
         throwError err400 { errBody = "Order is not in a payable state" }
       
       let totalCents = ME.serviceStorefrontOrderPriceUsdCents order
           currency = ME.serviceStorefrontOrderCurrency order
           buyerName = ME.serviceStorefrontOrderBuyerName order
           buyerEmail = ME.serviceStorefrontOrderBuyerEmail order
+
+      (cid, sec, baseUrl, paypalEnvironment, merchantRef) <- loadPaypalEnvForService
+      (checkout, attempt) <- beginCanonicalPaymentAttempt
+        oid order paypalEnvironment Checkout.ProviderPayPal
+        Checkout.OperationCreate merchantRef "create"
       
       (ppOrderId, approvalUrl) <- case (status, ME.serviceStorefrontOrderPaypalOrderId order) of
         ("paypal_pending", Just existingOrderId) -> pure (existingOrderId, Nothing)
         _ -> do
-          (cid, sec, baseUrl) <- loadPaypalEnvForService
           manager <- liftIO newTlsManager
           createPaypalOrderRemoteForService
             manager cid sec baseUrl (toPathPiece oid) totalCents currency buyerName buyerEmail
+            `catchError` failCanonicalPaymentAttempt
+              checkout attempt Checkout.ProviderPayPal "paypal_order_create"
       
-      -- Update order with PayPal info
-      liftIO $ flip runSqlPool envPool $ update oid
-        [ ME.ServiceStorefrontOrderStatus =. "paypal_pending"
-        , ME.ServiceStorefrontOrderPaymentProvider =. Just "paypal"
-        , ME.ServiceStorefrontOrderPaypalOrderId =. Just ppOrderId
-        , ME.ServiceStorefrontOrderUpdatedAt =. now
-        ]
+      bindingResult <- liftIO $ flip runSqlPool envPool $ do
+        result <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
+          { Checkout.pbcAttempt = attempt
+          , Checkout.pbcCheckout = checkout
+          , Checkout.pbcProvider = Checkout.ProviderPayPal
+          , Checkout.pbcEnvironment = paypalEnvironment
+          , Checkout.pbcMerchantRef = merchantRef
+          , Checkout.pbcResourceType = "order"
+          , Checkout.pbcProviderResource = ppOrderId
+          , Checkout.pbcResourcePath = Just ("/v2/checkout/orders/" <> ppOrderId)
+          , Checkout.pbcOrderReference = toPathPiece oid
+          , Checkout.pbcAmountMinor = fromIntegral totalCents
+          , Checkout.pbcCurrency = currency
+          , Checkout.pbcStage = Checkout.AttemptRequiresCustomerAction
+          , Checkout.pbcOccurredAt = now
+          , Checkout.pbcCorrelationId = paymentCorrelationId oid "paypal" "create"
+          }
+        case result of
+          Left message -> pure (Left message)
+          Right () -> do
+            update oid
+              [ ME.ServiceStorefrontOrderStatus =. "paypal_pending"
+              , ME.ServiceStorefrontOrderPaymentProvider =. Just "paypal"
+              , ME.ServiceStorefrontOrderPaypalOrderId =. Just ppOrderId
+              , ME.ServiceStorefrontOrderUpdatedAt =. now
+              ]
+            pure (Right ())
+      either (throwError . providerValidationError) pure bindingResult
       
       pure PaypalCreateDTO
         { pcOrderId = ME.serviceStorefrontOrderOrderNumber order
@@ -378,63 +574,144 @@ capturePaypalHandler :: Maybe Text -> ServiceStorefrontPaypalCaptureReq -> AppM 
 capturePaypalHandler mLookupToken ServiceStorefrontPaypalCaptureReq{..} = do
   Env{..} <- ask
   now <- liftIO getCurrentTime
-  
-  -- Load order by order number
   mEntity <- liftIO $ flip runSqlPool envPool $
     getBy (ME.UniqueServiceStorefrontOrderNumber pcCaptureOrderId)
   case mEntity of
     Nothing -> throwError err404 { errBody = "Order not found" }
     Just (Entity oid order) -> do
       requireOrderLookupToken mLookupToken order
-      -- Verify PayPal order ID matches
       case ME.serviceStorefrontOrderPaypalOrderId order of
         Nothing -> throwError err400 { errBody = "Order has no PayPal order" }
         Just storedPpOrderId | storedPpOrderId /= pcCapturePaypalId ->
           throwError err400 { errBody = "PayPal order ID mismatch" }
         _ -> pure ()
-      if ME.serviceStorefrontOrderStatus order == "paid"
+      if isServicePaymentConfirmed order
         then pure (orderToDTO oid order)
         else do
-      
-          (cid, sec, baseUrl) <- loadPaypalEnvForService
+          (cid, sec, baseUrl, paypalEnvironment, merchantRef) <- loadPaypalEnvForService
+          (checkout, attempt) <- beginCanonicalPaymentAttempt
+            oid order paypalEnvironment Checkout.ProviderPayPal
+            Checkout.OperationCapture merchantRef "capture"
           manager <- liftIO newTlsManager
-      
-      -- Capture PayPal order
           captureOutcome <- capturePaypalOrderRemoteForService
             manager cid sec baseUrl pcCapturePaypalId
-          when (spcoStatus captureOutcome == "COMPLETED") $
-            either (throwError . providerValidationError) pure $
-              validatePaypalSuccessfulCapture
-                (toPathPiece oid)
-                (ME.serviceStorefrontOrderPriceUsdCents order)
-                (ME.serviceStorefrontOrderCurrency order)
-                captureOutcome
-          let nextStatus
+            `catchError` failCanonicalPaymentAttempt
+              checkout attempt Checkout.ProviderPayPal "paypal_capture"
+          when (spcoStatus captureOutcome == "COMPLETED") $ do
+            let validation = validatePaypalSuccessfulCapture
+                  (toPathPiece oid)
+                  (ME.serviceStorefrontOrderPriceUsdCents order)
+                  (ME.serviceStorefrontOrderCurrency order)
+                  merchantRef
+                  captureOutcome
+                actualAmount = spcoAmount captureOutcome >>= either (const Nothing) Just . parseDatafastCents
+                providerReference = fromMaybe pcCapturePaypalId (spcoCaptureId captureOutcome)
+            case validation of
+              Left message -> providerVerificationMismatch
+                checkout attempt Checkout.ProviderPayPal paypalEnvironment merchantRef
+                (toPathPiece oid) providerReference
+                (fromIntegral (ME.serviceStorefrontOrderPriceUsdCents order))
+                (fromIntegral <$> actualAmount)
+                (ME.serviceStorefrontOrderCurrency order) message
+              Right () -> pure ()
+          let nextStatus :: Text
+              nextStatus
                 | spcoStatus captureOutcome == "COMPLETED" = "paid"
                 | spcoStatus captureOutcome `elem` ["APPROVED", "PENDING"] = "paypal_pending"
                 | otherwise = "payment_failed"
-              paidAt
-                | nextStatus == "paid" = Just now
-                | otherwise = Nothing
-      
-          liftIO $ flip runSqlPool envPool $ update oid
-            [ ME.ServiceStorefrontOrderStatus =. nextStatus
-            , ME.ServiceStorefrontOrderPaypalCaptureId =. (spcoCaptureId captureOutcome <|> ME.serviceStorefrontOrderPaypalCaptureId order)
-            , ME.ServiceStorefrontOrderPaypalPayerEmail =. (spcoPayerEmail captureOutcome <|> ME.serviceStorefrontOrderPaypalPayerEmail order)
-            , ME.ServiceStorefrontOrderPaidAt =. paidAt
-            , ME.ServiceStorefrontOrderUpdatedAt =. now
-            ]
-      
-          when (nextStatus /= ME.serviceStorefrontOrderStatus order) $ do
-            let statusChange = ME.ServiceStorefrontOrderStatusChange
-                  { ME.serviceStorefrontOrderStatusChangeOrderId = oid
-                  , ME.serviceStorefrontOrderStatusChangeStatus = nextStatus
-                  , ME.serviceStorefrontOrderStatusChangeNotes = Just $ "PayPal server capture: " <> spcoStatus captureOutcome
-                  , ME.serviceStorefrontOrderStatusChangeChangedBy = Just "paypal_server_capture"
-                  , ME.serviceStorefrontOrderStatusChangeCreatedAt = now
+
+          result <- case nextStatus of
+            "paid" -> do
+              captureId <- maybe
+                (throwError (providerValidationError "PayPal capture ID is required"))
+                pure
+                (spcoCaptureId captureOutcome)
+              liftIO $ flip runSqlPool envPool $ do
+                binding <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
+                  { Checkout.pbcAttempt = attempt
+                  , Checkout.pbcCheckout = checkout
+                  , Checkout.pbcProvider = Checkout.ProviderPayPal
+                  , Checkout.pbcEnvironment = paypalEnvironment
+                  , Checkout.pbcMerchantRef = merchantRef
+                  , Checkout.pbcResourceType = "capture"
+                  , Checkout.pbcProviderResource = captureId
+                  , Checkout.pbcResourcePath = Just
+                      ("/v2/checkout/orders/" <> pcCapturePaypalId <> "/capture")
+                  , Checkout.pbcOrderReference = toPathPiece oid
+                  , Checkout.pbcAmountMinor = fromIntegral
+                      (ME.serviceStorefrontOrderPriceUsdCents order)
+                  , Checkout.pbcCurrency = ME.serviceStorefrontOrderCurrency order
+                  , Checkout.pbcStage = Checkout.AttemptProcessing
+                  , Checkout.pbcOccurredAt = now
+                  , Checkout.pbcCorrelationId = paymentCorrelationId oid "paypal" "capture"
                   }
-            _ <- liftIO $ flip runSqlPool envPool $ insert statusChange
-            pure ()
+                case binding of
+                  Left message -> pure (Left message)
+                  Right () -> do
+                    verified <- Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+                      { Checkout.vpAttempt = attempt
+                      , Checkout.vpCheckout = checkout
+                      , Checkout.vpProvider = Checkout.ProviderPayPal
+                      , Checkout.vpEnvironment = paypalEnvironment
+                      , Checkout.vpMerchantRef = merchantRef
+                      , Checkout.vpResourceType = "capture"
+                      , Checkout.vpProviderResource = captureId
+                      , Checkout.vpOrderReference = toPathPiece oid
+                      , Checkout.vpAmountMinor = fromIntegral
+                          (ME.serviceStorefrontOrderPriceUsdCents order)
+                      , Checkout.vpCurrency = ME.serviceStorefrontOrderCurrency order
+                      , Checkout.vpEvidence = "server_to_server"
+                      , Checkout.vpOccurredAt = now
+                      , Checkout.vpCorrelationId = paymentCorrelationId oid "paypal" "capture"
+                      }
+                    case verified of
+                      Left message -> pure (Left message)
+                      Right newlyPaid -> do
+                        when newlyPaid $ do
+                          update oid
+                            [ ME.ServiceStorefrontOrderStatus =. "paid"
+                            , ME.ServiceStorefrontOrderPaypalCaptureId =. Just captureId
+                            , ME.ServiceStorefrontOrderPaypalPayerEmail =.
+                                (spcoPayerEmail captureOutcome <|>
+                                  ME.serviceStorefrontOrderPaypalPayerEmail order)
+                            , ME.ServiceStorefrontOrderPaidAt =. Just now
+                            , ME.ServiceStorefrontOrderUpdatedAt =. now
+                            ]
+                          insertServiceStatusChange oid "paid"
+                            ("PayPal server capture: " <> spcoStatus captureOutcome)
+                            "paypal_server_capture" now
+                        pure (Right ())
+            "paypal_pending" -> do
+              liftIO $ flip runSqlPool envPool $ do
+                Checkout.recordPaymentProcessing checkout attempt Checkout.ProviderPayPal
+                  (paymentCorrelationId oid "paypal" "capture") now
+                update oid
+                  [ ME.ServiceStorefrontOrderStatus =. "paypal_pending"
+                  , ME.ServiceStorefrontOrderPaypalPayerEmail =.
+                      (spcoPayerEmail captureOutcome <|>
+                        ME.serviceStorefrontOrderPaypalPayerEmail order)
+                  , ME.ServiceStorefrontOrderUpdatedAt =. now
+                  ]
+                when (ME.serviceStorefrontOrderStatus order /= "paypal_pending") $
+                  insertServiceStatusChange oid "paypal_pending"
+                    ("PayPal server capture: " <> spcoStatus captureOutcome)
+                    "paypal_server_capture" now
+                pure (Right ())
+            _ -> do
+              liftIO $ flip runSqlPool envPool $ do
+                Checkout.recordPaymentFailure checkout attempt Checkout.ProviderPayPal
+                  ("paypal_" <> T.toLower (spcoStatus captureOutcome))
+                  (paymentCorrelationId oid "paypal" "capture") now
+                update oid
+                  [ ME.ServiceStorefrontOrderStatus =. "payment_failed"
+                  , ME.ServiceStorefrontOrderUpdatedAt =. now
+                  ]
+                when (ME.serviceStorefrontOrderStatus order /= "payment_failed") $
+                  insertServiceStatusChange oid "payment_failed"
+                    ("PayPal server capture: " <> spcoStatus captureOutcome)
+                    "paypal_server_capture" now
+                pure (Right ())
+          either (throwError . providerValidationError) pure result
           mUpdated <- liftIO $ flip runSqlPool envPool $ get oid
           case mUpdated of
             Nothing -> throwError err500 { errBody = "Failed to load updated order" }
@@ -460,20 +737,26 @@ selectManualPaymentHandler orderIdText mLookupToken ServiceStorefrontManualPayme
       when (ME.serviceStorefrontOrderStatus order `notElem`
               ["awaiting_payment", "pending_payment", "payment_failed", "awaiting_manual_confirmation"]) $
         throwError err409 { errBody = "Order is not awaiting payment" }
+      let provider = case methodName of
+            "bank_transfer" -> Checkout.ProviderBankTransfer
+            "cash" -> Checkout.ProviderCash
+            _ -> Checkout.ProviderPos
+      checkoutEnvironment <- loadConfiguredCheckoutEnvironment
+      (checkout, attempt) <- beginCanonicalPaymentAttempt
+        oid order checkoutEnvironment provider Checkout.OperationManualVerify
+        "tdf-manual-settlement" ("manual-" <> methodName)
       liftIO $ flip runSqlPool envPool $ do
+        Checkout.recordManualPaymentSelection checkout attempt provider
+          (paymentCorrelationId oid methodName "manual-selection") now
         update oid
           [ ME.ServiceStorefrontOrderStatus =. "awaiting_manual_confirmation"
           , ME.ServiceStorefrontOrderPaymentProvider =. Just methodName
           , ME.ServiceStorefrontOrderUpdatedAt =. now
           ]
-        _ <- insert ME.ServiceStorefrontOrderStatusChange
-          { ME.serviceStorefrontOrderStatusChangeOrderId = oid
-          , ME.serviceStorefrontOrderStatusChangeStatus = "awaiting_manual_confirmation"
-          , ME.serviceStorefrontOrderStatusChangeNotes = Just ("Customer selected " <> methodName <> "; staff verification required")
-          , ME.serviceStorefrontOrderStatusChangeChangedBy = Just "customer"
-          , ME.serviceStorefrontOrderStatusChangeCreatedAt = now
-          }
-        pure ()
+        when (ME.serviceStorefrontOrderStatus order /= "awaiting_manual_confirmation") $
+          insertServiceStatusChange oid "awaiting_manual_confirmation"
+            ("Customer selected " <> methodName <> "; staff verification required")
+            "customer" now
       mUpdated <- liftIO $ flip runSqlPool envPool $ get oid
       maybe (throwError err500 { errBody = "Failed to load updated order" })
         (pure . orderToDTO oid) mUpdated
@@ -544,6 +827,13 @@ updateOrderAdminHandler orderIdText ServiceStorefrontOrderUpdate{..} = do
   case mEntity of
     Nothing -> throwError err404 { errBody = "Order not found" }
     Just (Entity oid order) -> do
+      case ssouStatus of
+        Just nextStatus ->
+          either (throwError . badRequestText) pure $
+            validateServiceFulfillmentTransition
+              (ME.serviceStorefrontOrderStatus order)
+              nextStatus
+        Nothing -> pure ()
       let updatedOrder = order
             { ME.serviceStorefrontOrderStatus = fromMaybe (ME.serviceStorefrontOrderStatus order) ssouStatus
             , ME.serviceStorefrontOrderDeliverablesUrl = maybe (ME.serviceStorefrontOrderDeliverablesUrl order) Just ssouDeliverablesUrl
@@ -553,7 +843,7 @@ updateOrderAdminHandler orderIdText ServiceStorefrontOrderUpdate{..} = do
       liftIO $ flip runSqlPool envPool $ do
         -- Insert status change if status changed
         case ssouStatus of
-          Just newStatus -> do
+          Just newStatus | newStatus /= ME.serviceStorefrontOrderStatus order -> do
             let statusChange = ME.ServiceStorefrontOrderStatusChange
                   { ME.serviceStorefrontOrderStatusChangeOrderId = oid
                   , ME.serviceStorefrontOrderStatusChangeStatus = newStatus
@@ -563,7 +853,7 @@ updateOrderAdminHandler orderIdText ServiceStorefrontOrderUpdate{..} = do
                   }
             _ <- insert statusChange
             pure ()
-          Nothing -> pure ()
+          _ -> pure ()
         replace oid updatedOrder
       pure (orderToDTO oid updatedOrder)
 
@@ -719,6 +1009,41 @@ validatePackageOrder priceCents currency minSongs maxSongs requestedSongs
       Left ("Song count must be between " <> T.pack (show minSongs) <> " and " <> T.pack (show maxSongs))
   | otherwise = Right requestedSongs
 
+validateServiceFulfillmentTransition :: Text -> Text -> Either Text ()
+validateServiceFulfillmentTransition rawCurrent rawNext
+  | current == next = Right ()
+  | (current, next) `elem` allowedTransitions = Right ()
+  | next `elem` paymentManagedStatuses =
+      Left "Payment states are provider/manual-verification managed and cannot be set by the generic admin update"
+  | otherwise = Left ("Invalid service fulfillment transition from " <> current <> " to " <> next)
+  where
+    current = T.toLower (T.strip rawCurrent)
+    next = T.toLower (T.strip rawNext)
+    allowedTransitions =
+      [ ("paid", "in_progress")
+      , ("in_progress", "v1_delivered")
+      , ("v1_delivered", "revisions")
+      , ("v1_delivered", "approved")
+      , ("revisions", "v1_delivered")
+      , ("revisions", "approved")
+      , ("approved", "delivered")
+      , ("delivered", "completed")
+      ]
+    paymentManagedStatuses =
+      [ "awaiting_payment", "pending_payment", "datafast_pending", "paypal_pending"
+      , "awaiting_manual_confirmation", "payment_failed", "paid"
+      , "partially_refunded", "refunded", "disputed", "chargeback"
+      ]
+
+isServicePaymentConfirmed :: ME.ServiceStorefrontOrder -> Bool
+isServicePaymentConfirmed order =
+  ME.serviceStorefrontOrderPaidAt order /= Nothing
+    || ME.serviceStorefrontOrderStatus order `elem`
+      [ "paid", "in_progress", "v1_delivered", "revisions", "approved"
+      , "delivered", "completed", "partially_refunded", "refunded"
+      , "disputed", "chargeback"
+      ]
+
 isPlausibleEmail :: Text -> Bool
 isPlausibleEmail email =
   not (T.null email)
@@ -758,6 +1083,127 @@ requireOrderLookupToken mRawToken order =
       , TE.encodeUtf8 expectedHash `constEq` TE.encodeUtf8 (hashLookupToken rawToken) -> pure ()
     _ -> throwError err404 { errBody = "Order not found" }
 
+loadConfiguredCheckoutEnvironment :: AppM Checkout.CheckoutEnvironment
+loadConfiguredCheckoutEnvironment = do
+  rawEnvironment <- liftIO $ lookupEnv "COMMERCE_CHECKOUT_ENV"
+  either (throwError . configurationError) pure
+    (Checkout.resolveCheckoutEnvironment rawEnvironment)
+
+configurationError :: Text -> ServerError
+configurationError message =
+  err500 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+beginCanonicalPaymentAttempt
+  :: ME.ServiceStorefrontOrderId
+  -> ME.ServiceStorefrontOrder
+  -> Checkout.CheckoutEnvironment
+  -> Checkout.PaymentProvider
+  -> Checkout.PaymentOperation
+  -> Text
+  -> Text
+  -> AppM (Checkout.CheckoutReference, Checkout.PaymentAttemptReference)
+beginCanonicalPaymentAttempt orderId order providerEnvironment provider operation merchantRef suffix = do
+  Env{..} <- ask
+  checkoutUuid <- maybe
+    (throwError err409 { errBody = "Order is not linked to a canonical checkout; staff reconciliation is required" })
+    pure
+    (ME.serviceStorefrontOrderCheckoutId order)
+  let checkout = Checkout.CheckoutReference (toText checkoutUuid)
+      correlationId = paymentCorrelationId orderId (Checkout.paymentProviderText provider) suffix
+  storedEnvironment <- liftIO (flip runSqlPool envPool (Checkout.loadCheckoutEnvironment checkout))
+    >>= either (throwError . providerValidationError) pure
+  unless (storedEnvironment == providerEnvironment) $
+    throwError err503
+      { errBody = "Configured provider environment does not match this immutable checkout" }
+  domainEnabled <- liftIO $ flip runSqlPool envPool $
+    Checkout.domainEnabledForEnvironment storedEnvironment "mixing_mastering"
+  unless domainEnabled $
+    throwError err503
+      { errBody = "Mixing/mastering checkout is disabled for this environment" }
+  enabled <- liftIO $ flip runSqlPool envPool $
+    Checkout.providerEnabledForEnvironment storedEnvironment provider
+  unless enabled $
+    throwError err503
+      { errBody = "Payment provider is disabled for this checkout environment" }
+  now <- liftIO getCurrentTime
+  result <- liftIO $ flip runSqlPool envPool $
+    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+      { Checkout.pacCheckout = checkout
+      , Checkout.pacProvider = provider
+      , Checkout.pacEnvironment = storedEnvironment
+      , Checkout.pacOperation = operation
+      , Checkout.pacAmountMinor = fromIntegral (ME.serviceStorefrontOrderPriceUsdCents order)
+      , Checkout.pacCurrency = ME.serviceStorefrontOrderCurrency order
+      , Checkout.pacMerchantRef = merchantRef
+      , Checkout.pacIdempotencyKey = correlationId
+      , Checkout.pacCreatedAt = now
+      , Checkout.pacCorrelationId = correlationId
+      }
+  attempt <- either (throwError . providerValidationError) pure result
+  pure (checkout, attempt)
+
+failCanonicalPaymentAttempt
+  :: Checkout.CheckoutReference
+  -> Checkout.PaymentAttemptReference
+  -> Checkout.PaymentProvider
+  -> Text
+  -> ServerError
+  -> AppM a
+failCanonicalPaymentAttempt checkout attempt provider failureCode providerError = do
+  Env{..} <- ask
+  now <- liftIO getCurrentTime
+  liftIO $ flip runSqlPool envPool $
+    Checkout.recordPaymentFailure
+      checkout attempt provider failureCode
+      ("provider-error:" <> Checkout.paymentAttemptReferenceId attempt)
+      now
+  throwError providerError
+
+providerVerificationMismatch
+  :: Checkout.CheckoutReference
+  -> Checkout.PaymentAttemptReference
+  -> Checkout.PaymentProvider
+  -> Checkout.CheckoutEnvironment
+  -> Text
+  -> Text
+  -> Text
+  -> Int64
+  -> Maybe Int64
+  -> Text
+  -> Text
+  -> AppM a
+providerVerificationMismatch checkout attempt provider environment merchantRef internalRef providerRef expectedAmount actualAmount currency message = do
+  Env{..} <- ask
+  now <- liftIO getCurrentTime
+  liftIO $ flip runSqlPool envPool $ do
+    Checkout.recordPaymentFailure checkout attempt provider "provider_verification_mismatch"
+      ("provider-verification:" <> Checkout.paymentAttemptReferenceId attempt) now
+    Checkout.recordReconciliationException
+      provider environment merchantRef "provider_verification_mismatch"
+      internalRef providerRef expectedAmount actualAmount currency now
+  throwError (providerValidationError message)
+
+paymentCorrelationId :: ME.ServiceStorefrontOrderId -> Text -> Text -> Text
+paymentCorrelationId orderId provider suffix =
+  "service-storefront:" <> toPathPiece orderId <> ":" <> provider <> ":" <> suffix
+
+insertServiceStatusChange
+  :: ME.ServiceStorefrontOrderId
+  -> Text
+  -> Text
+  -> Text
+  -> UTCTime
+  -> SqlPersistT IO ()
+insertServiceStatusChange orderId status notes changedBy createdAt = do
+  _ <- insert ME.ServiceStorefrontOrderStatusChange
+    { ME.serviceStorefrontOrderStatusChangeOrderId = orderId
+    , ME.serviceStorefrontOrderStatusChangeStatus = status
+    , ME.serviceStorefrontOrderStatusChangeNotes = Just notes
+    , ME.serviceStorefrontOrderStatusChangeChangedBy = Just changedBy
+    , ME.serviceStorefrontOrderStatusChangeCreatedAt = createdAt
+    }
+  pure ()
+
 validateDatafastOrderResourcePath :: Maybe Text -> Text -> Either Text Text
 validateDatafastOrderResourcePath mCheckoutId rawResourcePath = do
   checkoutId <- maybe (Left "Order does not have a Datafast checkout to confirm") Right mCheckoutId
@@ -783,7 +1229,31 @@ data ServiceDatafastEnv = ServiceDatafastEnv
   , sdfBearerToken :: Text
   , sdfBaseUrl     :: String
   , sdfTestMode    :: Maybe Text
+  , sdfEnvironment :: Checkout.CheckoutEnvironment
   } deriving (Show)
+
+validateDatafastEnvironmentBase
+  :: Checkout.CheckoutEnvironment
+  -> String
+  -> Either Text ()
+validateDatafastEnvironmentBase environment rawBaseUrl = do
+  let baseUrl = T.toLower (T.strip (T.pack rawBaseUrl))
+      mAfterScheme = T.stripPrefix "https://" baseUrl
+      authority = maybe "" (T.takeWhile (`notElem` ("/?#" :: String))) mAfterScheme
+      suffix = maybe "" (T.dropWhile (`notElem` ("/?#" :: String))) mAfterScheme
+      validSuffix = T.null suffix || suffix == "/"
+      validAuthority = not (T.null authority)
+        && not ("@" `T.isInfixOf` authority)
+        && not (":" `T.isInfixOf` authority)
+      isOppwa = authority == "oppwa.com" || ".oppwa.com" `T.isSuffixOf` authority
+      isTest = "test.oppwa.com" `T.isSuffixOf` authority
+  unless (mAfterScheme /= Nothing && validAuthority && validSuffix && isOppwa) $
+    Left "DATAFAST_BASE_URL must be an HTTPS oppwa.com endpoint"
+  case environment of
+    Checkout.CheckoutSandbox ->
+      unless isTest (Left "DATAFAST_ENV=sandbox requires a test.oppwa.com endpoint")
+    Checkout.CheckoutProduction ->
+      when isTest (Left "DATAFAST_ENV=production cannot use a test.oppwa.com endpoint")
 
 -- | Load Datafast environment from env vars.
 loadServiceDatafastEnv :: AppM ServiceDatafastEnv
@@ -792,15 +1262,21 @@ loadServiceDatafastEnv = do
   mBearer <- liftIO $ lookupEnv "DATAFAST_BEARER_TOKEN"
   mBase   <- liftIO $ lookupEnv "DATAFAST_BASE_URL"
   mTest   <- liftIO $ lookupEnv "DATAFAST_TEST_MODE"
+  mEnvironment <- liftIO $ lookupEnv "DATAFAST_ENV"
   entityId <- maybe (throwError err500 { errBody = "DATAFAST_ENTITY_ID not set" }) (pure . T.pack) mEntity
   bearer   <- maybe (throwError err500 { errBody = "DATAFAST_BEARER_TOKEN not set" }) (pure . T.pack) mBearer
   baseUrl  <- maybe (throwError err500 { errBody = "DATAFAST_BASE_URL not set" }) (pure) mBase
+  environment <- either (throwError . configurationError) pure
+    (Checkout.resolveCheckoutEnvironment mEnvironment)
+  either (throwError . configurationError) pure
+    (validateDatafastEnvironmentBase environment baseUrl)
   let testMode = T.pack <$> mTest
   pure ServiceDatafastEnv
     { sdfEntityId = entityId
     , sdfBearerToken = bearer
     , sdfBaseUrl = baseUrl
     , sdfTestMode = testMode
+    , sdfEnvironment = environment
     }
 
 -- | Request a Datafast checkout session for a service order.
@@ -852,9 +1328,10 @@ requestDatafastCheckoutForService txnId totalCents currency name email mPhone = 
       let mCheckoutId = extractCheckoutId dfResp
           mResultCode = extractResultCode dfResp
       case mResultCode of
-        Just code | not (isSuccessCode code) ->
+        Just code | isDatafastCheckoutCreationSuccess code -> pure ()
+        Just code ->
           throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Datafast rejected checkout: " <> code)) }
-        _ -> pure ()
+        Nothing -> throwError err502 { errBody = "Datafast checkout response omitted the result code" }
       checkoutId <- maybe (throwError err502 { errBody = "No checkout ID in response" }) pure mCheckoutId
       unless (isProviderReference checkoutId) $
         throwError err502 { errBody = "Datafast returned an invalid checkout ID" }
@@ -920,12 +1397,16 @@ extractResultCode (Object obj) = case KM.lookup "result" obj of
 extractResultCode _ = Nothing
 
 -- | Check if a Datafast result code indicates success.
-isSuccessCode :: Text -> Bool
-isSuccessCode code = code `elem` ["000.000.000", "000.100.110", "000.200.000"]
+isDatafastCheckoutCreationSuccess :: Text -> Bool
+isDatafastCheckoutCreationSuccess code = T.strip code == "000.200.100"
 
-isDatafastPaymentSuccess :: Text -> Bool
-isDatafastPaymentSuccess code =
-  "000.000" `T.isPrefixOf` code || "000.100" `T.isPrefixOf` code
+isDatafastPaymentSuccess :: Checkout.CheckoutEnvironment -> Text -> Bool
+isDatafastPaymentSuccess environment rawCode =
+  case environment of
+    Checkout.CheckoutProduction -> code == "000.000.000"
+    Checkout.CheckoutSandbox -> code `elem` ["000.100.110", "000.100.112"]
+  where
+    code = T.strip rawCode
 
 providerValidationError :: Text -> ServerError
 providerValidationError message =
@@ -1000,18 +1481,25 @@ stripTrailingSlash s = if not (null s) && last s == '/' then init s else s
 -- ============================================================================
 
 -- | Load PayPal environment configuration.
-loadPaypalEnvForService :: AppM (Text, Text, String)
+loadPaypalEnvForService
+  :: AppM (Text, Text, String, Checkout.CheckoutEnvironment, Text)
 loadPaypalEnvForService = do
   mCid <- liftIO $ lookupEnv "PAYPAL_CLIENT_ID"
   mSecret <- liftIO $ lookupEnv "PAYPAL_CLIENT_SECRET"
   mEnv <- liftIO $ lookupEnv "PAYPAL_ENV"
+  mMerchant <- liftIO $ lookupEnv "PAYPAL_MERCHANT_ID"
   cid <- maybe (throwError err500 { errBody = "PAYPAL_CLIENT_ID not set" }) (pure . T.pack) mCid
   secret <- maybe (throwError err500 { errBody = "PAYPAL_CLIENT_SECRET not set" }) (pure . T.pack) mSecret
-  let baseUrl = case mEnv of
-        Just "sandbox" -> "https://api-m.sandbox.paypal.com"
-        Just "live"    -> "https://api-m.paypal.com"
-        _              -> "https://api-m.sandbox.paypal.com"
-  pure (cid, secret, baseUrl)
+  environment <- either (throwError . configurationError) pure
+    (Checkout.resolveCheckoutEnvironment mEnv)
+  merchantRef <- case T.strip . T.pack <$> mMerchant of
+    Just value | isProviderReference value -> pure value
+    _ -> throwError err500
+      { errBody = "PAYPAL_MERCHANT_ID must be configured with the provider merchant account ID" }
+  let baseUrl = case environment of
+        Checkout.CheckoutSandbox -> "https://api-m.sandbox.paypal.com"
+        Checkout.CheckoutProduction -> "https://api-m.paypal.com"
+  pure (cid, secret, baseUrl, environment, merchantRef)
 
 -- | Get PayPal access token.
 paypalAccessTokenForService :: Manager -> Text -> Text -> String -> AppM Text
@@ -1093,6 +1581,7 @@ data ServicePaypalCaptureOutcome = ServicePaypalCaptureOutcome
   , spcoAmount          :: Maybe Text
   , spcoCurrency        :: Maybe Text
   , spcoInternalOrderId :: Maybe Text
+  , spcoMerchantId      :: Maybe Text
   } deriving (Show)
 
 -- | Capture a PayPal order remotely and retain the fields required for binding.
@@ -1116,31 +1605,37 @@ capturePaypalOrderRemoteForService manager cid sec baseUrl ppOrderId = do
     throwError err502 { errBody = "PayPal capture failed." }
   case eitherDecode (responseBody resp) of
     Left err -> throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid PayPal capture response: " <> T.pack err)) }
-    Right (Object obj) -> do
-      let captureStatus = case KM.lookup "status" obj of
-            Just (String s) -> s
-            _ -> "UNKNOWN"
-      let payerEmail = case KM.lookup "payer" obj of
-            Just (Object payerObj) -> case KM.lookup "email_address" payerObj of
-              Just (String e) -> Just e
-              _ -> Nothing
-            _ -> Nothing
-          purchaseUnit = firstObject "purchase_units" obj
-          captureObject = purchaseUnit >>= firstObject "payments" >>= firstObject "captures"
-          captureId = captureObject >>= lookupObjectText "id"
-          amountObject = captureObject >>= lookupObject "amount"
-          capturedValue = amountObject >>= lookupObjectText "value"
-          capturedCurrency = amountObject >>= lookupObjectText "currency_code"
-          internalOrderId = purchaseUnit >>= lookupObjectText "custom_id"
-      pure ServicePaypalCaptureOutcome
-        { spcoStatus = captureStatus
-        , spcoPayerEmail = payerEmail
-        , spcoCaptureId = captureId
-        , spcoAmount = capturedValue
-        , spcoCurrency = capturedCurrency
-        , spcoInternalOrderId = internalOrderId
-        }
-    _ -> throwError err502 { errBody = "Invalid PayPal capture response format" }
+    Right value -> either
+      (throwError . providerValidationError)
+      pure
+      (parsePaypalCaptureOutcome value)
+
+parsePaypalCaptureOutcome :: Value -> Either Text ServicePaypalCaptureOutcome
+parsePaypalCaptureOutcome (Object obj) =
+  let payerEmail = case KM.lookup "payer" obj of
+        Just (Object payerObj) -> case KM.lookup "email_address" payerObj of
+          Just (String email) -> Just email
+          _ -> Nothing
+        _ -> Nothing
+      purchaseUnit = onlyObject "purchase_units" obj
+      captureObject = purchaseUnit >>= lookupObject "payments" >>= onlyObject "captures"
+      captureStatus = fromMaybe "UNKNOWN" (captureObject >>= lookupObjectText "status")
+      captureId = captureObject >>= lookupObjectText "id"
+      amountObject = captureObject >>= lookupObject "amount"
+      capturedValue = amountObject >>= lookupObjectText "value"
+      capturedCurrency = amountObject >>= lookupObjectText "currency_code"
+      internalOrderId = purchaseUnit >>= lookupObjectText "custom_id"
+      merchantId = purchaseUnit >>= lookupObject "payee" >>= lookupObjectText "merchant_id"
+  in Right ServicePaypalCaptureOutcome
+    { spcoStatus = captureStatus
+    , spcoPayerEmail = payerEmail
+    , spcoCaptureId = captureId
+    , spcoAmount = capturedValue
+    , spcoCurrency = capturedCurrency
+    , spcoInternalOrderId = internalOrderId
+    , spcoMerchantId = merchantId
+    }
+parsePaypalCaptureOutcome _ = Left "Invalid PayPal capture response format"
 
 -- | Extract approval URL from PayPal order response.
 extractPaypalApprovalUrl :: Aeson.Object -> AppM (Maybe Text)
@@ -1167,29 +1662,31 @@ lookupObjectText key obj = case KM.lookup (AesonKey.fromText key) obj of
   Just (String value) -> Just value
   _ -> Nothing
 
-firstObject :: Text -> Aeson.Object -> Maybe Aeson.Object
-firstObject key obj = case KM.lookup (AesonKey.fromText key) obj of
+onlyObject :: Text -> Aeson.Object -> Maybe Aeson.Object
+onlyObject key obj = case KM.lookup (AesonKey.fromText key) obj of
   Just (Array values) -> case foldr (:) [] values of
-    Object value : _ -> Just value
+    [Object value] -> Just value
     _ -> Nothing
-  Just (Object value) -> Just value
   _ -> Nothing
 
 validatePaypalSuccessfulCapture
   :: Text
   -> Int
   -> Text
+  -> Text
   -> ServicePaypalCaptureOutcome
   -> Either Text ()
-validatePaypalSuccessfulCapture expectedOrderId expectedCents expectedCurrency outcome = do
+validatePaypalSuccessfulCapture expectedOrderId expectedCents expectedCurrency expectedMerchant outcome = do
   captureId <- maybe (Left "PayPal response did not include a capture ID") (Right . T.strip) (spcoCaptureId outcome)
   capturedCents <- maybe (Left "PayPal response did not include a captured amount") parseDatafastCents (spcoAmount outcome)
   capturedCurrency <- maybe (Left "PayPal response did not include a captured currency") (Right . T.toUpper . T.strip) (spcoCurrency outcome)
   customId <- maybe (Left "PayPal response did not include the internal order binding") (Right . T.strip) (spcoInternalOrderId outcome)
+  merchantId <- maybe (Left "PayPal response did not include the payee merchant ID") (Right . T.strip) (spcoMerchantId outcome)
   unless (not (T.null captureId) && T.length captureId <= 128) (Left "PayPal capture ID is invalid")
   unless (capturedCents == expectedCents) (Left "PayPal captured amount does not match the immutable order total")
   unless (capturedCurrency == T.toUpper (T.strip expectedCurrency)) (Left "PayPal captured currency does not match the immutable order currency")
   unless (customId == expectedOrderId) (Left "PayPal custom_id does not match the internal order")
+  unless (merchantId == T.strip expectedMerchant) (Left "PayPal payee merchant ID does not match the configured merchant")
 
 isProviderReference :: Text -> Bool
 isProviderReference value =

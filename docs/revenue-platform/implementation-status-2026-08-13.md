@@ -21,10 +21,20 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
 - Datafast service confirmation binds the internal order, stored checkout resource, amount,
   currency, entity, and merchant transaction reference before accepting the provider status.
 - PayPal service checkout uses Orders v2 create/capture, binds `custom_id`/`invoice_id`, amount and
-  currency, and supplies a request id for retry safety. Browser return alone does not mark payment
-  successful.
-- Manual bank transfer remains `awaiting_manual_confirmation`. Stripe returns an explicit
+  currency and configured payee merchant ID, and supplies a request id for retry safety. Browser
+  return alone does not mark payment successful.
+- Every newly created mixing/mastering order now creates, in the same database transaction, one
+  canonical checkout and immutable line-item snapshot. Datafast/PayPal initiation and capture use
+  canonical attempts and immutable provider bindings. A server-verified payment atomically posts a
+  balanced service-revenue ledger transaction, one payment receipt and the separate domain payment
+  state. A second succeeded attempt is rejected.
+- Provider amount, currency, order, resource, environment or merchant mismatches remain unpaid and
+  create a deduplicated reconciliation exception. Manual bank transfer/cash/POS selection creates a
+  review record and remains `awaiting_manual_confirmation`. Stripe returns an explicit
   capability-unavailable response instead of `501` or success.
+- Service-storefront administration now requires strict Admin access. Its generic order updater can
+  advance only the fulfillment lifecycle; it cannot manufacture paid, refund, dispute or chargeback
+  states.
 - The public Records page no longer installs a demo/admin bearer token. It uses the existing public
   booking path.
 - Provider-neutral persistence exists for immutable checkout snapshots, attempts and provider
@@ -58,6 +68,8 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
 
 - Production Datafast and PayPal execution until merchant credentials, webhook/callback semantics,
   sandbox evidence, reconciliation ownership, and production authorization are verified.
+- Production mixing/mastering checkout through its independent `commerce.mixing_mastering` database
+  kill switch, in addition to the provider-specific switches.
 - Datafast recurrence, tokenization, authorization/capture, installments, and refunds unless the
   specific merchant contract confirms them.
 - PayPal subscriptions and Payouts; they are different products from PayPal Checkout.
@@ -89,16 +101,19 @@ The following requested domains remain future phases and must not be represented
 
 ## Compatibility and data migration
 
-All migrations are additive. Legacy orders and provider references are preserved. The checkout
-foundation provides `legacy_unreconciled` linkage rather than inferring payment from ambiguous
-history. Rollbacks refuse to remove schemas after material checkout, product approval,
-distribution, royalty, or payout evidence exists. No existing record was backfilled or rewritten in
-this branch; production dry-run counts still require a read-only staging/production snapshot.
+All forward migrations are additive. Legacy service orders and provider references are preserved;
+the read-only `service_storefront_checkout_backfill_report` classifies them as `linked`,
+`safe_unpaid_candidate`, or `requires_reconciliation` without creating a checkout or inferring
+payment. Its rollback is available before runtime links exist and refuses to remove the linkage once
+any service order references a canonical checkout. Other rollbacks likewise refuse to remove schemas
+after material checkout, product approval, distribution, royalty, or payout evidence exists. No
+existing record was backfilled or rewritten in this branch; production dry-run counts still require
+a read-only staging/production snapshot.
 
 ## Release conclusion
 
 This branch is suitable for a draft review and an isolated migration/application staging exercise.
-It is not production-ready and does not satisfy the full multi-phase definition of done. The next
-safe implementation slice is to wire one low-risk domain into the canonical checkout/event/ledger
-model, complete signed provider webhooks and refunds, then prove reconciliation in provider
-sandboxes before broadening storefronts.
+It is not production-ready and does not satisfy the full multi-phase definition of done. One
+low-risk domain—mixing/mastering—is now wired into the canonical checkout/receipt/ledger model. The
+next safe slice is signed provider event ingestion and refunds followed by sandbox reconciliation,
+before broadening checkout to marketplace sales or additional storefronts.

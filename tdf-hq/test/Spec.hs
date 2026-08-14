@@ -100,6 +100,7 @@ import TDF.CampaignAutomation
       validateCampaignAutomationDailyLimit,
       validateCampaignAutomationStatus )
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
+import qualified TDF.Commerce.CheckoutStore as CheckoutStore
 import qualified TDF.Commerce.StateMachine as Commerce
 import qualified TDF.Distribution.StateMachine as Distribution
 import qualified TDF.Catalog.CountryReferenceSeed as CountrySeed
@@ -784,6 +785,121 @@ main = hspec $ do
             ServiceStorefront.validateIdempotencyKey Nothing `shouldSatisfy` isLeft
             ServiceStorefront.validateIdempotencyKey (Just "too-short") `shouldSatisfy` isLeft
             ServiceStorefront.validateIdempotencyKey (Just "invalid key with spaces") `shouldSatisfy` isLeft
+
+        it "defaults checkout configuration to sandbox and requires an explicit valid production value" $ do
+            CheckoutStore.resolveCheckoutEnvironment Nothing
+              `shouldBe` Right CheckoutStore.CheckoutSandbox
+            CheckoutStore.resolveCheckoutEnvironment (Just " production ")
+              `shouldBe` Right CheckoutStore.CheckoutProduction
+            CheckoutStore.resolveCheckoutEnvironment (Just "staging")
+              `shouldSatisfy` isLeft
+
+        it "binds Datafast environment declarations to the configured gateway host" $ do
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutSandbox
+              "https://eu-test.oppwa.com"
+              `shouldBe` Right ()
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutProduction
+              "https://eu-prod.oppwa.com"
+              `shouldBe` Right ()
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutProduction
+              "https://eu-test.oppwa.com"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutSandbox
+              "http://eu-test.oppwa.com"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutSandbox
+              "https://eu-test.oppwa.com.attacker.example"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutSandbox
+              "https://eu-test.oppwa.com@attacker.example"
+              `shouldSatisfy` isLeft
+
+        it "accepts only documented Datafast success codes for the immutable environment" $ do
+            ServiceStorefront.isDatafastCheckoutCreationSuccess "000.200.100"
+              `shouldBe` True
+            ServiceStorefront.isDatafastCheckoutCreationSuccess "000.200.000"
+              `shouldBe` False
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutProduction "000.000.000"
+              `shouldBe` True
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutProduction "000.100.110"
+              `shouldBe` False
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutSandbox "000.100.110"
+              `shouldBe` True
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutSandbox "000.100.112"
+              `shouldBe` True
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutSandbox "000.100.999"
+              `shouldBe` False
+
+        it "uses the nested PayPal capture status rather than the order status" $ do
+            let pendingPayload = A.object
+                  [ "status" .= ("COMPLETED" :: Text)
+                  , "purchase_units" .=
+                      [ A.object
+                          [ "custom_id" .= ("internal-order" :: Text)
+                          , "payee" .= A.object ["merchant_id" .= ("MERCHANT" :: Text)]
+                          , "payments" .= A.object
+                              [ "captures" .=
+                                  [ A.object
+                                      [ "id" .= ("CAPTURE-1" :: Text)
+                                      , "status" .= ("PENDING" :: Text)
+                                      , "amount" .= A.object
+                                          [ "value" .= ("80.00" :: Text)
+                                          , "currency_code" .= ("USD" :: Text)
+                                          ]
+                                      ]
+                                  ]
+                              ]
+                          ]
+                      ]
+                  ]
+            case ServiceStorefront.parsePaypalCaptureOutcome pendingPayload of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right outcome -> do
+                ServiceStorefront.spcoStatus outcome `shouldBe` "PENDING"
+                ServiceStorefront.spcoCaptureId outcome `shouldBe` Just "CAPTURE-1"
+
+        it "rejects ambiguous multi-capture PayPal responses" $ do
+            let capture captureId = A.object
+                  [ "id" .= (captureId :: Text)
+                  , "status" .= ("COMPLETED" :: Text)
+                  ]
+                ambiguousPayload = A.object
+                  [ "status" .= ("COMPLETED" :: Text)
+                  , "purchase_units" .=
+                      [ A.object
+                          [ "payments" .= A.object
+                              [ "captures" .= [capture "CAPTURE-1", capture "CAPTURE-2"] ]
+                          ]
+                      ]
+                  ]
+            case ServiceStorefront.parsePaypalCaptureOutcome ambiguousPayload of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right outcome -> do
+                ServiceStorefront.spcoStatus outcome `shouldBe` "UNKNOWN"
+                ServiceStorefront.spcoCaptureId outcome `shouldBe` Nothing
+
+        it "keeps payment states outside the generic service admin updater" $ do
+            ServiceStorefront.validateServiceFulfillmentTransition "paid" "in_progress"
+              `shouldBe` Right ()
+            ServiceStorefront.validateServiceFulfillmentTransition "in_progress" "v1_delivered"
+              `shouldBe` Right ()
+            ServiceStorefront.validateServiceFulfillmentTransition "awaiting_payment" "paid"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateServiceFulfillmentTransition "paid" "refunded"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateServiceFulfillmentTransition "paid" "completed"
+              `shouldSatisfy` isLeft
 
     describe "provider-neutral checkout state machine" $ do
         let verifiedPayment = Commerce.PaymentVerification

@@ -51,6 +51,7 @@ executable tdf-hq-exe
     TDF.Artists.Enrichment
     TDF.Auth
     TDF.CampaignAutomation
+    TDF.Commerce.CheckoutStore
     TDF.Commerce.StateMachine
     TDF.Config
     TDF.Cron
@@ -250,6 +251,7 @@ test-suite tdf-hq-test
     TDF.Artists.EnrichmentSpec
     TDF.Auth
     TDF.CampaignAutomation
+    TDF.Commerce.CheckoutStore
     TDF.Commerce.StateMachine
     TDF.Config
     TDF.Cors

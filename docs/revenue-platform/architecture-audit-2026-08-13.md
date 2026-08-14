@@ -41,6 +41,22 @@ The complete endpoint/surface mapping, including auth, pricing, tax, idempotency
 payment state, fulfillment, refunds, reconciliation, and public access, is in
 [`endpoint-inventory.csv`](endpoint-inventory.csv).
 
+## Implemented delta after the audited baseline
+
+The first domain-linked runtime slice now covers new mixing/mastering orders. Order creation and its
+immutable canonical checkout snapshot are one transaction. Datafast/PayPal operations persist
+idempotent attempts and immutable resource bindings; only server verification with matching
+environment, merchant, internal order, provider resource, amount and currency can post payment.
+Posting creates one balanced ledger transaction and one receipt while fulfillment remains separate.
+Manual selection remains under review. Provider mismatches create reconciliation exceptions, strict
+Admin is required for service administration, and the generic admin update cannot set financial
+states.
+
+Historical service orders are not silently linked. The migration exposes a read-only classification
+of safe unpaid candidates versus records requiring evidence-preserving reconciliation; it performs
+no backfill. Production Datafast/PayPal remain disabled, and signed event ingestion, refunds and
+sandbox proof remain later work.
+
 ## Validated known findings
 
 1. `MixingMasteringPage.tsx` sends Datafast, PayPal, and bank transfer through the same
@@ -118,14 +134,15 @@ The enforceable transition tables and invariants are in [`formal-model.yaml`](fo
 
 Existing server payment variables are `DATAFAST_ENTITY_ID`, `DATAFAST_BEARER_TOKEN`,
 `DATAFAST_BASE_URL`, `DATAFAST_TEST_MODE`, `DATAFAST_MID`, `DATAFAST_TID`, `DATAFAST_PSERV`,
-`DATAFAST_USER_DATA2`, `DATAFAST_VERSIONDF`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`,
-`PAYPAL_ENV`, `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, and `STRIPE_WEBHOOK_SECRET`.
+`DATAFAST_USER_DATA2`, `DATAFAST_VERSIONDF`, `DATAFAST_ENV`, `COMMERCE_CHECKOUT_ENV`,
+`PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_ENV`, `PAYPAL_MERCHANT_ID`,
+`STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, and `STRIPE_WEBHOOK_SECRET`.
 Frontend/mobile public configuration includes `VITE_API_BASE`, `EXPO_PUBLIC_API_BASE`, Stripe
-publishable/merchant identifiers, `VITE_CARDANO_ADDRESS`, and the unsafe legacy
-`VITE_PUBLIC_BOOKING_TOKEN`/`VITE_API_DEMO_TOKEN` pair.
+publishable/merchant identifiers, and `VITE_CARDANO_ADDRESS`. Browser bearer configuration was
+removed in Phase 0 and must not be reintroduced.
 
-Missing explicit boundaries to add are provider enabled/mode variables, PayPal webhook ID, Datafast
-notification verification/capability configuration, private object-storage bucket/region/endpoint
+Missing explicit boundaries to add are PayPal webhook ID, Datafast notification
+verification/capability configuration, private object-storage bucket/region/endpoint
 and credential references, malware-scanner configuration, signed-link keys, per-partner credential
 references, DDEX mode, and payout enable/approval gates. Secret values belong in the deployment
 secret manager only. Provider payloads, access tokens, raw card data, protected asset URLs, KYC/tax
@@ -197,10 +214,13 @@ The accepted ADRs are:
 
 ## Feature flags and phased rollout
 
-Every flag is independently killable. New flags default `false` outside local/test unless stated:
+Every flag is independently killable. The canonical runtime flags are rows in
+`revenue_feature_flag`, keyed by environment; production rows default to disabled. Environment
+variables select immutable sandbox/production configuration but do not override a disabled
+production capability:
 
-- providers: `CHECKOUT_DATAFAST_ENABLED`, `CHECKOUT_PAYPAL_ENABLED`,
-  `CHECKOUT_STRIPE_ENABLED`, `MANUAL_PAYMENT_ENABLED`, `CARDANO_VERIFICATION_ENABLED`;
+- implemented keys: `checkout.datafast`, `checkout.paypal`, `commerce.mixing_mastering`; planned provider/domain keys
+  must use the same registry rather than introducing an untracked environment-only bypass;
 - domains: `COMMERCE_MIXING_ENABLED`, `COMMERCE_EQUIPMENT_SALES_ENABLED`,
   `COMMERCE_RENTALS_ENABLED`, `COMMERCE_BOOKINGS_ENABLED`, `COMMERCE_DOMO_ENABLED`,
   `COMMERCE_COURSES_ENABLED`, `COMMERCE_TICKETS_ENABLED`, `COMMERCE_TIPS_ENABLED`,
