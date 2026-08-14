@@ -101,6 +101,8 @@ import TDF.CampaignAutomation
       validateCampaignAutomationStatus )
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
 import qualified TDF.Commerce.CheckoutStore as CheckoutStore
+import qualified TDF.Commerce.ProviderEventStore as ProviderEventStore
+import qualified TDF.Commerce.RefundStore as RefundStore
 import qualified TDF.Commerce.StateMachine as Commerce
 import qualified TDF.Distribution.StateMachine as Distribution
 import qualified TDF.Catalog.CountryReferenceSeed as CountrySeed
@@ -888,6 +890,114 @@ main = hspec $ do
               Right outcome -> do
                 ServiceStorefront.spcoStatus outcome `shouldBe` "UNKNOWN"
                 ServiceStorefront.spcoCaptureId outcome `shouldBe` Nothing
+
+        it "preserves the exact raw webhook event in PayPal verification requests" $ do
+            let now = UTCTime (fromGregorian 2026 8 14) (secondsToDiffTime (12 * 60 * 60 + 60))
+                rawEvent = "{\"id\":\"WH-1\", \"event_type\":\"PAYMENT.CAPTURE.COMPLETED\",\"create_time\":\"2026-08-14T12:00:00Z\",\"resource\":{}}"
+                expected = "{\"transmission_id\":\"transmission-1\",\"transmission_time\":\"2026-08-14T12:00:00Z\",\"cert_url\":\"https://api-m.sandbox.paypal.com/certs/cert.pem\",\"auth_algo\":\"SHA256withRSA\",\"transmission_sig\":\"signature-1\",\"webhook_id\":\"webhook-1\",\"webhook_event\":"
+                    <> rawEvent <> "}"
+            case ServiceStorefront.validatePaypalWebhookHeaders
+                    now
+                    (Just "transmission-1")
+                    (Just "2026-08-14T12:00:00Z")
+                    (Just "https://api-m.sandbox.paypal.com/certs/cert.pem")
+                    (Just "SHA256withRSA")
+                    (Just "signature-1") of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right headers ->
+                ServiceStorefront.buildPaypalWebhookVerificationBody
+                  "webhook-1" headers rawEvent `shouldBe` expected
+
+        it "rejects stale, future, and unsupported PayPal webhook headers" $ do
+            let now = UTCTime (fromGregorian 2026 8 14) (secondsToDiffTime (12 * 60 * 60))
+            ProviderEventStore.validateProviderEventTimestamp
+              now (addUTCTime (negate (4 * 24 * 60 * 60 + 1)) now)
+              `shouldSatisfy` isLeft
+            ProviderEventStore.validateProviderEventTimestamp
+              now (addUTCTime (5 * 60 + 1) now)
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validatePaypalWebhookHeaders
+              now
+              (Just "transmission-1")
+              (Just "2026-08-14T12:00:00Z")
+              (Just "https://api-m.sandbox.paypal.com/certs/cert.pem")
+              (Just "SHA1withRSA")
+              (Just "signature-1")
+              `shouldSatisfy` isLeft
+
+        it "requires exact amount, currency, merchant, and order webhook bindings" $ do
+            let bound = ServiceStorefront.BoundPaypalCapture
+                  { ServiceStorefront.bpcCheckoutId = "00000000-0000-4000-8000-000000000001"
+                  , ServiceStorefront.bpcAttemptId = "00000000-0000-4000-8000-000000000002"
+                  , ServiceStorefront.bpcDomainOrderId = "00000000-0000-4000-8000-000000000003"
+                  , ServiceStorefront.bpcExpectedAmount = 8000
+                  , ServiceStorefront.bpcCurrency = "USD"
+                  , ServiceStorefront.bpcMerchantRef = "MERCHANT"
+                  , ServiceStorefront.bpcPaypalOrderId = "ORDER-1"
+                  }
+                capture = ServiceStorefront.PaypalWebhookCapture
+                  { ServiceStorefront.pwcCaptureId = "CAPTURE-1"
+                  , ServiceStorefront.pwcStatus = "COMPLETED"
+                  , ServiceStorefront.pwcAmount = "80.00"
+                  , ServiceStorefront.pwcCurrency = "USD"
+                  , ServiceStorefront.pwcMerchantId = "MERCHANT"
+                  , ServiceStorefront.pwcPaypalOrderId = "ORDER-1"
+                  }
+            ServiceStorefront.validatePaypalWebhookCaptureBinding
+              "MERCHANT" bound capture `shouldBe` Right ()
+            ServiceStorefront.validatePaypalWebhookCaptureBinding
+              "MERCHANT" bound capture { ServiceStorefront.pwcAmount = "79.99" }
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validatePaypalWebhookCaptureBinding
+              "MERCHANT" bound capture { ServiceStorefront.pwcCurrency = "EUR" }
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validatePaypalWebhookCaptureBinding
+              "OTHER-MERCHANT" bound capture `shouldSatisfy` isLeft
+            ServiceStorefront.validatePaypalWebhookCaptureBinding
+              "MERCHANT" bound capture { ServiceStorefront.pwcPaypalOrderId = "ORDER-2" }
+              `shouldSatisfy` isLeft
+
+        it "parses only represented PayPal refund evidence" $ do
+            let payload = A.object
+                  [ "id" .= ("REFUND-1" :: Text)
+                  , "status" .= ("COMPLETED" :: Text)
+                  , "amount" .= A.object
+                      [ "value" .= ("12.50" :: Text)
+                      , "currency_code" .= ("USD" :: Text)
+                      ]
+                  ]
+            ServiceStorefront.parsePaypalRefundOutcome payload
+              `shouldBe` Right ServiceStorefront.PaypalRefundOutcome
+                { ServiceStorefront.proRefundId = "REFUND-1"
+                , ServiceStorefront.proStatus = "COMPLETED"
+                , ServiceStorefront.proAmount = "12.50"
+                , ServiceStorefront.proCurrency = "USD"
+                }
+
+        it "never permits a requested refund above the unreserved captured balance" $ do
+            let refundBalanceProperty
+                  :: QC.Positive Int
+                  -> QC.NonNegative Int
+                  -> Bool
+                refundBalanceProperty
+                  (QC.Positive paidSeed) (QC.NonNegative refundedSeed) =
+                    let paid = fromIntegral (paidSeed `mod` 1000000 + 1) :: Int64
+                        refunded = fromIntegral
+                          (refundedSeed `mod` fromIntegral paid) :: Int64
+                        remaining = paid - refunded
+                    in RefundStore.validateRefundAmount
+                        paid refunded 0 remaining "USD" "usd" == Right ()
+                        && isLeft (RefundStore.validateRefundAmount
+                          paid refunded 0 (remaining + 1) "USD" "USD")
+            QC.property refundBalanceProperty
+
+        it "normalizes safe configured refund reason identifiers without hard-coding the catalog" $ do
+            RefundStore.validateRefundReason " Quality_Issue "
+              `shouldBe` Right "quality_issue"
+            RefundStore.validateRefundReason "refund reason"
+              `shouldSatisfy` isLeft
+            RefundStore.validateRefundReason "_internal"
+              `shouldSatisfy` isLeft
 
         it "keeps payment states outside the generic service admin updater" $ do
             ServiceStorefront.validateServiceFulfillmentTransition "paid" "in_progress"

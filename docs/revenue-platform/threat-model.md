@@ -13,9 +13,9 @@ Staff actions require least privilege and audit; a staff login does not make fin
 | Threat | Control implemented in this branch | Residual action before production |
 |---|---|---|
 | Price, quantity, tax, or fee tampering | Server package lookup, integer minor-unit snapshots, song bounds, immutable checkout lines | Wire all domains to approved product/quote versions and tax adapter |
-| Fake browser callback | Return cannot mark paid; Datafast/PayPal bindings verify provider data | Complete signature-verified inbox for both rails and secret-backed sandbox tests |
-| Callback replay/reordering | Unique event/idempotency/provider-reference constraints and pure transition rules | Runtime event worker, timestamp tolerance, retry/DLQ and provider-specific ordering tests |
-| Duplicate order/capture/refund | Client idempotency, unique provider bindings, request IDs and immutable refund model | Apply orchestration to every domain; add provider refund adapters and concurrency E2E |
+| Fake browser callback | Return cannot mark paid; Datafast/PayPal bindings verify provider data; PayPal webhook uses remote verification over exact raw bytes | Verify the PayPal contract with secret-backed sandbox tests; keep Datafast callback disabled until contracted |
+| Callback replay/reordering | Immutable encrypted PayPal inbox, event/hash dedupe, four-day/five-minute timestamp bounds, claim/retry/dead-letter state | Add operator replay endpoint/worker scheduling, alerting and credentialed delayed-event tests |
+| Duplicate order/capture/refund | Client idempotency, unique provider bindings, PayPal request IDs, checkout-locked refund reservation and immutable allocation | Apply orchestration to every domain and add provider concurrency E2E |
 | Guessing guest orders | Random lookup token stored as hash, constant-shape not-found response | Add verified-email recovery, rate limiter and abuse telemetry at ingress |
 | Raw card/secret leakage | Hosted provider model; secret values not documented; redaction boundary specified | Structured redaction tests, secret-manager rotation and log sampling in staging |
 | Privileged token in browser | Records demo/admin bearer removed | Bundle scan as a blocking CI check across all build variants |
@@ -27,7 +27,7 @@ Staff actions require least privilege and audit; a staff login does not make fin
 | Royalty report tampering | Raw checksum/version/correction lineage; normalized lines and allocations immutable | Signed partner receipt where offered, total reconciliation and dual-control report acceptance |
 | Rounding/split theft | Basis points must total exactly 100%; immutable correcting events | Currency/FX/rounding property tests on real partner fixtures |
 | Payout-account takeover | Versioned beneficiary profile, verification status, dual-control payout approval | Step-up auth, cooling period, out-of-band change notice and bank ownership verification |
-| Insider refund/price/release abuse | Approval fields, immutable economics, audit schema, requester/reviewer separation | RBAC actions, step-up auth, limits, anomaly alerts and periodic access review |
+| Insider refund/price/release abuse | Strict-admin refund endpoints, immutable economics and allocations, requester/reviewer separation, compensating ledger and credit note | Step-up auth, configurable limits, anomaly alerts and periodic access review |
 | Enumeration/rate abuse | Token capability and customer-safe response | Edge/IP/account/device throttles, CAPTCHA escalation and alert thresholds |
 | Provider/partner outage | Honest processing/unavailable states and kill flags | Circuit breaker, bounded worker retries, DLQ dashboard and rehearsed failover messaging |
 
@@ -47,8 +47,8 @@ Staff actions require least privilege and audit; a staff login does not make fin
 
 ## Abuse-test gates
 
-Before production, add an automated bundle/secret scan, webhook signature/timestamp/replay suite,
-concurrent capture/refund/hold tests, signed-URL authorization tests, malware/quarantine fixtures,
+Before production, add an automated bundle/secret scan, credentialed webhook signature/retry suite,
+concurrent HTTP capture/refund/hold tests, signed-URL authorization tests, malware/quarantine fixtures,
 role-matrix tests, beneficiary-change/cooling-period tests, and log-redaction assertions. Perform a
 staging tabletop exercise for provider compromise, account takeover, false live evidence, emergency
 takedown, reconciliation variance, and insider approval abuse.

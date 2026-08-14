@@ -1,6 +1,6 @@
 # Revenue platform implementation status
 
-Date: 2026-08-13
+Date: 2026-08-14
 
 Branch: `feat/unified-revenue-platform-20260813`
 
@@ -32,6 +32,18 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   create a deduplicated reconciliation exception. Manual bank transfer/cash/POS selection creates a
   review record and remains `awaiting_manual_confirmation`. Stripe returns an explicit
   capability-unavailable response instead of `501` or success.
+- PayPal capture webhooks are remotely signature-verified over the exact raw event, timestamp-
+  bounded, encrypted at rest, deduplicated and processed through a bounded retry/dead-letter inbox.
+  A completed capture must still match the immutable order, capture, amount, currency, environment
+  and merchant binding. Unknown events do not mutate commerce state; externally observed refund or
+  reversal events open reconciliation exceptions instead of inventing an internal refund.
+- Strict administrators can request a full or partial PayPal refund from the server-calculated
+  remaining captured balance using an active database-managed bilingual reason code. A different
+  authenticated administrator must approve it. Provider success creates immutable allocation
+  evidence, a balanced compensating ledger transaction and one credit note. Refund and webhook
+  production flags remain off.
+- Strict administrators can run read-only provider reconciliation for a paid mixing/mastering order.
+  Mismatches create deduplicated exceptions; reconciliation never edits payment or fulfillment state.
 - Service-storefront administration now requires strict Admin access. Its generic order updater can
   advance only the fulfillment lifecycle; it cannot manufacture paid, refund, dispute or chargeback
   states.
@@ -62,7 +74,7 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   accessible bilingual discovery. They disclose whether a path is checkout, request-only, private
   pilot, or unavailable and do not display invented distribution prices.
 - OpenAPI, generated web types, and the mobile generated client are synchronized for the service
-  storefront security changes.
+  storefront public checkout, webhook, refund, reconciliation, tracking, and administration contract.
 
 ## Explicitly feature-disabled
 
@@ -72,6 +84,8 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   kill switch, in addition to the provider-specific switches.
 - Datafast recurrence, tokenization, authorization/capture, installments, and refunds unless the
   specific merchant contract confirms them.
+- Datafast webhook and refund runtime; the public merchant documentation reviewed does not establish
+  an authenticated callback or refund contract for TDF's merchant capability.
 - PayPal subscriptions and Payouts; they are different products from PayPal Checkout.
 - Domo checkout until the historical and proposed rate card receives independent approval.
 - DDEX production export/delivery/takedown, DSR ingestion, statements, automatic payouts, and every
@@ -90,7 +104,7 @@ The following requested domains remain future phases and must not be represented
 - Physical shipping/pickup/returns, rental dates/deposit/custody/damage, booking deposits/balances,
   atomic course seats, and guest ticket issuance through Datafast/PayPal.
 - Mixing/mastering private object-store multipart upload, malware scanning, engineer workflow,
-  deliverable version history, revision billing, notifications, and refunds.
+  deliverable version history, revision billing, notifications, and non-PayPal refund adapters.
 - Public event detail/storefront, distribution onboarding/release wizard, staff QC consoles,
   customer catalog/submission tracking, statement UI, and admin reconciliation dashboards.
 - DDEX import-plan generation/resolution/commit, ERN rendering/download, partner transport,
@@ -115,5 +129,6 @@ a read-only staging/production snapshot.
 This branch is suitable for a draft review and an isolated migration/application staging exercise.
 It is not production-ready and does not satisfy the full multi-phase definition of done. One
 low-risk domain—mixing/mastering—is now wired into the canonical checkout/receipt/ledger model. The
-next safe slice is signed provider event ingestion and refunds followed by sandbox reconciliation,
-before broadening checkout to marketplace sales or additional storefronts.
+next safe slice is credentialed PayPal sandbox webhook/capture/refund/reconciliation evidence,
+followed by marketplace sales fulfillment and provider-neutral checkout reuse. Datafast refund or
+callback work remains blocked on a verified merchant contract.

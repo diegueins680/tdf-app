@@ -14,14 +14,26 @@ module TDF.Server.ServiceStorefront
   , validateServiceFulfillmentTransition
   , ServicePaypalCaptureOutcome(..)
   , parsePaypalCaptureOutcome
+  , PaypalWebhookEnvelope(..)
+  , PaypalWebhookHeaders(..)
+  , PaypalWebhookCapture(..)
+  , PaypalRefundOutcome(..)
+  , BoundPaypalCapture(..)
+  , parsePaypalWebhookEnvelope
+  , parsePaypalWebhookCapture
+  , validatePaypalWebhookHeaders
+  , validatePaypalWebhookCaptureBinding
+  , buildPaypalWebhookVerificationBody
+  , parsePaypalRefundOutcome
   ) where
 
 import           Control.Monad (when, unless)
 import           Control.Monad.Except (catchError)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask)
+import           Control.Exception.Safe (tryAny)
 import           Crypto.Hash (Digest, SHA256, hash)
-import           Data.Aeson (eitherDecode, FromJSON(..), Value(..), (.=), (.:), (.:?), object, withObject)
+import           Data.Aeson (Result(..), eitherDecode, FromJSON(..), Value(..), (.=), (.:), (.:?), object, withObject)
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as KM
@@ -40,8 +52,8 @@ import qualified Data.Text.Encoding as TE
 import           Data.Time (UTCTime, addUTCTime, defaultTimeLocale, formatTime, getCurrentTime)
 import           Data.UUID (UUID, fromText, toText)
 import           Data.UUID.V4 (nextRandom)
-import           Database.Persist (selectList, get, insert, insertUnique, getBy, replace, update, Entity(..), (==.), (=.), SelectOpt(..))
-import           Database.Persist.Sql (SqlPersistT, runSqlPool)
+import           Database.Persist (PersistValue(..), selectList, get, insert, insertUnique, getBy, replace, update, Entity(..), (==.), (=.), SelectOpt(..))
+import           Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
 import           Network.HTTP.Client (httpLbs, parseRequest, responseBody, responseStatus, method, requestBody, requestHeaders, Request(..), RequestBody(..), Manager)
 import           Network.HTTP.Client.TLS (newTlsManager)
 import           Network.HTTP.Types (statusCode)
@@ -52,8 +64,10 @@ import           Web.PathPieces (fromPathPiece, toPathPiece)
 import           TDF.API.ServiceStorefront (ServiceStorefrontPublicAPI, ServiceStorefrontAdminAPI)
 import           TDF.API.ServiceStorefrontTypes
 import           TDF.API.Types (DatafastCheckoutDTO(..), PaypalCreateDTO(..))
-import           TDF.Auth (AuthedUser, hasStrictAdminAccess)
+import           TDF.Auth (AuthedUser(..), hasStrictAdminAccess)
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
+import qualified TDF.Commerce.RefundStore as Refund
 import           TDF.Config (defaultCurrency, defaultLocale, supportedCurrencies)
 import           TDF.DB (Env(..))
 import           TDF.Internationalization (formatMinorUnitsDecimal, formatMoney, normalizeCurrencyCode)
@@ -74,6 +88,7 @@ serviceStorefrontPublicServer =
   :<|> confirmDatafastStatusHandler
   :<|> createPaypalOrderHandler
   :<|> capturePaypalHandler
+  :<|> paypalWebhookHandler
   :<|> selectManualPaymentHandler
   :<|> createRevisionHandler
 
@@ -85,6 +100,11 @@ serviceStorefrontAdminServer user =
   :<|> (requireAccess *> listPackagesAdminHandler)
   :<|> (\request -> requireAccess *> createPackageAdminHandler request)
   :<|> (\packageId request -> requireAccess *> updatePackageAdminHandler packageId request)
+  :<|> (\orderId -> requireAccess *> listServiceRefundsHandler orderId)
+  :<|> (\orderId idempotency request ->
+          requireAccess *> requestServiceRefundHandler user orderId idempotency request)
+  :<|> (\refundId -> requireAccess *> approveServiceRefundHandler user refundId)
+  :<|> (\orderId -> requireAccess *> reconcileServiceOrderHandler orderId)
   where
     requireAccess = unless (hasStrictAdminAccess user) $
       throwError err403 { errBody = "Strict Admin access required" }
@@ -717,6 +737,320 @@ capturePaypalHandler mLookupToken ServiceStorefrontPaypalCaptureReq{..} = do
             Nothing -> throwError err500 { errBody = "Failed to load updated order" }
             Just updated -> pure (orderToDTO oid updated)
 
+paypalWebhookHandler
+  :: Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> BL.ByteString
+  -> AppM NoContent
+paypalWebhookHandler transmissionId transmissionTime certUrl authAlgo transmissionSig rawBody = do
+  Env{..} <- ask
+  now <- liftIO getCurrentTime
+  headers <- either (throwError . badRequestText) pure $
+    validatePaypalWebhookHeaders
+      now transmissionId transmissionTime certUrl authAlgo transmissionSig
+  envelope <- either (throwError . badRequestText) pure $
+    parsePaypalWebhookEnvelope rawBody
+  (cid, sec, baseUrl, paypalEnvironment, merchantRef) <- loadPaypalEnvForService
+  webhookId <- loadRequiredSafeEnv "PAYPAL_WEBHOOK_ID" 50
+  encryptionKey <- loadProviderEventEncryptionKey
+  unless (paypalCertUrlMatchesEnvironment paypalEnvironment (pwhCertUrl headers)) $
+    throwError err400 { errBody = "PayPal certificate URL does not match the configured environment" }
+  enabled <- liftIO $ flip runSqlPool envPool $
+    Checkout.capabilityEnabledForEnvironment paypalEnvironment "checkout.paypal.webhooks"
+  unless enabled $
+    throwError err503 { errBody = "PayPal webhook processing is disabled for this environment" }
+  manager <- liftIO newTlsManager
+  signatureVerified <- verifyPaypalWebhookRemote
+    manager cid sec baseUrl webhookId headers rawBody
+  unless signatureVerified $
+    throwError err401 { errBody = "PayPal webhook signature verification failed" }
+  storedResult <- liftIO $ flip runSqlPool envPool $
+    ProviderEvent.storeVerifiedProviderEvent ProviderEvent.ProviderEventCreation
+      { ProviderEvent.pecProvider = Checkout.ProviderPayPal
+      , ProviderEvent.pecEnvironment = paypalEnvironment
+      , ProviderEvent.pecMerchantRef = merchantRef
+      , ProviderEvent.pecProviderEventId = pweEventId envelope
+      , ProviderEvent.pecEventType = pweEventType envelope
+      , ProviderEvent.pecProviderCreatedAt = Just (pweCreatedAt envelope)
+      , ProviderEvent.pecProviderResource = paypalWebhookResourceId envelope
+      , ProviderEvent.pecRawPayload = BL.toStrict rawBody
+      , ProviderEvent.pecEncryptionKey = encryptionKey
+      , ProviderEvent.pecReceivedAt = now
+      }
+  stored <- either (throwError . providerValidationError) pure storedResult
+  claim <- liftIO $ flip runSqlPool envPool $
+    ProviderEvent.claimProviderEvent (ProviderEvent.pesReference stored) now
+  case claim of
+    ProviderEvent.ProviderEventAlreadyHandled _ -> pure NoContent
+    ProviderEvent.ProviderEventBusy ->
+      throwError err503 { errBody = "Verified PayPal event is already processing or awaiting retry" }
+    ProviderEvent.ProviderEventClaimed attemptCount -> do
+      outcome <- processPaypalWebhookEvent
+        paypalEnvironment merchantRef envelope now
+      case outcome of
+        PaypalEventProcessed checkoutId attemptId refundId -> do
+          liftIO $ flip runSqlPool envPool $
+            ProviderEvent.markProviderEventProcessed
+              (ProviderEvent.pesReference stored) checkoutId attemptId refundId now
+          pure NoContent
+        PaypalEventIgnored -> do
+          liftIO $ flip runSqlPool envPool $
+            ProviderEvent.markProviderEventIgnored
+              (ProviderEvent.pesReference stored) Nothing Nothing Nothing now
+          pure NoContent
+        PaypalEventPermanentFailure summary checkoutId attemptId refundId -> do
+          liftIO $ flip runSqlPool envPool $
+            ProviderEvent.markProviderEventDeadLetter
+              (ProviderEvent.pesReference stored)
+              checkoutId attemptId refundId summary now
+          pure NoContent
+        PaypalEventRetry summary -> do
+          exhausted <- liftIO $ flip runSqlPool envPool $
+            ProviderEvent.markProviderEventRetry
+              (ProviderEvent.pesReference stored) attemptCount summary now
+          if exhausted
+            then pure NoContent
+            else throwError err503 { errBody = "Verified PayPal event is queued for retry" }
+
+processPaypalWebhookEvent
+  :: Checkout.CheckoutEnvironment
+  -> Text
+  -> PaypalWebhookEnvelope
+  -> UTCTime
+  -> AppM PaypalEventProcessResult
+processPaypalWebhookEvent environment merchantRef envelope now =
+  case pweEventType envelope of
+    "PAYMENT.CAPTURE.COMPLETED" -> processCompletedCapture
+    "PAYMENT.CAPTURE.REFUNDED" -> processExternalCaptureChange
+      "external_refund_detected"
+    "PAYMENT.CAPTURE.REVERSED" -> processExternalCaptureChange
+      "external_reversal_detected"
+    _ -> pure PaypalEventIgnored
+  where
+    processCompletedCapture = case parsePaypalWebhookCapture envelope of
+      Left message -> pure (PaypalEventPermanentFailure message Nothing Nothing Nothing)
+      Right capture -> do
+        Env{..} <- ask
+        result <- liftIO $ tryAny $ flip runSqlPool envPool $ do
+          mBound <- loadBoundPaypalOrder environment merchantRef (pwcPaypalOrderId capture)
+          case mBound of
+            Nothing -> pure PaypalEventIgnored
+            Just bound -> case validatePaypalWebhookCaptureBinding merchantRef bound capture of
+              Left message -> do
+                recordPaypalWebhookMismatch environment (pweCreatedAt envelope) bound capture message
+                pure (PaypalEventPermanentFailure message
+                  (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing)
+              Right () -> do
+                let checkout = Checkout.CheckoutReference (bpcCheckoutId bound)
+                    attempt = Checkout.PaymentAttemptReference (bpcAttemptId bound)
+                    correlationId = "paypal-webhook:" <> pweEventId envelope
+                binding <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
+                  { Checkout.pbcAttempt = attempt
+                  , Checkout.pbcCheckout = checkout
+                  , Checkout.pbcProvider = Checkout.ProviderPayPal
+                  , Checkout.pbcEnvironment = environment
+                  , Checkout.pbcMerchantRef = merchantRef
+                  , Checkout.pbcResourceType = "capture"
+                  , Checkout.pbcProviderResource = pwcCaptureId capture
+                  , Checkout.pbcResourcePath = Just
+                      ("/v2/checkout/orders/" <> pwcPaypalOrderId capture <> "/capture")
+                  , Checkout.pbcOrderReference = bpcDomainOrderId bound
+                  , Checkout.pbcAmountMinor = bpcExpectedAmount bound
+                  , Checkout.pbcCurrency = bpcCurrency bound
+                  , Checkout.pbcStage = Checkout.AttemptProcessing
+                  , Checkout.pbcOccurredAt = pweCreatedAt envelope
+                  , Checkout.pbcCorrelationId = correlationId
+                  }
+                case binding of
+                  Left message -> do
+                    recordPaypalWebhookMismatch environment (pweCreatedAt envelope) bound capture message
+                    pure (PaypalEventPermanentFailure message
+                      (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing)
+                  Right () -> do
+                    verified <- Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+                      { Checkout.vpAttempt = attempt
+                      , Checkout.vpCheckout = checkout
+                      , Checkout.vpProvider = Checkout.ProviderPayPal
+                      , Checkout.vpEnvironment = environment
+                      , Checkout.vpMerchantRef = merchantRef
+                      , Checkout.vpResourceType = "capture"
+                      , Checkout.vpProviderResource = pwcCaptureId capture
+                      , Checkout.vpOrderReference = bpcDomainOrderId bound
+                      , Checkout.vpAmountMinor = bpcExpectedAmount bound
+                      , Checkout.vpCurrency = bpcCurrency bound
+                      , Checkout.vpEvidence = "signature_verified_webhook"
+                      , Checkout.vpOccurredAt = pweCreatedAt envelope
+                      , Checkout.vpCorrelationId = correlationId
+                      }
+                    case verified of
+                      Left message -> do
+                        recordPaypalWebhookMismatch environment (pweCreatedAt envelope) bound capture message
+                        pure (PaypalEventPermanentFailure message
+                          (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing)
+                      Right newlyPaid -> do
+                        when newlyPaid $ do
+                          rawExecute
+                            "UPDATE service_storefront_order SET status = 'paid',\
+                            \ paypal_capture_id = ?, paid_at = COALESCE(paid_at, ?), updated_at = ?\
+                            \ WHERE id = ?::uuid AND checkout_id = ?::uuid\
+                            \ AND paypal_order_id = ?"
+                            [ PersistText (pwcCaptureId capture)
+                            , PersistUTCTime (pweCreatedAt envelope)
+                            , PersistUTCTime now
+                            , PersistText (bpcDomainOrderId bound)
+                            , PersistText (bpcCheckoutId bound)
+                            , PersistText (pwcPaypalOrderId capture)
+                            ]
+                          rawExecute
+                            "INSERT INTO service_storefront_order_status_change\
+                            \ (order_id, status, notes, changed_by, created_at)\
+                            \ VALUES (?::uuid, 'paid',\
+                            \ 'PayPal capture completed through a signature-verified webhook',\
+                            \ 'paypal_signature_verified_webhook', ?)"
+                            [ PersistText (bpcDomainOrderId bound)
+                            , PersistUTCTime now
+                            ]
+                        pure (PaypalEventProcessed
+                          (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing)
+        pure $ case result of
+          Left _ -> PaypalEventRetry "PayPal capture event database processing failed"
+          Right outcome -> outcome
+
+    processExternalCaptureChange exceptionType =
+      case parsePaypalWebhookCapture envelope of
+        Left _ -> do
+          Env{..} <- ask
+          result <- liftIO $ tryAny $ flip runSqlPool envPool $
+            Checkout.recordReconciliationException
+              Checkout.ProviderPayPal environment merchantRef exceptionType
+              ("provider-event:" <> pweEventId envelope)
+              (fromMaybe (pweEventId envelope) (paypalWebhookResourceId envelope))
+              0 Nothing "USD" now
+          pure $ case result of
+            Left _ -> PaypalEventRetry "Malformed PayPal refund or reversal event could not be recorded"
+            Right () -> PaypalEventProcessed Nothing Nothing Nothing
+        Right capture -> do
+          Env{..} <- ask
+          result <- liftIO $ tryAny $ flip runSqlPool envPool $ do
+            mBound <- loadBoundPaypalCapture environment merchantRef (pwcCaptureId capture)
+            case mBound of
+              Nothing -> pure PaypalEventIgnored
+              Just bound -> do
+                let actualAmount = fromIntegral <$> either (const Nothing) Just
+                      (parseDatafastCents (pwcAmount capture))
+                Checkout.recordReconciliationException
+                  Checkout.ProviderPayPal environment merchantRef exceptionType
+                  (bpcDomainOrderId bound) (pwcCaptureId capture)
+                  (bpcExpectedAmount bound) actualAmount (bpcCurrency bound) now
+                pure (PaypalEventProcessed
+                  (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing)
+          pure $ case result of
+            Left _ -> PaypalEventRetry "PayPal refund or reversal event database processing failed"
+            Right outcome -> outcome
+
+loadBoundPaypalOrder
+  :: Checkout.CheckoutEnvironment
+  -> Text
+  -> Text
+  -> SqlPersistT IO (Maybe BoundPaypalCapture)
+loadBoundPaypalOrder environment merchantRef paypalOrderId =
+  loadBoundPaypalCaptureBy
+    "binding.resource_type = 'order' AND binding.provider_resource_id = ?"
+    environment merchantRef paypalOrderId
+
+loadBoundPaypalCapture
+  :: Checkout.CheckoutEnvironment
+  -> Text
+  -> Text
+  -> SqlPersistT IO (Maybe BoundPaypalCapture)
+loadBoundPaypalCapture environment merchantRef captureId =
+  loadBoundPaypalCaptureBy
+    "binding.resource_type = 'capture' AND binding.provider_resource_id = ?"
+    environment merchantRef captureId
+
+loadBoundPaypalCaptureBy
+  :: Text
+  -> Checkout.CheckoutEnvironment
+  -> Text
+  -> Text
+  -> SqlPersistT IO (Maybe BoundPaypalCapture)
+loadBoundPaypalCaptureBy bindingPredicate environment merchantRef providerResource = do
+  rows <- (rawSql
+    ("SELECT checkout.id::text, attempt.id::text, checkout.domain_order_id,\
+     \ checkout.total_minor, checkout.currency, attempt.merchant_account_ref,\
+     \ order_binding.provider_resource_id\
+     \ FROM commerce_checkout_session checkout\
+     \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id = checkout.id\
+     \ JOIN commerce_provider_binding binding ON binding.payment_attempt_id = attempt.id\
+     \ JOIN commerce_provider_binding order_binding\
+     \   ON order_binding.payment_attempt_id = attempt.id\
+     \  AND order_binding.resource_type = 'order'\
+     \ WHERE checkout.domain_type = 'mixing_mastering'\
+     \ AND attempt.provider = 'paypal' AND attempt.environment = ?\
+     \ AND attempt.merchant_account_ref = ? AND " <> bindingPredicate)
+    [ PersistText (Checkout.checkoutEnvironmentText environment)
+    , PersistText merchantRef
+    , PersistText providerResource
+    ] :: SqlPersistT IO
+      [( Single Text, Single Text, Single Text, Single Int64
+       , Single Text, Single Text, Single Text
+       )])
+  pure $ case rows of
+    [( Single checkoutId, Single attemptId, Single domainOrderId, Single amount
+     , Single currency, Single storedMerchant, Single paypalOrderId
+     )] -> Just BoundPaypalCapture
+        { bpcCheckoutId = checkoutId
+        , bpcAttemptId = attemptId
+        , bpcDomainOrderId = domainOrderId
+        , bpcExpectedAmount = amount
+        , bpcCurrency = currency
+        , bpcMerchantRef = storedMerchant
+        , bpcPaypalOrderId = paypalOrderId
+        }
+    _ -> Nothing
+
+validatePaypalWebhookCaptureBinding
+  :: Text
+  -> BoundPaypalCapture
+  -> PaypalWebhookCapture
+  -> Either Text ()
+validatePaypalWebhookCaptureBinding configuredMerchant bound capture = do
+  capturedMinor <- fromIntegral <$> parseDatafastCents (pwcAmount capture)
+  unless (pwcStatus capture == "COMPLETED") $
+    Left "PayPal webhook capture is not completed"
+  unless (pwcPaypalOrderId capture == bpcPaypalOrderId bound) $
+    Left "PayPal webhook order ID does not match the immutable provider binding"
+  unless (pwcMerchantId capture == configuredMerchant
+      && pwcMerchantId capture == bpcMerchantRef bound) $
+    Left "PayPal webhook merchant does not match the configured merchant binding"
+  unless (capturedMinor == bpcExpectedAmount bound) $
+    Left "PayPal webhook amount does not match the immutable checkout"
+  unless (pwcCurrency capture == T.toUpper (T.strip (bpcCurrency bound))) $
+    Left "PayPal webhook currency does not match the immutable checkout"
+
+recordPaypalWebhookMismatch
+  :: Checkout.CheckoutEnvironment
+  -> UTCTime
+  -> BoundPaypalCapture
+  -> PaypalWebhookCapture
+  -> Text
+  -> SqlPersistT IO ()
+recordPaypalWebhookMismatch environment occurredAt bound capture _ =
+  Checkout.recordReconciliationException
+    Checkout.ProviderPayPal
+    environment
+    (bpcMerchantRef bound)
+    "provider_verification_mismatch"
+    (bpcDomainOrderId bound)
+    (pwcCaptureId capture)
+    (bpcExpectedAmount bound)
+    (fromIntegral <$> either (const Nothing) Just (parseDatafastCents (pwcAmount capture)))
+    (bpcCurrency bound)
+    occurredAt
+
 selectManualPaymentHandler
   :: Text
   -> Maybe Text
@@ -857,6 +1191,243 @@ updateOrderAdminHandler orderIdText ServiceStorefrontOrderUpdate{..} = do
         replace oid updatedOrder
       pure (orderToDTO oid updatedOrder)
 
+listServiceRefundsHandler :: Text -> AppM [ServiceStorefrontRefundDTO]
+listServiceRefundsHandler orderNumber = do
+  Env{..} <- ask
+  paidCheckout <- liftIO (flip runSqlPool envPool
+      (loadServicePaidCheckoutByOrder orderNumber))
+    >>= either (throwError . refundLookupError) pure
+  refunds <- liftIO $ flip runSqlPool envPool $
+    Refund.listCheckoutRefunds
+      (Checkout.CheckoutReference (spcCheckoutId paidCheckout))
+  pure (map (serviceRefundToDTO orderNumber) refunds)
+
+requestServiceRefundHandler
+  :: AuthedUser
+  -> Text
+  -> Maybe Text
+  -> ServiceStorefrontRefundCreate
+  -> AppM ServiceStorefrontRefundDTO
+requestServiceRefundHandler user orderNumber mIdempotencyKey ServiceStorefrontRefundCreate{..} = do
+  Env{..} <- ask
+  now <- liftIO getCurrentTime
+  idempotencyKey <- either (throwError . badRequestText) pure $
+    validateIdempotencyKey mIdempotencyKey
+  paidCheckout <- liftIO (flip runSqlPool envPool
+      (loadServicePaidCheckoutByOrder orderNumber))
+    >>= either (throwError . refundLookupError) pure
+  provider <- either (throwError . configurationError) pure $
+    paymentProviderFromText (spcProvider paidCheckout)
+  environment <- either (throwError . configurationError) pure $
+    checkoutEnvironmentFromText (spcEnvironment paidCheckout)
+  unless (provider == Checkout.ProviderPayPal) $
+    throwError err503
+      { errBody = "Refund adapter is not enabled for this payment provider" }
+  capabilityEnabled <- liftIO $ flip runSqlPool envPool $
+    Checkout.capabilityEnabledForEnvironment environment "checkout.paypal.refunds"
+  unless capabilityEnabled $
+    throwError err503 { errBody = "PayPal refunds are disabled for this environment" }
+  let remainingMinor = spcPaidMinor paidCheckout
+        - spcRefundedMinor paidCheckout - spcReservedMinor paidCheckout
+      requestedMinor = maybe remainingMinor fromIntegral ssrfcAmountUsdCents
+  when (requestedMinor > fromIntegral (maxBound :: Int)) $
+    throwError err409 { errBody = "Refund amount exceeds the supported API range" }
+  result <- liftIO $ flip runSqlPool envPool $
+    Refund.requestSingleLineRefund Refund.RefundCreation
+      { Refund.rcCheckout = Checkout.CheckoutReference (spcCheckoutId paidCheckout)
+      , Refund.rcPaymentAttempt = Checkout.PaymentAttemptReference (spcAttemptId paidCheckout)
+      , Refund.rcProvider = provider
+      , Refund.rcEnvironment = environment
+      , Refund.rcMerchantRef = spcMerchantRef paidCheckout
+      , Refund.rcAmountMinor = requestedMinor
+      , Refund.rcCurrency = spcCurrency paidCheckout
+      , Refund.rcReasonCode = ssrfcReasonCode
+      , Refund.rcIdempotencyKey = idempotencyKey
+      , Refund.rcRequestedBy = fromSqlKey (auPartyId user)
+      , Refund.rcCreatedAt = now
+      }
+  record <- either (throwError . badRequestText) pure result
+  pure (serviceRefundToDTO orderNumber record)
+
+approveServiceRefundHandler
+  :: AuthedUser
+  -> Text
+  -> AppM ServiceStorefrontRefundDTO
+approveServiceRefundHandler user rawRefundId = do
+  Env{..} <- ask
+  now <- liftIO getCurrentTime
+  refundRef <- parseRefundReference rawRefundId
+  mExisting <- liftIO $ flip runSqlPool envPool $ Refund.loadRefund refundRef
+  existing <- maybe (throwError err404 { errBody = "Refund not found" }) pure mExisting
+  orderNumber <- liftIO (flip runSqlPool envPool
+      (loadServiceOrderNumberForCheckout (Refund.rrCheckout existing)))
+    >>= maybe (throwError err404 { errBody = "Service order not found" }) pure
+  unless (Refund.rrProvider existing == "paypal") $
+    throwError err503
+      { errBody = "Refund adapter is not enabled for this payment provider" }
+  storedEnvironment <- either (throwError . configurationError) pure $
+    checkoutEnvironmentFromText (Refund.rrEnvironment existing)
+  capabilityEnabled <- liftIO $ flip runSqlPool envPool $
+    Checkout.capabilityEnabledForEnvironment storedEnvironment "checkout.paypal.refunds"
+  unless capabilityEnabled $
+    throwError err503 { errBody = "PayPal refunds are disabled for this environment" }
+  paidCheckout <- liftIO (flip runSqlPool envPool
+      (loadServicePaidCheckoutByCheckout (Refund.rrCheckout existing)))
+    >>= either (throwError . refundLookupError) pure
+  unless (spcAttemptId paidCheckout
+      == Checkout.paymentAttemptReferenceId (Refund.rrPaymentAttempt existing)) $
+    throwError err409 { errBody = "Refund payment binding is inconsistent" }
+  (cid, sec, baseUrl, configuredEnvironment, configuredMerchant) <-
+    loadPaypalEnvForService
+  unless (configuredEnvironment == storedEnvironment
+      && configuredMerchant == Refund.rrMerchantRef existing) $
+    throwError err503
+      { errBody = "PayPal configuration does not match immutable refund evidence" }
+  approved <- liftIO $ flip runSqlPool envPool $
+    Refund.approveRefundForProcessing refundRef (fromSqlKey (auPartyId user)) now
+  (refundRecord, shouldIssue) <- either (throwError . refundConflictError) pure approved
+  if not shouldIssue
+    then pure (serviceRefundToDTO orderNumber refundRecord)
+    else do
+      manager <- liftIO newTlsManager
+      outcome <- issuePaypalRefundRemote
+        manager cid sec baseUrl (spcProviderResource paidCheckout) refundRecord
+      let actualMinor = fromIntegral <$> either (const Nothing) Just
+            (parseDatafastCents (proAmount outcome))
+          outcomeMatches = actualMinor == Just (Refund.rrAmountMinor refundRecord)
+            && proCurrency outcome == Refund.rrCurrency refundRecord
+      unless outcomeMatches $ do
+        liftIO $ flip runSqlPool envPool $ do
+          Refund.recordRefundFailure refundRef "provider_verification_mismatch" now
+          Checkout.recordReconciliationException
+            Checkout.ProviderPayPal storedEnvironment configuredMerchant
+            "refund_verification_mismatch"
+            (Refund.refundReferenceId refundRef) (proRefundId outcome)
+            (Refund.rrAmountMinor refundRecord) actualMinor
+            (Refund.rrCurrency refundRecord) now
+        throwError (providerValidationError
+          "PayPal refund amount or currency does not match the immutable request")
+      case proStatus outcome of
+        "COMPLETED" -> do
+          verified <- liftIO $ flip runSqlPool envPool $
+            Refund.recordVerifiedRefund Refund.VerifiedRefund
+              { Refund.vrRefund = refundRef
+              , Refund.vrProviderRefund = proRefundId outcome
+              , Refund.vrAmountMinor = Refund.rrAmountMinor refundRecord
+              , Refund.vrCurrency = Refund.rrCurrency refundRecord
+              , Refund.vrOccurredAt = now
+              , Refund.vrCorrelationId =
+                  "paypal-refund:" <> Refund.refundReferenceId refundRef
+              }
+          either (throwError . refundConflictError) (const (pure ())) verified
+        "PENDING" -> do
+          pending <- liftIO $ flip runSqlPool envPool $
+            Refund.recordRefundPending refundRef (proRefundId outcome) now
+          either (throwError . refundConflictError) (const (pure ())) pending
+        providerStatus -> do
+          liftIO $ flip runSqlPool envPool $
+            Refund.recordRefundFailure
+              refundRef ("paypal_" <> T.toLower providerStatus) now
+          throwError err502 { errBody = "PayPal did not complete the refund" }
+      updated <- liftIO $ flip runSqlPool envPool $ Refund.loadRefund refundRef
+      maybe (throwError err500 { errBody = "Refund could not be reloaded" })
+        (pure . serviceRefundToDTO orderNumber) updated
+
+reconcileServiceOrderHandler
+  :: Text
+  -> AppM ServiceStorefrontReconciliationDTO
+reconcileServiceOrderHandler orderNumber = do
+  Env{..} <- ask
+  now <- liftIO getCurrentTime
+  mOrder <- liftIO $ flip runSqlPool envPool $
+    getBy (ME.UniqueServiceStorefrontOrderNumber orderNumber)
+  (oid, order) <- case mOrder of
+    Nothing -> throwError err404 { errBody = "Order not found" }
+    Just (Entity orderId value) -> pure (orderId, value)
+  paidCheckout <- liftIO (flip runSqlPool envPool
+      (loadServicePaidCheckoutByOrder orderNumber))
+    >>= either (throwError . refundLookupError) pure
+  case spcProvider paidCheckout of
+    "paypal" -> do
+      paypalOrderId <- maybe
+        (throwError err409 { errBody = "Order has no PayPal order reference" })
+        pure (ME.serviceStorefrontOrderPaypalOrderId order)
+      (cid, sec, baseUrl, environment, merchantRef) <- loadPaypalEnvForService
+      requireReconciliationBinding paidCheckout environment merchantRef
+      manager <- liftIO newTlsManager
+      outcome <- getPaypalOrderRemoteForService manager cid sec baseUrl paypalOrderId
+      let actualMinor = spcoAmount outcome >>= either (const Nothing) Just . parseDatafastCents
+          matched = spcoStatus outcome == "COMPLETED"
+            && either (const False) (const True)
+              (validatePaypalSuccessfulCapture
+                (toPathPiece oid)
+                (fromIntegral (spcPaidMinor paidCheckout))
+                (spcCurrency paidCheckout) merchantRef outcome)
+          providerReference = fromMaybe paypalOrderId (spcoCaptureId outcome)
+      unless matched $ liftIO $ flip runSqlPool envPool $
+        Checkout.recordReconciliationException
+          Checkout.ProviderPayPal environment merchantRef
+          "manual_reconciliation_mismatch" (toPathPiece oid) providerReference
+          (spcPaidMinor paidCheckout) (fromIntegral <$> actualMinor)
+          (spcCurrency paidCheckout) now
+      pure ServiceStorefrontReconciliationDTO
+        { ssrecOrderId = orderNumber
+        , ssrecProvider = "paypal"
+        , ssrecProviderReference = providerReference
+        , ssrecExpectedAmount = fromIntegral (spcPaidMinor paidCheckout)
+        , ssrecActualAmount = actualMinor
+        , ssrecCurrency = spcCurrency paidCheckout
+        , ssrecMatched = matched
+        , ssrecCheckedAt = now
+        }
+    "datafast" -> do
+      resourcePath <- maybe
+        (throwError err409 { errBody = "Order has no Datafast resource path" })
+        pure (ME.serviceStorefrontOrderDatafastResourcePath order)
+      datafast <- loadServiceDatafastEnv
+      requireReconciliationBinding paidCheckout
+        (sdfEnvironment datafast) (sdfEntityId datafast)
+      providerStatus <- checkDatafastPaymentStatus resourcePath
+      let actualMinor = sdfpsAmount providerStatus
+            >>= either (const Nothing) Just . parseDatafastCents
+          matched = isDatafastPaymentSuccess
+              (sdfEnvironment datafast) (sdfpsResultCode providerStatus)
+            && either (const False) (const True)
+              (validateDatafastSuccessfulPayment
+                (toPathPiece oid)
+                (fromIntegral (spcPaidMinor paidCheckout))
+                (spcCurrency paidCheckout) providerStatus)
+          providerReference = fromMaybe resourcePath (sdfpsPaymentId providerStatus)
+      unless matched $ liftIO $ flip runSqlPool envPool $
+        Checkout.recordReconciliationException
+          Checkout.ProviderDatafast (sdfEnvironment datafast) (sdfEntityId datafast)
+          "manual_reconciliation_mismatch" (toPathPiece oid) providerReference
+          (spcPaidMinor paidCheckout) (fromIntegral <$> actualMinor)
+          (spcCurrency paidCheckout) now
+      pure ServiceStorefrontReconciliationDTO
+        { ssrecOrderId = orderNumber
+        , ssrecProvider = "datafast"
+        , ssrecProviderReference = providerReference
+        , ssrecExpectedAmount = fromIntegral (spcPaidMinor paidCheckout)
+        , ssrecActualAmount = actualMinor
+        , ssrecCurrency = spcCurrency paidCheckout
+        , ssrecMatched = matched
+        , ssrecCheckedAt = now
+        }
+    _ -> throwError err503
+      { errBody = "No automated reconciliation adapter is enabled for this provider" }
+
+requireReconciliationBinding
+  :: ServicePaidCheckout
+  -> Checkout.CheckoutEnvironment
+  -> Text
+  -> AppM ()
+requireReconciliationBinding paidCheckout environment merchantRef =
+  unless (spcEnvironment paidCheckout == Checkout.checkoutEnvironmentText environment
+      && spcMerchantRef paidCheckout == merchantRef) $
+    throwError err503
+      { errBody = "Provider configuration does not match immutable payment evidence" }
+
 listPackagesAdminHandler :: AppM [ServiceStorefrontPackageDTO]
 listPackagesAdminHandler = do
   Env{..} <- ask
@@ -932,6 +1503,129 @@ updatePackageAdminHandler packageIdText ServiceStorefrontPackageUpdate{..} = do
 -- ============================================================================
 -- Helpers
 -- ============================================================================
+
+loadServicePaidCheckoutByOrder
+  :: Text
+  -> SqlPersistT IO (Either Text ServicePaidCheckout)
+loadServicePaidCheckoutByOrder orderNumber =
+  loadServicePaidCheckoutBy
+    "service_order.order_number = ?" [PersistText orderNumber]
+
+loadServicePaidCheckoutByCheckout
+  :: Checkout.CheckoutReference
+  -> SqlPersistT IO (Either Text ServicePaidCheckout)
+loadServicePaidCheckoutByCheckout checkout =
+  loadServicePaidCheckoutBy
+    "checkout.id = ?::uuid"
+    [PersistText (Checkout.checkoutReferenceId checkout)]
+
+loadServicePaidCheckoutBy
+  :: Text
+  -> [PersistValue]
+  -> SqlPersistT IO (Either Text ServicePaidCheckout)
+loadServicePaidCheckoutBy predicate params = do
+  rows <- (rawSql
+    ("SELECT checkout.id::text, attempt.id::text, attempt.provider,\
+     \ attempt.environment, attempt.merchant_account_ref, checkout.paid_minor,\
+     \ checkout.refunded_minor,\
+     \ COALESCE((SELECT SUM(refund.amount_minor) FROM commerce_refund refund\
+     \   WHERE refund.checkout_id = checkout.id\
+     \   AND refund.status IN ('requested','approved','processing')), 0),\
+     \ checkout.currency, binding.provider_resource_id\
+     \ FROM service_storefront_order service_order\
+     \ JOIN commerce_checkout_session checkout ON checkout.id = service_order.checkout_id\
+     \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id = checkout.id\
+     \   AND attempt.status = 'succeeded'\
+     \ JOIN commerce_provider_binding binding ON binding.payment_attempt_id = attempt.id\
+     \   AND ((attempt.provider = 'paypal' AND binding.resource_type = 'capture')\
+     \     OR (attempt.provider = 'datafast' AND binding.resource_type = 'payment'))\
+     \ WHERE checkout.domain_type = 'mixing_mastering' AND " <> predicate)
+    params :: SqlPersistT IO
+      [( Single Text, Single Text, Single Text, Single Text, Single Text
+       , Single Int64, Single Int64, Single Int64, Single Text, Single Text
+       )])
+  pure $ case rows of
+    [( Single checkoutId, Single attemptId, Single provider, Single environment
+     , Single merchantRef, Single paidMinor, Single refundedMinor
+     , Single reservedMinor, Single currency, Single providerResource
+     )] -> Right ServicePaidCheckout
+        { spcCheckoutId = checkoutId
+        , spcAttemptId = attemptId
+        , spcProvider = provider
+        , spcEnvironment = environment
+        , spcMerchantRef = merchantRef
+        , spcPaidMinor = paidMinor
+        , spcRefundedMinor = refundedMinor
+        , spcReservedMinor = reservedMinor
+        , spcCurrency = currency
+        , spcProviderResource = providerResource
+        }
+    [] -> Left "Service order does not have a succeeded canonical payment"
+    _ -> Left "Service payment binding is ambiguous"
+
+loadServiceOrderNumberForCheckout
+  :: Checkout.CheckoutReference
+  -> SqlPersistT IO (Maybe Text)
+loadServiceOrderNumberForCheckout checkout = do
+  rows <- (rawSql
+    "SELECT order_number FROM service_storefront_order\
+    \ WHERE checkout_id = ?::uuid"
+    [PersistText (Checkout.checkoutReferenceId checkout)]
+    :: SqlPersistT IO [Single Text])
+  pure $ case rows of
+    [Single orderNumber] -> Just orderNumber
+    _ -> Nothing
+
+serviceRefundToDTO :: Text -> Refund.RefundRecord -> ServiceStorefrontRefundDTO
+serviceRefundToDTO orderNumber record = ServiceStorefrontRefundDTO
+  { ssrfId = Refund.refundReferenceId (Refund.rrReference record)
+  , ssrfOrderId = orderNumber
+  , ssrfProvider = Refund.rrProvider record
+  , ssrfProviderRefundId = Refund.rrProviderRefundId record
+  , ssrfStatus = Refund.rrStatus record
+  , ssrfAmountUsdCents = fromIntegral (Refund.rrAmountMinor record)
+  , ssrfCurrency = Refund.rrCurrency record
+  , ssrfReasonCode = Refund.rrReasonCode record
+  , ssrfRequestedBy = Refund.rrRequestedBy record
+  , ssrfApprovedBy = Refund.rrApprovedBy record
+  , ssrfCreatedAt = Refund.rrCreatedAt record
+  , ssrfCompletedAt = Refund.rrCompletedAt record
+  }
+
+parseRefundReference :: Text -> AppM Refund.RefundReference
+parseRefundReference rawRefundId =
+  case fromText (T.strip rawRefundId) of
+    Just refundId -> pure (Refund.RefundReference (toText refundId))
+    Nothing -> throwError err400 { errBody = "Refund ID must be a UUID" }
+
+checkoutEnvironmentFromText
+  :: Text
+  -> Either Text Checkout.CheckoutEnvironment
+checkoutEnvironmentFromText rawEnvironment =
+  case T.toLower (T.strip rawEnvironment) of
+    "sandbox" -> Right Checkout.CheckoutSandbox
+    "production" -> Right Checkout.CheckoutProduction
+    _ -> Left "Stored checkout environment is invalid"
+
+paymentProviderFromText :: Text -> Either Text Checkout.PaymentProvider
+paymentProviderFromText rawProvider =
+  case T.toLower (T.strip rawProvider) of
+    "paypal" -> Right Checkout.ProviderPayPal
+    "datafast" -> Right Checkout.ProviderDatafast
+    "stripe" -> Right Checkout.ProviderStripe
+    "bank_transfer" -> Right Checkout.ProviderBankTransfer
+    "cash" -> Right Checkout.ProviderCash
+    "pos" -> Right Checkout.ProviderPos
+    "cardano" -> Right Checkout.ProviderCardano
+    _ -> Left "Stored payment provider is invalid"
+
+refundLookupError :: Text -> ServerError
+refundLookupError message =
+  err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+refundConflictError :: Text -> ServerError
+refundConflictError message =
+  err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
 
 packageEntityToDTO :: Entity ME.ServiceStorefrontPackage -> ServiceStorefrontPackageDTO
 packageEntityToDTO (Entity pid pkg) = ServiceStorefrontPackageDTO
@@ -1480,6 +2174,249 @@ stripTrailingSlash s = if not (null s) && last s == '/' then init s else s
 -- PayPal Integration
 -- ============================================================================
 
+data PaypalWebhookHeaders = PaypalWebhookHeaders
+  { pwhTransmissionId   :: Text
+  , pwhTransmissionTime :: Text
+  , pwhTransmittedAt    :: UTCTime
+  , pwhCertUrl           :: Text
+  , pwhAuthAlgo          :: Text
+  , pwhTransmissionSig   :: Text
+  } deriving (Eq, Show)
+
+data PaypalWebhookEnvelope = PaypalWebhookEnvelope
+  { pweEventId   :: Text
+  , pweEventType :: Text
+  , pweCreatedAt :: UTCTime
+  , pweResource  :: Value
+  } deriving (Show)
+
+data PaypalWebhookCapture = PaypalWebhookCapture
+  { pwcCaptureId    :: Text
+  , pwcStatus       :: Text
+  , pwcAmount       :: Text
+  , pwcCurrency     :: Text
+  , pwcMerchantId   :: Text
+  , pwcPaypalOrderId :: Text
+  } deriving (Eq, Show)
+
+data PaypalRefundOutcome = PaypalRefundOutcome
+  { proRefundId :: Text
+  , proStatus   :: Text
+  , proAmount   :: Text
+  , proCurrency :: Text
+  } deriving (Eq, Show)
+
+data PaypalEventProcessResult
+  = PaypalEventProcessed (Maybe Text) (Maybe Text) (Maybe Text)
+  | PaypalEventIgnored
+  | PaypalEventPermanentFailure Text (Maybe Text) (Maybe Text) (Maybe Text)
+  | PaypalEventRetry Text
+
+data BoundPaypalCapture = BoundPaypalCapture
+  { bpcCheckoutId     :: Text
+  , bpcAttemptId      :: Text
+  , bpcDomainOrderId  :: Text
+  , bpcExpectedAmount :: Int64
+  , bpcCurrency       :: Text
+  , bpcMerchantRef    :: Text
+  , bpcPaypalOrderId  :: Text
+  }
+
+data ServicePaidCheckout = ServicePaidCheckout
+  { spcCheckoutId       :: Text
+  , spcAttemptId        :: Text
+  , spcProvider         :: Text
+  , spcEnvironment      :: Text
+  , spcMerchantRef      :: Text
+  , spcPaidMinor        :: Int64
+  , spcRefundedMinor    :: Int64
+  , spcReservedMinor    :: Int64
+  , spcCurrency         :: Text
+  , spcProviderResource :: Text
+  }
+
+validatePaypalWebhookHeaders
+  :: UTCTime
+  -> Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> Either Text PaypalWebhookHeaders
+validatePaypalWebhookHeaders now mTransmissionId mTransmissionTime mCertUrl mAuthAlgo mSignature = do
+  transmissionId <- requireSafeHeader "PayPal-Transmission-Id" 100 mTransmissionId
+  transmissionTime <- requireSafeHeader "PayPal-Transmission-Time" 100 mTransmissionTime
+  certUrl <- requireSafeHeader "PayPal-Cert-Url" 500 mCertUrl
+  authAlgo <- requireSafeHeader "PayPal-Auth-Algo" 100 mAuthAlgo
+  signature <- requireSafeHeader "PayPal-Transmission-Sig" 500 mSignature
+  unless (authAlgo == "SHA256withRSA") $
+    Left "Unsupported PayPal webhook signature algorithm"
+  unless (isPaypalCertificateUrl certUrl) $
+    Left "PayPal certificate URL is not an approved HTTPS provider URL"
+  transmittedAt <- parseAesonUtc "PayPal transmission time" transmissionTime
+  ProviderEvent.validateProviderEventTimestamp now transmittedAt
+  pure PaypalWebhookHeaders
+    { pwhTransmissionId = transmissionId
+    , pwhTransmissionTime = transmissionTime
+    , pwhTransmittedAt = transmittedAt
+    , pwhCertUrl = certUrl
+    , pwhAuthAlgo = authAlgo
+    , pwhTransmissionSig = signature
+    }
+
+parsePaypalWebhookEnvelope :: BL.ByteString -> Either Text PaypalWebhookEnvelope
+parsePaypalWebhookEnvelope rawBody
+  | BL.null rawBody = Left "PayPal webhook body is empty"
+  | BL.length rawBody > 1024 * 1024 = Left "PayPal webhook body exceeds 1048576 bytes"
+  | otherwise = do
+      value <- either (Left . ("Invalid PayPal webhook JSON: " <>) . T.pack) Right
+        (eitherDecode rawBody :: Either String Value)
+      case value of
+        Object obj -> do
+          eventId <- requiredObjectText "id" obj
+          eventType <- requiredObjectText "event_type" obj
+          createTime <- requiredObjectText "create_time" obj
+          createdAt <- parseAesonUtc "PayPal event create_time" createTime
+          resource <- maybe (Left "PayPal webhook omitted resource") Right
+            (KM.lookup "resource" obj)
+          unless (isProviderReference eventId && T.length eventId <= 128) $
+            Left "PayPal webhook event ID is invalid"
+          unless (validPaypalEventType eventType) $
+            Left "PayPal webhook event type is invalid"
+          pure PaypalWebhookEnvelope
+            { pweEventId = eventId
+            , pweEventType = eventType
+            , pweCreatedAt = createdAt
+            , pweResource = resource
+            }
+        _ -> Left "PayPal webhook must be a JSON object"
+
+parsePaypalWebhookCapture :: PaypalWebhookEnvelope -> Either Text PaypalWebhookCapture
+parsePaypalWebhookCapture PaypalWebhookEnvelope{pweResource = Object resource} = do
+  captureId <- requiredObjectText "id" resource
+  status <- requiredObjectText "status" resource
+  amountObject <- maybe (Left "PayPal webhook omitted capture amount") Right
+    (lookupObject "amount" resource)
+  amount <- requiredObjectText "value" amountObject
+  currency <- requiredObjectText "currency_code" amountObject
+  payee <- maybe (Left "PayPal webhook omitted capture payee") Right
+    (lookupObject "payee" resource)
+  merchantId <- requiredObjectText "merchant_id" payee
+  supplementary <- maybe (Left "PayPal webhook omitted supplementary_data") Right
+    (lookupObject "supplementary_data" resource)
+  related <- maybe (Left "PayPal webhook omitted related_ids") Right
+    (lookupObject "related_ids" supplementary)
+  paypalOrderId <- requiredObjectText "order_id" related
+  unless (all isProviderReference [captureId, merchantId, paypalOrderId]) $
+    Left "PayPal webhook contains an invalid provider reference"
+  pure PaypalWebhookCapture
+    { pwcCaptureId = captureId
+    , pwcStatus = T.toUpper (T.strip status)
+    , pwcAmount = T.strip amount
+    , pwcCurrency = T.toUpper (T.strip currency)
+    , pwcMerchantId = merchantId
+    , pwcPaypalOrderId = paypalOrderId
+    }
+parsePaypalWebhookCapture _ = Left "PayPal webhook capture resource must be an object"
+
+parsePaypalRefundOutcome :: Value -> Either Text PaypalRefundOutcome
+parsePaypalRefundOutcome (Object obj) = do
+  refundId <- requiredObjectText "id" obj
+  status <- requiredObjectText "status" obj
+  amountObject <- maybe (Left "PayPal refund response omitted amount") Right
+    (lookupObject "amount" obj)
+  amount <- requiredObjectText "value" amountObject
+  currency <- requiredObjectText "currency_code" amountObject
+  unless (isProviderReference refundId) $
+    Left "PayPal refund response contains an invalid refund ID"
+  pure PaypalRefundOutcome
+    { proRefundId = refundId
+    , proStatus = T.toUpper (T.strip status)
+    , proAmount = T.strip amount
+    , proCurrency = T.toUpper (T.strip currency)
+    }
+parsePaypalRefundOutcome _ = Left "PayPal refund response must be an object"
+
+buildPaypalWebhookVerificationBody
+  :: Text
+  -> PaypalWebhookHeaders
+  -> BL.ByteString
+  -> BL.ByteString
+buildPaypalWebhookVerificationBody webhookId PaypalWebhookHeaders{..} rawBody =
+  BL.concat
+    [ "{\"transmission_id\":"
+    , Aeson.encode pwhTransmissionId
+    , ",\"transmission_time\":"
+    , Aeson.encode pwhTransmissionTime
+    , ",\"cert_url\":"
+    , Aeson.encode pwhCertUrl
+    , ",\"auth_algo\":"
+    , Aeson.encode pwhAuthAlgo
+    , ",\"transmission_sig\":"
+    , Aeson.encode pwhTransmissionSig
+    , ",\"webhook_id\":"
+    , Aeson.encode webhookId
+    , ",\"webhook_event\":"
+    , rawBody
+    , "}"
+    ]
+
+paypalWebhookResourceId :: PaypalWebhookEnvelope -> Maybe Text
+paypalWebhookResourceId PaypalWebhookEnvelope{pweResource = Object resource} =
+  lookupObjectText "id" resource
+paypalWebhookResourceId _ = Nothing
+
+requiredObjectText :: Text -> Aeson.Object -> Either Text Text
+requiredObjectText key obj =
+  case lookupObjectText key obj of
+    Just value | not (T.null (T.strip value)) -> Right (T.strip value)
+    _ -> Left ("PayPal payload omitted " <> key)
+
+parseAesonUtc :: Text -> Text -> Either Text UTCTime
+parseAesonUtc label rawTimestamp =
+  case Aeson.fromJSON (String (T.strip rawTimestamp)) of
+    Success value -> Right value
+    Error _ -> Left (label <> " is not a valid RFC 3339 timestamp")
+
+requireSafeHeader :: Text -> Int -> Maybe Text -> Either Text Text
+requireSafeHeader name maxLength mRawValue = do
+  value <- maybe (Left ("Missing " <> name <> " header")) (Right . T.strip) mRawValue
+  unless (not (T.null value) && T.length value <= maxLength) $
+    Left (name <> " header is invalid")
+  unless (T.all (\character -> character >= '!' && character <= '~') value) $
+    Left (name <> " header contains unsafe characters")
+  pure value
+
+validPaypalEventType :: Text -> Bool
+validPaypalEventType value =
+  not (T.null value)
+    && T.length value <= 100
+    && T.all (\character ->
+      (character >= 'A' && character <= 'Z')
+        || (character >= '0' && character <= '9')
+        || character `elem` ("._-" :: String)) value
+
+isPaypalCertificateUrl :: Text -> Bool
+isPaypalCertificateUrl rawUrl =
+  let normalized = T.toLower (T.strip rawUrl)
+      allowedPrefixes =
+        [ "https://api-m.paypal.com/"
+        , "https://api.paypal.com/"
+        , "https://api-m.sandbox.paypal.com/"
+        , "https://api.sandbox.paypal.com/"
+        ]
+  in any (`T.isPrefixOf` normalized) allowedPrefixes
+      && not ("@" `T.isInfixOf` normalized)
+      && not ("#" `T.isInfixOf` normalized)
+
+paypalCertUrlMatchesEnvironment :: Checkout.CheckoutEnvironment -> Text -> Bool
+paypalCertUrlMatchesEnvironment environment rawUrl =
+  let normalized = T.toLower (T.strip rawUrl)
+      isSandbox = ".sandbox.paypal.com/" `T.isInfixOf` normalized
+  in case environment of
+    Checkout.CheckoutSandbox -> isSandbox
+    Checkout.CheckoutProduction -> not isSandbox
+
 -- | Load PayPal environment configuration.
 loadPaypalEnvForService
   :: AppM (Text, Text, String, Checkout.CheckoutEnvironment, Text)
@@ -1500,6 +2437,61 @@ loadPaypalEnvForService = do
         Checkout.CheckoutSandbox -> "https://api-m.sandbox.paypal.com"
         Checkout.CheckoutProduction -> "https://api-m.paypal.com"
   pure (cid, secret, baseUrl, environment, merchantRef)
+
+loadRequiredSafeEnv :: String -> Int -> AppM Text
+loadRequiredSafeEnv variableName maxLength = do
+  rawValue <- liftIO (lookupEnv variableName)
+  case T.strip . T.pack <$> rawValue of
+    Just value
+      | not (T.null value)
+      , T.length value <= maxLength
+      , T.all (\character -> character >= '!' && character <= '~') value -> pure value
+    _ -> throwError err500
+      { errBody = BL.fromStrict (TE.encodeUtf8
+          (T.pack variableName <> " must be configured with safe visible ASCII")) }
+
+loadProviderEventEncryptionKey :: AppM Text
+loadProviderEventEncryptionKey = do
+  encryptionKey <- loadRequiredSafeEnv "COMMERCE_EVENT_ENCRYPTION_KEY" 256
+  when (T.length encryptionKey < 32) $
+    throwError err500
+      { errBody = "COMMERCE_EVENT_ENCRYPTION_KEY must contain at least 32 characters" }
+  pure encryptionKey
+
+verifyPaypalWebhookRemote
+  :: Manager
+  -> Text
+  -> Text
+  -> String
+  -> Text
+  -> PaypalWebhookHeaders
+  -> BL.ByteString
+  -> AppM Bool
+verifyPaypalWebhookRemote manager cid sec baseUrl webhookId headers rawBody = do
+  token <- paypalAccessTokenForService manager cid sec baseUrl
+  req0 <- liftIO $ parseRequest (baseUrl ++ "/v1/notifications/verify-webhook-signature")
+  let req = req0
+        { method = "POST"
+        , requestBody = RequestBodyLBS
+            (buildPaypalWebhookVerificationBody webhookId headers rawBody)
+        , requestHeaders =
+            [ ("Content-Type", "application/json")
+            , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
+            ]
+        }
+  result <- liftIO (tryAny (httpLbs req manager))
+  resp <- case result of
+    Left _ -> throwError err503 { errBody = "PayPal webhook verification is temporarily unavailable" }
+    Right value -> pure value
+  let responseCode = statusCode (responseStatus resp)
+  when (responseCode >= 500) $
+    throwError err503 { errBody = "PayPal webhook verification is temporarily unavailable" }
+  when (responseCode >= 400) $
+    throwError err502 { errBody = "PayPal rejected the webhook verification request" }
+  case eitherDecode (responseBody resp) of
+    Right (Object obj) ->
+      pure (lookupObjectText "verification_status" obj == Just "SUCCESS")
+    _ -> throwError err502 { errBody = "Invalid PayPal webhook verification response" }
 
 -- | Get PayPal access token.
 paypalAccessTokenForService :: Manager -> Text -> Text -> String -> AppM Text
@@ -1609,6 +2601,87 @@ capturePaypalOrderRemoteForService manager cid sec baseUrl ppOrderId = do
       (throwError . providerValidationError)
       pure
       (parsePaypalCaptureOutcome value)
+
+getPaypalOrderRemoteForService
+  :: Manager
+  -> Text
+  -> Text
+  -> String
+  -> Text
+  -> AppM ServicePaypalCaptureOutcome
+getPaypalOrderRemoteForService manager cid sec baseUrl paypalOrderId = do
+  token <- paypalAccessTokenForService manager cid sec baseUrl
+  req0 <- liftIO $ parseRequest
+    (baseUrl ++ "/v2/checkout/orders/" ++ T.unpack paypalOrderId)
+  let req = req0
+        { method = "GET"
+        , requestHeaders =
+            [("Authorization", "Bearer " <> TE.encodeUtf8 token)]
+        }
+  result <- liftIO (tryAny (httpLbs req manager))
+  resp <- case result of
+    Left _ -> throwError err503
+      { errBody = "PayPal reconciliation is temporarily unavailable" }
+    Right value -> pure value
+  let responseCode = statusCode (responseStatus resp)
+  when (responseCode >= 500) $
+    throwError err503 { errBody = "PayPal reconciliation is temporarily unavailable" }
+  when (responseCode >= 400) $
+    throwError err502 { errBody = "PayPal rejected the reconciliation request" }
+  value <- either
+    (const (throwError err502 { errBody = "Invalid PayPal reconciliation response" }))
+    pure
+    (eitherDecode (responseBody resp) :: Either String Value)
+  either (throwError . providerValidationError) pure
+    (parsePaypalCaptureOutcome value)
+
+issuePaypalRefundRemote
+  :: Manager
+  -> Text
+  -> Text
+  -> String
+  -> Text
+  -> Refund.RefundRecord
+  -> AppM PaypalRefundOutcome
+issuePaypalRefundRemote manager cid sec baseUrl captureId refundRecord = do
+  token <- paypalAccessTokenForService manager cid sec baseUrl
+  req0 <- liftIO $ parseRequest
+    (baseUrl ++ "/v2/payments/captures/" ++ T.unpack captureId ++ "/refund")
+  let body = object
+        [ "amount" .= object
+            [ "currency_code" .= Refund.rrCurrency refundRecord
+            , "value" .= formatMinorUnitsDecimal
+                (Refund.rrCurrency refundRecord)
+                (fromIntegral (Refund.rrAmountMinor refundRecord))
+            ]
+        ]
+      requestId = Refund.refundReferenceId (Refund.rrReference refundRecord)
+      req = req0
+        { method = "POST"
+        , requestBody = RequestBodyLBS (Aeson.encode body)
+        , requestHeaders =
+            [ ("Content-Type", "application/json")
+            , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
+            , ("PayPal-Request-Id", TE.encodeUtf8 requestId)
+            , ("Prefer", "return=representation")
+            ]
+        }
+  result <- liftIO (tryAny (httpLbs req manager))
+  resp <- case result of
+    Left _ -> throwError err503
+      { errBody = "PayPal refund is temporarily unavailable; retry with the same refund ID" }
+    Right value -> pure value
+  let responseCode = statusCode (responseStatus resp)
+  when (responseCode >= 500) $
+    throwError err503
+      { errBody = "PayPal refund is temporarily unavailable; retry with the same refund ID" }
+  when (responseCode >= 400) $
+    throwError err502 { errBody = "PayPal rejected the refund request" }
+  value <- either
+    (const (throwError err502 { errBody = "Invalid PayPal refund response" }))
+    pure
+    (eitherDecode (responseBody resp) :: Either String Value)
+  either (throwError . providerValidationError) pure (parsePaypalRefundOutcome value)
 
 parsePaypalCaptureOutcome :: Value -> Either Text ServicePaypalCaptureOutcome
 parsePaypalCaptureOutcome (Object obj) =

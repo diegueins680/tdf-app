@@ -26,6 +26,7 @@ module TDF.Commerce.CheckoutStore
   , recordReconciliationException
   , providerEnabledForEnvironment
   , domainEnabledForEnvironment
+  , capabilityEnabledForEnvironment
   ) where
 
 import           Control.Monad (when)
@@ -628,6 +629,18 @@ domainEnabledForEnvironment CheckoutProduction domainKey = do
     "SELECT enabled FROM revenue_feature_flag\
     \ WHERE flag_key = ? AND environment = 'production'"
     [PersistText ("commerce." <> domainKey)]
+  pure (rows == [Single True])
+
+capabilityEnabledForEnvironment
+  :: CheckoutEnvironment
+  -> Text
+  -> SqlPersistT IO Bool
+capabilityEnabledForEnvironment CheckoutSandbox _ = pure True
+capabilityEnabledForEnvironment CheckoutProduction flagKey = do
+  rows <- rawSql
+    "SELECT enabled FROM revenue_feature_flag\
+    \ WHERE flag_key = ? AND environment = 'production'"
+    [PersistText flagKey]
   pure (rows == [Single True])
 
 postPaymentLedger :: VerifiedPayment -> SqlPersistT IO ()

@@ -80,6 +80,35 @@ state_machines:
       disputed: [review, corrected]
       corrected: [review]
       rejected: []
+  refund:
+    initial: requested
+    transitions:
+      requested: [approved, cancelled]
+      approved: [processing, cancelled]
+      processing: [succeeded, failed]
+      failed: [processing, cancelled]
+      succeeded: []
+      cancelled: []
+    invariants:
+      - requested_by != approved_by for approved processing or succeeded
+      - amount currency provider environment merchant checkout and payment attempt are immutable
+      - sum(allocations.amount_minor) == refund.amount_minor before succeeded
+      - checkout.refunded_minor + active_or_succeeded_refunds <= checkout.paid_minor
+      - succeeded requires an exact provider refund id amount currency and completion time
+  provider_event:
+    initial: pending
+    transitions:
+      pending: [processing]
+      processing: [processed, ignored, retry, dead_letter]
+      retry: [processing, dead_letter]
+      processed: []
+      ignored: []
+      dead_letter: []
+    invariants:
+      - production requires signature_verified
+      - provider environment merchant event_id event_type payload_hash and encrypted_payload are immutable
+      - duplicate event ids cannot replace immutable evidence
+      - a claim increments attempt_count exactly once
 
 payment_fulfillment_separation:
   rule: payment transitions never directly imply fulfillment transitions

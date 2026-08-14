@@ -2560,10 +2560,583 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/services/storefront": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active mixing and mastering packages */
+        get: operations["listServiceStorefrontPackages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/{packageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packageId: components["parameters"]["ServiceStorefrontPackageId"];
+            };
+            cookie?: never;
+        };
+        /** Read one active service package */
+        get: operations["getServiceStorefrontPackage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an unpaid service order from authoritative package pricing
+         * @description The Idempotency-Key prevents duplicate orders. The response contains a lookup token only when the order is first created.
+         */
+        post: operations["createServiceStorefrontOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        /** Track a service order with its unguessable lookup token */
+        get: operations["getServiceStorefrontOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderId}/stripe/payment-intent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an optional Stripe payment intent
+         * @description This rail is capability-gated and is not an Ecuador-critical dependency.
+         */
+        post: operations["createServiceStorefrontStripePaymentIntent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderId}/datafast/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover a Datafast checkout resource */
+        post: operations["createServiceStorefrontDatafastCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/datafast/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify a Datafast resource server-to-server
+         * @description A browser return alone never marks the order paid. The server verifies resource, amount, currency, merchant, and internal order binding.
+         */
+        get: operations["confirmServiceStorefrontDatafastStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderId}/paypal/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover a PayPal order */
+        post: operations["createServiceStorefrontPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/paypal/capture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Capture and verify an approved PayPal order
+         * @description The internal order and PayPal resource are rebound and verified server-to-server before payment state changes.
+         */
+        post: operations["captureServiceStorefrontPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/paypal/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive a PayPal webhook into the encrypted idempotent event inbox
+         * @description All PayPal transmission headers and the exact raw event are verified with PayPal before a production event may affect payment state.
+         */
+        post: operations["receiveServiceStorefrontPaypalWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderId}/manual-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Select a manual payment method without confirming payment */
+        post: operations["selectServiceStorefrontManualPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderId}/revision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request a service-order revision */
+        post: operations["createServiceStorefrontRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List service orders for operations */
+        get: operations["adminListServiceStorefrontOrders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Apply a validated service fulfillment transition */
+        put: operations["adminUpdateServiceStorefrontOrder"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/packages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all service packages */
+        get: operations["adminListServiceStorefrontPackages"];
+        put?: never;
+        /** Create a versioned service package */
+        post: operations["adminCreateServiceStorefrontPackage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/packages/{packageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packageId: components["parameters"]["ServiceStorefrontPackageId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Update a service package */
+        put: operations["adminUpdateServiceStorefrontPackage"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/orders/{orderId}/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        /** List immutable refund requests for an order */
+        get: operations["adminListServiceStorefrontRefunds"];
+        put?: never;
+        /**
+         * Request a full or partial refund
+         * @description The amount defaults to the server-calculated unreserved captured balance. Requesting does not contact the provider.
+         */
+        post: operations["adminRequestServiceStorefrontRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/refunds/{refundId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Independently approve and submit a PayPal refund
+         * @description The approver must differ from the requester. Success is recorded only after PayPal returns an exact completed refund.
+         */
+        post: operations["adminApproveServiceStorefrontRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/orders/{orderId}/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Compare an order binding with the provider without changing payment state */
+        post: operations["adminReconcileServiceStorefrontOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ServiceStorefrontPackage: {
+            /** Format: uuid */
+            sspId: string;
+            /** @enum {string} */
+            sspServiceKind: "Mixing" | "Mastering" | "Bundle";
+            sspTier: string;
+            sspName: string;
+            sspDescription: string | null;
+            /** @description Authoritative price per song in integer minor units. */
+            sspPriceUsdCents: number;
+            sspCurrency: string;
+            sspMinSongCount: number;
+            sspMaxSongCount: number;
+            sspTurnaroundDays: number;
+            sspRevisionCount: number;
+            sspDeliverables: string[] | null;
+            sspFeatures: string[] | null;
+            sspActive: boolean;
+            sspSortOrder: number;
+        };
+        ServiceStorefrontPackageCreate: {
+            /** @enum {string} */
+            sspcServiceKind: "Mixing" | "Mastering" | "Bundle";
+            sspcTier: string;
+            sspcName: string;
+            sspcDescription?: string | null;
+            sspcPriceUsdCents: number;
+            sspcCurrency?: string | null;
+            sspcMinSongCount?: number | null;
+            sspcMaxSongCount?: number | null;
+            sspcTurnaroundDays?: number | null;
+            sspcRevisionCount?: number | null;
+            sspcDeliverables?: string[] | null;
+            sspcFeatures?: string[] | null;
+            sspcSortOrder?: number | null;
+        };
+        ServiceStorefrontPackageUpdate: {
+            sspuName?: string | null;
+            sspuDescription?: string | null;
+            sspuPriceUsdCents?: number | null;
+            sspuMinSongCount?: number | null;
+            sspuMaxSongCount?: number | null;
+            sspuTurnaroundDays?: number | null;
+            sspuRevisionCount?: number | null;
+            sspuDeliverables?: string[] | null;
+            sspuFeatures?: string[] | null;
+            sspuActive?: boolean | null;
+            sspuSortOrder?: number | null;
+        };
+        ServiceStorefrontOrderCreate: {
+            /** Format: uuid */
+            ssocPackageId: string;
+            ssocBuyerName: string;
+            /** Format: email */
+            ssocBuyerEmail: string;
+            ssocBuyerPhone?: string | null;
+            ssocArtistName?: string | null;
+            ssocGenre?: string | null;
+            ssocSongCount?: number | null;
+            ssocNotes?: string | null;
+            /** Format: uri */
+            ssocReferenceTrackUrl?: string | null;
+            /** Format: date */
+            ssocDeadline?: string | null;
+        };
+        ServiceStorefrontOrder: {
+            /** Format: uuid */
+            ssoId: string;
+            ssoOrderNumber: string;
+            ssoBuyerName: string;
+            /** Format: email */
+            ssoBuyerEmail: string;
+            ssoBuyerPhone: string | null;
+            ssoArtistName: string | null;
+            /** Format: uuid */
+            ssoPackageId: string;
+            ssoServiceKind: string;
+            ssoTier: string;
+            ssoPriceUsdCents: number;
+            ssoCurrency: string;
+            ssoStatus: string;
+            ssoPaymentProvider: string | null;
+            ssoLookupToken: string | null;
+            /** Format: date-time */
+            ssoPaidAt: string | null;
+            ssoGenre: string | null;
+            ssoSongCount: number;
+            ssoNotes: string | null;
+            /** Format: uri */
+            ssoReferenceTrackUrl: string | null;
+            /** Format: date */
+            ssoDeadline: string | null;
+            /** Format: uri */
+            ssoDeliverablesUrl: string | null;
+            /** Format: date-time */
+            ssoCreatedAt: string;
+            /** Format: date-time */
+            ssoUpdatedAt: string;
+        };
+        ServiceStorefrontOrderUpdate: {
+            ssouStatus?: string | null;
+            /** Format: uri */
+            ssouDeliverablesUrl?: string | null;
+            ssouNotes?: string | null;
+        };
+        ServiceStorefrontPaypalCapture: {
+            pcCaptureOrderId: string;
+            pcCapturePaypalId: string;
+        };
+        ServiceStorefrontManualPaymentCreate: {
+            /** @enum {string} */
+            ssmPaymentMethod: "bank_transfer" | "cash" | "pos";
+        };
+        ServiceStorefrontRevisionCreate: {
+            ssrcFeedback: string;
+        };
+        ServiceStorefrontRevision: {
+            /** Format: uuid */
+            ssrId: string;
+            /** Format: uuid */
+            ssrOrderId: string;
+            ssrRevisionNumber: number;
+            ssrFeedback: string;
+            ssrStatus: string;
+            /** Format: date-time */
+            ssrCreatedAt: string;
+            /** Format: date-time */
+            ssrCompletedAt: string | null;
+        };
+        ServiceStorefrontRefundCreate: {
+            ssrfcAmountUsdCents?: number | null;
+            ssrfcReasonCode: string;
+        };
+        ServiceStorefrontRefund: {
+            /** Format: uuid */
+            ssrfId: string;
+            /** Format: uuid */
+            ssrfOrderId: string;
+            /** @enum {string} */
+            ssrfProvider: "paypal" | "datafast" | "stripe";
+            ssrfProviderRefundId: string | null;
+            /** @enum {string} */
+            ssrfStatus: "requested" | "approved" | "processing" | "succeeded" | "failed" | "cancelled";
+            ssrfAmountUsdCents: number;
+            ssrfCurrency: string;
+            ssrfReasonCode: string;
+            /** Format: int64 */
+            ssrfRequestedBy: number;
+            /** Format: int64 */
+            ssrfApprovedBy: number | null;
+            /** Format: date-time */
+            ssrfCreatedAt: string;
+            /** Format: date-time */
+            ssrfCompletedAt: string | null;
+        };
+        ServiceStorefrontReconciliation: {
+            /** Format: uuid */
+            ssrecOrderId: string;
+            ssrecProvider: string;
+            ssrecProviderReference: string;
+            ssrecExpectedAmount: number;
+            ssrecActualAmount: number | null;
+            ssrecCurrency: string;
+            ssrecMatched: boolean;
+            /** Format: date-time */
+            ssrecCheckedAt: string;
+        };
+        DatafastCheckout: {
+            dcOrderId: string;
+            dcCheckoutId: string;
+            /** Format: uri */
+            dcWidgetUrl: string;
+            dcAmount: string;
+            dcCurrency: string;
+        };
+        PaypalCreate: {
+            pcOrderId: string;
+            pcPaypalOrderId: string;
+            /** Format: uri */
+            pcApprovalUrl: string | null;
+        };
+        PaymentSheetParams: {
+            psCustomerId: string;
+            psEphemeralKeySecret: string;
+            psPaymentIntentClientSecret: string;
+            psPublishableKey: string;
+        };
+        StripePaymentIntent: {
+            spiClientSecret: string;
+            spiOrderId: string;
+            spiAmountCents: number;
+            spiCurrency: string;
+            spiPaymentSheet: components["schemas"]["PaymentSheetParams"] | null;
+        };
         DdexStandardVersion: {
             /** Format: uuid */
             ddexStandardVersionId: string;
@@ -5130,6 +5703,13 @@ export interface components {
         DdexDocumentId: number;
         DdexImportPlanId: number;
         DdexExportId: number;
+        ServiceStorefrontPackageId: string;
+        /** @description Public order number or canonical UUID accepted by the service storefront. */
+        ServiceStorefrontOrderId: string;
+        /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+        OrderLookupToken: string;
+        /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+        IdempotencyKey: string;
     };
     requestBodies: never;
     headers: never;
@@ -9720,6 +10300,898 @@ export interface operations {
             };
             /** @description A supplied standard version is inactive or not detection-enabled */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listServiceStorefrontPackages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active packages ordered by their configured sort order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontPackage"][];
+                };
+            };
+        };
+    };
+    getServiceStorefrontPackage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packageId: components["parameters"]["ServiceStorefrontPackageId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Package pricing and fulfillment policy */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontPackage"];
+                };
+            };
+            /** @description Package not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createServiceStorefrontOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontOrderCreate"];
+            };
+        };
+        responses: {
+            /** @description Created or idempotently recovered unpaid order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Invalid buyer */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency-key payload conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Public request rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getServiceStorefrontOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Customer-safe order state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createServiceStorefrontStripePaymentIntent: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Hosted or tokenized payment-intent parameters */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripePaymentIntent"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stripe capability is disabled */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createServiceStorefrontDatafastCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound Datafast hosted checkout resource */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatafastCheckout"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Existing provider binding conflicts with the order snapshot */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast rejected or did not create the resource */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmServiceStorefrontDatafastStatus: {
+        parameters: {
+            query: {
+                orderId: string;
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current order state after provider verification */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider evidence did not match the immutable order snapshot */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast status could not be verified */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createServiceStorefrontPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound PayPal order and approval URL */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaypalCreate"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Existing provider binding conflicts with the order snapshot */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal rejected or did not create the order */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    captureServiceStorefrontPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontPaypalCapture"];
+            };
+        };
+        responses: {
+            /** @description Current order state after server verification */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider evidence did not match the immutable order snapshot */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Capture or server verification failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    receiveServiceStorefrontPaypalWebhook: {
+        parameters: {
+            query?: never;
+            header: {
+                "PayPal-Transmission-Id": string;
+                "PayPal-Transmission-Time": string;
+                "PayPal-Cert-Url": string;
+                "PayPal-Auth-Algo": string;
+                "PayPal-Transmission-Sig": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Event was verified and processed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Required signature header or event envelope is invalid */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal signature verification failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider event identifier conflicts with different raw evidence */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Webhook capability is disabled for this environment */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    selectServiceStorefrontManualPayment: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontManualPaymentCreate"];
+            };
+        };
+        responses: {
+            /** @description Order remains awaiting manual confirmation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Unsupported manual payment method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createServiceStorefrontRevision: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontRevisionCreate"];
+            };
+        };
+        responses: {
+            /** @description Persisted revision request */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontRevision"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order state does not permit a revision */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListServiceStorefrontOrders: {
+        parameters: {
+            query?: {
+                status?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Matching service orders */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"][];
+                };
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminUpdateServiceStorefrontOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontOrderUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated service order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid state transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListServiceStorefrontPackages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active and inactive packages */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontPackage"][];
+                };
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminCreateServiceStorefrontPackage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontPackageCreate"];
+            };
+        };
+        responses: {
+            /** @description Created package */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontPackage"];
+                };
+            };
+            /** @description Invalid pricing or quantity policy */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminUpdateServiceStorefrontPackage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packageId: components["parameters"]["ServiceStorefrontPackageId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontPackageUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated package */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontPackage"];
+                };
+            };
+            /** @description Invalid pricing or quantity policy */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Package not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListServiceStorefrontRefunds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Refund history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontRefund"][];
+                };
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminRequestServiceStorefrontRefund: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontRefundCreate"];
+            };
+        };
+        responses: {
+            /** @description Requested refund awaiting independent approval */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontRefund"];
+                };
+            };
+            /** @description Invalid amount or reason */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Paid order or capture binding not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Amount exceeds the unreserved captured balance or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminApproveServiceStorefrontRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current truthful refund state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontRefund"];
+                };
+            };
+            /** @description Strict Admin role required or separation of duties failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Refund not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid state or provider evidence mismatch */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Refund capability is disabled for this environment */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal request failed; refund remains processing or failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminReconcileServiceStorefrontOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Read-only provider comparison; mismatches create an operator exception */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontReconciliation"];
+                };
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order or provider binding not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider reconciliation capability is unavailable */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider status could not be read */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };

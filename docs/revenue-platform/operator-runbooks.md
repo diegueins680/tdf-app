@@ -29,6 +29,15 @@ redacted evidence. Resolve through an immutable compensating entry or linked evi
 second reviewer for cash-impacting changes. Do not close until provider and ledger totals agree or
 the accepted write-off is documented.
 
+## PayPal refund pending, failed, or ambiguous
+
+Do not create a second refund request. Keep the immutable refund UUID and retry the approval action
+with the same provider request ID after checking provider health. A requester may not approve their
+own refund. For `PENDING`, query PayPal server-to-server and compare capture, refund ID, amount,
+currency, environment and merchant before recording completion. For a mismatch or an externally
+observed refund/reversal, keep the internal refund unchanged and resolve the reconciliation
+exception with a second reviewer. Never edit allocations, ledger entries, or credit notes in place.
+
 ## Distribution dead letter or release-date risk
 
 Stop retries if the package/profile/checksum may be wrong. Verify immutable release version,

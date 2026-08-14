@@ -1185,6 +1185,10 @@ BEGIN
     'commerce_checkout_line_item',
     'commerce_payment_attempt',
     'commerce_provider_binding',
+    'commerce_provider_event_inbox',
+    'commerce_refund',
+    'commerce_refund_allocation',
+    'commerce_refund_reason_code',
     'commerce_reconciliation_exception',
     'commerce_receipt',
     'commerce_ledger_transaction',
@@ -1224,6 +1228,100 @@ BEGIN
      OR to_regclass('public.uq_commerce_active_payment_receipt_checkout') IS NULL
      OR to_regclass('public.uq_commerce_open_reconciliation_fingerprint') IS NULL THEN
     RAISE EXCEPTION 'Service storefront checkout runtime view or indexes are incomplete';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('commerce_provider_event_inbox', 'checkout_id', 'uuid', 'YES'),
+        ('commerce_provider_event_inbox', 'payment_attempt_id', 'uuid', 'YES'),
+        ('commerce_provider_event_inbox', 'refund_id', 'uuid', 'YES'),
+        ('commerce_provider_event_inbox', 'provider_resource_id', 'text', 'YES'),
+        ('commerce_provider_event_inbox', 'processing_started_at', 'timestamp with time zone', 'YES'),
+        ('commerce_provider_event_inbox', 'last_attempt_at', 'timestamp with time zone', 'YES'),
+        ('commerce_refund', 'provider', 'text', 'YES'),
+        ('commerce_refund', 'environment', 'text', 'YES'),
+        ('commerce_refund', 'merchant_account_ref', 'text', 'YES'),
+        ('commerce_refund', 'failure_code', 'text', 'YES'),
+        ('commerce_refund', 'failure_summary', 'text', 'YES'),
+        ('commerce_refund', 'updated_at', 'timestamp with time zone', 'NO'),
+        ('commerce_refund_reason_code', 'reason_code', 'text', 'NO'),
+        ('commerce_refund_reason_code', 'name_es', 'text', 'NO'),
+        ('commerce_refund_reason_code', 'name_en', 'text', 'NO'),
+        ('commerce_refund_reason_code', 'active', 'boolean', 'NO'),
+        ('commerce_refund_reason_code', 'requires_note', 'boolean', 'NO'),
+        ('commerce_receipt', 'refund_id', 'uuid', 'YES')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Provider event/refund runtime columns are missing or invalid';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('commerce_provider_event_inbox', 'fk_commerce_provider_event_checkout', 'f', 'FOREIGN KEY (checkout_id) REFERENCES commerce_checkout_session(id) ON DELETE RESTRICT'),
+        ('commerce_provider_event_inbox', 'fk_commerce_provider_event_attempt', 'f', 'FOREIGN KEY (payment_attempt_id) REFERENCES commerce_payment_attempt(id) ON DELETE RESTRICT'),
+        ('commerce_provider_event_inbox', 'fk_commerce_provider_event_refund', 'f', 'FOREIGN KEY (refund_id) REFERENCES commerce_refund(id) ON DELETE RESTRICT'),
+        ('commerce_refund', 'ck_commerce_refund_provider', 'c', 'CHECK (((provider IS NULL) OR (provider = ANY (ARRAY[''datafast''::text, ''paypal''::text, ''stripe''::text, ''bank_transfer''::text, ''cash''::text, ''pos''::text]))))'),
+        ('commerce_refund', 'ck_commerce_refund_environment', 'c', 'CHECK (((environment IS NULL) OR (environment = ANY (ARRAY[''sandbox''::text, ''production''::text]))))'),
+        ('commerce_receipt', 'fk_commerce_receipt_refund', 'f', 'FOREIGN KEY (refund_id) REFERENCES commerce_refund(id) ON DELETE RESTRICT')
+    ) AS expected(table_name, constraint_name, constraint_type, definition)
+    LEFT JOIN pg_constraint AS actual
+      ON actual.conrelid = ('public.' || expected.table_name)::regclass
+     AND actual.conname = expected.constraint_name
+     AND actual.contype = expected.constraint_type::"char"
+    WHERE actual.oid IS NULL
+       OR NOT actual.convalidated
+       OR replace(pg_get_constraintdef(actual.oid), 'public.', '') <> expected.definition
+  ) THEN
+    RAISE EXCEPTION 'Provider event/refund constraints are missing or invalid';
+  END IF;
+
+  IF to_regclass('public.idx_commerce_provider_event_work') IS NULL
+     OR to_regclass('public.idx_commerce_provider_event_resource') IS NULL
+     OR to_regclass('public.idx_commerce_refund_checkout_status') IS NULL
+     OR to_regclass('public.uq_commerce_credit_note_refund') IS NULL THEN
+    RAISE EXCEPTION 'Provider event/refund runtime indexes are incomplete';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.commerce_refund'::regclass
+      AND tgname = 'trg_commerce_validate_refund_write' AND tgenabled = 'O'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.commerce_refund_allocation'::regclass
+      AND tgname = 'trg_commerce_refund_allocation_immutable' AND tgenabled = 'O'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.commerce_receipt'::regclass
+      AND tgname = 'trg_commerce_validate_credit_note' AND tgenabled = 'O'
+  ) THEN
+    RAISE EXCEPTION 'Provider refund invariant triggers are missing or disabled';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('checkout.paypal.webhooks'),
+      ('checkout.paypal.refunds'),
+      ('checkout.datafast.webhooks'),
+      ('checkout.datafast.refunds')
+    ) AS expected(flag_key)
+    LEFT JOIN revenue_feature_flag AS flag
+      ON flag.flag_key = expected.flag_key AND flag.environment = 'production'
+    WHERE flag.flag_key IS NULL OR flag.enabled
+  ) THEN
+    RAISE EXCEPTION 'Production provider event/refund capability gates must exist disabled';
   END IF;
 END
 $verify$;`;

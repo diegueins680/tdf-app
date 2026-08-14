@@ -61,6 +61,7 @@
     "generate:feature-audit-reports": "node scripts/generate-feature-audit-reports.mjs",
     "test:feature-migrations": "sh scripts/test-feature-migrations.sh",
     "test:service-checkout-migration": "sh scripts/test-service-storefront-checkout-runtime-migration.sh",
+    "test:checkout-event-refund-migration": "sh scripts/test-checkout-event-refund-runtime-migration.sh",
     "release:backend:plan": "node scripts/production-release.mjs plan",
     "release:backend:preflight": "node scripts/production-release.mjs preflight",
     "release:backend": "node scripts/production-release.mjs release",

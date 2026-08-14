@@ -7092,6 +7092,26 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
+    },
+    {
+      "id": "67ea93ac852e5fd17892",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P0-security",
+      "risk": "An unknown provider discriminator could bypass exact merchant, environment, signature, or settlement adapter checks.",
+      "justification": "These values are the closed implementation dispatch union for compiled payment adapters. Merchant capabilities and enablement remain database-configured feature flags.",
+      "reviewed": true
+    },
+    {
+      "id": "d14b4c467d704c72df48",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P0-security",
+      "risk": "An unknown environment discriminator could allow sandbox evidence to affect production records.",
+      "justification": "Sandbox and production are protocol-level security partitions enforced exhaustively in code and constraints, not selectable business catalog values.",
+      "reviewed": true
     }
   ]
 }

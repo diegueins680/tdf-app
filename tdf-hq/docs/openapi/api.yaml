@@ -3579,6 +3579,419 @@ paths:
         '400': { description: Unknown properties, duplicated IDs, or malformed canonical UUID }
         '403': { description: Missing persisted `catalog.import` capability }
         '422': { description: A supplied standard version is inactive or not detection-enabled }
+  /services/storefront:
+    get:
+      tags: [Service storefront]
+      summary: List active mixing and mastering packages
+      operationId: listServiceStorefrontPackages
+      security: [ ]
+      responses:
+        '200':
+          description: Active packages ordered by their configured sort order
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ServiceStorefrontPackage' }
+  /services/storefront/{packageId}:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontPackageId'
+    get:
+      tags: [Service storefront]
+      summary: Read one active service package
+      operationId: getServiceStorefrontPackage
+      security: [ ]
+      responses:
+        '200':
+          description: Package pricing and fulfillment policy
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontPackage' }
+        '404': { description: Package not found }
+  /services/storefront/order:
+    post:
+      tags: [Service storefront]
+      summary: Create an unpaid service order from authoritative package pricing
+      description: The Idempotency-Key prevents duplicate orders. The response contains a lookup token only when the order is first created.
+      operationId: createServiceStorefrontOrder
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceStorefrontOrderCreate' }
+      responses:
+        '200':
+          description: Created or idempotently recovered unpaid order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontOrder' }
+        '400': { description: Invalid buyer, quantity, or package relationship }
+        '409': { description: Idempotency-key payload conflict }
+        '429': { description: Public request rate limit exceeded }
+  /services/storefront/order/{orderId}:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontOrderId'
+    get:
+      tags: [Service storefront]
+      summary: Track a service order with its unguessable lookup token
+      operationId: getServiceStorefrontOrder
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Customer-safe order state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontOrder' }
+        '404': { description: Order not found or lookup token invalid }
+  /services/storefront/order/{orderId}/stripe/payment-intent:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontOrderId'
+    post:
+      tags: [Service storefront]
+      summary: Create an optional Stripe payment intent
+      description: This rail is capability-gated and is not an Ecuador-critical dependency.
+      operationId: createServiceStorefrontStripePaymentIntent
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Hosted or tokenized payment-intent parameters
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StripePaymentIntent' }
+        '404': { description: Order not found or lookup token invalid }
+        '501': { description: Stripe capability is disabled }
+  /services/storefront/order/{orderId}/datafast/checkout:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontOrderId'
+    post:
+      tags: [Service storefront]
+      summary: Create or recover a Datafast checkout resource
+      operationId: createServiceStorefrontDatafastCheckout
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Bound Datafast hosted checkout resource
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DatafastCheckout' }
+        '404': { description: Order not found or lookup token invalid }
+        '409': { description: Existing provider binding conflicts with the order snapshot }
+        '502': { description: Datafast rejected or did not create the resource }
+  /services/storefront/datafast/status:
+    get:
+      tags: [Service storefront]
+      summary: Verify a Datafast resource server-to-server
+      description: A browser return alone never marks the order paid. The server verifies resource, amount, currency, merchant, and internal order binding.
+      operationId: confirmServiceStorefrontDatafastStatus
+      security: [ ]
+      parameters:
+        - name: orderId
+          in: query
+          required: true
+          schema: { type: string, minLength: 1 }
+        - name: resourcePath
+          in: query
+          required: true
+          schema: { type: string, minLength: 1 }
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Current order state after provider verification
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontOrder' }
+        '404': { description: Order not found or lookup token invalid }
+        '409': { description: Provider evidence did not match the immutable order snapshot }
+        '502': { description: Datafast status could not be verified }
+  /services/storefront/order/{orderId}/paypal/create:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontOrderId'
+    post:
+      tags: [Service storefront]
+      summary: Create or recover a PayPal order
+      operationId: createServiceStorefrontPaypalOrder
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Bound PayPal order and approval URL
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaypalCreate' }
+        '404': { description: Order not found or lookup token invalid }
+        '409': { description: Existing provider binding conflicts with the order snapshot }
+        '502': { description: PayPal rejected or did not create the order }
+  /services/storefront/paypal/capture:
+    post:
+      tags: [Service storefront]
+      summary: Capture and verify an approved PayPal order
+      description: The internal order and PayPal resource are rebound and verified server-to-server before payment state changes.
+      operationId: captureServiceStorefrontPaypalOrder
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceStorefrontPaypalCapture' }
+      responses:
+        '200':
+          description: Current order state after server verification
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontOrder' }
+        '404': { description: Order not found or lookup token invalid }
+        '409': { description: Provider evidence did not match the immutable order snapshot }
+        '502': { description: Capture or server verification failed }
+  /services/storefront/paypal/webhook:
+    post:
+      tags: [Service storefront]
+      summary: Receive a PayPal webhook into the encrypted idempotent event inbox
+      description: All PayPal transmission headers and the exact raw event are verified with PayPal before a production event may affect payment state.
+      operationId: receiveServiceStorefrontPaypalWebhook
+      security: [ ]
+      parameters:
+        - { name: PayPal-Transmission-Id, in: header, required: true, schema: { type: string } }
+        - { name: PayPal-Transmission-Time, in: header, required: true, schema: { type: string, format: date-time } }
+        - { name: PayPal-Cert-Url, in: header, required: true, schema: { type: string, format: uri } }
+        - { name: PayPal-Auth-Algo, in: header, required: true, schema: { type: string } }
+        - { name: PayPal-Transmission-Sig, in: header, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '200': { description: Event was verified and processed, ignored, or durably scheduled for bounded retry }
+        '400': { description: Required signature header or event envelope is invalid }
+        '401': { description: PayPal signature verification failed }
+        '409': { description: Provider event identifier conflicts with different raw evidence }
+        '501': { description: Webhook capability is disabled for this environment }
+  /services/storefront/order/{orderId}/manual-payment:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontOrderId'
+    post:
+      tags: [Service storefront]
+      summary: Select a manual payment method without confirming payment
+      operationId: selectServiceStorefrontManualPayment
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceStorefrontManualPaymentCreate' }
+      responses:
+        '200':
+          description: Order remains awaiting manual confirmation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontOrder' }
+        '400': { description: Unsupported manual payment method }
+        '404': { description: Order not found or lookup token invalid }
+  /services/storefront/order/{orderId}/revision:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontOrderId'
+    post:
+      tags: [Service storefront]
+      summary: Request a service-order revision
+      operationId: createServiceStorefrontRevision
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceStorefrontRevisionCreate' }
+      responses:
+        '200':
+          description: Persisted revision request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontRevision' }
+        '404': { description: Order not found or lookup token invalid }
+        '409': { description: Order state does not permit a revision }
+  /admin/services/storefront/orders:
+    get:
+      tags: [Admin, Service storefront]
+      summary: List service orders for operations
+      operationId: adminListServiceStorefrontOrders
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0 } }
+      responses:
+        '200':
+          description: Matching service orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ServiceStorefrontOrder' }
+        '403': { description: Strict Admin role required }
+  /admin/services/storefront/orders/{orderId}:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontOrderId'
+    put:
+      tags: [Admin, Service storefront]
+      summary: Apply a validated service fulfillment transition
+      operationId: adminUpdateServiceStorefrontOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceStorefrontOrderUpdate' }
+      responses:
+        '200':
+          description: Updated service order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontOrder' }
+        '403': { description: Strict Admin role required }
+        '404': { description: Order not found }
+        '409': { description: Invalid state transition }
+  /admin/services/storefront/packages:
+    get:
+      tags: [Admin, Service storefront]
+      summary: List all service packages
+      operationId: adminListServiceStorefrontPackages
+      responses:
+        '200':
+          description: Active and inactive packages
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ServiceStorefrontPackage' }
+        '403': { description: Strict Admin role required }
+    post:
+      tags: [Admin, Service storefront]
+      summary: Create a versioned service package
+      operationId: adminCreateServiceStorefrontPackage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceStorefrontPackageCreate' }
+      responses:
+        '200':
+          description: Created package
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontPackage' }
+        '400': { description: Invalid pricing or quantity policy }
+        '403': { description: Strict Admin role required }
+  /admin/services/storefront/packages/{packageId}:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontPackageId'
+    put:
+      tags: [Admin, Service storefront]
+      summary: Update a service package
+      operationId: adminUpdateServiceStorefrontPackage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceStorefrontPackageUpdate' }
+      responses:
+        '200':
+          description: Updated package
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontPackage' }
+        '400': { description: Invalid pricing or quantity policy }
+        '403': { description: Strict Admin role required }
+        '404': { description: Package not found }
+  /admin/services/storefront/orders/{orderId}/refunds:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontOrderId'
+    get:
+      tags: [Admin, Service storefront]
+      summary: List immutable refund requests for an order
+      operationId: adminListServiceStorefrontRefunds
+      responses:
+        '200':
+          description: Refund history
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ServiceStorefrontRefund' }
+        '403': { description: Strict Admin role required }
+    post:
+      tags: [Admin, Service storefront]
+      summary: Request a full or partial refund
+      description: The amount defaults to the server-calculated unreserved captured balance. Requesting does not contact the provider.
+      operationId: adminRequestServiceStorefrontRefund
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceStorefrontRefundCreate' }
+      responses:
+        '200':
+          description: Requested refund awaiting independent approval
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontRefund' }
+        '400': { description: Invalid amount or reason }
+        '403': { description: Strict Admin role required }
+        '404': { description: Paid order or capture binding not found }
+        '409': { description: Amount exceeds the unreserved captured balance or idempotency conflict }
+  /admin/services/storefront/refunds/{refundId}/approve:
+    parameters:
+      - name: refundId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [Admin, Service storefront]
+      summary: Independently approve and submit a PayPal refund
+      description: The approver must differ from the requester. Success is recorded only after PayPal returns an exact completed refund.
+      operationId: adminApproveServiceStorefrontRefund
+      responses:
+        '200':
+          description: Current truthful refund state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontRefund' }
+        '403': { description: Strict Admin role required or separation of duties failed }
+        '404': { description: Refund not found }
+        '409': { description: Invalid state or provider evidence mismatch }
+        '501': { description: Refund capability is disabled for this environment }
+        '502': { description: PayPal request failed; refund remains processing or failed }
+  /admin/services/storefront/orders/{orderId}/reconcile:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontOrderId'
+    post:
+      tags: [Admin, Service storefront]
+      summary: Compare an order binding with the provider without changing payment state
+      operationId: adminReconcileServiceStorefrontOrder
+      responses:
+        '200':
+          description: Read-only provider comparison; mismatches create an operator exception
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontReconciliation' }
+        '403': { description: Strict Admin role required }
+        '404': { description: Order or provider binding not found }
+        '501': { description: Provider reconciliation capability is unavailable }
+        '502': { description: Provider status could not be read }
 security:
   - bearerAuth: [ ]
 
@@ -3652,7 +4065,250 @@ components:
       in: path
       required: true
       schema: { type: integer, format: int64, minimum: 1 }
+    ServiceStorefrontPackageId:
+      name: packageId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ServiceStorefrontOrderId:
+      name: orderId
+      in: path
+      required: true
+      description: Public order number or canonical UUID accepted by the service storefront.
+      schema: { type: string, minLength: 1 }
+    OrderLookupToken:
+      name: X-Order-Lookup-Token
+      in: header
+      required: true
+      description: Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders.
+      schema: { type: string, minLength: 32, writeOnly: true }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
+      schema: { type: string, minLength: 8, maxLength: 200 }
   schemas:
+    ServiceStorefrontPackage:
+      type: object
+      required: [sspId, sspServiceKind, sspTier, sspName, sspDescription, sspPriceUsdCents, sspCurrency, sspMinSongCount, sspMaxSongCount, sspTurnaroundDays, sspRevisionCount, sspDeliverables, sspFeatures, sspActive, sspSortOrder]
+      properties:
+        sspId: { type: string, format: uuid }
+        sspServiceKind: { type: string, enum: [Mixing, Mastering, Bundle] }
+        sspTier: { type: string }
+        sspName: { type: string }
+        sspDescription: { type: string, nullable: true }
+        sspPriceUsdCents: { type: integer, minimum: 0, description: Authoritative price per song in integer minor units. }
+        sspCurrency: { type: string, minLength: 3, maxLength: 3 }
+        sspMinSongCount: { type: integer, minimum: 1 }
+        sspMaxSongCount: { type: integer, minimum: 1 }
+        sspTurnaroundDays: { type: integer, minimum: 0 }
+        sspRevisionCount: { type: integer, minimum: 0 }
+        sspDeliverables:
+          type: array
+          nullable: true
+          items: { type: string }
+        sspFeatures:
+          type: array
+          nullable: true
+          items: { type: string }
+        sspActive: { type: boolean }
+        sspSortOrder: { type: integer }
+    ServiceStorefrontPackageCreate:
+      type: object
+      additionalProperties: false
+      required: [sspcServiceKind, sspcTier, sspcName, sspcPriceUsdCents]
+      properties:
+        sspcServiceKind: { type: string, enum: [Mixing, Mastering, Bundle] }
+        sspcTier: { type: string, minLength: 1 }
+        sspcName: { type: string, minLength: 1 }
+        sspcDescription: { type: string, nullable: true }
+        sspcPriceUsdCents: { type: integer, minimum: 0 }
+        sspcCurrency: { type: string, minLength: 3, maxLength: 3, nullable: true }
+        sspcMinSongCount: { type: integer, minimum: 1, nullable: true }
+        sspcMaxSongCount: { type: integer, minimum: 1, nullable: true }
+        sspcTurnaroundDays: { type: integer, minimum: 0, nullable: true }
+        sspcRevisionCount: { type: integer, minimum: 0, nullable: true }
+        sspcDeliverables:
+          type: array
+          nullable: true
+          items: { type: string }
+        sspcFeatures:
+          type: array
+          nullable: true
+          items: { type: string }
+        sspcSortOrder: { type: integer, nullable: true }
+    ServiceStorefrontPackageUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        sspuName: { type: string, nullable: true }
+        sspuDescription: { type: string, nullable: true }
+        sspuPriceUsdCents: { type: integer, minimum: 0, nullable: true }
+        sspuMinSongCount: { type: integer, minimum: 1, nullable: true }
+        sspuMaxSongCount: { type: integer, minimum: 1, nullable: true }
+        sspuTurnaroundDays: { type: integer, minimum: 0, nullable: true }
+        sspuRevisionCount: { type: integer, minimum: 0, nullable: true }
+        sspuDeliverables:
+          type: array
+          nullable: true
+          items: { type: string }
+        sspuFeatures:
+          type: array
+          nullable: true
+          items: { type: string }
+        sspuActive: { type: boolean, nullable: true }
+        sspuSortOrder: { type: integer, nullable: true }
+    ServiceStorefrontOrderCreate:
+      type: object
+      additionalProperties: false
+      required: [ssocPackageId, ssocBuyerName, ssocBuyerEmail]
+      properties:
+        ssocPackageId: { type: string, format: uuid }
+        ssocBuyerName: { type: string, minLength: 1 }
+        ssocBuyerEmail: { type: string, format: email }
+        ssocBuyerPhone: { type: string, nullable: true }
+        ssocArtistName: { type: string, nullable: true }
+        ssocGenre: { type: string, nullable: true }
+        ssocSongCount: { type: integer, minimum: 1, nullable: true }
+        ssocNotes: { type: string, nullable: true }
+        ssocReferenceTrackUrl: { type: string, format: uri, nullable: true }
+        ssocDeadline: { type: string, format: date, nullable: true }
+    ServiceStorefrontOrder:
+      type: object
+      required: [ssoId, ssoOrderNumber, ssoBuyerName, ssoBuyerEmail, ssoBuyerPhone, ssoArtistName, ssoPackageId, ssoServiceKind, ssoTier, ssoPriceUsdCents, ssoCurrency, ssoStatus, ssoPaymentProvider, ssoLookupToken, ssoPaidAt, ssoGenre, ssoSongCount, ssoNotes, ssoReferenceTrackUrl, ssoDeadline, ssoDeliverablesUrl, ssoCreatedAt, ssoUpdatedAt]
+      properties:
+        ssoId: { type: string, format: uuid }
+        ssoOrderNumber: { type: string }
+        ssoBuyerName: { type: string }
+        ssoBuyerEmail: { type: string, format: email }
+        ssoBuyerPhone: { type: string, nullable: true }
+        ssoArtistName: { type: string, nullable: true }
+        ssoPackageId: { type: string, format: uuid }
+        ssoServiceKind: { type: string }
+        ssoTier: { type: string }
+        ssoPriceUsdCents: { type: integer, minimum: 0 }
+        ssoCurrency: { type: string, minLength: 3, maxLength: 3 }
+        ssoStatus: { type: string }
+        ssoPaymentProvider: { type: string, nullable: true }
+        ssoLookupToken: { type: string, nullable: true, writeOnly: true }
+        ssoPaidAt: { type: string, format: date-time, nullable: true }
+        ssoGenre: { type: string, nullable: true }
+        ssoSongCount: { type: integer, minimum: 1 }
+        ssoNotes: { type: string, nullable: true }
+        ssoReferenceTrackUrl: { type: string, format: uri, nullable: true }
+        ssoDeadline: { type: string, format: date, nullable: true }
+        ssoDeliverablesUrl: { type: string, format: uri, nullable: true }
+        ssoCreatedAt: { type: string, format: date-time }
+        ssoUpdatedAt: { type: string, format: date-time }
+    ServiceStorefrontOrderUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        ssouStatus: { type: string, nullable: true }
+        ssouDeliverablesUrl: { type: string, format: uri, nullable: true }
+        ssouNotes: { type: string, nullable: true }
+    ServiceStorefrontPaypalCapture:
+      type: object
+      additionalProperties: false
+      required: [pcCaptureOrderId, pcCapturePaypalId]
+      properties:
+        pcCaptureOrderId: { type: string, minLength: 1 }
+        pcCapturePaypalId: { type: string, minLength: 1 }
+    ServiceStorefrontManualPaymentCreate:
+      type: object
+      additionalProperties: false
+      required: [ssmPaymentMethod]
+      properties:
+        ssmPaymentMethod: { type: string, enum: [bank_transfer, cash, pos] }
+    ServiceStorefrontRevisionCreate:
+      type: object
+      additionalProperties: false
+      required: [ssrcFeedback]
+      properties:
+        ssrcFeedback: { type: string, minLength: 1 }
+    ServiceStorefrontRevision:
+      type: object
+      required: [ssrId, ssrOrderId, ssrRevisionNumber, ssrFeedback, ssrStatus, ssrCreatedAt, ssrCompletedAt]
+      properties:
+        ssrId: { type: string, format: uuid }
+        ssrOrderId: { type: string, format: uuid }
+        ssrRevisionNumber: { type: integer, minimum: 1 }
+        ssrFeedback: { type: string }
+        ssrStatus: { type: string }
+        ssrCreatedAt: { type: string, format: date-time }
+        ssrCompletedAt: { type: string, format: date-time, nullable: true }
+    ServiceStorefrontRefundCreate:
+      type: object
+      additionalProperties: false
+      required: [ssrfcReasonCode]
+      properties:
+        ssrfcAmountUsdCents: { type: integer, minimum: 1, nullable: true }
+        ssrfcReasonCode: { type: string, minLength: 1 }
+    ServiceStorefrontRefund:
+      type: object
+      required: [ssrfId, ssrfOrderId, ssrfProvider, ssrfProviderRefundId, ssrfStatus, ssrfAmountUsdCents, ssrfCurrency, ssrfReasonCode, ssrfRequestedBy, ssrfApprovedBy, ssrfCreatedAt, ssrfCompletedAt]
+      properties:
+        ssrfId: { type: string, format: uuid }
+        ssrfOrderId: { type: string, format: uuid }
+        ssrfProvider: { type: string, enum: [paypal, datafast, stripe] }
+        ssrfProviderRefundId: { type: string, nullable: true }
+        ssrfStatus: { type: string, enum: [requested, approved, processing, succeeded, failed, cancelled] }
+        ssrfAmountUsdCents: { type: integer, minimum: 1 }
+        ssrfCurrency: { type: string, minLength: 3, maxLength: 3 }
+        ssrfReasonCode: { type: string }
+        ssrfRequestedBy: { type: integer, format: int64 }
+        ssrfApprovedBy: { type: integer, format: int64, nullable: true }
+        ssrfCreatedAt: { type: string, format: date-time }
+        ssrfCompletedAt: { type: string, format: date-time, nullable: true }
+    ServiceStorefrontReconciliation:
+      type: object
+      required: [ssrecOrderId, ssrecProvider, ssrecProviderReference, ssrecExpectedAmount, ssrecActualAmount, ssrecCurrency, ssrecMatched, ssrecCheckedAt]
+      properties:
+        ssrecOrderId: { type: string, format: uuid }
+        ssrecProvider: { type: string }
+        ssrecProviderReference: { type: string }
+        ssrecExpectedAmount: { type: integer, minimum: 0 }
+        ssrecActualAmount: { type: integer, minimum: 0, nullable: true }
+        ssrecCurrency: { type: string, minLength: 3, maxLength: 3 }
+        ssrecMatched: { type: boolean }
+        ssrecCheckedAt: { type: string, format: date-time }
+    DatafastCheckout:
+      type: object
+      required: [dcOrderId, dcCheckoutId, dcWidgetUrl, dcAmount, dcCurrency]
+      properties:
+        dcOrderId: { type: string }
+        dcCheckoutId: { type: string }
+        dcWidgetUrl: { type: string, format: uri }
+        dcAmount: { type: string, pattern: '^[0-9]+\\.[0-9]{2}$' }
+        dcCurrency: { type: string, minLength: 3, maxLength: 3 }
+    PaypalCreate:
+      type: object
+      required: [pcOrderId, pcPaypalOrderId, pcApprovalUrl]
+      properties:
+        pcOrderId: { type: string }
+        pcPaypalOrderId: { type: string }
+        pcApprovalUrl: { type: string, format: uri, nullable: true }
+    PaymentSheetParams:
+      type: object
+      required: [psCustomerId, psEphemeralKeySecret, psPaymentIntentClientSecret, psPublishableKey]
+      properties:
+        psCustomerId: { type: string }
+        psEphemeralKeySecret: { type: string, writeOnly: true }
+        psPaymentIntentClientSecret: { type: string, writeOnly: true }
+        psPublishableKey: { type: string }
+    StripePaymentIntent:
+      type: object
+      required: [spiClientSecret, spiOrderId, spiAmountCents, spiCurrency, spiPaymentSheet]
+      properties:
+        spiClientSecret: { type: string, writeOnly: true }
+        spiOrderId: { type: string }
+        spiAmountCents: { type: integer, minimum: 0 }
+        spiCurrency: { type: string, minLength: 3, maxLength: 3 }
+        spiPaymentSheet:
+          allOf:
+            - $ref: '#/components/schemas/PaymentSheetParams'
+          nullable: true
     DdexStandardVersion:
       type: object
       additionalProperties: false
