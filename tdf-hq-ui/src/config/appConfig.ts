@@ -17,12 +17,15 @@ const parseList = (raw?: string): string[] =>
 
 // Explicit references prevent Vite from serializing unrelated VITE_* values.
 const appConfigEnv = {
+  VITE_API_DEMO_TOKEN: import.meta.env?.VITE_API_DEMO_TOKEN,
   VITE_CARDANO_ADDRESS: import.meta.env?.VITE_CARDANO_ADDRESS,
   VITE_COURSE_COHORTS: import.meta.env?.VITE_COURSE_COHORTS,
   VITE_COURSE_INSTRUCTOR_AVATAR: import.meta.env?.VITE_COURSE_INSTRUCTOR_AVATAR,
   VITE_COURSE_MAP_URL: import.meta.env?.VITE_COURSE_MAP_URL,
   VITE_COURSE_SLUG: import.meta.env?.VITE_COURSE_SLUG,
   VITE_COURSE_WHATSAPP_URL: import.meta.env?.VITE_COURSE_WHATSAPP_URL,
+  VITE_DEFAULT_DEMO_TOKEN: import.meta.env?.VITE_DEFAULT_DEMO_TOKEN,
+  VITE_DEMO_TOKEN_HOSTS: import.meta.env?.VITE_DEMO_TOKEN_HOSTS,
   VITE_GOOGLE_MAPS_BROWSER_API_KEY: import.meta.env?.VITE_GOOGLE_MAPS_BROWSER_API_KEY,
   VITE_INVENTORY_SCAN_BASE: import.meta.env?.VITE_INVENTORY_SCAN_BASE,
   VITE_PUBLIC_BASE: import.meta.env?.VITE_PUBLIC_BASE,
@@ -60,6 +63,46 @@ export const buildInventoryScanUrl = (token: string) => `${INVENTORY_SCAN_BASE}/
 export const CARDANO_ADDRESS =
   (envString('VITE_CARDANO_ADDRESS') ??
     'addr1qx2mdr6n8d0v2y5s99tmdluzvcq6lvpvez0mx55vvpfy6ee4fzjjxl454z8d2f5gd2yualhds75ycvsl3wuar908v0csqksrwy').trim();
+
+const demoTokenEnv = envString('VITE_API_DEMO_TOKEN')?.trim() ?? '';
+const demoTokenHostsEnv = parseList(envString('VITE_DEMO_TOKEN_HOSTS'));
+const demoTokenHosts = demoTokenHostsEnv.length
+  ? demoTokenHostsEnv
+  : ['localhost', '127.0.0.1', '::1'];
+const demoTokenValue =
+  envTrimmedOrUndefined(envString('VITE_DEFAULT_DEMO_TOKEN')) ?? '';
+
+const URL_SCHEME_PATTERN = /^[a-z][a-z\d+\-.]*:\/\//i;
+
+const stripIpv6Brackets = (host: string): string => {
+  if (host.startsWith('[') && host.endsWith(']')) return host.slice(1, -1);
+  return host;
+};
+
+const extractHostname = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const normalizedUrl = URL_SCHEME_PATTERN.test(trimmed) ? trimmed : `http://${trimmed}`;
+  try {
+    return new URL(normalizedUrl).hostname;
+  } catch {
+    return null;
+  }
+};
+
+const normalizeHost = (host: string): string => {
+  const trimmed = host.trim();
+  if (!trimmed) return '';
+  const parsedHost = extractHostname(trimmed);
+  return stripIpv6Brackets(parsedHost ?? trimmed).toLowerCase();
+};
+
+export const inferDemoToken = (host?: string): string => {
+  if (demoTokenEnv) return demoTokenEnv;
+  if (!host || !demoTokenValue) return '';
+  const normalized = normalizeHost(host);
+  return demoTokenHosts.map(normalizeHost).includes(normalized) ? demoTokenValue : '';
+};
 
 const defaultCourseSlug =
   envTrimmedOrUndefined(envString('VITE_COURSE_SLUG')) ?? 'produccion-musical-jun-2026';

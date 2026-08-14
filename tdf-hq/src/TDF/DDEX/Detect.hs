@@ -15,7 +15,6 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Encoding.Error as TEE
 import Data.Maybe (fromMaybe)
-import Control.Applicative ((<|>))
 import TDF.DDEX.Types
 
 -- | Result of probing a document
@@ -150,40 +149,25 @@ extractNamespace text =
 
 extractVersion :: Text -> Maybe Text
 extractVersion text =
-  (firstAttribute
-    [ "MessageSchemaVersionId=\""
-    , "messageSchemaVersionId=\""
-    , "version=\""
-    ]
-    >>= normalizeDetectedVersion)
-    <|> versionFromNamespace (extractNamespace text)
+  -- Look for version attribute or namespace version
+  case T.breakOn "version=\"" text of
+    (_, rest) | T.isPrefixOf "version=\"" rest ->
+      let afterQuote = T.drop 9 rest
+      in case T.findIndex (== '"') afterQuote of
+        Just end -> Just (T.take end afterQuote)
+        Nothing -> Nothing
+    _ -> extractVersionFromNamespace text
+
+extractVersionFromNamespace :: Text -> Maybe Text
+extractVersionFromNamespace ns =
+  -- Extract version from namespace like "http://ddex.net/xml/ern/432"
+  let parts = T.splitOn "/" ns
+      versionPart = case reverse parts of
+        (x:_) | T.all isDigitOrDot x -> Just x
+        _ -> Nothing
+  in versionPart
   where
-    firstAttribute [] = Nothing
-    firstAttribute (attribute : rest) =
-      case T.breakOn attribute text of
-        (_, suffix) | T.isPrefixOf attribute suffix ->
-          let valueStart = T.drop (T.length attribute) suffix
-          in T.takeWhile (/= '"') valueStart `nonEmptyOr` firstAttribute rest
-        _ -> firstAttribute rest
-
-    nonEmptyOr value fallback
-      | T.null value = fallback
-      | otherwise = Just value
-
-    versionFromNamespace namespace = normalizeDetectedVersion (lastOrEmpty (T.splitOn "/" namespace))
-    lastOrEmpty [] = ""
-    lastOrEmpty values = last values
-
-normalizeDetectedVersion :: Text -> Maybe Text
-normalizeDetectedVersion raw =
-  case T.toLower (T.strip raw) of
-    "ern/432" -> Just "4.3.2"
-    "432" -> Just "4.3.2"
-    "4.3.2" -> Just "4.3.2"
-    "ern/43" -> Just "4.3"
-    "43" -> Just "4.3"
-    value | not (T.null value) -> Just value
-    _ -> Nothing
+    isDigitOrDot c = c >= '0' && c <= '9' || c == '.'
 
 -- Helper to decode UTF-8 leniently
 decodeUtf8Lenient :: BL.ByteString -> Text
