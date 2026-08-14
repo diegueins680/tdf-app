@@ -18,8 +18,6 @@ describe('normalizePreferences', () => {
       currency: ' usd ',
       timezone: ' America/Guayaquil ',
       countryCode: ' ec ',
-      supportedLocales: ['es', 'en'],
-      supportedCurrencies: ['USD'],
     }, fallback)).toEqual({
       localeId: '',
       locale: 'es',
