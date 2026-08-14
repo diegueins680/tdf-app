@@ -25,7 +25,7 @@ The final command transcript is summarized here after the branch-wide verificati
 | Web type safety | `npm run typecheck` | Pass |
 | Web production build | `npm run build` | Pass: 12,382 modules; bundle/secret gate 5 preloads and 399,972 gzip bytes |
 | Release/CI contracts | `npm run test:production-release`; `npm run test:ci-pipeline` | Pass: 21 + 12 tests |
-| Registered production batch | Render preflight; apply twice; schema verification against PostgreSQL 17 | Pass: 21/21 migrations, second run idempotent |
+| Registered production batch | Render preflight; apply twice; schema verification against PostgreSQL 17 | Pass: 22/22 migrations, second run idempotent, service runtime view/index/FK contract verified |
 | Mobile type safety | `npm --prefix tdf-mobile run typecheck` | Not valid locally: submodule dependencies are absent; CI must install and run it |
 
 The focused backend groups were: service storefront (5), checkout state machine (6), distribution
@@ -38,6 +38,11 @@ Follow-up verification for the service checkout runtime passed 10 focused exampl
 property cases, with zero failures. `stack test --no-run-tests --fast` compiled both the executable
 and test suite after the runtime integration. This is local database/application evidence only: no
 Datafast or PayPal sandbox request was made and no provider success was asserted.
+
+After registering the runtime migration with its immutable feature commit, the exact production
+batch applied twice in a fresh PostgreSQL 17 container. All 22 manifest entries were recorded, the
+release schema verifier passed, the mixing/mastering production flag remained disabled, and the
+legacy classification view contained no invented rows in the pristine fixture.
 
 ## Required staging exercise
 

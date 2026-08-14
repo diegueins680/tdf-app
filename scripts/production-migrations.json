@@ -105,6 +105,11 @@
       "id": "2026-08-13_distribution_product_seeds",
       "path": "tdf-hq/sql/2026-08-13_distribution_product_seeds.sql",
       "introducedBy": "b43065808494a7ed9e94ce8e6a87dcb33d25c96f"
+    },
+    {
+      "id": "2026-08-14_service_storefront_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-14_service_storefront_checkout_runtime.sql",
+      "introducedBy": "b52f48534ec196b03223f2f5203cf35f98a68278"
     }
   ]
 }
