@@ -87,6 +87,96 @@
       "introducedBy": "588fdef6ace56ffe077eb85063ad82d583130f48"
     },
     {
+      "id": "2026-08-14_catalog_canonical_schema",
+      "path": "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
+      "introducedBy": "15d0d0b607344e62025f39208861c313c08b7eaa"
+    },
+    {
+      "id": "2026-08-14_catalog_consumer_expand",
+      "path": "tdf-hq/sql/2026-08-14_catalog_consumer_expand.sql",
+      "introducedBy": "15d0d0b607344e62025f39208861c313c08b7eaa"
+    },
+    {
+      "id": "2026-08-14_catalog_integrity",
+      "path": "tdf-hq/sql/2026-08-14_catalog_integrity.sql",
+      "introducedBy": "15d0d0b607344e62025f39208861c313c08b7eaa"
+    },
+    {
+      "id": "2026-08-14_catalog_foundation_seed",
+      "path": "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
+      "introducedBy": "15d0d0b607344e62025f39208861c313c08b7eaa"
+    },
+    {
+      "id": "2026-08-07_catalog_backfill_apply",
+      "path": "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39"
+    },
+    {
+      "id": "2026-08-07_label_project_notes_backfill_apply",
+      "path": "tdf-hq/sql/2026-08-07_label_project_notes_backfill_apply.sql",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39"
+    },
+    {
+      "id": "2026-08-07_records_cms_backfill_apply",
+      "path": "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39"
+    },
+    {
+      "id": "2026-08-11_instrument_input_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-11_instrument_input_cutover_apply.sql",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39"
+    },
+    {
+      "id": "2026-08-11_feedback_catalog_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-11_feedback_catalog_cutover_apply.sql",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39"
+    },
+    {
+      "id": "2026-08-11_pipeline_workflow_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-11_pipeline_workflow_cutover_apply.sql",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39"
+    },
+    {
+      "id": "2026-08-11_social_event_type_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-11_social_event_type_cutover_apply.sql",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39"
+    },
+    {
+      "id": "2026-08-11_social_event_workflow_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39"
+    },
+    {
+      "id": "2026-08-12_event_moment_reaction_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-12_event_moment_reaction_cutover_apply.sql",
+      "introducedBy": "081de2ebe339f56585618010f994f65a4e21fe12"
+    },
+    {
+      "id": "2026-08-12_content_reaction_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
+      "introducedBy": "2574ee6c7629084836e75efe8b3264f33870e0ac"
+    },
+    {
+      "id": "2026-08-12_creator_badge_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-12_creator_badge_cutover_apply.sql",
+      "introducedBy": "0e41edacebcd7ff381ccd6c2fa7401d6f8476cf2"
+    },
+    {
+      "id": "2026-08-12_ddex_reference_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39"
+    },
+    {
+      "id": "2026-08-12_ddex_validation_reference_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_apply.sql",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39"
+    },
+    {
+      "id": "2026-08-12_ddex_operational_cutover_apply",
+      "path": "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39"
+    },
+    {
       "id": "2026-08-14_music_directory_core",
       "path": "tdf-hq/sql/2026-08-14_music_directory_core.sql",
       "introducedBy": "6dfc2281dce1837189fba869dc80ea548b2e942f"
