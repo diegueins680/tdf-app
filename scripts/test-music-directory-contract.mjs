@@ -58,6 +58,17 @@ assert.notEqual(response.properties.items, response.properties.sponsoredItems);
 assert.equal(spec.components.schemas.DirectorySearchItem.properties.sponsored.type, 'boolean');
 assert.equal(spec.components.parameters.IdempotencyKey.required, true);
 
+const taxonomy = spec.components.schemas.DirectoryTaxonomies;
+for (const collection of [
+  'professions', 'instruments', 'genres', 'serviceOfferings', 'classifiedCategories',
+  'compensationTypes', 'currencies', 'cities',
+]) {
+  assert(taxonomy.required.includes(collection), `DirectoryTaxonomies requires ${collection}`);
+  assert.equal(taxonomy.properties[collection].type, 'array', `${collection} is server-managed`);
+}
+assert.equal(spec.components.schemas.TaxonomyItem.properties.metadata.type, 'object');
+assert.equal(spec.components.schemas.TaxonomyItem.properties.minorUnits.type, 'integer');
+
 const idempotentOperations = [
   ['/directory/profiles', 'post'],
   ['/directory/classifieds', 'post'],
@@ -76,4 +87,4 @@ for (const [path, method] of idempotentOperations) {
   assert(parameters.some((parameter) => parameter.$ref === '#/components/parameters/IdempotencyKey'), `${method.toUpperCase()} ${path} requires Idempotency-Key`);
 }
 
-console.log('Music directory OpenAPI privacy, public-auth, sponsorship, and idempotency contracts passed.');
+console.log('Music directory OpenAPI privacy, public-auth, taxonomy, sponsorship, and idempotency contracts passed.');

@@ -371,11 +371,11 @@ components:
     TaxonomyItem:
       type: object
       required: [id, code, name]
-      properties: { id: { type: string, format: uuid }, code: { type: string }, slug: { type: string, nullable: true }, name: { type: string }, parentId: { type: string, format: uuid, nullable: true }, requirements: { type: object, additionalProperties: true }, countryId: { type: string, format: uuid }, latitude: { type: number, nullable: true }, longitude: { type: number, nullable: true } }
+      properties: { id: { type: string, format: uuid }, code: { type: string }, slug: { type: string, nullable: true }, name: { type: string }, parentId: { type: string, format: uuid, nullable: true }, requirements: { type: object, additionalProperties: true }, metadata: { type: object, additionalProperties: true }, countryId: { type: string, format: uuid }, currencyId: { type: string, format: uuid }, symbol: { type: string }, minorUnits: { type: integer, minimum: 0, maximum: 6 }, latitude: { type: number, nullable: true }, longitude: { type: number, nullable: true } }
     DirectoryTaxonomies:
       type: object
-      required: [locale, professions, classifiedCategories, compensationTypes, instruments, genres, cities]
-      properties: { locale: { type: string }, professions: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, classifiedCategories: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, compensationTypes: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, instruments: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, genres: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, cities: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } } }
+      required: [locale, professions, classifiedCategories, compensationTypes, serviceOfferings, currencies, instruments, genres, cities]
+      properties: { locale: { type: string }, professions: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, classifiedCategories: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, compensationTypes: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, serviceOfferings: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, currencies: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, instruments: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, genres: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, cities: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } } }
     PublicDirectoryProfile:
       type: object
       description: Public projection excludes Party PII and directory_private_location.

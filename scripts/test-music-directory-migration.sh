@@ -235,4 +235,54 @@ test "$private_columns" = "0"
 public_profession_security_refs=$(psql_exec -Atc "SELECT count(*) FROM information_schema.table_constraints WHERE table_name='directory_profile_profession' AND constraint_name ILIKE '%role%';")
 test "$public_profession_security_refs" = "0"
 
-echo "Music directory migration passed restart, backfill, rollback/reapply, privacy, claim, review, alert, merge, search-volume, and invariant checks."
+# Exercise the anonymous taxonomy handler against the migrated database. This catches
+# drift between the SQL implementation and the canonical OpenAPI/client projection.
+(
+  cd "$TDF_DIRECTORY_ROOT/tdf-hq"
+  DB_HOST=127.0.0.1 \
+  DB_PORT="$TDF_DIRECTORY_DB_PORT" \
+  DB_USER=postgres \
+  DB_PASS=unused-local-test-value \
+  DB_NAME="$TDF_DIRECTORY_DATABASE" \
+  APP_PORT="$TDF_DIRECTORY_API_PORT" \
+  RUN_MIGRATIONS=false \
+  RESET_DB=false \
+  SEED_DB=false \
+  EVENT_DISCOVERY_ENABLED=false \
+  sh -c 'if [ -n "${TDF_DIRECTORY_SERVER_BIN:-}" ]; then exec "$TDF_DIRECTORY_SERVER_BIN"; else exec stack exec -- tdf-hq-exe; fi'
+) >"$TDF_DIRECTORY_API_LOG" 2>&1 &
+TDF_DIRECTORY_API_PID=$!
+
+attempt=0
+until curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/health" 2>/dev/null | grep -q '"db":"ok"'; do
+  if ! kill -0 "$TDF_DIRECTORY_API_PID" >/dev/null 2>&1; then
+    tail -80 "$TDF_DIRECTORY_API_LOG" >&2
+    echo "Backend exited while validating the public directory taxonomy" >&2
+    exit 1
+  fi
+  attempt=$((attempt + 1))
+  if [ "$attempt" -ge 60 ]; then
+    tail -80 "$TDF_DIRECTORY_API_LOG" >&2
+    echo "Backend did not become ready for the public directory taxonomy check" >&2
+    exit 1
+  fi
+  sleep 1
+done
+
+curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/taxonomies?locale=es" |
+  node -e '
+    let raw = "";
+    process.stdin.on("data", (chunk) => { raw += chunk; });
+    process.stdin.on("end", () => {
+      const value = JSON.parse(raw);
+      const collections = ["professions", "instruments", "genres", "serviceOfferings", "classifiedCategories", "compensationTypes", "currencies", "cities"];
+      for (const key of collections) {
+        if (!Array.isArray(value[key])) throw new Error(`${key} is not a public taxonomy array`);
+      }
+      if (!value.currencies.some((item) => item.code === "USD")) throw new Error("USD currency taxonomy is missing");
+      if (!value.classifiedCategories.some((item) => Array.isArray(item.requirements?.required))) throw new Error("classified requirements are missing");
+    });
+  '
+stop_api
+
+echo "Music directory migration passed restart, backfill, rollback/reapply, privacy, claim, review, alert, merge, search-volume, taxonomy, and invariant checks."

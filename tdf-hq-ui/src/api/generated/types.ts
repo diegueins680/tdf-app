@@ -5698,8 +5698,15 @@ export interface components {
             requirements?: {
                 [key: string]: unknown;
             };
+            metadata?: {
+                [key: string]: unknown;
+            };
             /** Format: uuid */
             countryId?: string;
+            /** Format: uuid */
+            currencyId?: string;
+            symbol?: string;
+            minorUnits?: number;
             latitude?: number | null;
             longitude?: number | null;
         };
@@ -5708,6 +5715,8 @@ export interface components {
             professions: components["schemas"]["TaxonomyItem"][];
             classifiedCategories: components["schemas"]["TaxonomyItem"][];
             compensationTypes: components["schemas"]["TaxonomyItem"][];
+            serviceOfferings: components["schemas"]["TaxonomyItem"][];
+            currencies: components["schemas"]["TaxonomyItem"][];
             instruments: components["schemas"]["TaxonomyItem"][];
             genres: components["schemas"]["TaxonomyItem"][];
             cities: components["schemas"]["TaxonomyItem"][];
