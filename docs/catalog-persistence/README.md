@@ -4,6 +4,9 @@ Status: implementation in progress. This directory records the immutable baselin
 migration evidence, verification results, and rollout decisions for the repository-wide catalog
 persistence cutover.
 
+The production schema gap, authoritative migration order, CI rehearsal, deployment gates, and
+rollback boundary are documented in `production-schema-cutover.md`.
+
 ## Baselines
 
 - Root repository: `ce0c3bc19e2d9030e871480e9e93790940c9eb12`
@@ -27,6 +30,9 @@ bodies, contact fields, notes, payloads, metadata, URLs, hashes, and external id
 - `reports/static-list-inventory.json` is the machine-readable static baseline.
 - `reports/list-consumer-matrix.csv` is the review-friendly consumer matrix.
 - `reports/production-distinct-values.json` is the sanitized production baseline.
+- `reports/production-schema-cutover-local-2026-08-14.json` records the disposable PostgreSQL 17
+  schema rehearsal, exact fixture digests, idempotency and interruption results, and the remaining
+  production security gate without including production rows or credentials.
 
 Do not treat the current report as proof that all candidates should become database rows. Each
 candidate must receive one reviewed classification: dynamic business catalog, governed reference

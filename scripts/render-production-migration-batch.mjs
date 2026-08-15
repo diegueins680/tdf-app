@@ -4,14 +4,24 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { buildMigrationBatchSql, normalizeFullSha } from './lib/production-release.mjs';
+import {
+  buildMigrationBatchSql,
+  expandMigrationIncludes,
+  normalizeFullSha,
+} from './lib/production-release.mjs';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const manifest = JSON.parse(
   await fs.readFile(path.join(rootDir, 'scripts', 'production-migrations.json'), 'utf8'),
 );
 const migrations = await Promise.all(manifest.migrations.map(async (entry) => {
-  const content = await fs.readFile(path.join(rootDir, entry.path), 'utf8');
+  const content = await expandMigrationIncludes(
+    {
+      path: entry.path,
+      content: await fs.readFile(path.join(rootDir, entry.path), 'utf8'),
+    },
+    (includedPath) => fs.readFile(path.join(rootDir, includedPath), 'utf8'),
+  );
   return {
     ...entry,
     content,

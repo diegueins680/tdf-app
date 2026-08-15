@@ -2,6 +2,7 @@
 
 module TDF.Catalog.Integrity
   ( applyCatalogIntegrity
+  , catalogIntegrityStatements
   ) where
 
 import Control.Monad (forM_)

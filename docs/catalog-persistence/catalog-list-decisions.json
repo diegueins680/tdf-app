@@ -354,16 +354,6 @@
       "reviewed": true
     },
     {
-      "id": "864ea981d61cca3699cc",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
-      "reviewed": true
-    },
-    {
       "id": "3391a96825357d78f794",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -2424,16 +2414,6 @@
       "reviewed": true
     },
     {
-      "id": "4dbf6436c5135a864130",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
       "id": "def94d5a0ce0c11998a9",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -2479,16 +2459,6 @@
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "5234eba2ceff6e9b12a0",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
@@ -6521,6 +6491,96 @@
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "470693b769b0b47b4836",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the ordered manifest can make a production release non-reproducible or apply schema revisions out of order.",
+      "justification": "Migration identifiers and ordered immutable script paths are deployment execution mechanics; every applied revision and checksum is persisted independently in the production migration ledger.",
+      "reviewed": true
+    },
+    {
+      "id": "4dbf6436c5135a864130",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "event_type, venue_event_pricing_policy",
+      "priority": "P0-cutover",
+      "risk": "Venue quotes can diverge from the canonical event catalog and versioned commercial rate cards.",
+      "justification": "Venue event types are selectable business values and must reference published event_type IDs; their pricing parameters belong to an effective-dated venue pricing policy.",
+      "reviewed": true
+    },
+    {
+      "id": "5234eba2ceff6e9b12a0",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "event_type, venue_event_pricing_policy",
+      "priority": "P0-cutover",
+      "risk": "Venue quotes can diverge from the canonical event catalog and versioned commercial rate cards.",
+      "justification": "Labels and quote parameters duplicate selectable event types and must be loaded from event_type plus an approved effective-dated venue pricing policy.",
+      "reviewed": true
+    },
+    {
+      "id": "788589924677cdaf0afa",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Unknown classification discriminants would bypass catalog governance or make persisted definitions uninterpretable.",
+      "justification": "These four values are the exhaustive governance classifications required by the catalog schema and auditor; persisted catalog definitions store the selected discriminant.",
+      "reviewed": true
+    },
+    {
+      "id": "a1d28d8c97d930d72c96",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unknown ordering algorithm cannot be executed deterministically by backend and clients.",
+      "justification": "Ordering modes name the finite algorithms implemented by the catalog service; the selected mode remains persisted on each catalog definition.",
+      "reviewed": true
+    },
+    {
+      "id": "7aded0cb900eb3a3e228",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unknown appearance mode cannot be rendered consistently or safely upgraded in cached clients.",
+      "justification": "The rendering discriminants are exhaustively implemented by clients while their bilingual labels, availability, ordering, and selection metadata are persisted in appearance_mode_option.",
+      "reviewed": true
+    },
+    {
+      "id": "abf4dcddf1b0335c46ba",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "record_contributor_kind, record_contributor",
+      "priority": "P1-cross-platform",
+      "risk": "Contributor roles can diverge across Records forms, credits, filters, and exports.",
+      "justification": "Contributor kinds are displayable and reportable Records taxonomy values and require persisted bilingual identities referenced by record_contributor rows.",
+      "reviewed": true
+    },
+    {
+      "id": "f8cac28929a0db75db14",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "record_external_resource_kind, record_external_resource",
+      "priority": "P1-cross-platform",
+      "risk": "External resource kinds can diverge across Records validation, rendering, search, and provider integrations.",
+      "justification": "External resource kinds are selectable and reportable Records taxonomy values and require persisted bilingual identities referenced by external resources.",
+      "reviewed": true
+    },
+    {
+      "id": "ebd81d1dca9a8835b48b",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Mapping review states can diverge between genre/country ingestion, administration, reporting, and remediation jobs.",
+      "justification": "Mapped, unresolved, and ambiguous are operational workflow states shown in review queues and reports and must use a persisted governed workflow.",
       "reviewed": true
     }
   ]

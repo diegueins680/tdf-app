@@ -246,7 +246,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:17-alpine
+        image: pgvector/pgvector:pg17
         env:
           POSTGRES_DB: tdf_hq_migration_test
           POSTGRES_PASSWORD: postgres
@@ -273,7 +273,9 @@ jobs:
         run: npm run test:production-release
 
       - name: Create production baseline fixture
-        run: psql "$PGURL" -v ON_ERROR_STOP=1 -f scripts/__tests__/fixtures/production-ticketing-base.sql
+        run: |
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f scripts/__tests__/fixtures/production-schema-20260814.sql
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f scripts/__tests__/fixtures/catalog-production-source-fixture.sql
 
       - name: Verify pristine production preflight
         run: |
@@ -287,6 +289,12 @@ jobs:
           node scripts/render-production-migration-batch.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
           expected_migrations="$(node -p "require('./scripts/production-migrations.json').migrations.length")"
           test "$(psql "$PGURL" -Atqc 'SELECT COUNT(*) FROM public.tdf_schema_migration')" = "$expected_migrations"
+
+      - name: Verify catalog dry-runs and raw cutover idempotency
+        env:
+          TDF_CATALOG_TEST_DATABASE_URL: ${{ env.PGURL }}
+          TDF_CATALOG_TEST_REVISION: catalog-ci-idempotency-v1
+        run: scripts/test-catalog-production-cutover.sh
 
       - name: Verify raw migration idempotency and the release schema contract
         run: |

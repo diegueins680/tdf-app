@@ -28,6 +28,73 @@ export function validateMigrationRelativePath(value) {
   return normalized;
 }
 
+export function buildDatabaseSqlInvocation(context, sql, options = {}) {
+  const dbApp = validateSafeName(context?.dbApp, 'Fly database app');
+  const database = validateSafeName(context?.database, 'PostgreSQL database');
+  const input = String(sql ?? '');
+  if (!input.trim()) throw new Error('Database SQL input cannot be empty.');
+  const psqlFlags = options.tuplesOnly === true ? '-qAt ' : '';
+  const remoteCommand = `su postgres -c "psql -X -v ON_ERROR_STOP=1 ${psqlFlags}-p 5433 -d ${database}"`;
+  return {
+    argv: [
+      'flyctl', 'ssh', 'console',
+      '--app', dbApp,
+      '--command', remoteCommand,
+    ],
+    input,
+  };
+}
+
+export function requireMigrationIntroductionAncestor({ id, introducedBy }, releaseSha, isAncestor) {
+  const migrationId = validateSafeName(id, 'Migration id');
+  const introductionSha = normalizeFullSha(introducedBy);
+  const normalizedReleaseSha = normalizeFullSha(releaseSha);
+  if (isAncestor !== true) {
+    throw new Error(
+      `Production migration ${migrationId} was introduced by ${introductionSha}, `
+        + `which is not an ancestor of release ${normalizedReleaseSha}; `
+        + 'refusing to omit a registered migration.',
+    );
+  }
+}
+
+export async function expandMigrationIncludes(migration, readFile, ancestors = new Set()) {
+  const relativePath = validateMigrationRelativePath(migration?.path);
+  const content = String(migration?.content ?? '');
+  if (!content.trim()) throw new Error(`Migration ${relativePath} has no SQL content.`);
+  if (typeof readFile !== 'function') throw new Error('Migration include expansion requires a reader.');
+  if (ancestors.has(relativePath)) {
+    throw new Error(`Recursive migration include detected at ${relativePath}.`);
+  }
+
+  const nextAncestors = new Set(ancestors).add(relativePath);
+  const output = [];
+  for (const line of content.split(/\r?\n/u)) {
+    const include = line.match(/^\s*\\ir\s+([a-zA-Z0-9][a-zA-Z0-9._-]*\.sql)\s*$/u);
+    if (!include) {
+      if (/^\s*\\i(?:r)?\s+/u.test(line)) {
+        throw new Error(`Unsupported migration include syntax in ${relativePath}: ${line.trim()}`);
+      }
+      output.push(line);
+      continue;
+    }
+
+    const includedPath = validateMigrationRelativePath(
+      path.posix.join(path.posix.dirname(relativePath), include[1]),
+    );
+    const includedContent = await readFile(includedPath);
+    const expanded = await expandMigrationIncludes(
+      { path: includedPath, content: includedContent },
+      readFile,
+      nextAncestors,
+    );
+    output.push(`-- begin inlined migration include: ${includedPath}`);
+    output.push(expanded);
+    output.push(`-- end inlined migration include: ${includedPath}`);
+  }
+  return output.join('\n');
+}
+
 export function parseSecurityEmergencyReadinessOutput(output) {
   const records = String(output ?? '')
     .split(/\r?\n/)
@@ -215,6 +282,9 @@ function migrationSource(migration) {
   if (typeof migration.content !== 'string' || !migration.content.trim()) {
     throw new Error(`Migration ${migration.path ?? migration.id ?? '<unknown>'} has no SQL content.`);
   }
+  if (/^\s*\\i(?:r)?\s+/mu.test(migration.content)) {
+    throw new Error(`Migration ${migration.path ?? migration.id ?? '<unknown>'} contains an unexpanded include.`);
+  }
   return migration.content.trim();
 }
 
@@ -248,6 +318,11 @@ export function buildMigrationBatchSql(migrations, options = {}) {
   const body = entries.map((entry, index) => {
     const applyVariable = `apply_migration_${index + 1}`;
     return [
+      '\\unset run_code',
+      '\\unset safety_threshold',
+      '\\unset batch_size',
+      '\\unset backfill_run_id',
+      '\\unset records_backfill_run_id',
       `\\echo Checking ${entry.id}`,
       'DO $checksum$',
       'BEGIN',
@@ -274,6 +349,7 @@ export function buildMigrationBatchSql(migrations, options = {}) {
 
   return [
     '\\set ON_ERROR_STOP on',
+    `\\set candidate_revision ${sourceCommit}`,
     "SELECT pg_try_advisory_lock(hashtextextended('tdf-production-schema-migrations', 0)) AS migration_lock_acquired \\gset",
     '\\if :migration_lock_acquired',
     'CREATE TABLE IF NOT EXISTS public.tdf_schema_migration (',
@@ -429,6 +505,8 @@ export function buildSchemaVerificationSql(options = {}) {
   return `${header}DO $verify$
 DECLARE
   campaign_table TEXT;
+  catalog_table TEXT;
+  cutover_code TEXT;
   discovery_table TEXT;
   ddex_table TEXT;
   feature_table TEXT;
@@ -436,6 +514,123 @@ DECLARE
   ticketing_table TEXT;
   enrichment_table TEXT;
 BEGIN
+  FOREACH catalog_table IN ARRAY ARRAY[
+    'workflow_definition',
+    'workflow_state',
+    'workflow_transition',
+    'catalog_definition',
+    'catalog_revision',
+    'catalog_audit_event',
+    'catalog_backfill_run',
+    'catalog_migration_mapping',
+    'catalog_slug_alias',
+    'catalog_scoped_default',
+    'security_module',
+    'security_action',
+    'security_permission',
+    'security_role',
+    'role_permission',
+    'party_security_role',
+    'country_reference',
+    'locale_reference',
+    'currency_reference',
+    'language_reference',
+    'genre',
+    'instrument',
+    'service_offering',
+    'event_type',
+    'content_type',
+    'authored_content',
+    'record_release',
+    'recording',
+    'recording_session',
+    'editorial_collection',
+    'ddex_standard_version',
+    'ddex_message_type',
+    'ddex_standard_support'
+  ] LOOP
+    IF to_regclass('public.' || catalog_table) IS NULL THEN
+      RAISE EXCEPTION 'Canonical catalog relation public.% is missing', catalog_table;
+    END IF;
+  END LOOP;
+
+  IF (SELECT count(*) FROM workflow_definition WHERE active) < 16
+     OR (SELECT count(*) FROM workflow_state WHERE active) < 97
+     OR (SELECT count(*) FROM workflow_transition WHERE active) < 295
+     OR (SELECT count(*) FROM catalog_definition WHERE active) < 47
+     OR (SELECT count(*) FROM country_reference WHERE active) < 249
+     OR (SELECT count(*) FROM security_module WHERE active) < 8
+     OR (SELECT count(*) FROM security_action WHERE active) < 16
+     OR (SELECT count(*) FROM security_permission WHERE active) < 30
+     OR (SELECT count(*) FROM security_role WHERE active) < 31
+     OR (SELECT count(*) FROM role_permission WHERE active) < 116 THEN
+    RAISE EXCEPTION 'Canonical catalog foundation seed is incomplete';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('party', 'country_id'),
+        ('artist_profile', 'country_id'),
+        ('user_locale_preferences', 'locale_id'),
+        ('user_locale_preferences', 'currency_id'),
+        ('user_locale_preferences', 'country_id'),
+        ('service_order', 'service_offering_id'),
+        ('booking', 'service_offering_id'),
+        ('booking', 'booking_type_id'),
+        ('booking', 'workflow_state_id'),
+        ('pipeline_card', 'service_offering_id'),
+        ('pipeline_card', 'workflow_state_id'),
+        ('feedback', 'category_id'),
+        ('feedback', 'severity_id'),
+        ('input_row', 'instrument_id'),
+        ('social_event', 'event_type_id'),
+        ('social_event', 'workflow_state_id'),
+        ('social_event', 'currency_id'),
+        ('ddex_document', 'standard_version_id'),
+        ('ddex_document', 'message_type_id'),
+        ('ddex_document', 'workflow_state_id')
+    ) AS expected(table_name, column_name)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL OR actual.data_type <> 'uuid'
+  ) THEN
+    RAISE EXCEPTION 'A canonical catalog consumer UUID reference is missing or invalid';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM catalog_backfill_run
+    WHERE NOT dry_run AND status <> 'completed'
+  ) THEN
+    RAISE EXCEPTION 'A canonical catalog cutover did not complete';
+  END IF;
+
+  FOREACH cutover_code IN ARRAY ARRAY[
+    'catalog-cutover-2026-08-07',
+    'records-cms-cutover-2026-08-07',
+    'instrument-input-cutover-2026-08-11',
+    'feedback-catalog-cutover-2026-08-11',
+    'pipeline-workflow-cutover-2026-08-11',
+    'social-event-type-cutover-2026-08-11',
+    'social-event-workflow-cutover-2026-08-11',
+    'event-moment-reaction-cutover-2026-08-12',
+    'content-reaction-cutover-2026-08-12',
+    'creator-badge-cutover-2026-08-12',
+    'ddex-reference-cutover-2026-08-12',
+    'ddex-validation-reference-cutover-2026-08-12',
+    'ddex-operational-cutover-2026-08-12'
+  ] LOOP
+    IF NOT EXISTS (
+      SELECT 1 FROM catalog_backfill_run
+      WHERE run_code = cutover_code AND NOT dry_run AND status = 'completed'
+    ) THEN
+      RAISE EXCEPTION 'Canonical catalog cutover % has no completed run', cutover_code;
+    END IF;
+  END LOOP;
+
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public'
@@ -1148,7 +1343,7 @@ BEGIN
   IF (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'ddex_document'
-  ) <> 15 OR EXISTS (
+  ) <> 18 OR EXISTS (
     SELECT 1
     FROM (
       VALUES
@@ -1157,16 +1352,19 @@ BEGIN
         ('private_uri', 'text', 'NO'),
         ('sha256', 'text', 'NO'),
         ('size_bytes', 'bigint', 'NO'),
-        ('family', 'text', 'NO'),
-        ('version', 'text', 'NO'),
+        ('family', 'text', 'YES'),
+        ('version', 'text', 'YES'),
         ('namespace', 'text', 'YES'),
         ('message_type', 'text', 'YES'),
-        ('status', 'text', 'NO'),
+        ('status', 'text', 'YES'),
         ('uploaded_by', 'integer', 'NO'),
         ('message_id', 'text', 'YES'),
         ('sender_id', 'text', 'YES'),
         ('recipient_id', 'text', 'YES'),
-        ('created_at', 'timestamp with time zone', 'NO')
+        ('created_at', 'timestamp with time zone', 'NO'),
+        ('standard_version_id', 'uuid', 'YES'),
+        ('message_type_id', 'uuid', 'YES'),
+        ('workflow_state_id', 'uuid', 'YES')
     ) AS expected(column_name, data_type, is_nullable)
     LEFT JOIN information_schema.columns AS actual
       ON actual.table_schema = 'public'
@@ -1177,6 +1375,20 @@ BEGIN
        OR actual.is_nullable <> expected.is_nullable
   ) THEN
     RAISE EXCEPTION 'ddex_document does not match the inbox runtime schema';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM ddex_document
+    WHERE standard_version_id IS NULL
+       OR workflow_state_id IS NULL
+       OR family IS NOT NULL
+       OR version IS NOT NULL
+       OR message_type IS NOT NULL
+       OR status IS NOT NULL
+  ) OR EXISTS (
+    SELECT 1 FROM ddex_partner
+    WHERE jsonb_array_length(COALESCE(to_jsonb(ddex_partner)->'allowed_versions', '[]'::jsonb)) <> 0
+  ) THEN
+    RAISE EXCEPTION 'DDEX canonical cutover retained legacy values or missing IDs';
   END IF;
 END
 $verify$;`;
