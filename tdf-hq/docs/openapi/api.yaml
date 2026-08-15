@@ -3579,6 +3579,38 @@ paths:
         '400': { description: Unknown properties, duplicated IDs, or malformed canonical UUID }
         '403': { description: Missing persisted `catalog.import` capability }
         '422': { description: A supplied standard version is inactive or not detection-enabled }
+  /directory/search: { $ref: './directory.yaml#/paths/~1directory~1search' }
+  /directory/suggestions: { $ref: './directory.yaml#/paths/~1directory~1suggestions' }
+  /directory/taxonomies: { $ref: './directory.yaml#/paths/~1directory~1taxonomies' }
+  /directory/profiles/{slug}: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{slug}' }
+  /directory/classifieds/{slug}: { $ref: './directory.yaml#/paths/~1directory~1classifieds~1{slug}' }
+  /directory/events/{eventId}: { $ref: './directory.yaml#/paths/~1directory~1events~1{eventId}' }
+  /directory/venues/{venueId}: { $ref: './directory.yaml#/paths/~1directory~1venues~1{venueId}' }
+  /directory/age-assurance: { $ref: './directory.yaml#/paths/~1directory~1age-assurance' }
+  /directory/profiles: { $ref: './directory.yaml#/paths/~1directory~1profiles' }
+  /directory/profiles/{profileId}: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{profileId}' }
+  /directory/profiles/{profileId}/status: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{profileId}~1status' }
+  /directory/classifieds: { $ref: './directory.yaml#/paths/~1directory~1classifieds' }
+  /directory/classifieds/{classifiedId}/status: { $ref: './directory.yaml#/paths/~1directory~1classifieds~1{classifiedId}~1status' }
+  /directory/classifieds/{classifiedId}/applications: { $ref: './directory.yaml#/paths/~1directory~1classifieds~1{classifiedId}~1applications' }
+  /directory/applications/{applicationId}/status: { $ref: './directory.yaml#/paths/~1directory~1applications~1{applicationId}~1status' }
+  /directory/invitations: { $ref: './directory.yaml#/paths/~1directory~1invitations' }
+  /directory/invitations/{invitationId}/status: { $ref: './directory.yaml#/paths/~1directory~1invitations~1{invitationId}~1status' }
+  /directory/contact: { $ref: './directory.yaml#/paths/~1directory~1contact' }
+  /directory/favorites: { $ref: './directory.yaml#/paths/~1directory~1favorites' }
+  /directory/favorites/{targetKind}/{targetId}: { $ref: './directory.yaml#/paths/~1directory~1favorites~1{targetKind}~1{targetId}' }
+  /directory/saved-searches: { $ref: './directory.yaml#/paths/~1directory~1saved-searches' }
+  /directory/claims: { $ref: './directory.yaml#/paths/~1directory~1claims' }
+  /directory/verifications: { $ref: './directory.yaml#/paths/~1directory~1verifications' }
+  /directory/reports: { $ref: './directory.yaml#/paths/~1directory~1reports' }
+  /directory/admin/claims: { $ref: './directory.yaml#/paths/~1directory~1admin~1claims' }
+  /directory/admin/claims/{claimId}/status: { $ref: './directory.yaml#/paths/~1directory~1admin~1claims~1{claimId}~1status' }
+  /directory/admin/verifications: { $ref: './directory.yaml#/paths/~1directory~1admin~1verifications' }
+  /directory/admin/verifications/{verificationId}/status: { $ref: './directory.yaml#/paths/~1directory~1admin~1verifications~1{verificationId}~1status' }
+  /directory/admin/moderation: { $ref: './directory.yaml#/paths/~1directory~1admin~1moderation' }
+  /directory/admin/moderation/{caseId}/decisions: { $ref: './directory.yaml#/paths/~1directory~1admin~1moderation~1{caseId}~1decisions' }
+  /directory/admin/merges: { $ref: './directory.yaml#/paths/~1directory~1admin~1merges' }
+
 security:
   - bearerAuth: [ ]
 

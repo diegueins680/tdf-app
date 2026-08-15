@@ -1,0 +1,514 @@
+openapi: 3.0.0
+info: { title: TDF Music Directory API, version: 1.0.0 }
+paths:
+  /directory/search:
+    get:
+      tags: [Music directory]
+      operationId: searchDirectory
+      summary: Search the public, current, moderated music directory
+      security: []
+      parameters:
+        - { $ref: '#/components/parameters/SearchQuery' }
+        - { name: entityType, in: query, schema: { $ref: '#/components/schemas/DirectoryEntityType' } }
+        - { name: cityId, in: query, schema: { type: string, format: uuid } }
+        - { name: latitude, in: query, description: Consented ephemeral search latitude, schema: { type: number, minimum: -90, maximum: 90 } }
+        - { name: longitude, in: query, description: Consented ephemeral search longitude, schema: { type: number, minimum: -180, maximum: 180 } }
+        - { name: radiusKm, in: query, schema: { type: number, exclusiveMinimum: true, minimum: 0, maximum: 500 } }
+        - { name: professionId, in: query, schema: { type: string, format: uuid } }
+        - { name: serviceId, in: query, schema: { type: string, format: uuid } }
+        - { name: instrumentId, in: query, schema: { type: string, format: uuid } }
+        - { name: genreId, in: query, schema: { type: string, format: uuid } }
+        - { name: remote, in: query, schema: { type: boolean } }
+        - { name: available, in: query, schema: { type: boolean } }
+        - { name: dateFrom, in: query, schema: { type: string, format: date-time } }
+        - { name: dateTo, in: query, schema: { type: string, format: date-time } }
+        - { $ref: '#/components/parameters/Cursor' }
+        - { $ref: '#/components/parameters/Limit' }
+      responses:
+        '200': { description: Organic results, separate sponsored results, and facets, content: { application/json: { schema: { $ref: '#/components/schemas/DirectorySearchResponse' } } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /directory/suggestions:
+    get:
+      tags: [Music directory]
+      operationId: suggestDirectoryQuery
+      security: []
+      parameters:
+        - { $ref: '#/components/parameters/SearchQuery' }
+        - { name: cityId, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Canonical taxonomy and entity suggestions, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/DirectorySuggestion' } } } } }
+  /directory/taxonomies:
+    get:
+      tags: [Music directory]
+      operationId: getDirectoryTaxonomies
+      security: []
+      parameters: [{ name: locale, in: query, schema: { type: string, enum: [es, en, pt], default: es } }]
+      responses:
+        '200': { description: Database-governed directory options, content: { application/json: { schema: { $ref: '#/components/schemas/DirectoryTaxonomies' } } } }
+  /directory/profiles/{slug}:
+    get:
+      tags: [Music directory]
+      operationId: getPublicDirectoryProfile
+      security: []
+      parameters: [{ $ref: '#/components/parameters/Slug' }]
+      responses:
+        '200': { description: Safe public profile projection, content: { application/json: { schema: { $ref: '#/components/schemas/PublicDirectoryProfile' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /directory/classifieds/{slug}:
+    get:
+      tags: [Music classifieds]
+      operationId: getPublicClassified
+      security: []
+      parameters: [{ $ref: '#/components/parameters/Slug' }]
+      responses:
+        '200': { description: Published and unexpired classified, content: { application/json: { schema: { $ref: '#/components/schemas/PublicClassified' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /directory/events/{eventId}:
+    get:
+      tags: [Music directory]
+      operationId: getPublicDirectoryEvent
+      security: []
+      parameters: [{ name: eventId, in: path, required: true, schema: { type: integer, format: int64 } }]
+      responses:
+        '200': { description: Public-listable event without privileged browser credentials, content: { application/json: { schema: { $ref: '#/components/schemas/PublicDirectoryEvent' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /directory/venues/{venueId}:
+    get:
+      tags: [Music directory]
+      operationId: getPublicDirectoryVenue
+      security: []
+      parameters: [{ name: venueId, in: path, required: true, schema: { type: integer, format: int64 } }]
+      responses:
+        '200': { description: Safe public venue projection, content: { application/json: { schema: { $ref: '#/components/schemas/PublicDirectoryVenue' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /directory/age-assurance:
+    put:
+      tags: [Music directory account]
+      operationId: setDirectoryAgeAssurance
+      security: [{ bearerAuth: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/AgeAssuranceRequest' } } } }
+      responses: { '200': { description: Restricted age-assurance state; adult attestation is not identity verification } }
+  /directory/profiles:
+    get:
+      tags: [Music directory account]
+      operationId: listManagedDirectoryProfiles
+      security: [{ bearerAuth: [] }]
+      responses: { '200': { description: Explicitly managed profiles, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ManagedDirectoryProfile' } } } } } }
+    post:
+      tags: [Music directory account]
+      operationId: createDirectoryProfile
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/DirectoryProfileUpsert' } } } }
+      responses: { '201': { description: Draft profile with an explicit manager grant, content: { application/json: { schema: { $ref: '#/components/schemas/ManagedDirectoryProfile' } } } } }
+  /directory/profiles/{profileId}:
+    put:
+      tags: [Music directory account]
+      operationId: updateDirectoryProfile
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/ProfileId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/DirectoryProfileUpsert' } } } }
+      responses: { '200': { description: Updated explicitly managed profile } }
+  /directory/profiles/{profileId}/status:
+    patch:
+      tags: [Music directory account]
+      operationId: transitionDirectoryProfile
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/ProfileId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StatusRequest' } } } }
+      responses: { '200': { description: Transitioned profile } }
+  /directory/classifieds:
+    get:
+      tags: [Music classifieds]
+      operationId: listManagedClassifieds
+      security: [{ bearerAuth: [] }]
+      responses: { '200': { description: Classifieds authored by explicitly managed profiles, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ManagedClassified' } } } } } }
+    post:
+      tags: [Music classifieds]
+      operationId: createClassified
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ClassifiedCreate' } } } }
+      responses: { '201': { description: Draft classified, content: { application/json: { schema: { $ref: '#/components/schemas/ManagedClassified' } } } } }
+  /directory/classifieds/{classifiedId}/status:
+    patch:
+      tags: [Music classifieds]
+      operationId: transitionClassified
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/ClassifiedId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StatusRequest' } } } }
+      responses: { '200': { description: Classified state transition } }
+  /directory/classifieds/{classifiedId}/applications:
+    get:
+      tags: [Music classifieds]
+      operationId: listClassifiedApplications
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/ClassifiedId' }]
+      responses: { '200': { description: Private participant-scoped applications, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ClassifiedApplication' } } } } } }
+    post:
+      tags: [Music classifieds]
+      operationId: createClassifiedApplication
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/ClassifiedId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ApplicationCreate' } } } }
+      responses: { '201': { description: Idempotent application, content: { application/json: { schema: { $ref: '#/components/schemas/ClassifiedApplication' } } } } }
+  /directory/applications/{applicationId}/status:
+    patch:
+      tags: [Music classifieds]
+      operationId: transitionClassifiedApplication
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: applicationId, in: path, required: true, schema: { type: string, format: uuid } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StatusRequest' } } } }
+      responses: { '200': { description: Participant-authorized transition } }
+  /directory/invitations:
+    get:
+      tags: [Music directory contact]
+      operationId: listDirectoryInvitations
+      security: [{ bearerAuth: [] }]
+      responses: { '200': { description: Participant-scoped invitations, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/DirectoryInvitation' } } } } } }
+    post:
+      tags: [Music directory contact]
+      operationId: createDirectoryInvitation
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/InvitationCreate' } } } }
+      responses: { '201': { description: Preference-checked invitation, content: { application/json: { schema: { $ref: '#/components/schemas/DirectoryInvitation' } } } } }
+  /directory/invitations/{invitationId}/status:
+    patch:
+      tags: [Music directory contact]
+      operationId: transitionDirectoryInvitation
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: invitationId, in: path, required: true, schema: { type: string, format: uuid } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StatusRequest' } } } }
+      responses: { '200': { description: Participant-authorized transition } }
+  /directory/contact:
+    post:
+      tags: [Music directory contact]
+      operationId: contactDirectoryProfile
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/DirectoryContact' } } } }
+      responses: { '201': { description: Existing chat thread linked to directory context } }
+  /directory/favorites:
+    get:
+      tags: [Music directory account]
+      operationId: listDirectoryFavorites
+      security: [{ bearerAuth: [] }]
+      responses: { '200': { description: Current user's favorites, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/DirectoryFavorite' } } } } } }
+  /directory/favorites/{targetKind}/{targetId}:
+    put:
+      tags: [Music directory account]
+      operationId: saveDirectoryFavorite
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/TargetKind' }, { $ref: '#/components/parameters/TargetId' }]
+      responses: { '200': { description: Idempotently saved favorite } }
+    delete:
+      tags: [Music directory account]
+      operationId: deleteDirectoryFavorite
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/TargetKind' }, { $ref: '#/components/parameters/TargetId' }]
+      responses: { '200': { description: Favorite removed } }
+  /directory/saved-searches:
+    get:
+      tags: [Music directory alerts]
+      operationId: listSavedDirectorySearches
+      security: [{ bearerAuth: [] }]
+      responses: { '200': { description: Saved searches and alert preferences, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/SavedDirectorySearch' } } } } } }
+    post:
+      tags: [Music directory alerts]
+      operationId: createSavedDirectorySearch
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SavedSearchCreate' } } } }
+      responses: { '201': { description: Idempotent saved search; alert deliveries are deduplicated by result version } }
+  /directory/claims:
+    post:
+      tags: [Music directory trust]
+      operationId: createDirectoryClaim
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ClaimCreate' } } } }
+      responses: { '201': { description: Submitted claim; it grants no management before approval } }
+  /directory/verifications:
+    post:
+      tags: [Music directory trust]
+      operationId: createDirectoryVerificationRequest
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/VerificationCreate' } } } }
+      responses: { '201': { description: Submitted independent verification request } }
+  /directory/reports:
+    post:
+      tags: [Music directory moderation]
+      operationId: reportDirectoryContent
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ReportCreate' } } } }
+      responses: { '201': { description: Deduplicated community report } }
+  /directory/admin/claims:
+    get:
+      tags: [Music directory administration]
+      operationId: listDirectoryClaimsForReview
+      security: [{ bearerAuth: [] }]
+      responses: { '200': { description: Admin-only claim queue } }
+  /directory/admin/claims/{claimId}/status:
+    patch:
+      tags: [Music directory administration]
+      operationId: decideDirectoryClaim
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: claimId, in: path, required: true, schema: { type: string, format: uuid } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StatusRequest' } } } }
+      responses: { '200': { description: Reviewed claim; only approval can create a manager grant } }
+  /directory/admin/verifications:
+    get:
+      tags: [Music directory administration]
+      operationId: listDirectoryVerificationsForReview
+      security: [{ bearerAuth: [] }]
+      responses: { '200': { description: Admin-only verification queue } }
+  /directory/admin/verifications/{verificationId}/status:
+    patch:
+      tags: [Music directory administration]
+      operationId: decideDirectoryVerification
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: verificationId, in: path, required: true, schema: { type: string, format: uuid } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StatusRequest' } } } }
+      responses: { '200': { description: Independent verification decision } }
+  /directory/admin/moderation:
+    get:
+      tags: [Music directory administration]
+      operationId: listDirectoryModerationQueue
+      security: [{ bearerAuth: [] }]
+      responses: { '200': { description: Admin-only moderation cases and reports } }
+  /directory/admin/moderation/{caseId}/decisions:
+    post:
+      tags: [Music directory administration]
+      operationId: decideDirectoryModerationCase
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: caseId, in: path, required: true, schema: { type: string, format: uuid } }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ModerationDecision' } } } }
+      responses: { '201': { description: Auditable moderation decision } }
+  /directory/admin/merges:
+    post:
+      tags: [Music directory administration]
+      operationId: mergeDirectoryProfiles
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ProfileMerge' } } } }
+      responses: { '201': { description: Non-destructive, idempotent profile merge preserving source references and slug resolution } }
+components:
+  parameters:
+    SearchQuery: { name: q, in: query, schema: { type: string, maxLength: 160 } }
+    Cursor: { name: cursor, in: query, schema: { type: string }, description: Opaque stable keyset cursor }
+    Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+    Slug: { name: slug, in: path, required: true, schema: { type: string, pattern: '^[a-z0-9][a-z0-9-]+$' } }
+    ProfileId: { name: profileId, in: path, required: true, schema: { type: string, format: uuid } }
+    ClassifiedId: { name: classifiedId, in: path, required: true, schema: { type: string, format: uuid } }
+    TargetKind: { name: targetKind, in: path, required: true, schema: { $ref: '#/components/schemas/DirectoryEntityType' } }
+    TargetId: { name: targetId, in: path, required: true, schema: { type: string, maxLength: 160 } }
+    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string, minLength: 8, maxLength: 160 } }
+  responses:
+    BadRequest: { description: Invalid input, content: { application/json: { schema: { $ref: '#/components/schemas/ApiError' } } } }
+    NotFound: { description: Not found or not publicly eligible, content: { application/json: { schema: { $ref: '#/components/schemas/ApiError' } } } }
+  schemas:
+    ApiError:
+      type: object
+      required: [error]
+      properties: { error: { type: string }, code: { type: string }, correlationId: { type: string } }
+    DirectoryEntityType: { type: string, enum: [profile, classified, event, venue] }
+    PublicLocation:
+      type: object
+      description: Safe public location; exact residential address and private coordinates are structurally absent.
+      additionalProperties: false
+      properties:
+        cityId: { type: string, format: uuid, nullable: true }
+        city: { type: string, nullable: true }
+        countryCode: { type: string, nullable: true }
+        sector: { type: string, nullable: true }
+        latitude: { type: number, nullable: true }
+        longitude: { type: number, nullable: true }
+        precision: { type: string, enum: [country, region, metro, city, sector, commercial_exact], nullable: true }
+        distanceKm: { type: number, nullable: true }
+    DirectorySearchItem:
+      type: object
+      additionalProperties: false
+      required: [id, type, slug, title, location, taxonomy, score, scoreBreakdown, sponsored]
+      properties:
+        id: { type: string }
+        type: { $ref: '#/components/schemas/DirectoryEntityType' }
+        slug: { type: string }
+        title: { type: string }
+        subtitle: { type: string, nullable: true }
+        summary: { type: string, nullable: true }
+        imageUrl: { type: string, format: uri, nullable: true }
+        location: { $ref: '#/components/schemas/PublicLocation' }
+        modality: { type: object, properties: { onsite: { type: boolean }, remote: { type: boolean }, travel: { type: boolean } } }
+        taxonomy: { type: object, required: [professionIds, serviceIds, instrumentIds, genreIds], properties: { professionIds: { type: array, items: { type: string, format: uuid } }, serviceIds: { type: array, items: { type: string, format: uuid } }, instrumentIds: { type: array, items: { type: string, format: uuid } }, genreIds: { type: array, items: { type: string, format: uuid } } } }
+        score: { type: number, minimum: 0, maximum: 1 }
+        scoreBreakdown: { type: object, additionalProperties: { type: number, nullable: true } }
+        sponsored: { type: boolean }
+        sponsorDisclosure: { type: string, nullable: true }
+        effectiveAt: { type: string, format: date-time, nullable: true }
+        expiresAt: { type: string, format: date-time, nullable: true }
+    DirectoryFacets:
+      type: object
+      required: [entityTypes, cities, total]
+      properties:
+        entityTypes: { type: object, additionalProperties: { type: integer, minimum: 0 } }
+        cities: { type: array, items: { type: object, required: [id, name, count], properties: { id: { type: string, format: uuid }, name: { type: string }, count: { type: integer } } } }
+        total: { type: integer, minimum: 0 }
+    DirectorySearchResponse:
+      type: object
+      required: [items, sponsoredItems, facets]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/DirectorySearchItem' } }
+        sponsoredItems: { type: array, description: Always separate and explicitly labeled, items: { $ref: '#/components/schemas/DirectorySearchItem' } }
+        facets: { $ref: '#/components/schemas/DirectoryFacets' }
+        nextCursor: { type: string, nullable: true }
+    DirectorySuggestion:
+      type: object
+      required: [label, canonicalQuery, suggestionKind]
+      properties: { label: { type: string }, canonicalQuery: { type: string }, suggestionKind: { type: string }, entityId: { type: string, nullable: true } }
+    TaxonomyItem:
+      type: object
+      required: [id, code, name]
+      properties: { id: { type: string, format: uuid }, code: { type: string }, slug: { type: string, nullable: true }, name: { type: string }, parentId: { type: string, format: uuid, nullable: true }, requirements: { type: object, additionalProperties: true }, countryId: { type: string, format: uuid }, latitude: { type: number, nullable: true }, longitude: { type: number, nullable: true } }
+    DirectoryTaxonomies:
+      type: object
+      required: [locale, professions, classifiedCategories, compensationTypes, instruments, genres, cities]
+      properties: { locale: { type: string }, professions: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, classifiedCategories: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, compensationTypes: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, instruments: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, genres: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, cities: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } } }
+    PublicDirectoryProfile:
+      type: object
+      description: Public projection excludes Party PII and directory_private_location.
+      additionalProperties: false
+      required: [id, kind, name, slug, availability, locations, professions, instruments, genres, verification, reputation, canonicalUrl]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        bio: { type: string, nullable: true }
+        experience: { type: string, nullable: true }
+        creditsSummary: { type: string, nullable: true }
+        portfolio: { type: array, items: { type: object, additionalProperties: true } }
+        links: { type: array, items: { type: object, additionalProperties: true } }
+        equipment: { type: string, nullable: true }
+        rates: { type: object, nullable: true, additionalProperties: false, properties: { minMinor: { type: integer, format: int64 }, maxMinor: { type: integer, format: int64, nullable: true }, currencyId: { type: string, format: uuid, nullable: true } } }
+        availability: { type: object, additionalProperties: false, required: [status, onsite, remote, travel], properties: { status: { type: string }, onsite: { type: boolean }, remote: { type: boolean }, travel: { type: boolean }, radiusKm: { type: number, nullable: true } } }
+        locations: { type: array, items: { $ref: '#/components/schemas/PublicLocation' } }
+        professions: { type: array, items: { $ref: '#/components/schemas/PublicTaxonomyMembership' } }
+        instruments: { type: array, items: { $ref: '#/components/schemas/PublicTaxonomyMembership' } }
+        genres: { type: array, items: { $ref: '#/components/schemas/PublicTaxonomyMembership' } }
+        verification: { type: array, items: { type: object, additionalProperties: false, required: [type, status], properties: { type: { type: string }, status: { type: string }, verifiedAt: { type: string, format: date-time, nullable: true } } } }
+        reputation: { type: object, additionalProperties: false, properties: { completeness: { type: number }, responseRate: { type: number }, medianResponseMinutes: { type: integer }, completed: { type: integer }, reviewAverage: { type: number }, reviewCount: { type: integer } } }
+        canonicalUrl: { type: string }
+    PublicTaxonomyMembership:
+      type: object
+      additionalProperties: false
+      required: [id, code, name]
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string }
+        name: { type: string }
+        headline: { type: string, nullable: true }
+        yearsExperience: { type: number, nullable: true }
+        proficiency: { type: string, nullable: true }
+    PublicClassified:
+      type: object
+      description: Published, current, moderated classified.
+      additionalProperties: false
+      required: [id, title, slug, description, category, author, modality, locations, expiresAt, canonicalUrl]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        slug: { type: string }
+        description: { type: string }
+        category: { $ref: '#/components/schemas/PublicTaxonomyMembership' }
+        author: { type: object, additionalProperties: false, required: [id, name, slug], properties: { id: { type: string, format: uuid }, name: { type: string }, slug: { type: string } } }
+        modality: { type: object, additionalProperties: false, required: [onsite, remote, travel], properties: { onsite: { type: boolean }, remote: { type: boolean }, travel: { type: boolean } } }
+        locations: { type: array, items: { $ref: '#/components/schemas/PublicLocation' } }
+        compensation: { type: object, nullable: true, additionalProperties: false, properties: { typeId: { type: string, format: uuid }, minMinor: { type: integer, format: int64, nullable: true }, maxMinor: { type: integer, format: int64, nullable: true }, currencyId: { type: string, format: uuid, nullable: true }, negotiable: { type: boolean } } }
+        startsAt: { type: string, format: date-time, nullable: true }
+        endsAt: { type: string, format: date-time, nullable: true }
+        expiresAt: { type: string, format: date-time }
+        canonicalUrl: { type: string }
+    PublicDirectoryEvent:
+      type: object
+      description: Public-listable event with approximate location.
+      additionalProperties: false
+      required: [id, title, startTime, timezone, location, canonicalUrl]
+      properties:
+        id: { type: integer, format: int64 }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        startTime: { type: string, format: date-time }
+        endTime: { type: string, format: date-time, nullable: true }
+        timezone: { type: string }
+        priceCents: { type: integer, format: int64, nullable: true }
+        currencyId: { type: string, format: uuid, nullable: true }
+        capacity: { type: integer, nullable: true }
+        venue: { type: object, nullable: true, additionalProperties: false, properties: { id: { type: integer, format: int64 }, name: { type: string } } }
+        location: { $ref: '#/components/schemas/PublicLocation' }
+        canonicalUrl: { type: string }
+    PublicDirectoryVenue:
+      type: object
+      description: Venue used by public events; address and contact fields are structurally absent.
+      additionalProperties: false
+      required: [id, name, location, canonicalUrl]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        capacity: { type: integer, nullable: true }
+        location: { $ref: '#/components/schemas/PublicLocation' }
+        canonicalUrl: { type: string }
+    AgeAssuranceRequest: { type: object, additionalProperties: false, required: [adultAttestation], properties: { adultAttestation: { type: boolean }, guardianPartyId: { type: integer, format: int64 } } }
+    DirectoryProfileUpsert:
+      type: object
+      additionalProperties: false
+      required: [profileKind, publicName, slug, professionIds, instrumentIds, genreIds, serviceOfferingIds, countryId, onsite, remote, availableToTravel]
+      properties: { profileKind: { type: string }, publicName: { type: string, minLength: 1, maxLength: 160 }, slug: { type: string }, bio: { type: string }, professionIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }, instrumentIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }, genreIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }, serviceOfferingIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }, countryId: { type: string, format: uuid }, cityId: { type: string, format: uuid }, metropolitanAreaId: { type: string, format: uuid }, onsite: { type: boolean }, remote: { type: boolean }, availableToTravel: { type: boolean }, travelRadiusKm: { type: number, minimum: 0, maximum: 20000 } }
+    ManagedDirectoryProfile: { type: object, required: [id, kind, name, slug, status, visibility, moderationStatus, version, capabilities], properties: { id: { type: string, format: uuid }, kind: { type: string }, name: { type: string }, slug: { type: string }, bio: { type: string, nullable: true }, status: { type: string }, visibility: { type: string }, moderationStatus: { type: string }, version: { type: integer, format: int64 }, capabilities: { type: object, additionalProperties: { type: boolean } } } }
+    StatusRequest: { type: object, required: [status], properties: { status: { type: string }, reason: { type: string } } }
+    ClassifiedCreate:
+      type: object
+      additionalProperties: false
+      required: [authorProfileId, categoryId, title, slug, description, professionIds, instrumentIds, genreIds, countryIds, cityIds, metropolitanAreaIds, onsite, remote, availableToTravel, budgetNegotiable]
+      properties:
+        authorProfileId: { type: string, format: uuid }
+        categoryId: { type: string, format: uuid }
+        title: { type: string, minLength: 5, maxLength: 160 }
+        slug: { type: string, minLength: 2, maxLength: 120, pattern: '^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$' }
+        description: { type: string, minLength: 20, maxLength: 10000 }
+        professionIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }
+        instrumentIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }
+        genreIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }
+        countryIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }
+        cityIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }
+        metropolitanAreaIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }
+        onsite: { type: boolean }
+        remote: { type: boolean }
+        availableToTravel: { type: boolean }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }
+        experienceLevel: { type: string }
+        compensationTypeId: { type: string, format: uuid }
+        budgetMinMinor: { type: integer, format: int64, minimum: 0 }
+        budgetMaxMinor: { type: integer, format: int64, minimum: 0 }
+        currencyId: { type: string, format: uuid }
+        budgetNegotiable: { type: boolean }
+        serviceOfferingId: { type: string, format: uuid }
+        serviceAdId: { type: integer, format: int64 }
+        expiresAt: { type: string, format: date-time }
+    ManagedClassified: { type: object, required: [id, title, slug, status, moderationStatus, version], properties: { id: { type: string, format: uuid }, title: { type: string }, slug: { type: string }, status: { type: string }, moderationStatus: { type: string }, expiresAt: { type: string, format: date-time, nullable: true }, version: { type: integer, format: int64 } } }
+    ApplicationCreate: { type: object, required: [applicantProfileId, message, portfolio], properties: { applicantProfileId: { type: string, format: uuid }, message: { type: string, minLength: 10, maxLength: 5000 }, portfolio: { type: array, items: { type: object, additionalProperties: true } }, availability: { type: string }, proposedAmountMinor: { type: integer, format: int64, minimum: 0 }, currencyId: { type: string, format: uuid } } }
+    ClassifiedApplication: { type: object, description: Private to participants and authorized admins, additionalProperties: true }
+    InvitationCreate: { type: object, required: [senderProfileId, targetProfileId, message], properties: { senderProfileId: { type: string, format: uuid }, targetProfileId: { type: string, format: uuid }, classifiedId: { type: string, format: uuid }, message: { type: string, minLength: 10, maxLength: 5000 } } }
+    DirectoryInvitation: { type: object, description: Participant-scoped invitation, additionalProperties: true }
+    DirectoryContact: { type: object, required: [senderProfileId, targetProfileId, contextKind, contextId, message], properties: { senderProfileId: { type: string, format: uuid }, targetProfileId: { type: string, format: uuid }, contextKind: { type: string, enum: [profile, classified, application, invitation] }, contextId: { type: string, format: uuid }, message: { type: string, minLength: 1, maxLength: 5000 } } }
+    DirectoryFavorite: { type: object, required: [targetKind, targetId, createdAt], properties: { targetKind: { $ref: '#/components/schemas/DirectoryEntityType' }, targetId: { type: string }, createdAt: { type: string, format: date-time }, result: { $ref: '#/components/schemas/DirectorySearchItem', nullable: true } } }
+    SavedSearchCreate: { type: object, required: [name, canonicalQuery, alertsEnabled, alertFrequency], properties: { name: { type: string, minLength: 1, maxLength: 120 }, canonicalQuery: { type: object, additionalProperties: true }, alertsEnabled: { type: boolean }, alertFrequency: { type: string, enum: [instant, daily, weekly, off] } } }
+    SavedDirectorySearch: { allOf: [{ $ref: '#/components/schemas/SavedSearchCreate' }, { type: object, required: [id, createdAt], properties: { id: { type: string, format: uuid }, createdAt: { type: string, format: date-time }, lastEvaluatedAt: { type: string, format: date-time, nullable: true } } }] }
+    ClaimCreate: { type: object, required: [profileId, claimType, evidence], properties: { profileId: { type: string, format: uuid }, claimType: { type: string, enum: [profile, organization, venue, administration, credit] }, evidence: { type: array, items: { type: object, additionalProperties: true } } } }
+    VerificationCreate: { type: object, required: [profileId, verificationType, evidence], properties: { profileId: { type: string, format: uuid }, verificationType: { type: string, enum: [identity, organization, venue, ownership, administration, professional_credit] }, evidence: { type: array, items: { type: object, additionalProperties: true } } } }
+    ReportCreate: { type: object, required: [targetKind, targetId, reasonCode], properties: { targetKind: { type: string }, targetId: { type: string }, reasonCode: { type: string }, details: { type: string, minLength: 10, maxLength: 3000 } } }
+    ModerationDecision: { type: object, required: [decision, reasonCode, notes], properties: { decision: { type: string, enum: [dismiss, warn, pause, remove, suspend, close] }, reasonCode: { type: string }, notes: { type: string, minLength: 10, maxLength: 5000 } } }
+    ProfileMerge: { type: object, additionalProperties: false, required: [sourceProfileId, targetProfileId, reason], properties: { sourceProfileId: { type: string, format: uuid }, targetProfileId: { type: string, format: uuid }, reason: { type: string, minLength: 10, maxLength: 2000 } } }
