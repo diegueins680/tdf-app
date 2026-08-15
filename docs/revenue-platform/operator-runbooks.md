@@ -10,8 +10,11 @@ capture, refund, takedown, DSP delivery, or payout.
 3. Inspect redacted correlation ID, event-inbox state, signature result, timestamp, event ID and retry
    count. Never paste full payloads or credentials into a ticket.
 4. Query provider status server-to-server and compare merchant, resource, order, amount and currency.
-5. Replay the stored inbox event through the idempotent processor. Move repeated failures to
-   operator review; record owner, root cause and evidence hash.
+5. Where the environment-specific worker flag is enabled, allow it to process `retry` events. For
+   `dead_letter`, repair the documented root cause first, then use
+   `/admin/commerce/provider-events` and enter a specific remediation reason.
+   The audited requeue preserves the original attempt count and encrypted payload; it does not mark
+   the order paid. Never reset the counter or edit the event directly.
 6. Reconcile before re-enabling. Contact affected customers with the honest current state.
 
 ## Provider outage

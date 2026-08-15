@@ -102,6 +102,7 @@ import TDF.CampaignAutomation
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
 import qualified TDF.Commerce.CheckoutStore as CheckoutStore
 import qualified TDF.Commerce.ProviderEventStore as ProviderEventStore
+import qualified TDF.Commerce.ProviderEventWorker as ProviderEventWorker
 import qualified TDF.Commerce.RefundStore as RefundStore
 import qualified TDF.Commerce.StateMachine as Commerce
 import qualified TDF.Distribution.StateMachine as Distribution
@@ -112,6 +113,7 @@ import qualified TDF.Catalog.PipelineSpec as CatalogPipelineSpec
 import TDF.Email (resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
+import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import TDF.Services.EventLogisticsRoutes (RouteEstimateResult (..), parseGoogleDurationSeconds, parseGoogleRouteResponse)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
@@ -912,6 +914,72 @@ main = hspec $ do
             let now = UTCTime (fromGregorian 2026 8 14) (secondsToDiffTime (12 * 60 * 60))
             ProviderEventStore.validateProviderEventTimestamp
               now (addUTCTime (negate (4 * 24 * 60 * 60 + 1)) now)
+              `shouldSatisfy` isLeft
+
+        it "replays only payloads that match immutable verified event metadata" $ do
+            let createdAt = UTCTime (fromGregorian 2026 8 14)
+                  (secondsToDiffTime (12 * 60 * 60))
+                rawEvent = TE.encodeUtf8
+                  "{\"id\":\"WH-RETRY-1\",\"event_type\":\"PAYMENT.CAPTURE.COMPLETED\",\"create_time\":\"2026-08-14T12:00:00Z\",\"resource\":{\"id\":\"CAPTURE-RETRY-1\"}}"
+                payload = ProviderEventStore.ProviderEventPayload
+                  { ProviderEventStore.pepReference =
+                      ProviderEventStore.ProviderEventReference
+                        "00000000-0000-4000-8000-000000000010"
+                  , ProviderEventStore.pepProvider = "paypal"
+                  , ProviderEventStore.pepEnvironment = "sandbox"
+                  , ProviderEventStore.pepMerchantRef = "MERCHANT-RETRY"
+                  , ProviderEventStore.pepProviderEventId = "WH-RETRY-1"
+                  , ProviderEventStore.pepEventType = "PAYMENT.CAPTURE.COMPLETED"
+                  , ProviderEventStore.pepProviderCreatedAt = Just createdAt
+                  , ProviderEventStore.pepProviderResourceId = Just "CAPTURE-RETRY-1"
+                  , ProviderEventStore.pepRawPayload = rawEvent
+                  }
+            case ProviderEventWorker.validateStoredPaypalEvent payload of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right (environment, envelope) -> do
+                environment `shouldBe` CheckoutStore.CheckoutSandbox
+                ServiceStorefront.pweEventId envelope `shouldBe` "WH-RETRY-1"
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepProviderEventId = "WH-TAMPERED" }
+              `shouldSatisfy` isLeft
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepProvider = "datafast" }
+              `shouldSatisfy` isLeft
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepEventType = "PAYMENT.CAPTURE.REFUNDED" }
+              `shouldSatisfy` isLeft
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepProviderCreatedAt =
+                Just (addUTCTime 1 createdAt) }
+              `shouldSatisfy` isLeft
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepProviderResourceId = Just "CAPTURE-TAMPERED" }
+              `shouldSatisfy` isLeft
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepEnvironment = "production" }
+              `shouldSatisfy` isRight
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepEnvironment = "mock" }
+              `shouldSatisfy` isLeft
+
+        it "requires a UUID event reference and an auditable replay reason" $ do
+            let now = UTCTime (fromGregorian 2026 8 14)
+                  (secondsToDiffTime (12 * 60 * 60))
+            ProviderEventStore.parseProviderEventReference
+              "00000000-0000-4000-8000-000000000010"
+              `shouldSatisfy` isRight
+            ProviderEventStore.parseProviderEventReference "provider-event-1"
+              `shouldSatisfy` isLeft
+            CommerceOperationsServer.validateProviderEventReplayReason
+              "  Provider credentials were repaired  "
+              `shouldBe` Right "Provider credentials were repaired"
+            CommerceOperationsServer.validateProviderEventReplayReason "retry"
+              `shouldSatisfy` isLeft
+            CommerceOperationsServer.validateProviderEventReplayReason
+              "credentials repaired\nreplay now"
+              `shouldSatisfy` isLeft
+            CommerceOperationsServer.validateProviderEventReplayReason
+              (Data.Text.replicate 501 "r")
               `shouldSatisfy` isLeft
             ProviderEventStore.validateProviderEventTimestamp
               now (addUTCTime (5 * 60 + 1) now)

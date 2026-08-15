@@ -1504,6 +1504,33 @@
       "apiScopes": [{ "pathPrefix": "/admin/social", "methods": { "GET": "view", "POST": "administer" } }, { "pathPrefix": "/admin/email-test", "methods": { "POST": "administer" } }, { "pathPrefix": "/admin/seed", "methods": { "POST": "administer" } }, { "pathPrefix": "/meta/backfill", "methods": { "POST": "administer" } }]
     },
     {
+      "id": "admin.commerce-provider-events",
+      "parentId": "admin.system-status",
+      "webRoute": "/admin/commerce/provider-events",
+      "routeType": "important-submodule",
+      "classification": "important-submodule",
+      "label": { "es": "Eventos de pago", "en": "Payment events" },
+      "synonyms": { "es": ["webhooks de pago", "dead letters de pago"], "en": ["payment webhooks", "payment dead letters"] },
+      "keywords": ["payment", "webhook", "provider-event", "retry", "dead-letter"],
+      "description": { "es": "Revisar el inbox verificado y registrar reintentos auditados.", "en": "Review the verified inbox and record audited retries." },
+      "navigationGroup": "admin",
+      "icon": "payment",
+      "breadcrumb": ["admin.system-status"],
+      "requiredRoles": ["Admin"],
+      "requiredModules": ["Admin"],
+      "permissions": {
+        "discover": { "rolesAny": ["Admin"], "modulesAll": ["Admin"], "strictAdmin": true },
+        "view": { "rolesAny": ["Admin"], "modulesAll": ["Admin"], "strictAdmin": true },
+        "administer": { "rolesAny": ["Admin"], "modulesAll": ["Admin"], "strictAdmin": true }
+      },
+      "recordScope": "verified-provider-event",
+      "maturity": "beta",
+      "globalMenu": true,
+      "accessRequestEligible": false,
+      "mobilePresentation": { "kind": "web-only", "destination": null, "documentedException": "Encrypted payment-event operations require the strict-admin desktop workflow." },
+      "apiScopes": [{ "pathPrefix": "/admin/commerce/provider-events", "methods": { "GET": "view", "POST": "administer" } }]
+    },
+    {
       "id": "admin.artist-enrichment",
       "parentId": "admin.system-status",
       "webRoute": "/admin/artistas-enriquecimiento",

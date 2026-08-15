@@ -3992,6 +3992,63 @@ paths:
         '404': { description: Order or provider binding not found }
         '501': { description: Provider reconciliation capability is unavailable }
         '502': { description: Provider status could not be read }
+  /admin/commerce/provider-events:
+    get:
+      tags: [Admin, Commerce operations]
+      summary: List redacted provider-event inbox records
+      description: Strict-admin operational view. Encrypted payloads and merchant-account references are never returned.
+      operationId: adminListCommerceProviderEvents
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pending, processing, processed, retry, dead_letter, ignored]
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: offset
+          in: query
+          required: false
+          schema: { type: integer, minimum: 0, maximum: 10000, default: 0 }
+      responses:
+        '200':
+          description: Redacted provider-event records ordered newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CommerceProviderEvent' }
+        '400': { description: Invalid filter }
+        '403': { description: Strict Admin role required }
+  /admin/commerce/provider-events/{eventId}/replay:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [Admin, Commerce operations]
+      summary: Requeue one dead-letter provider event with immutable operator evidence
+      description: Requeueing does not mark an order paid. The bounded worker reprocesses only the original signature-verified encrypted payload.
+      operationId: adminReplayCommerceProviderEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CommerceProviderEventReplayCreate' }
+      responses:
+        '200':
+          description: Event moved from dead_letter to retry with an immutable action record
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommerceProviderEvent' }
+        '400': { description: Invalid event ID or replay reason }
+        '403': { description: Strict Admin role required }
+        '404': { description: Provider event not found }
+        '409': { description: Event is not currently dead-lettered }
 security:
   - bearerAuth: [ ]
 
@@ -4273,6 +4330,35 @@ components:
         ssrecCurrency: { type: string, minLength: 3, maxLength: 3 }
         ssrecMatched: { type: boolean }
         ssrecCheckedAt: { type: string, format: date-time }
+    CommerceProviderEvent:
+      type: object
+      additionalProperties: false
+      required: [cpeId, cpeProvider, cpeEnvironment, cpeProviderEventId, cpeEventType, cpeProviderResourceId, cpeStatus, cpeAttemptCount, cpeCheckoutId, cpePaymentAttemptId, cpeRefundId, cpeReceivedAt, cpeProviderCreatedAt, cpeProcessingStartedAt, cpeLastAttemptAt, cpeNextAttemptAt, cpeProcessedAt, cpeErrorSummary]
+      properties:
+        cpeId: { type: string, format: uuid }
+        cpeProvider: { type: string, enum: [paypal, datafast, stripe, bank_transfer, cash, pos, cardano] }
+        cpeEnvironment: { type: string, enum: [sandbox, production] }
+        cpeProviderEventId: { type: string }
+        cpeEventType: { type: string }
+        cpeProviderResourceId: { type: string, nullable: true }
+        cpeStatus: { type: string, enum: [pending, processing, processed, retry, dead_letter, ignored] }
+        cpeAttemptCount: { type: integer, minimum: 0 }
+        cpeCheckoutId: { type: string, format: uuid, nullable: true }
+        cpePaymentAttemptId: { type: string, format: uuid, nullable: true }
+        cpeRefundId: { type: string, format: uuid, nullable: true }
+        cpeReceivedAt: { type: string, format: date-time }
+        cpeProviderCreatedAt: { type: string, format: date-time, nullable: true }
+        cpeProcessingStartedAt: { type: string, format: date-time, nullable: true }
+        cpeLastAttemptAt: { type: string, format: date-time, nullable: true }
+        cpeNextAttemptAt: { type: string, format: date-time, nullable: true }
+        cpeProcessedAt: { type: string, format: date-time, nullable: true }
+        cpeErrorSummary: { type: string, maxLength: 500, nullable: true }
+    CommerceProviderEventReplayCreate:
+      type: object
+      additionalProperties: false
+      required: [cperReason]
+      properties:
+        cperReason: { type: string, minLength: 8, maxLength: 500 }
     DatafastCheckout:
       type: object
       required: [dcOrderId, dcCheckoutId, dcWidgetUrl, dcAmount, dcCurrency]

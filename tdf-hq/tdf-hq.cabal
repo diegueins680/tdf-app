@@ -47,12 +47,14 @@ executable tdf-hq-exe
     TDF.API.Catalog
     TDF.API.ServiceStorefront
     TDF.API.ServiceStorefrontTypes
+    TDF.API.CommerceOperations
     TDF.Artists.Promotion
     TDF.Artists.Enrichment
     TDF.Auth
     TDF.CampaignAutomation
     TDF.Commerce.CheckoutStore
     TDF.Commerce.ProviderEventStore
+    TDF.Commerce.ProviderEventWorker
     TDF.Commerce.RefundStore
     TDF.Commerce.StateMachine
     TDF.Config
@@ -95,6 +97,7 @@ executable tdf-hq-exe
     TDF.Routes.Academy
     TDF.Seed
     TDF.Server
+    TDF.Server.CommerceOperations
     TDF.ServerAuth
     TDF.ServerAdmin
     TDF.Server.SocialDiscovery
@@ -229,6 +232,7 @@ test-suite tdf-hq-test
     TDF.API.SocialDiscoveryAPI
     TDF.API.SocialSyncAPI
     TDF.API.Calendar
+    TDF.API.CommerceOperations
     TDF.API.Label
     TDF.API.Services
     TDF.Contracts.API
@@ -255,6 +259,7 @@ test-suite tdf-hq-test
     TDF.CampaignAutomation
     TDF.Commerce.CheckoutStore
     TDF.Commerce.ProviderEventStore
+    TDF.Commerce.ProviderEventWorker
     TDF.Commerce.RefundStore
     TDF.Commerce.StateMachine
     TDF.Config
@@ -295,6 +300,7 @@ test-suite tdf-hq-test
     TDF.Seed
     TDF.Server
     TDF.Server.Catalog
+    TDF.Server.CommerceOperations
     TDF.Server.DDEX
     TDF.Server.ServiceStorefront
     TDF.ServerAuth

@@ -15,6 +15,14 @@ window; workers use a claim/retry/dead-letter lifecycle. A duplicate event may r
 cannot replace the original payload. Provider mocks and sandbox evidence cannot transition
 production records.
 
+Due work is claimed atomically and decrypted only after the row is processing. The worker checks the
+stored SHA-256, provider, environment, event ID/type/time and resource against the original payload
+before invoking the same idempotent processor used by the webhook request. Automatic processing has
+an environment-specific kill switch. A strict administrator may requeue only `dead_letter` records
+after remediation; the database transition appends immutable actor, reason, old-state and new-state
+evidence and preserves the lifetime attempt count. Direct status edits and counter resets are
+rejected.
+
 Refunds use a separate two-person state machine and immutable line allocation. A provider refund
 becomes successful only after exact server-side provider ID, amount and currency verification; the
 result is represented by compensating ledger entries and a credit note, not destructive edits.

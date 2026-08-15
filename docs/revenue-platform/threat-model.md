@@ -14,7 +14,7 @@ Staff actions require least privilege and audit; a staff login does not make fin
 |---|---|---|
 | Price, quantity, tax, or fee tampering | Server package lookup, integer minor-unit snapshots, song bounds, immutable checkout lines | Wire all domains to approved product/quote versions and tax adapter |
 | Fake browser callback | Return cannot mark paid; Datafast/PayPal bindings verify provider data; PayPal webhook uses remote verification over exact raw bytes | Verify the PayPal contract with secret-backed sandbox tests; keep Datafast callback disabled until contracted |
-| Callback replay/reordering | Immutable encrypted PayPal inbox, event/hash dedupe, four-day/five-minute timestamp bounds, claim/retry/dead-letter state | Add operator replay endpoint/worker scheduling, alerting and credentialed delayed-event tests |
+| Callback replay/reordering | Immutable encrypted PayPal inbox, event/hash dedupe, four-day/five-minute acceptance bounds, atomic claim/retry/dead-letter worker, metadata/checksum revalidation, audited strict-admin requeue | Add external alert delivery and credentialed delayed-event tests |
 | Duplicate order/capture/refund | Client idempotency, unique provider bindings, PayPal request IDs, checkout-locked refund reservation and immutable allocation | Apply orchestration to every domain and add provider concurrency E2E |
 | Guessing guest orders | Random lookup token stored as hash, constant-shape not-found response | Add verified-email recovery, rate limiter and abuse telemetry at ingress |
 | Raw card/secret leakage | Hosted provider model; secret values not documented; redaction boundary specified | Structured redaction tests, secret-manager rotation and log sampling in staging |
@@ -29,7 +29,7 @@ Staff actions require least privilege and audit; a staff login does not make fin
 | Payout-account takeover | Versioned beneficiary profile, verification status, dual-control payout approval | Step-up auth, cooling period, out-of-band change notice and bank ownership verification |
 | Insider refund/price/release abuse | Strict-admin refund endpoints, immutable economics and allocations, requester/reviewer separation, compensating ledger and credit note | Step-up auth, configurable limits, anomaly alerts and periodic access review |
 | Enumeration/rate abuse | Token capability and customer-safe response | Edge/IP/account/device throttles, CAPTCHA escalation and alert thresholds |
-| Provider/partner outage | Honest processing/unavailable states and kill flags | Circuit breaker, bounded worker retries, DLQ dashboard and rehearsed failover messaging |
+| Provider/partner outage | Honest processing/unavailable states, kill flags, bounded worker retries and redacted dead-letter dashboard | Circuit breaker, external alert delivery and rehearsed failover messaging |
 
 ## Security invariants
 

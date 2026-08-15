@@ -95,6 +95,7 @@ import           TDF.API.Drive (DriveAPI, DriveUploadForm(..))
 import           TDF.Contracts.API (ContractsAPI)
 import qualified TDF.Server.DDEX as DDEXServer
 import qualified TDF.Server.Catalog as CatalogServer
+import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Catalog.Models as Catalog
 import           TDF.Catalog.Security
   ( applySecurityRoleAssignmentPolicy
@@ -3745,6 +3746,7 @@ protectedServer user =
   :<|> accessRequestsServer user
   :<|> navigationPreferencesServer user
   :<|> OperationsServer.operationsServer user
+  :<|> CommerceOperationsServer.commerceOperationsServer user
 
 navigationPreferencesServer :: AuthedUser -> ServerT NavigationPreferencesAPI AppM
 navigationPreferencesServer user =

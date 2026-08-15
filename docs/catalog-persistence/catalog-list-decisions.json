@@ -494,6 +494,16 @@
       "reviewed": true
     },
     {
+      "id": "fd041f69371df7061bea",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break event-inbox transition parsing, filtering, or operator dispatch.",
+      "justification": "Provider-event inbox statuses are a closed protocol state machine enforced by database transitions and shared API contracts, not editable business catalog data.",
+      "reviewed": true
+    },
+    {
       "id": "54b69bd3e72c315624d5",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -944,7 +954,7 @@
       "reviewed": true
     },
     {
-      "id": "7cea23e1dac639fe0160",
+      "id": "91ec5702d1c3efd7777e",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
@@ -2211,6 +2221,16 @@
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "Visual style tokens are rendering constants; persisted catalog records own labels and ordering, not theme palette tokens.",
+      "reviewed": true
+    },
+    {
+      "id": "362db8e04619b3b1f700",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break event-inbox transition filtering or operator dispatch.",
+      "justification": "The filter enumerates the same closed provider-event protocol state machine enforced by the database and OpenAPI contract.",
       "reviewed": true
     },
     {
@@ -4064,6 +4084,16 @@
       "reviewed": true
     },
     {
+      "id": "c6e4988f9791b0f4e8d0",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the enum could break generated clients or admit an invalid provider-event transition state.",
+      "justification": "The OpenAPI enum is the wire contract for the closed provider-event protocol state machine enforced by database constraints.",
+      "reviewed": true
+    },
+    {
       "id": "540029aef455a23da579",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -5464,6 +5494,26 @@
       "reviewed": true
     },
     {
+      "id": "67ea93ac852e5fd17892",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P0-security",
+      "risk": "An unknown provider discriminator could bypass exact merchant, environment, signature, or settlement adapter checks.",
+      "justification": "These values are the closed implementation dispatch union for compiled payment adapters. Merchant capabilities and enablement remain database-configured feature flags.",
+      "reviewed": true
+    },
+    {
+      "id": "d14b4c467d704c72df48",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P0-security",
+      "risk": "An unknown environment discriminator could allow sandbox evidence to affect production records.",
+      "justification": "Sandbox and production are protocol-level security partitions enforced exhaustively in code and constraints, not selectable business catalog values.",
+      "reviewed": true
+    },
+    {
       "id": "b4532ea6cfa7d8e317e8",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -6504,7 +6554,7 @@
       "reviewed": true
     },
     {
-      "id": "dee5c1431841d4f8474a",
+      "id": "00bfa6ced61022a8b20f",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
@@ -7091,26 +7141,6 @@
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "67ea93ac852e5fd17892",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P0-security",
-      "risk": "An unknown provider discriminator could bypass exact merchant, environment, signature, or settlement adapter checks.",
-      "justification": "These values are the closed implementation dispatch union for compiled payment adapters. Merchant capabilities and enablement remain database-configured feature flags.",
-      "reviewed": true
-    },
-    {
-      "id": "d14b4c467d704c72df48",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P0-security",
-      "risk": "An unknown environment discriminator could allow sandbox evidence to affect production records.",
-      "justification": "Sandbox and production are protocol-level security partitions enforced exhaustively in code and constraints, not selectable business catalog values.",
       "reviewed": true
     }
   ]

@@ -2939,6 +2939,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/commerce/provider-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List redacted provider-event inbox records
+         * @description Strict-admin operational view. Encrypted payloads and merchant-account references are never returned.
+         */
+        get: operations["adminListCommerceProviderEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/commerce/provider-events/{eventId}/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Requeue one dead-letter provider event with immutable operator evidence
+         * @description Requeueing does not mark an order paid. The bounded worker reprocesses only the original signature-verified encrypted payload.
+         */
+        post: operations["adminReplayCommerceProviderEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3109,6 +3151,42 @@ export interface components {
             ssrecMatched: boolean;
             /** Format: date-time */
             ssrecCheckedAt: string;
+        };
+        CommerceProviderEvent: {
+            /** Format: uuid */
+            cpeId: string;
+            /** @enum {string} */
+            cpeProvider: "paypal" | "datafast" | "stripe" | "bank_transfer" | "cash" | "pos" | "cardano";
+            /** @enum {string} */
+            cpeEnvironment: "sandbox" | "production";
+            cpeProviderEventId: string;
+            cpeEventType: string;
+            cpeProviderResourceId: string | null;
+            /** @enum {string} */
+            cpeStatus: "pending" | "processing" | "processed" | "retry" | "dead_letter" | "ignored";
+            cpeAttemptCount: number;
+            /** Format: uuid */
+            cpeCheckoutId: string | null;
+            /** Format: uuid */
+            cpePaymentAttemptId: string | null;
+            /** Format: uuid */
+            cpeRefundId: string | null;
+            /** Format: date-time */
+            cpeReceivedAt: string;
+            /** Format: date-time */
+            cpeProviderCreatedAt: string | null;
+            /** Format: date-time */
+            cpeProcessingStartedAt: string | null;
+            /** Format: date-time */
+            cpeLastAttemptAt: string | null;
+            /** Format: date-time */
+            cpeNextAttemptAt: string | null;
+            /** Format: date-time */
+            cpeProcessedAt: string | null;
+            cpeErrorSummary: string | null;
+        };
+        CommerceProviderEventReplayCreate: {
+            cperReason: string;
         };
         DatafastCheckout: {
             dcOrderId: string;
@@ -11192,6 +11270,98 @@ export interface operations {
             };
             /** @description Provider status could not be read */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListCommerceProviderEvents: {
+        parameters: {
+            query?: {
+                status?: "pending" | "processing" | "processed" | "retry" | "dead_letter" | "ignored";
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redacted provider-event records ordered newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommerceProviderEvent"][];
+                };
+            };
+            /** @description Invalid filter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminReplayCommerceProviderEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommerceProviderEventReplayCreate"];
+            };
+        };
+        responses: {
+            /** @description Event moved from dead_letter to retry with an immutable action record */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommerceProviderEvent"];
+                };
+            };
+            /** @description Invalid event ID or replay reason */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider event not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event is not currently dead-lettered */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

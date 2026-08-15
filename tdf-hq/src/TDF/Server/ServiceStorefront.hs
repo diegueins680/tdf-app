@@ -18,13 +18,16 @@ module TDF.Server.ServiceStorefront
   , PaypalWebhookHeaders(..)
   , PaypalWebhookCapture(..)
   , PaypalRefundOutcome(..)
+  , PaypalEventProcessResult(..)
   , BoundPaypalCapture(..)
   , parsePaypalWebhookEnvelope
   , parsePaypalWebhookCapture
+  , paypalWebhookResourceId
   , validatePaypalWebhookHeaders
   , validatePaypalWebhookCaptureBinding
   , buildPaypalWebhookVerificationBody
   , parsePaypalRefundOutcome
+  , processPaypalWebhookEventIO
   ) where
 
 import           Control.Monad (when, unless)
@@ -69,7 +72,7 @@ import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
 import qualified TDF.Commerce.RefundStore as Refund
 import           TDF.Config (defaultCurrency, defaultLocale, supportedCurrencies)
-import           TDF.DB (Env(..))
+import           TDF.DB (ConnectionPool, Env(..))
 import           TDF.Internationalization (formatMinorUnitsDecimal, formatMoney, normalizeCurrencyCode)
 import qualified TDF.ModelsExtra as ME
 import           TDF.DTO.SocialEventsDTO (StripePaymentIntentDTO(..))
@@ -821,7 +824,18 @@ processPaypalWebhookEvent
   -> PaypalWebhookEnvelope
   -> UTCTime
   -> AppM PaypalEventProcessResult
-processPaypalWebhookEvent environment merchantRef envelope now =
+processPaypalWebhookEvent environment merchantRef envelope now = do
+  Env{..} <- ask
+  liftIO $ processPaypalWebhookEventIO envPool environment merchantRef envelope now
+
+processPaypalWebhookEventIO
+  :: ConnectionPool
+  -> Checkout.CheckoutEnvironment
+  -> Text
+  -> PaypalWebhookEnvelope
+  -> UTCTime
+  -> IO PaypalEventProcessResult
+processPaypalWebhookEventIO envPool environment merchantRef envelope now =
   case pweEventType envelope of
     "PAYMENT.CAPTURE.COMPLETED" -> processCompletedCapture
     "PAYMENT.CAPTURE.REFUNDED" -> processExternalCaptureChange
@@ -833,8 +847,7 @@ processPaypalWebhookEvent environment merchantRef envelope now =
     processCompletedCapture = case parsePaypalWebhookCapture envelope of
       Left message -> pure (PaypalEventPermanentFailure message Nothing Nothing Nothing)
       Right capture -> do
-        Env{..} <- ask
-        result <- liftIO $ tryAny $ flip runSqlPool envPool $ do
+        result <- tryAny $ flip runSqlPool envPool $ do
           mBound <- loadBoundPaypalOrder environment merchantRef (pwcPaypalOrderId capture)
           case mBound of
             Nothing -> pure PaypalEventIgnored
@@ -922,8 +935,7 @@ processPaypalWebhookEvent environment merchantRef envelope now =
     processExternalCaptureChange exceptionType =
       case parsePaypalWebhookCapture envelope of
         Left _ -> do
-          Env{..} <- ask
-          result <- liftIO $ tryAny $ flip runSqlPool envPool $
+          result <- tryAny $ flip runSqlPool envPool $
             Checkout.recordReconciliationException
               Checkout.ProviderPayPal environment merchantRef exceptionType
               ("provider-event:" <> pweEventId envelope)
@@ -933,8 +945,7 @@ processPaypalWebhookEvent environment merchantRef envelope now =
             Left _ -> PaypalEventRetry "Malformed PayPal refund or reversal event could not be recorded"
             Right () -> PaypalEventProcessed Nothing Nothing Nothing
         Right capture -> do
-          Env{..} <- ask
-          result <- liftIO $ tryAny $ flip runSqlPool envPool $ do
+          result <- tryAny $ flip runSqlPool envPool $ do
             mBound <- loadBoundPaypalCapture environment merchantRef (pwcCaptureId capture)
             case mBound of
               Nothing -> pure PaypalEventIgnored

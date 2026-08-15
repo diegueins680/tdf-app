@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
@@ -6,7 +7,15 @@ module TDF.Commerce.ProviderEventStore
   , ProviderEventReference(..)
   , ProviderEventStored(..)
   , ProviderEventClaim(..)
+  , ProviderEventRecord(..)
+  , ProviderEventPayload(..)
+  , ProviderEventReplayError(..)
+  , parseProviderEventReference
   , storeVerifiedProviderEvent
+  , listProviderEvents
+  , listDueProviderEventReferences
+  , loadProviderEventPayload
+  , requeueDeadLetterProviderEvent
   , claimProviderEvent
   , markProviderEventProcessed
   , markProviderEventIgnored
@@ -17,6 +26,7 @@ module TDF.Commerce.ProviderEventStore
 
 import           Control.Monad.IO.Class (liftIO)
 import           Crypto.Hash (Digest, SHA256, hash)
+import           Data.Aeson (FromJSON, eitherDecodeStrict')
 import qualified Data.ByteArray.Encoding as BAE
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
@@ -25,10 +35,11 @@ import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import           Data.Time (NominalDiffTime, UTCTime, addUTCTime, diffUTCTime)
-import           Data.UUID (toText)
+import           Data.UUID (fromText, toText)
 import           Data.UUID.V4 (nextRandom)
 import           Database.Persist (PersistValue(..))
 import           Database.Persist.Sql (Single(..), SqlPersistT, rawExecute, rawSql)
+import           GHC.Generics (Generic)
 
 import           TDF.Commerce.CheckoutStore
   ( CheckoutEnvironment
@@ -64,6 +75,66 @@ data ProviderEventClaim
   | ProviderEventAlreadyHandled Text
   | ProviderEventBusy
   deriving (Eq, Show)
+
+data ProviderEventRecord = ProviderEventRecord
+  { perId                  :: Text
+  , perProvider            :: Text
+  , perEnvironment         :: Text
+  , perProviderEventId     :: Text
+  , perEventType           :: Text
+  , perProviderResourceId  :: Maybe Text
+  , perStatus              :: Text
+  , perAttemptCount        :: Int
+  , perCheckoutId          :: Maybe Text
+  , perPaymentAttemptId    :: Maybe Text
+  , perRefundId            :: Maybe Text
+  , perReceivedAt          :: UTCTime
+  , perProviderCreatedAt   :: Maybe UTCTime
+  , perProcessingStartedAt :: Maybe UTCTime
+  , perLastAttemptAt       :: Maybe UTCTime
+  , perNextAttemptAt       :: Maybe UTCTime
+  , perProcessedAt         :: Maybe UTCTime
+  , perErrorSummary        :: Maybe Text
+  } deriving (Eq, Show, Generic)
+
+instance FromJSON ProviderEventRecord
+
+data ProviderEventPayload = ProviderEventPayload
+  { pepReference          :: ProviderEventReference
+  , pepProvider           :: Text
+  , pepEnvironment        :: Text
+  , pepMerchantRef        :: Text
+  , pepProviderEventId    :: Text
+  , pepEventType          :: Text
+  , pepProviderCreatedAt  :: Maybe UTCTime
+  , pepProviderResourceId :: Maybe Text
+  , pepRawPayload         :: ByteString
+  } deriving (Eq, Show)
+
+data ProviderEventPayloadMetadata = ProviderEventPayloadMetadata
+  { ppmId                  :: Text
+  , ppmProvider            :: Text
+  , ppmEnvironment         :: Text
+  , ppmMerchantRef         :: Text
+  , ppmProviderEventId     :: Text
+  , ppmEventType           :: Text
+  , ppmProviderCreatedAt   :: Maybe UTCTime
+  , ppmProviderResourceId  :: Maybe Text
+  , ppmPayloadSha256       :: Text
+  } deriving (Eq, Show, Generic)
+
+instance FromJSON ProviderEventPayloadMetadata
+
+data ProviderEventReplayError
+  = ProviderEventNotFound
+  | ProviderEventReplayConflict Text
+  deriving (Eq, Show)
+
+parseProviderEventReference :: Text -> Either Text ProviderEventReference
+parseProviderEventReference rawReference =
+  case fromText (T.strip rawReference) of
+    Nothing -> Left "Provider event ID must be a UUID"
+    Just eventId -> Right (ProviderEventReference (toText eventId))
 
 storeVerifiedProviderEvent
   :: ProviderEventCreation
@@ -130,6 +201,123 @@ storeVerifiedProviderEvent ProviderEventCreation{..}
               pure (Right (ProviderEventStored (ProviderEventReference existingId) False))
             _ -> pure (Left "Provider event ID conflicts with different immutable evidence")
         _ -> pure (Left "Provider event insert returned an ambiguous result")
+
+listProviderEvents
+  :: Maybe Text
+  -> Int
+  -> Int
+  -> SqlPersistT IO [ProviderEventRecord]
+listProviderEvents statusFilter requestedLimit requestedOffset = do
+  rows <- rawSql
+    (providerEventRecordSelect <> "\
+    \ WHERE (?::text IS NULL OR processing_status = ?::text)\
+    \ ORDER BY received_at DESC, id DESC LIMIT ? OFFSET ?")
+    [ maybe PersistNull PersistText statusFilter
+    , maybe PersistNull PersistText statusFilter
+    , PersistInt64 (fromIntegral (min 100 (max 1 requestedLimit)))
+    , PersistInt64 (fromIntegral (min 10000 (max 0 requestedOffset)))
+    ] :: SqlPersistT IO [Single Text]
+  decodeProviderEventRecords rows
+
+listDueProviderEventReferences
+  :: UTCTime
+  -> Int
+  -> SqlPersistT IO [ProviderEventReference]
+listDueProviderEventReferences now requestedLimit = do
+  rows <- rawSql
+    "SELECT event.id::text FROM commerce_provider_event_inbox event\
+    \ WHERE event.signature_verified = TRUE\
+    \ AND EXISTS (SELECT 1 FROM revenue_feature_flag flag\
+    \   WHERE flag.flag_key = 'checkout.provider_event_worker'\
+    \   AND flag.environment = event.environment AND flag.enabled)\
+    \ AND (\
+    \   event.processing_status = 'pending'\
+    \   OR (event.processing_status = 'retry' AND COALESCE(event.next_attempt_at, ?) <= ?)\
+    \   OR (event.processing_status = 'processing'\
+    \       AND event.processing_started_at < ? - INTERVAL '15 minutes')\
+    \ ) ORDER BY COALESCE(event.next_attempt_at, event.received_at), event.received_at\
+    \ LIMIT ?"
+    [ PersistUTCTime now
+    , PersistUTCTime now
+    , PersistUTCTime now
+    , PersistInt64 (fromIntegral (min 100 (max 1 requestedLimit)))
+    ] :: SqlPersistT IO [Single Text]
+  pure [ProviderEventReference eventId | Single eventId <- rows]
+
+loadProviderEventPayload
+  :: ProviderEventReference
+  -> Text
+  -> SqlPersistT IO (Either Text ProviderEventPayload)
+loadProviderEventPayload eventRef encryptionKey
+  | not (validEncryptionKey encryptionKey) =
+      pure (Left "Provider event encryption key is invalid")
+  | otherwise = do
+      rows <- rawSql
+        "SELECT jsonb_build_object(\
+        \ 'ppmId', id::text, 'ppmProvider', provider, 'ppmEnvironment', environment,\
+        \ 'ppmMerchantRef', merchant_account_ref,\
+        \ 'ppmProviderEventId', provider_event_id, 'ppmEventType', event_type,\
+        \ 'ppmProviderCreatedAt', provider_created_at,\
+        \ 'ppmProviderResourceId', provider_resource_id,\
+        \ 'ppmPayloadSha256', payload_sha256)::text,\
+        \ pgp_sym_decrypt_bytea(payload_ciphertext, ?)\
+        \ FROM commerce_provider_event_inbox\
+        \ WHERE id = ?::uuid AND signature_verified = TRUE\
+        \ AND processing_status = 'processing'"
+        [ PersistText encryptionKey
+        , PersistText (providerEventReferenceId eventRef)
+        ] :: SqlPersistT IO [(Single Text, Single ByteString)]
+      pure $ case rows of
+        [(Single metadataJson, Single rawPayload)] -> do
+          metadata <- firstText "Invalid provider event metadata" $
+            eitherDecodeStrict' (TE.encodeUtf8 metadataJson)
+          if ppmPayloadSha256 metadata /= sha256Hex rawPayload
+            then Left "Provider event payload checksum mismatch"
+            else Right ProviderEventPayload
+              { pepReference = ProviderEventReference (ppmId metadata)
+              , pepProvider = ppmProvider metadata
+              , pepEnvironment = ppmEnvironment metadata
+              , pepMerchantRef = ppmMerchantRef metadata
+              , pepProviderEventId = ppmProviderEventId metadata
+              , pepEventType = ppmEventType metadata
+              , pepProviderCreatedAt = ppmProviderCreatedAt metadata
+              , pepProviderResourceId = ppmProviderResourceId metadata
+              , pepRawPayload = rawPayload
+              }
+        [] -> Left "Provider event is unavailable for processing"
+        _ -> Left "Provider event payload lookup returned an ambiguous result"
+
+requeueDeadLetterProviderEvent
+  :: ProviderEventReference
+  -> Int64
+  -> Text
+  -> UTCTime
+  -> SqlPersistT IO (Either ProviderEventReplayError ProviderEventRecord)
+requeueDeadLetterProviderEvent eventRef actorPartyId reason now = do
+  statuses <- rawSql
+    "SELECT processing_status FROM commerce_provider_event_inbox\
+    \ WHERE id = ?::uuid FOR UPDATE"
+    [PersistText (providerEventReferenceId eventRef)] :: SqlPersistT IO [Single Text]
+  case statuses of
+    [] -> pure (Left ProviderEventNotFound)
+    [Single "dead_letter"] -> do
+      requeued <- rawSql
+        "SELECT commerce_requeue_provider_event(?::uuid, ?::bigint, ?, ?)::text"
+        [ PersistText (providerEventReferenceId eventRef)
+        , PersistInt64 actorPartyId
+        , PersistText reason
+        , PersistUTCTime now
+        ] :: SqlPersistT IO [Single Text]
+      case requeued of
+        [Single _] -> do
+          records <- loadProviderEventRecord eventRef
+          pure $ case records of
+            [record] -> Right record
+            _ -> Left ProviderEventNotFound
+        _ -> pure (Left (ProviderEventReplayConflict "dead_letter"))
+    [Single currentStatus] ->
+      pure (Left (ProviderEventReplayConflict currentStatus))
+    _ -> pure (Left ProviderEventNotFound)
 
 claimProviderEvent
   :: ProviderEventReference
@@ -314,3 +502,44 @@ allowedFutureSkew = 300
 
 maxProviderEventAge :: NominalDiffTime
 maxProviderEventAge = 4 * 24 * 60 * 60
+
+providerEventRecordSelect :: Text
+providerEventRecordSelect =
+  "SELECT jsonb_build_object(\
+  \ 'perId', id::text, 'perProvider', provider, 'perEnvironment', environment,\
+  \ 'perProviderEventId', provider_event_id, 'perEventType', event_type,\
+  \ 'perProviderResourceId', provider_resource_id, 'perStatus', processing_status,\
+  \ 'perAttemptCount', attempt_count, 'perCheckoutId', checkout_id::text,\
+  \ 'perPaymentAttemptId', payment_attempt_id::text, 'perRefundId', refund_id::text,\
+  \ 'perReceivedAt', received_at, 'perProviderCreatedAt', provider_created_at,\
+  \ 'perProcessingStartedAt', processing_started_at, 'perLastAttemptAt', last_attempt_at,\
+  \ 'perNextAttemptAt', next_attempt_at, 'perProcessedAt', processed_at,\
+  \ 'perErrorSummary', error_summary)::text\
+  \ FROM commerce_provider_event_inbox"
+
+loadProviderEventRecord
+  :: ProviderEventReference
+  -> SqlPersistT IO [ProviderEventRecord]
+loadProviderEventRecord eventRef = do
+  rows <- rawSql
+    (providerEventRecordSelect <> " WHERE id = ?::uuid")
+    [PersistText (providerEventReferenceId eventRef)] :: SqlPersistT IO [Single Text]
+  decodeProviderEventRecords rows
+
+decodeProviderEventRecords
+  :: [Single Text]
+  -> SqlPersistT IO [ProviderEventRecord]
+decodeProviderEventRecords rows =
+  case traverse decodeOne rows of
+    Left message -> liftIO (ioError (userError message))
+    Right records -> pure records
+  where
+    decodeOne (Single rawJson) =
+      firstString "Invalid provider event record" $
+        eitherDecodeStrict' (TE.encodeUtf8 rawJson)
+
+firstText :: Text -> Either String a -> Either Text a
+firstText prefix = either (Left . (prefix <>) . (": " <>) . T.pack) Right
+
+firstString :: String -> Either String a -> Either String a
+firstString prefix = either (Left . ((prefix <> ": ") <>)) Right

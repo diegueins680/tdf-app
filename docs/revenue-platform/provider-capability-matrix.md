@@ -65,7 +65,10 @@ The public webhook endpoint validates bounded visible-ASCII headers, allows only
 certificate hosts for the immutable environment, rejects events more than four days old or more
 than five minutes in the future, and posts the exact raw event to PayPal's verification endpoint.
 Only `SUCCESS` evidence is encrypted into the inbox. Event IDs and immutable payload hashes are
-deduplicated; processing uses bounded retries and dead-letter review. PayPal's mock webhook
+deduplicated; processing uses bounded retries and dead-letter review. The background worker is
+independently gated by `checkout.provider_event_worker`, decrypts only signature-verified rows,
+checks the stored payload hash and metadata, and never resets the total attempt counter. Strict-admin
+requeue requires a remediation reason and appends immutable actor/status evidence. PayPal's mock webhook
 simulator cannot pass remote verification and therefore cannot transition these records.
 
 Refund execution is limited to a succeeded, bound PayPal capture. The immutable request reserves

@@ -64,6 +64,7 @@ import           TDF.Contracts.API (ContractsAPI)
 import           TDF.API.DDEX (DDEXAPI)
 import           TDF.API.Catalog (CatalogAPI, PublicCatalogAPI, SecurityGrantRevisionDTO, SelfFanRoleRequest)
 import           TDF.API.ServiceStorefront (ServiceStorefrontPublicAPI, ServiceStorefrontAdminAPI)
+import           TDF.API.CommerceOperations (CommerceOperationsAPI)
 import           TDF.Operations.API (OperationsAPI)
 
 type InventoryItem = ME.Asset
@@ -551,6 +552,7 @@ type ProtectedAPI =
   :<|> "access-requests" :> AccessRequestsAPI
   :<|> "navigation" :> "preferences" :> NavigationPreferencesAPI
   :<|> OperationsAPI
+  :<|> CommerceOperationsAPI
 
 type API =
        VersionAPI

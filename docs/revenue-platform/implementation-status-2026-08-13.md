@@ -37,6 +37,12 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   A completed capture must still match the immutable order, capture, amount, currency, environment
   and merchant binding. Unknown events do not mutate commerce state; externally observed refund or
   reversal events open reconciliation exceptions instead of inventing an internal refund.
+- A five-second bounded worker claims due or stale provider events atomically, decrypts only rows
+  already marked signature-verified, verifies the stored SHA-256 and immutable event metadata, and
+  reuses the same idempotent PayPal processor. Strict administrators have a bilingual redacted
+  `/admin/commerce/provider-events` view. A dead letter can move back to `retry` only through the
+  database requeue function, which appends an immutable actor/reason action; replay never resets the
+  attempt counter and never marks an order paid by itself.
 - Strict administrators can request a full or partial PayPal refund from the server-calculated
   remaining captured balance using an active database-managed bilingual reason code. A different
   authenticated administrator must approve it. Provider success creates immutable allocation
@@ -74,7 +80,8 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   accessible bilingual discovery. They disclose whether a path is checkout, request-only, private
   pilot, or unavailable and do not display invented distribution prices.
 - OpenAPI, generated web types, and the mobile generated client are synchronized for the service
-  storefront public checkout, webhook, refund, reconciliation, tracking, and administration contract.
+  storefront public checkout, webhook, refund, reconciliation, tracking, provider-event operations,
+  and administration contract.
 
 ## Explicitly feature-disabled
 
@@ -82,6 +89,9 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   sandbox evidence, reconciliation ownership, and production authorization are verified.
 - Production mixing/mastering checkout through its independent `commerce.mixing_mastering` database
   kill switch, in addition to the provider-specific switches.
+- Production asynchronous provider-event processing through
+  `checkout.provider_event_worker`; sandbox is enabled for local/staging rehearsal while production
+  remains off pending credentialed retry evidence and named alert ownership.
 - Datafast recurrence, tokenization, authorization/capture, installments, and refunds unless the
   specific merchant contract confirms them.
 - Datafast webhook and refund runtime; the public merchant documentation reviewed does not establish
@@ -106,7 +116,7 @@ The following requested domains remain future phases and must not be represented
 - Mixing/mastering private object-store multipart upload, malware scanning, engineer workflow,
   deliverable version history, revision billing, notifications, and non-PayPal refund adapters.
 - Public event detail/storefront, distribution onboarding/release wizard, staff QC consoles,
-  customer catalog/submission tracking, statement UI, and admin reconciliation dashboards.
+  customer catalog/submission tracking, statement UI, and reconciliation-exception assignment dashboard.
 - DDEX import-plan generation/resolution/commit, ERN rendering/download, partner transport,
   acknowledgement ingestion, correction/takedown execution, DSR parsing, royalty allocation jobs,
   statement generation, or settlements. Their schemas and gates do not equal runtime completion.
@@ -129,6 +139,7 @@ a read-only staging/production snapshot.
 This branch is suitable for a draft review and an isolated migration/application staging exercise.
 It is not production-ready and does not satisfy the full multi-phase definition of done. One
 low-risk domain—mixing/mastering—is now wired into the canonical checkout/receipt/ledger model. The
-next safe slice is credentialed PayPal sandbox webhook/capture/refund/reconciliation evidence,
-followed by marketplace sales fulfillment and provider-neutral checkout reuse. Datafast refund or
-callback work remains blocked on a verified merchant contract.
+next safe external step is credentialed PayPal sandbox webhook/capture/refund/reconciliation and
+delayed-retry evidence. The next internally implementable domain slice is marketplace sales
+fulfillment and provider-neutral checkout reuse. Datafast refund or callback work remains blocked on
+a verified merchant contract.

@@ -222,15 +222,16 @@ production capability:
 
 - implemented keys: `checkout.datafast`, `checkout.paypal`, `checkout.paypal.webhooks`,
   `checkout.paypal.refunds`, `checkout.datafast.webhooks`, `checkout.datafast.refunds`,
-  `commerce.mixing_mastering`; planned provider/domain keys
+  `checkout.provider_event_worker`, `commerce.mixing_mastering`; planned provider/domain keys
   must use the same registry rather than introducing an untracked environment-only bypass;
 - domains: `COMMERCE_MIXING_ENABLED`, `COMMERCE_EQUIPMENT_SALES_ENABLED`,
   `COMMERCE_RENTALS_ENABLED`, `COMMERCE_BOOKINGS_ENABLED`, `COMMERCE_DOMO_ENABLED`,
   `COMMERCE_COURSES_ENABLED`, `COMMERCE_TICKETS_ENABLED`, `COMMERCE_TIPS_ENABLED`,
   `COMMERCE_MEMBERSHIPS_ENABLED`, `COMMERCE_PROVIDER_SERVICES_ENABLED`,
   `COMMERCE_DISTRIBUTION_ENABLED`;
-- operations: `PROVIDER_EVENTS_ENABLED`, `REFUNDS_ENABLED`, `RECONCILIATION_ENABLED`,
-  `PRIVATE_ASSETS_ENABLED`, `SRI_INVOICING_ENABLED`;
+- operations: provider-event execution uses the canonical environment-scoped
+  `checkout.provider_event_worker` row; planned reconciliation, private-asset, and SRI-invoicing
+  capabilities must also use registry rows rather than environment-only bypasses;
 - distribution: `DDEX_IMPORT_ENABLED`, `DDEX_EXPORT_ENABLED`, `DDEX_DELIVERY_ENABLED`,
   `DDEX_TAKEDOWN_ENABLED`, `ROYALTY_INGEST_ENABLED`, `STATEMENTS_ENABLED`,
   `AUTOMATIC_PAYOUTS_ENABLED`, plus a recipient-specific flag.
