@@ -21,7 +21,7 @@ jest.unstable_mockModule('../api/directory', () => ({
     search: jest.fn(async () => searchResponse),
     suggestions: jest.fn(async () => []),
     taxonomies: jest.fn(async () => ({
-      locale: 'es', professions: [], classifiedCategories: [], compensationTypes: [], instruments: [], genres: [],
+      locale: 'es', professions: [], classifiedCategories: [], compensationTypes: [], serviceOfferings: [], currencies: [], instruments: [], genres: [],
       cities: [{ id: '22222222-2222-4222-8222-222222222222', code: 'quito-ec-p', name: 'Quito', countryId: '33333333-3333-4333-8333-333333333333' }],
     })),
     addFavorite: jest.fn(async () => undefined),
@@ -55,6 +55,7 @@ describe('DirectorySearchPage', () => {
       expect(container.querySelector('main#main-content')).not.toBeNull();
       expect(container.textContent).toContain('Encuentra a la gente y las oportunidades que hacen música');
       expect(container.textContent).toContain('Quito');
+      expect(container.textContent).toContain('Servicio');
       expect(container.textContent).toContain('Resultados orgánicos');
       await expectNoSeriousAccessibilityViolations(container);
     } finally {

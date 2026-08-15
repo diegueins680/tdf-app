@@ -78,6 +78,7 @@ export default function DirectorySearchPage() {
     initial.get('cityId') ?? (typeof localStorage === 'undefined' ? '' : localStorage.getItem(CITY_STORAGE_KEY) ?? ''),
   );
   const [professionId, setProfessionId] = useState(initial.get('professionId') ?? '');
+  const [serviceId, setServiceId] = useState(initial.get('serviceId') ?? '');
   const [instrumentId, setInstrumentId] = useState(initial.get('instrumentId') ?? '');
   const [genreId, setGenreId] = useState(initial.get('genreId') ?? '');
   const [remote, setRemote] = useState(initial.get('remote') === 'true');
@@ -122,6 +123,7 @@ export default function DirectorySearchPage() {
     entityType: entityType === 'all' ? undefined : entityType,
     cityId: coordinates ? undefined : cityId || undefined,
     professionId: professionId || undefined,
+    serviceId: serviceId || undefined,
     instrumentId: instrumentId || undefined,
     genreId: genreId || undefined,
     remote: remote || undefined,
@@ -150,13 +152,14 @@ export default function DirectorySearchPage() {
     if (entityType !== 'all') params.set('entityType', entityType);
     if (cityId && !coordinates) params.set('cityId', cityId);
     if (professionId) params.set('professionId', professionId);
+    if (serviceId) params.set('serviceId', serviceId);
     if (instrumentId) params.set('instrumentId', instrumentId);
     if (genreId) params.set('genreId', genreId);
     if (remote) params.set('remote', 'true');
     if (available) params.set('available', 'true');
     if (coordinates) params.set('radiusKm', String(radiusKm));
     navigate({ pathname: '/buscar', search: params.toString() }, { replace: true });
-  }, [available, cityId, coordinates, entityType, genreId, instrumentId, navigate, professionId, query, radiusKm, remote]);
+  }, [available, cityId, coordinates, entityType, genreId, instrumentId, navigate, professionId, query, radiusKm, remote, serviceId]);
 
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
@@ -243,6 +246,13 @@ export default function DirectorySearchPage() {
                 </Select>
               </FormControl>
               <FormControl size="small" sx={{ minWidth: 190 }}>
+                <InputLabel id="directory-service-label">Servicio</InputLabel>
+                <Select labelId="directory-service-label" label="Servicio" value={serviceId} onChange={(event) => setServiceId(event.target.value)}>
+                  <MenuItem value="">Todos</MenuItem>
+                  {(taxonomies.data?.serviceOfferings ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}
+                </Select>
+              </FormControl>
+              <FormControl size="small" sx={{ minWidth: 190 }}>
                 <InputLabel id="directory-instrument-label">Instrumento</InputLabel>
                 <Select labelId="directory-instrument-label" label="Instrumento" value={instrumentId} onChange={(event) => setInstrumentId(event.target.value)}>
                   <MenuItem value="">Todos</MenuItem>
@@ -259,7 +269,7 @@ export default function DirectorySearchPage() {
               {coordinates && <TextField size="small" type="number" label="Radio (km)" value={radiusKm} onChange={(event) => setRadiusKm(Math.min(500, Math.max(1, Number(event.target.value))))} inputProps={{ min: 1, max: 500 }} sx={{ width: 140 }} />}
               <FormControlLabel control={<Switch checked={remote} onChange={(event) => setRemote(event.target.checked)} />} label="Remoto" />
               <FormControlLabel control={<Switch checked={available} onChange={(event) => setAvailable(event.target.checked)} />} label="Disponible" />
-              <Button onClick={() => { setProfessionId(''); setInstrumentId(''); setGenreId(''); setRemote(false); setAvailable(false); }}>Limpiar filtros</Button>
+              <Button onClick={() => { setProfessionId(''); setServiceId(''); setInstrumentId(''); setGenreId(''); setRemote(false); setAvailable(false); }}>Limpiar filtros</Button>
             </Stack>
           </Paper>
 

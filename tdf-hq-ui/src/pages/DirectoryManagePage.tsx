@@ -30,10 +30,16 @@ import AddIcon from '@mui/icons-material/Add';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PublishIcon from '@mui/icons-material/Publish';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
-import { Directory, type ManagedClassified, type ManagedDirectoryProfile } from '../api/directory';
+import {
+  Directory,
+  type DirectoryTaxonomies,
+  type DirectoryTaxonomyItem,
+  type ManagedClassified,
+  type ManagedDirectoryProfile,
+} from '../api/directory';
 
 const slugify = (value: string) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 120);
 
@@ -119,30 +125,149 @@ function ApplicationRow({ application }: { application: Record<string, unknown> 
   return <Paper sx={{ p: 2, bgcolor: 'action.hover' }}><Typography fontWeight={800}>{profileName}</Typography><Typography sx={{ whiteSpace: 'pre-wrap' }}>{message}</Typography><Stack direction="row" gap={1} mt={1}><Chip size="small" label={applicationStatus} /><Button size="small" onClick={() => mutation.mutate('shortlisted')}>Preseleccionar</Button><Button size="small" onClick={() => mutation.mutate('rejected')}>Rechazar</Button><Button size="small" onClick={() => mutation.mutate('conversation_open')}>Conversar</Button></Stack></Paper>;
 }
 
-function ProfileDialog({ open, onClose, taxonomies, onCreated }: { open: boolean; onClose: () => void; taxonomies?: Awaited<ReturnType<typeof Directory.taxonomies>>; onCreated: () => void }) {
+function ProfileDialog({ open, onClose, taxonomies, onCreated }: { open: boolean; onClose: () => void; taxonomies?: DirectoryTaxonomies; onCreated: () => void }) {
   const [name, setName] = useState('');
   const [kind, setKind] = useState('person');
   const [bio, setBio] = useState('');
   const [professions, setProfessions] = useState<string[]>([]);
+  const [instruments, setInstruments] = useState<string[]>([]);
+  const [genres, setGenres] = useState<string[]>([]);
+  const [services, setServices] = useState<string[]>([]);
   const [cityId, setCityId] = useState('');
+  const [onsite, setOnsite] = useState(true);
   const [remote, setRemote] = useState(false);
+  const [availableToTravel, setAvailableToTravel] = useState(false);
+  const [travelRadiusKm, setTravelRadiusKm] = useState('');
   const mutation = useMutation({ mutationFn: () => {
     const city = taxonomies?.cities.find((item) => item.id === cityId);
     if (!city?.countryId) throw new Error('Selecciona una ciudad.');
-    return Directory.createProfile({ profileKind: kind, publicName: name.trim(), slug: slugify(name), bio: bio.trim() || undefined, professionIds: professions, instrumentIds: [], genreIds: [], serviceOfferingIds: [], countryId: city.countryId, cityId, onsite: true, remote, availableToTravel: false });
+    return Directory.createProfile({
+      profileKind: kind,
+      publicName: name.trim(),
+      slug: slugify(name),
+      bio: bio.trim() || undefined,
+      professionIds: professions,
+      instrumentIds: instruments,
+      genreIds: genres,
+      serviceOfferingIds: services,
+      countryId: city.countryId,
+      cityId,
+      onsite,
+      remote,
+      availableToTravel,
+      travelRadiusKm: availableToTravel && travelRadiusKm ? Number(travelRadiusKm) : undefined,
+    });
   }, onSuccess: onCreated });
-  return <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm"><DialogTitle>Crear perfil público</DialogTitle><DialogContent><Stack spacing={2} pt={1}><TextField label="Nombre público" value={name} onChange={(event) => setName(event.target.value)} required inputProps={{ maxLength: 160 }} /><FormControl><InputLabel>Tipo</InputLabel><Select label="Tipo" value={kind} onChange={(event) => setKind(event.target.value)}>{[['person','Persona'],['artist','Artista'],['band','Banda'],['project','Proyecto'],['organization','Organización'],['venue','Venue'],['studio','Estudio'],['agency','Agencia'],['label','Sello'],['school','Escuela']].map(([value,label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}</Select></FormControl><TextField label="Biografía" multiline minRows={4} value={bio} onChange={(event) => setBio(event.target.value)} /><FormControl><InputLabel>Profesiones</InputLabel><Select multiple label="Profesiones" value={professions} onChange={(event) => setProfessions(typeof event.target.value === 'string' ? event.target.value.split(',') : event.target.value)}>{(taxonomies?.professions ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</Select></FormControl><FormControl><InputLabel>Ciudad principal</InputLabel><Select label="Ciudad principal" value={cityId} onChange={(event) => setCityId(event.target.value)}>{(taxonomies?.cities ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</Select></FormControl><FormControlLabel control={<Switch checked={remote} onChange={(event) => setRemote(event.target.checked)} />} label="También trabajo de forma remota" />{mutation.error && <Alert severity="error">{mutation.error.message}</Alert>}</Stack></DialogContent><DialogActions><Button onClick={onClose}>Cancelar</Button><Button variant="contained" onClick={() => mutation.mutate()} disabled={!name.trim() || !cityId || mutation.isPending}>Crear borrador</Button></DialogActions></Dialog>;
+  const validModality = onsite || remote || availableToTravel;
+  return <Dialog open={open} onClose={onClose} fullWidth maxWidth="md"><DialogTitle>Crear perfil público</DialogTitle><DialogContent><Stack spacing={2} pt={1}><TextField label="Nombre público" value={name} onChange={(event) => setName(event.target.value)} required inputProps={{ maxLength: 160 }} /><FormControl><InputLabel>Tipo</InputLabel><Select label="Tipo" value={kind} onChange={(event) => setKind(event.target.value)}>{[['person','Persona'],['artist','Artista'],['band','Banda'],['project','Proyecto'],['organization','Organización'],['venue','Venue'],['studio','Estudio'],['agency','Agencia'],['label','Sello'],['distributor','Distribuidora'],['school','Escuela']].map(([value,label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}</Select></FormControl><TextField label="Biografía" multiline minRows={4} value={bio} onChange={(event) => setBio(event.target.value)} /><TaxonomyMultiSelect label="Profesiones" items={taxonomies?.professions ?? []} values={professions} onChange={setProfessions} /><TaxonomyMultiSelect label="Instrumentos" items={taxonomies?.instruments ?? []} values={instruments} onChange={setInstruments} /><TaxonomyMultiSelect label="Géneros" items={taxonomies?.genres ?? []} values={genres} onChange={setGenres} /><TaxonomyMultiSelect label="Servicios" items={taxonomies?.serviceOfferings ?? []} values={services} onChange={setServices} /><FormControl><InputLabel>Ciudad principal</InputLabel><Select label="Ciudad principal" value={cityId} onChange={(event) => setCityId(event.target.value)}>{(taxonomies?.cities ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</Select></FormControl><Stack direction={{ xs: 'column', sm: 'row' }} gap={1}><FormControlLabel control={<Switch checked={onsite} onChange={(event) => setOnsite(event.target.checked)} />} label="Presencial" /><FormControlLabel control={<Switch checked={remote} onChange={(event) => setRemote(event.target.checked)} />} label="Remoto" /><FormControlLabel control={<Switch checked={availableToTravel} onChange={(event) => setAvailableToTravel(event.target.checked)} />} label="Disponible para viajar" /></Stack>{availableToTravel && <TextField label="Radio de viaje (km)" type="number" value={travelRadiusKm} onChange={(event) => setTravelRadiusKm(event.target.value)} inputProps={{ min: 0, max: 20000 }} />}{!validModality && <Alert severity="warning">Selecciona al menos una modalidad de trabajo.</Alert>}{mutation.error && <Alert severity="error">{mutation.error.message}</Alert>}</Stack></DialogContent><DialogActions><Button onClick={onClose}>Cancelar</Button><Button variant="contained" onClick={() => mutation.mutate()} disabled={!name.trim() || !cityId || !validModality || mutation.isPending}>Crear borrador</Button></DialogActions></Dialog>;
 }
 
-function ClassifiedDialog({ open, onClose, profiles, taxonomies, onCreated }: { open: boolean; onClose: () => void; profiles: ManagedDirectoryProfile[]; taxonomies?: Awaited<ReturnType<typeof Directory.taxonomies>>; onCreated: () => void }) {
+function ClassifiedDialog({ open, onClose, profiles, taxonomies, onCreated }: { open: boolean; onClose: () => void; profiles: ManagedDirectoryProfile[]; taxonomies?: DirectoryTaxonomies; onCreated: () => void }) {
   const [profileId, setProfileId] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [cityId, setCityId] = useState('');
+  const [professionIds, setProfessionIds] = useState<string[]>([]);
+  const [instrumentIds, setInstrumentIds] = useState<string[]>([]);
+  const [genreIds, setGenreIds] = useState<string[]>([]);
+  const [cityIds, setCityIds] = useState<string[]>([]);
   const [remote, setRemote] = useState(false);
-  const mutation = useMutation({ mutationFn: () => Directory.createClassified({ authorProfileId: profileId, categoryId, title: title.trim(), slug: slugify(`${title}-${Date.now().toString(36)}`), description: description.trim(), professionIds: [], instrumentIds: [], genreIds: [], countryIds: [], cityIds: cityId ? [cityId] : [], metropolitanAreaIds: [], onsite: true, remote, availableToTravel: false, budgetNegotiable: false }), onSuccess: onCreated });
-  return <Dialog open={open} onClose={onClose} fullWidth maxWidth="md"><DialogTitle>Nueva oportunidad o clasificado</DialogTitle><DialogContent><Stack spacing={2} pt={1}><FormControl><InputLabel>Perfil que publica</InputLabel><Select label="Perfil que publica" value={profileId} onChange={(event) => setProfileId(event.target.value)}>{profiles.map((profile) => <MenuItem key={profile.id} value={profile.id}>{profile.name}</MenuItem>)}</Select></FormControl><FormControl><InputLabel>Categoría</InputLabel><Select label="Categoría" value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>{(taxonomies?.classifiedCategories ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</Select></FormControl><TextField label="Título" value={title} onChange={(event) => setTitle(event.target.value)} required inputProps={{ minLength: 5, maxLength: 160 }} /><TextField label="Descripción" value={description} onChange={(event) => setDescription(event.target.value)} multiline minRows={6} required inputProps={{ minLength: 20, maxLength: 10000 }} /><FormControl><InputLabel>Ciudad</InputLabel><Select label="Ciudad" value={cityId} onChange={(event) => setCityId(event.target.value)}><MenuItem value="">Solo remoto o alcance nacional</MenuItem>{(taxonomies?.cities ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</Select></FormControl><FormControlLabel control={<Switch checked={remote} onChange={(event) => setRemote(event.target.checked)} />} label="También acepta respuestas remotas" /><Typography variant="caption" color="text.secondary">El anuncio vence 30 días después de publicarse. Las ofertas reservables deben vincularse al marketplace, no duplicarse aquí.</Typography>{mutation.error && <Alert severity="error">{mutation.error.message}</Alert>}</Stack></DialogContent><DialogActions><Button onClick={onClose}>Cancelar</Button><Button variant="contained" onClick={() => mutation.mutate()} disabled={!profileId || !categoryId || title.trim().length < 5 || description.trim().length < 20 || mutation.isPending}>Guardar borrador</Button></DialogActions></Dialog>;
+  const [availableToTravel, setAvailableToTravel] = useState(false);
+  const [startsAt, setStartsAt] = useState('');
+  const [endsAt, setEndsAt] = useState('');
+  const [experienceLevel, setExperienceLevel] = useState('any');
+  const [compensationTypeId, setCompensationTypeId] = useState('');
+  const [budgetMin, setBudgetMin] = useState('');
+  const [budgetMax, setBudgetMax] = useState('');
+  const [currencyId, setCurrencyId] = useState('');
+  const [budgetNegotiable, setBudgetNegotiable] = useState(false);
+  const [serviceOfferingId, setServiceOfferingId] = useState('');
+  const selectedCategory = taxonomies?.classifiedCategories.find((item) => item.id === categoryId);
+  const required = taxonomyRequirements(selectedCategory);
+  const selectedCompensation = taxonomies?.compensationTypes.find((item) => item.id === compensationTypeId);
+  const budgetMode = typeof selectedCompensation?.metadata?.['budget'] === 'string' ? selectedCompensation.metadata['budget'] : undefined;
+  const selectedCurrencyId = currencyId || taxonomies?.currencies.find((item) => item.code === 'USD')?.id || taxonomies?.currencies[0]?.id || '';
+  const selectedCurrency = taxonomies?.currencies.find((item) => item.id === selectedCurrencyId);
+  const countryIds = useMemo(() => Array.from(new Set(cityIds.flatMap((id) => {
+    const countryId = taxonomies?.cities.find((city) => city.id === id)?.countryId;
+    return countryId ? [countryId] : [];
+  }))), [cityIds, taxonomies?.cities]);
+  const validationError = classifiedFormError({ required, cityIds, remote, availableToTravel, professionIds, instrumentIds, genreIds, startsAt, endsAt, compensationTypeId, budgetMode, budgetMin, budgetMax, serviceOfferingId });
+  const mutation = useMutation({ mutationFn: () => {
+    if (validationError) throw new Error(validationError);
+    const minMinor = moneyToMinor(budgetMin, selectedCurrency?.minorUnits);
+    const maxMinor = moneyToMinor(budgetMax, selectedCurrency?.minorUnits);
+    return Directory.createClassified({
+      authorProfileId: profileId,
+      categoryId,
+      title: title.trim(),
+      slug: slugify(`${title}-${Date.now().toString(36)}`),
+      description: description.trim(),
+      professionIds,
+      instrumentIds,
+      genreIds,
+      countryIds,
+      cityIds,
+      metropolitanAreaIds: [],
+      onsite: cityIds.length > 0,
+      remote,
+      availableToTravel,
+      startsAt: toIso(startsAt),
+      endsAt: toIso(endsAt),
+      experienceLevel,
+      compensationTypeId: compensationTypeId || undefined,
+      budgetMinMinor: minMinor,
+      budgetMaxMinor: budgetMode === 'exact' && minMinor !== undefined ? minMinor : maxMinor,
+      currencyId: minMinor !== undefined || maxMinor !== undefined ? selectedCurrencyId : undefined,
+      budgetNegotiable: budgetNegotiable || selectedCompensation?.code === 'negotiable',
+      serviceOfferingId: serviceOfferingId || undefined,
+    });
+  }, onSuccess: onCreated });
+  const basicsValid = Boolean(profileId && categoryId && title.trim().length >= 5 && description.trim().length >= 20);
+  const showBudget = Boolean(compensationTypeId && budgetMode !== 'forbidden');
+  return <Dialog open={open} onClose={onClose} fullWidth maxWidth="md"><DialogTitle>Nueva oportunidad o clasificado</DialogTitle><DialogContent><Stack spacing={2} pt={1}><FormControl><InputLabel>Perfil que publica</InputLabel><Select label="Perfil que publica" value={profileId} onChange={(event) => setProfileId(event.target.value)}>{profiles.map((profile) => <MenuItem key={profile.id} value={profile.id}>{profile.name}</MenuItem>)}</Select></FormControl><FormControl><InputLabel>Categoría</InputLabel><Select label="Categoría" value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>{(taxonomies?.classifiedCategories ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</Select></FormControl>{required.size > 0 && <Alert severity="info">Esta categoría requiere: {Array.from(required).map(requirementLabel).join(', ')}.</Alert>}<TextField label="Título" value={title} onChange={(event) => setTitle(event.target.value)} required inputProps={{ minLength: 5, maxLength: 160 }} /><TextField label="Descripción" value={description} onChange={(event) => setDescription(event.target.value)} multiline minRows={6} required inputProps={{ minLength: 20, maxLength: 10000 }} /><TaxonomyMultiSelect label="Profesiones buscadas" items={taxonomies?.professions ?? []} values={professionIds} onChange={setProfessionIds} required={required.has('professionIds')} /><TaxonomyMultiSelect label="Instrumentos buscados" items={taxonomies?.instruments ?? []} values={instrumentIds} onChange={setInstrumentIds} required={required.has('instrumentIds')} /><TaxonomyMultiSelect label="Géneros" items={taxonomies?.genres ?? []} values={genreIds} onChange={setGenreIds} required={required.has('genreIds')} /><TaxonomyMultiSelect label="Ciudades" items={taxonomies?.cities ?? []} values={cityIds} onChange={setCityIds} required={required.has('locations')} /><Stack direction={{ xs: 'column', sm: 'row' }} gap={1}><FormControlLabel control={<Switch checked={remote} onChange={(event) => setRemote(event.target.checked)} />} label="Acepta remoto" /><FormControlLabel control={<Switch checked={availableToTravel} onChange={(event) => setAvailableToTravel(event.target.checked)} />} label="Disponible para viajar" /></Stack><Stack direction={{ xs: 'column', sm: 'row' }} gap={2}><TextField fullWidth label="Inicio" type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} InputLabelProps={{ shrink: true }} required={required.has('dateRange')} /><TextField fullWidth label="Fin" type="datetime-local" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} InputLabelProps={{ shrink: true }} required={required.has('dateRange')} /></Stack><FormControl><InputLabel>Experiencia requerida</InputLabel><Select label="Experiencia requerida" value={experienceLevel} onChange={(event) => setExperienceLevel(event.target.value)}>{[['any','Cualquier nivel'],['beginner','Principiante'],['intermediate','Intermedio'],['advanced','Avanzado'],['professional','Profesional']].map(([value,label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}</Select></FormControl><FormControl required={required.has('compensationTypeId')}><InputLabel>Compensación</InputLabel><Select label="Compensación" value={compensationTypeId} onChange={(event) => { setCompensationTypeId(event.target.value); setBudgetMin(''); setBudgetMax(''); }}>{(taxonomies?.compensationTypes ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</Select></FormControl>{showBudget && <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}><FormControl sx={{ minWidth: 150 }}><InputLabel>Moneda</InputLabel><Select label="Moneda" value={selectedCurrencyId} onChange={(event) => setCurrencyId(event.target.value)}>{(taxonomies?.currencies ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.code} · {item.symbol ?? item.name}</MenuItem>)}</Select></FormControl><TextField label={budgetMode === 'exact' ? 'Monto' : 'Presupuesto mínimo'} type="number" value={budgetMin} onChange={(event) => setBudgetMin(event.target.value)} inputProps={{ min: 0, step: '0.01' }} required={required.has('budget')} />{budgetMode !== 'exact' && <TextField label="Presupuesto máximo" type="number" value={budgetMax} onChange={(event) => setBudgetMax(event.target.value)} inputProps={{ min: 0, step: '0.01' }} required={budgetMode === 'range'} />}<FormControlLabel control={<Switch checked={budgetNegotiable} onChange={(event) => setBudgetNegotiable(event.target.checked)} />} label="Negociable" /></Stack>}<FormControl required={required.has('serviceOfferingId')}><InputLabel>Servicio vinculado</InputLabel><Select label="Servicio vinculado" value={serviceOfferingId} onChange={(event) => setServiceOfferingId(event.target.value)}><MenuItem value="">Sin servicio comercial</MenuItem>{(taxonomies?.serviceOfferings ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</Select></FormControl><Typography variant="caption" color="text.secondary">El anuncio vence 30 días después de publicarse. Las ofertas reservables se vinculan al marketplace mediante el servicio seleccionado, sin duplicar el producto comercial.</Typography>{basicsValid && validationError && <Alert severity="warning">{validationError}</Alert>}{mutation.error && <Alert severity="error">{mutation.error.message}</Alert>}</Stack></DialogContent><DialogActions><Button onClick={onClose}>Cancelar</Button><Button variant="contained" onClick={() => mutation.mutate()} disabled={!basicsValid || Boolean(validationError) || mutation.isPending}>Guardar borrador</Button></DialogActions></Dialog>;
+}
+
+function TaxonomyMultiSelect({ label, items, values, onChange, required = false }: { label: string; items: DirectoryTaxonomyItem[]; values: string[]; onChange: (values: string[]) => void; required?: boolean }) {
+  const labelId = `directory-${slugify(label)}-label`;
+  return <FormControl required={required}><InputLabel id={labelId}>{label}</InputLabel><Select labelId={labelId} multiple label={label} value={values} onChange={(event) => onChange(typeof event.target.value === 'string' ? event.target.value.split(',') : event.target.value)} renderValue={(selected) => selected.map((id) => items.find((item) => item.id === id)?.name ?? id).join(', ')}>{items.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</Select></FormControl>;
+}
+
+export function taxonomyRequirements(item?: DirectoryTaxonomyItem): Set<string> {
+  const raw = item?.requirements?.['required'];
+  return new Set(Array.isArray(raw) ? raw.filter((value): value is string => typeof value === 'string') : []);
+}
+
+const REQUIREMENT_LABELS: Record<string, string> = {
+  instrumentIds: 'instrumento', genreIds: 'género', professionIds: 'profesión', locations: 'ubicación',
+  locationsOrRemote: 'ubicación o remoto', dateRange: 'periodo', compensationTypeId: 'compensación',
+  budget: 'presupuesto', serviceOfferingId: 'servicio', expiresAt: 'vencimiento de 30 días',
+};
+
+const requirementLabel = (value: string) => REQUIREMENT_LABELS[value] ?? value;
+const toIso = (value: string): string | undefined => value ? new Date(value).toISOString() : undefined;
+export const moneyToMinor = (value: string, minorUnits = 2): number | undefined => {
+  if (!value.trim()) return undefined;
+  const amount = Number(value);
+  return Number.isFinite(amount) && amount >= 0 ? Math.round(amount * (10 ** minorUnits)) : undefined;
+};
+
+export function classifiedFormError(input: { required: Set<string>; cityIds: string[]; remote: boolean; availableToTravel: boolean; professionIds: string[]; instrumentIds: string[]; genreIds: string[]; startsAt: string; endsAt: string; compensationTypeId: string; budgetMode?: string; budgetMin: string; budgetMax: string; serviceOfferingId: string }): string | null {
+  const { required } = input;
+  if (!input.cityIds.length && !input.remote && !input.availableToTravel) return 'Selecciona una ciudad, trabajo remoto o disponibilidad para viajar.';
+  if (required.has('professionIds') && !input.professionIds.length) return 'Selecciona al menos una profesión.';
+  if (required.has('instrumentIds') && !input.instrumentIds.length) return 'Selecciona al menos un instrumento.';
+  if (required.has('genreIds') && !input.genreIds.length) return 'Selecciona al menos un género.';
+  if (required.has('locations') && !input.cityIds.length) return 'Selecciona al menos una ciudad.';
+  if (required.has('locationsOrRemote') && !input.cityIds.length && !input.remote) return 'Selecciona una ciudad o activa trabajo remoto.';
+  if (required.has('dateRange') && (!input.startsAt || !input.endsAt)) return 'Indica el inicio y el fin de la oportunidad.';
+  if (input.startsAt && input.endsAt && new Date(input.endsAt) < new Date(input.startsAt)) return 'La fecha de fin no puede preceder al inicio.';
+  if (required.has('compensationTypeId') && !input.compensationTypeId) return 'Selecciona el tipo de compensación.';
+  if (required.has('budget') && !input.budgetMin) return 'Indica el presupuesto.';
+  if (input.budgetMode === 'range' && (!input.budgetMin || !input.budgetMax)) return 'Indica el rango completo de presupuesto.';
+  if (input.budgetMin && input.budgetMax && Number(input.budgetMax) < Number(input.budgetMin)) return 'El presupuesto máximo no puede ser menor que el mínimo.';
+  if (required.has('serviceOfferingId') && !input.serviceOfferingId) return 'Selecciona el servicio que ofrece el anuncio.';
+  return null;
 }
 
 function OpportunityActionPanel({ profiles, applyId, contactId, contextKind, onDone }: { profiles: ManagedDirectoryProfile[]; applyId: string | null; contactId: string | null; contextKind: 'profile' | 'classified' | 'application' | 'invitation'; onDone: () => void }) {
