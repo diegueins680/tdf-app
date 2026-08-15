@@ -87,31 +87,6 @@
       "introducedBy": "588fdef6ace56ffe077eb85063ad82d583130f48"
     },
     {
-      "id": "2026-08-13_unified_checkout_core",
-      "path": "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
-      "introducedBy": "c79d22d3e150d9a492ee5eafad7e3052426e0c2b"
-    },
-    {
-      "id": "2026-08-13_distribution_accounting_core",
-      "path": "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
-      "introducedBy": "9c4a621e62073d263989fde9bf51ef5b16107e55"
-    },
-    {
-      "id": "2026-08-13_versioned_revenue_products",
-      "path": "tdf-hq/sql/2026-08-13_versioned_revenue_products.sql",
-      "introducedBy": "62a9cfaed413a50fe80c88ee834325648da6324d"
-    },
-    {
-      "id": "2026-08-13_distribution_product_seeds",
-      "path": "tdf-hq/sql/2026-08-13_distribution_product_seeds.sql",
-      "introducedBy": "b43065808494a7ed9e94ce8e6a87dcb33d25c96f"
-    },
-    {
-      "id": "2026-08-14_service_storefront_checkout_runtime",
-      "path": "tdf-hq/sql/2026-08-14_service_storefront_checkout_runtime.sql",
-      "introducedBy": "b52f48534ec196b03223f2f5203cf35f98a68278"
-    },
-    {
       "id": "2026-08-14_catalog_canonical_schema",
       "path": "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
       "introducedBy": "15d0d0b607344e62025f39208861c313c08b7eaa"

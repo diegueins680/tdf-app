@@ -3741,7 +3741,7 @@ protectedServer user =
   :<|> futureServer user
   :<|> DDEXServer.ddexServer user
   :<|> CatalogServer.catalogServer user
-  :<|> serviceStorefrontAdminServer user
+  :<|> serviceStorefrontAdminServer
   :<|> accessRequestsServer user
   :<|> navigationPreferencesServer user
   :<|> OperationsServer.operationsServer user

@@ -930,7 +930,6 @@ ServiceStorefrontOrder
     lookupTokenHash       Text Maybe
     createIdempotencyKey  Text Maybe
     createRequestSha256   Text Maybe
-    checkoutId            UUID Maybe
     paidAt                UTCTime Maybe
     genre                 Text Maybe
     songCount             Int default=1

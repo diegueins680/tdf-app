@@ -67,12 +67,13 @@ scripts/test-catalog-production-cutover.sh
 
 The integration helper refuses every non-localhost database URL.
 
-The 2026-08-14 disposable rehearsal restored the schema-only production fixture, loaded three
-synthetic Records rows, and applied all 40 authoritative manifest entries, including the five
-checkout and distribution migrations added on the integrated baseline. A second manifest run
-was a complete no-op; all 14 dry-runs, apply scripts, and raw idempotency reruns passed; 13 distinct
-backfill run codes completed; and all three Records rows received canonical mappings. The
-machine-readable evidence and fixture digests are in
+The 2026-08-14 disposable rehearsal was repeated after merging recovered `main` revision
+`91f8a5878d633fe0b1719898e99b16ed1dfc9946`. It restored the schema-only production fixture,
+loaded three synthetic Records rows, and applied all 35 authoritative manifest entries. Five
+unrelated checkout and distribution migrations removed by the recovery were also excluded from
+this cutover. A second manifest run was a complete no-op; all 14 dry-runs, apply scripts, and raw
+idempotency reruns passed; 13 distinct backfill run codes completed; and all three Records rows
+received canonical mappings. The machine-readable evidence and fixture digests are in
 `reports/production-schema-cutover-local-2026-08-14.json`.
 
 ## Production sequence

@@ -51,8 +51,6 @@ executable tdf-hq-exe
     TDF.Artists.Enrichment
     TDF.Auth
     TDF.CampaignAutomation
-    TDF.Commerce.CheckoutStore
-    TDF.Commerce.StateMachine
     TDF.Config
     TDF.Cron
     TDF.Cors
@@ -61,7 +59,6 @@ executable tdf-hq-exe
     TDF.DTO.SocialEventsDTO
     TDF.DTO.SocialDiscoveryDTO
     TDF.DTO.SocialSyncDTO
-    TDF.Distribution.StateMachine
     TDF.Email
     TDF.Handlers.InputList
     TDF.Invoice.SRI
@@ -251,8 +248,6 @@ test-suite tdf-hq-test
     TDF.Artists.EnrichmentSpec
     TDF.Auth
     TDF.CampaignAutomation
-    TDF.Commerce.CheckoutStore
-    TDF.Commerce.StateMachine
     TDF.Config
     TDF.Cors
     TDF.Cron
@@ -262,7 +257,6 @@ test-suite tdf-hq-test
     TDF.DTO.SocialEventsDTO
     TDF.DTO.SocialDiscoveryDTO
     TDF.DTO.SocialSyncDTO
-    TDF.Distribution.StateMachine
     TDF.Email
     TDF.Email.Service
     TDF.Handlers.InputList
