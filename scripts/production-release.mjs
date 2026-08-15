@@ -16,6 +16,7 @@ import {
   expandMigrationIncludes,
   normalizeFullSha,
   parseSecurityEmergencyReadinessOutput,
+  requireMigrationIntroductionAncestor,
   securityEmergencyReadinessBlocker,
   validateFlyConfig,
   validateMigrationRelativePath,
@@ -172,14 +173,15 @@ async function resolveReleaseContext(options) {
     migrationIds.add(id);
     migrationPaths.add(relativePath);
     const introducedBy = normalizeFullSha(entry.introducedBy);
-    let included = true;
     try {
       await run(['git', 'merge-base', '--is-ancestor', introducedBy, sha], { log: false });
     } catch (error) {
-      if (error.cause?.code === 1) included = false;
-      else throw error;
+      if (error.cause?.code === 1) {
+        requireMigrationIntroductionAncestor({ id, introducedBy }, sha, false);
+      }
+      throw error;
     }
-    if (!included) continue;
+    requireMigrationIntroductionAncestor({ id, introducedBy }, sha, true);
     const content = await expandMigrationIncludes(
       { path: relativePath, content: await readGitBlob(sha, relativePath) },
       (includedPath) => readGitBlob(sha, includedPath),

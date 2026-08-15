@@ -28,6 +28,19 @@ export function validateMigrationRelativePath(value) {
   return normalized;
 }
 
+export function requireMigrationIntroductionAncestor({ id, introducedBy }, releaseSha, isAncestor) {
+  const migrationId = validateSafeName(id, 'Migration id');
+  const introductionSha = normalizeFullSha(introducedBy);
+  const normalizedReleaseSha = normalizeFullSha(releaseSha);
+  if (isAncestor !== true) {
+    throw new Error(
+      `Production migration ${migrationId} was introduced by ${introductionSha}, `
+        + `which is not an ancestor of release ${normalizedReleaseSha}; `
+        + 'refusing to omit a registered migration.',
+    );
+  }
+}
+
 export async function expandMigrationIncludes(migration, readFile, ancestors = new Set()) {
   const relativePath = validateMigrationRelativePath(migration?.path);
   const content = String(migration?.content ?? '');

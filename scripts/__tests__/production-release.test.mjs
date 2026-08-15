@@ -11,6 +11,7 @@ import {
   expandMigrationIncludes,
   normalizeFullSha,
   parseSecurityEmergencyReadinessOutput,
+  requireMigrationIntroductionAncestor,
   securityEmergencyReadinessBlocker,
   validateFlyConfig,
   validateMigrationRelativePath,
@@ -109,6 +110,21 @@ test('production migration manifest uses immutable full commit SHAs', () => {
   for (const migration of manifest.migrations) {
     assert.equal(normalizeFullSha(migration.introducedBy), migration.introducedBy);
   }
+});
+
+test('production release refuses to omit a migration outside the release ancestry', () => {
+  const migration = {
+    id: '2026-08-14_catalog_canonical_schema',
+    introducedBy: '1'.repeat(40),
+  };
+
+  assert.doesNotThrow(() => {
+    requireMigrationIntroductionAncestor(migration, '2'.repeat(40), true);
+  });
+  assert.throws(
+    () => requireMigrationIntroductionAncestor(migration, '2'.repeat(40), false),
+    /not an ancestor.*refusing to omit/u,
+  );
 });
 
 test('validateMigrationRelativePath accepts a dated SQL migration inside tdf-hq/sql', () => {

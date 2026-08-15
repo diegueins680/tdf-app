@@ -83,7 +83,12 @@ received canonical mappings. The machine-readable evidence and fixture digests a
 2. Capture a fresh Fly volume snapshot and record its identifier without
    credentials.
 3. Export aggregate before-counts and run the inventory against a restored copy.
-4. Build all applications from the exact candidate SHA and require CI to pass.
+4. Merge migration-bearing pull requests with a merge commit so every
+   `introducedBy` provenance commit remains in the release ancestry. Build all
+   applications from the exact candidate SHA, require CI to pass, and verify
+   each manifest origin with `git merge-base --is-ancestor`. The release tool
+   aborts instead of silently omitting any registered migration whose origin is
+   outside that ancestry.
 5. Run the release tool's read-only preflight and security gate.
 6. Apply the ledgered manifest once. Any missing relation, ambiguity,
    incomplete seed, invalid FK, legacy DDEX value, or checksum mismatch aborts.
