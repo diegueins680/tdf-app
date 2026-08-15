@@ -51,6 +51,11 @@ Salidas:
 - ciudad/alcance efectivo y precisión geográfica pública;
 - sugerencias y categorías relacionadas cuando no haya coincidencias.
 
+`GET /directory/taxonomies` es la autoridad pública localizada para profesiones, instrumentos,
+géneros, servicios, categorías, compensaciones, monedas y ciudades. Web y móvil consumen esos IDs;
+no mantienen listas editoriales divergentes. Los filtros de servicio usan el mismo
+`service_offering` que el marketplace.
+
 Ranking orgánico normalizado a `[0,1]`:
 
 `0.40 texto + 0.15 taxonomía + 0.15 proximidad + 0.10 completitud + 0.08 actividad +
@@ -93,6 +98,11 @@ y no cambia el autor original.
 Estados y transiciones están en `formal-model.yaml`. Un clasificado admite título, descripción,
 perfil autor, profesiones/instrumentos/géneros buscados, ciudades/radio, modalidad, ventana, nivel de
 experiencia, compensación, presupuesto, adjuntos permitidos, expiración y moderación.
+
+Los formularios web y móvil leen `requirements.required` de la categoría elegida y bloquean el
+borrador hasta completar los campos contextuales. Los importes se convierten a unidades menores con
+la precisión de la moneda canónica; una oferta reservable sólo enlaza el `service_offering`
+existente.
 
 ## Postulaciones, invitaciones y contacto
 

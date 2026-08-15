@@ -61,6 +61,8 @@ const ids = {
   bass: '55555555-5555-4555-8555-555555555555',
   guitar: '66666666-6666-4666-8666-666666666666',
   rock: '77777777-7777-4777-8777-777777777777',
+  recordingService: '77777777-7777-4777-8777-777777777778',
+  usd: '77777777-7777-4777-8777-777777777779',
 };
 
 const taxonomy = (id, code, name) => ({ id, code, slug: code, name, parentId: null, requirements: {} });
@@ -72,6 +74,8 @@ const taxonomies = {
     taxonomy('88888888-8888-4888-8888-888888888882', 'trabajo-remunerado', 'Trabajo remunerado'),
   ],
   compensationTypes: [taxonomy('99999999-9999-4999-8999-999999999999', 'rango', 'Rango negociable')],
+  serviceOfferings: [{ ...taxonomy(ids.recordingService, 'grabacion', 'Grabación'), currencyId: ids.usd }],
+  currencies: [{ ...taxonomy(ids.usd, 'USD', 'Dólar estadounidense'), symbol: '$', minorUnits: 2 }],
   instruments: [taxonomy(ids.bass, 'bajo-electrico', 'Bajo eléctrico'), taxonomy(ids.guitar, 'guitarra', 'Guitarra')],
   genres: [taxonomy(ids.rock, 'rock', 'Rock')],
   cities: [
@@ -91,7 +95,7 @@ const item = (overrides) => ({
   imageUrl: null,
   location,
   modality: { onsite: true, remote: true, travel: true },
-  taxonomy: { professionIds: [ids.bassist, ids.producer], serviceIds: [], instrumentIds: [ids.bass], genreIds: [ids.rock] },
+  taxonomy: { professionIds: [ids.bassist, ids.producer], serviceIds: [ids.recordingService], instrumentIds: [ids.bass], genreIds: [ids.rock] },
   score: 0.91,
   scoreBreakdown: { text: 0.4, semantic: 0.15, proximity: 0.13, completeness: 0.09, activity: 0.07, availability: 0.05, reputation: 0.02 },
   sponsored: false,
