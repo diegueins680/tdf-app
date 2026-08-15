@@ -15,7 +15,7 @@ contienen personas, eventos, direcciones, credenciales ni verificaciones inventa
 | OpenAPI/clientes | Pass: seguridad pública, PII, separación patrocinada e idempotency keys; tipos web/móvil regenerados |
 | Feature registry | Pass: 131 features, 146 rutas web, 44 rutas móviles |
 | Auditoría formal del repositorio | 4 pruebas, 0 fallos; QuickCheck cubre invariantes del dominio |
-| Manifiesto de release | 25 pruebas, 0 fallos; SHA inmutable de migración validado |
+| Manifiesto de release | 29 pruebas, 0 fallos; SHA inmutable, ancestry y streaming SQL validados |
 | TypeScript | Pass en web y móvil |
 | Lint | Pass: 0 errores; web conserva 90 warnings preexistentes, móvil 0 warnings |
 | Build web | Pass; presupuesto inicial 404.271 bytes gzip |
