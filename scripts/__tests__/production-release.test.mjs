@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import {
+  buildDatabaseSqlInvocation,
   buildDeployPlan,
   buildMigrationBatchSql,
   buildReleaseSteps,
@@ -125,6 +126,19 @@ test('production release refuses to omit a migration outside the release ancestr
     () => requireMigrationIntroductionAncestor(migration, '2'.repeat(40), false),
     /not an ancestor.*refusing to omit/u,
   );
+});
+
+test('production database SQL streams outside the flyctl argument vector', () => {
+  const sql = `SELECT '${'x'.repeat(1_500_000)}';`;
+  const invocation = buildDatabaseSqlInvocation({
+    dbApp: 'tdf-hq-db',
+    database: 'tdf_hq',
+  }, sql, { tuplesOnly: true });
+
+  assert.equal(invocation.input, sql);
+  assert.ok(invocation.argv.every((argument) => argument.length < 1_024));
+  assert.doesNotMatch(invocation.argv.join(' '), /base64|SELECT 'x/u);
+  assert.match(invocation.argv.at(-1), /psql -X -v ON_ERROR_STOP=1 -qAt -p 5433 -d tdf_hq/u);
 });
 
 test('validateMigrationRelativePath accepts a dated SQL migration inside tdf-hq/sql', () => {

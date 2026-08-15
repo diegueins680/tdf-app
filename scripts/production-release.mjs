@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
 import {
+  buildDatabaseSqlInvocation,
   buildDeployPlan,
   buildMigrationBatchSql,
   buildSchemaPreflightSql,
@@ -118,6 +119,56 @@ async function run(argv, options = {}) {
     const detail = [error.stdout, error.stderr].filter(Boolean).join('\n').trim();
     throw new Error(`${argv.join(' ')} failed${detail ? `:\n${detail}` : ''}`, { cause: error });
   }
+}
+
+async function runWithInput(argv, input, options = {}) {
+  const [command, ...args] = argv;
+  if (options.log !== false) console.error(`$ ${argv.join(' ')}`);
+  const maxBuffer = options.maxBuffer ?? 30 * 1024 * 1024;
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: rootDir,
+      env: process.env,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    const output = { stdout: '', stderr: '' };
+    let outputBytes = 0;
+    let bufferExceeded = false;
+
+    const capture = (stream) => (chunk) => {
+      outputBytes += chunk.length;
+      if (outputBytes > maxBuffer) {
+        bufferExceeded = true;
+        child.kill();
+        return;
+      }
+      output[stream] += chunk.toString();
+    };
+    child.stdout.on('data', capture('stdout'));
+    child.stderr.on('data', capture('stderr'));
+    child.once('error', (cause) => {
+      reject(new Error(`${argv.join(' ')} failed: ${cause.message}`, { cause }));
+    });
+    child.stdin.once('error', (cause) => {
+      if (cause.code !== 'EPIPE') {
+        reject(new Error(`${argv.join(' ')} input failed: ${cause.message}`, { cause }));
+      }
+    });
+    child.once('close', (code, signal) => {
+      if (bufferExceeded) {
+        reject(new Error(`${argv.join(' ')} exceeded the ${maxBuffer}-byte output limit.`));
+      } else if (code === 0) {
+        resolve(output);
+      } else {
+        const detail = output.stderr.trim();
+        reject(new Error(
+          `${argv.join(' ')} failed with ${signal ? `signal ${signal}` : `exit code ${code}`}`
+            + `${detail ? `:\n${detail}` : ''}`,
+        ));
+      }
+    });
+    child.stdin.end(input);
+  });
 }
 
 async function commandExists(command) {
@@ -264,22 +315,9 @@ async function readSecretNames(app) {
   return new Set(rows.map((row) => row.Name ?? row.name).filter(Boolean));
 }
 
-function remotePsqlCommand(sql, database, tuplesOnly = false) {
-  const encoded = Buffer.from(sql).toString('base64');
-  const psqlFlags = tuplesOnly ? '-qAt' : '';
-  return [
-    'sh -lc',
-    `'printf %s ${encoded} | base64 -d | su postgres -c "psql -X -v ON_ERROR_STOP=1 ${psqlFlags} -p 5433 -d ${database}"'`,
-  ].join(' ');
-}
-
 async function runDatabaseSql(context, sql, options = {}) {
-  const remoteCommand = remotePsqlCommand(sql, context.database, options.tuplesOnly);
-  return run([
-    'flyctl', 'ssh', 'console',
-    '--app', context.dbApp,
-    '--command', remoteCommand,
-  ]);
+  const invocation = buildDatabaseSqlInvocation(context, sql, options);
+  return runWithInput(invocation.argv, invocation.input);
 }
 
 async function readSecurityEmergencyReadiness(context) {

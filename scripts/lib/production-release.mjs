@@ -28,6 +28,23 @@ export function validateMigrationRelativePath(value) {
   return normalized;
 }
 
+export function buildDatabaseSqlInvocation(context, sql, options = {}) {
+  const dbApp = validateSafeName(context?.dbApp, 'Fly database app');
+  const database = validateSafeName(context?.database, 'PostgreSQL database');
+  const input = String(sql ?? '');
+  if (!input.trim()) throw new Error('Database SQL input cannot be empty.');
+  const psqlFlags = options.tuplesOnly === true ? '-qAt ' : '';
+  const remoteCommand = `su postgres -c "psql -X -v ON_ERROR_STOP=1 ${psqlFlags}-p 5433 -d ${database}"`;
+  return {
+    argv: [
+      'flyctl', 'ssh', 'console',
+      '--app', dbApp,
+      '--command', remoteCommand,
+    ],
+    input,
+  };
+}
+
 export function requireMigrationIntroductionAncestor({ id, introducedBy }, releaseSha, isAncestor) {
   const migrationId = validateSafeName(id, 'Migration id');
   const introductionSha = normalizeFullSha(introducedBy);
