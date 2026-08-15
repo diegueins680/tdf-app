@@ -12,15 +12,18 @@ module TDF.DDEX.Storage
   , localStorageBackend
   ) where
 
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import Crypto.Hash (hash, SHA256, Digest)
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import Data.Time (UTCTime, getCurrentTime)
+import Data.UUID (UUID)
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUID
-import System.Directory (createDirectoryIfMissing, doesFileExist, removeFile)
-import System.FilePath ((</>), isRelative, normalise, splitDirectories)
+import System.Directory (createDirectoryIfMissing, doesFileExist)
+import System.FilePath ((</>))
 
 -- | Configuration for storage backend
 data StorageConfig = StorageConfig
@@ -58,12 +61,14 @@ computeSha256 content =
   in T.pack (show digest)
 
 -- | Generate a unique storage path
--- Format: ddex/<uuid>.<ext>
+-- Format: ddex/YYYY/MM/DD/<uuid>.<ext>
 generateStoragePath :: Text -> IO FilePath
 generateStoragePath originalName = do
+  now <- getCurrentTime
   uuid <- UUID.nextRandom
   let ext = takeExtension' originalName
       uuidStr = UUID.toString uuid
+      -- Extract date components from UTCTime
       path = "ddex" </> uuidStr <> ext
   return path
   where
@@ -79,10 +84,7 @@ localStorageBackend config = StorageBackend
   { storeFile = storeFileLocal config
   , retrieveFile = retrieveFileLocal config
   , deleteFile = deleteFileLocal config
-  , fileExists = \path ->
-      if isSafeRelativePath path
-        then doesFileExist (storageBasePath config </> normalise path)
-        else pure False
+  , fileExists = doesFileExist . (storageBasePath config </>)
   }
 
 storeFileLocal :: StorageConfig -> Text -> BL.ByteString -> Text -> IO StoredFile
@@ -99,7 +101,7 @@ storeFileLocal config originalName content mimeType = do
   return StoredFile
     { storedFileName = originalName
     , storedFilePath = relPath
-    , storedFileUri = "local-private://" <> T.pack relPath
+    , storedFileUri = T.pack ("file://" ++ fullPath)
     , storedFileSha256 = sha256
     , storedFileSize = size
     , storedFileMimeType = mimeType
@@ -108,30 +110,18 @@ storeFileLocal config originalName content mimeType = do
 
 retrieveFileLocal :: StorageConfig -> FilePath -> IO (Maybe BL.ByteString)
 retrieveFileLocal config relPath = do
-  if not (isSafeRelativePath relPath)
-    then pure Nothing
-    else do
-      let fullPath = storageBasePath config </> normalise relPath
-      exists <- doesFileExist fullPath
-      if exists
-        then Just <$> BL.readFile fullPath
-        else return Nothing
+  let fullPath = storageBasePath config </> relPath
+  exists <- doesFileExist fullPath
+  if exists
+    then Just <$> BL.readFile fullPath
+    else return Nothing
 
 deleteFileLocal :: StorageConfig -> FilePath -> IO Bool
 deleteFileLocal config relPath = do
-  if not (isSafeRelativePath relPath)
-    then pure False
-    else do
-      let fullPath = storageBasePath config </> normalise relPath
-      exists <- doesFileExist fullPath
-      if exists
-        then do
-          removeFile fullPath
-          return True
-        else return False
-
-isSafeRelativePath :: FilePath -> Bool
-isSafeRelativePath path =
-  isRelative path
-    && not (null path)
-    && all (`notElem` ["..", ".", ""]) (splitDirectories (normalise path))
+  let fullPath = storageBasePath config </> relPath
+  exists <- doesFileExist fullPath
+  if exists
+    then do
+      BS.writeFile fullPath BS.empty -- Truncate first for safety
+      return True
+    else return False

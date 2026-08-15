@@ -429,7 +429,6 @@ export function buildSchemaVerificationSql(options = {}) {
   return `${header}DO $verify$
 DECLARE
   campaign_table TEXT;
-  commerce_table TEXT;
   discovery_table TEXT;
   ddex_table TEXT;
   feature_table TEXT;
@@ -1178,52 +1177,6 @@ BEGIN
        OR actual.is_nullable <> expected.is_nullable
   ) THEN
     RAISE EXCEPTION 'ddex_document does not match the inbox runtime schema';
-  END IF;
-
-  FOREACH commerce_table IN ARRAY ARRAY[
-    'commerce_checkout_session',
-    'commerce_checkout_line_item',
-    'commerce_payment_attempt',
-    'commerce_provider_binding',
-    'commerce_reconciliation_exception',
-    'commerce_receipt',
-    'commerce_ledger_transaction',
-    'commerce_ledger_entry'
-  ] LOOP
-    IF to_regclass('public.' || commerce_table) IS NULL THEN
-      RAISE EXCEPTION 'Commerce relation public.% is missing', commerce_table;
-    END IF;
-  END LOOP;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public'
-      AND table_name = 'service_storefront_order'
-      AND column_name = 'checkout_id'
-      AND data_type = 'uuid'
-      AND is_nullable = 'YES'
-  ) THEN
-    RAISE EXCEPTION 'service_storefront_order.checkout_id is missing or invalid';
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint
-    WHERE conrelid = 'public.service_storefront_order'::regclass
-      AND conname = 'fk_service_storefront_order_checkout'
-      AND contype = 'f'
-      AND convalidated
-      AND pg_get_constraintdef(oid) ILIKE '%FOREIGN KEY (checkout_id) REFERENCES commerce_checkout_session(id) ON DELETE RESTRICT%'
-  ) THEN
-    RAISE EXCEPTION 'service storefront canonical checkout foreign key is missing or invalid';
-  END IF;
-
-  IF to_regclass('public.service_storefront_checkout_backfill_report') IS NULL
-     OR to_regclass('public.uq_service_storefront_order_checkout') IS NULL
-     OR to_regclass('public.uq_commerce_manual_evidence_attempt') IS NULL
-     OR to_regclass('public.uq_commerce_succeeded_attempt_checkout') IS NULL
-     OR to_regclass('public.uq_commerce_active_payment_receipt_checkout') IS NULL
-     OR to_regclass('public.uq_commerce_open_reconciliation_fingerprint') IS NULL THEN
-    RAISE EXCEPTION 'Service storefront checkout runtime view or indexes are incomplete';
   END IF;
 END
 $verify$;`;

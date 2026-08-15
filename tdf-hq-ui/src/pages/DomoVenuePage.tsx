@@ -36,33 +36,18 @@ import { DateTime } from 'luxon';
 import { Bookings } from '../api/bookings';
 import { Services } from '../api/services';
 import { PUBLIC_BASE } from '../config/appConfig';
-import { useMetaTags } from '../hooks/useMetaTags';
+import {
+  calculateQuote,
+  clampNumber,
+  EVENT_TYPES,
+  MAX_QUOTE_GUESTS,
+  type BookingFormState,
+  type EventType,
+} from './domoVenueQuote';
 
-const DOMO_TIMEZONE = (import.meta.env as Record<string, string | undefined> | undefined)?.['VITE_DOMO_TIMEZONE'] ?? 'UTC';
+const DOMO_TIMEZONE = import.meta.env.VITE_DOMO_TIMEZONE ?? 'UTC';
 
-type EventType = 'wedding' | 'corporate' | 'retreat' | 'concert' | 'workshop' | 'photo';
 type DomoExperienceKey = 'naturaleza' | 'eventos' | 'musica' | 'ceremonias';
-
-interface EventTypeConfig {
-  label: string;
-  serviceType: string;
-  minimumHours: number;
-}
-
-interface BookingFormState {
-  fullName: string;
-  email: string;
-  phone: string;
-  eventType: EventType;
-  guests: number;
-  startsAt: string;
-  durationHours: number;
-  setupHours: number;
-  catering: boolean;
-  production: boolean;
-  transport: boolean;
-  notes: string;
-}
 
 interface DomoExperience {
   navLabel: string;
@@ -88,7 +73,7 @@ interface DomoExperience {
 }
 
 const DOMO_IMAGE_URL = `${PUBLIC_BASE}/assets/tdf-ui/domo-pululahua-hero-cozy.jpg`;
-const MAX_QUOTE_GUESTS = 220;
+const CURRENCY = 'USD';
 
 const DOMO_EXPERIENCE_ORDER: readonly DomoExperienceKey[] = ['naturaleza', 'eventos', 'musica', 'ceremonias'];
 
@@ -257,39 +242,6 @@ const DOMO_EXPERIENCES: Record<DomoExperienceKey, DomoExperience> = {
   },
 };
 
-const EVENT_TYPES: Record<EventType, EventTypeConfig> = {
-  wedding: {
-    label: 'Boda',
-    serviceType: 'Domo del Pululahua - boda',
-    minimumHours: 8,
-  },
-  corporate: {
-    label: 'Evento corporativo',
-    serviceType: 'Domo del Pululahua - evento corporativo',
-    minimumHours: 6,
-  },
-  retreat: {
-    label: 'Retiro o taller',
-    serviceType: 'Domo del Pululahua - retiro',
-    minimumHours: 6,
-  },
-  concert: {
-    label: 'Concierto',
-    serviceType: 'Domo del Pululahua - concierto',
-    minimumHours: 7,
-  },
-  workshop: {
-    label: 'Taller',
-    serviceType: 'Domo del Pululahua - taller',
-    minimumHours: 4,
-  },
-  photo: {
-    label: 'Sesión fotográfica',
-    serviceType: 'Domo del Pululahua - sesion fotografica',
-    minimumHours: 3,
-  },
-};
-
 const initialStart = () =>
   DateTime.now()
     .setZone(DOMO_TIMEZONE)
@@ -312,24 +264,12 @@ const initialForm: BookingFormState = {
   notes: '',
 };
 
-const clampNumber = (value: number, min: number, max: number) => {
-  if (!Number.isFinite(value)) return min;
-  return Math.min(max, Math.max(min, Math.round(value)));
-};
-
-const summarizeRequest = (form: BookingFormState) => {
-  const config = EVENT_TYPES[form.eventType];
-  const guests = clampNumber(form.guests, 1, MAX_QUOTE_GUESTS);
-  const billableHours = Math.max(config.minimumHours, clampNumber(form.durationHours, 1, 24));
-  const setupHours = clampNumber(form.setupHours, 0, 12);
-  const selectedAddons = [
-    form.catering ? 'Catering y barra' : null,
-    form.production ? 'Sonido e iluminación' : null,
-    form.transport ? 'Transporte desde Quito' : null,
-  ].filter((value): value is string => Boolean(value));
-
-  return { billableHours, guests, setupHours, selectedAddons };
-};
+const money = (amountCents: number) =>
+  new Intl.NumberFormat('es-EC', {
+    style: 'currency',
+    currency: CURRENCY,
+    maximumFractionDigits: 0,
+  }).format(amountCents / 100);
 
 const toBookingIso = (value: string) => {
   const parsed = DateTime.fromFormat(value, "yyyy-LL-dd'T'HH:mm", { zone: DOMO_TIMEZONE });
@@ -337,15 +277,21 @@ const toBookingIso = (value: string) => {
   return parsed.toUTC().toISO({ suppressMilliseconds: true });
 };
 
-const buildBookingNotes = (form: BookingFormState, summary: ReturnType<typeof summarizeRequest>) => {
+const buildBookingNotes = (form: BookingFormState, quote: ReturnType<typeof calculateQuote>) => {
+  const selectedAddons = [
+    form.catering ? 'catering/barra' : null,
+    form.production ? 'sonido e iluminación' : null,
+    form.transport ? 'transporte' : null,
+  ].filter(Boolean);
+
   return [
     'Solicitud pública Domo del Pululahua',
     `Tipo: ${EVENT_TYPES[form.eventType].label}`,
-    `Invitados: ${summary.guests}`,
-    `Duración solicitada: ${summary.billableHours} horas + ${summary.setupHours} horas de montaje`,
-    'Precio: pendiente de cotización autoritativa y versionada',
-    'Disponibilidad: no verificada; esta solicitud no retiene la fecha',
-    summary.selectedAddons.length ? `Adicionales: ${summary.selectedAddons.join(', ')}` : 'Adicionales: ninguno',
+    `Invitados: ${quote.guests}`,
+    `Duración: ${quote.billableHours} horas + ${form.setupHours} horas de montaje`,
+    `Cotización estimada: ${money(quote.totalCents)} IVA incluido`,
+    `Reserva sugerida: ${money(quote.depositCents)}`,
+    selectedAddons.length ? `Adicionales: ${selectedAddons.join(', ')}` : 'Adicionales: ninguno',
     form.notes.trim() ? `Notas del cliente: ${form.notes.trim()}` : null,
   ]
     .filter(Boolean)
@@ -353,10 +299,6 @@ const buildBookingNotes = (form: BookingFormState, summary: ReturnType<typeof su
 };
 
 export default function DomoVenuePage() {
-  useMetaTags({
-    title: 'Domo del Pululahua',
-    description: 'Solicita una cotización para eventos, música y experiencias en el Domo del Pululahua.',
-  });
   const [activeExperienceKey, setActiveExperienceKey] = useState<DomoExperienceKey>('naturaleza');
   const [form, setForm] = useState<BookingFormState>(initialForm);
   const [submitting, setSubmitting] = useState(false);
@@ -370,7 +312,7 @@ export default function DomoVenuePage() {
     (service) => service.scCode === 'event-production' && service.scActive,
   );
   const activeExperience = DOMO_EXPERIENCES[activeExperienceKey];
-  const requestSummary = useMemo(() => summarizeRequest(form), [form]);
+  const quote = useMemo(() => calculateQuote(form), [form]);
   const bookingIso = toBookingIso(form.startsAt);
 
   const updateForm = <Key extends keyof BookingFormState>(key: Key, value: BookingFormState[Key]) => {
@@ -404,8 +346,8 @@ export default function DomoVenuePage() {
         pbPhone: form.phone.trim() || null,
         pbServiceOfferingId: eventProductionOffering.scId,
         pbStartsAt: bookingIso,
-        pbDurationMinutes: requestSummary.billableHours * 60,
-        pbNotes: buildBookingNotes(form, requestSummary),
+        pbDurationMinutes: quote.billableHours * 60,
+        pbNotes: buildBookingNotes(form, quote),
       });
       setStatus({
         severity: 'success',
@@ -783,10 +725,10 @@ export default function DomoVenuePage() {
                 <Stack spacing={2.5}>
                   <Stack spacing={0.75}>
                     <Typography variant="h4" fontWeight={900} sx={{ fontSize: { xs: '1.5rem', md: '2rem' } }}>
-                      Solicitud de cotización
+                      Cotización y reserva
                     </Typography>
                     <Typography color="text.secondary">
-                      Cuéntanos el plan. Enviar esta solicitud no confirma disponibilidad, no retiene la fecha y no crea un pago.
+                      La cifra es estimada. La confirmación final depende de disponibilidad, montaje, proveedores y permisos.
                     </Typography>
                   </Stack>
 
@@ -928,32 +870,32 @@ export default function DomoVenuePage() {
                   <Stack direction="row" spacing={1} alignItems="center">
                     <CalculateIcon color="primary" />
                     <Typography variant="h5" fontWeight={900}>
-                      Resumen de solicitud
+                      Cotización estimada
                     </Typography>
                   </Stack>
-                  <Stack spacing={1.25}>
-                    <Stack direction="row" justifyContent="space-between" spacing={2}>
-                      <Typography variant="body2" color="text.secondary">Experiencia</Typography>
-                      <Typography variant="body2" fontWeight={700}>{EVENT_TYPES[form.eventType].label}</Typography>
-                    </Stack>
-                    <Stack direction="row" justifyContent="space-between" spacing={2}>
-                      <Typography variant="body2" color="text.secondary">Invitados</Typography>
-                      <Typography variant="body2" fontWeight={700}>{requestSummary.guests}</Typography>
-                    </Stack>
-                    <Stack direction="row" justifyContent="space-between" spacing={2}>
-                      <Typography variant="body2" color="text.secondary">Evento y montaje</Typography>
-                      <Typography variant="body2" fontWeight={700}>{requestSummary.billableHours} h + {requestSummary.setupHours} h</Typography>
-                    </Stack>
-                    <Stack direction="row" justifyContent="space-between" spacing={2}>
-                      <Typography variant="body2" color="text.secondary">Adicionales</Typography>
-                      <Typography variant="body2" fontWeight={700} textAlign="right">
-                        {requestSummary.selectedAddons.length ? requestSummary.selectedAddons.join(', ') : 'Ninguno'}
-                      </Typography>
-                    </Stack>
+                  <Stack spacing={1}>
+                    {quote.lines.map((line) => (
+                      <Stack key={line.label} direction="row" justifyContent="space-between" spacing={2}>
+                        <Typography variant="body2" color="text.secondary">{line.label}</Typography>
+                        <Typography variant="body2" fontWeight={700}>{money(line.amountCents)}</Typography>
+                      </Stack>
+                    ))}
                   </Stack>
                   <Divider />
-                  <Alert severity="warning">
-                    El precio, impuestos, depósito y políticas vendrán en una cotización versionada emitida por TDF. Solo una cotización aprobada y un pago verificado podrán separar la fecha.
+                  <Stack direction="row" justifyContent="space-between">
+                    <Typography color="text.secondary">Subtotal</Typography>
+                    <Typography fontWeight={800}>{money(quote.subtotalCents)}</Typography>
+                  </Stack>
+                  <Stack direction="row" justifyContent="space-between">
+                    <Typography color="text.secondary">IVA 12%</Typography>
+                    <Typography fontWeight={800}>{money(quote.taxCents)}</Typography>
+                  </Stack>
+                  <Stack direction="row" justifyContent="space-between" alignItems="baseline">
+                    <Typography variant="h6" fontWeight={900}>Total</Typography>
+                    <Typography variant="h4" fontWeight={900}>{money(quote.totalCents)}</Typography>
+                  </Stack>
+                  <Alert severity="info">
+                    Para separar fecha se estima una reserva de {money(quote.depositCents)}. El equipo puede ajustar el plan si el evento requiere permisos, carpa, seguridad, hospedaje o producción especial.
                   </Alert>
                 </Stack>
               </CardContent>
