@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-15T04:03:11.605Z",
+  "generatedAt": "2026-08-15T04:11:58.857Z",
   "repositoryRoot": ".",
   "filesScanned": 1016,
   "candidateCount": 714,
@@ -7823,7 +7823,7 @@
       "similarCandidateIds": []
     },
     {
-      "id": "86c582f26529b726cb23",
+      "id": "d244378376fdb4ea7036",
       "file": "scripts/production-migrations.json",
       "sourceKind": "production",
       "surface": "automation",
@@ -7854,9 +7854,10 @@
         "{id=2026-08-13_versioned_revenue_products}",
         "{id=2026-08-13_distribution_product_seeds}",
         "{id=2026-08-14_service_storefront_checkout_runtime}",
-        "{id=2026-08-14_checkout_event_refund_runtime}"
+        "{id=2026-08-14_checkout_event_refund_runtime}",
+        "{id=2026-08-14_provider_event_operations}"
       ],
-      "valueCount": 23,
+      "valueCount": 24,
       "recommendedClassification": "governed-reference-data",
       "lines": [
         3
@@ -13533,7 +13534,7 @@
       "lines": [
         77
       ],
-      "consumerCount": 146,
+      "consumerCount": 147,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -13672,6 +13673,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/lib/production-release.mjs",
         "scripts/production-catalog-inventory.mjs",
+        "scripts/production-migrations.json",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-provider-event-operations-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh",

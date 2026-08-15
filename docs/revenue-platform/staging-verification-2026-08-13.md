@@ -17,16 +17,19 @@ The final command transcript is summarized here after the branch-wide verificati
 | Checkout core migration | `./scripts/test-unified-checkout-migration.sh` | Pass: dry-run, rollback, binding, inbox, hold, ledger |
 | Service checkout runtime migration | `./scripts/test-service-storefront-checkout-runtime-migration.sh` | Pass: rerun, pre-use rollback, legacy classification, one checkout link, one succeeded attempt, reconciliation deduplication, manual evidence and receipt constraints; rollback correctly refused after a live link |
 | Provider-event/refund runtime migration | `./scripts/test-checkout-event-refund-runtime-migration.sh` | Pass: rerun, clean rollback, production-off gates, unsigned-event rejection, immutable encrypted inbox evidence, active configured reason enforcement, two-person approval, allocation/credit-note constraints; rollback correctly refused after live evidence |
+| Provider-event operations migration | `./scripts/test-provider-event-operations-migration.sh` | Pass: rerun, clean rollback, formal status transitions, control-safe audited dead-letter requeue, event-scoped transition authorization, duplicate prevention, sandbox-on/production-off worker gates, immutable action evidence; rollback correctly refused after replay evidence |
 | Distribution accounting migration | `./scripts/test-distribution-accounting-migration.sh` | Pass: rollback, lifecycle, splits, package/evidence, royalty, separation of duties, payout gates |
 | Versioned revenue products | `./scripts/test-versioned-revenue-products-migration.sh` | Pass: inactive legacy Domo rate, approval/immutability, production flag |
 | Distribution pricing seeds | `./scripts/test-distribution-product-seeds-migration.sh` | Pass: 14 inactive bilingual seeds, activation/mutation/rollback gates |
 | Backend focused tests | Stack-built `tdf-hq-test --match …` | Pass: 50 examples, including 800 property cases, zero failures |
-| Backend build | `stack test --no-run-tests` with the default optimized Stack profile | Pass: executable and all 155 test modules compiled and linked |
+| Provider-event backend invariants | Stack-built `tdf-hq-test --match 'service storefront commercial invariants'` | Pass: 18 examples, including 300 property cases, zero failures; immutable event metadata/provider/environment tampering and invalid replay reasons are rejected |
+| Backend build | `stack test --fast --no-run-tests` with the default optimized Stack profile | Pass: executable and all 159 test modules compiled and linked |
 | Web regression/accessibility | Jest: five changed suites | Pass: 16 tests, zero failures |
+| Provider-event operator UI/access | Jest: provider-event page and access-control suites | Pass: 14 tests, zero failures; raw payload and merchant binding are absent from the UI contract |
 | Web type safety | `npm run typecheck:ui` | Pass |
-| Web production build | `npm run build` | Pass: 12,382 modules; bundle/secret gate 5 preloads and 399,972 gzip bytes |
+| Web production build | `npm run build --workspace=tdf-hq-ui` | Pass: 12,383 modules; bundle/secret gate 5 preloads and 403,425 gzip bytes |
 | Release/CI contracts | `npm run test:production-release`; `npm run test:ci-pipeline` | Pass: 25 + 12 tests |
-| Registered production batch | Render preflight; apply twice; schema verification against PostgreSQL 17 | Pass: 23/23 migrations, second run idempotent, service checkout/event/refund runtime contracts verified |
+| Registered production batch | Render preflight; apply twice; raw idempotency reruns; schema verification against PostgreSQL 17 | Pass: 24/24 migrations, second run idempotent, provider-event action table present, worker flags `sandbox=true` and `production=false` |
 | OpenAPI/generated clients | `npm run generate:api` | Pass: canonical service-storefront contract generated for web and mobile |
 | Mobile type safety | `npm run typecheck:mobile` | Pass |
 | Formal-method audit | `npm run verify:formal` | Pass: 0 critical, 0 errors; repository warnings remain advisory |
@@ -44,7 +47,7 @@ and test suite after the runtime integration. This is local database/application
 Datafast or PayPal sandbox request was made and no provider success was asserted.
 
 After registering the runtime migrations with their immutable feature commits, the exact production
-batch applied twice in fresh PostgreSQL 17 containers. All 23 manifest entries were recorded, the
+batch applied twice in fresh PostgreSQL 17 containers. All 24 manifest entries were recorded, the
 release schema verifier passed, checkout/refund production flags remained disabled, and the legacy
 classification view contained no invented rows in the pristine fixture.
 
@@ -52,6 +55,13 @@ The 2026-08-14 PayPal event/refund follow-up passed 19 focused examples, includi
 cases, with zero failures. The executable and all 155 test modules compiled under the repository's
 default optimized Stack configuration. No PayPal or Datafast network request was made; the provider
 sandbox evidence requirement remains open.
+
+The provider-event operations follow-up passed 18 focused service-commerce examples, including 300
+property cases, and linked the executable plus all 159 test modules. The dedicated migration
+rehearsal additionally proved that a requeue authorization cannot leak to another event in the same
+transaction. The registered 24-entry production batch was then applied twice and schema-verified in
+a disposable PostgreSQL 17 container. These are local fixtures only: no provider callback, sandbox
+transaction, staging deployment, refund, or production state was exercised.
 
 ## Required staging exercise
 

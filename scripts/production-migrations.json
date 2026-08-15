@@ -115,6 +115,11 @@
       "id": "2026-08-14_checkout_event_refund_runtime",
       "path": "tdf-hq/sql/2026-08-14_checkout_event_refund_runtime.sql",
       "introducedBy": "df8b615cf4780d450550db6a93bb94a1fc21e968"
+    },
+    {
+      "id": "2026-08-14_provider_event_operations",
+      "path": "tdf-hq/sql/2026-08-14_provider_event_operations.sql",
+      "introducedBy": "1f992718f5fe3ce8493f4508ab23424a46ebdc6c"
     }
   ]
 }
