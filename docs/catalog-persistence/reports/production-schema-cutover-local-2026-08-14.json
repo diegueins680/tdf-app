@@ -60,7 +60,7 @@
   "automatedChecks": {
     "productionReleaseUnitTests": "27 passed, 0 failed",
     "repositoryQuality": "passed; 7987 audit findings, 0 critical, 0 errors; all repository quality tests passed",
-    "backendQuality": "passed; executable compiled and 2320 backend examples passed with 0 failures on GHC 9.10.3",
+    "backendQuality": "passed; executable compiled and 2265 backend examples passed with 0 failures on GHC 9.10.3",
     "diffCheck": "passed"
   },
   "productionGate": {
