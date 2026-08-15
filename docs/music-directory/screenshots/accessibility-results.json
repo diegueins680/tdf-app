@@ -1,0 +1,30 @@
+[
+  {
+    "name": "web-desktop-search-list",
+    "path": "/buscar",
+    "violations": [],
+    "passes": 29,
+    "incomplete": 2
+  },
+  {
+    "name": "web-desktop-search-map",
+    "path": "/buscar",
+    "violations": [],
+    "passes": 32,
+    "incomplete": 2
+  },
+  {
+    "name": "web-mobile-search",
+    "path": "/buscar",
+    "violations": [],
+    "passes": 30,
+    "incomplete": 2
+  },
+  {
+    "name": "mobile-expo-directory",
+    "path": "/directory",
+    "violations": [],
+    "passes": 27,
+    "incomplete": 2
+  }
+]
