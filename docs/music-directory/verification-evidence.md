@@ -14,6 +14,7 @@ contienen personas, eventos, direcciones, credenciales ni verificaciones inventa
 | Migración PostgreSQL 16 | Pass: doble aplicación, backfill seco/aplicado/rollback/reaplicado, privacidad, claim, review, alertas, merge y 10.000 documentos de búsqueda |
 | OpenAPI/clientes | Pass: seguridad pública, PII, separación patrocinada e idempotency keys; tipos web/móvil regenerados |
 | Feature registry | Pass: 131 features, 146 rutas web, 44 rutas móviles |
+| Autoridad de catálogos | Pass: 720 fingerprints revisados; 0 decisiones nuevas o caducas pendientes |
 | Auditoría formal del repositorio | 4 pruebas, 0 fallos; QuickCheck cubre invariantes del dominio |
 | Manifiesto de release | 29 pruebas, 0 fallos; SHA inmutable, ancestry y streaming SQL validados |
 | TypeScript | Pass en web y móvil |
