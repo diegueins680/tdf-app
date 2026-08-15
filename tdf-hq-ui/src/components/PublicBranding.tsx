@@ -14,6 +14,7 @@ import {
 } from '../utils/instagramTraffic';
 
 const PUBLIC_NAV_ITEMS = [
+  { label: 'Buscar', to: '/buscar' },
   { label: 'TDF', to: '/tdf' },
   { label: 'Comunidad', to: '/fans' },
   { label: 'Tienda', to: '/marketplace' },
