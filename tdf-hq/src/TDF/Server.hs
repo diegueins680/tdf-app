@@ -20,6 +20,9 @@ import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask, asks, runReaderT)
 import           Control.Monad.Trans.Class (lift)
 import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
+import           Crypto.Hash (Digest, SHA256, hash)
+import           Data.ByteArray (constEq)
+import qualified Data.ByteArray.Encoding as BAE
 import           Data.Bits (xor)
 import           Data.Int (Int64)
 import           Data.List (find, nub, isInfixOf, sort, sortOn)
@@ -84,7 +87,7 @@ import           Database.Persist.Postgresql ()
 import           Database.PostgreSQL.Simple (SqlError (..))
 
 import           TDF.API
-import           TDF.API.Types (UserRoleSummaryDTO(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceCheckoutReq(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), LabelProjectNoteDTO(..), LabelProjectNoteCreate(..), LabelProjectNoteUpdate(..), DriveUploadDTO(..), DriveTokenExchangeRequest(..), DriveTokenRefreshRequest(..), DriveTokenResponse(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..), verifyMetaWebhookSignature)
+import           TDF.API.Types (UserRoleSummaryDTO(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceFulfillmentUpdate(..), MarketplaceCheckoutReq(..), MarketplaceShippingAddress(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), LabelProjectNoteDTO(..), LabelProjectNoteCreate(..), LabelProjectNoteUpdate(..), DriveUploadDTO(..), DriveTokenExchangeRequest(..), DriveTokenRefreshRequest(..), DriveTokenResponse(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..), verifyMetaWebhookSignature)
 import           TDF.API.Types (maxMarketplaceCartItemQuantity)
 import qualified TDF.API.Types as APITypes
 import           TDF.API.WhatsApp (validateHookVerifyRequest)
@@ -174,6 +177,9 @@ import           TDF.ServerFuture (futureServer)
 import           TDF.ServerRadio (radioServer)
 import           TDF.ServerLiveSessions (liveSessionsServer)
 import           TDF.Server.ServiceStorefront (serviceStorefrontPublicServer, serviceStorefrontAdminServer)
+import qualified TDF.Server.ServiceStorefront as ServiceStorefront
+import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
 import           TDF.ServerFeedback (feedbackServer)
 import qualified TDF.Contracts.Server as Contracts
 import           TDF.ServerProposals (proposalsServer)
@@ -1389,6 +1395,7 @@ createCoursePaymentIntent rawSlug regIdRaw req = do
                 , spiAmountCents = amountCents
                 , spiCurrency = currency
                 , spiPaymentSheet = Nothing
+                , spiLookupToken = Nothing
                 }
         Just mobileSdkVer ->
           case (ME.courseRegistrationPartyId reg, stripePublishableKey envConfig) of
@@ -1430,6 +1437,7 @@ createCoursePaymentIntent rawSlug regIdRaw req = do
                         , psPaymentIntentClientSecret = clientSecret
                         , psPublishableKey = publishableKey
                         }
+                    , spiLookupToken = Nothing
                     }
     _ -> throwError err500 { errBody = "Stripe is not configured" }
 
@@ -13603,6 +13611,7 @@ marketplaceAdminServer :: AuthedUser -> ServerT MarketplaceAdminAPI AppM
 marketplaceAdminServer user =
        listMarketplaceOrders user
   :<|> updateMarketplaceOrder user
+  :<|> updateMarketplaceFulfillment user
 
 labelServer :: AuthedUser -> ServerT LabelAPI AppM
 labelServer user =
@@ -13772,6 +13781,15 @@ upsertCartItem rawId MarketplaceCartItemUpdate{..} = do
       (Just _, Just listing) ->
         case validateMarketplacePublicListingActive (ME.marketplaceListingActive listing) of
           Left serverErr -> pure (Left serverErr)
+          Right () | mciuQuantity > 0
+                     && T.toLower (T.strip (ME.marketplaceListingPurpose listing)) /= "sale" ->
+            pure (Left err409
+              { errBody = "Rental listings require dates and the dedicated rental checkout"
+              })
+          Right () | mciuQuantity > 1 ->
+            pure (Left err409
+              { errBody = "Each physical marketplace asset can only be added once"
+              })
           Right () -> do
             existing <-
               selectFirst
@@ -13796,76 +13814,435 @@ upsertCartItem rawId MarketplaceCartItemUpdate{..} = do
             maybe (Left marketplaceCartNotFound) Right <$> loadCartDTO (defaultCurrency envConfig) cartKey
   either throwError pure result
 
-checkoutCart :: Text -> MarketplaceCheckoutReq -> AppM MarketplaceOrderDTO
-checkoutCart rawId MarketplaceCheckoutReq{..} = do
+data MarketplaceSaleCheckoutContext = MarketplaceSaleCheckoutContext
+  { msccOrderKey :: Key ME.MarketplaceOrder
+  , msccCheckout :: Checkout.CheckoutReference
+  , msccEnvironment :: Checkout.CheckoutEnvironment
+  , msccLookupToken :: Text
+  , msccIdempotencyKey :: Text
+  , msccCreated :: Bool
+  , msccTotalCents :: Int
+  , msccCurrency :: Text
+  }
+
+checkoutCart :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM MarketplaceOrderDTO
+checkoutCart rawId mIdempotency payload = do
+  context <- prepareMarketplaceSaleCheckout "bank_transfer" rawId mIdempotency payload
+  now <- liftIO getCurrentTime
+  Env{ envPool } <- ask
+  attemptResult <- liftIO $ flip runSqlPool envPool $
+    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+        { Checkout.pacCheckout = msccCheckout context
+        , Checkout.pacProvider = Checkout.ProviderBankTransfer
+        , Checkout.pacEnvironment = msccEnvironment context
+        , Checkout.pacOperation = Checkout.OperationCreate
+        , Checkout.pacAmountMinor = fromIntegral (msccTotalCents context)
+        , Checkout.pacCurrency = msccCurrency context
+        , Checkout.pacMerchantRef = "tdf-marketplace-manual"
+        , Checkout.pacIdempotencyKey = msccIdempotencyKey context
+        , Checkout.pacCreatedAt = now
+        , Checkout.pacCorrelationId = "marketplace-manual:" <> toPathPiece (msccOrderKey context)
+        }
+  attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
+  liftIO $ flip runSqlPool envPool $ do
+    Checkout.recordManualPaymentSelection
+      (msccCheckout context)
+      attempt
+      Checkout.ProviderBankTransfer
+      ("marketplace-manual:" <> toPathPiece (msccOrderKey context))
+      now
+    update (msccOrderKey context)
+      [ ME.MarketplaceOrderStatus =. "awaiting_manual_confirmation"
+      , ME.MarketplaceOrderPaymentProvider =. Just "bank_transfer"
+      , ME.MarketplaceOrderUpdatedAt =. now
+      ]
+  orderDto <- loadMarketplaceOrderWithLookup context
+  when (msccCreated context) $ sendMarketplaceOrderCreatedEmail orderDto
+  pure orderDto
+
+prepareMarketplaceSaleCheckout
+  :: Text
+  -> Text
+  -> Maybe Text
+  -> MarketplaceCheckoutReq
+  -> AppM MarketplaceSaleCheckoutContext
+prepareMarketplaceSaleCheckout _provider rawCartId mIdempotency payload@MarketplaceCheckoutReq{..} = do
+  idempotencyKey <- either (throwError . marketplaceCheckoutBadRequest) pure
+    (ServiceStorefront.validateIdempotencyKey mIdempotency)
   buyerNameTxt <- either throwError pure (validateMarketplaceBuyerName mcrBuyerName)
   buyerEmailTxt <- either throwError pure (validateMarketplaceBuyerEmail mcrBuyerEmail)
   buyerPhoneTxt <- either throwError pure (validateMarketplaceBuyerPhone mcrBuyerPhone)
-  cartKey <- parseCartId rawId
+  cartKey <- parseCartId rawCartId
+  method <- either (throwError . marketplaceCheckoutBadRequest) pure $
+    MarketplaceSales.parseMarketplaceFulfillmentMethod
+      (fromMaybe "pickup" mcrFulfillmentMethod)
+  validateMarketplaceShippingAddress method mcrShippingAddress
+  checkoutEnvironment <- loadMarketplaceCheckoutEnvironment
   now <- liftIO getCurrentTime
+  let holdExpiresAt = addUTCTime (15 * 60) now
+      cartIdText = toPathPiece cartKey
+      methodText = MarketplaceSales.marketplaceFulfillmentMethodText method
+      requestHash = marketplaceSha256Text . TE.decodeUtf8 . BL.toStrict . encode $ object
+        [ "cart_id" .= cartIdText
+        , "buyer_name" .= buyerNameTxt
+        , "buyer_email" .= buyerEmailTxt
+        , "buyer_phone" .= buyerPhoneTxt
+        , "fulfillment_method" .= methodText
+        , "shipping_address" .= mcrShippingAddress
+        ]
+      lookupToken = marketplaceSha256Text
+        ("marketplace-order-lookup:" <> idempotencyKey <> ":" <> cartIdText)
+      lookupHash = marketplaceSha256Text lookupToken
   Env{ envPool } <- ask
-  cartTotalsState <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
-  (cartItems, totalCents, currency) <-
-    either throwError pure (requireMarketplaceCartTotals cartTotalsState)
-  mOrder <- liftIO $ flip runSqlPool envPool $ do
-    let statusTxt = if totalCents > 0 then "pending" else "contact"
-    orderId <- insert ME.MarketplaceOrder
-      { ME.marketplaceOrderCartId        = Just cartKey
-      , ME.marketplaceOrderBuyerName     = buyerNameTxt
-      , ME.marketplaceOrderBuyerEmail    = buyerEmailTxt
-      , ME.marketplaceOrderBuyerPhone    = buyerPhoneTxt
-      , ME.marketplaceOrderTotalUsdCents = totalCents
-      , ME.marketplaceOrderCurrency      = currency
-      , ME.marketplaceOrderStatus        = statusTxt
-      , ME.marketplaceOrderPaymentProvider = Nothing
-      , ME.marketplaceOrderStripePaymentIntentId = Nothing
-      , ME.marketplaceOrderStripeIdempotencyKey = Nothing
-      , ME.marketplaceOrderPaypalOrderId = Nothing
-      , ME.marketplaceOrderPaypalPayerEmail = Nothing
-      , ME.marketplaceOrderDatafastCheckoutId = Nothing
-      , ME.marketplaceOrderDatafastResourcePath = Nothing
-      , ME.marketplaceOrderDatafastPaymentId = Nothing
-      , ME.marketplaceOrderDatafastResultCode = Nothing
-      , ME.marketplaceOrderDatafastResultDescription = Nothing
-      , ME.marketplaceOrderDatafastPaymentBrand = Nothing
-      , ME.marketplaceOrderDatafastAuthCode = Nothing
-      , ME.marketplaceOrderDatafastAcquirerCode = Nothing
-      , ME.marketplaceOrderPaidAt        = Nothing
-      , ME.marketplaceOrderCreatedAt     = now
-      , ME.marketplaceOrderUpdatedAt     = now
+  result <- liftIO $ flip runSqlPool envPool $ do
+    _ <- (rawSql
+      "SELECT 1::bigint FROM (SELECT pg_advisory_xact_lock(hashtextextended(?, 0))) locked"
+      [PersistText ("marketplace-sale:" <> idempotencyKey)]
+      :: SqlPersistT IO [Single Int64])
+    existingRows <- (rawSql
+      "SELECT order_id::text, checkout_id::text, create_request_sha256\
+      \ FROM marketplace_sale_order_runtime WHERE create_idempotency_key = ?"
+      [PersistText idempotencyKey]
+      :: SqlPersistT IO [(Single Text, Single Text, Single Text)])
+    case existingRows of
+      [(Single orderIdText, Single checkoutId, Single storedRequestHash)]
+        | storedRequestHash /= requestHash ->
+            pure (Left (marketplaceCheckoutConflict
+              "Idempotency key was already used for a different marketplace checkout"))
+        | otherwise ->
+            case fromPathPiece orderIdText of
+              Nothing -> pure (Left (marketplaceCheckoutInternal
+                "Stored marketplace runtime has an invalid order reference"))
+              Just orderKey -> do
+                mOrder <- get orderKey
+                storedEnvironment <- Checkout.loadCheckoutEnvironment
+                  (Checkout.CheckoutReference checkoutId)
+                case (mOrder, storedEnvironment) of
+                  (_, Left _) -> pure (Left (marketplaceCheckoutInternal
+                    "Stored marketplace checkout environment is invalid"))
+                  (_, Right environment) | environment /= checkoutEnvironment ->
+                    pure (Left (marketplaceCheckoutConflict
+                      "Checkout environment changed; the existing order must be reconciled"))
+                  (Nothing, _) -> pure (Left (marketplaceCheckoutInternal
+                    "Stored marketplace runtime order is missing"))
+                  (Just order, Right environment) -> pure (Right MarketplaceSaleCheckoutContext
+                    { msccOrderKey = orderKey
+                    , msccCheckout = Checkout.CheckoutReference checkoutId
+                    , msccEnvironment = environment
+                    , msccLookupToken = lookupToken
+                    , msccIdempotencyKey = idempotencyKey
+                    , msccCreated = False
+                    , msccTotalCents = ME.marketplaceOrderTotalUsdCents order
+                    , msccCurrency = ME.marketplaceOrderCurrency order
+                    })
+      [] -> createMarketplaceSaleCheckout
+        checkoutEnvironment
+        now
+        holdExpiresAt
+        idempotencyKey
+        requestHash
+        lookupToken
+        lookupHash
+        methodText
+        buyerNameTxt
+        buyerEmailTxt
+        buyerPhoneTxt
+        cartKey
+        payload
+      _ -> pure (Left (marketplaceCheckoutInternal
+        "Marketplace idempotency lookup was ambiguous"))
+  either throwError pure result
+
+createMarketplaceSaleCheckout
+  :: Checkout.CheckoutEnvironment
+  -> UTCTime
+  -> UTCTime
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> Key ME.MarketplaceCart
+  -> MarketplaceCheckoutReq
+  -> SqlPersistT IO (Either ServerError MarketplaceSaleCheckoutContext)
+createMarketplaceSaleCheckout checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupToken lookupHash methodText buyerNameTxt buyerEmailTxt buyerPhoneTxt cartKey payload = do
+  domainEnabled <- Checkout.domainEnabledForEnvironment checkoutEnvironment "marketplace_sales"
+  if not domainEnabled
+    then pure (Left err503
+      { errBody = "Marketplace sales checkout is disabled in this environment"
+      })
+    else do
+      _ <- (rawSql "SELECT marketplace_expire_sale_holds(?)"
+        [PersistUTCTime now] :: SqlPersistT IO [Single Int])
+      _ <- (rawSql
+        "SELECT asset.id::text FROM marketplace_cart cart\
+        \ JOIN marketplace_cart_item item ON item.cart_id = cart.id\
+        \ JOIN marketplace_listing listing ON listing.id = item.listing_id\
+        \ JOIN asset ON asset.id = listing.asset_id\
+        \ WHERE cart.id = ?::uuid FOR UPDATE OF cart, item, listing, asset"
+        [PersistText (toPathPiece cartKey)] :: SqlPersistT IO [Single Text])
+      cartTotalsState <- loadCartTotals cartKey
+      case requireMarketplaceCartTotals cartTotalsState of
+        Left serverErr -> pure (Left serverErr)
+        Right (cartItems, totalCentsRaw, currency) ->
+          case validateMarketplaceSaleCart cartItems of
+            Left serverErr -> pure (Left serverErr)
+            Right () ->
+              case validateMarketplaceOnlinePaymentTotal totalCentsRaw of
+                Left serverErr -> pure (Left serverErr)
+                Right totalCents -> do
+                  let orderRecord = ME.MarketplaceOrder
+                        { ME.marketplaceOrderCartId = Just cartKey
+                        , ME.marketplaceOrderBuyerName = buyerNameTxt
+                        , ME.marketplaceOrderBuyerEmail = buyerEmailTxt
+                        , ME.marketplaceOrderBuyerPhone = buyerPhoneTxt
+                        , ME.marketplaceOrderTotalUsdCents = totalCents
+                        , ME.marketplaceOrderCurrency = currency
+                        , ME.marketplaceOrderStatus = "awaiting_payment"
+                        , ME.marketplaceOrderPaymentProvider = Nothing
+                        , ME.marketplaceOrderStripePaymentIntentId = Nothing
+                        , ME.marketplaceOrderStripeIdempotencyKey = Nothing
+                        , ME.marketplaceOrderPaypalOrderId = Nothing
+                        , ME.marketplaceOrderPaypalPayerEmail = Nothing
+                        , ME.marketplaceOrderDatafastCheckoutId = Nothing
+                        , ME.marketplaceOrderDatafastResourcePath = Nothing
+                        , ME.marketplaceOrderDatafastPaymentId = Nothing
+                        , ME.marketplaceOrderDatafastResultCode = Nothing
+                        , ME.marketplaceOrderDatafastResultDescription = Nothing
+                        , ME.marketplaceOrderDatafastPaymentBrand = Nothing
+                        , ME.marketplaceOrderDatafastAuthCode = Nothing
+                        , ME.marketplaceOrderDatafastAcquirerCode = Nothing
+                        , ME.marketplaceOrderPaidAt = Nothing
+                        , ME.marketplaceOrderCreatedAt = now
+                        , ME.marketplaceOrderUpdatedAt = now
+                        }
+                  orderKey <- insert orderRecord
+                  forM_ cartItems $ \(_, listingEnt, _, qty) -> do
+                    let listing = entityVal listingEnt
+                        unitPrice = ME.marketplaceListingPriceUsdCents listing
+                    void $ insert ME.MarketplaceOrderItem
+                      { ME.marketplaceOrderItemOrderId = orderKey
+                      , ME.marketplaceOrderItemListingId = entityKey listingEnt
+                      , ME.marketplaceOrderItemQuantity = qty
+                      , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
+                      , ME.marketplaceOrderItemSubtotalUsdCents = unitPrice * qty
+                      }
+                  let checkoutSnapshot = object
+                        [ "domain" .= ("marketplace_sale" :: Text)
+                        , "order_id" .= toPathPiece orderKey
+                        , "cart_id" .= toPathPiece cartKey
+                        , "currency" .= currency
+                        , "total_minor" .= totalCents
+                        , "fulfillment_method" .= methodText
+                        , "shipping_address" .= mcrShippingAddress payload
+                        ]
+                      checkoutLines = map marketplaceCheckoutLine cartItems
+                  checkout <- Checkout.createCheckoutWithLines Checkout.CheckoutCreation
+                    { Checkout.ccDomainType = "marketplace_sale"
+                    , Checkout.ccDomainOrderId = toPathPiece orderKey
+                    , Checkout.ccEnvironment = checkoutEnvironment
+                    , Checkout.ccCurrency = currency
+                    , Checkout.ccAmountMinor = fromIntegral totalCents
+                    , Checkout.ccCustomerEmail = buyerEmailTxt
+                    , Checkout.ccLookupTokenHash = lookupHash
+                    , Checkout.ccIdempotencyKey = idempotencyKey
+                    , Checkout.ccExpiresAt = holdExpiresAt
+                    , Checkout.ccProductType = "marketplace_cart"
+                    , Checkout.ccProductId = toPathPiece cartKey
+                    , Checkout.ccProductVersion = T.pack
+                        (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S%QZ" now)
+                    , Checkout.ccDescription = "TDF equipment sale"
+                    , Checkout.ccSnapshot = checkoutSnapshot
+                    , Checkout.ccCorrelationId = "marketplace-order:" <> toPathPiece orderKey
+                    } checkoutLines
+                  insertMarketplaceRuntime
+                    orderKey checkout lookupHash idempotencyKey requestHash methodText
+                    buyerNameTxt buyerPhoneTxt holdExpiresAt (mcrShippingAddress payload)
+                  forM_ cartItems $ \(_, _, assetEnt, _) ->
+                    rawExecute
+                      "INSERT INTO commerce_reservation_hold(\
+                      \ checkout_id, resource_type, resource_id, quantity, status, expires_at\
+                      \) VALUES (?::uuid, 'marketplace_asset_sale', ?, 1, 'active', ?)"
+                      [ PersistText (Checkout.checkoutReferenceId checkout)
+                      , PersistText (toPathPiece (entityKey assetEnt))
+                      , PersistUTCTime holdExpiresAt
+                      ]
+                  pure (Right MarketplaceSaleCheckoutContext
+                    { msccOrderKey = orderKey
+                    , msccCheckout = checkout
+                    , msccEnvironment = checkoutEnvironment
+                    , msccLookupToken = lookupToken
+                    , msccIdempotencyKey = idempotencyKey
+                    , msccCreated = True
+                    , msccTotalCents = totalCents
+                    , msccCurrency = currency
+                    })
+
+marketplaceCheckoutLine
+  :: (Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)
+  -> Checkout.CheckoutLineCreation
+marketplaceCheckoutLine (_, listingEnt, assetEnt, quantity) =
+  let listing = entityVal listingEnt
+      asset = entityVal assetEnt
+  in Checkout.CheckoutLineCreation
+      { Checkout.clProductType = "marketplace_asset"
+      , Checkout.clProductId = toPathPiece (entityKey assetEnt)
+      , Checkout.clProductVersion = T.pack
+          (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S%QZ"
+            (ME.marketplaceListingUpdatedAt listing))
+      , Checkout.clDescription = ME.marketplaceListingTitle listing
+      , Checkout.clQuantity = quantity
+      , Checkout.clUnitAmountMinor = fromIntegral
+          (ME.marketplaceListingPriceUsdCents listing)
+      , Checkout.clSnapshot = object
+          [ "listing_id" .= toPathPiece (entityKey listingEnt)
+          , "asset_id" .= toPathPiece (entityKey assetEnt)
+          , "title" .= ME.marketplaceListingTitle listing
+          , "purpose" .= ME.marketplaceListingPurpose listing
+          , "asset_category" .= ME.assetCategory asset
+          , "asset_brand" .= ME.assetBrand asset
+          , "asset_model" .= ME.assetModel asset
+          , "unit_amount_minor" .= ME.marketplaceListingPriceUsdCents listing
+          , "currency" .= ME.marketplaceListingCurrency listing
+          ]
       }
-    forM_ cartItems $ \(_, listingEnt, _, qty) -> do
-      let listing   = entityVal listingEnt
-          unitPrice = ME.marketplaceListingPriceUsdCents listing
-          subtotal  = unitPrice * qty
-      void $ insert ME.MarketplaceOrderItem
-        { ME.marketplaceOrderItemOrderId           = orderId
-        , ME.marketplaceOrderItemListingId         = entityKey listingEnt
-        , ME.marketplaceOrderItemQuantity          = qty
-        , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
-        , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
-        }
-    loadOrderDTO orderId
+
+insertMarketplaceRuntime
+  :: Key ME.MarketplaceOrder
+  -> Checkout.CheckoutReference
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> UTCTime
+  -> Maybe MarketplaceShippingAddress
+  -> SqlPersistT IO ()
+insertMarketplaceRuntime orderKey checkout lookupHash idempotencyKey requestHash methodText recipientName recipientPhone holdExpiresAt mAddress = do
+  rawExecute
+    "INSERT INTO marketplace_sale_order_runtime(\
+    \ order_id, checkout_id, lookup_token_hash, create_idempotency_key,\
+    \ create_request_sha256, fulfillment_method, fulfillment_status, recipient_name,\
+    \ recipient_phone, address_line_1, address_line_2, city, province, postal_code,\
+    \ country_code, hold_expires_at\
+    \) VALUES (?::uuid, ?::uuid, ?, ?, ?, ?, 'on_hold', ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    [ PersistText (toPathPiece orderKey)
+    , PersistText (Checkout.checkoutReferenceId checkout)
+    , PersistText lookupHash
+    , PersistText idempotencyKey
+    , PersistText requestHash
+    , PersistText methodText
+    , PersistText recipientName
+    , maybe PersistNull PersistText recipientPhone
+    , maybe PersistNull (PersistText . msaAddressLine1) mAddress
+    , maybe PersistNull (maybe PersistNull PersistText . msaAddressLine2) mAddress
+    , maybe PersistNull (PersistText . msaCity) mAddress
+    , maybe PersistNull (PersistText . msaProvince) mAddress
+    , maybe PersistNull (maybe PersistNull PersistText . msaPostalCode) mAddress
+    , maybe PersistNull (PersistText . msaCountryCode) mAddress
+    , PersistUTCTime holdExpiresAt
+    ]
+  rawExecute
+    "INSERT INTO marketplace_sale_fulfillment_event(\
+    \ order_id, from_status, to_status, actor_type, reason_code, notes\
+    \) VALUES (?::uuid, NULL, 'on_hold', 'system', 'checkout_created',\
+    \ 'Asset hold created; payment and fulfillment remain separate')"
+    [PersistText (toPathPiece orderKey)]
+
+validateMarketplaceSaleCart
+  :: [(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)]
+  -> Either ServerError ()
+validateMarketplaceSaleCart cartItems = forM_ cartItems $ \(_, listingEnt, assetEnt, quantity) -> do
+  let listing = entityVal listingEnt
+      asset = entityVal assetEnt
+  unless (T.toLower (T.strip (ME.marketplaceListingPurpose listing)) == "sale") $
+    Left err409
+      { errBody = "Rental listings require dates, deposit terms, and the dedicated rental checkout"
+      }
+  unless (ME.marketplaceListingActive listing) $
+    Left marketplaceListingNotFound
+  unless (quantity == 1) $
+    Left err409
+      { errBody = "Each physical marketplace asset can only be purchased once"
+      }
+  unless (ME.assetStatus asset == ME.Active) $
+    Left err409
+      { errBody = "A marketplace asset is no longer available for sale"
+      }
+
+validateMarketplaceShippingAddress
+  :: MarketplaceSales.MarketplaceFulfillmentMethod
+  -> Maybe MarketplaceShippingAddress
+  -> AppM ()
+validateMarketplaceShippingAddress MarketplaceSales.MarketplacePickup _ = pure ()
+validateMarketplaceShippingAddress _ Nothing =
+  throwError err400 { errBody = "Shipping address is required for delivery and shipping" }
+validateMarketplaceShippingAddress _ (Just _) = pure ()
+
+loadMarketplaceCheckoutEnvironment :: AppM Checkout.CheckoutEnvironment
+loadMarketplaceCheckoutEnvironment = do
+  rawEnvironment <- liftIO $ lookupEnv "COMMERCE_CHECKOUT_ENV"
+  either (throwError . marketplaceCheckoutInternal) pure
+    (Checkout.resolveCheckoutEnvironment rawEnvironment)
+
+loadMarketplaceOrderWithLookup
+  :: MarketplaceSaleCheckoutContext
+  -> AppM MarketplaceOrderDTO
+loadMarketplaceOrderWithLookup MarketplaceSaleCheckoutContext{..} = do
+  Env{ envPool } <- ask
+  mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO msccOrderKey
   orderDto <- either throwError pure
-    (requireLoadedMarketplaceWriteResult "Marketplace order" mOrder)
+    (requireLoadedMarketplaceWriteResult "Marketplace order" mDto)
+  pure orderDto { moLookupToken = Just msccLookupToken }
+
+sendMarketplaceOrderCreatedEmail :: MarketplaceOrderDTO -> AppM ()
+sendMarketplaceOrderCreatedEmail orderDto = do
   env <- ask
-  -- fire-and-forget email confirmation
   let emailSvc = EmailSvc.mkEmailService (envConfig env)
-      itemsSummary = map (\oi -> T.pack (show (moiQuantity oi)) <> " × " <> moiTitle oi <> " — " <> moiSubtotalDisplay oi) (moItems orderDto)
+      itemsSummary = map
+        (\oi -> T.pack (show (moiQuantity oi)) <> " × " <> moiTitle oi <> " — " <> moiSubtotalDisplay oi)
+        (moItems orderDto)
   liftIO $ void $ forkIO $ do
     _ <- (try $
       EmailSvc.sendMarketplaceOrder
         emailSvc
-        buyerNameTxt
-        buyerEmailTxt
+        (moBuyerName orderDto)
+        (moBuyerEmail orderDto)
         (moOrderId orderDto)
         (moTotalDisplay orderDto)
         itemsSummary) :: IO (Either SomeException ())
     pure ()
-  pure orderDto
 
-createMarketplaceStripePaymentIntent :: Text -> MarketplaceCheckoutReq -> AppM StripePaymentIntentDTO
-createMarketplaceStripePaymentIntent rawId payload = do
+marketplaceSha256Text :: Text -> Text
+marketplaceSha256Text value =
+  TE.decodeUtf8
+    (BAE.convertToBase BAE.Base16
+      (hash (TE.encodeUtf8 value) :: Digest SHA256))
+
+marketplaceCheckoutBadRequest :: Text -> ServerError
+marketplaceCheckoutBadRequest message =
+  err400 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+marketplaceCheckoutConflict :: Text -> ServerError
+marketplaceCheckoutConflict message =
+  err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+marketplaceCheckoutInternal :: Text -> ServerError
+marketplaceCheckoutInternal message =
+  err500 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+createMarketplaceStripePaymentIntent :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM StripePaymentIntentDTO
+createMarketplaceStripePaymentIntent _ _ _ =
+  throwError err503
+    { errBody = "Stripe marketplace checkout is disabled until it uses the canonical verified-payment runtime; use Datafast or PayPal"
+    }
+
+createLegacyMarketplaceStripePaymentIntent :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM StripePaymentIntentDTO
+createLegacyMarketplaceStripePaymentIntent rawId _ payload = do
   nameTxt <- either throwError pure (validateMarketplaceBuyerName (mcrBuyerName payload))
   emailTxt <- either throwError pure (validateMarketplaceBuyerEmail (mcrBuyerEmail payload))
   phoneTxt <- either throwError pure (validateMarketplaceBuyerPhone (mcrBuyerPhone payload))
@@ -14064,6 +14441,7 @@ createMarketplaceStripePaymentIntent rawId payload = do
     , spiAmountCents = totalCents
     , spiCurrency = currency
     , spiPaymentSheet = Nothing
+    , spiLookupToken = Nothing
     }
 
 isMarketplaceStripeRetryStale :: UTCTime -> UTCTime -> Bool
@@ -14088,79 +14466,98 @@ isMarketplaceActiveStripeOrderConflict exception =
           `BS8.isInfixOf` (sqlErrorMsg sqlErr <> " " <> sqlErrorDetail sqlErr)
     Nothing -> False
 
-createDatafastCheckout :: Text -> MarketplaceCheckoutReq -> AppM DatafastCheckoutDTO
-createDatafastCheckout rawId payload = do
-  nameTxt <- either throwError pure (validateMarketplaceBuyerName (mcrBuyerName payload))
-  emailTxt <- either throwError pure (validateMarketplaceBuyerEmail (mcrBuyerEmail payload))
-  phoneTxt <- either throwError pure (validateMarketplaceBuyerPhone (mcrBuyerPhone payload))
-  cartKey <- parseCartId rawId
+createDatafastCheckout :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM DatafastCheckoutDTO
+createDatafastCheckout rawId mIdempotency payload = do
+  context <- prepareMarketplaceSaleCheckout "datafast" rawId mIdempotency payload
+  dfEnv <- loadDatafastEnv
+  unless (dfEnvironment dfEnv == msccEnvironment context) $
+    throwError err500
+      { errBody = "DATAFAST_ENV must match COMMERCE_CHECKOUT_ENV for marketplace checkout"
+      }
   now <- liftIO getCurrentTime
   Env{ envPool } <- ask
-  cartTotalsState <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
-  (cartItems, totalCentsRaw, currency) <-
-    either throwError pure (requireMarketplaceCartTotals cartTotalsState)
-  totalCents <-
-    either throwError pure (validateMarketplaceOnlinePaymentTotal totalCentsRaw)
-  orderKey <- liftIO $ flip runSqlPool envPool $ do
-    oid <- insert ME.MarketplaceOrder
-      { ME.marketplaceOrderCartId        = Just cartKey
-      , ME.marketplaceOrderBuyerName     = nameTxt
-      , ME.marketplaceOrderBuyerEmail    = emailTxt
-      , ME.marketplaceOrderBuyerPhone    = phoneTxt
-      , ME.marketplaceOrderTotalUsdCents = totalCents
-      , ME.marketplaceOrderCurrency      = currency
-      , ME.marketplaceOrderStatus        = "datafast_init"
-      , ME.marketplaceOrderPaymentProvider = Just "datafast"
-      , ME.marketplaceOrderStripePaymentIntentId = Nothing
-      , ME.marketplaceOrderStripeIdempotencyKey = Nothing
-      , ME.marketplaceOrderPaypalOrderId = Nothing
-      , ME.marketplaceOrderPaypalPayerEmail = Nothing
-      , ME.marketplaceOrderDatafastCheckoutId = Nothing
-      , ME.marketplaceOrderDatafastResourcePath = Nothing
-      , ME.marketplaceOrderDatafastPaymentId = Nothing
-      , ME.marketplaceOrderDatafastResultCode = Nothing
-      , ME.marketplaceOrderDatafastResultDescription = Nothing
-      , ME.marketplaceOrderDatafastPaymentBrand = Nothing
-      , ME.marketplaceOrderDatafastAuthCode = Nothing
-      , ME.marketplaceOrderDatafastAcquirerCode = Nothing
-      , ME.marketplaceOrderPaidAt        = Nothing
-      , ME.marketplaceOrderCreatedAt     = now
-      , ME.marketplaceOrderUpdatedAt     = now
+  providerEnabled <- liftIO $ flip runSqlPool envPool $
+    Checkout.providerEnabledForEnvironment (msccEnvironment context) Checkout.ProviderDatafast
+  unless providerEnabled $
+    throwError err503 { errBody = "Datafast checkout is disabled in this environment" }
+  attemptResult <- liftIO $ flip runSqlPool envPool $
+    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+      { Checkout.pacCheckout = msccCheckout context
+      , Checkout.pacProvider = Checkout.ProviderDatafast
+      , Checkout.pacEnvironment = msccEnvironment context
+      , Checkout.pacOperation = Checkout.OperationCreate
+      , Checkout.pacAmountMinor = fromIntegral (msccTotalCents context)
+      , Checkout.pacCurrency = msccCurrency context
+      , Checkout.pacMerchantRef = dfEntityId dfEnv
+      , Checkout.pacIdempotencyKey = msccIdempotencyKey context
+      , Checkout.pacCreatedAt = now
+      , Checkout.pacCorrelationId = "marketplace-datafast:" <> toPathPiece (msccOrderKey context)
       }
-    forM_ cartItems $ \(_, listingEnt, _, qty) -> do
-      let listing   = entityVal listingEnt
-          unitPrice = ME.marketplaceListingPriceUsdCents listing
-          subtotal  = unitPrice * qty
-      void $ insert ME.MarketplaceOrderItem
-        { ME.marketplaceOrderItemOrderId           = oid
-        , ME.marketplaceOrderItemListingId         = entityKey listingEnt
-        , ME.marketplaceOrderItemQuantity          = qty
-        , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
-        , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
-        }
-    pure oid
-  (checkoutId, widgetUrl) <- requestDatafastCheckout orderKey totalCents currency nameTxt emailTxt phoneTxt
-  now2 <- liftIO getCurrentTime
-  liftIO $ flip runSqlPool envPool $
-    update orderKey
-      [ ME.MarketplaceOrderStatus =. "datafast_pending"
-      , ME.MarketplaceOrderPaymentProvider =. Just "datafast"
-      , ME.MarketplaceOrderDatafastCheckoutId =. Just checkoutId
-      , ME.MarketplaceOrderUpdatedAt =. now2
-      ]
+  attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
+  mOrder <- liftIO $ flip runSqlPool envPool $ get (msccOrderKey context)
+  order <- maybe (throwError marketplaceOrderNotFound) pure mOrder
+  (checkoutId, widgetUrl) <- case ME.marketplaceOrderDatafastCheckoutId order of
+    Just storedCheckoutId -> do
+      validatedCheckoutId <- either throwError pure
+        (validateStoredDatafastCheckoutId storedCheckoutId)
+      pure
+        ( validatedCheckoutId
+        , normalizeBaseUrl (dfBaseUrl dfEnv)
+            <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack validatedCheckoutId
+        )
+    Nothing ->
+      requestDatafastCheckout
+        (msccOrderKey context)
+        (msccTotalCents context)
+        (msccCurrency context)
+        (ME.marketplaceOrderBuyerName order)
+        (ME.marketplaceOrderBuyerEmail order)
+        (ME.marketplaceOrderBuyerPhone order)
+  bindingResult <- liftIO $ flip runSqlPool envPool $ do
+    result <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
+      { Checkout.pbcAttempt = attempt
+      , Checkout.pbcCheckout = msccCheckout context
+      , Checkout.pbcProvider = Checkout.ProviderDatafast
+      , Checkout.pbcEnvironment = msccEnvironment context
+      , Checkout.pbcMerchantRef = dfEntityId dfEnv
+      , Checkout.pbcResourceType = "checkout"
+      , Checkout.pbcProviderResource = checkoutId
+      , Checkout.pbcResourcePath = Just
+          ("/v1/checkouts/" <> checkoutId <> "/payment")
+      , Checkout.pbcOrderReference = toPathPiece (msccOrderKey context)
+      , Checkout.pbcAmountMinor = fromIntegral (msccTotalCents context)
+      , Checkout.pbcCurrency = msccCurrency context
+      , Checkout.pbcStage = Checkout.AttemptRequiresCustomerAction
+      , Checkout.pbcOccurredAt = now
+      , Checkout.pbcCorrelationId = "marketplace-datafast:" <> toPathPiece (msccOrderKey context)
+      }
+    case result of
+      Left err -> pure (Left err)
+      Right () -> do
+        update (msccOrderKey context)
+          [ ME.MarketplaceOrderStatus =. "datafast_pending"
+          , ME.MarketplaceOrderPaymentProvider =. Just "datafast"
+          , ME.MarketplaceOrderDatafastCheckoutId =. Just checkoutId
+          , ME.MarketplaceOrderUpdatedAt =. now
+          ]
+        pure (Right ())
+  either (throwError . marketplaceCheckoutConflict) pure bindingResult
   pure DatafastCheckoutDTO
-    { dcOrderId    = toPathPiece orderKey
+    { dcOrderId    = toPathPiece (msccOrderKey context)
     , dcCheckoutId = checkoutId
     , dcWidgetUrl  = T.pack widgetUrl
-    , dcAmount     = formatUsd totalCents currency
-    , dcCurrency   = currency
+    , dcAmount     = Internationalization.formatMinorUnitsDecimal
+        (msccCurrency context) (fromIntegral (msccTotalCents context))
+    , dcCurrency   = msccCurrency context
+    , dcLookupToken = Just (msccLookupToken context)
     }
 
-confirmDatafastPayment :: Maybe Text -> Maybe Text -> AppM MarketplaceOrderDTO
-confirmDatafastPayment mOrderId mResourcePath = do
+confirmDatafastPayment :: Maybe Text -> Maybe Text -> Maybe Text -> AppM MarketplaceOrderDTO
+confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
   orderKey <- case mOrderId of
     Just oid -> parseOrderId oid
     Nothing  -> throwBadRequest "orderId requerido"
+  requireMarketplaceOrderLookupToken orderKey mLookupToken
   Env{ envPool } <- ask
   mOrder <- liftIO $ flip runSqlPool envPool $ get orderKey
   order <- maybe (throwError err404) pure mOrder
@@ -14173,15 +14570,19 @@ confirmDatafastPayment mOrderId mResourcePath = do
   statusResp <- datafastPaymentStatus dfEnv resourcePathTxt
   now <- liftIO getCurrentTime
   code <- either throwError pure (validateDatafastResultCodeField (dfrCode (dfpResult statusResp)))
-  let success = isDfPaymentSuccess code
+  let success = ServiceStorefront.isDatafastPaymentSuccess (dfEnvironment dfEnv) code
       pending = isDfPaymentPending code
-  when success $
+  when success $ do
     either throwError pure $
       validateDatafastSuccessfulPaymentAmountAndCurrency
         (ME.marketplaceOrderTotalUsdCents order)
         (ME.marketplaceOrderCurrency order)
         (dfpAmount statusResp)
         (dfpCurrency statusResp)
+    unless (dfpMerchantTransactionId statusResp == Just (toPathPiece orderKey)) $
+      throwError err502
+        { errBody = "Datafast merchant transaction reference does not match this order"
+        }
   paymentId <- either throwError pure (validateOptionalDatafastPaymentIdField (dfpId statusResp))
   resultDescription <- either throwError pure $
     validateOptionalDatafastMetadataField
@@ -14199,15 +14600,81 @@ confirmDatafastPayment mOrderId mResourcePath = do
     validateOptionalDatafastMetadataField
       "Datafast acquirer code"
       (dfpResultDetails statusResp >>= dfrdAcquirerCode)
+  runtimeRows <- liftIO $ flip runSqlPool envPool $
+    (rawSql
+      "SELECT checkout_id::text, create_idempotency_key\
+      \ FROM marketplace_sale_order_runtime WHERE order_id = ?::uuid"
+      [PersistText (toPathPiece orderKey)]
+      :: SqlPersistT IO [(Single Text, Single Text)])
+  case runtimeRows of
+    [(Single canonicalCheckoutId, Single createIdempotencyKey)] -> do
+      let checkout = Checkout.CheckoutReference canonicalCheckoutId
+      checkoutEnvironmentResult <- liftIO $ flip runSqlPool envPool $
+        Checkout.loadCheckoutEnvironment checkout
+      checkoutEnvironment <- either (throwError . marketplaceCheckoutInternal) pure
+        checkoutEnvironmentResult
+      unless (checkoutEnvironment == dfEnvironment dfEnv) $
+        throwError err500
+          { errBody = "DATAFAST_ENV does not match the stored checkout environment"
+          }
+      attemptResult <- liftIO $ flip runSqlPool envPool $
+        Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+          { Checkout.pacCheckout = checkout
+          , Checkout.pacProvider = Checkout.ProviderDatafast
+          , Checkout.pacEnvironment = checkoutEnvironment
+          , Checkout.pacOperation = Checkout.OperationCreate
+          , Checkout.pacAmountMinor = fromIntegral (ME.marketplaceOrderTotalUsdCents order)
+          , Checkout.pacCurrency = ME.marketplaceOrderCurrency order
+          , Checkout.pacMerchantRef = dfEntityId dfEnv
+          , Checkout.pacIdempotencyKey = createIdempotencyKey
+          , Checkout.pacCreatedAt = now
+          , Checkout.pacCorrelationId = "marketplace-datafast:" <> toPathPiece orderKey
+          }
+      attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
+      if success
+        then do
+          verified <- liftIO $ flip runSqlPool envPool $
+            Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+              { Checkout.vpAttempt = attempt
+              , Checkout.vpCheckout = checkout
+              , Checkout.vpProvider = Checkout.ProviderDatafast
+              , Checkout.vpEnvironment = checkoutEnvironment
+              , Checkout.vpMerchantRef = dfEntityId dfEnv
+              , Checkout.vpResourceType = "checkout"
+              , Checkout.vpProviderResource = fromMaybe "" (ME.marketplaceOrderDatafastCheckoutId order)
+              , Checkout.vpProviderResourcePath = Just resourcePathTxt
+              , Checkout.vpOrderReference = toPathPiece orderKey
+              , Checkout.vpAmountMinor = fromIntegral (ME.marketplaceOrderTotalUsdCents order)
+              , Checkout.vpCurrency = ME.marketplaceOrderCurrency order
+              , Checkout.vpEvidence = "server_to_server"
+              , Checkout.vpOccurredAt = now
+              , Checkout.vpCorrelationId = "marketplace-datafast:" <> toPathPiece orderKey
+              }
+          either (throwError . marketplaceCheckoutConflict) (const (pure ())) verified
+        else liftIO $ flip runSqlPool envPool $
+          if pending
+            then Checkout.recordPaymentProcessing checkout attempt Checkout.ProviderDatafast
+              ("marketplace-datafast:" <> toPathPiece orderKey) now
+            else Checkout.recordPaymentFailure checkout attempt Checkout.ProviderDatafast code
+              ("marketplace-datafast:" <> toPathPiece orderKey) now
+    [] -> pure ()
+    _ -> throwError (marketplaceCheckoutInternal
+      "Marketplace Datafast runtime lookup was ambiguous")
   let nextStatus
         | success = "paid"
         | pending = "datafast_pending"
         | otherwise = "datafast_failed"
-      paidAtVal = if success then Just now else ME.marketplaceOrderPaidAt order
-      updateFields =
-        [ ME.MarketplaceOrderStatus =. nextStatus
-        , ME.MarketplaceOrderPaymentProvider =. Just "datafast"
-        , ME.MarketplaceOrderPaidAt =. paidAtVal
+      legacyPaymentFields =
+        if null runtimeRows
+          then [ ME.MarketplaceOrderStatus =. nextStatus
+               , ME.MarketplaceOrderPaidAt =.
+                   (if success then Just now else ME.marketplaceOrderPaidAt order)
+               ]
+          else if success
+            then []
+            else [ME.MarketplaceOrderStatus =. nextStatus]
+      updateFields = legacyPaymentFields <>
+        [ ME.MarketplaceOrderPaymentProvider =. Just "datafast"
         , ME.MarketplaceOrderUpdatedAt =. now
         , ME.MarketplaceOrderDatafastResourcePath =. Just resourcePathTxt
         , ME.MarketplaceOrderDatafastPaymentId =. paymentId
@@ -14222,106 +14689,312 @@ confirmDatafastPayment mOrderId mResourcePath = do
   either throwError pure $
     requireLoadedMarketplacePublicOrderResponse "Marketplace order" mDto
 
-createPaypalOrder :: Text -> MarketplaceCheckoutReq -> AppM PaypalCreateDTO
-createPaypalOrder rawId MarketplaceCheckoutReq{..} = do
-  nameTxt <- either throwError pure (validateMarketplaceBuyerName mcrBuyerName)
-  emailTxt <- either throwError pure (validateMarketplaceBuyerEmail mcrBuyerEmail)
-  phoneTxt <- either throwError pure (validateMarketplaceBuyerPhone mcrBuyerPhone)
-  cartKey <- parseCartId rawId
+createPaypalOrder :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM PaypalCreateDTO
+createPaypalOrder rawId mIdempotency payload = do
+  context <- prepareMarketplaceSaleCheckout "paypal" rawId mIdempotency payload
+  (cid, sec, baseUrl, paypalEnvironment, merchantRef) <-
+    ServiceStorefront.loadPaypalEnvForService
+  unless (paypalEnvironment == msccEnvironment context) $
+    throwError err500
+      { errBody = "PAYPAL_ENV must match COMMERCE_CHECKOUT_ENV for marketplace checkout"
+      }
   now <- liftIO getCurrentTime
   Env{ envPool } <- ask
-  cartTotalsState <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
-  (cartItems, totalCentsRaw, currency) <-
-    either throwError pure (requireMarketplaceCartTotals cartTotalsState)
-  totalCents <-
-    either throwError pure (validateMarketplaceOnlinePaymentTotal totalCentsRaw)
-  (cid, sec, baseUrl) <- loadPaypalEnv
-  manager <- pure sharedTlsManager
-  (ppOrderId, approvalUrl) <- createPaypalOrderRemote manager cid sec baseUrl totalCents currency nameTxt emailTxt
-  orderId <- liftIO $ flip runSqlPool envPool $ do
-    oid <- insert ME.MarketplaceOrder
-      { ME.marketplaceOrderCartId        = Just cartKey
-      , ME.marketplaceOrderBuyerName     = nameTxt
-      , ME.marketplaceOrderBuyerEmail    = emailTxt
-      , ME.marketplaceOrderBuyerPhone    = phoneTxt
-      , ME.marketplaceOrderTotalUsdCents = totalCents
-      , ME.marketplaceOrderCurrency      = currency
-      , ME.marketplaceOrderStatus        = "paypal_pending"
-      , ME.marketplaceOrderPaymentProvider = Just "paypal"
-      , ME.marketplaceOrderStripePaymentIntentId = Nothing
-      , ME.marketplaceOrderStripeIdempotencyKey = Nothing
-      , ME.marketplaceOrderPaypalOrderId = Just ppOrderId
-      , ME.marketplaceOrderPaypalPayerEmail = Nothing
-      , ME.marketplaceOrderDatafastCheckoutId = Nothing
-      , ME.marketplaceOrderDatafastResourcePath = Nothing
-      , ME.marketplaceOrderDatafastPaymentId = Nothing
-      , ME.marketplaceOrderDatafastResultCode = Nothing
-      , ME.marketplaceOrderDatafastResultDescription = Nothing
-      , ME.marketplaceOrderDatafastPaymentBrand = Nothing
-      , ME.marketplaceOrderDatafastAuthCode = Nothing
-      , ME.marketplaceOrderDatafastAcquirerCode = Nothing
-      , ME.marketplaceOrderPaidAt        = Nothing
-      , ME.marketplaceOrderCreatedAt     = now
-      , ME.marketplaceOrderUpdatedAt     = now
+  providerEnabled <- liftIO $ flip runSqlPool envPool $
+    Checkout.providerEnabledForEnvironment (msccEnvironment context) Checkout.ProviderPayPal
+  unless providerEnabled $
+    throwError err503 { errBody = "PayPal checkout is disabled in this environment" }
+  attemptResult <- liftIO $ flip runSqlPool envPool $
+    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+      { Checkout.pacCheckout = msccCheckout context
+      , Checkout.pacProvider = Checkout.ProviderPayPal
+      , Checkout.pacEnvironment = msccEnvironment context
+      , Checkout.pacOperation = Checkout.OperationCreate
+      , Checkout.pacAmountMinor = fromIntegral (msccTotalCents context)
+      , Checkout.pacCurrency = msccCurrency context
+      , Checkout.pacMerchantRef = merchantRef
+      , Checkout.pacIdempotencyKey = msccIdempotencyKey context
+      , Checkout.pacCreatedAt = now
+      , Checkout.pacCorrelationId = "marketplace-paypal:" <> toPathPiece (msccOrderKey context)
       }
-    forM_ cartItems $ \(_, listingEnt, _, qty) -> do
-      let listing   = entityVal listingEnt
-          unitPrice = ME.marketplaceListingPriceUsdCents listing
-          subtotal  = unitPrice * qty
-      void $ insert ME.MarketplaceOrderItem
-        { ME.marketplaceOrderItemOrderId           = oid
-        , ME.marketplaceOrderItemListingId         = entityKey listingEnt
-        , ME.marketplaceOrderItemQuantity          = qty
-        , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
-        , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
-        }
-    pure oid
+  attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
+  mOrder <- liftIO $ flip runSqlPool envPool $ get (msccOrderKey context)
+  order <- maybe (throwError marketplaceOrderNotFound) pure mOrder
+  (ppOrderId, approvalUrl) <- case ME.marketplaceOrderPaypalOrderId order of
+    Just storedOrderId -> pure (storedOrderId, Nothing)
+    Nothing -> ServiceStorefront.createPaypalOrderRemoteForService
+      sharedTlsManager cid sec baseUrl
+      (toPathPiece (msccOrderKey context))
+      (msccTotalCents context)
+      (msccCurrency context)
+      (ME.marketplaceOrderBuyerName order)
+      (ME.marketplaceOrderBuyerEmail order)
+  bindingResult <- liftIO $ flip runSqlPool envPool $ do
+    result <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
+      { Checkout.pbcAttempt = attempt
+      , Checkout.pbcCheckout = msccCheckout context
+      , Checkout.pbcProvider = Checkout.ProviderPayPal
+      , Checkout.pbcEnvironment = msccEnvironment context
+      , Checkout.pbcMerchantRef = merchantRef
+      , Checkout.pbcResourceType = "order"
+      , Checkout.pbcProviderResource = ppOrderId
+      , Checkout.pbcResourcePath = Just ("/v2/checkout/orders/" <> ppOrderId)
+      , Checkout.pbcOrderReference = toPathPiece (msccOrderKey context)
+      , Checkout.pbcAmountMinor = fromIntegral (msccTotalCents context)
+      , Checkout.pbcCurrency = msccCurrency context
+      , Checkout.pbcStage = Checkout.AttemptRequiresCustomerAction
+      , Checkout.pbcOccurredAt = now
+      , Checkout.pbcCorrelationId = "marketplace-paypal:" <> toPathPiece (msccOrderKey context)
+      }
+    case result of
+      Left err -> pure (Left err)
+      Right () -> do
+        update (msccOrderKey context)
+          [ ME.MarketplaceOrderStatus =. "paypal_pending"
+          , ME.MarketplaceOrderPaymentProvider =. Just "paypal"
+          , ME.MarketplaceOrderPaypalOrderId =. Just ppOrderId
+          , ME.MarketplaceOrderUpdatedAt =. now
+          ]
+        pure (Right ())
+  either (throwError . marketplaceCheckoutConflict) pure bindingResult
   pure PaypalCreateDTO
-    { pcOrderId = toPathPiece orderId
+    { pcOrderId = toPathPiece (msccOrderKey context)
     , pcPaypalOrderId = ppOrderId
     , pcApprovalUrl = approvalUrl
+    , pcLookupToken = Just (msccLookupToken context)
     }
 
-capturePaypalOrder :: PaypalCaptureReq -> AppM MarketplaceOrderDTO
-capturePaypalOrder PaypalCaptureReq{..} = do
+capturePaypalOrder :: Maybe Text -> PaypalCaptureReq -> AppM MarketplaceOrderDTO
+capturePaypalOrder mLookupToken PaypalCaptureReq{..} = do
   orderKey <- parseOrderId pcCaptureOrderId
+  requireMarketplaceOrderLookupToken orderKey mLookupToken
   paypalOrderId <- either throwError pure (validatePayPalCaptureOrderId pcCapturePaypalId)
   Env{ envPool } <- ask
   mOrder <- liftIO $ flip runSqlPool envPool $ get orderKey
-  case mOrder of
-    Nothing -> throwError err404
-    Just order -> do
-      paypalOrderIdForCapture <- either throwError pure $
-        validatePayPalCaptureOrderReference
-          (ME.marketplaceOrderPaypalOrderId order)
-          paypalOrderId
-      (cid, sec, baseUrl) <- loadPaypalEnv
-      manager <- pure sharedTlsManager
-      PayPalCaptureOutcome statusTxt payerEmail <-
-        capturePaypalOrderRemote manager cid sec baseUrl paypalOrderIdForCapture
-      now <- liftIO getCurrentTime
-      nextStatus <- either throwError pure (parsePayPalCaptureOrderStatus statusTxt)
-      let paidAtVal =
-            if nextStatus == "paid"
-              then Just now
-              else ME.marketplaceOrderPaidAt order
-      liftIO $ flip runSqlPool envPool $ update orderKey
-        [ ME.MarketplaceOrderStatus =. nextStatus
-        , ME.MarketplaceOrderPaypalOrderId =. Just paypalOrderId
-        , ME.MarketplaceOrderPaymentProvider =. Just "paypal"
-        , ME.MarketplaceOrderPaypalPayerEmail =. (payerEmail <|> ME.marketplaceOrderPaypalPayerEmail order)
-        , ME.MarketplaceOrderPaidAt =. paidAtVal
+  order <- maybe (throwError marketplaceOrderNotFound) pure mOrder
+  paypalOrderIdForCapture <- either throwError pure $
+    validatePayPalCaptureOrderReference
+      (ME.marketplaceOrderPaypalOrderId order)
+      paypalOrderId
+  runtimeRows <- liftIO $ flip runSqlPool envPool $
+    (rawSql
+      "SELECT runtime.checkout_id::text, runtime.create_idempotency_key, checkout.status\
+      \ FROM marketplace_sale_order_runtime runtime\
+      \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+      \ WHERE runtime.order_id = ?::uuid"
+      [PersistText (toPathPiece orderKey)]
+      :: SqlPersistT IO [(Single Text, Single Text, Single Text)])
+  case runtimeRows of
+    [(Single canonicalCheckoutId, Single createIdempotencyKey, Single checkoutStatus)]
+      | checkoutStatus == "paid" -> do
+          mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
+          either throwError pure $
+            requireLoadedMarketplacePublicOrderResponse "Marketplace order" mDto
+      | otherwise -> captureCanonicalPaypalOrder
+          orderKey order canonicalCheckoutId createIdempotencyKey paypalOrderIdForCapture
+    [] -> captureLegacyPaypalOrder orderKey order paypalOrderIdForCapture
+    _ -> throwError (marketplaceCheckoutInternal
+      "Marketplace PayPal runtime lookup was ambiguous")
+
+captureCanonicalPaypalOrder
+  :: Key ME.MarketplaceOrder
+  -> ME.MarketplaceOrder
+  -> Text
+  -> Text
+  -> Text
+  -> AppM MarketplaceOrderDTO
+captureCanonicalPaypalOrder orderKey order canonicalCheckoutId createIdempotencyKey paypalOrderId = do
+  Env{ envPool } <- ask
+  now <- liftIO getCurrentTime
+  (cid, sec, baseUrl, paypalEnvironment, merchantRef) <-
+    ServiceStorefront.loadPaypalEnvForService
+  let checkout = Checkout.CheckoutReference canonicalCheckoutId
+      captureIdempotencyKey = marketplaceSha256Text ("capture:" <> createIdempotencyKey)
+      correlationId = "marketplace-paypal-capture:" <> toPathPiece orderKey
+  storedEnvironmentResult <- liftIO $ flip runSqlPool envPool $
+    Checkout.loadCheckoutEnvironment checkout
+  storedEnvironment <- either (throwError . marketplaceCheckoutInternal) pure
+    storedEnvironmentResult
+  unless (storedEnvironment == paypalEnvironment) $
+    throwError err500
+      { errBody = "PAYPAL_ENV does not match the stored checkout environment"
+      }
+  attemptResult <- liftIO $ flip runSqlPool envPool $
+    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+      { Checkout.pacCheckout = checkout
+      , Checkout.pacProvider = Checkout.ProviderPayPal
+      , Checkout.pacEnvironment = paypalEnvironment
+      , Checkout.pacOperation = Checkout.OperationCapture
+      , Checkout.pacAmountMinor = fromIntegral (ME.marketplaceOrderTotalUsdCents order)
+      , Checkout.pacCurrency = ME.marketplaceOrderCurrency order
+      , Checkout.pacMerchantRef = merchantRef
+      , Checkout.pacIdempotencyKey = captureIdempotencyKey
+      , Checkout.pacCreatedAt = now
+      , Checkout.pacCorrelationId = correlationId
+      }
+  attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
+  outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
+    sharedTlsManager cid sec baseUrl paypalOrderId
+    `catchError` \serverErr -> do
+      liftIO $ flip runSqlPool envPool $
+        Checkout.recordPaymentFailure checkout attempt Checkout.ProviderPayPal
+          "paypal_capture_request" correlationId now
+      throwError serverErr
+  let status = ServiceStorefront.spcoStatus outcome
+  case status of
+    "COMPLETED" -> do
+      case ServiceStorefront.validatePaypalSuccessfulCapture
+        (toPathPiece orderKey)
+        (ME.marketplaceOrderTotalUsdCents order)
+        (ME.marketplaceOrderCurrency order)
+        merchantRef
+        outcome of
+          Left validationMessage -> do
+            liftIO $ flip runSqlPool envPool $ do
+              Checkout.recordReconciliationException
+                Checkout.ProviderPayPal paypalEnvironment merchantRef
+                "provider_binding_mismatch" (toPathPiece orderKey) paypalOrderId
+                (fromIntegral (ME.marketplaceOrderTotalUsdCents order)) Nothing
+                (ME.marketplaceOrderCurrency order) now
+              Checkout.recordPaymentFailure checkout attempt Checkout.ProviderPayPal
+                "provider_binding_mismatch" correlationId now
+            throwError err502
+              { errBody = BL.fromStrict (TE.encodeUtf8 validationMessage)
+              }
+          Right () -> pure ()
+      captureId <- maybe
+        (throwError err502 { errBody = "PayPal capture ID is missing" })
+        pure
+        (ServiceStorefront.spcoCaptureId outcome)
+      result <- liftIO $ flip runSqlPool envPool $ do
+        binding <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
+          { Checkout.pbcAttempt = attempt
+          , Checkout.pbcCheckout = checkout
+          , Checkout.pbcProvider = Checkout.ProviderPayPal
+          , Checkout.pbcEnvironment = paypalEnvironment
+          , Checkout.pbcMerchantRef = merchantRef
+          , Checkout.pbcResourceType = "capture"
+          , Checkout.pbcProviderResource = captureId
+          , Checkout.pbcResourcePath = Just
+              ("/v2/checkout/orders/" <> paypalOrderId <> "/capture")
+          , Checkout.pbcOrderReference = toPathPiece orderKey
+          , Checkout.pbcAmountMinor = fromIntegral (ME.marketplaceOrderTotalUsdCents order)
+          , Checkout.pbcCurrency = ME.marketplaceOrderCurrency order
+          , Checkout.pbcStage = Checkout.AttemptProcessing
+          , Checkout.pbcOccurredAt = now
+          , Checkout.pbcCorrelationId = correlationId
+          }
+        case binding of
+          Left message -> pure (Left message)
+          Right () -> do
+            verified <- Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+              { Checkout.vpAttempt = attempt
+              , Checkout.vpCheckout = checkout
+              , Checkout.vpProvider = Checkout.ProviderPayPal
+              , Checkout.vpEnvironment = paypalEnvironment
+              , Checkout.vpMerchantRef = merchantRef
+              , Checkout.vpResourceType = "capture"
+              , Checkout.vpProviderResource = captureId
+              , Checkout.vpProviderResourcePath = Just
+                  ("/v2/checkout/orders/" <> paypalOrderId <> "/capture")
+              , Checkout.vpOrderReference = toPathPiece orderKey
+              , Checkout.vpAmountMinor = fromIntegral (ME.marketplaceOrderTotalUsdCents order)
+              , Checkout.vpCurrency = ME.marketplaceOrderCurrency order
+              , Checkout.vpEvidence = "server_to_server"
+              , Checkout.vpOccurredAt = now
+              , Checkout.vpCorrelationId = correlationId
+              }
+            case verified of
+              Left message -> pure (Left message)
+              Right _ -> do
+                update orderKey
+                  [ ME.MarketplaceOrderPaypalPayerEmail =.
+                      (ServiceStorefront.spcoPayerEmail outcome <|>
+                        ME.marketplaceOrderPaypalPayerEmail order)
+                  , ME.MarketplaceOrderUpdatedAt =. now
+                  ]
+                pure (Right ())
+      either (throwError . marketplaceCheckoutConflict) pure result
+    "APPROVED" -> recordPendingPaypalCapture
+      checkout attempt orderKey order outcome correlationId now
+    "PENDING" -> recordPendingPaypalCapture
+      checkout attempt orderKey order outcome correlationId now
+    _ -> liftIO $ flip runSqlPool envPool $ do
+      Checkout.recordPaymentFailure checkout attempt Checkout.ProviderPayPal
+        ("paypal_" <> T.toLower status) correlationId now
+      update orderKey
+        [ ME.MarketplaceOrderStatus =. "paypal_failed"
         , ME.MarketplaceOrderUpdatedAt =. now
         ]
-      mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
-      either throwError pure $
-        requireLoadedMarketplacePublicOrderResponse "Marketplace order" mDto
+  mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
+  either throwError pure $
+    requireLoadedMarketplacePublicOrderResponse "Marketplace order" mDto
+
+recordPendingPaypalCapture
+  :: Checkout.CheckoutReference
+  -> Checkout.PaymentAttemptReference
+  -> Key ME.MarketplaceOrder
+  -> ME.MarketplaceOrder
+  -> ServiceStorefront.ServicePaypalCaptureOutcome
+  -> Text
+  -> UTCTime
+  -> AppM ()
+recordPendingPaypalCapture checkout attempt orderKey order outcome correlationId now = do
+  Env{ envPool } <- ask
+  liftIO $ flip runSqlPool envPool $ do
+    Checkout.recordPaymentProcessing checkout attempt Checkout.ProviderPayPal correlationId now
+    update orderKey
+      [ ME.MarketplaceOrderStatus =. "paypal_pending"
+      , ME.MarketplaceOrderPaypalPayerEmail =.
+          (ServiceStorefront.spcoPayerEmail outcome <|>
+            ME.marketplaceOrderPaypalPayerEmail order)
+      , ME.MarketplaceOrderUpdatedAt =. now
+      ]
+
+captureLegacyPaypalOrder
+  :: Key ME.MarketplaceOrder
+  -> ME.MarketplaceOrder
+  -> Text
+  -> AppM MarketplaceOrderDTO
+captureLegacyPaypalOrder orderKey order paypalOrderId = do
+  Env{ envPool } <- ask
+  (cid, sec, baseUrl, _, merchantRef) <- ServiceStorefront.loadPaypalEnvForService
+  outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
+    sharedTlsManager cid sec baseUrl paypalOrderId
+  now <- liftIO getCurrentTime
+  let status = ServiceStorefront.spcoStatus outcome
+      nextStatus
+        | status == "COMPLETED" = "paid"
+        | status `elem` ["APPROVED", "PENDING"] = "paypal_pending"
+        | otherwise = "paypal_failed"
+  when (status == "COMPLETED") $
+    either (throwError . marketplaceCheckoutConflict) pure $
+      ServiceStorefront.validatePaypalSuccessfulCapture
+        (toPathPiece orderKey)
+        (ME.marketplaceOrderTotalUsdCents order)
+        (ME.marketplaceOrderCurrency order)
+        merchantRef
+        outcome
+  liftIO $ flip runSqlPool envPool $ update orderKey
+    [ ME.MarketplaceOrderStatus =. nextStatus
+    , ME.MarketplaceOrderPaymentProvider =. Just "paypal"
+    , ME.MarketplaceOrderPaypalPayerEmail =.
+        (ServiceStorefront.spcoPayerEmail outcome <|>
+          ME.marketplaceOrderPaypalPayerEmail order)
+    , ME.MarketplaceOrderPaidAt =.
+        (if status == "COMPLETED" then Just now else ME.marketplaceOrderPaidAt order)
+    , ME.MarketplaceOrderUpdatedAt =. now
+    ]
+  mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
+  either throwError pure $
+    requireLoadedMarketplacePublicOrderResponse "Marketplace order" mDto
 
 requestDatafastCheckout :: Key ME.MarketplaceOrder -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
 requestDatafastCheckout orderKey totalCents currency name email mPhone = do
   dfEnv <- loadDatafastEnv
   manager <- pure sharedTlsManager
-  let amountTxt = T.pack (printf "%.2f" (fromIntegral totalCents / 100 :: Double))
+  let amountTxt = Internationalization.formatMinorUnitsDecimal
+        currency (fromIntegral totalCents)
       currencyTxt = T.toUpper (T.strip currency)
       (givenName, surname) = splitName name
       baseParams =
@@ -14702,6 +15375,15 @@ updateMarketplaceOrder user rawId MarketplaceOrderUpdate{..} = do
   now <- liftIO getCurrentTime
   paidAtInput <- either throwError pure (validateMarketplaceOrderPaidAtUpdate now mouPaidAt)
   Env{..} <- ask
+  when (nextStatus == Just "paid") $ do
+    canonicalRuntime <- liftIO $ flip runSqlPool envPool $
+      (rawSql
+        "SELECT 1::bigint FROM marketplace_sale_order_runtime WHERE order_id = ?::uuid"
+        [PersistText (toPathPiece orderKey)] :: SqlPersistT IO [Single Int64])
+    unless (null canonicalRuntime) $
+      throwError err409
+        { errBody = "Canonical marketplace payments can only become paid from verified provider evidence"
+        }
   mDto <- liftIO $ flip runSqlPool envPool $ do
     mOrder <- get orderKey
     case mOrder of
@@ -14738,6 +15420,95 @@ updateMarketplaceOrder user rawId MarketplaceOrderUpdate{..} = do
         loadOrderDTO orderKey
   either throwError pure (requireMarketplaceOrderLookupResult mDto)
 
+updateMarketplaceFulfillment
+  :: AuthedUser
+  -> Text
+  -> MarketplaceFulfillmentUpdate
+  -> AppM MarketplaceOrderDTO
+updateMarketplaceFulfillment user rawId MarketplaceFulfillmentUpdate{..} = do
+  requireMarketplaceAccess user
+  orderKey <- parseOrderId rawId
+  nextState <- either (throwError . marketplaceCheckoutBadRequest) pure
+    (MarketplaceSales.parseMarketplaceFulfillmentState mfuStatus)
+  carrier <- either throwError pure
+    (normalizeMarketplaceFulfillmentField "carrier" 120 mfuCarrier)
+  trackingReference <- either throwError pure
+    (normalizeMarketplaceFulfillmentField "trackingReference" 160 mfuTrackingReference)
+  reasonCode <- either throwError pure
+    (normalizeMarketplaceFulfillmentField "reasonCode" 80 mfuReasonCode)
+  notes <- either throwError pure
+    (normalizeMarketplaceFulfillmentField "notes" 500 mfuNotes)
+  Env{ envPool } <- ask
+  runtimeRows <- liftIO $ flip runSqlPool envPool $
+    (rawSql
+      "SELECT fulfillment_method, fulfillment_status, tracking_reference\
+      \ FROM marketplace_sale_order_runtime WHERE order_id = ?::uuid"
+      [PersistText (toPathPiece orderKey)]
+      :: SqlPersistT IO [(Single Text, Single Text, Single (Maybe Text))])
+  (methodText, currentStateText, storedTracking) <- case runtimeRows of
+    [(Single methodValue, Single statusValue, Single trackingValue)] ->
+      pure (methodValue, statusValue, trackingValue)
+    [] -> throwError err409
+      { errBody = "This historical order is not linked to the marketplace fulfillment runtime"
+      }
+    _ -> throwError (marketplaceCheckoutInternal
+      "Marketplace fulfillment runtime lookup was ambiguous")
+  method <- either (throwError . marketplaceCheckoutInternal) pure
+    (MarketplaceSales.parseMarketplaceFulfillmentMethod methodText)
+  currentState <- either (throwError . marketplaceCheckoutInternal) pure
+    (MarketplaceSales.parseMarketplaceFulfillmentState currentStateText)
+  either (throwError . marketplaceCheckoutConflict) pure
+    (MarketplaceSales.validateMarketplaceFulfillmentTransition method currentState nextState)
+  when (nextState == MarketplaceSales.MarketplaceShipped
+      && isNothing (trackingReference <|> storedTracking)) $
+    throwError err400 { errBody = "Tracking reference is required before an order is shipped" }
+  let nextStateText = MarketplaceSales.marketplaceFulfillmentStateText nextState
+      actorId = toPathPiece (auPartyId user)
+  updatedRows <- liftIO $ flip runSqlPool envPool $
+    (rawSql
+      "WITH actor_context AS MATERIALIZED (\
+      \ SELECT set_config('tdf.actor_type', 'operator', true),\
+      \ set_config('tdf.actor_id', ?, true),\
+      \ set_config('tdf.reason_code', ?, true),\
+      \ set_config('tdf.notes', ?, true)\
+      \) UPDATE marketplace_sale_order_runtime SET fulfillment_status = ?,\
+      \ carrier = COALESCE(?, carrier),\
+      \ tracking_reference = COALESCE(?, tracking_reference)\
+      \ FROM actor_context WHERE order_id = ?::uuid AND fulfillment_status = ?\
+      \ RETURNING marketplace_sale_order_runtime.fulfillment_status"
+      [ PersistText actorId
+      , PersistText (fromMaybe "" reasonCode)
+      , PersistText (fromMaybe "" notes)
+      , PersistText nextStateText
+      , maybe PersistNull PersistText carrier
+      , maybe PersistNull PersistText trackingReference
+      , PersistText (toPathPiece orderKey)
+      , PersistText currentStateText
+      ] :: SqlPersistT IO [Single Text])
+  when (null updatedRows) $
+    throwError (marketplaceCheckoutConflict
+      "Marketplace fulfillment state changed concurrently; reload the order before retrying")
+  mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
+  either throwError pure (requireLoadedMarketplaceWriteResult "Marketplace order" mDto)
+
+normalizeMarketplaceFulfillmentField
+  :: Text
+  -> Int
+  -> Maybe Text
+  -> Either ServerError (Maybe Text)
+normalizeMarketplaceFulfillmentField _ _ Nothing = Right Nothing
+normalizeMarketplaceFulfillmentField fieldName maxLength (Just rawValue)
+  | T.null value = Left invalid
+  | T.length value > maxLength = Left invalid
+  | T.any (\ch -> isControl ch || generalCategory ch == Format) value = Left invalid
+  | otherwise = Right (Just value)
+  where
+    value = T.strip rawValue
+    invalid = err400
+      { errBody = BL.fromStrict . TE.encodeUtf8 $
+          fieldName <> " must contain 1 to " <> T.pack (show maxLength) <> " safe characters"
+      }
+
 validateMarketplaceStripeAdminUpdate
   :: Text
   -> Maybe Text
@@ -14759,9 +15530,10 @@ validateMarketplaceStripeAdminUpdate currentStatus currentProvider nextStatus ne
     finalStatus = fromMaybe currentStatus nextStatus
     finalProvider = fromMaybe currentProvider nextProvider
 
-getOrder :: Text -> AppM MarketplaceOrderDTO
-getOrder rawId = do
+getOrder :: Text -> Maybe Text -> AppM MarketplaceOrderDTO
+getOrder rawId mLookupToken = do
   orderKey <- parseOrderId rawId
+  requireMarketplaceOrderLookupToken orderKey mLookupToken
   Env{..} <- ask
   mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
   orderDto <- either throwError pure (requireMarketplaceOrderLookupResult mDto)
@@ -14776,7 +15548,27 @@ redactMarketplaceOrderForPublicLookup orderDto =
     , moBuyerPhone = Nothing
     , moPaypalOrderId = Nothing
     , moPaypalPayerEmail = Nothing
+    , moLookupToken = Nothing
     }
+
+requireMarketplaceOrderLookupToken
+  :: Key ME.MarketplaceOrder
+  -> Maybe Text
+  -> AppM ()
+requireMarketplaceOrderLookupToken orderKey mRawToken = do
+  Env{ envPool } <- ask
+  storedHashes <- liftIO $ flip runSqlPool envPool $
+    (rawSql
+      "SELECT lookup_token_hash FROM marketplace_sale_order_runtime WHERE order_id = ?::uuid"
+      [PersistText (toPathPiece orderKey)] :: SqlPersistT IO [Single Text])
+  case storedHashes of
+    [] -> pure ()
+    [Single expectedHash]
+      | Just rawToken <- T.strip <$> mRawToken
+      , not (T.null rawToken)
+      , TE.encodeUtf8 expectedHash `constEq`
+          TE.encodeUtf8 (marketplaceSha256Text rawToken) -> pure ()
+    _ -> throwError marketplaceOrderNotFound
 
 parseOrderId :: Text -> AppM (Key ME.MarketplaceOrder)
 parseOrderId rawId = do
@@ -15068,7 +15860,33 @@ loadOrderDTO orderId = do
       listings <- forM orderItems $ \(Entity _ oi) -> do
         mListing <- get (ME.marketplaceOrderItemListingId oi)
         pure (oi, mListing)
-      pure (Just (orderToDTO orderEnt listings))
+      runtimeRows <- (rawSql
+        "SELECT checkout.status, runtime.fulfillment_method, runtime.fulfillment_status,\
+        \ runtime.hold_expires_at, runtime.tracking_reference\
+        \ FROM marketplace_sale_order_runtime runtime\
+        \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+        \ WHERE runtime.order_id = ?::uuid"
+        [PersistText (toPathPiece orderId)]
+        :: SqlPersistT IO
+          [(Single Text, Single Text, Single Text, Single UTCTime, Single (Maybe Text))])
+      fulfillmentHistory <- (rawSql
+        "SELECT to_status, created_at FROM marketplace_sale_fulfillment_event\
+        \ WHERE order_id = ?::uuid ORDER BY created_at, id"
+        [PersistText (toPathPiece orderId)]
+        :: SqlPersistT IO [(Single Text, Single UTCTime)])
+      let baseDto = orderToDTO orderEnt listings
+          history = [(status, occurredAt) | (Single status, Single occurredAt) <- fulfillmentHistory]
+      pure . Just $ case runtimeRows of
+        [(Single checkoutStatus, Single method, Single fulfillmentStatus, Single holdExpiresAt, Single trackingReference)] ->
+          baseDto
+            { moCheckoutStatus = Just checkoutStatus
+            , moFulfillmentMethod = Just method
+            , moFulfillmentStatus = Just fulfillmentStatus
+            , moHoldExpiresAt = Just holdExpiresAt
+            , moTrackingReference = trackingReference
+            , moFulfillmentHistory = history
+            }
+        _ -> baseDto
 
 orderToDTO
   :: Entity ME.MarketplaceOrder
@@ -15102,6 +15920,13 @@ orderToDTO (Entity oid order) items =
     , moPaypalOrderId   = ME.marketplaceOrderPaypalOrderId order
     , moPaypalPayerEmail = ME.marketplaceOrderPaypalPayerEmail order
     , moPaidAt          = ME.marketplaceOrderPaidAt order
+    , moLookupToken     = Nothing
+    , moCheckoutStatus  = Nothing
+    , moFulfillmentMethod = Nothing
+    , moFulfillmentStatus = Nothing
+    , moHoldExpiresAt   = Nothing
+    , moTrackingReference = Nothing
+    , moFulfillmentHistory = []
     , moCreatedAt       = ME.marketplaceOrderCreatedAt order
     , moUpdatedAt       = ME.marketplaceOrderUpdatedAt order
     , moItems           = itemDtos
@@ -15109,8 +15934,12 @@ orderToDTO (Entity oid order) items =
 
 formatUsd :: Int -> Text -> Text
 formatUsd cents currency =
-  let amount = (fromIntegral cents :: Double) / 100
-  in T.pack (printf "%s $%.2f" (T.unpack (T.toUpper currency)) amount)
+  let wholeUnits = cents `div` 100
+      fractionalUnits = cents `mod` 100
+      fractionText
+        | fractionalUnits < 10 = "0" <> T.pack (show fractionalUnits)
+        | otherwise = T.pack (show fractionalUnits)
+  in T.toUpper currency <> " $" <> T.pack (show wholeUnits) <> "." <> fractionText
 
 -- Datafast / OPPWA types and helpers
 data DFResult = DFResult
@@ -15145,6 +15974,7 @@ data DFPaymentStatus = DFPaymentStatus
   , dfpPaymentBrand  :: Maybe Text
   , dfpAmount        :: Maybe Text
   , dfpCurrency      :: Maybe Text
+  , dfpMerchantTransactionId :: Maybe Text
   , dfpResult        :: DFResult
   , dfpResultDetails :: Maybe DFResultDetails
   } deriving (Show, Generic)
@@ -15156,6 +15986,7 @@ instance FromJSON DFPaymentStatus where
       <*> o .:? "paymentBrand"
       <*> o .:? "amount"
       <*> o .:? "currency"
+      <*> o .:? "merchantTransactionId"
       <*> o .:  "result"
       <*> o .:? "resultDetails"
 
@@ -15165,6 +15996,7 @@ data DatafastEnv = DatafastEnv
   , dfBaseUrl      :: String
   , dfTestMode     :: Maybe Text
   , dfExtraParams  :: [(ByteString, ByteString)]
+  , dfEnvironment  :: Checkout.CheckoutEnvironment
   } deriving (Show)
 
 loadDatafastEnv :: AppM DatafastEnv
@@ -15173,6 +16005,7 @@ loadDatafastEnv = do
   mBearer <- liftIO $ lookupEnv "DATAFAST_BEARER_TOKEN"
   mBase   <- liftIO $ lookupEnv "DATAFAST_BASE_URL"
   mTest   <- liftIO $ lookupEnv "DATAFAST_TEST_MODE"
+  mEnvironment <- liftIO $ lookupEnv "DATAFAST_ENV"
   mMid    <- liftIO $ lookupEnv "DATAFAST_MID"
   mTid    <- liftIO $ lookupEnv "DATAFAST_TID"
   mPserv  <- liftIO $ lookupEnv "DATAFAST_PSERV"
@@ -15189,6 +16022,13 @@ loadDatafastEnv = do
   userData2Val <-
     either throwError pure (validateOptionalDatafastCredential "DATAFAST_USER_DATA2" mUserData2)
   versionDf <- either throwError pure (validateOptionalDatafastVersionDf mVersionDf)
+  environment <- either (throwError . marketplaceCheckoutInternal) pure
+    (Checkout.resolveCheckoutEnvironment mEnvironment)
+  either (throwError . marketplaceCheckoutInternal) pure
+    (ServiceStorefront.validateDatafastEnvironmentBase environment baseUrl)
+  when (environment == Checkout.CheckoutProduction && isJust testModeVal) $
+    throwError (marketplaceCheckoutInternal
+      "DATAFAST_TEST_MODE must be unset when DATAFAST_ENV=production")
   let
       optPair k mv = (\v -> (k, TE.encodeUtf8 v)) <$> mv
       extras =
@@ -15205,6 +16045,7 @@ loadDatafastEnv = do
     , dfBaseUrl = baseUrl
     , dfTestMode = testModeVal
     , dfExtraParams = extras
+    , dfEnvironment = environment
     }
 
 validateDatafastCredential :: Text -> Maybe String -> Either ServerError Text
@@ -15823,6 +16664,7 @@ assetStatusLabel st =
     ME.Booked            -> "Reservado"
     ME.OutForMaintenance -> "Mantenimiento"
     ME.Retired           -> "No disponible"
+    ME.Sold              -> "Vendido"
 
 assetConditionLabel :: ME.AssetCondition -> Text
 assetConditionLabel cond =

@@ -1468,6 +1468,7 @@ data StripePaymentIntentDTO = StripePaymentIntentDTO
     , spiAmountCents :: Int
     , spiCurrency :: Text
     , spiPaymentSheet :: Maybe PaymentSheetParamsDTO
+    , spiLookupToken :: Maybe Text
     -- ^ Present only when the request supplied @ticketPurchaseMobileSdkStripeVersion@.
     -- Carries the extra parameters mobile PaymentSheet needs (customer, ephemeral
     -- key, publishable key) so the client can call @initPaymentSheet@.

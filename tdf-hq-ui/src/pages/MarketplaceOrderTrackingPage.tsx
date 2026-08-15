@@ -17,7 +17,7 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import type { MarketplaceOrderDTO } from '../api/types';
-import { Marketplace } from '../api/marketplace';
+import { Marketplace, loadMarketplaceLookupToken } from '../api/marketplace';
 import { getOrderStatusMeta } from '../utils/marketplace';
 
 export default function MarketplaceOrderTrackingPage() {
@@ -32,7 +32,9 @@ export default function MarketplaceOrderTrackingPage() {
         return;
       }
       try {
-        const dto = await Marketplace.getOrder(orderId);
+        const lookupToken = loadMarketplaceLookupToken(orderId);
+        if (!lookupToken) throw new Error('Missing secure order lookup token');
+        const dto = await Marketplace.getOrder(orderId, lookupToken);
         setOrder(dto);
         setStatus('success');
       } catch {
@@ -43,13 +45,13 @@ export default function MarketplaceOrderTrackingPage() {
   }, [orderId]);
 
   const timeline = useMemo(() => order?.moStatusHistory ?? [], [order]);
+  const fulfillmentTimeline = useMemo(() => order?.moFulfillmentHistory ?? [], [order]);
   const currentStatusMeta = useMemo(() => getOrderStatusMeta(order?.moStatus ?? ''), [order?.moStatus]);
 
-  const copyLink = () => {
+  const copyOrderId = () => {
     if (typeof window === 'undefined') return;
-    const url = window.location.href;
-    if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(url).catch((err) => logger.warn('No se pudo copiar el enlace de seguimiento', err));
+    if (orderId && navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(orderId).catch((err) => logger.warn('No se pudo copiar el ID del pedido', err));
     }
   };
 
@@ -65,9 +67,9 @@ export default function MarketplaceOrderTrackingPage() {
             size="small"
             startIcon={<ContentCopyIcon />}
             variant="outlined"
-            onClick={copyLink}
+            onClick={copyOrderId}
           >
-            Copiar enlace
+            Copiar ID
           </Button>
         </Stack>
 
@@ -103,6 +105,12 @@ export default function MarketplaceOrderTrackingPage() {
                     Pagado el {new Date(order.moPaidAt).toLocaleString()} via {order.moPaymentProvider?.toUpperCase() ?? '—'}
                   </Typography>
                 )}
+                {order.moFulfillmentStatus && (
+                  <Typography variant="body2" color="text.secondary">
+                    Entrega: {order.moFulfillmentStatus.replace(/_/g, ' ')}
+                    {order.moTrackingReference ? ` · Guía: ${order.moTrackingReference}` : ''}
+                  </Typography>
+                )}
                 <Divider sx={{ my: 2 }} />
                 <Stack spacing={0.75}>
                   <Typography variant="subtitle2">Ítems</Typography>
@@ -122,6 +130,24 @@ export default function MarketplaceOrderTrackingPage() {
                 </Stack>
               </CardContent>
             </Card>
+
+            {fulfillmentTimeline.length > 0 && (
+              <Card variant="outlined">
+                <CardContent>
+                  <Stack spacing={1}>
+                    <Typography variant="subtitle1" fontWeight={700}>Historial de entrega</Typography>
+                    {fulfillmentTimeline.map(([fulfillmentStatus, timestamp]) => (
+                      <Stack key={`${fulfillmentStatus}-${timestamp}`} direction="row" spacing={1} alignItems="center">
+                        <Chip size="small" label={fulfillmentStatus.replace(/_/g, ' ')} />
+                        <Typography variant="body2" color="text.secondary">
+                          {new Date(timestamp).toLocaleString()}
+                        </Typography>
+                      </Stack>
+                    ))}
+                  </Stack>
+                </CardContent>
+              </Card>
+            )}
 
             <Card variant="outlined">
               <CardContent>

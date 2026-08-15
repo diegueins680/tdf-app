@@ -1,6 +1,6 @@
 # Staging verification record
 
-Date: 2026-08-14
+Date: 2026-08-15
 
 Environment tested: local isolated worktree and disposable PostgreSQL 16 containers.
 
@@ -18,6 +18,7 @@ The final command transcript is summarized here after the branch-wide verificati
 | Service checkout runtime migration | `./scripts/test-service-storefront-checkout-runtime-migration.sh` | Pass: rerun, pre-use rollback, legacy classification, one checkout link, one succeeded attempt, reconciliation deduplication, manual evidence and receipt constraints; rollback correctly refused after a live link |
 | Provider-event/refund runtime migration | `./scripts/test-checkout-event-refund-runtime-migration.sh` | Pass: rerun, clean rollback, production-off gates, unsigned-event rejection, immutable encrypted inbox evidence, active configured reason enforcement, two-person approval, allocation/credit-note constraints; rollback correctly refused after live evidence |
 | Provider-event operations migration | `./scripts/test-provider-event-operations-migration.sh` | Pass: rerun, clean rollback, formal status transitions, control-safe audited dead-letter requeue, event-scoped transition authorization, duplicate prevention, sandbox-on/production-off worker gates, immutable action evidence; rollback correctly refused after replay evidence |
+| Marketplace sale checkout runtime | `./scripts/test-marketplace-sale-checkout-runtime-migration.sh` | Pass on PostgreSQL 17: rerun, clean rollback/reapply, one active hold per unique asset, direct paid transition rejected, verified payment separated from fulfillment, fully refunded outbound fulfillment rejected, pickup/delivery custody, return without relisting, immutable history; rollback correctly refused after a live link |
 | Distribution accounting migration | `./scripts/test-distribution-accounting-migration.sh` | Pass: rollback, lifecycle, splits, package/evidence, royalty, separation of duties, payout gates |
 | Versioned revenue products | `./scripts/test-versioned-revenue-products-migration.sh` | Pass: inactive legacy Domo rate, approval/immutability, production flag |
 | Distribution pricing seeds | `./scripts/test-distribution-product-seeds-migration.sh` | Pass: 14 inactive bilingual seeds, activation/mutation/rollback gates |
@@ -26,11 +27,12 @@ The final command transcript is summarized here after the branch-wide verificati
 | Backend build | `stack test --fast --no-run-tests` with the default optimized Stack profile | Pass: executable and all 159 test modules compiled and linked |
 | Web regression/accessibility | Jest: five changed suites | Pass: 16 tests, zero failures |
 | Provider-event operator UI/access | Jest: provider-event page and access-control suites | Pass: 14 tests, zero failures; raw payload and merchant binding are absent from the UI contract |
+| Marketplace web regressions | Jest: marketplace API, Datafast return and storefront suites | Pass: 14 tests, zero failures; one checkout key survives provider switching, lookup secrets stay in headers/session storage, missing lookup and provider failure never clear the cart, rental sale checkout is disabled |
 | Web type safety | `npm run typecheck:ui` | Pass |
 | Web production build | `npm run build --workspace=tdf-hq-ui` | Pass: 12,383 modules; bundle/secret gate 5 preloads and 403,425 gzip bytes |
 | Release/CI contracts | `npm run test:production-release`; `npm run test:ci-pipeline` | Pass: 25 + 12 tests |
 | Registered production batch | Render preflight; apply twice; raw idempotency reruns; schema verification against PostgreSQL 17 | Pass: 24/24 migrations, second run idempotent, provider-event action table present, worker flags `sandbox=true` and `production=false` |
-| OpenAPI/generated clients | `npm run generate:api` | Pass: canonical service-storefront contract generated for web and mobile |
+| OpenAPI/generated clients | `npm run generate:api` for web and mobile | Pass: canonical service-storefront and marketplace-sale contracts generated for both clients |
 | Mobile type safety | `npm run typecheck:mobile` | Pass |
 | Formal-method audit | `npm run verify:formal` | Pass: 0 critical, 0 errors; repository warnings remain advisory |
 | Catalog authority audit | `npm run audit:catalog-lists` | Pass: configured refund reasons are database-managed; provider/environment discriminants have reviewed technical-constant decisions |
@@ -62,6 +64,13 @@ rehearsal additionally proved that a requeue authorization cannot leak to anothe
 transaction. The registered 24-entry production batch was then applied twice and schema-verified in
 a disposable PostgreSQL 17 container. These are local fixtures only: no provider callback, sandbox
 transaction, staging deployment, refund, or production state was exercised.
+
+The 2026-08-15 marketplace-sale follow-up compiled the backend executable and all 160 test modules,
+passed the dedicated PostgreSQL 17 migration rehearsal, and passed 14 focused web tests. The
+OpenAPI document now includes public sale checkout and secure tracking plus authenticated
+fulfillment operations; generated web/mobile artifacts were refreshed. This remains local fixture
+evidence only. No Datafast or PayPal network request, customer charge, provider refund, carrier
+handoff, staging deployment, or production state was exercised.
 
 ## Required staging exercise
 

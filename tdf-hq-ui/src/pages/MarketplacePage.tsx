@@ -53,8 +53,14 @@ import type {
   DatafastCheckoutDTO,
   StripePaymentIntentDTO,
 } from '../api/types';
-import { Marketplace } from '../api/marketplace';
-import { formatLastSavedTimestamp, getOrderStatusMeta } from '../utils/marketplace';
+import {
+  Marketplace,
+  getMarketplaceCheckoutIdempotencyKey,
+  loadMarketplaceLookupToken,
+  storeMarketplaceLookupToken,
+  type CheckoutRequest,
+} from '../api/marketplace';
+import { formatLastSavedTimestamp, getOrderStatusMeta, isPaidOrderStatus } from '../utils/marketplace';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import { Inventory } from '../api/inventory';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
@@ -136,6 +142,20 @@ const BUYER_INFO_KEY = 'tdf-marketplace-buyer';
 const PAYMENT_PREF_KEY = 'tdf-marketplace-payment-pref';
 const FILTERS_KEY = 'tdf-marketplace-filters';
 
+const buildMarketplaceCheckoutRequest = (
+  buyerName: string,
+  buyerEmail: string,
+  buyerPhone: string,
+): CheckoutRequest => {
+  const normalizedPhone = normalizePhone(buyerPhone);
+  return {
+    mcrBuyerName: buyerName,
+    mcrBuyerEmail: buyerEmail,
+    mcrFulfillmentMethod: 'pickup',
+    ...(normalizedPhone ? { mcrBuyerPhone: normalizedPhone } : {}),
+  };
+};
+
 type MarketplacePaymentMethod = 'stripe' | 'contact' | 'card' | 'paypal';
 
 const paymentMethodLabel = (method: MarketplacePaymentMethod) => {
@@ -171,7 +191,7 @@ const continuePaymentLabel = (method: MarketplacePaymentMethod) => {
 const parseCartQuantity = (value: string, fallback = 0): number => {
   const parsed = Number(value);
   if (!Number.isSafeInteger(parsed)) return fallback;
-  return Math.min(99, Math.max(0, parsed));
+  return Math.min(1, Math.max(0, parsed));
 };
 
 interface SavedFilters {
@@ -451,9 +471,9 @@ export default function MarketplacePage() {
   const [stripeError, setStripeError] = useState<string | null>(null);
   const [paypalReady, setPaypalReady] = useState(false);
   const [paypalDialogOpen, setPaypalDialogOpen] = useState(false);
-  const [paypalOrder, setPaypalOrder] = useState<{ orderId: string; paypalOrderId: string } | null>(null);
+  const [paypalOrder, setPaypalOrder] = useState<{ orderId: string; paypalOrderId: string; lookupToken: string } | null>(null);
   const [paypalError, setPaypalError] = useState<string | null>(null);
-  const showStripeOption = Boolean(stripePublishableKey);
+  const showStripeOption = false;
   const paypalEnabled = Boolean(paypalClientId);
   const columnScrollHeight = { xs: 'auto', md: 'calc(100vh - 240px)' };
   const datafastFormRef = useRef<HTMLDivElement>(null);
@@ -467,7 +487,7 @@ export default function MarketplacePage() {
   const [paymentMethod, setPaymentMethod] = useState<MarketplacePaymentMethod>(() => {
     if (typeof window === 'undefined') return 'contact';
     const saved = localStorage.getItem(PAYMENT_PREF_KEY);
-    return saved === 'stripe' || saved === 'card' || saved === 'paypal' || saved === 'contact' ? saved : 'contact';
+    return saved === 'card' || saved === 'paypal' || saved === 'contact' ? saved : 'contact';
   });
   const [reviewOpen, setReviewOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -682,14 +702,15 @@ export default function MarketplacePage() {
   const checkoutMutation = useMutation({
     mutationFn: async () => {
       const ensuredCart = await ensureCart();
-      const order = await Marketplace.checkout(ensuredCart, {
-        mcrBuyerName: buyerName,
-        mcrBuyerEmail: buyerEmail,
-        mcrBuyerPhone: normalizePhone(buyerPhone),
-      });
+      const order = await Marketplace.checkout(
+        ensuredCart,
+        buildMarketplaceCheckoutRequest(buyerName, buyerEmail, buyerPhone),
+        getMarketplaceCheckoutIdempotencyKey(ensuredCart, 'bank_transfer'),
+      );
       return order;
     },
     onSuccess: (order) => {
+      storeMarketplaceLookupToken(order.moOrderId, order.moLookupToken);
       setLastOrder(order);
       qc.removeQueries({ queryKey: ['marketplace-cart'] });
       setCartId(null);
@@ -711,11 +732,11 @@ export default function MarketplacePage() {
   const stripePaymentIntentMutation = useMutation<StripePaymentIntentDTO, Error, void>({
     mutationFn: async () => {
       const ensuredCart = await ensureCart();
-      return Marketplace.stripePaymentIntent(ensuredCart, {
-        mcrBuyerName: buyerName,
-        mcrBuyerEmail: buyerEmail,
-        mcrBuyerPhone: normalizePhone(buyerPhone),
-      });
+      return Marketplace.stripePaymentIntent(
+        ensuredCart,
+        buildMarketplaceCheckoutRequest(buyerName, buyerEmail, buyerPhone),
+        getMarketplaceCheckoutIdempotencyKey(ensuredCart, 'stripe'),
+      );
     },
     onSuccess: (dto) => {
       setStripeIntent(dto);
@@ -730,13 +751,14 @@ export default function MarketplacePage() {
   const datafastCheckoutMutation = useMutation<DatafastCheckoutDTO, Error, void>({
     mutationFn: async () => {
       const ensuredCart = await ensureCart();
-      return Marketplace.datafastCheckout(ensuredCart, {
-        mcrBuyerName: buyerName,
-        mcrBuyerEmail: buyerEmail,
-        mcrBuyerPhone: normalizePhone(buyerPhone),
-      });
+      return Marketplace.datafastCheckout(
+        ensuredCart,
+        buildMarketplaceCheckoutRequest(buyerName, buyerEmail, buyerPhone),
+        getMarketplaceCheckoutIdempotencyKey(ensuredCart, 'datafast'),
+      );
     },
     onSuccess: (dto) => {
+      storeMarketplaceLookupToken(dto.dcOrderId, dto.dcLookupToken);
       setDatafastCheckout(dto);
       setDatafastDialogOpen(true);
       setDatafastError(null);
@@ -753,14 +775,23 @@ export default function MarketplacePage() {
   const createPaypalOrderMutation = useMutation({
     mutationFn: async () => {
       const ensuredCart = await ensureCart();
-      return Marketplace.createPaypalOrder(ensuredCart, {
-        mcrBuyerName: buyerName,
-        mcrBuyerEmail: buyerEmail,
-        mcrBuyerPhone: normalizePhone(buyerPhone),
-      });
+      return Marketplace.createPaypalOrder(
+        ensuredCart,
+        buildMarketplaceCheckoutRequest(buyerName, buyerEmail, buyerPhone),
+        getMarketplaceCheckoutIdempotencyKey(ensuredCart, 'paypal'),
+      );
     },
     onSuccess: (data) => {
-      setPaypalOrder({ orderId: data.pcOrderId, paypalOrderId: data.pcPaypalOrderId });
+      if (!data.pcLookupToken) {
+        setPaypalError('La orden PayPal no incluyó un acceso seguro de seguimiento. Intenta nuevamente.');
+        return;
+      }
+      storeMarketplaceLookupToken(data.pcOrderId, data.pcLookupToken);
+      setPaypalOrder({
+        orderId: data.pcOrderId,
+        paypalOrderId: data.pcPaypalOrderId,
+        lookupToken: data.pcLookupToken,
+      });
       setPaypalDialogOpen(true);
       setPaypalError(null);
     },
@@ -772,12 +803,23 @@ export default function MarketplacePage() {
     Error,
     { orderId: string; paypalOrderId: string }
   >({
-    mutationFn: ({ orderId, paypalOrderId }) =>
-      Marketplace.capturePaypalOrder({ pcCaptureOrderId: orderId, pcCapturePaypalId: paypalOrderId }),
+    mutationFn: ({ orderId, paypalOrderId }) => {
+      const lookupToken = paypalOrder?.lookupToken ?? loadMarketplaceLookupToken(orderId);
+      if (!lookupToken) throw new Error('No secure marketplace order lookup token');
+      return Marketplace.capturePaypalOrder(
+        { pcCaptureOrderId: orderId, pcCapturePaypalId: paypalOrderId },
+        lookupToken,
+      );
+    },
     onSuccess: (order) => {
       setLastOrder(order);
       setPaypalDialogOpen(false);
       setPaypalOrder(null);
+      const paid = isPaidOrderStatus(order.moCheckoutStatus ?? order.moStatus);
+      if (!paid) {
+        setToast('PayPal está procesando el pago. Conservamos tu carrito hasta recibir confirmación verificable.');
+        return;
+      }
       qc.removeQueries({ queryKey: ['marketplace-cart'] });
       setCartId(null);
       setSavedCartMeta(null);
@@ -786,7 +828,7 @@ export default function MarketplacePage() {
         localStorage.removeItem(CART_STORAGE_KEY);
         localStorage.removeItem(CART_META_KEY);
       }
-      setToast('Pago recibido con PayPal. Gracias por tu compra.');
+      setToast('Pago verificado con PayPal. Gracias por tu compra.');
       fireCartMetaEvent();
     },
     onError: () => setPaypalError('No pudimos confirmar el pago. Intenta de nuevo.'),
@@ -1044,13 +1086,21 @@ export default function MarketplacePage() {
   }, [capturePaypalMutation, paypalDialogOpen, paypalOrder, paypalReady]);
 
   const handleAdd = (listing: MarketplaceItemDTO) => {
+    if (listing.miPurpose === 'rent') {
+      setToast('La renta estará disponible cuando podamos confirmar fechas, depósito y términos. No creamos una compra falsa.');
+      return;
+    }
     if (!isListingAvailable(listing.miStatus)) {
       setToast('Este artículo no está disponible en este momento.');
       return;
     }
     const currentQty =
       cart?.mcItems.find((item) => item.mciListingId === listing.miListingId)?.mciQuantity ?? 0;
-    upsertItemMutation.mutate({ listingId: listing.miListingId, quantity: currentQty + 1 });
+    if (currentQty >= 1) {
+      setToast('Este activo físico ya está en tu carrito.');
+      return;
+    }
+    upsertItemMutation.mutate({ listingId: listing.miListingId, quantity: 1 });
   };
 
   const handleUpdateQty = (item: MarketplaceCartItemDTO, quantity: number) => {
@@ -1108,16 +1158,23 @@ export default function MarketplacePage() {
 
   const handleStripePaymentSuccess = async (orderId: string) => {
     try {
-      const order = await Marketplace.getOrder(orderId);
+      const lookupToken = stripeIntent?.spiLookupToken ?? loadMarketplaceLookupToken(orderId);
+      if (!lookupToken) throw new Error('No secure marketplace order lookup token');
+      const order = await Marketplace.getOrder(orderId, lookupToken);
       setLastOrder(order);
+      if (isPaidOrderStatus(order.moCheckoutStatus ?? order.moStatus)) {
+        clearCheckoutCart();
+        setToast('El servidor verificó el pago con Stripe. Gracias por tu compra.');
+      } else {
+        setToast('Stripe devolvió el navegador, pero el servidor aún no verificó el pago. Conservamos tu carrito.');
+      }
     } catch {
       setLastOrder(null);
+      setToast('No pudimos verificar el pago en el servidor. Conservamos tu carrito; no intentes pagar de nuevo todavía.');
     }
     setStripeDialogOpen(false);
     setStripeIntent(null);
     setStripeError(null);
-    clearCheckoutCart();
-    setToast('Pago confirmado con Stripe. Gracias por tu compra.');
   };
 
   const handlePaypalCheckout = () => {
@@ -1837,9 +1894,9 @@ export default function MarketplacePage() {
                               size="small"
                               startIcon={<ShoppingCartIcon />}
                               onClick={() => handleAdd(item)}
-                              disabled={upsertItemMutation.isPending || !isListingAvailable(item.miStatus)}
+                              disabled={upsertItemMutation.isPending || !isListingAvailable(item.miStatus) || item.miPurpose === 'rent'}
                             >
-                              {item.miPurpose === 'rent' ? 'Agregar renta' : 'Agregar'}
+                              {item.miPurpose === 'rent' ? 'Renta con fechas: próximamente' : 'Agregar'}
                             </Button>
                           </span>
                         </Tooltip>
@@ -1947,14 +2004,14 @@ export default function MarketplacePage() {
                               onChange={(e) =>
                                 handleUpdateQty(item, parseCartQuantity(e.target.value ?? '0', item.mciQuantity))
                               }
-                              inputProps={{ min: 0, max: 99 }}
+                              inputProps={{ min: 0, max: 1 }}
                               sx={{ width: 120 }}
                             />
                             <IconButton
                               aria-label="Incrementar cantidad"
                               size="small"
-                              onClick={() => handleUpdateQty(item, Math.min(99, item.mciQuantity + 1))}
-                              disabled={upsertItemMutation.isPending}
+                              onClick={() => handleUpdateQty(item, 1)}
+                              disabled={upsertItemMutation.isPending || item.mciQuantity >= 1}
                             >
                               <AddIcon fontSize="small" />
                             </IconButton>
@@ -2604,9 +2661,9 @@ export default function MarketplacePage() {
                     handleAdd(selectedListing);
                     closeDetail();
                   }}
-                  disabled={upsertItemMutation.isPending || !isListingAvailable(selectedListing.miStatus)}
+                  disabled={upsertItemMutation.isPending || !isListingAvailable(selectedListing.miStatus) || selectedListing.miPurpose === 'rent'}
                 >
-                  {selectedListing.miPurpose === 'rent' ? 'Agregar renta' : 'Agregar'}
+                  {selectedListing.miPurpose === 'rent' ? 'Renta con fechas: próximamente' : 'Agregar'}
                 </Button>
                 <Button
                   size="small"

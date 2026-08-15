@@ -41,6 +41,21 @@ currency, environment and merchant before recording completion. For a mismatch o
 observed refund/reversal, keep the internal refund unchanged and resolve the reconciliation
 exception with a second reviewer. Never edit allocations, ledger entries, or credit notes in place.
 
+## Marketplace sale hold or custody mismatch
+
+Disable `commerce.marketplace_sales` for new production checkouts without disabling unrelated
+domains. Do not edit the order to `paid` or the asset to `Sold`. Compare the immutable checkout
+lines, active/consumed hold, provider binding, marketplace runtime row, fulfillment history, asset,
+and listing under one correlation/order ID. A checkout start should have one expiring active hold;
+verified payment should consume it and stop at `ready_to_fulfill`; only documented pickup or
+delivery should produce `delivered` and `Sold`.
+
+If payment exists without a fulfillment transition, keep custody with TDF and assign operations. If
+delivery evidence exists without verified payment, stop handoff and open a reconciliation incident.
+For a return, record the authorized transition and condition evidence; `returned` restores asset
+custody but must not silently reactivate the listing. Use compensating financial records for any
+refund. Never repurpose the sale lifecycle for a rental or invent rental dates/deposit evidence.
+
 ## Distribution dead letter or release-date risk
 
 Stop retries if the package/profile/checksum may be wrong. Verify immutable release version,

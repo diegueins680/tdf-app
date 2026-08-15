@@ -4,6 +4,7 @@
 module TDF.Commerce.CheckoutStore
   ( CheckoutEnvironment(..)
   , CheckoutCreation(..)
+  , CheckoutLineCreation(..)
   , CheckoutReference(..)
   , PaymentProvider(..)
   , PaymentOperation(..)
@@ -16,6 +17,7 @@ module TDF.Commerce.CheckoutStore
   , checkoutEnvironmentText
   , paymentProviderText
   , createCheckout
+  , createCheckoutWithLines
   , loadCheckoutEnvironment
   , beginPaymentAttempt
   , bindProviderResource
@@ -69,6 +71,16 @@ data CheckoutCreation = CheckoutCreation
   , ccDescription      :: Text
   , ccSnapshot         :: Value
   , ccCorrelationId    :: Text
+  }
+
+data CheckoutLineCreation = CheckoutLineCreation
+  { clProductType    :: Text
+  , clProductId      :: Text
+  , clProductVersion :: Text
+  , clDescription    :: Text
+  , clQuantity       :: Int
+  , clUnitAmountMinor :: Int64
+  , clSnapshot       :: Value
   }
 
 data PaymentProvider
@@ -139,6 +151,7 @@ data VerifiedPayment = VerifiedPayment
   , vpMerchantRef      :: Text
   , vpResourceType     :: Text
   , vpProviderResource :: Text
+  , vpProviderResourcePath :: Maybe Text
   , vpOrderReference   :: Text
   , vpAmountMinor      :: Int64
   , vpCurrency         :: Text
@@ -187,7 +200,30 @@ paymentAttemptStageText stage = case stage of
   AttemptRequiresReview -> "requires_review"
 
 createCheckout :: CheckoutCreation -> SqlPersistT IO CheckoutReference
-createCheckout CheckoutCreation{..} = do
+createCheckout creation@CheckoutCreation{..} =
+  createCheckoutWithLines creation
+    [ CheckoutLineCreation
+        { clProductType = ccProductType
+        , clProductId = ccProductId
+        , clProductVersion = ccProductVersion
+        , clDescription = ccDescription
+        , clQuantity = 1
+        , clUnitAmountMinor = ccAmountMinor
+        , clSnapshot = ccSnapshot
+        }
+    ]
+
+createCheckoutWithLines
+  :: CheckoutCreation
+  -> [CheckoutLineCreation]
+  -> SqlPersistT IO CheckoutReference
+createCheckoutWithLines CheckoutCreation{..} checkoutLines = do
+  when (null checkoutLines) $
+    fail "Canonical checkout requires at least one immutable line item"
+  when (any invalidLine checkoutLines) $
+    fail "Canonical checkout line quantity and unit amount must be positive"
+  when (lineTotal /= ccAmountMinor) $
+    fail "Canonical checkout line totals do not match the checkout total"
   checkoutId <- liftIO (toText <$> nextRandom)
   rawExecute
     "INSERT INTO commerce_checkout_session (\
@@ -207,21 +243,7 @@ createCheckout CheckoutCreation{..} = do
     , PersistText ccIdempotencyKey
     , PersistUTCTime ccExpiresAt
     ]
-  rawExecute
-    "INSERT INTO commerce_checkout_line_item (\
-    \ checkout_id, line_number, product_type, product_id, product_version,\
-    \ description, quantity, unit_amount_minor, subtotal_minor, total_minor, snapshot\
-    \) VALUES (?::uuid, 1, ?, ?, ?, ?, 1, ?, ?, ?, ?::jsonb)"
-    [ PersistText checkoutId
-    , PersistText ccProductType
-    , PersistText ccProductId
-    , PersistText ccProductVersion
-    , PersistText ccDescription
-    , PersistInt64 ccAmountMinor
-    , PersistInt64 ccAmountMinor
-    , PersistInt64 ccAmountMinor
-    , PersistText (jsonText ccSnapshot)
-    ]
+  mapM_ (insertCheckoutLine checkoutId) (zip [1 :: Int64 ..] checkoutLines)
   insertAudit
     checkoutId
     "checkout_created"
@@ -231,6 +253,37 @@ createCheckout CheckoutCreation{..} = do
     ccCorrelationId
     ccSnapshot
   pure (CheckoutReference checkoutId)
+  where
+    invalidLine CheckoutLineCreation{..} =
+      clQuantity <= 0 || clUnitAmountMinor <= 0
+    lineTotal = sum
+      [ fromIntegral clQuantity * clUnitAmountMinor
+      | CheckoutLineCreation{..} <- checkoutLines
+      ]
+
+insertCheckoutLine
+  :: Text
+  -> (Int64, CheckoutLineCreation)
+  -> SqlPersistT IO ()
+insertCheckoutLine checkoutId (lineNumber, CheckoutLineCreation{..}) = do
+  let subtotal = fromIntegral clQuantity * clUnitAmountMinor
+  rawExecute
+    "INSERT INTO commerce_checkout_line_item (\
+    \ checkout_id, line_number, product_type, product_id, product_version,\
+    \ description, quantity, unit_amount_minor, subtotal_minor, total_minor, snapshot\
+    \) VALUES (?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb)"
+    [ PersistText checkoutId
+    , PersistInt64 lineNumber
+    , PersistText clProductType
+    , PersistText clProductId
+    , PersistText clProductVersion
+    , PersistText clDescription
+    , PersistInt64 (fromIntegral clQuantity)
+    , PersistInt64 clUnitAmountMinor
+    , PersistInt64 subtotal
+    , PersistInt64 subtotal
+    , PersistText (jsonText clSnapshot)
+    ]
 
 loadCheckoutEnvironment
   :: CheckoutReference
@@ -514,6 +567,7 @@ recordVerifiedPayment VerifiedPayment{..}
         \ AND binding.environment = attempt.environment\
         \ AND binding.merchant_account_ref = attempt.merchant_account_ref\
         \ AND binding.resource_type = ? AND binding.provider_resource_id = ?\
+        \ AND binding.provider_resource_path IS NOT DISTINCT FROM ?\
         \ AND binding.merchant_reference = checkout.domain_order_id\
         \ AND binding.amount_minor = checkout.total_minor\
         \ AND binding.currency = checkout.currency\
@@ -529,6 +583,7 @@ recordVerifiedPayment VerifiedPayment{..}
         , PersistText vpMerchantRef
         , PersistText vpResourceType
         , PersistText vpProviderResource
+        , maybe PersistNull PersistText vpProviderResourcePath
         ] :: SqlPersistT IO [(Single Text, Single Text)])
       case paymentStates of
         [(Single currentStatus, Single attemptStatus)] -> do
@@ -669,8 +724,8 @@ postPaymentLedger VerifiedPayment{..} = do
   rawExecute
     "INSERT INTO commerce_ledger_entry (\
     \ transaction_id, account_code, domain_type, domain_id, currency, amount_minor, memo\
-    \) SELECT ?::uuid, 'revenue.service_storefront', domain_type, domain_order_id,\
-    \ currency, -total_minor, 'Service revenue recognized on verified payment'\
+    \) SELECT ?::uuid, 'revenue.' || domain_type, domain_type, domain_order_id,\
+    \ currency, -total_minor, 'Revenue recognized on verified payment'\
     \ FROM commerce_checkout_session WHERE id = ?::uuid"
     [PersistText ledgerId, PersistText (checkoutReferenceId vpCheckout)]
   rawExecute

@@ -9,11 +9,14 @@ const listMock = jest.fn<() => Promise<MarketplaceItemDTO[]>>();
 const getCartMock = jest.fn<(cartId: string) => Promise<MarketplaceCartDTO>>();
 const createCartMock = jest.fn<() => Promise<MarketplaceCartDTO>>();
 const upsertItemMock = jest.fn<(cartId: string) => Promise<MarketplaceCartDTO>>();
-const checkoutMock = jest.fn<(cartId: string, payload: unknown) => Promise<MarketplaceOrderDTO>>();
+const checkoutMock = jest.fn<
+  (cartId: string, payload: unknown, idempotencyKey: string) => Promise<MarketplaceOrderDTO>
+>();
 const datafastCheckoutMock = jest.fn();
 const createPaypalOrderMock = jest.fn();
 const capturePaypalOrderMock = jest.fn();
 const inventoryUpdateMock = jest.fn();
+const storeLookupTokenMock = jest.fn();
 
 jest.unstable_mockModule('../api/marketplace', () => ({
   Marketplace: {
@@ -21,11 +24,15 @@ jest.unstable_mockModule('../api/marketplace', () => ({
     getCart: (cartId: string) => getCartMock(cartId),
     createCart: () => createCartMock(),
     upsertItem: (cartId: string) => upsertItemMock(cartId),
-    checkout: (cartId: string, payload: unknown) => checkoutMock(cartId, payload as never),
+    checkout: (cartId: string, payload: unknown, idempotencyKey: string) =>
+      checkoutMock(cartId, payload as never, idempotencyKey),
     datafastCheckout: (...args: unknown[]) => datafastCheckoutMock(...args),
     createPaypalOrder: (...args: unknown[]) => createPaypalOrderMock(...args),
     capturePaypalOrder: (...args: unknown[]) => capturePaypalOrderMock(...args),
   },
+  getMarketplaceCheckoutIdempotencyKey: (cartId: string, provider: string) => `${cartId}-${provider}-idempotency`,
+  loadMarketplaceLookupToken: () => 'secure-lookup-token',
+  storeMarketplaceLookupToken: (...args: unknown[]) => storeLookupTokenMock(...args),
 }));
 
 jest.unstable_mockModule('../api/inventory', () => ({
@@ -240,6 +247,7 @@ describe('MarketplacePage', () => {
     createPaypalOrderMock.mockReset();
     capturePaypalOrderMock.mockReset();
     inventoryUpdateMock.mockReset();
+    storeLookupTokenMock.mockReset();
     listMock.mockResolvedValue([buildListing()]);
     getCartMock.mockResolvedValue(buildCart());
     createCartMock.mockResolvedValue(buildCart({ mcCartId: 'new-cart', mcItems: [] }));
@@ -377,6 +385,28 @@ describe('MarketplacePage', () => {
     document.body.removeChild(container);
   });
 
+  it('does not send rental listings through the sale checkout without dates and deposits', async () => {
+    listMock.mockResolvedValue([
+      buildListing({ miPurpose: 'rent', miTitle: 'Rental Console' }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const rentalButton = Array.from(container.querySelectorAll('button')).find(
+        (button) => button.textContent?.trim() === 'Renta con fechas: próximamente',
+      );
+      expect(rentalButton).toBeDefined();
+      expect(rentalButton?.disabled).toBe(true);
+    });
+    expect(upsertItemMock).not.toHaveBeenCalled();
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
   it('restores the original saved buyer snapshot and clears buyer storage cleanly', async () => {
     window.localStorage.setItem('tdf-marketplace-cart-id', 'cart-1');
     window.localStorage.setItem(
@@ -464,6 +494,15 @@ describe('MarketplacePage', () => {
 
     await waitForExpectation(() => {
       expect(checkoutMock).toHaveBeenCalled();
+      expect(checkoutMock).toHaveBeenCalledWith(
+        'cart-1',
+        expect.objectContaining({
+          mcrBuyerName: 'Saved Buyer',
+          mcrBuyerEmail: 'saved@example.com',
+          mcrFulfillmentMethod: 'pickup',
+        }),
+        'cart-1-bank_transfer-idempotency',
+      );
       expect(window.localStorage.getItem('tdf-marketplace-cart-id')).toBeNull();
       expect(window.localStorage.getItem('tdf-marketplace-cart-meta')).toBeNull();
       expect(document.body.textContent).toContain('Pedido enviado');

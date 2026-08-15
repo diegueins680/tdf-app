@@ -5,10 +5,10 @@ evidence that the TDF merchant account is enabled for it.
 
 | Rail | Implemented contract | Server verification | Refund | Recurring | Outbound payout | Production state |
 |---|---|---|---|---|---|---|
-| Datafast | Canonical service checkout/resource creation and server status confirmation | Immutable checkout/resource path, amount, USD currency, environment, merchant entity, internal order and merchant reference | Explicitly disabled; no merchant refund contract verified | Not assumed | Not offered by this checkout integration | Checkout disabled pending certification; webhook/refund capabilities separately off |
-| PayPal Checkout | Canonical Orders v2 create/capture, verified webhook inbox, full/partial capture refund and on-demand reconciliation | Remote signature verification over the exact raw event; event replay window/deduplication; order/capture/custom ID, amount, currency, environment and payee merchant; request-id retry protection | Two-person request/approval, immutable allocation, compensating ledger and credit note; sandbox-capable, production-off | Separate Subscriptions capability, not enabled | Separate Payouts product, not enabled | All production flags disabled pending credentialed sandbox evidence and authorization |
+| Datafast | Canonical service and marketplace-sale checkout/resource creation plus server status confirmation | Immutable checkout/resource path, amount, USD currency, environment, merchant entity, internal order and merchant reference | Explicitly disabled; no merchant refund contract verified | Not assumed | Not offered by this checkout integration | Provider and per-domain checkout flags disabled pending certification; webhook/refund capabilities separately off |
+| PayPal Checkout | Canonical service and marketplace-sale Orders v2 create/capture, shared verified webhook inbox, service full/partial capture refund and on-demand reconciliation | Remote signature verification over the exact raw event; event replay window/deduplication; order/capture/path/custom ID, amount, currency, environment and payee merchant; request-id retry protection | Two-person service refund request/approval is implemented; marketplace refund policy/runtime remains future work; all production refund execution is off | Separate Subscriptions capability, not enabled | Separate Payouts product, not enabled | All production provider and domain flags disabled pending credentialed sandbox evidence and authorization |
 | Stripe | Legacy domain paths only | Existing domain-specific webhooks | Domain-specific legacy behavior | Existing legacy course path only | Connect dependency exists for tips | Optional; not an Ecuador-critical dependency and unavailable in shared service checkout |
-| Bank/cash/POS | Canonical manual attempt and evidence-review record | Authorized staff approval, never browser selection | Compensating manual record required | No | Admin-reviewed settlement only | Customer selection is implemented for service checkout; approval policy/runtime remains incomplete |
+| Bank/cash/POS | Canonical manual attempt and evidence-review record | Authorized staff approval, never browser selection | Compensating manual record required | No | Admin-reviewed settlement only | Customer selection is implemented for service and marketplace-sale checkout; approval policy/runtime remains incomplete |
 | Cardano donation | Public address display remains separate | No chain confirmation adapter in this branch | Not applicable | No | No | Unverified references must not be shown as received funds |
 
 ## Datafast evidence and unknowns
@@ -26,7 +26,7 @@ semantics, refund/void boundary and partial-refund support, installment products
 tokenization/recurrence, rate limits, reconciliation files, test cards, certification, and an
 approved production verification window. None is inferred from the generic docs.
 
-Server-only variable names currently read by the service adapter:
+Server-only variable names currently read by the shared service and marketplace-sale adapter:
 `COMMERCE_CHECKOUT_ENV`, `DATAFAST_ENV`, `DATAFAST_ENTITY_ID`,
 `DATAFAST_BEARER_TOKEN`, `DATAFAST_BASE_URL`, and
 `DATAFAST_TEST_MODE`. Other repository paths inventory `DATAFAST_MID`, `DATAFAST_TID`,
@@ -74,7 +74,8 @@ simulator cannot pass remote verification and therefore cannot transition these 
 Refund execution is limited to a succeeded, bound PayPal capture. The immutable request reserves
 the remaining captured balance under a checkout lock and snapshots an active bilingual reason from
 `commerce_refund_reason_code`; a different authenticated administrator must approve it.
-`PayPal-Request-Id` is the internal refund UUID. A refund becomes `succeeded` only
+`PayPal-Request-Id` is the internal refund UUID. Create/capture request IDs are deterministic hashes
+bounded to the provider's 38-character limit. A refund becomes `succeeded` only
 when provider ID, status, exact amount and currency match; then a balanced compensating ledger entry
 and one credit note are created. Provider outage leaves a retryable processing record. Production
 webhook and refund flags remain false by default.
@@ -94,7 +95,7 @@ documented capability, provider confirmation reference, tested operation, non-se
 hash, reviewer, timestamp, limits, rollback/kill switch, reconciliation owner, and expiry/review date.
 Capabilities not present in that record remain unavailable.
 
-For the implemented service slice, provider verification mismatch creates an open reconciliation
+For the implemented service and marketplace-sale slices, provider verification mismatch creates an open reconciliation
 exception and leaves payment unconfirmed. A verified Datafast status query, PayPal server capture,
 or signature-verified PayPal capture event may post one receipt and one balanced ledger transaction.
 The refund and webhook runtimes are implemented but remain capability-gated. Local fixtures are not

@@ -3579,6 +3579,310 @@ paths:
         '400': { description: Unknown properties, duplicated IDs, or malformed canonical UUID }
         '403': { description: Missing persisted `catalog.import` capability }
         '422': { description: A supplied standard version is inactive or not detection-enabled }
+  /marketplace:
+    get:
+      tags: [Marketplace]
+      summary: List public equipment sale and rental listings
+      operationId: listMarketplaceItems
+      security: [ ]
+      responses:
+        '200':
+          description: Active public listings with authoritative server prices
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MarketplaceItem' }
+  /marketplace/{listingId}:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceListingId'
+    get:
+      tags: [Marketplace]
+      summary: Read one public equipment listing
+      operationId: getMarketplaceItem
+      security: [ ]
+      responses:
+        '200':
+          description: Public listing
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceItem' }
+        '404': { description: Listing not found }
+  /marketplace/cart:
+    post:
+      tags: [Marketplace]
+      summary: Create a guest marketplace cart
+      operationId: createMarketplaceCart
+      security: [ ]
+      responses:
+        '200':
+          description: Empty cart
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceCart' }
+  /marketplace/cart/{cartId}:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceCartId'
+    get:
+      tags: [Marketplace]
+      summary: Read a guest marketplace cart
+      operationId: getMarketplaceCart
+      security: [ ]
+      responses:
+        '200':
+          description: Current cart snapshot
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceCart' }
+        '404': { description: Cart not found }
+  /marketplace/cart/{cartId}/items:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceCartId'
+    post:
+      tags: [Marketplace]
+      summary: Add, replace, or remove one unique sale asset in a cart
+      description: Rental listings and quantities greater than one are rejected until the date-aware rental domain is enabled.
+      operationId: upsertMarketplaceCartItem
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceCartItemUpdate' }
+      responses:
+        '200':
+          description: Updated cart with server-calculated totals
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceCart' }
+        '400': { description: Invalid listing, quantity, or rental request }
+        '404': { description: Cart or listing not found }
+        '409': { description: Asset is no longer available }
+  /marketplace/cart/{cartId}/checkout:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceCartId'
+    post:
+      tags: [Marketplace]
+      summary: Create an unpaid manual-payment sale order and atomic asset hold
+      description: The Idempotency-Key binds an immutable checkout snapshot. Selecting bank transfer never confirms payment.
+      operationId: checkoutMarketplaceCart
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceCheckoutRequest' }
+      responses:
+        '200':
+          description: Created or idempotently recovered order awaiting manual confirmation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceOrder' }
+        '400': { description: Invalid buyer, fulfillment, address, or cart snapshot }
+        '409': { description: Idempotency conflict or asset is already held }
+        '429': { description: Public request rate limit exceeded }
+        '503': { description: Marketplace sales checkout is disabled }
+  /marketplace/cart/{cartId}/stripe/payment-intent:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceCartId'
+    post:
+      tags: [Marketplace]
+      summary: Marketplace Stripe rail (fail-closed compatibility endpoint)
+      description: This endpoint cannot create a payment until Stripe is connected to the canonical verified-payment runtime.
+      operationId: createMarketplaceStripePaymentIntent
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceCheckoutRequest' }
+      responses:
+        '503': { description: Stripe marketplace checkout is disabled; use Datafast or PayPal }
+  /marketplace/cart/{cartId}/datafast/checkout:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceCartId'
+    post:
+      tags: [Marketplace]
+      summary: Create or recover a canonical Datafast sale checkout
+      operationId: createMarketplaceDatafastCheckout
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceCheckoutRequest' }
+      responses:
+        '200':
+          description: Bound hosted checkout and one-time guest lookup token
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DatafastCheckout' }
+        '400': { description: Invalid cart, buyer, fulfillment, or environment configuration }
+        '409': { description: Idempotency, asset-hold, or provider-binding conflict }
+        '502': { description: Datafast did not create a verifiable checkout resource }
+        '503': { description: Datafast or marketplace sales are disabled }
+  /marketplace/datafast/status:
+    get:
+      tags: [Marketplace]
+      summary: Verify a marketplace Datafast resource server-to-server
+      description: Browser return parameters never mark an order paid. Amount, currency, merchant transaction, environment, order, and stored resource are verified first.
+      operationId: confirmMarketplaceDatafastStatus
+      security: [ ]
+      parameters:
+        - name: orderId
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - name: resourcePath
+          in: query
+          required: true
+          schema: { type: string, minLength: 1 }
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Current payment and separate fulfillment state after server verification
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceOrder' }
+        '404': { description: Order not found or lookup token invalid }
+        '409': { description: Provider evidence conflicts with the immutable checkout }
+        '502': { description: Datafast status could not be verified }
+  /marketplace/cart/{cartId}/paypal/create:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceCartId'
+    post:
+      tags: [Marketplace]
+      summary: Create or recover a canonical PayPal sale order
+      operationId: createMarketplacePaypalOrder
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceCheckoutRequest' }
+      responses:
+        '200':
+          description: Bound PayPal order, approval URL, and one-time guest lookup token
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaypalCreate' }
+        '400': { description: Invalid cart, buyer, fulfillment, or environment configuration }
+        '409': { description: Idempotency, asset-hold, or provider-binding conflict }
+        '502': { description: PayPal did not create an order }
+        '503': { description: PayPal or marketplace sales are disabled }
+  /marketplace/paypal/capture:
+    post:
+      tags: [Marketplace]
+      summary: Capture and verify an approved marketplace PayPal order
+      description: Capture is idempotent and cannot change payment state until amount, currency, merchant, internal order, environment, and capture resource all match.
+      operationId: captureMarketplacePaypalOrder
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplacePaypalCapture' }
+      responses:
+        '200':
+          description: Current payment and separate fulfillment state after server verification
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceOrder' }
+        '404': { description: Order not found or lookup token invalid }
+        '409': { description: Provider evidence conflicts with the immutable checkout }
+        '502': { description: Capture or server verification failed }
+  /marketplace/orders:
+    get:
+      tags: [Marketplace administration]
+      summary: List marketplace orders for authorized operations staff
+      operationId: listMarketplaceOrders
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        '200':
+          description: Orders with payment and fulfillment state kept distinct
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MarketplaceOrder' }
+        '403': { description: Operations access required }
+  /marketplace/orders/{orderId}:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceOrderId'
+    get:
+      tags: [Marketplace]
+      summary: Track a guest marketplace order
+      operationId: getMarketplaceOrder
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Customer-safe order state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceOrder' }
+        '404': { description: Order not found or lookup token invalid }
+    put:
+      tags: [Marketplace administration]
+      summary: Update legacy marketplace order metadata
+      description: Canonical sale orders cannot be marked paid through this endpoint; payment is provider-verified only.
+      operationId: updateMarketplaceOrder
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceOrderUpdate' }
+      responses:
+        '200':
+          description: Updated order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceOrder' }
+        '403': { description: Operations access required }
+        '409': { description: Direct paid transition is prohibited for canonical orders }
+  /marketplace/orders/{orderId}/fulfillment:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceOrderId'
+    put:
+      tags: [Marketplace administration]
+      summary: Apply a validated physical-fulfillment transition
+      description: Payment is a separate state machine. Delivery and pickup transitions update asset custody only through database-enforced transitions.
+      operationId: updateMarketplaceFulfillment
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceFulfillmentUpdate' }
+      responses:
+        '200':
+          description: Updated fulfillment state and immutable history
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceOrder' }
+        '400': { description: Invalid transition payload }
+        '403': { description: Operations access required }
+        '404': { description: Canonical sale order not found }
+        '409': { description: Transition is invalid or payment is not verified }
   /services/storefront:
     get:
       tags: [Service storefront]
@@ -4122,6 +4426,22 @@ components:
       in: path
       required: true
       schema: { type: integer, format: int64, minimum: 1 }
+    MarketplaceListingId:
+      name: listingId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    MarketplaceCartId:
+      name: cartId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    MarketplaceOrderId:
+      name: orderId
+      in: path
+      required: true
+      description: Canonical marketplace sale order UUID.
+      schema: { type: string, format: uuid }
     ServiceStorefrontPackageId:
       name: packageId
       in: path
@@ -4146,6 +4466,161 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 8, maxLength: 200 }
   schemas:
+    MarketplaceItem:
+      type: object
+      required: [miListingId, miAssetId, miTitle, miPurpose, miCategory, miBrand, miModel, miPhotoUrl, miStatus, miCondition, miPriceUsdCents, miPriceDisplay, miMarkupPct, miCurrency]
+      properties:
+        miListingId: { type: string, format: uuid }
+        miAssetId: { type: string, format: uuid }
+        miTitle: { type: string }
+        miPurpose: { type: string, enum: [sale, rent] }
+        miCategory: { type: string }
+        miBrand: { type: string, nullable: true }
+        miModel: { type: string, nullable: true }
+        miPhotoUrl: { type: string, format: uri, nullable: true }
+        miStatus: { type: string, nullable: true }
+        miCondition: { type: string, nullable: true }
+        miPriceUsdCents: { type: integer, minimum: 0, description: Authoritative unit price in integer minor units. }
+        miPriceDisplay: { type: string }
+        miMarkupPct: { type: integer }
+        miCurrency: { type: string, minLength: 3, maxLength: 3 }
+    MarketplaceCartItem:
+      type: object
+      required: [mciListingId, mciTitle, mciCategory, mciBrand, mciModel, mciQuantity, mciUnitPriceUsdCents, mciSubtotalCents, mciUnitPriceDisplay, mciSubtotalDisplay]
+      properties:
+        mciListingId: { type: string, format: uuid }
+        mciTitle: { type: string }
+        mciCategory: { type: string }
+        mciBrand: { type: string, nullable: true }
+        mciModel: { type: string, nullable: true }
+        mciQuantity: { type: integer, minimum: 1, maximum: 1 }
+        mciUnitPriceUsdCents: { type: integer, minimum: 0 }
+        mciSubtotalCents: { type: integer, minimum: 0 }
+        mciUnitPriceDisplay: { type: string }
+        mciSubtotalDisplay: { type: string }
+    MarketplaceCart:
+      type: object
+      required: [mcCartId, mcItems, mcCurrency, mcSubtotalCents, mcSubtotalDisplay]
+      properties:
+        mcCartId: { type: string, format: uuid }
+        mcItems:
+          type: array
+          items: { $ref: '#/components/schemas/MarketplaceCartItem' }
+        mcCurrency: { type: string, minLength: 3, maxLength: 3 }
+        mcSubtotalCents: { type: integer, minimum: 0 }
+        mcSubtotalDisplay: { type: string }
+    MarketplaceCartItemUpdate:
+      type: object
+      additionalProperties: false
+      required: [mciuListingId, mciuQuantity]
+      properties:
+        mciuListingId: { type: string, format: uuid }
+        mciuQuantity: { type: integer, minimum: 0, maximum: 1, description: Zero removes the item; one reserves the unique sale asset in the cart. }
+    MarketplaceShippingAddress:
+      type: object
+      additionalProperties: false
+      required: [msaAddressLine1, msaCity, msaProvince, msaCountryCode]
+      properties:
+        msaAddressLine1: { type: string, minLength: 1, maxLength: 200 }
+        msaAddressLine2: { type: string, minLength: 1, maxLength: 200 }
+        msaCity: { type: string, minLength: 1, maxLength: 200 }
+        msaProvince: { type: string, minLength: 1, maxLength: 200 }
+        msaPostalCode: { type: string, minLength: 1, maxLength: 40 }
+        msaCountryCode: { type: string, pattern: '^[A-Z]{2}$' }
+    MarketplaceCheckoutRequest:
+      type: object
+      additionalProperties: false
+      required: [mcrBuyerName, mcrBuyerEmail]
+      properties:
+        mcrBuyerName: { type: string, minLength: 1, maxLength: 160 }
+        mcrBuyerEmail: { type: string, format: email, maxLength: 254 }
+        mcrBuyerPhone: { type: string, pattern: '^\+[0-9]{8,15}$' }
+        mcrFulfillmentMethod: { type: string, enum: [pickup, local_delivery, shipping], default: pickup }
+        mcrShippingAddress:
+          $ref: '#/components/schemas/MarketplaceShippingAddress'
+    MarketplaceOrderItem:
+      type: object
+      required: [moiListingId, moiTitle, moiQuantity, moiUnitPriceUsdCents, moiSubtotalCents, moiUnitPriceDisplay, moiSubtotalDisplay]
+      properties:
+        moiListingId: { type: string, format: uuid }
+        moiTitle: { type: string }
+        moiQuantity: { type: integer, minimum: 1, maximum: 1 }
+        moiUnitPriceUsdCents: { type: integer, minimum: 0 }
+        moiSubtotalCents: { type: integer, minimum: 0 }
+        moiUnitPriceDisplay: { type: string }
+        moiSubtotalDisplay: { type: string }
+    MarketplaceStateHistoryEntry:
+      type: array
+      minItems: 2
+      maxItems: 2
+      description: State code followed by its UTC transition timestamp.
+      items:
+        oneOf:
+          - { type: string }
+          - { type: string, format: date-time }
+    MarketplaceOrder:
+      type: object
+      required: [moOrderId, moCartId, moCurrency, moTotalUsdCents, moTotalDisplay, moStatus, moStatusHistory, moBuyerName, moBuyerEmail, moBuyerPhone, moPaymentProvider, moPaypalOrderId, moPaypalPayerEmail, moPaidAt, moLookupToken, moCheckoutStatus, moFulfillmentMethod, moFulfillmentStatus, moHoldExpiresAt, moTrackingReference, moFulfillmentHistory, moCreatedAt, moUpdatedAt, moItems]
+      properties:
+        moOrderId: { type: string, format: uuid }
+        moCartId: { type: string, format: uuid, nullable: true }
+        moCurrency: { type: string, minLength: 3, maxLength: 3 }
+        moTotalUsdCents: { type: integer, minimum: 0 }
+        moTotalDisplay: { type: string }
+        moStatus: { type: string, description: Domain payment projection; fulfillment status is separate. }
+        moStatusHistory:
+          type: array
+          items: { $ref: '#/components/schemas/MarketplaceStateHistoryEntry' }
+        moBuyerName: { type: string }
+        moBuyerEmail: { type: string, description: Valid email for staff responses; intentionally blank in redacted guest tracking responses. }
+        moBuyerPhone: { type: string, nullable: true }
+        moPaymentProvider: { type: string, enum: [datafast, paypal, stripe, bank_transfer, cash, pos], nullable: true }
+        moPaypalOrderId: { type: string, nullable: true }
+        moPaypalPayerEmail: { type: string, format: email, nullable: true }
+        moPaidAt: { type: string, format: date-time, nullable: true }
+        moLookupToken: { type: string, nullable: true, writeOnly: true, description: Returned only when the order is first created. }
+        moCheckoutStatus: { type: string, nullable: true }
+        moFulfillmentMethod: { type: string, enum: [pickup, local_delivery, shipping], nullable: true }
+        moFulfillmentStatus:
+          type: string
+          enum: [on_hold, ready_to_fulfill, picking, ready_for_pickup, shipped, delivered, cancellation_requested, cancelled, return_requested, return_authorized, return_in_transit, returned, closed, expired]
+          nullable: true
+        moHoldExpiresAt: { type: string, format: date-time, nullable: true }
+        moTrackingReference: { type: string, nullable: true }
+        moFulfillmentHistory:
+          type: array
+          items: { $ref: '#/components/schemas/MarketplaceStateHistoryEntry' }
+        moCreatedAt: { type: string, format: date-time }
+        moUpdatedAt: { type: string, format: date-time }
+        moItems:
+          type: array
+          items: { $ref: '#/components/schemas/MarketplaceOrderItem' }
+    MarketplacePaypalCapture:
+      type: object
+      additionalProperties: false
+      required: [pcCaptureOrderId, pcCapturePaypalId]
+      properties:
+        pcCaptureOrderId: { type: string, format: uuid }
+        pcCapturePaypalId: { type: string, minLength: 1, maxLength: 128, pattern: '^[A-Za-z0-9_-]+$' }
+    MarketplaceOrderUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        mouStatus: { type: string }
+        mouPaymentProvider: { type: string, nullable: true }
+        mouPaidAt: { type: string, format: date-time, nullable: true }
+    MarketplaceFulfillmentUpdate:
+      type: object
+      additionalProperties: false
+      required: [mfuStatus]
+      properties:
+        mfuStatus:
+          type: string
+          enum: [on_hold, ready_to_fulfill, picking, ready_for_pickup, shipped, delivered, cancellation_requested, cancelled, return_requested, return_authorized, return_in_transit, returned, closed, expired]
+        mfuCarrier: { type: string, minLength: 1, maxLength: 120 }
+        mfuTrackingReference: { type: string, minLength: 1, maxLength: 160 }
+        mfuReasonCode: { type: string, minLength: 1, maxLength: 80 }
+        mfuNotes: { type: string, minLength: 1, maxLength: 500 }
     ServiceStorefrontPackage:
       type: object
       required: [sspId, sspServiceKind, sspTier, sspName, sspDescription, sspPriceUsdCents, sspCurrency, sspMinSongCount, sspMaxSongCount, sspTurnaroundDays, sspRevisionCount, sspDeliverables, sspFeatures, sspActive, sspSortOrder]
@@ -4361,20 +4836,22 @@ components:
         cperReason: { type: string, minLength: 8, maxLength: 500 }
     DatafastCheckout:
       type: object
-      required: [dcOrderId, dcCheckoutId, dcWidgetUrl, dcAmount, dcCurrency]
+      required: [dcOrderId, dcCheckoutId, dcWidgetUrl, dcAmount, dcCurrency, dcLookupToken]
       properties:
         dcOrderId: { type: string }
         dcCheckoutId: { type: string }
         dcWidgetUrl: { type: string, format: uri }
         dcAmount: { type: string, pattern: '^[0-9]+\\.[0-9]{2}$' }
         dcCurrency: { type: string, minLength: 3, maxLength: 3 }
+        dcLookupToken: { type: string, nullable: true, writeOnly: true, description: Returned only when the guest order is first created. }
     PaypalCreate:
       type: object
-      required: [pcOrderId, pcPaypalOrderId, pcApprovalUrl]
+      required: [pcOrderId, pcPaypalOrderId, pcApprovalUrl, pcLookupToken]
       properties:
         pcOrderId: { type: string }
         pcPaypalOrderId: { type: string }
         pcApprovalUrl: { type: string, format: uri, nullable: true }
+        pcLookupToken: { type: string, nullable: true, writeOnly: true, description: Returned only when the guest order is first created. }
     PaymentSheetParams:
       type: object
       required: [psCustomerId, psEphemeralKeySecret, psPaymentIntentClientSecret, psPublishableKey]
@@ -4385,7 +4862,7 @@ components:
         psPublishableKey: { type: string }
     StripePaymentIntent:
       type: object
-      required: [spiClientSecret, spiOrderId, spiAmountCents, spiCurrency, spiPaymentSheet]
+      required: [spiClientSecret, spiOrderId, spiAmountCents, spiCurrency, spiPaymentSheet, spiLookupToken]
       properties:
         spiClientSecret: { type: string, writeOnly: true }
         spiOrderId: { type: string }
@@ -4395,6 +4872,7 @@ components:
           allOf:
             - $ref: '#/components/schemas/PaymentSheetParams'
           nullable: true
+        spiLookupToken: { type: string, nullable: true, writeOnly: true, description: Returned only when the guest order is first created. }
     DdexStandardVersion:
       type: object
       additionalProperties: false

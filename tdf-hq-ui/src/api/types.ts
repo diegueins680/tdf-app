@@ -235,6 +235,13 @@ export interface MarketplaceOrderDTO {
   moPaypalOrderId?: string | null;
   moPaypalPayerEmail?: string | null;
   moPaidAt?: string | null;
+  moLookupToken?: string | null;
+  moCheckoutStatus?: string | null;
+  moFulfillmentMethod?: string | null;
+  moFulfillmentStatus?: string | null;
+  moHoldExpiresAt?: string | null;
+  moTrackingReference?: string | null;
+  moFulfillmentHistory?: [string, string][];
   moCreatedAt: string;
   moUpdatedAt: string;
   moItems: MarketplaceOrderItemDTO[];
@@ -252,6 +259,7 @@ export interface DatafastCheckoutDTO {
   dcWidgetUrl: string;
   dcAmount: string;
   dcCurrency: string;
+  dcLookupToken?: string | null;
 }
 
 export interface StripePaymentIntentDTO {
@@ -261,12 +269,31 @@ export interface StripePaymentIntentDTO {
   spiAmountCents: number;
   spiCurrency: string;
   spiPaymentSheet?: Record<string, unknown> | null;
+  spiLookupToken?: string | null;
 }
 
 export interface PaypalCreateDTO {
   pcOrderId: string;
   pcPaypalOrderId: string;
   pcApprovalUrl?: string | null;
+  pcLookupToken?: string | null;
+}
+
+export interface MarketplaceShippingAddress {
+  msaAddressLine1: string;
+  msaAddressLine2?: string;
+  msaCity: string;
+  msaProvince: string;
+  msaPostalCode?: string;
+  msaCountryCode: string;
+}
+
+export interface MarketplaceFulfillmentUpdatePayload {
+  mfuStatus: string;
+  mfuCarrier?: string;
+  mfuTrackingReference?: string;
+  mfuReasonCode?: string;
+  mfuNotes?: string;
 }
 
 export interface PaypalCaptureRequest {

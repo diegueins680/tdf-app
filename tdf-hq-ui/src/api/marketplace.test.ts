@@ -1,41 +1,71 @@
 import { jest } from '@jest/globals';
 
-const getMock = jest.fn<(path: string) => Promise<unknown>>();
+const getMock = jest.fn<(path: string, init?: RequestInit) => Promise<unknown>>();
+const postMock = jest.fn<(path: string, body: unknown, init?: RequestInit) => Promise<unknown>>();
+const putMock = jest.fn<(path: string, body: unknown, init?: RequestInit) => Promise<unknown>>();
 
 jest.unstable_mockModule('./client', () => ({
-  get: getMock,
-  post: jest.fn(),
-  put: jest.fn(),
+  get: (path: string, init?: RequestInit) => getMock(path, init),
+  post: (path: string, body: unknown, init?: RequestInit) => postMock(path, body, init),
+  put: (path: string, body: unknown, init?: RequestInit) => putMock(path, body, init),
 }));
 
-const { Marketplace } = await import('./marketplace');
+const {
+  Marketplace,
+  getMarketplaceCheckoutIdempotencyKey,
+  loadMarketplaceLookupToken,
+  storeMarketplaceLookupToken,
+} = await import('./marketplace');
 
-describe('Marketplace.listOrders', () => {
+describe('marketplace checkout API security contract', () => {
   beforeEach(() => {
     getMock.mockReset();
+    postMock.mockReset();
+    putMock.mockReset();
+    window.localStorage.clear();
+    window.sessionStorage.clear();
   });
 
-  it('keeps offset=0 when building query params', async () => {
-    getMock.mockResolvedValueOnce([]);
+  it('uses one stable checkout idempotency key when the customer switches payment rails', () => {
+    const datafastKey = getMarketplaceCheckoutIdempotencyKey('cart-1', 'datafast');
+    const paypalKey = getMarketplaceCheckoutIdempotencyKey('cart-1', 'paypal');
+    const manualKey = getMarketplaceCheckoutIdempotencyKey('cart-1', 'bank_transfer');
 
-    await Marketplace.listOrders({ status: 'pending', limit: 25, offset: 0 });
-
-    expect(getMock).toHaveBeenCalledWith('/marketplace/orders?status=pending&limit=25&offset=0');
+    expect(datafastKey).toMatch(/^[0-9a-f-]{36}$/i);
+    expect(paypalKey).toBe(datafastKey);
+    expect(manualKey).toBe(datafastKey);
+    expect(window.localStorage.getItem('tdf-marketplace-checkout-idempotency:cart-1')).toBe(datafastKey);
   });
 
-  it('drops invalid numeric filters', async () => {
-    getMock.mockResolvedValueOnce([]);
+  it('sends the immutable checkout key on every order-creation request', async () => {
+    postMock.mockResolvedValue({});
+    const payload = { mcrBuyerName: 'Ada', mcrBuyerEmail: 'ada@example.com' };
 
-    await Marketplace.listOrders({ limit: 0, offset: -2 });
+    await Marketplace.datafastCheckout('cart-1', payload, 'checkout-key');
 
-    expect(getMock).toHaveBeenCalledWith('/marketplace/orders');
+    expect(postMock).toHaveBeenCalledWith(
+      '/marketplace/cart/cart-1/datafast/checkout',
+      payload,
+      { headers: { 'Idempotency-Key': 'checkout-key' } },
+    );
   });
 
-  it('drops limits that truncate to zero and trims status text', async () => {
-    getMock.mockResolvedValueOnce([]);
+  it('keeps guest lookup credentials out of URLs and sends them only as headers', async () => {
+    getMock.mockResolvedValue({});
+    storeMarketplaceLookupToken('order-1', 'lookup-secret');
 
-    await Marketplace.listOrders({ status: '  pending  ', limit: 0.7, offset: 1.9 });
+    expect(loadMarketplaceLookupToken('order-1')).toBe('lookup-secret');
+    await Marketplace.getOrder('order-1', 'lookup-secret');
+    await Marketplace.confirmDatafastPayment('order-1', '/v1/checkouts/checkout-1/payment', 'lookup-secret');
 
-    expect(getMock).toHaveBeenCalledWith('/marketplace/orders?status=pending&offset=1');
+    expect(getMock).toHaveBeenNthCalledWith(
+      1,
+      '/marketplace/orders/order-1',
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+    expect(getMock.mock.calls[1]?.[0]).not.toContain('lookup-secret');
+    expect(getMock.mock.calls[1]?.[1]).toEqual({
+      headers: { 'X-Order-Lookup-Token': 'lookup-secret' },
+    });
   });
 });

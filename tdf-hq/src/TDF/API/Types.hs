@@ -29,6 +29,7 @@ import qualified Data.Aeson.Key as AKey
 import qualified Data.Aeson.KeyMap as AKM
 import           Data.Time    (UTCTime, Day)
 import           Data.UUID    (UUID)
+import qualified Data.UUID as UUID
 import           Data.Maybe   (fromMaybe)
 import           GHC.Generics (Generic)
 import           Network.HTTP.Media ((//))
@@ -475,7 +476,7 @@ data MarketplaceCartItemUpdate = MarketplaceCartItemUpdate
   } deriving (Show, Generic)
 
 maxMarketplaceCartItemQuantity :: Int
-maxMarketplaceCartItemQuantity = 99
+maxMarketplaceCartItemQuantity = 1
 
 instance FromJSON MarketplaceCartItemUpdate where
   parseJSON value = do
@@ -498,7 +499,13 @@ instance ToJSON MarketplaceCartItemUpdate
 
 normalizeMarketplaceCartListingId :: Text -> Either String Text
 normalizeMarketplaceCartListingId rawListingId =
-  normalizeMarketplacePositiveDecimalId "mciuListingId" rawListingId
+  normalizeMarketplaceUuid "mciuListingId" rawListingId
+
+normalizeMarketplaceUuid :: Text -> Text -> Either String Text
+normalizeMarketplaceUuid fieldName rawValue =
+  case UUID.fromText (T.strip rawValue) of
+    Just value -> Right (UUID.toText value)
+    Nothing -> Left (T.unpack fieldName <> " must be a UUID")
 
 normalizeMarketplacePositiveDecimalId :: Text -> Text -> Either String Text
 normalizeMarketplacePositiveDecimalId fieldName rawValue =
@@ -521,11 +528,51 @@ data MarketplaceCheckoutReq = MarketplaceCheckoutReq
   { mcrBuyerName  :: Text
   , mcrBuyerEmail :: Text
   , mcrBuyerPhone :: Maybe Text
+  , mcrFulfillmentMethod :: Maybe Text
+  , mcrShippingAddress :: Maybe MarketplaceShippingAddress
   } deriving (Show, Generic)
+
+data MarketplaceShippingAddress = MarketplaceShippingAddress
+  { msaAddressLine1 :: Text
+  , msaAddressLine2 :: Maybe Text
+  , msaCity         :: Text
+  , msaProvince     :: Text
+  , msaPostalCode   :: Maybe Text
+  , msaCountryCode  :: Text
+  } deriving (Show, Generic)
+
+instance FromJSON MarketplaceShippingAddress where
+  parseJSON value = do
+    rejectNullOptionalFields "MarketplaceShippingAddress"
+      ["msaAddressLine2", "msaPostalCode"] value
+    address <- genericParseJSON strictObjectOptions value
+    addressLine1 <- requiredAddressField "msaAddressLine1" (msaAddressLine1 address)
+    city <- requiredAddressField "msaCity" (msaCity address)
+    province <- requiredAddressField "msaProvince" (msaProvince address)
+    let country = T.toUpper (T.strip (msaCountryCode address))
+    if T.length country /= 2 || not (T.all isAsciiUpper country)
+      then fail "msaCountryCode must be an ISO 3166-1 alpha-2 code"
+      else pure address
+        { msaAddressLine1 = addressLine1
+        , msaAddressLine2 = normalizeMarketplaceOptionalField (msaAddressLine2 address)
+        , msaCity = city
+        , msaProvince = province
+        , msaPostalCode = normalizeMarketplaceOptionalField (msaPostalCode address)
+        , msaCountryCode = country
+        }
+    where
+      requiredAddressField label rawValue =
+        let normalized = T.strip rawValue
+        in if T.null normalized || T.length normalized > 200
+             then fail (label <> " must contain 1 to 200 characters")
+             else pure normalized
+
+instance ToJSON MarketplaceShippingAddress
 
 instance FromJSON MarketplaceCheckoutReq where
   parseJSON value = do
-    rejectNullOptionalFields "MarketplaceCheckoutReq" ["mcrBuyerPhone"] value
+    rejectNullOptionalFields "MarketplaceCheckoutReq"
+      ["mcrBuyerPhone", "mcrFulfillmentMethod", "mcrShippingAddress"] value
     payload <- genericParseJSON strictObjectOptions value
     buyerName <- normalizeMarketplaceBuyerNameField (mcrBuyerName payload)
     buyerEmail <- normalizeMarketplaceBuyerEmailField (mcrBuyerEmail payload)
@@ -534,6 +581,7 @@ instance FromJSON MarketplaceCheckoutReq where
       { mcrBuyerName = buyerName
       , mcrBuyerEmail = buyerEmail
       , mcrBuyerPhone = buyerPhone
+      , mcrFulfillmentMethod = normalizeMarketplaceOptionalField (mcrFulfillmentMethod payload)
       }
 instance ToJSON MarketplaceCheckoutReq
 
@@ -687,6 +735,13 @@ data MarketplaceOrderDTO = MarketplaceOrderDTO
   , moPaypalOrderId :: Maybe Text
   , moPaypalPayerEmail :: Maybe Text
   , moPaidAt        :: Maybe UTCTime
+  , moLookupToken   :: Maybe Text
+  , moCheckoutStatus :: Maybe Text
+  , moFulfillmentMethod :: Maybe Text
+  , moFulfillmentStatus :: Maybe Text
+  , moHoldExpiresAt :: Maybe UTCTime
+  , moTrackingReference :: Maybe Text
+  , moFulfillmentHistory :: [(Text, UTCTime)]
   , moCreatedAt     :: UTCTime
   , moUpdatedAt     :: UTCTime
   , moItems         :: [MarketplaceOrderItemDTO]
@@ -732,12 +787,29 @@ data MarketplaceOrderUpdateParsed = MarketplaceOrderUpdateParsed
 instance FromJSON MarketplaceOrderUpdateParsed where
   parseJSON = genericParseJSON strictObjectOptions
 
+data MarketplaceFulfillmentUpdate = MarketplaceFulfillmentUpdate
+  { mfuStatus :: Text
+  , mfuCarrier :: Maybe Text
+  , mfuTrackingReference :: Maybe Text
+  , mfuReasonCode :: Maybe Text
+  , mfuNotes :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON MarketplaceFulfillmentUpdate where
+  parseJSON value = do
+    rejectNullOptionalFields "MarketplaceFulfillmentUpdate"
+      ["mfuCarrier", "mfuTrackingReference", "mfuReasonCode", "mfuNotes"] value
+    genericParseJSON strictObjectOptions value
+
+instance ToJSON MarketplaceFulfillmentUpdate
+
 data DatafastCheckoutDTO = DatafastCheckoutDTO
   { dcOrderId     :: Text
   , dcCheckoutId  :: Text
   , dcWidgetUrl   :: Text
   , dcAmount      :: Text
   , dcCurrency    :: Text
+  , dcLookupToken :: Maybe Text
   } deriving (Show, Generic)
 
 instance ToJSON DatafastCheckoutDTO
@@ -747,6 +819,7 @@ data PaypalCreateDTO = PaypalCreateDTO
   { pcOrderId       :: Text
   , pcPaypalOrderId :: Text
   , pcApprovalUrl   :: Maybe Text
+  , pcLookupToken   :: Maybe Text
   } deriving (Show, Generic)
 
 instance ToJSON PaypalCreateDTO
@@ -763,7 +836,7 @@ instance FromJSON PaypalCaptureReq where
     payload <- genericParseJSON strictObjectOptions value
     orderId <-
       either fail pure $
-        normalizeMarketplacePositiveDecimalId
+        normalizeMarketplaceUuid
           "pcCaptureOrderId"
           (pcCaptureOrderId payload)
     paypalId <-

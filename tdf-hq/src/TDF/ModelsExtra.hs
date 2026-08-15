@@ -37,7 +37,7 @@ import           TDF.Catalog.Models
 import           TDF.Models         (ArtistProfileId, InvoiceId, PartyId, ServiceKind)
 import           TDF.UUIDInstances  ()
 
-data AssetStatus = Active | Booked | OutForMaintenance | Retired
+data AssetStatus = Active | Booked | OutForMaintenance | Retired | Sold
   deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
 derivePersistField "AssetStatus"
 

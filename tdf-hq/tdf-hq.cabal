@@ -53,6 +53,7 @@ executable tdf-hq-exe
     TDF.Auth
     TDF.CampaignAutomation
     TDF.Commerce.CheckoutStore
+    TDF.Commerce.MarketplaceSales
     TDF.Commerce.ProviderEventStore
     TDF.Commerce.ProviderEventWorker
     TDF.Commerce.RefundStore
@@ -258,6 +259,7 @@ test-suite tdf-hq-test
     TDF.Auth
     TDF.CampaignAutomation
     TDF.Commerce.CheckoutStore
+    TDF.Commerce.MarketplaceSales
     TDF.Commerce.ProviderEventStore
     TDF.Commerce.ProviderEventWorker
     TDF.Commerce.RefundStore

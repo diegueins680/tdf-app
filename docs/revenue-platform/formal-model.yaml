@@ -26,6 +26,37 @@ state_machines:
       expired: []
       refunded: []
       chargeback: []
+  marketplace_sale_fulfillment:
+    initial: on_hold
+    method_specific_transitions:
+      pickup:
+        picking: [ready_for_pickup]
+      local_delivery:
+        picking: [shipped]
+      shipping:
+        picking: [shipped]
+    transitions:
+      on_hold: [ready_to_fulfill, cancelled, expired]
+      ready_to_fulfill: [picking, cancellation_requested]
+      picking: [ready_for_pickup, shipped, cancellation_requested]
+      ready_for_pickup: [delivered, cancellation_requested]
+      shipped: [delivered]
+      cancellation_requested: [cancelled]
+      delivered: [return_requested, closed]
+      return_requested: [return_authorized, closed]
+      return_authorized: [return_in_transit, returned]
+      return_in_transit: [returned]
+      returned: [closed]
+      cancelled: []
+      closed: []
+      expired: []
+    invariants:
+      - outbound fulfillment requires checkout in paid or partially_refunded
+      - payment paid transitions only on_hold to ready_to_fulfill
+      - paid never implies picked_up shipped delivered or closed
+      - an asset becomes sold only when fulfillment becomes delivered
+      - a returned asset restores custody but does not reactivate its listing
+      - pickup cannot transition through shipped and delivery cannot transition through ready_for_pickup
   quote:
     initial: draft
     transitions:
@@ -124,6 +155,7 @@ payment_fulfillment_separation:
 idempotency:
   unique_scopes:
     - checkout(domain_type, domain_id, client_request_key)
+    - marketplace_sale(cart_id, checkout_client_request_key)
     - provider_order(provider, merchant_account, provider_order_id)
     - provider_resource(provider, merchant_account, provider_resource_id)
     - provider_event(provider, merchant_account, provider_event_id)

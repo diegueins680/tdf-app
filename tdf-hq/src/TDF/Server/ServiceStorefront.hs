@@ -14,6 +14,11 @@ module TDF.Server.ServiceStorefront
   , validateServiceFulfillmentTransition
   , ServicePaypalCaptureOutcome(..)
   , parsePaypalCaptureOutcome
+  , validatePaypalSuccessfulCapture
+  , loadPaypalEnvForService
+  , createPaypalOrderRemoteForService
+  , capturePaypalOrderRemoteForService
+  , paypalRequestId
   , PaypalWebhookEnvelope(..)
   , PaypalWebhookHeaders(..)
   , PaypalWebhookCapture(..)
@@ -382,6 +387,7 @@ createDatafastCheckoutHandler orderIdText mLookupToken = do
         , dcWidgetUrl  = T.pack widgetUrl
         , dcAmount     = formatMoney (defaultLocale envConfig) currency (fromIntegral totalCents)
         , dcCurrency   = currency
+        , dcLookupToken = Nothing
         }
 
 confirmDatafastStatusHandler :: Maybe Text -> Maybe Text -> Maybe Text -> AppM ServiceStorefrontOrderDTO
@@ -459,6 +465,7 @@ confirmDatafastStatusHandler mOrderId mResourcePath mLookupToken = do
                       , Checkout.vpMerchantRef = sdfEntityId dfEnv
                       , Checkout.vpResourceType = "payment"
                       , Checkout.vpProviderResource = paymentId
+                      , Checkout.vpProviderResourcePath = Just resourcePath
                       , Checkout.vpOrderReference = toPathPiece oid
                       , Checkout.vpAmountMinor = fromIntegral totalCents
                       , Checkout.vpCurrency = currency
@@ -591,6 +598,7 @@ createPaypalOrderHandler orderIdText mLookupToken = do
         { pcOrderId = ME.serviceStorefrontOrderOrderNumber order
         , pcPaypalOrderId = ppOrderId
         , pcApprovalUrl = approvalUrl
+        , pcLookupToken = Nothing
         }
 
 capturePaypalHandler :: Maybe Text -> ServiceStorefrontPaypalCaptureReq -> AppM ServiceStorefrontOrderDTO
@@ -679,6 +687,8 @@ capturePaypalHandler mLookupToken ServiceStorefrontPaypalCaptureReq{..} = do
                       , Checkout.vpMerchantRef = merchantRef
                       , Checkout.vpResourceType = "capture"
                       , Checkout.vpProviderResource = captureId
+                      , Checkout.vpProviderResourcePath = Just
+                          ("/v2/checkout/orders/" <> pcCapturePaypalId <> "/capture")
                       , Checkout.vpOrderReference = toPathPiece oid
                       , Checkout.vpAmountMinor = fromIntegral
                           (ME.serviceStorefrontOrderPriceUsdCents order)
@@ -848,7 +858,12 @@ processPaypalWebhookEventIO envPool environment merchantRef envelope now =
       Left message -> pure (PaypalEventPermanentFailure message Nothing Nothing Nothing)
       Right capture -> do
         result <- tryAny $ flip runSqlPool envPool $ do
-          mBound <- loadBoundPaypalOrder environment merchantRef (pwcPaypalOrderId capture)
+          mCaptureBound <- loadBoundPaypalCapture
+            environment merchantRef (pwcCaptureId capture)
+          mBound <- case mCaptureBound of
+            Just existing -> pure (Just existing)
+            Nothing -> loadBoundPaypalOrder
+              environment merchantRef (pwcPaypalOrderId capture)
           case mBound of
             Nothing -> pure PaypalEventIgnored
             Just bound -> case validatePaypalWebhookCaptureBinding merchantRef bound capture of
@@ -891,6 +906,8 @@ processPaypalWebhookEventIO envPool environment merchantRef envelope now =
                       , Checkout.vpMerchantRef = merchantRef
                       , Checkout.vpResourceType = "capture"
                       , Checkout.vpProviderResource = pwcCaptureId capture
+                      , Checkout.vpProviderResourcePath = Just
+                          ("/v2/checkout/orders/" <> pwcPaypalOrderId capture <> "/capture")
                       , Checkout.vpOrderReference = bpcDomainOrderId bound
                       , Checkout.vpAmountMinor = bpcExpectedAmount bound
                       , Checkout.vpCurrency = bpcCurrency bound
@@ -904,7 +921,7 @@ processPaypalWebhookEventIO envPool environment merchantRef envelope now =
                         pure (PaypalEventPermanentFailure message
                           (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing)
                       Right newlyPaid -> do
-                        when newlyPaid $ do
+                        when (newlyPaid && bpcDomainType bound == "mixing_mastering") $ do
                           rawExecute
                             "UPDATE service_storefront_order SET status = 'paid',\
                             \ paypal_capture_id = ?, paid_at = COALESCE(paid_at, ?), updated_at = ?\
@@ -990,31 +1007,35 @@ loadBoundPaypalCaptureBy
   -> SqlPersistT IO (Maybe BoundPaypalCapture)
 loadBoundPaypalCaptureBy bindingPredicate environment merchantRef providerResource = do
   rows <- (rawSql
-    ("SELECT checkout.id::text, attempt.id::text, checkout.domain_order_id,\
+    ("SELECT checkout.id::text, attempt.id::text, checkout.domain_type, checkout.domain_order_id,\
      \ checkout.total_minor, checkout.currency, attempt.merchant_account_ref,\
      \ order_binding.provider_resource_id\
      \ FROM commerce_checkout_session checkout\
      \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id = checkout.id\
      \ JOIN commerce_provider_binding binding ON binding.payment_attempt_id = attempt.id\
      \ JOIN commerce_provider_binding order_binding\
-     \   ON order_binding.payment_attempt_id = attempt.id\
+     \   ON order_binding.provider = attempt.provider\
+     \  AND order_binding.environment = attempt.environment\
+     \  AND order_binding.merchant_account_ref = attempt.merchant_account_ref\
+     \  AND order_binding.merchant_reference = checkout.domain_order_id\
      \  AND order_binding.resource_type = 'order'\
-     \ WHERE checkout.domain_type = 'mixing_mastering'\
+     \ WHERE checkout.domain_type IN ('mixing_mastering','marketplace_sale')\
      \ AND attempt.provider = 'paypal' AND attempt.environment = ?\
      \ AND attempt.merchant_account_ref = ? AND " <> bindingPredicate)
     [ PersistText (Checkout.checkoutEnvironmentText environment)
     , PersistText merchantRef
     , PersistText providerResource
     ] :: SqlPersistT IO
-      [( Single Text, Single Text, Single Text, Single Int64
+      [( Single Text, Single Text, Single Text, Single Text, Single Int64
        , Single Text, Single Text, Single Text
        )])
   pure $ case rows of
-    [( Single checkoutId, Single attemptId, Single domainOrderId, Single amount
+    [( Single checkoutId, Single attemptId, Single domainType, Single domainOrderId, Single amount
      , Single currency, Single storedMerchant, Single paypalOrderId
      )] -> Just BoundPaypalCapture
         { bpcCheckoutId = checkoutId
         , bpcAttemptId = attemptId
+        , bpcDomainType = domainType
         , bpcDomainOrderId = domainOrderId
         , bpcExpectedAmount = amount
         , bpcCurrency = currency
@@ -1976,6 +1997,9 @@ loadServiceDatafastEnv = do
   either (throwError . configurationError) pure
     (validateDatafastEnvironmentBase environment baseUrl)
   let testMode = T.pack <$> mTest
+  when (environment == Checkout.CheckoutProduction && testMode /= Nothing) $
+    throwError (configurationError
+      "DATAFAST_TEST_MODE must be unset when DATAFAST_ENV=production")
   pure ServiceDatafastEnv
     { sdfEntityId = entityId
     , sdfBearerToken = bearer
@@ -2226,6 +2250,7 @@ data PaypalEventProcessResult
 data BoundPaypalCapture = BoundPaypalCapture
   { bpcCheckoutId     :: Text
   , bpcAttemptId      :: Text
+  , bpcDomainType     :: Text
   , bpcDomainOrderId  :: Text
   , bpcExpectedAmount :: Int64
   , bpcCurrency       :: Text
@@ -2432,12 +2457,10 @@ paypalCertUrlMatchesEnvironment environment rawUrl =
 loadPaypalEnvForService
   :: AppM (Text, Text, String, Checkout.CheckoutEnvironment, Text)
 loadPaypalEnvForService = do
-  mCid <- liftIO $ lookupEnv "PAYPAL_CLIENT_ID"
-  mSecret <- liftIO $ lookupEnv "PAYPAL_CLIENT_SECRET"
   mEnv <- liftIO $ lookupEnv "PAYPAL_ENV"
   mMerchant <- liftIO $ lookupEnv "PAYPAL_MERCHANT_ID"
-  cid <- maybe (throwError err500 { errBody = "PAYPAL_CLIENT_ID not set" }) (pure . T.pack) mCid
-  secret <- maybe (throwError err500 { errBody = "PAYPAL_CLIENT_SECRET not set" }) (pure . T.pack) mSecret
+  cid <- loadRequiredSafeEnv "PAYPAL_CLIENT_ID" 256
+  secret <- loadRequiredSafeEnv "PAYPAL_CLIENT_SECRET" 512
   environment <- either (throwError . configurationError) pure
     (Checkout.resolveCheckoutEnvironment mEnv)
   merchantRef <- case T.strip . T.pack <$> mMerchant of
@@ -2559,7 +2582,7 @@ createPaypalOrderRemoteForService manager cid sec baseUrl internalOrderId totalC
         , requestHeaders =
             [ ("Content-Type", "application/json")
             , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
-            , ("PayPal-Request-Id", TE.encodeUtf8 ("svc-create-" <> T.take 27 internalOrderId))
+            , ("PayPal-Request-Id", TE.encodeUtf8 (paypalRequestId "create" internalOrderId))
             ]
         }
   resp <- liftIO $ httpLbs req manager
@@ -2576,6 +2599,10 @@ createPaypalOrderRemoteForService manager cid sec baseUrl internalOrderId totalC
       approvalUrl <- extractPaypalApprovalUrl obj
       pure (ppOrderId, approvalUrl)
     _ -> throwError err502 { errBody = "Invalid PayPal response format" }
+
+paypalRequestId :: Text -> Text -> Text
+paypalRequestId operation providerReference =
+  T.take 38 (T.toLower operation <> "-" <> hashLookupToken providerReference)
 
 data ServicePaypalCaptureOutcome = ServicePaypalCaptureOutcome
   { spcoStatus          :: Text
@@ -2600,7 +2627,7 @@ capturePaypalOrderRemoteForService manager cid sec baseUrl ppOrderId = do
         , requestHeaders =
             [ ("Content-Type", "application/json")
             , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
-            , ("PayPal-Request-Id", TE.encodeUtf8 ("service-capture-" <> ppOrderId))
+            , ("PayPal-Request-Id", TE.encodeUtf8 (paypalRequestId "capture" ppOrderId))
             ]
         }
   resp <- liftIO $ httpLbs req manager

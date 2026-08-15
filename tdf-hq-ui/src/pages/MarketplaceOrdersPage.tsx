@@ -44,7 +44,11 @@ import InventoryIcon from '@mui/icons-material/Inventory';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ClearIcon from '@mui/icons-material/Clear';
-import type { MarketplaceOrderDTO, MarketplaceOrderUpdatePayload } from '../api/types';
+import type {
+  MarketplaceFulfillmentUpdatePayload,
+  MarketplaceOrderDTO,
+  MarketplaceOrderUpdatePayload,
+} from '../api/types';
 import { Marketplace } from '../api/marketplace';
 import { DateTime } from 'luxon';
 import { Link as RouterLink } from 'react-router-dom';
@@ -75,6 +79,60 @@ const STATUS_PRESETS: { value: string; label: string; color: ChipProps['color'] 
   { value: 'failed', label: 'Falló', color: 'error' },
   { value: 'refunded', label: 'Reembolsado', color: 'default' },
 ];
+
+const FULFILLMENT_STATUS_LABELS: Record<string, string> = {
+  on_hold: 'Reserva activa',
+  ready_to_fulfill: 'Lista para preparar',
+  picking: 'En preparación',
+  ready_for_pickup: 'Lista para retiro',
+  shipped: 'Enviada',
+  delivered: 'Entregada',
+  cancellation_requested: 'Cancelación solicitada',
+  cancelled: 'Cancelada',
+  return_requested: 'Devolución solicitada',
+  return_authorized: 'Devolución autorizada',
+  return_in_transit: 'Devolución en tránsito',
+  returned: 'Devuelta',
+  closed: 'Cerrada',
+  expired: 'Reserva vencida',
+};
+
+const FULFILLMENT_METHOD_LABELS: Record<string, string> = {
+  pickup: 'Retiro',
+  local_delivery: 'Entrega local',
+  shipping: 'Envío',
+};
+
+const COMMON_FULFILLMENT_TRANSITIONS: Record<string, string[]> = {
+  on_hold: ['ready_to_fulfill', 'cancelled', 'expired'],
+  ready_to_fulfill: ['picking', 'cancellation_requested'],
+  picking: ['cancellation_requested'],
+  ready_for_pickup: ['delivered', 'cancellation_requested'],
+  shipped: ['delivered'],
+  cancellation_requested: ['cancelled'],
+  delivered: ['return_requested', 'closed'],
+  return_requested: ['return_authorized', 'closed'],
+  return_authorized: ['return_in_transit', 'returned'],
+  return_in_transit: ['returned'],
+  returned: ['closed'],
+};
+
+const fulfillmentStatusLabel = (value?: string | null) => (
+  value ? FULFILLMENT_STATUS_LABELS[value] ?? value : 'Sin runtime de entrega'
+);
+
+const fulfillmentMethodLabel = (value?: string | null) => (
+  value ? FULFILLMENT_METHOD_LABELS[value] ?? value : '—'
+);
+
+const fulfillmentTransitionsFor = (method?: string | null, current?: string | null) => {
+  if (!method || !current) return [];
+  const common = COMMON_FULFILLMENT_TRANSITIONS[current] ?? [];
+  if (current !== 'picking') return common;
+  return method === 'pickup'
+    ? [...common, 'ready_for_pickup']
+    : [...common, 'shipped'];
+};
 
 const QUICK_VIEW_PRESETS = [
   { value: 'last7', label: 'Últimos 7 días' },
@@ -191,6 +249,11 @@ export default function MarketplaceOrdersPage() {
   const [copyMenuAnchorEl, setCopyMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [statusConfirmOpen, setStatusConfirmOpen] = useState(false);
   const [pendingSavePayload, setPendingSavePayload] = useState<{ id: string; payload: MarketplaceOrderUpdatePayload } | null>(null);
+  const [fulfillmentStatusInput, setFulfillmentStatusInput] = useState('');
+  const [fulfillmentCarrierInput, setFulfillmentCarrierInput] = useState('');
+  const [fulfillmentTrackingInput, setFulfillmentTrackingInput] = useState('');
+  const [fulfillmentReasonInput, setFulfillmentReasonInput] = useState('');
+  const [fulfillmentNotesInput, setFulfillmentNotesInput] = useState('');
 
   const ordersQuery = useQuery<MarketplaceOrderDTO[], Error>({
     queryKey: ['marketplace-orders', statusFilter],
@@ -218,6 +281,11 @@ export default function MarketplaceOrdersPage() {
     setStatusInput('');
     setPaymentProviderInput(selectedOrder.moPaymentProvider ?? '');
     setPaidAtInput(formatInputDate(selectedOrder.moPaidAt));
+    setFulfillmentStatusInput('');
+    setFulfillmentCarrierInput('');
+    setFulfillmentTrackingInput(selectedOrder.moTrackingReference ?? '');
+    setFulfillmentReasonInput('');
+    setFulfillmentNotesInput('');
   }, [selectedOrder]);
 
   const statusFilterImpliesPaid = statusFilter !== 'all' && isPaidOrderStatus(statusFilter);
@@ -566,6 +634,26 @@ export default function MarketplaceOrdersPage() {
     },
   });
 
+  const fulfillmentMutation = useMutation<
+    MarketplaceOrderDTO,
+    Error,
+    { id: string; payload: MarketplaceFulfillmentUpdatePayload }
+  >({
+    mutationFn: ({ id, payload }) => Marketplace.updateFulfillment(id, payload),
+    onSuccess: (data) => {
+      qc.setQueryData(['marketplace-orders', statusFilter], (prev: MarketplaceOrderDTO[] | undefined) =>
+        prev ? prev.map((o) => (o.moOrderId === data.moOrderId ? data : o)) : prev,
+      );
+      void qc.invalidateQueries({ queryKey: ['marketplace-orders'] });
+      setFulfillmentStatusInput('');
+      setFulfillmentCarrierInput('');
+      setFulfillmentReasonInput('');
+      setFulfillmentNotesInput('');
+      setFulfillmentTrackingInput(data.moTrackingReference ?? '');
+      setToast('Entrega actualizada');
+    },
+  });
+
   const handleRefresh = () => {
     void qc.invalidateQueries({ queryKey: ['marketplace-orders'] });
   };
@@ -608,8 +696,14 @@ export default function MarketplaceOrdersPage() {
     setStatusInput('');
     setPaymentProviderInput('');
     setPaidAtInput('');
+    setFulfillmentStatusInput('');
+    setFulfillmentCarrierInput('');
+    setFulfillmentTrackingInput('');
+    setFulfillmentReasonInput('');
+    setFulfillmentNotesInput('');
     setCopyMenuAnchorEl(null);
     updateMutation.reset();
+    fulfillmentMutation.reset();
   };
 
   const closeCopyMenu = () => {
@@ -668,6 +762,22 @@ export default function MarketplaceOrdersPage() {
     const nowStr = DateTime.now().toFormat("yyyy-LL-dd'T'HH:mm");
     setStatusInput('paid');
     setPaidAtInput(nowStr);
+  };
+
+  const handleFulfillmentSave = async () => {
+    if (!selectedOrder || !fulfillmentStatusInput) return;
+    const payload: MarketplaceFulfillmentUpdatePayload = {
+      mfuStatus: fulfillmentStatusInput,
+    };
+    const carrier = fulfillmentCarrierInput.trim();
+    const trackingReference = fulfillmentTrackingInput.trim();
+    const reasonCode = fulfillmentReasonInput.trim();
+    const notes = fulfillmentNotesInput.trim();
+    if (carrier) payload.mfuCarrier = carrier;
+    if (trackingReference) payload.mfuTrackingReference = trackingReference;
+    if (reasonCode) payload.mfuReasonCode = reasonCode;
+    if (notes) payload.mfuNotes = notes;
+    await fulfillmentMutation.mutateAsync({ id: selectedOrder.moOrderId, payload });
   };
 
   const handleCopyOrderId = async (orderId: string) => {
@@ -745,7 +855,11 @@ export default function MarketplaceOrdersPage() {
   const paymentProviderHelperText = paymentProviderRequiredForShortcut
     ? 'Requerido antes de marcar una orden como pagada.'
     : undefined;
-  const showMarkPaidShortcut = Boolean(selectedOrder) && !isPaidOrderStatus(effectiveStatus) && Boolean(effectiveProvider);
+  const hasCanonicalFulfillment = Boolean(selectedOrder?.moFulfillmentMethod && selectedOrder.moFulfillmentStatus);
+  const showMarkPaidShortcut = Boolean(selectedOrder)
+    && !hasCanonicalFulfillment
+    && !isPaidOrderStatus(effectiveStatus)
+    && Boolean(effectiveProvider);
   const selectedBuyerIdentity = selectedOrder ? getOrderBuyerIdentity(selectedOrder) : '';
   const selectedBuyerEmail = selectedOrder ? normalizeEmailValue(selectedOrder.moBuyerEmail) : '';
   const selectedBuyerPhone = selectedOrder ? normalizeBuyerPhoneValue(selectedOrder.moBuyerPhone) : '';
@@ -768,6 +882,16 @@ export default function MarketplaceOrdersPage() {
   const availableStatusUpdatePresets = selectedOrder
     ? STATUS_PRESETS.filter((statusPreset) => statusPreset.value !== selectedOrder.moStatus)
     : STATUS_PRESETS;
+  const availableFulfillmentTransitions = fulfillmentTransitionsFor(
+    selectedOrder?.moFulfillmentMethod,
+    selectedOrder?.moFulfillmentStatus,
+  );
+  const selectedFulfillmentTransition = availableFulfillmentTransitions.includes(fulfillmentStatusInput)
+    ? fulfillmentStatusInput
+    : '';
+  const fulfillmentTrackingRequired = fulfillmentStatusInput === 'shipped'
+    && !fulfillmentTrackingInput.trim()
+    && !selectedOrder?.moTrackingReference;
   const orderPaginationResetKey = [
     statusFilter,
     providerFilter,
@@ -1406,6 +1530,21 @@ export default function MarketplaceOrdersPage() {
                           </Typography>
                           <Chip size="small" label={statusLabel(selectedOrder.moStatus)} color={statusColor(selectedOrder.moStatus)} />
                         </Stack>
+                        {hasCanonicalFulfillment && (
+                          <>
+                            <Typography variant="body2">
+                              <strong>Entrega:</strong> {fulfillmentStatusLabel(selectedOrder.moFulfillmentStatus)}
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Modalidad:</strong> {fulfillmentMethodLabel(selectedOrder.moFulfillmentMethod)}
+                            </Typography>
+                            {selectedOrder.moTrackingReference && (
+                              <Typography variant="body2">
+                                <strong>Guía:</strong> {selectedOrder.moTrackingReference}
+                              </Typography>
+                            )}
+                          </>
+                        )}
                         {showLatestStatusChangeSummary && latestStatusChange && (
                           <Typography variant="body2" color="text.secondary">
                             Último cambio: {formatDate(latestStatusChange[1])}
@@ -1426,9 +1565,92 @@ export default function MarketplaceOrdersPage() {
                     </CardContent>
                   </Card>
                   <Card variant="outlined" sx={{ flex: 1 }}>
-                    <CardHeader title="Actualizar estado" />
+                    <CardHeader title={hasCanonicalFulfillment ? 'Gestionar entrega' : 'Actualizar estado'} />
                     <CardContent>
-                      <Stack spacing={2}>
+                      {hasCanonicalFulfillment ? (
+                        <Stack spacing={2}>
+                          <Alert severity="info" variant="outlined">
+                            El pago y la entrega son estados separados. El pago canónico solo cambia con evidencia verificada del proveedor o aprobación del pago manual.
+                          </Alert>
+                          <FormControl fullWidth>
+                            <InputLabel id="fulfillment-status-input-label" shrink>Siguiente estado de entrega</InputLabel>
+                            <Select
+                              labelId="fulfillment-status-input-label"
+                              label="Siguiente estado de entrega"
+                              value={selectedFulfillmentTransition}
+                              displayEmpty
+                              renderValue={(value) => (value ? fulfillmentStatusLabel(String(value)) : 'Selecciona una transición')}
+                              onChange={(event) => setFulfillmentStatusInput(event.target.value)}
+                            >
+                              <MenuItem value="">
+                                <em>Selecciona una transición</em>
+                              </MenuItem>
+                              {availableFulfillmentTransitions.map((status) => (
+                                <MenuItem key={status} value={status}>
+                                  {fulfillmentStatusLabel(status)}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                          {(fulfillmentStatusInput === 'shipped' || Boolean(selectedOrder.moTrackingReference)) && (
+                            <>
+                              <TextField
+                                label="Transportista"
+                                fullWidth
+                                value={fulfillmentCarrierInput}
+                                onChange={(event) => setFulfillmentCarrierInput(event.target.value)}
+                                inputProps={{ maxLength: 120 }}
+                              />
+                              <TextField
+                                label="Referencia de seguimiento"
+                                fullWidth
+                                required={fulfillmentStatusInput === 'shipped'}
+                                value={fulfillmentTrackingInput}
+                                onChange={(event) => setFulfillmentTrackingInput(event.target.value)}
+                                inputProps={{ maxLength: 160 }}
+                                error={fulfillmentTrackingRequired}
+                                helperText={fulfillmentTrackingRequired ? 'La guía es obligatoria antes de marcar un envío.' : undefined}
+                              />
+                            </>
+                          )}
+                          <TextField
+                            label="Código de motivo"
+                            fullWidth
+                            value={fulfillmentReasonInput}
+                            onChange={(event) => setFulfillmentReasonInput(event.target.value)}
+                            inputProps={{ maxLength: 80 }}
+                            placeholder="cancelled_by_customer, damaged, delivered..."
+                          />
+                          <TextField
+                            label="Notas de operación"
+                            fullWidth
+                            multiline
+                            minRows={2}
+                            value={fulfillmentNotesInput}
+                            onChange={(event) => setFulfillmentNotesInput(event.target.value)}
+                            inputProps={{ maxLength: 500 }}
+                          />
+                          {availableFulfillmentTransitions.length === 0 ? (
+                            <Typography variant="body2" color="text.secondary">
+                              Este estado no tiene una transición operativa posterior.
+                            </Typography>
+                          ) : (
+                            <Button
+                              variant="contained"
+                              onClick={() => { void handleFulfillmentSave(); }}
+                              disabled={!fulfillmentStatusInput || fulfillmentTrackingRequired || fulfillmentMutation.isPending}
+                            >
+                              Guardar transición de entrega
+                            </Button>
+                          )}
+                          {fulfillmentMutation.isError && (
+                            <Alert severity="error">
+                              {fulfillmentMutation.error?.message ?? 'No se pudo actualizar la entrega'}
+                            </Alert>
+                          )}
+                        </Stack>
+                      ) : (
+                        <Stack spacing={2}>
                         <FormControl fullWidth>
                           <InputLabel id="status-input-label" shrink>Nuevo estado</InputLabel>
                           <Select
@@ -1520,7 +1742,8 @@ export default function MarketplaceOrdersPage() {
                         {updateMutation.isError && (
                           <Alert severity="error">{updateMutation.error?.message ?? 'No se pudo actualizar'}</Alert>
                         )}
-                      </Stack>
+                        </Stack>
+                      )}
                     </CardContent>
                   </Card>
                 </Stack>
@@ -1534,6 +1757,21 @@ export default function MarketplaceOrdersPage() {
                         {selectedStatusHistory.map(([st, ts], idx) => (
                           <Typography key={`${st}-${ts}-${idx}`} variant="body2" color="text.secondary">
                             {formatDate(ts)} — {statusLabel(st)}
+                          </Typography>
+                        ))}
+                      </Stack>
+                    </Stack>
+                  </>
+                )}
+                {hasCanonicalFulfillment && (selectedOrder.moFulfillmentHistory?.length ?? 0) > 0 && (
+                  <>
+                    <Divider />
+                    <Stack spacing={1}>
+                      <Typography variant="h6">Historial de entrega</Typography>
+                      <Stack spacing={0.5}>
+                        {selectedOrder.moFulfillmentHistory?.map(([status, occurredAt], index) => (
+                          <Typography key={`${status}-${occurredAt}-${index}`} variant="body2" color="text.secondary">
+                            {formatDate(occurredAt)} — {fulfillmentStatusLabel(status)}
                           </Typography>
                         ))}
                       </Stack>

@@ -101,6 +101,7 @@ import TDF.CampaignAutomation
       validateCampaignAutomationStatus )
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
 import qualified TDF.Commerce.CheckoutStore as CheckoutStore
+import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
 import qualified TDF.Commerce.ProviderEventStore as ProviderEventStore
 import qualified TDF.Commerce.ProviderEventWorker as ProviderEventWorker
 import qualified TDF.Commerce.RefundStore as RefundStore
@@ -778,6 +779,7 @@ main = hspec $ do
               (Just "checkout-abc")
               "/v1/checkouts/checkout-abc/payment"
               `shouldBe` Right "/v1/checkouts/checkout-abc/payment"
+
             ServiceStorefront.validateDatafastOrderResourcePath
               (Just "checkout-abc")
               "/v1/checkouts/checkout-other/payment"
@@ -997,6 +999,7 @@ main = hspec $ do
             let bound = ServiceStorefront.BoundPaypalCapture
                   { ServiceStorefront.bpcCheckoutId = "00000000-0000-4000-8000-000000000001"
                   , ServiceStorefront.bpcAttemptId = "00000000-0000-4000-8000-000000000002"
+                  , ServiceStorefront.bpcDomainType = "marketplace_sale"
                   , ServiceStorefront.bpcDomainOrderId = "00000000-0000-4000-8000-000000000003"
                   , ServiceStorefront.bpcExpectedAmount = 8000
                   , ServiceStorefront.bpcCurrency = "USD"
@@ -1024,6 +1027,17 @@ main = hspec $ do
             ServiceStorefront.validatePaypalWebhookCaptureBinding
               "MERCHANT" bound capture { ServiceStorefront.pwcPaypalOrderId = "ORDER-2" }
               `shouldSatisfy` isLeft
+
+        it "builds stable PayPal request IDs within the provider length limit" $ do
+            let first = ServiceStorefront.paypalRequestId
+                  "capture" "PAYPAL-ORDER-WITH-A-LONG-PROVIDER-REFERENCE-0001"
+                replay = ServiceStorefront.paypalRequestId
+                  "capture" "PAYPAL-ORDER-WITH-A-LONG-PROVIDER-REFERENCE-0001"
+                other = ServiceStorefront.paypalRequestId
+                  "capture" "PAYPAL-ORDER-WITH-A-LONG-PROVIDER-REFERENCE-0002"
+            Data.Text.length first `shouldSatisfy` (<= 38)
+            first `shouldBe` replay
+            first `shouldNotBe` other
 
         it "parses only represented PayPal refund evidence" $ do
             let payload = A.object
@@ -1077,6 +1091,67 @@ main = hspec $ do
             ServiceStorefront.validateServiceFulfillmentTransition "paid" "refunded"
               `shouldSatisfy` isLeft
             ServiceStorefront.validateServiceFulfillmentTransition "paid" "completed"
+              `shouldSatisfy` isLeft
+
+    describe "marketplace sale fulfillment invariants" $ do
+        it "keeps terminal fulfillment states terminal" $
+            QC.property $ \(QC.NonNegative rawMethod) (QC.NonNegative rawState) ->
+                let methods =
+                        [ MarketplaceSales.MarketplacePickup
+                        , MarketplaceSales.MarketplaceLocalDelivery
+                        , MarketplaceSales.MarketplaceShipping
+                        ]
+                    states =
+                        [ MarketplaceSales.MarketplaceOnHold
+                        , MarketplaceSales.MarketplaceReadyToFulfill
+                        , MarketplaceSales.MarketplacePicking
+                        , MarketplaceSales.MarketplaceReadyForPickup
+                        , MarketplaceSales.MarketplaceShipped
+                        , MarketplaceSales.MarketplaceDelivered
+                        , MarketplaceSales.MarketplaceCancellationRequested
+                        , MarketplaceSales.MarketplaceCancelled
+                        , MarketplaceSales.MarketplaceReturnRequested
+                        , MarketplaceSales.MarketplaceReturnAuthorized
+                        , MarketplaceSales.MarketplaceReturnInTransit
+                        , MarketplaceSales.MarketplaceReturned
+                        , MarketplaceSales.MarketplaceClosed
+                        , MarketplaceSales.MarketplaceExpired
+                        ]
+                    method = methods !! (rawMethod `mod` length methods)
+                    candidate = states !! (rawState `mod` length states)
+                    isRejected terminal =
+                        candidate == terminal
+                          || isLeft
+                            (MarketplaceSales.validateMarketplaceFulfillmentTransition
+                              method terminal candidate)
+                in all isRejected
+                    [ MarketplaceSales.MarketplaceCancelled
+                    , MarketplaceSales.MarketplaceClosed
+                    , MarketplaceSales.MarketplaceExpired
+                    ]
+
+        it "routes pickup and shipped orders through different custody states" $ do
+            MarketplaceSales.validateMarketplaceFulfillmentTransition
+              MarketplaceSales.MarketplacePickup
+              MarketplaceSales.MarketplacePicking
+              MarketplaceSales.MarketplaceReadyForPickup
+              `shouldBe` Right ()
+            MarketplaceSales.validateMarketplaceFulfillmentTransition
+              MarketplaceSales.MarketplacePickup
+              MarketplaceSales.MarketplacePicking
+              MarketplaceSales.MarketplaceShipped
+              `shouldSatisfy` isLeft
+            MarketplaceSales.validateMarketplaceFulfillmentTransition
+              MarketplaceSales.MarketplaceShipping
+              MarketplaceSales.MarketplacePicking
+              MarketplaceSales.MarketplaceShipped
+              `shouldBe` Right ()
+
+        it "never treats payment readiness as physical delivery" $ do
+            MarketplaceSales.validateMarketplaceFulfillmentTransition
+              MarketplaceSales.MarketplacePickup
+              MarketplaceSales.MarketplaceOnHold
+              MarketplaceSales.MarketplaceDelivered
               `shouldSatisfy` isLeft
 
     describe "provider-neutral checkout state machine" $ do

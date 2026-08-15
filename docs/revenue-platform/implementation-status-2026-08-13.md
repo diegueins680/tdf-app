@@ -53,6 +53,21 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
 - Service-storefront administration now requires strict Admin access. Its generic order updater can
   advance only the fulfillment lifecycle; it cannot manufacture paid, refund, dispute or chargeback
   states.
+- Marketplace equipment sales now link the legacy domain order to one canonical checkout with
+  immutable per-asset line snapshots and a 15-minute atomic hold. One cart-level idempotency key is
+  reused when the customer switches among Datafast, PayPal and manual payment; retries cannot create
+  a second internal order or stock hold. Rental listings fail closed because they still lack dates,
+  deposits and custody terms.
+- Marketplace Datafast and PayPal use the shared attempt, immutable provider binding, verified
+  payment, receipt, ledger and reconciliation primitives. Verification includes environment,
+  merchant, internal order, amount, currency, provider resource and resource path. Guest capture,
+  confirmation and tracking require a hashed lookup capability. Stripe's legacy marketplace create
+  endpoint now returns an explicit capability-unavailable response instead of creating an unheld
+  order.
+- Marketplace payment and physical fulfillment are separate state machines. Verified payment moves
+  the order only to `ready_to_fulfill`; validated pickup/shipping/delivery/return transitions append
+  immutable operator evidence. The asset becomes `Sold` only on delivery and a returned asset is not
+  silently relisted. Fully refunded or disputed checkouts cannot start outbound fulfillment.
 - The public Records page no longer installs a demo/admin bearer token. It uses the existing public
   booking path.
 - Provider-neutral persistence exists for immutable checkout snapshots, attempts and provider
@@ -80,8 +95,8 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   accessible bilingual discovery. They disclose whether a path is checkout, request-only, private
   pilot, or unavailable and do not display invented distribution prices.
 - OpenAPI, generated web types, and the mobile generated client are synchronized for the service
-  storefront public checkout, webhook, refund, reconciliation, tracking, provider-event operations,
-  and administration contract.
+  storefront and marketplace public checkout, webhook, tracking, fulfillment, refund,
+  reconciliation, provider-event operations, and administration contracts.
 
 ## Explicitly feature-disabled
 
@@ -89,6 +104,10 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   sandbox evidence, reconciliation ownership, and production authorization are verified.
 - Production mixing/mastering checkout through its independent `commerce.mixing_mastering` database
   kill switch, in addition to the provider-specific switches.
+- Production marketplace sales through `commerce.marketplace_sales`; production remains off until
+  the additive migration, anonymized backfill report, provider sandbox verification, shipping/pickup
+  ownership, reconciliation alerts and a separately authorized low-value rollout pass. Marketplace
+  rentals remain independently disabled through `commerce.marketplace_rentals`.
 - Production asynchronous provider-event processing through
   `checkout.provider_event_worker`; sandbox is enabled for local/staging rehearsal while production
   remains off pending credentialed retry evidence and named alert ownership.
@@ -108,11 +127,11 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
 
 The following requested domains remain future phases and must not be represented as complete:
 
-- Wiring the canonical checkout aggregate into marketplace sales, real rentals, room/resource
-  bookings, courses, Domo accepted quotes, public tickets, tips, memberships, provider services, and
-  verified donations.
-- Physical shipping/pickup/returns, rental dates/deposit/custody/damage, booking deposits/balances,
-  atomic course seats, and guest ticket issuance through Datafast/PayPal.
+- Wiring the canonical checkout aggregate into real rentals, room/resource bookings, courses, Domo
+  accepted quotes, public tickets, tips, memberships, provider services, and verified donations.
+- Marketplace carrier integrations and customer return/refund initiation; rental dates and deposit,
+  custody and damage workflows; booking deposits/balances; atomic course seats; and guest ticket
+  issuance through Datafast/PayPal.
 - Mixing/mastering private object-store multipart upload, malware scanning, engineer workflow,
   deliverable version history, revision billing, notifications, and non-PayPal refund adapters.
 - Public event detail/storefront, distribution onboarding/release wizard, staff QC consoles,
@@ -125,7 +144,7 @@ The following requested domains remain future phases and must not be represented
 
 ## Compatibility and data migration
 
-All forward migrations are additive. Legacy service orders and provider references are preserved;
+All forward migrations are additive. Legacy service and marketplace orders and provider references are preserved;
 the read-only `service_storefront_checkout_backfill_report` classifies them as `linked`,
 `safe_unpaid_candidate`, or `requires_reconciliation` without creating a checkout or inferring
 payment. Its rollback is available before runtime links exist and refuses to remove the linkage once
@@ -134,12 +153,18 @@ after material checkout, product approval, distribution, royalty, or payout evid
 existing record was backfilled or rewritten in this branch; production dry-run counts still require
 a read-only staging/production snapshot.
 
+The read-only `marketplace_sale_checkout_backfill_report` classifies legacy marketplace rows as
+`linked`, `requires_payment_reconciliation`, `eligible_unpaid_manual_review`, or
+`historical_terminal_manual_review`. It never infers payment. The marketplace runtime rollback works
+before live links exist and refuses after any canonical sale linkage exists.
+
 ## Release conclusion
 
 This branch is suitable for a draft review and an isolated migration/application staging exercise.
 It is not production-ready and does not satisfy the full multi-phase definition of done. One
-low-risk domain—mixing/mastering—is now wired into the canonical checkout/receipt/ledger model. The
-next safe external step is credentialed PayPal sandbox webhook/capture/refund/reconciliation and
-delayed-retry evidence. The next internally implementable domain slice is marketplace sales
-fulfillment and provider-neutral checkout reuse. Datafast refund or callback work remains blocked on
-a verified merchant contract.
+two low-risk domains—mixing/mastering and equipment sales—are now wired into the canonical
+checkout/receipt/ledger model. The next safe external step is credentialed Datafast and PayPal
+sandbox checkout/capture/webhook/reconciliation evidence for both domains. The next internally
+implementable domain slice is payable studio/DJ bookings or a date-aware rental aggregate; neither
+should reuse the sale lifecycle. Datafast refund or callback work remains blocked on a verified
+merchant contract.

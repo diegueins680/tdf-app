@@ -12,10 +12,11 @@ Staff actions require least privilege and audit; a staff login does not make fin
 
 | Threat | Control implemented in this branch | Residual action before production |
 |---|---|---|
-| Price, quantity, tax, or fee tampering | Server package lookup, integer minor-unit snapshots, song bounds, immutable checkout lines | Wire all domains to approved product/quote versions and tax adapter |
+| Price, quantity, tax, or fee tampering | Server package/listing lookup, integer minor-unit snapshots, song bounds, unique-asset quantity checks, immutable checkout lines | Wire all remaining domains to approved product/quote versions and tax adapter |
 | Fake browser callback | Return cannot mark paid; Datafast/PayPal bindings verify provider data; PayPal webhook uses remote verification over exact raw bytes | Verify the PayPal contract with secret-backed sandbox tests; keep Datafast callback disabled until contracted |
 | Callback replay/reordering | Immutable encrypted PayPal inbox, event/hash dedupe, four-day/five-minute acceptance bounds, atomic claim/retry/dead-letter worker, metadata/checksum revalidation, audited strict-admin requeue | Add external alert delivery and credentialed delayed-event tests |
-| Duplicate order/capture/refund | Client idempotency, unique provider bindings, PayPal request IDs, checkout-locked refund reservation and immutable allocation | Apply orchestration to every domain and add provider concurrency E2E |
+| Duplicate order/capture/refund | One provider-neutral checkout key per cart, unique provider bindings and asset holds, bounded PayPal request IDs, checkout-locked refund reservation and immutable allocation | Apply orchestration to every remaining domain and add credentialed provider concurrency E2E |
+| Premature equipment sale or custody forgery | Payment only consumes the hold and moves fulfillment to ready; database transitions mark an asset sold only on delivery and append operator evidence | Add separation-of-duty policy for handoff and staging evidence for pickup shipping and returns |
 | Guessing guest orders | Random lookup token stored as hash, constant-shape not-found response | Add verified-email recovery, rate limiter and abuse telemetry at ingress |
 | Raw card/secret leakage | Hosted provider model; secret values not documented; redaction boundary specified | Structured redaction tests, secret-manager rotation and log sampling in staging |
 | Privileged token in browser | Records demo/admin bearer removed | Bundle scan as a blocking CI check across all build variants |
@@ -44,6 +45,8 @@ Staff actions require least privilege and audit; a staff login does not make fin
 9. Requesting and approving a sensitive financial action must be different principals.
 10. Automatic payout remains impossible while its production flag, verification, reconciliation, and
     explicit authorization gates are incomplete.
+11. A marketplace payment cannot imply pickup, shipment, delivery, return, listing activation, or
+    custody; those changes require their own valid audited transition.
 
 ## Abuse-test gates
 

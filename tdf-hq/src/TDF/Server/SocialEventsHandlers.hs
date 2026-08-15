@@ -845,6 +845,7 @@ reuseStripeTicketCheckout mMobileSdkVersion orderKey order = do
             , spiAmountCents = eventTicketOrderAmountCents order
             , spiCurrency = eventTicketOrderCurrency order
             , spiPaymentSheet = paymentSheet
+            , spiLookupToken = Nothing
             }
 
 handleStripePaymentIntentCanceled :: UTCTime -> Aeson.Value -> AppM NoContent
@@ -4468,6 +4469,7 @@ socialEventsServer user =
                         , spiAmountCents = 0
                         , spiCurrency = currency
                         , spiPaymentSheet = Nothing
+                        , spiLookupToken = Nothing
                         }
             else
                 if reusedCheckout && isJust (eventTicketOrderStripePaymentIntentId orderRecord)
@@ -4532,6 +4534,7 @@ socialEventsServer user =
                                         , spiAmountCents = finalAmountCents
                                         , spiCurrency = currency
                                         , spiPaymentSheet = Nothing
+                                        , spiLookupToken = Nothing
                                         }
                             createMobilePaymentSheetIntent mobileSdkVer = do
                                 publishableKey <-
@@ -4599,6 +4602,7 @@ socialEventsServer user =
                                                     , psPaymentIntentClientSecret = clientSecret
                                                     , psPublishableKey = publishableKey
                                                     }
+                                        , spiLookupToken = Nothing
                                         }
                         maybe createLegacyPaymentIntent createMobilePaymentSheetIntent tpwpMobileSdkStripeVersion
 
