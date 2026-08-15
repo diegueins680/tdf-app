@@ -8807,7 +8807,10 @@ spec = describe "TDF.Server helpers" $ do
                         Left serverErr -> do
                             errHTTPCode serverErr `shouldBe` 409
                             BL8.unpack (errBody serverErr)
-                                `shouldContain` "cantidades entre 1 y 99"
+                                `shouldContain`
+                                    ( "cantidades entre 1 y "
+                                        <> show maxMarketplaceCartItemQuantity
+                                    )
                         Right quantity ->
                             expectationFailure
                                 ( "Expected invalid marketplace cart quantity to be rejected, got: "
