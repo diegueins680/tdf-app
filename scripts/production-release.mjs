@@ -9,12 +9,15 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
 import {
+  buildDatabaseSqlInvocation,
   buildDeployPlan,
   buildMigrationBatchSql,
   buildSchemaPreflightSql,
   buildSchemaVerificationSql,
+  expandMigrationIncludes,
   normalizeFullSha,
   parseSecurityEmergencyReadinessOutput,
+  requireMigrationIntroductionAncestor,
   securityEmergencyReadinessBlocker,
   validateFlyConfig,
   validateMigrationRelativePath,
@@ -118,6 +121,56 @@ async function run(argv, options = {}) {
   }
 }
 
+async function runWithInput(argv, input, options = {}) {
+  const [command, ...args] = argv;
+  if (options.log !== false) console.error(`$ ${argv.join(' ')}`);
+  const maxBuffer = options.maxBuffer ?? 30 * 1024 * 1024;
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: rootDir,
+      env: process.env,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    const output = { stdout: '', stderr: '' };
+    let outputBytes = 0;
+    let bufferExceeded = false;
+
+    const capture = (stream) => (chunk) => {
+      outputBytes += chunk.length;
+      if (outputBytes > maxBuffer) {
+        bufferExceeded = true;
+        child.kill();
+        return;
+      }
+      output[stream] += chunk.toString();
+    };
+    child.stdout.on('data', capture('stdout'));
+    child.stderr.on('data', capture('stderr'));
+    child.once('error', (cause) => {
+      reject(new Error(`${argv.join(' ')} failed: ${cause.message}`, { cause }));
+    });
+    child.stdin.once('error', (cause) => {
+      if (cause.code !== 'EPIPE') {
+        reject(new Error(`${argv.join(' ')} input failed: ${cause.message}`, { cause }));
+      }
+    });
+    child.once('close', (code, signal) => {
+      if (bufferExceeded) {
+        reject(new Error(`${argv.join(' ')} exceeded the ${maxBuffer}-byte output limit.`));
+      } else if (code === 0) {
+        resolve(output);
+      } else {
+        const detail = output.stderr.trim();
+        reject(new Error(
+          `${argv.join(' ')} failed with ${signal ? `signal ${signal}` : `exit code ${code}`}`
+            + `${detail ? `:\n${detail}` : ''}`,
+        ));
+      }
+    });
+    child.stdin.end(input);
+  });
+}
+
 async function commandExists(command) {
   try {
     await run(['sh', '-lc', `command -v ${command}`], { log: false });
@@ -171,15 +224,19 @@ async function resolveReleaseContext(options) {
     migrationIds.add(id);
     migrationPaths.add(relativePath);
     const introducedBy = normalizeFullSha(entry.introducedBy);
-    let included = true;
     try {
       await run(['git', 'merge-base', '--is-ancestor', introducedBy, sha], { log: false });
     } catch (error) {
-      if (error.cause?.code === 1) included = false;
-      else throw error;
+      if (error.cause?.code === 1) {
+        requireMigrationIntroductionAncestor({ id, introducedBy }, sha, false);
+      }
+      throw error;
     }
-    if (!included) continue;
-    const content = await readGitBlob(sha, relativePath);
+    requireMigrationIntroductionAncestor({ id, introducedBy }, sha, true);
+    const content = await expandMigrationIncludes(
+      { path: relativePath, content: await readGitBlob(sha, relativePath) },
+      (includedPath) => readGitBlob(sha, includedPath),
+    );
     migrations.push({
       ...entry,
       id,
@@ -258,22 +315,9 @@ async function readSecretNames(app) {
   return new Set(rows.map((row) => row.Name ?? row.name).filter(Boolean));
 }
 
-function remotePsqlCommand(sql, database, tuplesOnly = false) {
-  const encoded = Buffer.from(sql).toString('base64');
-  const psqlFlags = tuplesOnly ? '-qAt' : '';
-  return [
-    'sh -lc',
-    `'printf %s ${encoded} | base64 -d | su postgres -c "psql -X -v ON_ERROR_STOP=1 ${psqlFlags} -p 5433 -d ${database}"'`,
-  ].join(' ');
-}
-
 async function runDatabaseSql(context, sql, options = {}) {
-  const remoteCommand = remotePsqlCommand(sql, context.database, options.tuplesOnly);
-  return run([
-    'flyctl', 'ssh', 'console',
-    '--app', context.dbApp,
-    '--command', remoteCommand,
-  ]);
+  const invocation = buildDatabaseSqlInvocation(context, sql, options);
+  return runWithInput(invocation.argv, invocation.input);
 }
 
 async function readSecurityEmergencyReadiness(context) {

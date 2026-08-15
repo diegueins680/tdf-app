@@ -3,13 +3,16 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import {
+  buildDatabaseSqlInvocation,
   buildDeployPlan,
   buildMigrationBatchSql,
   buildReleaseSteps,
   buildSchemaPreflightSql,
   buildSchemaVerificationSql,
+  expandMigrationIncludes,
   normalizeFullSha,
   parseSecurityEmergencyReadinessOutput,
+  requireMigrationIntroductionAncestor,
   securityEmergencyReadinessBlocker,
   validateFlyConfig,
   validateMigrationRelativePath,
@@ -110,6 +113,34 @@ test('production migration manifest uses immutable full commit SHAs', () => {
   }
 });
 
+test('production release refuses to omit a migration outside the release ancestry', () => {
+  const migration = {
+    id: '2026-08-14_catalog_canonical_schema',
+    introducedBy: '1'.repeat(40),
+  };
+
+  assert.doesNotThrow(() => {
+    requireMigrationIntroductionAncestor(migration, '2'.repeat(40), true);
+  });
+  assert.throws(
+    () => requireMigrationIntroductionAncestor(migration, '2'.repeat(40), false),
+    /not an ancestor.*refusing to omit/u,
+  );
+});
+
+test('production database SQL streams outside the flyctl argument vector', () => {
+  const sql = `SELECT '${'x'.repeat(1_500_000)}';`;
+  const invocation = buildDatabaseSqlInvocation({
+    dbApp: 'tdf-hq-db',
+    database: 'tdf_hq',
+  }, sql, { tuplesOnly: true });
+
+  assert.equal(invocation.input, sql);
+  assert.ok(invocation.argv.every((argument) => argument.length < 1_024));
+  assert.doesNotMatch(invocation.argv.join(' '), /base64|SELECT 'x/u);
+  assert.match(invocation.argv.at(-1), /psql -X -v ON_ERROR_STOP=1 -qAt -p 5433 -d tdf_hq/u);
+});
+
 test('validateMigrationRelativePath accepts a dated SQL migration inside tdf-hq/sql', () => {
   assert.equal(validateMigrationRelativePath(ticketMigration), ticketMigration);
 });
@@ -129,6 +160,33 @@ test('validateMigrationRelativePath rejects traversal, absolute, nested, and non
       `expected ${JSON.stringify(invalid)} to be rejected`,
     );
   }
+});
+
+test('expandMigrationIncludes embeds same-directory SQL and rejects recursive includes', async () => {
+  const files = new Map([
+    ['tdf-hq/sql/2026-08-14_source.sql', 'SELECT 42 AS included;'],
+    ['tdf-hq/sql/2026-08-14_cycle.sql', '\\ir 2026-08-14_cycle.sql'],
+  ]);
+  const readFile = async (relativePath) => {
+    if (!files.has(relativePath)) throw new Error(`missing ${relativePath}`);
+    return files.get(relativePath);
+  };
+
+  const expanded = await expandMigrationIncludes({
+    path: 'tdf-hq/sql/2026-08-14_apply.sql',
+    content: 'BEGIN;\n\\ir 2026-08-14_source.sql\nCOMMIT;',
+  }, readFile);
+
+  assert.match(expanded, /begin inlined migration include/i);
+  assert.match(expanded, /SELECT 42 AS included/);
+  assert.doesNotMatch(expanded, /^\s*\\ir\s+/mu);
+  await assert.rejects(
+    expandMigrationIncludes({
+      path: 'tdf-hq/sql/2026-08-14_cycle.sql',
+      content: files.get('tdf-hq/sql/2026-08-14_cycle.sql'),
+    }, readFile),
+    /recursive/i,
+  );
 });
 
 test('security emergency readiness parser accepts only aggregate read-only gate reports', () => {
@@ -292,6 +350,9 @@ test('buildMigrationBatchSql enables psql fail-fast behavior and preserves migra
   const sql = buildMigrationBatchSql([ticketMigration, discoveryMigration]);
 
   assert.match(sql, /\\set\s+ON_ERROR_STOP\s+(?:on|1)/i);
+  assert.match(sql, /\\set\s+candidate_revision\s+0{40}/i);
+  assert.equal((sql.match(/\\unset\s+run_code/g) ?? []).length, 2);
+  assert.equal((sql.match(/\\unset\s+safety_threshold/g) ?? []).length, 2);
   assert.match(sql, /pg_try_advisory_lock/i);
   assert.match(sql, /\\quit\s+3/i);
   assert.doesNotMatch(sql, /SELECT\s+pg_advisory_lock\s*\(/i);
@@ -305,6 +366,18 @@ test('buildMigrationBatchSql validates every path before rendering psql input', 
   assert.throws(
     () => buildMigrationBatchSql([ticketMigration, 'tdf-hq/sql/../secrets.sql']),
     /migration|path|unsafe/i,
+  );
+});
+
+test('buildMigrationBatchSql rejects unexpanded include directives', () => {
+  assert.throws(
+    () => buildMigrationBatchSql([{
+      id: 'include-test',
+      path: 'tdf-hq/sql/2026-08-14_include_test.sql',
+      checksum: '0'.repeat(64),
+      content: '\\ir 2026-08-14_source.sql',
+    }]),
+    /unexpanded include/i,
   );
 });
 
@@ -376,6 +449,18 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     'checkout.paypal.refunds',
     'checkout.datafast.webhooks',
     'checkout.datafast.refunds',
+    'catalog_definition',
+    'catalog_backfill_run',
+    'security_permission',
+    'party_security_role',
+    'country_reference',
+    'record_release',
+    'ddex_standard_version',
+    'standard_version_id',
+    'workflow_state_id',
+    'allowed_versions',
+    'records-cms-cutover-2026-08-07',
+    'ddex-operational-cutover-2026-08-12',
   ]) {
     assert.match(sql, new RegExp(requiredObject), `verification must inspect ${requiredObject}`);
   }
