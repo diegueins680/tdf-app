@@ -2,7 +2,7 @@
 
 Date: 2026-08-15
 
-Environment tested: local isolated worktree and disposable PostgreSQL 16 containers.
+Environment tested: local isolated worktree and disposable PostgreSQL 16 and 17 containers.
 
 Staging deployment: **not performed**. Provider sandbox transaction: **not performed**. DDEX partner
 sandbox delivery: **not performed**. No credentials or real customer/royalty data were used.
@@ -23,15 +23,15 @@ The final command transcript is summarized here after the branch-wide verificati
 | Versioned revenue products | `./scripts/test-versioned-revenue-products-migration.sh` | Pass: inactive legacy Domo rate, approval/immutability, production flag |
 | Distribution pricing seeds | `./scripts/test-distribution-product-seeds-migration.sh` | Pass: 14 inactive bilingual seeds, activation/mutation/rollback gates |
 | Backend focused tests | Stack-built `tdf-hq-test --match …` | Pass: 50 examples, including 800 property cases, zero failures |
-| Provider-event backend invariants | Stack-built `tdf-hq-test --match 'service storefront commercial invariants'` | Pass: 18 examples, including 300 property cases, zero failures; immutable event metadata/provider/environment tampering and invalid replay reasons are rejected |
+| Provider-event backend invariants | Stack-built `tdf-hq-test --match 'service storefront commercial invariants'` | Pass: 19 examples, including 300 property cases, zero failures; immutable event metadata/provider/environment tampering, invalid replay reasons, and oversized PayPal request IDs are rejected |
 | Backend build | `stack test --fast --no-run-tests` with the default optimized Stack profile | Pass: executable and all 159 test modules compiled and linked |
 | Web regression/accessibility | Jest: five changed suites | Pass: 16 tests, zero failures |
 | Provider-event operator UI/access | Jest: provider-event page and access-control suites | Pass: 14 tests, zero failures; raw payload and merchant binding are absent from the UI contract |
-| Marketplace web regressions | Jest: marketplace API, Datafast return and storefront suites | Pass: 14 tests, zero failures; one checkout key survives provider switching, lookup secrets stay in headers/session storage, missing lookup and provider failure never clear the cart, rental sale checkout is disabled |
+| Marketplace web regressions | Jest: marketplace admin, API, Datafast return and storefront suites | Pass: 71 tests, zero failures; canonical payment is read-only in operations, fulfillment uses its dedicated transition API, one checkout key survives provider switching, lookup secrets stay in headers/session storage, missing lookup and provider failure never clear the cart, and rental sale checkout is disabled |
 | Web type safety | `npm run typecheck:ui` | Pass |
-| Web production build | `npm run build --workspace=tdf-hq-ui` | Pass: 12,383 modules; bundle/secret gate 5 preloads and 403,425 gzip bytes |
-| Release/CI contracts | `npm run test:production-release`; `npm run test:ci-pipeline` | Pass: 25 + 12 tests |
-| Registered production batch | Render preflight; apply twice; raw idempotency reruns; schema verification against PostgreSQL 17 | Pass: 24/24 migrations, second run idempotent, provider-event action table present, worker flags `sandbox=true` and `production=false` |
+| Web production build | `npm run build --workspace=tdf-hq-ui` | Pass: 12,383 modules; bundle/secret gate 5 preloads and 403,416 gzip bytes |
+| Release/CI contracts | `npm run test:production-release`; `npm run test:ci-pipeline` | Pass: 29 + 12 tests |
+| Registered production batch | Render; apply; repair the intentionally empty schema-only Records fixture with three minimal published collection rows; resume; apply again; schema verification against PostgreSQL 17 | Pass: the existing Records safety gate first failed closed as expected, then all 43/43 migrations were recorded, the exact second run was idempotent, all five marketplace invariant triggers were enabled, and both marketplace production flags remained disabled |
 | OpenAPI/generated clients | `npm run generate:api` for web and mobile | Pass: canonical service-storefront and marketplace-sale contracts generated for both clients |
 | Mobile type safety | `npm run typecheck:mobile` | Pass |
 | Formal-method audit | `npm run verify:formal` | Pass: 0 critical, 0 errors; repository warnings remain advisory |
@@ -49,9 +49,12 @@ and test suite after the runtime integration. This is local database/application
 Datafast or PayPal sandbox request was made and no provider success was asserted.
 
 After registering the runtime migrations with their immutable feature commits, the exact production
-batch applied twice in fresh PostgreSQL 17 containers. All 24 manifest entries were recorded, the
-release schema verifier passed, checkout/refund production flags remained disabled, and the legacy
-classification view contained no invented rows in the pristine fixture.
+batch applied in a fresh PostgreSQL 17 container. The schema-only snapshot intentionally contained
+no Records CMS rows, so the pre-existing default safety gate first rejected three missing collection
+containers. Three minimal, published collection fixtures repaired that test precondition; the exact
+batch then resumed, all 43 manifest entries were recorded, the release schema verifier passed, and
+an unchanged second run skipped all 43 entries idempotently. This fixture repair did not classify a
+payment, create a marketplace order, or alter any external environment.
 
 The 2026-08-14 PayPal event/refund follow-up passed 19 focused examples, including 400 property
 cases, with zero failures. The executable and all 155 test modules compiled under the repository's
@@ -66,7 +69,8 @@ a disposable PostgreSQL 17 container. These are local fixtures only: no provider
 transaction, staging deployment, refund, or production state was exercised.
 
 The 2026-08-15 marketplace-sale follow-up compiled the backend executable and all 160 test modules,
-passed the dedicated PostgreSQL 17 migration rehearsal, and passed 14 focused web tests. The
+passed 22 focused backend examples including 400 property cases, passed the dedicated PostgreSQL 17
+migration rehearsal, and passed 71 focused web tests. The
 OpenAPI document now includes public sale checkout and secure tracking plus authenticated
 fulfillment operations; generated web/mobile artifacts were refreshed. This remains local fixture
 evidence only. No Datafast or PayPal network request, customer charge, provider refund, carrier

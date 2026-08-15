@@ -210,6 +210,11 @@
       "id": "2026-08-14_provider_event_operations",
       "path": "tdf-hq/sql/2026-08-14_provider_event_operations.sql",
       "introducedBy": "1f992718f5fe3ce8493f4508ab23424a46ebdc6c"
+    },
+    {
+      "id": "2026-08-15_marketplace_sale_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-15_marketplace_sale_checkout_runtime.sql",
+      "introducedBy": "4ca1dfcf4a38d0defa1079b3193f29e5a4c61301"
     }
   ]
 }

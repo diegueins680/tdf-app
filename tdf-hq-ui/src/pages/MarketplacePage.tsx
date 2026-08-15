@@ -510,7 +510,7 @@ export default function MarketplacePage() {
   });
   const cart = cartQuery.data;
   const cartItems: MarketplaceCartItemDTO[] = cart?.mcItems ?? [];
-  const paypalCurrency = cart?.mcCurrency?.trim().toUpperCase() || null;
+  const paypalCurrency = cart?.mcCurrency?.trim().toUpperCase() ?? null;
   const [savedCartMeta, setSavedCartMeta] = useState<{ cartId: string; count: number; updatedAt: number | null } | null>(() => {
     if (typeof window === 'undefined') return null;
     try {

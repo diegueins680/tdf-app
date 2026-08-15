@@ -161,8 +161,8 @@ before live links exist and refuses after any canonical sale linkage exists.
 ## Release conclusion
 
 This branch is suitable for a draft review and an isolated migration/application staging exercise.
-It is not production-ready and does not satisfy the full multi-phase definition of done. One
-two low-risk domains—mixing/mastering and equipment sales—are now wired into the canonical
+It is not production-ready and does not satisfy the full multi-phase definition of done. Two
+low-risk domains—mixing/mastering and equipment sales—are now wired into the canonical
 checkout/receipt/ledger model. The next safe external step is credentialed Datafast and PayPal
 sandbox checkout/capture/webhook/reconciliation evidence for both domains. The next internally
 implementable domain slice is payable studio/DJ bookings or a date-aware rental aggregate; neither

@@ -494,6 +494,15 @@ BEGIN
   ) NOT IN (0, 3) THEN
     RAISE EXCEPTION 'Feature discovery tables are partially present';
   END IF;
+  IF (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name IN (
+        'marketplace_sale_order_runtime', 'marketplace_sale_fulfillment_event'
+      )
+  ) NOT IN (0, 2) THEN
+    RAISE EXCEPTION 'Marketplace sale checkout runtime tables are partially present';
+  END IF;
 END
 $preflight$;
 ROLLBACK;
@@ -1425,6 +1434,99 @@ BEGIN
      OR to_regclass('public.uq_commerce_active_payment_receipt_checkout') IS NULL
      OR to_regclass('public.uq_commerce_open_reconciliation_fingerprint') IS NULL THEN
     RAISE EXCEPTION 'Service storefront checkout runtime view or indexes are incomplete';
+  END IF;
+
+  IF to_regclass('public.marketplace_sale_order_runtime') IS NULL
+     OR to_regclass('public.marketplace_sale_fulfillment_event') IS NULL
+     OR to_regclass('public.marketplace_sale_checkout_backfill_report') IS NULL THEN
+    RAISE EXCEPTION 'Marketplace sale checkout runtime relations are missing';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('marketplace_sale_order_runtime', 'order_id', 'uuid', 'NO'),
+        ('marketplace_sale_order_runtime', 'checkout_id', 'uuid', 'NO'),
+        ('marketplace_sale_order_runtime', 'lookup_token_hash', 'text', 'NO'),
+        ('marketplace_sale_order_runtime', 'create_idempotency_key', 'text', 'NO'),
+        ('marketplace_sale_order_runtime', 'create_request_sha256', 'text', 'NO'),
+        ('marketplace_sale_order_runtime', 'fulfillment_method', 'text', 'NO'),
+        ('marketplace_sale_order_runtime', 'fulfillment_status', 'text', 'NO'),
+        ('marketplace_sale_order_runtime', 'recipient_name', 'text', 'NO'),
+        ('marketplace_sale_order_runtime', 'recipient_phone', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'address_line_1', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'address_line_2', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'city', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'province', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'postal_code', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'country_code', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'carrier', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'tracking_reference', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'hold_expires_at', 'timestamp with time zone', 'NO'),
+        ('marketplace_sale_order_runtime', 'delivered_at', 'timestamp with time zone', 'YES'),
+        ('marketplace_sale_order_runtime', 'returned_at', 'timestamp with time zone', 'YES'),
+        ('marketplace_sale_order_runtime', 'created_at', 'timestamp with time zone', 'NO'),
+        ('marketplace_sale_order_runtime', 'updated_at', 'timestamp with time zone', 'NO'),
+        ('marketplace_sale_fulfillment_event', 'id', 'bigint', 'NO'),
+        ('marketplace_sale_fulfillment_event', 'order_id', 'uuid', 'NO'),
+        ('marketplace_sale_fulfillment_event', 'from_status', 'text', 'YES'),
+        ('marketplace_sale_fulfillment_event', 'to_status', 'text', 'NO'),
+        ('marketplace_sale_fulfillment_event', 'actor_type', 'text', 'NO'),
+        ('marketplace_sale_fulfillment_event', 'actor_id', 'text', 'YES'),
+        ('marketplace_sale_fulfillment_event', 'reason_code', 'text', 'YES'),
+        ('marketplace_sale_fulfillment_event', 'notes', 'text', 'YES'),
+        ('marketplace_sale_fulfillment_event', 'created_at', 'timestamp with time zone', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Marketplace sale checkout runtime columns are missing or invalid';
+  END IF;
+
+  IF to_regclass('public.marketplace_sale_order_runtime_pkey') IS NULL
+     OR to_regclass('public.marketplace_sale_order_runtime_checkout_id_key') IS NULL
+     OR to_regclass('public.marketplace_sale_order_runtime_lookup_token_hash_key') IS NULL
+     OR to_regclass('public.marketplace_sale_order_runtime_create_idempotency_key_key') IS NULL
+     OR to_regclass('public.idx_marketplace_sale_runtime_status') IS NULL
+     OR to_regclass('public.idx_marketplace_sale_fulfillment_event_order') IS NULL THEN
+    RAISE EXCEPTION 'Marketplace sale checkout runtime indexes are incomplete';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('marketplace_sale_order_runtime', 'trg_marketplace_validate_sale_runtime'),
+      ('marketplace_sale_order_runtime', 'trg_marketplace_validate_fulfillment_transition'),
+      ('marketplace_sale_order_runtime', 'trg_marketplace_record_fulfillment_transition'),
+      ('commerce_checkout_session', 'trg_marketplace_sync_verified_checkout'),
+      ('marketplace_order', 'trg_marketplace_protect_canonical_payment_state')
+    ) AS expected(table_name, trigger_name)
+    LEFT JOIN pg_trigger AS actual
+      ON actual.tgrelid = ('public.' || expected.table_name)::regclass
+     AND actual.tgname = expected.trigger_name
+     AND actual.tgenabled = 'O'
+    WHERE actual.oid IS NULL
+  ) THEN
+    RAISE EXCEPTION 'Marketplace sale checkout invariant triggers are missing or disabled';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('commerce.marketplace_sales'),
+      ('commerce.marketplace_rentals')
+    ) AS expected(flag_key)
+    LEFT JOIN revenue_feature_flag AS flag
+      ON flag.flag_key = expected.flag_key AND flag.environment = 'production'
+    WHERE flag.flag_key IS NULL OR flag.enabled
+  ) THEN
+    RAISE EXCEPTION 'Production marketplace capability gates must exist disabled';
   END IF;
 
   IF EXISTS (

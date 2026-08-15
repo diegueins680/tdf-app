@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS marketplace_sale_order_runtime (
   postal_code TEXT CHECK (postal_code IS NULL OR length(btrim(postal_code)) BETWEEN 1 AND 40),
   country_code TEXT CHECK (country_code IS NULL OR country_code ~ '^[A-Z]{2}$'),
   carrier TEXT CHECK (carrier IS NULL OR length(btrim(carrier)) BETWEEN 1 AND 120),
-  tracking_reference TEXT CHECK (tracking_reference IS NULL OR length(btrim(tracking_reference)) BETWEEN 1 AND 200),
+  tracking_reference TEXT CHECK (tracking_reference IS NULL OR length(btrim(tracking_reference)) BETWEEN 1 AND 160),
   hold_expires_at TIMESTAMPTZ NOT NULL,
   delivered_at TIMESTAMPTZ,
   returned_at TIMESTAMPTZ,
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS marketplace_sale_fulfillment_event (
   actor_type TEXT NOT NULL CHECK (actor_type IN ('system','operator','provider','customer')),
   actor_id TEXT CHECK (actor_id IS NULL OR length(btrim(actor_id)) BETWEEN 1 AND 160),
   reason_code TEXT CHECK (reason_code IS NULL OR length(btrim(reason_code)) BETWEEN 1 AND 80),
-  notes TEXT CHECK (notes IS NULL OR length(btrim(notes)) BETWEEN 1 AND 1000),
+  notes TEXT CHECK (notes IS NULL OR length(btrim(notes)) BETWEEN 1 AND 500),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
