@@ -1,0 +1,279 @@
+- generic [ref=f12e9]:
+  - generic [ref=f12e12]:
+    - link [ref=f12e1775] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f12e1776]
+    - generic [ref=f12e25]:
+      - link [ref=f12e1777] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f12e1778]
+      - link [ref=f12e1779] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f12e1780]
+      - link [ref=f12e1781] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=f12e1782]
+      - link [ref=f12e1783] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f12e1784]
+      - link [ref=f12e1785] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f12e1786]
+      - link [ref=f12e1787] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f12e1788]
+      - link [ref=f12e1789] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f12e1790]
+      - link [ref=f12e1791] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f12e1792]:
+          - img "tdf.records.label's profile picture" [ref=f12e1793]
+    - generic [ref=f12e114]:
+      - link [ref=f12e1794] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f12e1795]
+      - link [ref=f12e1796] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f12e1797]
+  - main [ref=f12e134]:
+    - generic [ref=f12e220]:
+      - navigation "Thread list" [ref=f12e1798]:
+        - generic [ref=f12e222]:
+          - generic [ref=f12e223]:
+            - button [ref=f12e1799] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f12e1800]
+              - img "Down chevron icon" [ref=f12e1801]
+            - button [ref=f12e1802] [cursor=pointer]:
+              - img "New message" [ref=f12e1803]
+          - tablist [ref=f12e240]:
+            - tab "Primary" [selected] [ref=f12e1804] [cursor=pointer]
+            - tab "General" [ref=f12e1805] [cursor=pointer]
+            - tab "From ads" [ref=f12e1806] [cursor=pointer]
+            - tab "Requests" [ref=f12e1807] [cursor=pointer]
+          - generic [ref=f12e257]:
+            - img "Search" [ref=f12e1808]
+            - textbox "Search" [ref=f12e1809]
+          - generic [ref=f12e263]:
+            - generic [ref=f12e265]:
+              - list [ref=f12e267]:
+                - listitem [ref=f12e268]
+                - listitem [ref=f12e269]:
+                  - button "Morning motivation... Your note" [ref=f12e1810] [cursor=pointer]:
+                    - generic [ref=f12e272]:
+                      - generic [ref=f12e273]: Morning motivation...
+                      - generic [ref=f12e279]:
+                        - link [ref=f12e281]
+                        - generic [ref=f12e282]: Your note
+                - listitem [ref=f12e284]:
+                  - button "No dormí ni vrg:( naoenpatines's profile picture nao✨" [ref=f12e1811] [cursor=pointer]:
+                    - generic [ref=f12e288]:
+                      - generic [ref=f12e289]: No dormí ni vrg:(
+                      - generic [ref=f12e296]:
+                        - link [ref=f12e1812]:
+                          - img "naoenpatines's profile picture" [ref=f12e1813]
+                        - generic [ref=f12e300]: nao✨
+                - listitem [ref=f12e303]:
+                  - button "Hic et nunc danyrivadeneira7's profile picture Dany Rivadeneira López" [ref=f12e1814] [cursor=pointer]:
+                    - generic [ref=f12e307]:
+                      - generic [ref=f12e308]: Hic et nunc
+                      - generic [ref=f12e315]:
+                        - link [ref=f12e1815]:
+                          - img "danyrivadeneira7's profile picture" [ref=f12e1816]
+                        - generic [ref=f12e319]: Dany Rivadeneira López
+                - listitem [ref=f12e322]:
+                  - button "Mi casa, en el centro, está disponible para quien necesite de algo, strange_soul.col's profile picture Strange Soul Dj" [ref=f12e1817] [cursor=pointer]:
+                    - generic [ref=f12e326]:
+                      - generic [ref=f12e327]: Mi casa, en el centro, está disponible para quien necesite de algo,
+                      - generic [ref=f12e334]:
+                        - link [ref=f12e1818]:
+                          - img "strange_soul.col's profile picture" [ref=f12e1819]
+                        - generic [ref=f12e338]: Strange Soul Dj
+                - listitem [ref=f12e341]:
+                  - button "🌀 gabunogabriela's profile picture Gabu Córdova (NO Gabriela)" [ref=f12e1820] [cursor=pointer]:
+                    - generic [ref=f12e345]:
+                      - generic [ref=f12e346]: 🌀
+                      - generic [ref=f12e353]:
+                        - link [ref=f12e1821]:
+                          - img "gabunogabriela's profile picture" [ref=f12e1822]
+                        - generic [ref=f12e357]: Gabu Córdova (NO Gabriela)
+                - listitem [ref=f12e360]:
+                  - button "😮‍💨😍🎸 stevelopezok's profile picture Steve Lopez" [ref=f12e1823] [cursor=pointer]:
+                    - generic [ref=f12e364]:
+                      - generic [ref=f12e365]: 😮‍💨😍🎸
+                      - generic [ref=f12e372]:
+                        - link [ref=f12e1824]:
+                          - img "stevelopezok's profile picture" [ref=f12e1825]
+                        - generic [ref=f12e376]: Steve Lopez
+                - listitem [ref=f12e379]:
+                  - button "Mañana barra libre en @collide.party de 8 a 10! Ven a previar😋⭐️ anajusegovia's profile picture Ana Julia/ DJ JU🫧" [ref=f12e1826] [cursor=pointer]:
+                    - generic [ref=f12e383]:
+                      - generic [ref=f12e391]:
+                        - text: Mañana barra libre en
+                        - link "@collide.party" [ref=f12e1827]:
+                          - /url: /collide.party/
+                        - text: de 8 a 10! Ven a previar😋⭐️
+                      - generic [ref=f12e393]:
+                        - link [ref=f12e1828]:
+                          - img "anajusegovia's profile picture" [ref=f12e1829]
+                        - generic [ref=f12e397]: Ana Julia/ DJ JU🫧
+                - listitem [ref=f12e400]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Perro Fiel (feat. Nicky Jam) Shakira 😅 soley.fino's profile picture Soley Fino" [ref=f12e1830] [cursor=pointer]:
+                    - generic [ref=f12e404]:
+                      - generic [ref=f12e410]:
+                        - generic [ref=f12e411]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f12e1831]
+                          - generic [ref=f12e417]: Perro Fiel (feat. Nicky Jam)
+                        - generic [ref=f12e418]: Shakira
+                        - generic [ref=f12e419]: 😅
+                      - generic [ref=f12e420]:
+                        - link [ref=f12e1832]:
+                          - img "soley.fino's profile picture" [ref=f12e1833]
+                        - generic [ref=f12e424]: Soley Fino
+                - listitem [ref=f12e427]:
+                  - button "🇪🇨 green.house_music's profile picture Green House Music | Sello Discográfico" [ref=f12e1834] [cursor=pointer]:
+                    - generic [ref=f12e431]:
+                      - generic [ref=f12e432]: 🇪🇨
+                      - generic [ref=f12e439]:
+                        - link [ref=f12e1835]:
+                          - img "green.house_music's profile picture" [ref=f12e1836]
+                        - generic [ref=f12e443]: Green House Music | Sello Discográfico
+              - button "Next" [ref=f12e1837] [cursor=pointer]
+            - generic [ref=f12e451]:
+              - button "user-profile-picture George Molina Liked a message 12 hours ago" [ref=f12e1838] [cursor=pointer]:
+                - generic [ref=f12e457]:
+                  - img "user-profile-picture" [ref=f12e1839]
+                  - generic [ref=f12e464]:
+                    - generic [ref=f12e465]: George Molina
+                    - generic [ref=f12e471]:
+                      - generic [ref=f12e472]: Liked a message
+                      - generic [ref=f12e474]:
+                        - generic [ref=f12e475]: ·
+                        - generic "12 hours ago" [ref=f12e1840]: 12h
+              - button "user-profile-picture KIRMANA RECORDS Liked a message 13 hours ago" [ref=f12e1841] [cursor=pointer]:
+                - generic [ref=f12e486]:
+                  - img "user-profile-picture" [ref=f12e1842]
+                  - generic [ref=f12e493]:
+                    - generic [ref=f12e494]: KIRMANA RECORDS
+                    - generic [ref=f12e500]:
+                      - generic [ref=f12e501]: Liked a message
+                      - generic [ref=f12e503]:
+                        - generic [ref=f12e504]: ·
+                        - generic "13 hours ago" [ref=f12e1843]: 13h
+              - button "user-profile-picture Beto Graciaaaaas locoo 21 hours ago" [ref=f12e1844] [cursor=pointer]:
+                - generic [ref=f12e515]:
+                  - img "user-profile-picture" [ref=f12e1845]
+                  - generic [ref=f12e522]:
+                    - generic [ref=f12e523]: Beto
+                    - generic [ref=f12e529]:
+                      - generic [ref=f12e530]: Graciaaaaas locoo
+                      - generic [ref=f12e532]:
+                        - generic [ref=f12e533]: ·
+                        - generic "21 hours ago" [ref=f12e1846]: 21h
+              - 'button "user-profile-picture BACKROOM SESSIONS You: La idea sería diseñar juntos un modelo de coproducción viable: Backroom Sessions aportaría su identidad, curaduría, comunidad y visión de contenidos; TDF, el espacio, la infraestructura y el soporte de producción. También nos interesa conversar sobre otras formas de colaboración entre ambos proyectos. ¿Les gustaría visitar el Domo y tener una reunión breve para conversar sobre el piloto y una posible serie recurrente? Pueden proponernos una fecha que les funcione y, si les parece, compartirnos un número de WhatsApp para coordinar con mayor facilidad. 21 hours ago" [ref=f12e1847] [cursor=pointer]':
+                - generic [ref=f12e544]:
+                  - img "user-profile-picture" [ref=f12e1848]
+                  - generic [ref=f12e551]:
+                    - generic [ref=f12e552]: BACKROOM SESSIONS
+                    - generic [ref=f12e558]:
+                      - generic [ref=f12e559]: "You: La idea sería diseñar juntos un modelo de coproducción viable: Backroom Sessions aportaría su identidad, curaduría, comunidad y visión de contenidos; TDF, el espacio, la infraestructura y el soporte de producción. También nos interesa conversar sobre otras formas de colaboración entre ambos proyectos. ¿Les gustaría visitar el Domo y tener una reunión breve para conversar sobre el piloto y una posible serie recurrente? Pueden proponernos una fecha que les funcione y, si les parece, compartirnos un número de WhatsApp para coordinar con mayor facilidad."
+                      - generic [ref=f12e561]:
+                        - generic [ref=f12e562]: ·
+                        - generic "21 hours ago" [ref=f12e1849]: 21h
+              - button "user-profile-picture ✨Festival Mestizónica ✨ Liked a message 22 hours ago" [ref=f12e1850] [cursor=pointer]:
+                - generic [ref=f12e573]:
+                  - img "user-profile-picture" [ref=f12e1851]
+                  - generic [ref=f12e580]:
+                    - generic [ref=f12e581]: ✨Festival Mestizónica ✨
+                    - generic [ref=f12e587]:
+                      - generic [ref=f12e588]: Liked a message
+                      - generic [ref=f12e590]:
+                        - generic [ref=f12e591]: ·
+                        - generic "22 hours ago" [ref=f12e1852]: 22h
+              - 'button "user-profile-picture Alvaro Pardey You: Hola, Alvaro 👋 Vimos tu interacción con TDF y tus sets recientes de afro house y live act en Quito. En TDF puedes reunir perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Te invitamos a recorrerlo: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records 22 hours ago" [ref=f12e1853] [cursor=pointer]':
+                - generic [ref=f12e602]:
+                  - img "user-profile-picture" [ref=f12e1854]
+                  - generic [ref=f12e609]:
+                    - generic [ref=f12e610]: Alvaro Pardey
+                    - generic [ref=f12e616]:
+                      - generic [ref=f12e617]: "You: Hola, Alvaro 👋 Vimos tu interacción con TDF y tus sets recientes de afro house y live act en Quito. En TDF puedes reunir perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Te invitamos a recorrerlo: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f12e619]:
+                        - generic [ref=f12e620]: ·
+                        - generic "22 hours ago" [ref=f12e1855]: 22h
+              - 'button "user-profile-picture Risk You: Hola, Risk 👋 Vimos tu reacción en el reel de TDF y tus publicaciones de phonk vinculadas a Quito. Tu escena necesita un espacio propio: en TDF puedes seguir artistas, ver lanzamientos y explorar experiencias de la comunidad. Puedes entrar como fan aquí: https://tdf-app.pages.dev/login?signup=1&roles=Fan&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=fan_a Si no te interesa, todo bien: no volvemos a escribir. — TDF Records 22 hours ago" [ref=f12e1856] [cursor=pointer]':
+                - generic [ref=f12e631]:
+                  - img "user-profile-picture" [ref=f12e1857]
+                  - generic [ref=f12e638]:
+                    - generic [ref=f12e639]: Risk
+                    - generic [ref=f12e645]:
+                      - generic [ref=f12e646]: "You: Hola, Risk 👋 Vimos tu reacción en el reel de TDF y tus publicaciones de phonk vinculadas a Quito. Tu escena necesita un espacio propio: en TDF puedes seguir artistas, ver lanzamientos y explorar experiencias de la comunidad. Puedes entrar como fan aquí: https://tdf-app.pages.dev/login?signup=1&roles=Fan&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=fan_a Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f12e648]:
+                        - generic [ref=f12e649]: ·
+                        - generic "22 hours ago" [ref=f12e1858]: 22h
+              - 'button "user-profile-picture TAKIJANA You: Hola, Takijana 👋 Vimos su interacción con TDF y las fechas recientes de la banda dentro de la escena ska de Quito. En TDF pueden reunir perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Les invitamos a crear su perfil: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no les interesa, todo bien: no volvemos a escribir. — TDF Records 22 hours ago" [ref=f12e1859] [cursor=pointer]':
+                - generic [ref=f12e660]:
+                  - img "user-profile-picture" [ref=f12e1860]
+                  - generic [ref=f12e667]:
+                    - generic [ref=f12e668]: TAKIJANA
+                    - generic [ref=f12e674]:
+                      - generic [ref=f12e675]: "You: Hola, Takijana 👋 Vimos su interacción con TDF y las fechas recientes de la banda dentro de la escena ska de Quito. En TDF pueden reunir perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Les invitamos a crear su perfil: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f12e677]:
+                        - generic [ref=f12e678]: ·
+                        - generic "22 hours ago" [ref=f12e1861]: 22h
+              - button [ref=f12e1862] [cursor=pointer]:
+                - generic [ref=f12e708]:
+                  - status "Loading..." [ref=f12e1863]
+                  - generic [ref=f12e714]:
+                    - status "Loading..." [ref=f12e1864]
+                    - status "Loading..." [ref=f12e1865]
+      - generic [ref=f12e1867]:
+        - generic [ref=f12e1871]:
+          - link "Open the profile page of oximoron_tu_tentaculo" [ref=f12e1872] [cursor=pointer]:
+            - /url: /oximoron_tu_tentaculo/
+            - generic [ref=f12e1873]:
+              - generic [ref=f12e1875]:
+                - img "user-profile-picture" [ref=f12e1877]
+                - generic [ref=f12e1984]: Active
+              - generic [ref=f12e1878]:
+                - heading "Tentáculos" [level=2] [ref=f12e1880]
+                - generic [ref=f12e1882]: oximoron_tu_tentaculo
+          - generic [ref=f12e1886]:
+            - button [ref=f12e1887] [cursor=pointer]:
+              - img "Audio call" [ref=f12e1889]
+            - button [ref=f12e1891] [cursor=pointer]:
+              - img "Video call" [ref=f12e1893]
+            - button [ref=f12e1896] [cursor=pointer]:
+              - img "Conversation information" [ref=f12e1898]
+        - generic [ref=f12e1902]:
+          - generic [ref=f12e1906]:
+            - generic [ref=f12e1907]:
+              - img "user-profile-picture" [ref=f12e1911]
+              - generic [ref=f12e1912]:
+                - heading "Tentáculos" [level=2] [ref=f12e1915]
+                - generic [ref=f12e1917]: oximoron_tu_tentaculo · Instagram
+                - link "View profile" [ref=f12e1920] [cursor=pointer]:
+                  - /url: /oximoron_tu_tentaculo/
+            - generic [ref=f12e1924]:
+              - generic [ref=f12e1925]: 7/11/23, 6:27 PM
+              - group [ref=f12e1928]:
+                - generic [ref=f12e1930]:
+                  - link "Open the profile page of oximoron_tu_tentaculo" [ref=f12e1933] [cursor=pointer]:
+                    - /url: /oximoron_tu_tentaculo
+                    - img "user-profile-picture" [ref=f12e1936]
+                  - generic [ref=f12e1940]:
+                    - generic [ref=f12e1941]: Unsupported message
+                    - generic [ref=f12e1943]: Use the Instagram mobile app to view this message.
+          - generic [ref=f12e1953]:
+            - button [ref=f12e1956] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f12e1958]
+            - generic [ref=f12e1960]:
+              - textbox [active] [ref=f12e1961]:
+                - paragraph [ref=f12e1962]
+              - generic: Message...
+            - generic [ref=f12e1963]:
+              - button [ref=f12e1964] [cursor=pointer]:
+                - img "Voice Clip" [ref=f12e1966]
+              - button [ref=f12e1969] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f12e1971]
+              - button [ref=f12e1976] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f12e1978]

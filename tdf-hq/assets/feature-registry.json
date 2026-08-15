@@ -61,6 +61,52 @@
       "aliases": ["/instagram", "/ig", "/sobre-tdf"]
     },
     {
+      "id": "public.commerce",
+      "parentId": "public.platform",
+      "webRoute": "/comercio",
+      "routeType": "primary",
+      "classification": "primary-destination",
+      "label": { "es": "Servicios TDF", "en": "TDF Services" },
+      "synonyms": { "es": ["comercio", "tienda", "servicios"], "en": ["commerce", "store", "services"] },
+      "keywords": ["commerce", "checkout", "services"],
+      "description": { "es": "Hub público con el estado real de cada oferta comercial.", "en": "Public hub showing the truthful availability of each commercial offer." },
+      "navigationGroup": "people",
+      "icon": "storefront",
+      "breadcrumb": ["public.platform"],
+      "requiredAuth": "public",
+      "globalMenu": false,
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "none",
+      "mobilePresentation": { "kind": "external-web", "destination": "https://tdf-app.pages.dev/comercio", "documentedException": null },
+      "accessRequestEligible": false,
+      "aliases": ["/commerce"]
+    },
+    {
+      "id": "public.distribution",
+      "parentId": "public.commerce",
+      "webRoute": "/distribucion",
+      "routeType": "primary",
+      "classification": "primary-destination",
+      "label": { "es": "Distribución musical", "en": "Music distribution" },
+      "synonyms": { "es": ["distribuir música", "ddex"], "en": ["distribute music", "ddex"] },
+      "keywords": ["distribution", "ddex", "release"],
+      "description": { "es": "Información y acceso al piloto privado de distribución.", "en": "Information and private-pilot access for distribution." },
+      "navigationGroup": "label",
+      "icon": "album",
+      "breadcrumb": ["public.platform", "public.commerce"],
+      "requiredAuth": "public",
+      "featureFlag": "distribution.public_storefront",
+      "maturity": "pilot",
+      "globalMenu": false,
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "none",
+      "mobilePresentation": { "kind": "external-web", "destination": "https://tdf-app.pages.dev/distribucion", "documentedException": "Protected release management remains authenticated." },
+      "accessRequestEligible": false,
+      "aliases": ["/distribution"]
+    },
+    {
       "id": "home",
       "parentId": null,
       "webRoute": "/inicio",
@@ -227,7 +273,11 @@
       "requiredAuth": "public",
       "mobilePresentation": { "kind": "external-web", "destination": null, "documentedException": "Quote intake remains web based." },
       "accessRequestEligible": false,
-      "aliases": ["/services/mixing-mastering", "/mezcla-mastering/pedido/:orderNumber"]
+      "aliases": [
+        "/services/mixing-mastering",
+        "/mezcla-mastering/pago-datafast",
+        "/mezcla-mastering/pedido/:orderNumber"
+      ]
     },
     {
       "id": "bookings.public",

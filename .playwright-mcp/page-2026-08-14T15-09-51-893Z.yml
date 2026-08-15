@@ -1,0 +1,183 @@
+- generic [ref=f27e1]:
+  - link [ref=f27e1157] [cursor=pointer]:
+    - /url: "#main-content"
+    - text: Saltar al contenido principal
+  - generic [ref=f27e3]:
+    - generic [ref=f27e31]:
+      - link [ref=f27e1158] [cursor=pointer]:
+        - /url: "#main-content"
+        - text: Saltar al contenido principal
+      - navigation [ref=f27e1159]:
+        - generic [ref=f27e34]:
+          - generic [ref=f27e35]: MENÚ
+          - generic [ref=f27e37]:
+            - textbox [ref=f27e1160]:
+              - /placeholder: Buscar sección (/)
+            - group
+        - list [ref=f27e42]:
+          - listitem [ref=f27e43]:
+            - generic [ref=f27e44]: ATAJOS
+            - list [ref=f27e47]:
+              - link [ref=f27e1161] [cursor=pointer]:
+                - /url: /crm/empresas
+                - generic [ref=f27e51]:
+                  - generic [ref=f27e52]: Empresas
+                  - paragraph [ref=f27e53]: Reciente · GENTE
+          - listitem [ref=f27e54]:
+            - generic [ref=f27e55]:
+              - generic [ref=f27e56]: CREAR
+              - button [ref=f27e1162] [cursor=pointer]
+          - listitem [ref=f27e64]:
+            - generic [ref=f27e65]:
+              - generic [ref=f27e66]: GENTE
+              - button [expanded] [ref=f27e1163] [cursor=pointer]
+            - list [ref=f27e77]:
+              - listitem [ref=f27e78]:
+                - link [ref=f27e1164] [cursor=pointer]:
+                  - /url: /fans
+                  - generic [ref=f27e82]: Comunidad
+              - listitem [ref=f27e84]:
+                - link [ref=f27e1165] [cursor=pointer]:
+                  - /url: /marketplace
+                  - generic [ref=f27e88]: Tienda
+              - listitem [ref=f27e90]:
+                - link [ref=f27e1166] [cursor=pointer]:
+                  - /url: /records
+                  - generic [ref=f27e94]: Lanzamientos públicos
+              - listitem [ref=f27e96]:
+                - link [ref=f27e1167] [cursor=pointer]:
+                  - /url: /reservar
+                  - generic [ref=f27e100]: Reservar estudio
+              - listitem [ref=f27e102]:
+                - link [ref=f27e1168] [cursor=pointer]:
+                  - /url: /trials
+                  - generic [ref=f27e106]: Agenda de pruebas
+              - listitem [ref=f27e108]:
+                - link [ref=f27e1169] [cursor=pointer]:
+                  - /url: /live-sessions/registro
+                  - generic [ref=f27e112]: Registro live sessions
+              - listitem [ref=f27e114]:
+                - link [ref=f27e1170] [cursor=pointer]:
+                  - /url: /donar
+                  - generic [ref=f27e118]: Donaciones
+              - listitem [ref=f27e120]:
+                - link [ref=f27e1171] [cursor=pointer]:
+                  - /url: /domo-del-pululahua
+                  - generic [ref=f27e124]: Domo Pululahua
+              - listitem [ref=f27e126]:
+                - link [ref=f27e1172] [cursor=pointer]:
+                  - /url: /social
+                  - generic [ref=f27e130]: Conexiones
+              - listitem [ref=f27e132]:
+                - link [ref=f27e1173] [cursor=pointer]:
+                  - /url: /social/instagram
+                  - generic [ref=f27e136]: Instagram
+              - listitem [ref=f27e138]:
+                - link [ref=f27e1174] [cursor=pointer]:
+                  - /url: /chat
+                  - generic [ref=f27e145]:
+                    - generic [ref=f27e146]: Chat
+                    - generic [ref=f27e147]: "1"
+              - listitem [ref=f27e148]:
+                - link [ref=f27e1175] [cursor=pointer]:
+                  - /url: /social/inbox
+                  - generic [ref=f27e152]: Inbox social
+              - listitem [ref=f27e154]:
+                - link [ref=f27e1176] [cursor=pointer]:
+                  - /url: /social/eventos
+                  - generic [ref=f27e158]: Eventos sociales
+              - listitem [ref=f27e160]:
+                - link [ref=f27e1177] [cursor=pointer]:
+                  - /url: /crm/contactos
+                  - generic [ref=f27e164]: Contactos
+              - listitem [ref=f27e166]:
+                - link [ref=f27e1178] [cursor=pointer]:
+                  - /url: /crm/empresas
+                  - generic [ref=f27e170]: Empresas
+              - listitem [ref=f27e172]:
+                - link [ref=f27e1179] [cursor=pointer]:
+                  - /url: /crm/leads
+                  - generic [ref=f27e176]: Leads
+          - listitem [ref=f27e178]:
+            - generic [ref=f27e179]:
+              - generic [ref=f27e180]: SELLO
+              - button [ref=f27e1180] [cursor=pointer]
+          - listitem [ref=f27e188]:
+            - generic [ref=f27e189]:
+              - generic [ref=f27e190]: OPERAR
+              - button [ref=f27e1181] [cursor=pointer]
+          - listitem [ref=f27e199]:
+            - generic [ref=f27e200]:
+              - generic [ref=f27e201]: ADMIN
+              - button [ref=f27e1182] [cursor=pointer]
+          - listitem [ref=f27e212]:
+            - generic [ref=f27e213]:
+              - generic [ref=f27e214]: HERRAMIENTAS
+              - button [ref=f27e1183] [cursor=pointer]
+          - listitem [ref=f27e222]:
+            - generic [ref=f27e223]:
+              - generic [ref=f27e224]: AYUDA
+              - button [ref=f27e1184] [cursor=pointer]
+      - generic [ref=f27e232]:
+        - banner [ref=f27e233]:
+          - generic [ref=f27e234]:
+            - button [ref=f27e1185] [cursor=pointer]
+            - link [ref=f27e1186] [cursor=pointer]:
+              - /url: /inicio
+            - button [ref=f27e1187] [cursor=pointer]:
+              - generic [ref=f27e244]: Buscar sección
+              - generic [ref=f27e245]: ⌘K
+            - generic [ref=f27e246]:
+              - button [ref=f27e1188] [cursor=pointer]:
+                - generic [ref=f27e251]: Crear
+              - button [ref=f27e1189] [cursor=pointer]
+              - button [ref=f27e1190] [cursor=pointer]:
+                - generic [ref=f27e257]: D
+        - status [ref=f27e258]
+        - main [ref=f27e259]:
+          - generic [ref=f27e261]:
+            - generic [ref=f27e263]:
+              - generic [ref=f27e264]:
+                - heading [level=3] [ref=f27e1191]: Contactos
+                - paragraph [ref=f27e266]: Gestiona personas, empresas y roles en un solo lugar.
+              - button [ref=f27e1192] [cursor=pointer]: Nuevo contacto
+            - generic [ref=f27e274]:
+              - generic [ref=f27e277]:
+                - textbox [ref=f27e1194]:
+                  - /placeholder: Buscar por nombre, email o Instagram
+                  - text: oximoron_tu_tentaculo
+                - button [ref=f27e1195] [cursor=pointer]
+                - group
+              - generic [ref=f27e1154]:
+                - heading [level=5] [ref=f27e1196]: Sin resultados
+                - paragraph [ref=f27e1156]: No hay contactos que coincidan con "oximoron_tu_tentaculo". Limpia la búsqueda desde el buscador para volver a ver toda la lista.
+          - generic [ref=f27e579]:
+            - status [ref=f27e580]:
+              - generic [ref=f27e583]: "API: online"
+            - button [ref=f27e1197] [cursor=pointer]
+    - generic [ref=f27e14]:
+      - button [ref=f27e1198] [cursor=pointer]
+      - button [ref=f27e1200] [cursor=pointer]
+      - button [ref=f27e1202] [cursor=pointer]
+      - button [ref=f27e1203] [cursor=pointer]
+      - button [ref=f27e1204] [cursor=pointer]
+      - button [ref=f27e1205] [cursor=pointer]
+      - generic [ref=f27e29]:
+        - generic [ref=f27e30]: "En pausa: stream.rcast.net"
+        - text: Live
+  - dialog [ref=f27e1208]:
+    - heading "Nuevo contacto" [level=2] [ref=f27e1209]
+    - generic [ref=f27e1211]:
+      - generic [ref=f27e1212]:
+        - generic:
+          - text: Nombre / Display
+          - generic: "*"
+        - generic [ref=f27e1213]:
+          - textbox "Nombre / Display" [ref=f27e1214]
+          - group:
+            - generic: Nombre / Display *
+      - paragraph [ref=f27e1215]: "Tipo actual: Empresa. Usa Persona para individuos y Empresa para bandas, sellos o negocios."
+      - button "Cambiar a persona" [ref=f27e1216] [cursor=pointer]
+    - generic [ref=f27e1217]:
+      - button "Cancelar" [ref=f27e1218] [cursor=pointer]
+      - button "Crear" [ref=f27e1219] [cursor=pointer]

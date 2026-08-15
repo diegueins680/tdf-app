@@ -68,7 +68,8 @@ scripts/test-catalog-production-cutover.sh
 The integration helper refuses every non-localhost database URL.
 
 The 2026-08-14 disposable rehearsal restored the schema-only production fixture, loaded three
-synthetic Records rows, and applied all 35 authoritative manifest entries. A second manifest run
+synthetic Records rows, and applied all 40 authoritative manifest entries, including the five
+checkout and distribution migrations added on the integrated baseline. A second manifest run
 was a complete no-op; all 14 dry-runs, apply scripts, and raw idempotency reruns passed; 13 distinct
 backfill run codes completed; and all three Records rows received canonical mappings. The
 machine-readable evidence and fixture digests are in

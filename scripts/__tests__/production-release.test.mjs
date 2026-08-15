@@ -410,6 +410,15 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     'allowed_versions',
     'records-cms-cutover-2026-08-07',
     'ddex-operational-cutover-2026-08-12',
+    'commerce_checkout_session',
+    'commerce_payment_attempt',
+    'commerce_provider_binding',
+    'commerce_reconciliation_exception',
+    'service_storefront_order',
+    'checkout_id',
+    'fk_service_storefront_order_checkout',
+    'service_storefront_checkout_backfill_report',
+    'uq_commerce_succeeded_attempt_checkout',
   ]) {
     assert.match(sql, new RegExp(requiredObject), `verification must inspect ${requiredObject}`);
   }

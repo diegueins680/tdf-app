@@ -9,8 +9,9 @@
     "containsSecretsOrCredentials": false
   },
   "candidate": {
-    "baselineRevision": "14ef28bb0d7ce61cb1bb78b5c202ed81aa221e70",
+    "baselineRevision": "b8b5d927be1cf81af3d616e5afcf71b8492ad7d3",
     "foundationCommit": "15d0d0b607344e62025f39208861c313c08b7eaa",
+    "mergedManifestSha256": "e8dfd088ccf17c00088b7680b01e601b9600f807996abe6a689f21fd81888d49",
     "productionSchemaFixtureSha256": "7843bab95b3e49a076f4eca219ee8a24d6704d4488f16b696406753be3e2c38a",
     "syntheticSourceFixtureSha256": "f76f4a99192db71530a00e8f6caeb80aca79688b5723e34d65c240d00bb62769"
   },
@@ -25,10 +26,11 @@
     "readOnlyPreflight": "passed",
     "authoritativeManifestFirstRun": "passed",
     "authoritativeManifestRerun": "passed-no-op",
-    "manifestEntriesApplied": 35,
+    "manifestEntriesApplied": 40,
     "catalogBackfillRuns": 13,
     "distinctCompletedRunCodes": 13,
     "recordsMappingsCreated": 3,
+    "commerceTablesVerified": 20,
     "cutoverDryRunsPassed": 14,
     "cutoverApplyScriptsPassed": 14,
     "cutoverRawIdempotencyRerunsPassed": 14,
@@ -56,8 +58,8 @@
   },
   "automatedChecks": {
     "productionReleaseUnitTests": "27 passed, 0 failed",
-    "repositoryQuality": "passed; 7956 audit findings, 0 critical, 0 error",
-    "backendQuality": "running when this report was created",
+    "repositoryQuality": "passed; 7987 audit findings, 0 critical, 0 errors; all repository quality tests passed",
+    "backendQuality": "passed; executable compiled and 2320 backend examples passed with 0 failures on GHC 9.10.3",
     "diffCheck": "passed"
   },
   "productionGate": {

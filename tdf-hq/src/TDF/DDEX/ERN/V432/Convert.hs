@@ -27,10 +27,10 @@ data ConvertConfig = ConvertConfig
 -- | Default conversion configuration
 defaultConvertConfig :: ConvertConfig
 defaultConvertConfig = ConvertConfig
-  { ccSenderDpid = "DPID:TDF001"
-  , ccRecipientDpid = "DPID:DSP001"
-  , ccMessageId = "MSG-PLACEHOLDER"
-  , ccPartnerName = "Digital Service Provider"
+  { ccSenderDpid = ""
+  , ccRecipientDpid = ""
+  , ccMessageId = ""
+  , ccPartnerName = ""
   }
 
 -- | Conversion error
@@ -42,6 +42,7 @@ data ConvertError = ConvertError
 -- | Convert catalog entities to ERN message
 catalogToErn :: ConvertConfig -> UTCTime -> [CatalogRelease] -> [CatalogResource] -> [CatalogCredit] -> [CatalogDeal] -> Either [ConvertError] ErnMessage
 catalogToErn config now releases resources credits deals = do
+  validateConvertConfig config
   -- Build message header
   let header = buildMessageHeader config now
 
@@ -68,6 +69,18 @@ catalogToErn config now releases resources credits deals = do
     , ernResourceGroups = resourceGroups
     , ernDealList = ernDeals
     }
+
+validateConvertConfig :: ConvertConfig -> Either [ConvertError] ()
+validateConvertConfig ConvertConfig{..} =
+  let required label value =
+        [ConvertError (label <> " must be configured; generated placeholders are forbidden") Nothing | T.null (T.strip value)]
+      errors = concat
+        [ required "Sender DPID" ccSenderDpid
+        , required "Recipient DPID" ccRecipientDpid
+        , required "Message ID" ccMessageId
+        , required "Partner name" ccPartnerName
+        ]
+  in if null errors then Right () else Left errors
 
 -- | Build MessageHeader
 buildMessageHeader :: ConvertConfig -> UTCTime -> MessageHeader

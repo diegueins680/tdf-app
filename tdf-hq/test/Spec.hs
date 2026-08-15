@@ -100,6 +100,9 @@ import TDF.CampaignAutomation
       validateCampaignAutomationDailyLimit,
       validateCampaignAutomationStatus )
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
+import qualified TDF.Commerce.CheckoutStore as CheckoutStore
+import qualified TDF.Commerce.StateMachine as Commerce
+import qualified TDF.Distribution.StateMachine as Distribution
 import qualified TDF.Catalog.CountryReferenceSeed as CountrySeed
 import qualified TDF.Catalog.RecordsSpec as CatalogRecordsSpec
 import qualified TDF.Catalog.SecuritySpec as CatalogSecuritySpec
@@ -160,7 +163,13 @@ import qualified TDF.ModelsExtra as ME
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.Operations.ModelSpec as OperationsModelSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
-import qualified TDF.Server.DDEX as DDEXServer
+import qualified TDF.DDEX.Detect as DDEXDetect
+import qualified TDF.DDEX.Security as DDEXSecurity
+import qualified TDF.DDEX.ERN.V432.BusinessRulesSpec as DDEXBusinessRulesSpec
+import qualified TDF.DDEX.ERN.V432.Convert as DDEXConvert
+import qualified TDF.DDEX.ERN.V432.ParseSpec as DDEXParseSpec
+import qualified TDF.DDEX.Types as DDEXTypes
+import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.ServerProposalsSpec as ServerProposalsSpec
 import TDF.ServerRadio
     ( StreamMetadata (..),
@@ -744,6 +753,278 @@ main = hspec $ do
         it "rejects legacy partner allowedVersions arrays" $ do
             let payload = "{\"partnerName\":\"DSP\",\"partnerDpid\":null,\"partnerAllowedStandardVersionIds\":[\"40000000-0000-4000-8000-000000000001\"],\"allowedVersions\":[\"4.3.2\"]}"
             isLeft (eitherDecode payload :: Either String DdexPartnerCreateRequest) `shouldBe` True
+
+    describe "service storefront commercial invariants" $ do
+        it "accepts only server-configured package quantities" $
+            QC.property $ \(QC.Positive priceCents) (QC.Positive minSongs) (QC.NonNegative range) ->
+                let boundedRange = range `mod` 20
+                    maxSongs = minSongs + boundedRange
+                    requested = minSongs + (boundedRange `div` 2)
+                in ServiceStorefront.validatePackageOrder priceCents "USD" minSongs maxSongs requested
+                    == Right requested
+
+        it "rejects quantity and price tampering" $
+            QC.property $ \(QC.Positive priceCents) (QC.Positive minSongs) (QC.NonNegative range) ->
+                let maxSongs = minSongs + (range `mod` 20)
+                in isLeft (ServiceStorefront.validatePackageOrder priceCents "USD" minSongs maxSongs (maxSongs + 1))
+                    && isLeft (ServiceStorefront.validatePackageOrder 0 "USD" minSongs maxSongs minSongs)
+
+        it "binds a Datafast resource path to the stored checkout" $ do
+            ServiceStorefront.validateDatafastOrderResourcePath
+              (Just "checkout-abc")
+              "/v1/checkouts/checkout-abc/payment"
+              `shouldBe` Right "/v1/checkouts/checkout-abc/payment"
+            ServiceStorefront.validateDatafastOrderResourcePath
+              (Just "checkout-abc")
+              "/v1/checkouts/checkout-other/payment"
+              `shouldSatisfy` isLeft
+
+        it "requires a bounded visible-ASCII order idempotency key" $ do
+            ServiceStorefront.validateIdempotencyKey (Just "2e7c0f84-2945-4bed-a838-28cf482c5afb")
+              `shouldBe` Right "2e7c0f84-2945-4bed-a838-28cf482c5afb"
+            ServiceStorefront.validateIdempotencyKey Nothing `shouldSatisfy` isLeft
+            ServiceStorefront.validateIdempotencyKey (Just "too-short") `shouldSatisfy` isLeft
+            ServiceStorefront.validateIdempotencyKey (Just "invalid key with spaces") `shouldSatisfy` isLeft
+
+        it "defaults checkout configuration to sandbox and requires an explicit valid production value" $ do
+            CheckoutStore.resolveCheckoutEnvironment Nothing
+              `shouldBe` Right CheckoutStore.CheckoutSandbox
+            CheckoutStore.resolveCheckoutEnvironment (Just " production ")
+              `shouldBe` Right CheckoutStore.CheckoutProduction
+            CheckoutStore.resolveCheckoutEnvironment (Just "staging")
+              `shouldSatisfy` isLeft
+
+        it "binds Datafast environment declarations to the configured gateway host" $ do
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutSandbox
+              "https://eu-test.oppwa.com"
+              `shouldBe` Right ()
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutProduction
+              "https://eu-prod.oppwa.com"
+              `shouldBe` Right ()
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutProduction
+              "https://eu-test.oppwa.com"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutSandbox
+              "http://eu-test.oppwa.com"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutSandbox
+              "https://eu-test.oppwa.com.attacker.example"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutSandbox
+              "https://eu-test.oppwa.com@attacker.example"
+              `shouldSatisfy` isLeft
+
+        it "accepts only documented Datafast success codes for the immutable environment" $ do
+            ServiceStorefront.isDatafastCheckoutCreationSuccess "000.200.100"
+              `shouldBe` True
+            ServiceStorefront.isDatafastCheckoutCreationSuccess "000.200.000"
+              `shouldBe` False
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutProduction "000.000.000"
+              `shouldBe` True
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutProduction "000.100.110"
+              `shouldBe` False
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutSandbox "000.100.110"
+              `shouldBe` True
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutSandbox "000.100.112"
+              `shouldBe` True
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutSandbox "000.100.999"
+              `shouldBe` False
+
+        it "uses the nested PayPal capture status rather than the order status" $ do
+            let pendingPayload = A.object
+                  [ "status" .= ("COMPLETED" :: Text)
+                  , "purchase_units" .=
+                      [ A.object
+                          [ "custom_id" .= ("internal-order" :: Text)
+                          , "payee" .= A.object ["merchant_id" .= ("MERCHANT" :: Text)]
+                          , "payments" .= A.object
+                              [ "captures" .=
+                                  [ A.object
+                                      [ "id" .= ("CAPTURE-1" :: Text)
+                                      , "status" .= ("PENDING" :: Text)
+                                      , "amount" .= A.object
+                                          [ "value" .= ("80.00" :: Text)
+                                          , "currency_code" .= ("USD" :: Text)
+                                          ]
+                                      ]
+                                  ]
+                              ]
+                          ]
+                      ]
+                  ]
+            case ServiceStorefront.parsePaypalCaptureOutcome pendingPayload of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right outcome -> do
+                ServiceStorefront.spcoStatus outcome `shouldBe` "PENDING"
+                ServiceStorefront.spcoCaptureId outcome `shouldBe` Just "CAPTURE-1"
+
+        it "rejects ambiguous multi-capture PayPal responses" $ do
+            let capture captureId = A.object
+                  [ "id" .= (captureId :: Text)
+                  , "status" .= ("COMPLETED" :: Text)
+                  ]
+                ambiguousPayload = A.object
+                  [ "status" .= ("COMPLETED" :: Text)
+                  , "purchase_units" .=
+                      [ A.object
+                          [ "payments" .= A.object
+                              [ "captures" .= [capture "CAPTURE-1", capture "CAPTURE-2"] ]
+                          ]
+                      ]
+                  ]
+            case ServiceStorefront.parsePaypalCaptureOutcome ambiguousPayload of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right outcome -> do
+                ServiceStorefront.spcoStatus outcome `shouldBe` "UNKNOWN"
+                ServiceStorefront.spcoCaptureId outcome `shouldBe` Nothing
+
+        it "keeps payment states outside the generic service admin updater" $ do
+            ServiceStorefront.validateServiceFulfillmentTransition "paid" "in_progress"
+              `shouldBe` Right ()
+            ServiceStorefront.validateServiceFulfillmentTransition "in_progress" "v1_delivered"
+              `shouldBe` Right ()
+            ServiceStorefront.validateServiceFulfillmentTransition "awaiting_payment" "paid"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateServiceFulfillmentTransition "paid" "refunded"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateServiceFulfillmentTransition "paid" "completed"
+              `shouldSatisfy` isLeft
+
+    describe "provider-neutral checkout state machine" $ do
+        let verifiedPayment = Commerce.PaymentVerification
+                { Commerce.pvCheckoutEnvironment = Commerce.ProviderProduction
+                , Commerce.pvEventEnvironment = Commerce.ProviderProduction
+                , Commerce.pvEvidence = Commerce.SignatureVerifiedWebhook
+                , Commerce.pvExpectedAmountMinor = 12500
+                , Commerce.pvActualAmountMinor = 12500
+                , Commerce.pvExpectedCurrency = "USD"
+                , Commerce.pvActualCurrency = "usd"
+                , Commerce.pvExpectedMerchant = "tdf-merchant"
+                , Commerce.pvActualMerchant = "tdf-merchant"
+                , Commerce.pvExpectedOrder = "order-123"
+                , Commerce.pvActualOrder = "order-123"
+                , Commerce.pvExpectedResource = "/v1/checkouts/resource-123/payment"
+                , Commerce.pvActualResource = "/v1/checkouts/resource-123/payment"
+                }
+
+        it "allows payment only from authoritative, fully bound evidence" $
+            Commerce.transitionCheckout
+              Commerce.CheckoutProcessing
+              (Commerce.CheckoutPaymentVerified verifiedPayment)
+              `shouldBe` Right Commerce.CheckoutPaid
+
+        it "never treats a browser return or mocked evidence as payment" $
+            QC.property $ \useBrowserReturn ->
+                let evidence = if useBrowserReturn then Commerce.BrowserReturnOnly else Commerce.MockedEvidence
+                    untrusted = verifiedPayment { Commerce.pvEvidence = evidence }
+                in isLeft (Commerce.transitionCheckout Commerce.CheckoutProcessing (Commerce.CheckoutPaymentVerified untrusted))
+
+        it "rejects sandbox events for production checkouts" $ do
+            let sandboxEvent = verifiedPayment { Commerce.pvEventEnvironment = Commerce.ProviderSandbox }
+            Commerce.transitionCheckout Commerce.CheckoutProcessing (Commerce.CheckoutPaymentVerified sandboxEvent)
+              `shouldSatisfy` isLeft
+
+        it "rejects every provider amount mutation" $
+            QC.property $ \(QC.NonZero delta) ->
+                isLeft (Commerce.verifyPaymentBinding verifiedPayment
+                  { Commerce.pvActualAmountMinor = 12500 + delta })
+
+        it "keeps fulfillment out of the payment state machine" $
+            Commerce.transitionCheckout Commerce.CheckoutPaid Commerce.CheckoutProviderProcessing
+              `shouldSatisfy` isLeft
+
+        it "balances immutable ledger entries independently per currency" $ do
+            Commerce.ledgerBalances [("USD", 10000), ("usd", -10000), ("EUR", 8000), ("EUR", -8000)]
+              `shouldBe` True
+            Commerce.ledgerBalances [("USD", 10000), ("EUR", -10000)]
+              `shouldBe` False
+
+    describe "distribution state machine invariants" $ do
+        let completeGates = Distribution.DistributionGates
+              { Distribution.metadataValid = True
+              , Distribution.identifiersValid = True
+              , Distribution.assetsValid = True
+              , Distribution.rightsComplete = True
+              , Distribution.splitsAccepted = True
+              , Distribution.termsAccepted = True
+              , Distribution.commerciallyCleared = True
+              }
+
+        it "requires every intake and rights gate before validation" $
+            QC.property $ \metadata identifiers assets rights splits terms ->
+              let gates = completeGates
+                    { Distribution.metadataValid = metadata
+                    , Distribution.identifiersValid = identifiers
+                    , Distribution.assetsValid = assets
+                    , Distribution.rightsComplete = rights
+                    , Distribution.splitsAccepted = splits
+                    , Distribution.termsAccepted = terms
+                    }
+              in isRight (Distribution.transitionDistribution gates
+                    Distribution.DistributionDraft Distribution.DistributionValidated)
+                    == and [metadata, identifiers, assets, rights, splits, terms]
+
+        it "accepts only positive splits totaling exactly 100 percent" $
+            QC.property $ \(QC.NonEmpty rawShares) ->
+              let shares = map (\value -> 1 + abs value `mod` 9999) rawShares
+              in Distribution.splitTotalValid shares == (sum shares == 10000)
+
+        it "cannot mark distribution paid without commercial clearance" $
+            Distribution.transitionDistribution
+              (completeGates { Distribution.commerciallyCleared = False })
+              Distribution.DistributionPaymentDue
+              Distribution.DistributionPaid
+              `shouldSatisfy` isLeft
+
+        it "rejects mock and sandbox evidence for production status" $
+            QC.property $ \useMock ->
+              let evidence = if useMock then Distribution.MockEvidence else Distribution.SandboxEvidence
+              in isLeft (Distribution.validateRecipientEvidence Distribution.EvidenceProduction evidence)
+
+        it "keeps package generation, send, acknowledgement, acceptance, and live distinct" $ do
+            Distribution.transitionDistribution completeGates
+              Distribution.DistributionScheduled Distribution.DistributionPackageGenerated
+              `shouldBe` Right Distribution.DistributionPackageGenerated
+            Distribution.transitionDistribution completeGates
+              Distribution.DistributionPackageGenerated Distribution.DistributionSent
+              `shouldSatisfy` isLeft
+            Distribution.transitionDistribution completeGates
+              Distribution.DistributionSent Distribution.DistributionLive
+              `shouldSatisfy` isLeft
+
+    describe "DDEX intake safety and truthfulness" $ do
+        it "rejects entities, XInclude, malformed XML, and invalid UTF-8" $ do
+            let unsafePayloads =
+                  [ "<?xml version=\"1.0\"?><!DOCTYPE x [<!ENTITY e SYSTEM \"file:///etc/passwd\">]><x>&e;</x>"
+                  , "<?xml version=\"1.0\"?><x xmlns:xi=\"http://www.w3.org/2001/XInclude\"><xi:include href=\"file:///etc/passwd\"/></x>"
+                  , "<?xml version=\"1.0\"?><unclosed>"
+                  ]
+            mapM_ (\payload ->
+              DDEXSecurity.safeParseXml DDEXSecurity.defaultXmlParseConfig (BL.pack payload)
+                `shouldSatisfy` isLeft) unsafePayloads
+            DDEXSecurity.safeParseXml DDEXSecurity.defaultXmlParseConfig (BL.pack "\255\254")
+              `shouldSatisfy` isLeft
+
+        it "detects ERN 4.3.2 without inventing a version" $ do
+            let payload = BL.pack "<ernNewReleaseMessage xmlns=\"http://ddex.net/xml/ern/432\" MessageSchemaVersionId=\"ern/432\"></ernNewReleaseMessage>"
+            fmap DDEXTypes.detectionVersion (DDEXDetect.detectDocument payload)
+              `shouldBe` Just "4.3.2"
+
+        it "refuses to render ERN with placeholder sender or recipient identities" $
+            DDEXConvert.catalogToErn DDEXConvert.defaultConvertConfig currentSocialSyncTestTime [] [] [] []
+              `shouldSatisfy` isLeft
+
     describe "governed country reference snapshot" $ do
         it "contains one complete, bilingual identity for every ISO alpha-2 code" $ do
             let seeds = CountrySeed.countryReferenceSeeds
@@ -14710,6 +14991,8 @@ main = hspec $ do
     CatalogRecordsSpec.spec
     CatalogSecuritySpec.spec
     CatalogPipelineSpec.spec
+    DDEXParseSpec.spec
+    DDEXBusinessRulesSpec.spec
     EventDiscoverySpec.spec
     ArtistSpec.spec
     ServerAuthSpec.spec
