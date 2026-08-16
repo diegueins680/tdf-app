@@ -152,6 +152,8 @@ DO UPDATE SET state_id=EXCLUDED.state_id, normalized_value=EXCLUDED.normalized_v
   status='mapped', evidence=EXCLUDED.evidence;
 
 DROP TRIGGER IF EXISTS catalog_pipeline_card_integrity ON pipeline_card;
+ALTER TABLE pipeline_card ALTER COLUMN service_kind DROP NOT NULL;
+ALTER TABLE pipeline_card ALTER COLUMN stage DROP NOT NULL;
 
 DO $batches$
 DECLARE changed_rows integer;

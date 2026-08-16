@@ -186,6 +186,11 @@ DROP TRIGGER IF EXISTS ddex_operational_state_integrity ON ddex_import_run;
 DROP TRIGGER IF EXISTS ddex_operational_state_integrity ON ddex_job;
 DROP TRIGGER IF EXISTS ddex_import_change_canonical_integrity ON ddex_import_change;
 DROP TRIGGER IF EXISTS ddex_export_canonical_integrity ON ddex_export;
+ALTER TABLE ddex_import_plan ALTER COLUMN status DROP NOT NULL;
+ALTER TABLE ddex_import_run ALTER COLUMN status DROP NOT NULL;
+ALTER TABLE ddex_job ALTER COLUMN job_type DROP NOT NULL;
+ALTER TABLE ddex_job ALTER COLUMN status DROP NOT NULL;
+ALTER TABLE ddex_import_change ALTER COLUMN operation DROP NOT NULL;
 
 DO $batches$ DECLARE changed integer; BEGIN LOOP WITH batch AS (
   SELECT target.id FROM ddex_validation_run target JOIN catalog_ddex_operational_cutover_source source

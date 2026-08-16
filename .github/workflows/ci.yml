@@ -280,6 +280,8 @@ jobs:
       - name: Verify pristine production preflight
         run: |
           node scripts/render-production-schema-preflight.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
+          security_report="$(psql "$PGURL" -X -qAt -v ON_ERROR_STOP=1 -f tdf-hq/sql/preflight_security_emergency_readiness.sql)"
+          node -e 'const report=JSON.parse(process.argv[1]); if (report.schemaMode!=="legacy" || !report.preMigrationReady || report.authenticatableParties!==2) process.exit(1)' "$security_report"
 
       - name: Apply the authoritative migration batch twice
         env:
@@ -289,6 +291,8 @@ jobs:
           node scripts/render-production-migration-batch.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
           expected_migrations="$(node -p "require('./scripts/production-migrations.json').migrations.length")"
           test "$(psql "$PGURL" -Atqc 'SELECT COUNT(*) FROM public.tdf_schema_migration')" = "$expected_migrations"
+          security_report="$(psql "$PGURL" -X -qAt -v ON_ERROR_STOP=1 -f tdf-hq/sql/preflight_security_emergency_readiness.sql)"
+          node -e 'const report=JSON.parse(process.argv[1]); if (report.schemaMode!=="canonical" || !report.databaseReady || report.databaseCoherentPaths!==2) process.exit(1)' "$security_report"
 
       - name: Verify catalog dry-runs and raw cutover idempotency
         env:
