@@ -23,3 +23,14 @@ export const shouldHideRadioForRoute = (pathname: string, hash = '') => (
     && hash !== '#radio'
   )
 );
+
+export const shouldRenderRadioWidget = (
+  pathname: string,
+  hash: string,
+  authenticated: boolean,
+  sessionLoading: boolean,
+) => (
+  authenticated
+  && !sessionLoading
+  && !shouldHideRadioForRoute(pathname, hash)
+);
