@@ -107,6 +107,11 @@
       "introducedBy": "15d0d0b607344e62025f39208861c313c08b7eaa"
     },
     {
+      "id": "2026-08-16_catalog_locale_preference_resume",
+      "path": "tdf-hq/sql/2026-08-16_catalog_locale_preference_resume.sql",
+      "introducedBy": "07c76a2b59aec66997924c7b2809d6c66b451898"
+    },
+    {
       "id": "2026-08-07_catalog_backfill_apply",
       "path": "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
       "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39"
