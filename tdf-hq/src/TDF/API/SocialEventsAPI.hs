@@ -9,6 +9,7 @@ module TDF.API.SocialEventsAPI (
     EventsRoutes,
     EventCitiesRoutes,
     EventDiscoverySourcesRoutes,
+    EventResearchRoutes,
     VenuesRoutes,
     ArtistsRoutes,
     RsvpRoutes,
@@ -50,6 +51,8 @@ import Servant.Multipart (
     fdInputName,
  )
 import System.FilePath (takeExtension)
+
+import TDF.API.EventResearchAPI (EventResearchRoutes)
 
 import TDF.DTO.SocialEventsDTO (
     ArtistDTO,
@@ -554,6 +557,7 @@ type SocialEventsAPI =
     EventsRoutes
         :<|> EventCitiesRoutes
         :<|> EventDiscoverySourcesRoutes
+        :<|> EventResearchRoutes
         :<|> VenuesRoutes
         :<|> ArtistsRoutes
         :<|> RsvpRoutes
