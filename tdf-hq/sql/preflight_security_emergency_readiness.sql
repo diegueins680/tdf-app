@@ -45,6 +45,42 @@ SELECT CASE
         ON credential.party_id = assignment.party_id
        AND credential.active
     ),
+    legacy_authenticatable_party AS (
+      SELECT DISTINCT assignment.party_id
+      FROM party_role assignment
+      JOIN user_credential credential
+        ON credential.party_id = assignment.party_id
+       AND credential.active
+      WHERE assignment.active
+        AND assignment.role::text = 'Admin'
+    ),
+    coherent_legacy_target_role AS (
+      SELECT role.id
+      FROM security_role role
+      WHERE role.active
+        AND role.emergency_administrator
+        AND role.code = 'admin'
+        AND NOT EXISTS (
+          SELECT 1
+          FROM required_permission required
+          WHERE NOT EXISTS (
+            SELECT 1
+            FROM role_permission grant_row
+            JOIN security_permission permission
+              ON permission.id = grant_row.permission_id
+             AND permission.active
+            JOIN security_action action
+              ON action.id = permission.action_id
+             AND action.active
+            JOIN security_module module_row
+              ON module_row.id = permission.module_id
+             AND module_row.active
+            WHERE grant_row.role_id = role.id
+              AND grant_row.active
+              AND permission.code = required.code
+          )
+        )
+    ),
     coherent_party AS (
       SELECT DISTINCT candidate.party_id
       FROM authenticatable_party candidate
@@ -74,6 +110,8 @@ SELECT CASE
         (SELECT count(*)::int FROM active_assignment) AS active_assignments,
         (SELECT count(DISTINCT party_id)::int FROM active_assignment) AS assigned_parties,
         (SELECT count(DISTINCT party_id)::int FROM authenticatable_party) AS authenticatable_parties,
+        (SELECT count(*)::int FROM legacy_authenticatable_party) AS legacy_authenticatable_parties,
+        (SELECT count(*)::int FROM coherent_legacy_target_role) AS coherent_legacy_target_roles,
         (SELECT count(*)::int FROM coherent_party) AS database_coherent_paths
     )
     SELECT json_build_object(
@@ -84,8 +122,12 @@ SELECT CASE
       'activeEmergencyAssignments', active_assignments,
       'distinctAssignedParties', assigned_parties,
       'authenticatableParties', authenticatable_parties,
+      'legacyAuthenticatableParties', legacy_authenticatable_parties,
+      'coherentLegacyTargetRoles', coherent_legacy_target_roles,
       'databaseCoherentPaths', database_coherent_paths,
-      'preMigrationReady', database_coherent_paths >= 2,
+      'preMigrationReady', database_coherent_paths >= 2 OR (
+        legacy_authenticatable_parties >= 2 AND coherent_legacy_target_roles = 1
+      ),
       'databaseReady', database_coherent_paths >= 2,
       'manualIndependentLoginVerificationRequired', true,
       'capturedAt', now()

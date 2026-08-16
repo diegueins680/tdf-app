@@ -6454,6 +6454,16 @@
       "reviewed": true
     },
     {
+      "id": "7d04461181690599bf4f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the ordered manifest can make a production release non-reproducible or apply schema revisions out of order.",
+      "justification": "Migration identifiers and ordered immutable script paths are deployment execution mechanics; every applied revision and checksum is persisted independently in the production migration ledger.",
+      "reviewed": true
+    },
+    {
       "id": "4dbf6436c5135a864130",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -6541,16 +6551,6 @@
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "The list is a security/parser allowlist for MIME types, file extensions, reserved language properties, or secret-bearing fields.",
-      "reviewed": true
-    },
-    {
-      "id": "dc14b6589cbf758459af",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
       "reviewed": true
     },
     {
