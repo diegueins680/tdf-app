@@ -5902,6 +5902,8 @@ export interface components {
         ManagedClassified: {
             /** Format: uuid */
             id: string;
+            /** Format: uuid */
+            authorProfileId: string;
             title: string;
             slug: string;
             status: string;
@@ -5966,9 +5968,41 @@ export interface components {
             /** Format: uuid */
             currencyId?: string;
         };
-        /** @description Participant-scoped invitation */
+        DirectoryProfileReference: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+        };
+        DirectoryClassifiedReference: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            slug: string;
+            status: string;
+        };
+        /** @description Participant-scoped invitation; contains public profile labels but no Party PII. */
         DirectoryInvitation: {
-            [key: string]: unknown;
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            senderProfileId: string;
+            /** Format: uuid */
+            targetProfileId: string;
+            /** Format: uuid */
+            classifiedId?: string | null;
+            message: string;
+            /** @enum {string} */
+            status: "pending" | "accepted" | "declined" | "withdrawn" | "blocked" | "conversation_open" | "converted" | "expired";
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: int64 */
+            version: number;
+            /** @enum {string} */
+            participantRole: "sender" | "target" | "admin";
+            senderProfile: components["schemas"]["DirectoryProfileReference"];
+            targetProfile: components["schemas"]["DirectoryProfileReference"];
+            classified?: components["schemas"]["DirectoryClassifiedReference"] | null;
         };
         InvitationCreate: {
             /** Format: uuid */

@@ -68,6 +68,12 @@ for (const collection of [
 }
 assert.equal(spec.components.schemas.TaxonomyItem.properties.metadata.type, 'object');
 assert.equal(spec.components.schemas.TaxonomyItem.properties.minorUnits.type, 'integer');
+assert.equal(spec.components.schemas.ManagedClassified.additionalProperties, false);
+assert(spec.components.schemas.ManagedClassified.required.includes('authorProfileId'));
+assert.equal(spec.components.schemas.DirectoryInvitation.additionalProperties, false);
+for (const field of ['participantRole', 'senderProfile', 'targetProfile']) {
+  assert(spec.components.schemas.DirectoryInvitation.required.includes(field));
+}
 
 const idempotentOperations = [
   ['/directory/profiles', 'post'],

@@ -498,11 +498,30 @@ components:
         serviceOfferingId: { type: string, format: uuid }
         serviceAdId: { type: integer, format: int64 }
         expiresAt: { type: string, format: date-time }
-    ManagedClassified: { type: object, required: [id, title, slug, status, moderationStatus, version], properties: { id: { type: string, format: uuid }, title: { type: string }, slug: { type: string }, status: { type: string }, moderationStatus: { type: string }, expiresAt: { type: string, format: date-time, nullable: true }, version: { type: integer, format: int64 } } }
+    ManagedClassified: { type: object, additionalProperties: false, required: [id, authorProfileId, title, slug, status, moderationStatus, version], properties: { id: { type: string, format: uuid }, authorProfileId: { type: string, format: uuid }, title: { type: string }, slug: { type: string }, status: { type: string }, moderationStatus: { type: string }, expiresAt: { type: string, format: date-time, nullable: true }, version: { type: integer, format: int64 } } }
     ApplicationCreate: { type: object, required: [applicantProfileId, message, portfolio], properties: { applicantProfileId: { type: string, format: uuid }, message: { type: string, minLength: 10, maxLength: 5000 }, portfolio: { type: array, items: { type: object, additionalProperties: true } }, availability: { type: string }, proposedAmountMinor: { type: integer, format: int64, minimum: 0 }, currencyId: { type: string, format: uuid } } }
     ClassifiedApplication: { type: object, description: Private to participants and authorized admins, additionalProperties: true }
     InvitationCreate: { type: object, required: [senderProfileId, targetProfileId, message], properties: { senderProfileId: { type: string, format: uuid }, targetProfileId: { type: string, format: uuid }, classifiedId: { type: string, format: uuid }, message: { type: string, minLength: 10, maxLength: 5000 } } }
-    DirectoryInvitation: { type: object, description: Participant-scoped invitation, additionalProperties: true }
+    DirectoryProfileReference: { type: object, additionalProperties: false, required: [id, name, slug], properties: { id: { type: string, format: uuid }, name: { type: string }, slug: { type: string } } }
+    DirectoryClassifiedReference: { type: object, additionalProperties: false, required: [id, title, slug, status], properties: { id: { type: string, format: uuid }, title: { type: string }, slug: { type: string }, status: { type: string } } }
+    DirectoryInvitation:
+      type: object
+      description: Participant-scoped invitation; contains public profile labels but no Party PII.
+      additionalProperties: false
+      required: [id, senderProfileId, targetProfileId, message, status, expiresAt, version, participantRole, senderProfile, targetProfile]
+      properties:
+        id: { type: string, format: uuid }
+        senderProfileId: { type: string, format: uuid }
+        targetProfileId: { type: string, format: uuid }
+        classifiedId: { type: string, format: uuid, nullable: true }
+        message: { type: string }
+        status: { type: string, enum: [pending, accepted, declined, withdrawn, blocked, conversation_open, converted, expired] }
+        expiresAt: { type: string, format: date-time }
+        version: { type: integer, format: int64 }
+        participantRole: { type: string, enum: [sender, target, admin] }
+        senderProfile: { $ref: '#/components/schemas/DirectoryProfileReference' }
+        targetProfile: { $ref: '#/components/schemas/DirectoryProfileReference' }
+        classified: { allOf: [{ $ref: '#/components/schemas/DirectoryClassifiedReference' }], nullable: true }
     DirectoryContact: { type: object, required: [senderProfileId, targetProfileId, contextKind, contextId, message], properties: { senderProfileId: { type: string, format: uuid }, targetProfileId: { type: string, format: uuid }, contextKind: { type: string, enum: [profile, classified, application, invitation] }, contextId: { type: string, format: uuid }, message: { type: string, minLength: 1, maxLength: 5000 } } }
     DirectoryFavorite: { type: object, required: [targetKind, targetId, createdAt], properties: { targetKind: { $ref: '#/components/schemas/DirectoryEntityType' }, targetId: { type: string }, createdAt: { type: string, format: date-time }, result: { $ref: '#/components/schemas/DirectorySearchItem', nullable: true } } }
     SavedSearchCreate: { type: object, required: [name, canonicalQuery, alertsEnabled, alertFrequency], properties: { name: { type: string, minLength: 1, maxLength: 120 }, canonicalQuery: { type: object, additionalProperties: true }, alertsEnabled: { type: boolean }, alertFrequency: { type: string, enum: [instant, daily, weekly, off] } } }

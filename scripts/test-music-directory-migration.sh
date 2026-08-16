@@ -235,6 +235,36 @@ test "$private_columns" = "0"
 public_profession_security_refs=$(psql_exec -Atc "SELECT count(*) FROM information_schema.table_constraints WHERE table_name='directory_profile_profession' AND constraint_name ILIKE '%role%';")
 test "$public_profession_security_refs" = "0"
 
+# Runtime fixtures use obviously synthetic tokens and profiles in this isolated database.
+# They exercise participant binding without relying on production credentials or people.
+psql_exec <<'SQL' >/dev/null
+INSERT INTO party(display_name,is_org,created_at) VALUES
+  ('Synthetic invitation sender',FALSE,now()),
+  ('Synthetic invitation target',FALSE,now()),
+  ('Synthetic invitation unrelated',FALSE,now());
+INSERT INTO api_token(token,party_id,label,active)
+SELECT 'synthetic-directory-sender-token',id,'synthetic-directory-runtime',TRUE FROM party WHERE display_name='Synthetic invitation sender'
+UNION ALL
+SELECT 'synthetic-directory-target-token',id,'synthetic-directory-runtime',TRUE FROM party WHERE display_name='Synthetic invitation target';
+INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,bio,profile_status,visibility,moderation_status,completeness_score,public_contact_enabled,onsite,remote,published_at)
+SELECT 'd2000000-0000-4000-8000-000000000001'::uuid,id,'person','Synthetic invitation sender','synthetic-invitation-sender','Isolated runtime authorization fixture.','published','public','allowed',.9,TRUE,FALSE,TRUE,now() FROM party WHERE display_name='Synthetic invitation sender'
+UNION ALL
+SELECT 'd2000000-0000-4000-8000-000000000002'::uuid,id,'person','Synthetic invitation target','synthetic-invitation-target','Isolated runtime authorization fixture.','published','public','allowed',.9,TRUE,FALSE,TRUE,now() FROM party WHERE display_name='Synthetic invitation target'
+UNION ALL
+SELECT 'd2000000-0000-4000-8000-000000000003'::uuid,id,'person','Synthetic unrelated profile','synthetic-invitation-unrelated','Isolated runtime authorization fixture.','published','public','allowed',.9,TRUE,FALSE,TRUE,now() FROM party WHERE display_name='Synthetic invitation unrelated';
+INSERT INTO directory_profile_manager(profile_id,account_party_id,can_edit,can_publish,can_contact,can_manage,active)
+SELECT 'd2000000-0000-4000-8000-000000000001'::uuid,id,TRUE,TRUE,TRUE,TRUE,TRUE FROM party WHERE display_name='Synthetic invitation sender'
+UNION ALL
+SELECT 'd2000000-0000-4000-8000-000000000002'::uuid,id,TRUE,TRUE,TRUE,TRUE,TRUE FROM party WHERE display_name='Synthetic invitation target';
+INSERT INTO directory_age_assurance(account_party_id,assurance_status,verified_at)
+SELECT id,'adult_attested',now() FROM party WHERE display_name IN ('Synthetic invitation sender','Synthetic invitation target');
+INSERT INTO classified(id,author_profile_id,category_id,title,slug,description,status,moderation_status,onsite,remote,expires_at,published_at)
+SELECT 'd2000000-0000-4000-8000-000000000004'::uuid,'d2000000-0000-4000-8000-000000000001'::uuid,id,'Synthetic invitation opportunity','synthetic-invitation-opportunity','Isolated classified used to bind an invitation to its authorized sender.','published','allowed',FALSE,TRUE,now()+interval '30 days',now()
+FROM classified_category WHERE code='collaboration';
+INSERT INTO directory_invitation(id,sender_profile_id,target_profile_id,classified_id,message,status,idempotency_key,request_fingerprint,created_at,expires_at)
+VALUES ('d2000000-0000-4000-8000-000000000005','d2000000-0000-4000-8000-000000000001','d2000000-0000-4000-8000-000000000002',NULL,'Synthetic expired invitation for transition enforcement.','pending','synthetic-expired-invitation','synthetic-expired-fingerprint',now()-interval '31 days',now()-interval '1 day');
+SQL
+
 # Exercise the anonymous taxonomy handler against the migrated database. This catches
 # drift between the SQL implementation and the canonical OpenAPI/client projection.
 (
@@ -283,6 +313,98 @@ curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/taxonomies?locale=
       if (!value.classifiedCategories.some((item) => Array.isArray(item.requirements?.required))) throw new Error("classified requirements are missing");
     });
   '
+
+invitation_id=$(curl -fsS -X POST "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/invitations" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' \
+  -H 'Idempotency-Key: synthetic-invitation-create-1' \
+  -H 'Content-Type: application/json' \
+  --data '{"senderProfileId":"d2000000-0000-4000-8000-000000000001","targetProfileId":"d2000000-0000-4000-8000-000000000002","classifiedId":"d2000000-0000-4000-8000-000000000004","message":"Synthetic invitation used only for isolated runtime authorization testing."}' |
+  node -e '
+    let raw = "";
+    process.stdin.on("data", (chunk) => { raw += chunk; });
+    process.stdin.on("end", () => {
+      const value = JSON.parse(raw);
+      if (!/^[0-9a-f-]{36}$/.test(value.id ?? "")) throw new Error("invitation id is missing");
+      if (value.senderProfile?.name !== "Synthetic invitation sender" || value.targetProfile?.name !== "Synthetic invitation target") throw new Error("participant-safe invitation labels are missing");
+      if ("email" in value || "phone" in value || "partyId" in value) throw new Error("invitation response exposed participant PII");
+      process.stdout.write(value.id);
+    });
+  ')
+
+preaccept_status=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/contact" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' \
+  -H 'Idempotency-Key: synthetic-contact-before-accept' \
+  -H 'Content-Type: application/json' \
+  --data "{\"senderProfileId\":\"d2000000-0000-4000-8000-000000000001\",\"targetProfileId\":\"d2000000-0000-4000-8000-000000000002\",\"contextKind\":\"invitation\",\"contextId\":\"$invitation_id\",\"message\":\"Synthetic pre-acceptance contact must be rejected.\"}")
+test "$preaccept_status" = "404"
+
+preaccept_transition_status=$(curl -sS -o /dev/null -w '%{http_code}' -X PATCH "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/invitations/$invitation_id/status" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' \
+  -H 'Content-Type: application/json' \
+  --data '{"status":"conversation_open"}')
+test "$preaccept_transition_status" = "409"
+
+curl -fsS -X PATCH "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/invitations/$invitation_id/status" \
+  -H 'Authorization: Bearer synthetic-directory-target-token' \
+  -H 'Content-Type: application/json' \
+  --data '{"status":"accepted"}' >/dev/null
+
+psql_exec -c "INSERT INTO directory_contact_preference(profile_id,allow_profile_contacts) VALUES ('d2000000-0000-4000-8000-000000000002',FALSE) ON CONFLICT(profile_id) DO UPDATE SET allow_profile_contacts=FALSE;" >/dev/null
+cold_contact_status=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/contact" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' \
+  -H 'Idempotency-Key: synthetic-cold-contact-disabled' \
+  -H 'Content-Type: application/json' \
+  --data '{"senderProfileId":"d2000000-0000-4000-8000-000000000001","targetProfileId":"d2000000-0000-4000-8000-000000000002","contextKind":"profile","contextId":"d2000000-0000-4000-8000-000000000002","message":"Synthetic cold contact must respect the disabled general-contact preference."}')
+test "$cold_contact_status" = "403"
+
+mismatched_status=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/contact" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' \
+  -H 'Idempotency-Key: synthetic-contact-wrong-target' \
+  -H 'Content-Type: application/json' \
+  --data "{\"senderProfileId\":\"d2000000-0000-4000-8000-000000000001\",\"targetProfileId\":\"d2000000-0000-4000-8000-000000000003\",\"contextKind\":\"invitation\",\"contextId\":\"$invitation_id\",\"message\":\"Synthetic mismatched target contact must be rejected.\"}")
+test "$mismatched_status" = "404"
+
+curl -fsS -X POST "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/contact" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' \
+  -H 'Idempotency-Key: synthetic-contact-after-accept' \
+  -H 'Content-Type: application/json' \
+  --data "{\"senderProfileId\":\"d2000000-0000-4000-8000-000000000001\",\"targetProfileId\":\"d2000000-0000-4000-8000-000000000002\",\"contextKind\":\"invitation\",\"contextId\":\"$invitation_id\",\"message\":\"Synthetic accepted contact remains participant scoped.\"}" >/dev/null
+
+curl -fsS -X PATCH "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/invitations/$invitation_id/status" \
+  -H 'Authorization: Bearer synthetic-directory-target-token' \
+  -H 'Content-Type: application/json' \
+  --data '{"status":"blocked"}' >/dev/null
+block_count=$(psql_exec -Atc "SELECT count(*) FROM directory_profile_block WHERE blocker_profile_id='d2000000-0000-4000-8000-000000000002' AND blocked_profile_id='d2000000-0000-4000-8000-000000000001';")
+test "$block_count" = "1"
+
+blocked_contact_status=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/contact" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' \
+  -H 'Idempotency-Key: synthetic-contact-after-block' \
+  -H 'Content-Type: application/json' \
+  --data '{"senderProfileId":"d2000000-0000-4000-8000-000000000001","targetProfileId":"d2000000-0000-4000-8000-000000000002","contextKind":"profile","contextId":"d2000000-0000-4000-8000-000000000002","message":"Synthetic direct contact after a reverse block must be rejected."}')
+test "$blocked_contact_status" = "403"
+
+blocked_application_status=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/classifieds/d2000000-0000-4000-8000-000000000004/applications" \
+  -H 'Authorization: Bearer synthetic-directory-target-token' \
+  -H 'Idempotency-Key: synthetic-application-after-block' \
+  -H 'Content-Type: application/json' \
+  --data '{"applicantProfileId":"d2000000-0000-4000-8000-000000000002","message":"Synthetic application after a reverse block must be rejected.","portfolio":[]}')
+test "$blocked_application_status" = "403"
+
+blocked_reinvite_status=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/invitations" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' \
+  -H 'Idempotency-Key: synthetic-invitation-create-2' \
+  -H 'Content-Type: application/json' \
+  --data '{"senderProfileId":"d2000000-0000-4000-8000-000000000001","targetProfileId":"d2000000-0000-4000-8000-000000000002","message":"Synthetic reinvitation after blocking must be rejected."}')
+test "$blocked_reinvite_status" = "403"
+
+expired_status=$(curl -sS -o /dev/null -w '%{http_code}' -X PATCH "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/invitations/d2000000-0000-4000-8000-000000000005/status" \
+  -H 'Authorization: Bearer synthetic-directory-target-token' \
+  -H 'Content-Type: application/json' \
+  --data '{"status":"accepted"}')
+test "$expired_status" = "409"
+expired_state=$(psql_exec -Atc "SELECT status FROM directory_invitation WHERE id='d2000000-0000-4000-8000-000000000005';")
+test "$expired_state" = "expired"
 stop_api
 
-echo "Music directory migration passed restart, backfill, rollback/reapply, privacy, claim, review, alert, merge, search-volume, taxonomy, and invariant checks."
+echo "Music directory migration passed restart, backfill, rollback/reapply, privacy, claim, review, alert, merge, search-volume, taxonomy, invitation-participant, blocking, expiry, and invariant checks."

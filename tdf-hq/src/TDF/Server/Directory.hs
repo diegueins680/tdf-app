@@ -420,7 +420,7 @@ parseProfileStatus value = lookup value
 
 profileSummary profileId = jsonOne err404 "SELECT jsonb_build_object('id',id,'kind',profile_kind,'name',public_name,'slug',slug,'bio',bio,'status',profile_status,'visibility',visibility,'moderationStatus',moderation_status,'version',version) FROM directory_profile WHERE id=?" [toPersistValue profileId]
 
-listManagedClassifieds user = jsonRows "SELECT jsonb_build_object('id',classified.id,'title',classified.title,'slug',classified.slug,'status',classified.status,'moderationStatus',classified.moderation_status,'expiresAt',classified.expires_at,'version',classified.version) FROM classified JOIN directory_profile_manager manager ON manager.profile_id=classified.author_profile_id WHERE manager.account_party_id=? AND manager.active ORDER BY classified.updated_at DESC,classified.id" [toPersistValue (auPartyId user)]
+listManagedClassifieds user = jsonRows "SELECT jsonb_build_object('id',classified.id,'authorProfileId',classified.author_profile_id,'title',classified.title,'slug',classified.slug,'status',classified.status,'moderationStatus',classified.moderation_status,'expiresAt',classified.expires_at,'version',classified.version) FROM classified JOIN directory_profile_manager manager ON manager.profile_id=classified.author_profile_id WHERE manager.account_party_id=? AND manager.active ORDER BY classified.updated_at DESC,classified.id" [toPersistValue (auPartyId user)]
 
 createClassified user idempotency request@ClassifiedCreateRequest
   { authorProfileId, categoryId, title, slug, description, onsite, remote
@@ -530,7 +530,7 @@ changeClassifiedStatus user classifiedId DirectoryStatusRequest{status=newStatus
 
 parseClassifiedStatus value = lookup value [("draft",Draft),("pending_moderation",PendingModeration),("published",Published),("paused",Paused),("filled",Filled),("expired",Expired),("withdrawn",Withdrawn),("rejected",Rejected),("moderated",Moderated)]
 
-classifiedSummary classifiedId = jsonOne err404 "SELECT jsonb_build_object('id',id,'title',title,'slug',slug,'status',status,'moderationStatus',moderation_status,'expiresAt',expires_at,'version',version) FROM classified WHERE id=?" [toPersistValue classifiedId]
+classifiedSummary classifiedId = jsonOne err404 "SELECT jsonb_build_object('id',id,'authorProfileId',author_profile_id,'title',title,'slug',slug,'status',status,'moderationStatus',moderation_status,'expiresAt',expires_at,'version',version) FROM classified WHERE id=?" [toPersistValue classifiedId]
 
 listApplications user classifiedId = do
   _ <- requireClassifiedAuthor user classifiedId
@@ -547,7 +547,7 @@ createApplication user classifiedId idempotency request@ApplicationCreateRequest
   applicationId <- reserveIdempotency user "classified.apply" idempotency request "application"
   existing <- jsonRows "SELECT to_jsonb(TRUE) FROM classified_application WHERE id=?" [toPersistValue applicationId]
   if not (null existing) then applicationSummary user applicationId else do
-    allowed <- jsonRows "SELECT to_jsonb(TRUE) FROM classified JOIN directory_profile author ON author.id=classified.author_profile_id LEFT JOIN directory_contact_preference preference ON preference.profile_id=author.id WHERE classified.id=? AND classified.status='published' AND classified.moderation_status='allowed' AND classified.expires_at>now() AND classified.author_profile_id<>? AND coalesce(preference.allow_classified_applications,TRUE) AND NOT EXISTS (SELECT 1 FROM directory_profile_block block WHERE block.blocker_profile_id=classified.author_profile_id AND block.blocked_profile_id=?)" [toPersistValue classifiedId,toPersistValue applicantProfileId,toPersistValue applicantProfileId]
+    allowed <- jsonRows "SELECT to_jsonb(TRUE) FROM classified JOIN directory_profile author ON author.id=classified.author_profile_id JOIN directory_profile applicant ON applicant.id=? LEFT JOIN directory_contact_preference preference ON preference.profile_id=author.id WHERE classified.id=? AND classified.status='published' AND classified.moderation_status='allowed' AND classified.expires_at>now() AND classified.author_profile_id<>applicant.id AND applicant.completeness_score>=coalesce(preference.minimum_profile_completeness,0) AND coalesce(preference.allow_classified_applications,TRUE) AND NOT EXISTS (SELECT 1 FROM directory_profile_block block WHERE (block.blocker_profile_id=classified.author_profile_id AND block.blocked_profile_id=applicant.id) OR (block.blocker_profile_id=applicant.id AND block.blocked_profile_id=classified.author_profile_id))" [toPersistValue applicantProfileId,toPersistValue classifiedId]
     when (null allowed) $ throwError err403 {errBody="this classified does not accept this application"}
     consumeRate user "application" 20
     let fingerprint = requestFingerprint request
@@ -593,7 +593,7 @@ createInvitation user idempotency request@InvitationCreateRequest
   invitationId <- reserveIdempotency user "invitation.create" idempotency request "invitation"
   existing <- jsonRows "SELECT to_jsonb(TRUE) FROM directory_invitation WHERE id=?" [toPersistValue invitationId]
   if not (null existing) then invitationSummary user invitationId else do
-    permitted <- jsonRows "SELECT to_jsonb(TRUE) FROM directory_public_profile target LEFT JOIN directory_contact_preference preference ON preference.profile_id=target.id WHERE target.id=? AND target.id<>? AND coalesce(preference.allow_direct_invitations,TRUE) AND NOT EXISTS (SELECT 1 FROM directory_profile_block block WHERE block.blocker_profile_id=target.id AND block.blocked_profile_id=?) AND (?::uuid IS NULL OR EXISTS(SELECT 1 FROM classified WHERE classified.id=?::uuid AND classified.author_profile_id=? AND classified.status='published' AND classified.expires_at>now()))" [toPersistValue targetProfileId,toPersistValue senderProfileId,toPersistValue senderProfileId,optionalUuid classifiedId,optionalUuid classifiedId,toPersistValue senderProfileId]
+    permitted <- jsonRows "SELECT to_jsonb(TRUE) FROM directory_public_profile target JOIN directory_public_profile sender ON sender.id=? LEFT JOIN directory_contact_preference preference ON preference.profile_id=target.id WHERE target.id=? AND target.id<>sender.id AND sender.completeness_score>=coalesce(preference.minimum_profile_completeness,0) AND coalesce(preference.allow_direct_invitations,TRUE) AND NOT EXISTS (SELECT 1 FROM directory_profile_block block WHERE (block.blocker_profile_id=target.id AND block.blocked_profile_id=sender.id) OR (block.blocker_profile_id=sender.id AND block.blocked_profile_id=target.id)) AND (?::uuid IS NULL OR EXISTS(SELECT 1 FROM classified WHERE classified.id=?::uuid AND classified.author_profile_id=sender.id AND classified.status='published' AND classified.moderation_status='allowed' AND classified.expires_at>now()))" [toPersistValue senderProfileId,toPersistValue targetProfileId,optionalUuid classifiedId,optionalUuid classifiedId]
     when (null permitted) $ throwError err403 {errBody="target profile does not accept invitations"}
     consumeRate user "invitation" 10
     now <- liftIO getCurrentTime
@@ -603,11 +603,15 @@ createInvitation user idempotency request@InvitationCreateRequest
     invitationSummary user invitationId
 
 listInvitations user = jsonRows
-  "SELECT jsonb_build_object('id',invitation.id,'senderProfileId',invitation.sender_profile_id,'targetProfileId',invitation.target_profile_id,'classifiedId',invitation.classified_id,'message',invitation.message,'status',invitation.status,'expiresAt',invitation.expires_at,'version',invitation.version,'participantRole',CASE WHEN sender.account_party_id IS NOT NULL THEN 'sender' ELSE 'target' END) FROM directory_invitation invitation LEFT JOIN directory_profile_manager sender ON sender.profile_id=invitation.sender_profile_id AND sender.account_party_id=? AND sender.active LEFT JOIN directory_profile_manager target ON target.profile_id=invitation.target_profile_id AND target.account_party_id=? AND target.active WHERE sender.account_party_id IS NOT NULL OR target.account_party_id IS NOT NULL ORDER BY invitation.created_at DESC,invitation.id"
+  "SELECT jsonb_build_object('id',invitation.id,'senderProfileId',invitation.sender_profile_id,'targetProfileId',invitation.target_profile_id,'classifiedId',invitation.classified_id,'message',invitation.message,'status',CASE WHEN invitation.status='pending' AND invitation.expires_at<=now() THEN 'expired' ELSE invitation.status END,'expiresAt',invitation.expires_at,'version',invitation.version,'participantRole',CASE WHEN sender_manager.account_party_id IS NOT NULL THEN 'sender' ELSE 'target' END,'senderProfile',jsonb_build_object('id',sender_profile.id,'name',sender_profile.public_name,'slug',sender_profile.slug),'targetProfile',jsonb_build_object('id',target_profile.id,'name',target_profile.public_name,'slug',target_profile.slug),'classified',CASE WHEN classified.id IS NULL THEN NULL ELSE jsonb_build_object('id',classified.id,'title',classified.title,'slug',classified.slug,'status',classified.status) END) FROM directory_invitation invitation JOIN directory_profile sender_profile ON sender_profile.id=invitation.sender_profile_id JOIN directory_profile target_profile ON target_profile.id=invitation.target_profile_id LEFT JOIN classified ON classified.id=invitation.classified_id LEFT JOIN directory_profile_manager sender_manager ON sender_manager.profile_id=invitation.sender_profile_id AND sender_manager.account_party_id=? AND sender_manager.active LEFT JOIN directory_profile_manager target_manager ON target_manager.profile_id=invitation.target_profile_id AND target_manager.account_party_id=? AND target_manager.active WHERE sender_manager.account_party_id IS NOT NULL OR target_manager.account_party_id IS NOT NULL ORDER BY invitation.created_at DESC,invitation.id"
   [toPersistValue (auPartyId user),toPersistValue (auPartyId user)]
 
 changeInvitationStatus user invitationId DirectoryStatusRequest{status=newStatus} = do
   role <- invitationParticipantRole user invitationId
+  expired <- jsonRows "SELECT to_jsonb(TRUE) FROM directory_invitation WHERE id=? AND status='pending' AND expires_at<=now()" [toPersistValue invitationId]
+  unless (null expired) $ do
+    runDB $ rawExecute "UPDATE directory_invitation SET status='expired',updated_at=now(),version=version+1 WHERE id=? AND status='pending'" [toPersistValue invitationId]
+    throwError err409 {errBody="invitation expired before this transition"}
   current <- jsonOne err404 "SELECT to_jsonb(status) FROM directory_invitation WHERE id=?" [toPersistValue invitationId]
   oldStatus <- case current of String value -> pure value; _ -> throwError err500
   from <- maybe (throwError err409 {errBody="unknown current invitation state"}) pure (parseInvitationStatus oldStatus)
@@ -616,7 +620,10 @@ changeInvitationStatus user invitationId DirectoryStatusRequest{status=newStatus
       targetAllowed=Set.fromList ["accepted","declined","blocked","conversation_open","converted"]
   unless ((role=="sender" && newStatus `Set.member` senderAllowed) || (role=="target" && newStatus `Set.member` targetAllowed) || role=="admin") $ throwError err403 {errBody="invitation transition is not allowed"}
   unless (allowedInvitationTransition from to) $ throwError err409 {errBody="undeclared invitation transition"}
-  runDB $ rawExecute "UPDATE directory_invitation SET status=?,updated_at=now(),version=version+1 WHERE id=?" [PersistText newStatus,toPersistValue invitationId]
+  runDB $ do
+    rawExecute "UPDATE directory_invitation SET status=?,updated_at=now(),version=version+1 WHERE id=?" [PersistText newStatus,toPersistValue invitationId]
+    when (newStatus=="blocked" && role=="target") $
+      rawExecute "INSERT INTO directory_profile_block(blocker_profile_id,blocked_profile_id,created_by,reason) SELECT target_profile_id,sender_profile_id,?,'blocked_from_invitation' FROM directory_invitation WHERE id=? ON CONFLICT DO NOTHING" [toPersistValue (auPartyId user),toPersistValue invitationId]
   when (newStatus `elem` ["accepted","conversation_open"]) $
     recordAuthenticatedEvent user "contact_accepted" "invitation" (UUID.toText invitationId)
   when (newStatus == "converted") $
@@ -631,21 +638,21 @@ invitationParticipantRole user invitationId = do
   case listToMaybe rows of Just (String role) | role/="none" -> pure role; _ | isDirectoryAdmin user -> pure "admin"; _ -> throwError err404
 
 invitationSummary user invitationId = do
-  _ <- invitationParticipantRole user invitationId
-  jsonOne err404 "SELECT jsonb_build_object('id',id,'senderProfileId',sender_profile_id,'targetProfileId',target_profile_id,'classifiedId',classified_id,'message',message,'status',status,'expiresAt',expires_at,'version',version) FROM directory_invitation WHERE id=?" [toPersistValue invitationId]
+  role <- invitationParticipantRole user invitationId
+  jsonOne err404 "SELECT jsonb_build_object('id',invitation.id,'senderProfileId',invitation.sender_profile_id,'targetProfileId',invitation.target_profile_id,'classifiedId',invitation.classified_id,'message',invitation.message,'status',invitation.status,'expiresAt',invitation.expires_at,'version',invitation.version,'participantRole',?::text,'senderProfile',jsonb_build_object('id',sender_profile.id,'name',sender_profile.public_name,'slug',sender_profile.slug),'targetProfile',jsonb_build_object('id',target_profile.id,'name',target_profile.public_name,'slug',target_profile.slug),'classified',CASE WHEN classified.id IS NULL THEN NULL ELSE jsonb_build_object('id',classified.id,'title',classified.title,'slug',classified.slug,'status',classified.status) END) FROM directory_invitation invitation JOIN directory_profile sender_profile ON sender_profile.id=invitation.sender_profile_id JOIN directory_profile target_profile ON target_profile.id=invitation.target_profile_id LEFT JOIN classified ON classified.id=invitation.classified_id WHERE invitation.id=?" [PersistText role,toPersistValue invitationId]
 
 contactProfile user idempotency request@DirectoryContactRequest
   { senderProfileId, targetProfileId, contextKind, contextId, message } = do
   requireProfileCapability user senderProfileId "contact"
   requireAdult user
-  validateContactContext user targetProfileId contextKind contextId
+  validateContactContext user senderProfileId targetProfileId contextKind contextId
   validatePrivateMessage 1 message
   contextResource <- reserveIdempotency user "contact.create" idempotency request "conversation-context"
   existing <- jsonRows "SELECT jsonb_build_object('threadId',context.chat_thread_id,'senderPartyId',?::bigint,'contextId',context.idempotency_resource_id) FROM directory_conversation_context context WHERE context.idempotency_resource_id=?" [toPersistValue (auPartyId user),toPersistValue contextResource]
   case existing of
     prior:_ -> pure prior
     [] -> do
-      permitted <- jsonRows "SELECT jsonb_build_object('targetPartyId',manager.account_party_id) FROM directory_public_profile target JOIN LATERAL (SELECT candidate.account_party_id FROM directory_profile_manager candidate WHERE candidate.profile_id=target.id AND candidate.active AND candidate.can_contact AND candidate.account_party_id<>? ORDER BY candidate.can_manage DESC,candidate.created_at,candidate.account_party_id LIMIT 1) manager ON TRUE LEFT JOIN directory_contact_preference preference ON preference.profile_id=target.id WHERE target.id=? AND target.id<>? AND target.public_contact_enabled AND coalesce(preference.allow_profile_contacts,TRUE) AND NOT EXISTS (SELECT 1 FROM directory_profile_block block WHERE block.blocker_profile_id=target.id AND block.blocked_profile_id=?)" [toPersistValue (auPartyId user),toPersistValue targetProfileId,toPersistValue senderProfileId,toPersistValue senderProfileId]
+      permitted <- jsonRows "SELECT jsonb_build_object('targetPartyId',manager.account_party_id) FROM directory_public_profile target JOIN directory_profile target_state ON target_state.id=target.id JOIN directory_public_profile sender ON sender.id=? JOIN LATERAL (SELECT candidate.account_party_id FROM directory_profile_manager candidate WHERE candidate.profile_id=target.id AND candidate.active AND candidate.can_contact AND candidate.account_party_id<>? ORDER BY candidate.can_manage DESC,candidate.created_at,candidate.account_party_id LIMIT 1) manager ON TRUE LEFT JOIN directory_contact_preference preference ON preference.profile_id=target.id WHERE target.id=? AND target.id<>sender.id AND (?::text IN ('application','invitation') OR (target_state.public_contact_enabled AND sender.completeness_score>=coalesce(preference.minimum_profile_completeness,0) AND coalesce(preference.allow_profile_contacts,TRUE))) AND NOT EXISTS (SELECT 1 FROM directory_profile_block block WHERE (block.blocker_profile_id=target.id AND block.blocked_profile_id=sender.id) OR (block.blocker_profile_id=sender.id AND block.blocked_profile_id=target.id))" [toPersistValue senderProfileId,toPersistValue (auPartyId user),toPersistValue targetProfileId,PersistText contextKind]
       when (null permitted) $ throwError err403 {errBody="target profile does not accept contact or has no authorized contact manager"}
       consumeRate user "contact" 20
       thread <- jsonOne err500 "WITH recipient AS (SELECT manager.account_party_id target_party FROM directory_profile_manager manager WHERE manager.profile_id=? AND manager.active AND manager.can_contact AND manager.account_party_id<>? ORDER BY manager.can_manage DESC,manager.created_at,manager.account_party_id LIMIT 1), inserted AS (INSERT INTO chat_thread(dm_party_a,dm_party_b,created_at,updated_at) SELECT least(?::bigint,target_party),greatest(?::bigint,target_party),now(),now() FROM recipient ON CONFLICT(dm_party_a,dm_party_b) DO UPDATE SET updated_at=now() RETURNING id) SELECT jsonb_build_object('threadId',id,'senderPartyId',?::bigint,'contextId',?::uuid) FROM inserted" [toPersistValue targetProfileId,toPersistValue (auPartyId user),toPersistValue (auPartyId user),toPersistValue (auPartyId user),toPersistValue (auPartyId user),toPersistValue contextResource]
@@ -889,17 +896,19 @@ validatePrivateMessage minimumLength value =
   where
     unsafeControl character = isControl character && character `notElem` ['\n','\r','\t']
 
-validateContactContext :: AuthedUser -> UUID -> Text -> UUID -> AppM ()
-validateContactContext user targetProfileIdValue kind identifier = case kind of
+validateContactContext :: AuthedUser -> UUID -> UUID -> Text -> UUID -> AppM ()
+validateContactContext user senderProfileIdValue targetProfileIdValue kind identifier = case kind of
   "profile" -> unless (identifier == targetProfileIdValue) $
     throwError err400 {errBody="profile contact context must match targetProfileId"}
   "classified" -> do
-    rows <- jsonRows "SELECT to_jsonb(TRUE) FROM directory_public_classified WHERE id=?" [toPersistValue identifier]
-    when (null rows) (throwError err404 {errBody="classified contact context not found"})
+    rows <- jsonRows "SELECT to_jsonb(TRUE) FROM classified WHERE id=? AND author_profile_id=? AND author_profile_id<>? AND status='published' AND moderation_status='allowed' AND expires_at>now()" [toPersistValue identifier,toPersistValue targetProfileIdValue,toPersistValue senderProfileIdValue]
+    when (null rows) (throwError err404 {errBody="classified contact context does not match the participants"})
   "application" -> do
     _ <- applicationParticipantRole user identifier
-    pure ()
+    rows <- jsonRows "SELECT to_jsonb(TRUE) FROM classified_application application JOIN classified ON classified.id=application.classified_id WHERE application.id=? AND application.status IN ('accepted','conversation_open') AND ((application.applicant_profile_id=? AND classified.author_profile_id=?) OR (application.applicant_profile_id=? AND classified.author_profile_id=?))" [toPersistValue identifier,toPersistValue senderProfileIdValue,toPersistValue targetProfileIdValue,toPersistValue targetProfileIdValue,toPersistValue senderProfileIdValue]
+    when (null rows) (throwError err404 {errBody="application contact context is not accepted or does not match the participants"})
   "invitation" -> do
     _ <- invitationParticipantRole user identifier
-    pure ()
+    rows <- jsonRows "SELECT to_jsonb(TRUE) FROM directory_invitation WHERE id=? AND status IN ('accepted','conversation_open') AND ((sender_profile_id=? AND target_profile_id=?) OR (sender_profile_id=? AND target_profile_id=?))" [toPersistValue identifier,toPersistValue senderProfileIdValue,toPersistValue targetProfileIdValue,toPersistValue targetProfileIdValue,toPersistValue senderProfileIdValue]
+    when (null rows) (throwError err404 {errBody="invitation contact context is not accepted or does not match the participants"})
   _ -> throwError err400 {errBody="unsupported contact context"}

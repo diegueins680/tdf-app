@@ -45,9 +45,12 @@ spec = describe "music directory formal invariants" $ do
   it "I07: application and invitation state changes use declared relations" $ do
     allowedApplicationTransition ApplicationSubmitted ApplicationShortlisted `shouldBe` True
     allowedApplicationTransition ApplicationConversationOpen ApplicationConverted `shouldBe` True
+    allowedApplicationTransition ApplicationSubmitted ApplicationConversationOpen `shouldBe` False
     allowedApplicationTransition ApplicationRejected ApplicationAccepted `shouldBe` False
     allowedInvitationTransition InvitationPending InvitationAccepted `shouldBe` True
+    allowedInvitationTransition InvitationPending InvitationExpired `shouldBe` True
     allowedInvitationTransition InvitationConversationOpen InvitationConverted `shouldBe` True
+    allowedInvitationTransition InvitationPending InvitationConversationOpen `shouldBe` False
     allowedInvitationTransition InvitationDeclined InvitationAccepted `shouldBe` False
 
   it "I08: an application is visible only to participants or an administrator" $
