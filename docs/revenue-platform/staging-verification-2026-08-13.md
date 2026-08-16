@@ -32,9 +32,9 @@ The final command transcript is summarized here after the branch-wide verificati
 | Marketplace web regressions | Jest: marketplace admin, API, Datafast return and storefront suites | Pass: 71 tests, zero failures; canonical payment is read-only in operations, fulfillment uses its dedicated transition API, one checkout key survives provider switching, lookup secrets stay in headers/session storage, and missing lookup/provider failure never clear the cart |
 | Marketplace rental web regressions | Jest: marketplace storefront and rental-operations suites | Pass: 67 tests, zero failures; unapproved rentals fail closed, approved rentals require inclusive dates, and custody transfer requires an outbound condition report without sending a deposit deduction |
 | Web type safety | `npm run typecheck:ui` | Pass |
-| Web production build | `npm run build --workspace=tdf-hq-ui` | Pass: 12,383 modules; bundle/secret gate 5 preloads and 403,416 gzip bytes |
+| Web production build | `npm run build --workspace=tdf-hq-ui` | Pass: 12,383 modules; bundle/secret gate 5 preloads and 403,432 gzip bytes |
 | Release/CI contracts | `npm run test:production-release`; `npm run test:ci-pipeline` | Pass: 29 + 12 tests |
-| Registered production batch | Render; apply; repair the intentionally empty schema-only Records fixture with three minimal published collection rows; resume; apply again; schema verification against PostgreSQL 17 | Pass: the existing Records safety gate first failed closed as expected, then all 43/43 migrations were recorded, the exact second run was idempotent, all five marketplace invariant triggers were enabled, and both marketplace production flags remained disabled |
+| Registered production batch | Render; apply; repair the intentionally empty schema-only Records fixture with three minimal published collection rows and non-sensitive valid provider URLs; resume; apply again; schema verification against PostgreSQL 17 | Pass: the existing Records safety gate first failed closed as expected, then all 44/44 migrations were recorded, the exact second run was idempotent, all ten marketplace invariant triggers were enabled, and both marketplace domain flags were enabled while provider-event/refund production gates remained disabled |
 | OpenAPI/generated clients | `npm run generate:api` for web and mobile | Pass: canonical service-storefront and marketplace-sale contracts generated for both clients |
 | Mobile type safety | `npm run typecheck:mobile` | Pass |
 | Formal-method audit | `npm run verify:formal` | Pass: 0 critical, 0 errors; repository warnings remain advisory |
@@ -55,8 +55,8 @@ After registering the runtime migrations with their immutable feature commits, t
 batch applied in a fresh PostgreSQL 17 container. The schema-only snapshot intentionally contained
 no Records CMS rows, so the pre-existing default safety gate first rejected three missing collection
 containers. Three minimal, published collection fixtures repaired that test precondition; the exact
-batch then resumed, all 43 manifest entries were recorded, the release schema verifier passed, and
-an unchanged second run skipped all 43 entries idempotently. This fixture repair did not classify a
+batch then resumed, all 44 manifest entries were recorded, the release schema verifier passed, and
+an unchanged second run skipped all 44 entries idempotently. This fixture repair did not classify a
 payment, create a marketplace order, or alter any external environment.
 
 The 2026-08-14 PayPal event/refund follow-up passed 19 focused examples, including 400 property
