@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LoginIcon from '@mui/icons-material/Login';
+import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import ShareIcon from '@mui/icons-material/Share';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { useQuery } from '@tanstack/react-query';
@@ -94,6 +95,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
   const authenticatedAction = kind === 'classified'
     ? `/mis-clasificados?apply=${encodeURIComponent(targetId)}`
     : `/mis-clasificados?contact=${encodeURIComponent(targetId)}&contextKind=profile`;
+  const invitationAction = `/mis-clasificados?invite=${encodeURIComponent(targetId)}`;
 
   return (
     <Box component="main" id="main-content" sx={{ py: { xs: 4, md: 7 } }}>
@@ -137,15 +139,17 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
               <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
                 <Typography variant="h5" fontWeight={800}>{kind === 'classified' ? '¿Te interesa esta oportunidad?' : '¿Quieres contactar este perfil?'}</Typography>
                 <Typography color="text.secondary" mt={1}>TDF mantiene tu correo y teléfono ocultos hasta que decidas compartirlos.</Typography>
-                <Button
-                  component={RouterLink}
-                  to={session ? authenticatedAction : buildLoginRedirectPath(location.pathname)}
-                  variant="contained"
-                  startIcon={<LoginIcon />}
-                  sx={{ mt: 2 }}
-                >
-                  {session ? 'Contactar desde uno de mis perfiles' : 'Ingresar para contactar'}
-                </Button>
+                <Stack direction="row" gap={1} flexWrap="wrap" mt={2}>
+                  <Button
+                    component={RouterLink}
+                    to={session ? authenticatedAction : buildLoginRedirectPath(location.pathname)}
+                    variant="contained"
+                    startIcon={<LoginIcon />}
+                  >
+                    {session ? 'Contactar desde uno de mis perfiles' : 'Ingresar para contactar'}
+                  </Button>
+                  {kind === 'profile' && session && <Button component={RouterLink} to={invitationAction} variant="outlined" startIcon={<PersonAddAltIcon />}>Invitar a una oportunidad</Button>}
+                </Stack>
               </Paper>
             </Stack>
           </Paper>

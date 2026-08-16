@@ -10,6 +10,7 @@ export type DirectoryTaxonomyItem = components['schemas']['TaxonomyItem'];
 export type DirectoryTaxonomies = components['schemas']['DirectoryTaxonomies'];
 export type ManagedDirectoryProfile = components['schemas']['ManagedDirectoryProfile'];
 export type ManagedClassified = components['schemas']['ManagedClassified'];
+export type DirectoryInvitation = components['schemas']['DirectoryInvitation'];
 
 const idempotencyHeaders = (key?: string) => ({ headers: { 'Idempotency-Key': key ?? crypto.randomUUID() } });
 

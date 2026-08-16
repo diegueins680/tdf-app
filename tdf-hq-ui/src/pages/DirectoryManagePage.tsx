@@ -30,11 +30,12 @@ import AddIcon from '@mui/icons-material/Add';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PublishIcon from '@mui/icons-material/Publish';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
 import {
   Directory,
+  type DirectoryInvitation,
   type DirectoryTaxonomies,
   type DirectoryTaxonomyItem,
   type ManagedClassified,
@@ -46,7 +47,7 @@ const slugify = (value: string) => value.toLowerCase().normalize('NFD').replace(
 export default function DirectoryManagePage() {
   const client = useQueryClient();
   const [params, setParams] = useSearchParams();
-  const [tab, setTab] = useState(params.has('apply') || params.has('contact') ? 2 : 0);
+  const [tab, setTab] = useState(params.has('apply') || params.has('contact') || params.has('invite') ? 2 : 0);
   const [profileOpen, setProfileOpen] = useState(false);
   const [classifiedOpen, setClassifiedOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -77,12 +78,14 @@ export default function DirectoryManagePage() {
         <Tabs value={tab} onChange={(_, value: unknown) => { if (typeof value === 'number') setTab(value); }} aria-label="Administración del directorio">
           <Tab label={`Perfiles (${profiles.data?.length ?? 0})`} />
           <Tab label={`Clasificados (${classifieds.data?.length ?? 0})`} />
-          <Tab label="Responder o contactar" />
+          <Tab label="Responder, contactar o invitar" />
+          <Tab label="Invitaciones" />
         </Tabs>
 
         {tab === 0 && <ProfilePanel profiles={profiles.data ?? []} loading={profiles.isLoading} onCreate={() => setProfileOpen(true)} onRefresh={refresh} />}
         {tab === 1 && <ClassifiedPanel classifieds={classifieds.data ?? []} loading={classifieds.isLoading} onCreate={() => setClassifiedOpen(true)} onRefresh={refresh} />}
-        {tab === 2 && <OpportunityActionPanel profiles={profiles.data ?? []} applyId={params.get('apply')} contactId={params.get('contact')} contextKind={contextKind} onDone={() => { setNotice('Acción enviada de forma segura.'); setParams({}); }} />}
+        {tab === 2 && <OpportunityActionPanel profiles={profiles.data ?? []} classifieds={classifieds.data ?? []} applyId={params.get('apply')} contactId={params.get('contact')} inviteId={params.get('invite')} contextKind={contextKind} onDone={() => { setNotice('Acción enviada de forma segura.'); setParams({}); }} />}
+        {tab === 3 && <InvitationPanel />}
 
         <ProfileDialog open={profileOpen} onClose={() => setProfileOpen(false)} taxonomies={taxonomies.data} onCreated={() => { setProfileOpen(false); void refresh(); setNotice('Perfil creado como borrador.'); }} />
         <ClassifiedDialog open={classifiedOpen} onClose={() => setClassifiedOpen(false)} profiles={profiles.data ?? []} taxonomies={taxonomies.data} onCreated={() => { setClassifiedOpen(false); void refresh(); setNotice('Clasificado creado como borrador. Revísalo y publícalo cuando esté listo.'); }} />
@@ -112,17 +115,79 @@ function ClassifiedPanel({ classifieds, loading, onCreate, onRefresh }: { classi
   return <Stack spacing={2}>
     <Button variant="contained" startIcon={<AddIcon />} onClick={onCreate} sx={{ alignSelf: 'flex-start' }}>Publicar oportunidad</Button>
     {classifieds.length === 0 && <Alert severity="info">Todavía no tienes clasificados. Los anuncios básicos son gratuitos.</Alert>}
-    {classifieds.map((item) => <Paper key={item.id} variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}><Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={2}><Box><Typography variant="h5" fontWeight={800}>{item.title}</Typography><Typography color="text.secondary">Vence: {item.expiresAt ? new Date(item.expiresAt).toLocaleDateString() : 'al publicar +30 días'}</Typography></Box><Stack direction="row" gap={1} alignItems="center" flexWrap="wrap"><Chip label={item.status} color={item.status === 'published' ? 'success' : 'default'} />{item.status === 'draft' && <Button onClick={() => status.mutate({ id: item.id, value: 'published' })}>Publicar</Button>}{item.status === 'published' && <Button startIcon={<CheckCircleIcon />} onClick={() => status.mutate({ id: item.id, value: 'filled' })}>Marcar cubierto</Button>}<Button onClick={() => setSelected(selected === item.id ? null : item.id)}>Postulaciones</Button></Stack></Stack>{selected === item.id && <Stack mt={2} spacing={1}>{applications.isLoading && <CircularProgress size={24} />}{applications.data?.length === 0 && <Typography color="text.secondary">Sin postulaciones todavía.</Typography>}{applications.data?.map((application) => <ApplicationRow key={String(application['id'])} application={application} />)}</Stack>}</Paper>)}
+    {classifieds.map((item) => <Paper key={item.id} variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}><Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={2}><Box><Typography variant="h5" fontWeight={800}>{item.title}</Typography><Typography color="text.secondary">Vence: {item.expiresAt ? new Date(item.expiresAt).toLocaleDateString() : 'al publicar +30 días'}</Typography></Box><Stack direction="row" gap={1} alignItems="center" flexWrap="wrap"><Chip label={item.status} color={item.status === 'published' ? 'success' : 'default'} />{item.status === 'draft' && <Button onClick={() => status.mutate({ id: item.id, value: 'published' })}>Publicar</Button>}{item.status === 'published' && <Button startIcon={<CheckCircleIcon />} onClick={() => status.mutate({ id: item.id, value: 'filled' })}>Marcar cubierto</Button>}<Button onClick={() => setSelected(selected === item.id ? null : item.id)}>Postulaciones</Button></Stack></Stack>{selected === item.id && <Stack mt={2} spacing={1}>{applications.isLoading && <CircularProgress size={24} />}{applications.data?.length === 0 && <Typography color="text.secondary">Sin postulaciones todavía.</Typography>}{applications.data?.map((application) => <ApplicationRow key={String(application['id'])} application={application} authorProfileId={item.authorProfileId} />)}</Stack>}</Paper>)}
   </Stack>;
 }
 
-function ApplicationRow({ application }: { application: Record<string, unknown> }) {
+function ApplicationRow({ application, authorProfileId }: { application: Record<string, unknown>; authorProfileId: string }) {
+  const client = useQueryClient();
+  const [conversationMessage, setConversationMessage] = useState('Hola, aceptamos tu postulación y queremos continuar la conversación en TDF.');
   const profile = typeof application['applicantProfile'] === 'object' && application['applicantProfile'] ? application['applicantProfile'] as Record<string, unknown> : {};
-  const mutation = useMutation({ mutationFn: (status: string) => Directory.setApplicationStatus(String(application['id']), status) });
+  const applicationId = String(application['id']);
+  const applicantProfileId = typeof profile['id'] === 'string' ? profile['id'] : '';
+  const refresh = () => client.invalidateQueries({ queryKey: ['directory', 'applications'] });
+  const mutation = useMutation({ mutationFn: (status: string) => Directory.setApplicationStatus(applicationId, status), onSuccess: refresh });
+  const conversation = useMutation({
+    mutationFn: async () => {
+      await Directory.contact({ senderProfileId: authorProfileId, targetProfileId: applicantProfileId, contextKind: 'application', contextId: applicationId, message: conversationMessage.trim() }, `directory-application-contact-${applicationId}`);
+      return Directory.setApplicationStatus(applicationId, 'conversation_open');
+    },
+    onSuccess: refresh,
+  });
   const profileName = typeof profile['name'] === 'string' ? profile['name'] : 'Perfil postulante';
   const message = typeof application['message'] === 'string' ? application['message'] : '';
   const applicationStatus = typeof application['status'] === 'string' ? application['status'] : 'submitted';
-  return <Paper sx={{ p: 2, bgcolor: 'action.hover' }}><Typography fontWeight={800}>{profileName}</Typography><Typography sx={{ whiteSpace: 'pre-wrap' }}>{message}</Typography><Stack direction="row" gap={1} mt={1}><Chip size="small" label={applicationStatus} /><Button size="small" onClick={() => mutation.mutate('shortlisted')}>Preseleccionar</Button><Button size="small" onClick={() => mutation.mutate('rejected')}>Rechazar</Button><Button size="small" onClick={() => mutation.mutate('conversation_open')}>Conversar</Button></Stack></Paper>;
+  const awaitingDecision = ['submitted', 'viewed', 'shortlisted'].includes(applicationStatus);
+  return <Paper sx={{ p: 2, bgcolor: 'action.hover' }}><Stack spacing={1}><Typography fontWeight={800}>{profileName}</Typography><Typography sx={{ whiteSpace: 'pre-wrap' }}>{message}</Typography>{applicationStatus === 'accepted' && <TextField label="Mensaje para abrir la conversación" value={conversationMessage} onChange={(event) => setConversationMessage(event.target.value)} multiline minRows={2} inputProps={{ minLength: 1, maxLength: 5000 }} />}{(mutation.error || conversation.error) && <Alert severity="error">{(mutation.error ?? conversation.error)?.message}</Alert>}<Stack direction="row" gap={1} flexWrap="wrap"><Chip size="small" label={applicationStatus} />{awaitingDecision && <><Button size="small" onClick={() => mutation.mutate('shortlisted')}>Preseleccionar</Button><Button size="small" onClick={() => mutation.mutate('accepted')}>Aceptar</Button><Button size="small" onClick={() => mutation.mutate('rejected')}>Rechazar</Button></>}{applicationStatus === 'accepted' && <Button size="small" variant="contained" onClick={() => conversation.mutate()} disabled={!applicantProfileId || !conversationMessage.trim() || conversation.isPending}>Abrir conversación</Button>}</Stack></Stack></Paper>;
+}
+
+function InvitationPanel() {
+  const invitations = useQuery({ queryKey: ['directory', 'invitations'], queryFn: Directory.invitations });
+  if (invitations.isLoading) return <CircularProgress />;
+  if (invitations.isError) return <Alert severity="error">No se pudieron cargar tus invitaciones.</Alert>;
+  if (!invitations.data?.length) return <Alert severity="info">Todavía no tienes invitaciones enviadas o recibidas.</Alert>;
+  return <Stack spacing={2}>{invitations.data.map((invitation) => <InvitationCard key={invitation.id} invitation={invitation} />)}</Stack>;
+}
+
+function InvitationCard({ invitation }: { invitation: DirectoryInvitation }) {
+  const client = useQueryClient();
+  const [conversationMessage, setConversationMessage] = useState('Hola, acepté la invitación y quisiera continuar la conversación en TDF.');
+  const mine = invitation.participantRole === 'sender' ? invitation.senderProfile : invitation.targetProfile;
+  const other = invitation.participantRole === 'sender' ? invitation.targetProfile : invitation.senderProfile;
+  const transition = useMutation({
+    mutationFn: (status: string) => Directory.setInvitationStatus(invitation.id, status),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['directory', 'invitations'] }),
+  });
+  const conversation = useMutation({
+    mutationFn: async () => {
+      await Directory.contact({
+        senderProfileId: mine.id,
+        targetProfileId: other.id,
+        contextKind: 'invitation',
+        contextId: invitation.id,
+        message: conversationMessage.trim(),
+      }, `directory-invitation-contact-${invitation.id}`);
+      return Directory.setInvitationStatus(invitation.id, 'conversation_open');
+    },
+    onSuccess: () => client.invalidateQueries({ queryKey: ['directory', 'invitations'] }),
+  });
+  const pendingTarget = invitation.participantRole === 'target' && invitation.status === 'pending';
+  const pendingSender = invitation.participantRole === 'sender' && invitation.status === 'pending';
+  const canConverse = invitation.status === 'accepted';
+  return <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}><Stack spacing={1.5}>
+    <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
+      <Box><Typography variant="h6" fontWeight={800}>{invitation.participantRole === 'sender' ? `Invitaste a ${other.name}` : `${other.name} te invitó`}</Typography><Typography color="text.secondary">Actúas como {mine.name}{invitation.classified ? ` · ${invitation.classified.title}` : ' · invitación general'}</Typography></Box>
+      <Chip label={invitation.status} color={invitation.status === 'accepted' || invitation.status === 'conversation_open' ? 'success' : 'default'} />
+    </Stack>
+    <Typography sx={{ whiteSpace: 'pre-wrap' }}>{invitation.message}</Typography>
+    {canConverse && <TextField label="Mensaje para abrir la conversación" value={conversationMessage} onChange={(event) => setConversationMessage(event.target.value)} multiline minRows={2} inputProps={{ minLength: 1, maxLength: 5000 }} />}
+    {(transition.error || conversation.error) && <Alert severity="error">{(transition.error ?? conversation.error)?.message}</Alert>}
+    <Stack direction="row" gap={1} flexWrap="wrap">
+      {pendingTarget && <><Button onClick={() => transition.mutate('accepted')}>Aceptar</Button><Button onClick={() => transition.mutate('declined')}>Rechazar</Button><Button color="error" onClick={() => transition.mutate('blocked')}>Bloquear</Button></>}
+      {pendingSender && <Button onClick={() => transition.mutate('withdrawn')}>Retirar</Button>}
+      {canConverse && <Button variant="contained" onClick={() => conversation.mutate()} disabled={!conversationMessage.trim() || conversation.isPending}>Abrir conversación</Button>}
+    </Stack>
+  </Stack></Paper>;
 }
 
 function ProfileDialog({ open, onClose, taxonomies, onCreated }: { open: boolean; onClose: () => void; taxonomies?: DirectoryTaxonomies; onCreated: () => void }) {
@@ -270,14 +335,20 @@ export function classifiedFormError(input: { required: Set<string>; cityIds: str
   return null;
 }
 
-function OpportunityActionPanel({ profiles, applyId, contactId, contextKind, onDone }: { profiles: ManagedDirectoryProfile[]; applyId: string | null; contactId: string | null; contextKind: 'profile' | 'classified' | 'application' | 'invitation'; onDone: () => void }) {
-  const [profileId, setProfileId] = useState(profiles[0]?.id ?? '');
+function OpportunityActionPanel({ profiles, classifieds, applyId, contactId, inviteId, contextKind, onDone }: { profiles: ManagedDirectoryProfile[]; classifieds: ManagedClassified[]; applyId: string | null; contactId: string | null; inviteId: string | null; contextKind: 'profile' | 'classified' | 'application' | 'invitation'; onDone: () => void }) {
+  const [profileId, setProfileId] = useState('');
   const [message, setMessage] = useState('');
+  const [classifiedId, setClassifiedId] = useState('');
+  const eligibleClassifieds = classifieds.filter((classified) => classified.authorProfileId === profileId && classified.status === 'published');
+  useEffect(() => {
+    if (classifiedId && !eligibleClassifieds.some((classified) => classified.id === classifiedId)) setClassifiedId('');
+  }, [classifiedId, eligibleClassifieds]);
   const mutation = useMutation({ mutationFn: () => {
     if (applyId) return Directory.apply(applyId, { applicantProfileId: profileId, message: message.trim(), portfolio: [] });
     if (contactId) return Directory.contact({ senderProfileId: profileId, targetProfileId: contactId, contextKind, contextId: contactId, message: message.trim() });
+    if (inviteId) return Directory.invite({ senderProfileId: profileId, targetProfileId: inviteId, classifiedId: classifiedId || undefined, message: message.trim() });
     throw new Error('Abre un perfil o clasificado público para iniciar esta acción.');
   }, onSuccess: onDone });
-  if (!applyId && !contactId) return <Alert severity="info">Abre un perfil o clasificado desde <Button component={RouterLink} to="/buscar">la búsqueda</Button> para postularte o contactar.</Alert>;
-  return <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}><Stack component="form" spacing={2} onSubmit={(event: FormEvent) => { event.preventDefault(); mutation.mutate(); }}><Typography variant="h5" fontWeight={800}>{applyId ? 'Enviar postulación' : 'Iniciar conversación'}</Typography><FormControl><InputLabel>Actuar como perfil</InputLabel><Select label="Actuar como perfil" value={profileId} onChange={(event) => setProfileId(event.target.value)}>{profiles.map((profile) => <MenuItem key={profile.id} value={profile.id}>{profile.name}</MenuItem>)}</Select></FormControl><TextField label="Mensaje" multiline minRows={5} value={message} onChange={(event) => setMessage(event.target.value)} required inputProps={{ minLength: 10, maxLength: 5000 }} helperText="No incluyas teléfono ni correo si aún no quieres compartirlos." />{mutation.error && <Alert severity="error">{mutation.error.message}</Alert>}<Button type="submit" variant="contained" disabled={!profileId || message.trim().length < 10 || mutation.isPending}>{mutation.isPending ? 'Enviando…' : applyId ? 'Postularme' : 'Abrir conversación'}</Button></Stack></Paper>;
+  if (!applyId && !contactId && !inviteId) return <Alert severity="info">Abre un perfil o clasificado desde <Button component={RouterLink} to="/buscar">la búsqueda</Button> para postularte, contactar o invitar.</Alert>;
+  return <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}><Stack component="form" spacing={2} onSubmit={(event: FormEvent) => { event.preventDefault(); mutation.mutate(); }}><Typography variant="h5" fontWeight={800}>{applyId ? 'Enviar postulación' : inviteId ? 'Invitar a una oportunidad' : 'Iniciar conversación'}</Typography><FormControl><InputLabel>Actuar como perfil</InputLabel><Select label="Actuar como perfil" value={profileId} onChange={(event) => setProfileId(event.target.value)}><MenuItem value="" disabled>Selecciona explícitamente un perfil</MenuItem>{profiles.map((profile) => <MenuItem key={profile.id} value={profile.id}>{profile.name}</MenuItem>)}</Select></FormControl>{inviteId && <FormControl><InputLabel>Oportunidad</InputLabel><Select label="Oportunidad" value={classifiedId} onChange={(event) => setClassifiedId(event.target.value)}><MenuItem value="">Invitación general</MenuItem>{eligibleClassifieds.map((classified) => <MenuItem key={classified.id} value={classified.id}>{classified.title}</MenuItem>)}</Select></FormControl>}<TextField label="Mensaje" multiline minRows={5} value={message} onChange={(event) => setMessage(event.target.value)} required inputProps={{ minLength: 10, maxLength: 5000 }} helperText="No incluyas teléfono ni correo si aún no quieres compartirlos." />{mutation.error && <Alert severity="error">{mutation.error.message}</Alert>}<Button type="submit" variant="contained" disabled={!profileId || message.trim().length < 10 || mutation.isPending}>{mutation.isPending ? 'Enviando…' : applyId ? 'Postularme' : inviteId ? 'Enviar invitación' : 'Abrir conversación'}</Button></Stack></Paper>;
 }

@@ -45,6 +45,27 @@ describe('web music directory canonical API', () => {
     expect(mockPost).toHaveBeenLastCalledWith('/directory/saved-searches', expect.any(Object), { headers: { 'Idempotency-Key': 'web-saved-search-1' } });
   });
 
+  it('uses participant-scoped invitation and conversation contracts', async () => {
+    mockPost.mockResolvedValue({});
+    const invitation = {
+      senderProfileId: '11111111-1111-4111-8111-111111111111',
+      targetProfileId: '22222222-2222-4222-8222-222222222222',
+      classifiedId: '33333333-3333-4333-8333-333333333333',
+      message: 'Te invito a participar en esta oportunidad musical.',
+    };
+    await Directory.invite(invitation, 'web-invitation-retry-1');
+    expect(mockPost).toHaveBeenCalledWith('/directory/invitations', invitation, { headers: { 'Idempotency-Key': 'web-invitation-retry-1' } });
+
+    await Directory.contact({
+      senderProfileId: invitation.senderProfileId,
+      targetProfileId: invitation.targetProfileId,
+      contextKind: 'invitation',
+      contextId: '44444444-4444-4444-8444-444444444444',
+      message: 'Gracias por aceptar; continuemos la conversación.',
+    }, 'web-invitation-contact-1');
+    expect(mockPost).toHaveBeenLastCalledWith('/directory/contact', expect.objectContaining({ contextKind: 'invitation' }), { headers: { 'Idempotency-Key': 'web-invitation-contact-1' } });
+  });
+
   it('exposes the explicit non-destructive admin merge contract', async () => {
     mockPost.mockResolvedValue({});
     const request = {
