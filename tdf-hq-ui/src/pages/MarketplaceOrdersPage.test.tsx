@@ -7,6 +7,7 @@ import type {
   MarketplaceFulfillmentUpdatePayload,
   MarketplaceOrderDTO,
   MarketplaceOrderUpdatePayload,
+  MarketplaceRentalUpdatePayload,
 } from '../api/types';
 
 const listOrdersMock = jest.fn<(params?: { status?: string; limit?: number; offset?: number }) => Promise<MarketplaceOrderDTO[]>>();
@@ -16,6 +17,9 @@ const updateOrderMock = jest.fn<
 const updateFulfillmentMock = jest.fn<
   (orderId: string, payload: MarketplaceFulfillmentUpdatePayload) => Promise<MarketplaceOrderDTO>
 >();
+const updateRentalMock = jest.fn<
+  (orderId: string, payload: MarketplaceRentalUpdatePayload) => Promise<MarketplaceOrderDTO>
+>();
 
 jest.unstable_mockModule('../api/marketplace', () => ({
   Marketplace: {
@@ -23,6 +27,9 @@ jest.unstable_mockModule('../api/marketplace', () => ({
     updateOrder: (orderId: string, payload: MarketplaceOrderUpdatePayload) => updateOrderMock(orderId, payload),
     updateFulfillment: (orderId: string, payload: MarketplaceFulfillmentUpdatePayload) => (
       updateFulfillmentMock(orderId, payload)
+    ),
+    updateRental: (orderId: string, payload: MarketplaceRentalUpdatePayload) => (
+      updateRentalMock(orderId, payload)
     ),
   },
 }));
@@ -352,9 +359,11 @@ describe('MarketplaceOrdersPage', () => {
     listOrdersMock.mockReset();
     updateOrderMock.mockReset();
     updateFulfillmentMock.mockReset();
+    updateRentalMock.mockReset();
     listOrdersMock.mockResolvedValue([buildOrder()]);
     updateOrderMock.mockResolvedValue(buildOrder({ moStatus: 'paid', moPaidAt: '2030-01-01T13:00:00.000Z' }));
     updateFulfillmentMock.mockResolvedValue(buildOrder());
+    updateRentalMock.mockResolvedValue(buildOrder());
   });
 
   it('replaces the first-order empty view with one guided state instead of list-only filter and export chrome', async () => {
@@ -2647,6 +2656,71 @@ describe('MarketplaceOrdersPage', () => {
         });
         expect(updateOrderMock).not.toHaveBeenCalled();
         expect(document.body.textContent).toContain('En preparación');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('requires a condition report before transferring rental custody', async () => {
+    const rentalOrder = buildOrder({
+      moOrderKind: 'rental',
+      moStatus: 'paid',
+      moPaidAt: '2030-01-01T13:00:00.000Z',
+      moCheckoutStatus: 'paid',
+      moFulfillmentMethod: 'pickup',
+      moFulfillmentStatus: 'ready_for_handoff',
+      moRentalStartDate: '2030-01-10',
+      moRentalEndDate: '2030-01-12',
+      moRentalDurationDays: 3,
+      moRentalChargeUsdCents: 30000,
+      moSecurityDepositUsdCents: 5000,
+      moDepositStatus: 'collected',
+      moDepositDeductionUsdCents: 0,
+      moRentalTermsVersion: 'rental-v1',
+      moRentalTimezone: 'America/Guayaquil',
+      moFulfillmentHistory: [['ready_for_handoff', '2030-01-01T13:00:00.000Z']],
+    });
+    const checkedOutOrder = {
+      ...rentalOrder,
+      moFulfillmentStatus: 'checked_out',
+      moConditionOut: 'Consola operativa; dos rayones preexistentes documentados.',
+      moFulfillmentHistory: [
+        ...(rentalOrder.moFulfillmentHistory ?? []),
+        ['checked_out', '2030-01-10T14:00:00.000Z'] as [string, string],
+      ],
+    };
+    listOrdersMock.mockResolvedValueOnce([rentalOrder]).mockResolvedValue([checkedOutOrder]);
+    updateRentalMock.mockResolvedValue(checkedOutOrder);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => expect(queryActionByText(container, 'Abrir orden')).not.toBeNull());
+      await clickFirstOrderRow(container);
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Gestionar renta');
+        expect(document.body.textContent).toContain('Pago, custodia y depósito son estados separados.');
+        expect(countLabelsByText(document.body, 'Proveedor de pago')).toBe(0);
+      });
+
+      await selectOptionByLabel(document.body, 'Siguiente estado de renta', 'En custodia del cliente');
+      expect(queryActionByText(document.body, 'Guardar transición de renta')?.hasAttribute('disabled')).toBe(true);
+      await setTextareaValue(
+        getTextareaByLabel(document.body, 'Condición al entregar'),
+        'Consola operativa; dos rayones preexistentes documentados.',
+      );
+      await clickActionByText(document.body, 'Guardar transición de renta');
+
+      await waitForExpectation(() => {
+        expect(updateRentalMock).toHaveBeenCalledWith('order-1', {
+          mruStatus: 'checked_out',
+          mruConditionOut: 'Consola operativa; dos rayones preexistentes documentados.',
+        });
+        expect(updateFulfillmentMock).not.toHaveBeenCalled();
+        expect(updateOrderMock).not.toHaveBeenCalled();
       });
     } finally {
       await cleanup();

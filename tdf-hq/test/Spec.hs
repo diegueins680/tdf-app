@@ -102,6 +102,7 @@ import TDF.CampaignAutomation
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
 import qualified TDF.Commerce.CheckoutStore as CheckoutStore
 import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
+import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
 import qualified TDF.Commerce.ProviderEventStore as ProviderEventStore
 import qualified TDF.Commerce.ProviderEventWorker as ProviderEventWorker
 import qualified TDF.Commerce.RefundStore as RefundStore
@@ -1153,6 +1154,78 @@ main = hspec $ do
               MarketplaceSales.MarketplaceOnHold
               MarketplaceSales.MarketplaceDelivered
               `shouldSatisfy` isLeft
+
+    describe "marketplace rental pricing and custody invariants" $ do
+        it "uses inclusive dates without allowing a negative duration" $ do
+            let startDate = fromGregorian 2030 1 10
+            MarketplaceRentals.rentalDurationDays startDate startDate
+              `shouldBe` Right 1
+            MarketplaceRentals.rentalDurationDays startDate (addDays 6 startDate)
+              `shouldBe` Right 7
+            MarketplaceRentals.rentalDurationDays startDate (addDays (-1) startDate)
+              `shouldSatisfy` isLeft
+
+        it "calculates weekly pricing and discloses the deposit separately" $ do
+            MarketplaceRentals.calculateRentalPrice 1000 (Just 6000) 500 1 30 10
+              `shouldBe` Right MarketplaceRentals.RentalPriceBreakdown
+                { MarketplaceRentals.rpbDurationDays = 10
+                , MarketplaceRentals.rpbRentalChargeMinor = 9000
+                , MarketplaceRentals.rpbSecurityDepositMinor = 500
+                , MarketplaceRentals.rpbCheckoutTotalMinor = 9500
+                }
+
+        it "rejects invalid limits, abusive weekly rates, and overflowing totals" $ do
+            MarketplaceRentals.calculateRentalPrice 1000 (Just 7001) 0 1 30 7
+              `shouldSatisfy` isLeft
+            MarketplaceRentals.calculateRentalPrice 1000 Nothing 0 5 3 4
+              `shouldSatisfy` isLeft
+            MarketplaceRentals.calculateRentalPrice maxBound Nothing maxBound 1 2 2
+              `shouldSatisfy` isLeft
+
+        it "makes transition validation idempotent and keeps terminal states terminal" $
+            QC.property $ \(QC.NonNegative rawFrom) (QC.NonNegative rawTo) ->
+                let states =
+                      [ MarketplaceRentals.RentalOnHold
+                      , MarketplaceRentals.RentalConfirmed
+                      , MarketplaceRentals.RentalReadyForHandoff
+                      , MarketplaceRentals.RentalCheckedOut
+                      , MarketplaceRentals.RentalReturnDue
+                      , MarketplaceRentals.RentalReturnedPendingInspection
+                      , MarketplaceRentals.RentalDamageReview
+                      , MarketplaceRentals.RentalDepositRefundDue
+                      , MarketplaceRentals.RentalClosed
+                      , MarketplaceRentals.RentalCancellationRequested
+                      , MarketplaceRentals.RentalCancelled
+                      , MarketplaceRentals.RentalNoShow
+                      , MarketplaceRentals.RentalLost
+                      , MarketplaceRentals.RentalDisputed
+                      , MarketplaceRentals.RentalExpired
+                      ]
+                    fromState = states !! (rawFrom `mod` length states)
+                    toState = states !! (rawTo `mod` length states)
+                    terminalStateIsClosed terminal =
+                      toState == terminal
+                        || isLeft (MarketplaceRentals.validateMarketplaceRentalTransition terminal toState)
+                in MarketplaceRentals.validateMarketplaceRentalTransition fromState fromState == Right ()
+                    && all terminalStateIsClosed
+                      [ MarketplaceRentals.RentalClosed
+                      , MarketplaceRentals.RentalCancelled
+                      , MarketplaceRentals.RentalExpired
+                      ]
+
+        it "never skips payment confirmation, handoff, or inspection states" $ do
+            MarketplaceRentals.validateMarketplaceRentalTransition
+              MarketplaceRentals.RentalOnHold
+              MarketplaceRentals.RentalCheckedOut
+              `shouldSatisfy` isLeft
+            MarketplaceRentals.validateMarketplaceRentalTransition
+              MarketplaceRentals.RentalCheckedOut
+              MarketplaceRentals.RentalClosed
+              `shouldSatisfy` isLeft
+            MarketplaceRentals.validateMarketplaceRentalTransition
+              MarketplaceRentals.RentalReadyForHandoff
+              MarketplaceRentals.RentalCheckedOut
+              `shouldBe` Right ()
 
     describe "provider-neutral checkout state machine" $ do
         let verifiedPayment = Commerce.PaymentVerification

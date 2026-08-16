@@ -24,8 +24,9 @@ transition marks the asset `Sold` only at `delivered`. Returns restore TDF custo
 reactivating the public listing. Operator transitions record actor, reason, notes, and time as
 append-only evidence.
 
-Rental listings remain visible for discovery but cannot enter this checkout. Production sales and
-rentals have independent kill switches.
+Rental listings use the separate dated runtime adopted in ADR-0108. Production sales and rentals
+have independent capability gates, while provider rails and emergency kill switches remain
+separate.
 
 ## Alternatives
 
@@ -41,5 +42,5 @@ rentals have independent kill switches.
 ## Consequences
 
 Sales can be rolled out independently with honest payment and custody status. Operations must own
-pickup/shipping transitions, exceptions, and returns before production activation. Carrier APIs,
-customer-initiated returns, marketplace refunds, and the rental aggregate remain separately gated.
+pickup/shipping transitions, exceptions, and returns. Carrier APIs, customer-initiated returns,
+marketplace refunds, and rental deposit settlement adapters remain separately gated.

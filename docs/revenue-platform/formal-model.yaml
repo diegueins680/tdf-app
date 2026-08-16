@@ -57,6 +57,34 @@ state_machines:
       - an asset becomes sold only when fulfillment becomes delivered
       - a returned asset restores custody but does not reactivate its listing
       - pickup cannot transition through shipped and delivery cannot transition through ready_for_pickup
+  marketplace_rental_fulfillment:
+    initial: on_hold
+    transitions:
+      on_hold: [confirmed, cancelled, expired]
+      confirmed: [ready_for_handoff, cancellation_requested, no_show]
+      ready_for_handoff: [checked_out, cancellation_requested, no_show]
+      checked_out: [return_due, returned_pending_inspection, lost, disputed]
+      return_due: [returned_pending_inspection, lost, disputed]
+      returned_pending_inspection: [deposit_refund_due, damage_review]
+      damage_review: [deposit_refund_due, disputed]
+      deposit_refund_due: [closed]
+      cancellation_requested: [cancelled]
+      no_show: [cancelled]
+      lost: [disputed]
+      disputed: [damage_review, deposit_refund_due, closed]
+      cancelled: []
+      closed: []
+      expired: []
+    invariants:
+      - start and end dates are inclusive and end is not before start
+      - rental charge uses the approved snapshotted daily or weekly rate and integer minor units
+      - checkout total equals rental charge plus separately disclosed refundable deposit
+      - active date ranges for one asset cannot overlap
+      - verified payment only moves on_hold to confirmed and never changes custody
+      - checked_out requires an outbound condition report
+      - returned_pending_inspection requires an inbound condition report and restores TDF custody
+      - a deduction proposal is not provider or bank settlement evidence
+      - a nonzero deposit cannot close before refunded partially_refunded or forfeited evidence
   quote:
     initial: draft
     transitions:
@@ -156,6 +184,8 @@ idempotency:
   unique_scopes:
     - checkout(domain_type, domain_id, client_request_key)
     - marketplace_sale(cart_id, checkout_client_request_key)
+    - marketplace_rental(cart_id, checkout_client_request_key)
+    - marketplace_rental_active_range(asset_id, inclusive_date_range)
     - provider_order(provider, merchant_account, provider_order_id)
     - provider_resource(provider, merchant_account, provider_resource_id)
     - provider_event(provider, merchant_account, provider_event_id)
@@ -174,6 +204,7 @@ holds:
     - ticket and course quantities cannot make remaining capacity negative
     - expiration is monotonic and releases inventory exactly once
     - paid checkout consumes its holds exactly once
+    - marketplace rental holds use an inclusive date range and conflict per asset
 
 provider_verification:
   required_bindings:

@@ -48,6 +48,7 @@ import type {
   MarketplaceFulfillmentUpdatePayload,
   MarketplaceOrderDTO,
   MarketplaceOrderUpdatePayload,
+  MarketplaceRentalUpdatePayload,
 } from '../api/types';
 import { Marketplace } from '../api/marketplace';
 import { DateTime } from 'luxon';
@@ -102,6 +103,43 @@ const FULFILLMENT_METHOD_LABELS: Record<string, string> = {
   local_delivery: 'Entrega local',
   shipping: 'Envío',
 };
+
+const RENTAL_STATUS_LABELS: Record<string, string> = {
+  on_hold: 'Reserva con vencimiento',
+  confirmed: 'Renta confirmada',
+  ready_for_handoff: 'Lista para entrega',
+  checked_out: 'En custodia del cliente',
+  return_due: 'Devolución pendiente',
+  returned_pending_inspection: 'Devuelta; inspección pendiente',
+  damage_review: 'Daños en revisión',
+  deposit_refund_due: 'Devolución de depósito pendiente',
+  closed: 'Renta cerrada',
+  cancellation_requested: 'Cancelación solicitada',
+  cancelled: 'Renta cancelada',
+  no_show: 'Cliente no se presentó',
+  lost: 'Activo perdido',
+  disputed: 'Renta disputada',
+  expired: 'Reserva vencida',
+};
+
+const RENTAL_TRANSITIONS: Record<string, string[]> = {
+  on_hold: ['confirmed', 'cancelled', 'expired'],
+  confirmed: ['ready_for_handoff', 'cancellation_requested', 'no_show'],
+  ready_for_handoff: ['checked_out', 'cancellation_requested', 'no_show'],
+  checked_out: ['return_due', 'returned_pending_inspection', 'lost', 'disputed'],
+  return_due: ['returned_pending_inspection', 'lost', 'disputed'],
+  returned_pending_inspection: ['damage_review', 'deposit_refund_due', 'disputed'],
+  damage_review: ['deposit_refund_due', 'disputed'],
+  deposit_refund_due: ['closed', 'disputed'],
+  cancellation_requested: ['cancelled'],
+  no_show: ['cancelled'],
+  lost: ['disputed'],
+  disputed: ['damage_review', 'deposit_refund_due', 'closed'],
+};
+
+const rentalStatusLabel = (value?: string | null) => (
+  value ? RENTAL_STATUS_LABELS[value] ?? value : 'Sin runtime de renta'
+);
 
 const COMMON_FULFILLMENT_TRANSITIONS: Record<string, string[]> = {
   on_hold: ['ready_to_fulfill', 'cancelled', 'expired'],
@@ -254,6 +292,13 @@ export default function MarketplaceOrdersPage() {
   const [fulfillmentTrackingInput, setFulfillmentTrackingInput] = useState('');
   const [fulfillmentReasonInput, setFulfillmentReasonInput] = useState('');
   const [fulfillmentNotesInput, setFulfillmentNotesInput] = useState('');
+  const [rentalStatusInput, setRentalStatusInput] = useState('');
+  const [rentalConditionOutInput, setRentalConditionOutInput] = useState('');
+  const [rentalConditionInInput, setRentalConditionInInput] = useState('');
+  const [rentalEvidenceUrlInput, setRentalEvidenceUrlInput] = useState('');
+  const [rentalDepositDeductionInput, setRentalDepositDeductionInput] = useState('');
+  const [rentalReasonInput, setRentalReasonInput] = useState('');
+  const [rentalNotesInput, setRentalNotesInput] = useState('');
 
   const ordersQuery = useQuery<MarketplaceOrderDTO[], Error>({
     queryKey: ['marketplace-orders', statusFilter],
@@ -286,6 +331,13 @@ export default function MarketplaceOrdersPage() {
     setFulfillmentTrackingInput(selectedOrder.moTrackingReference ?? '');
     setFulfillmentReasonInput('');
     setFulfillmentNotesInput('');
+    setRentalStatusInput('');
+    setRentalConditionOutInput(selectedOrder.moConditionOut ?? '');
+    setRentalConditionInInput(selectedOrder.moConditionIn ?? '');
+    setRentalEvidenceUrlInput('');
+    setRentalDepositDeductionInput(String(selectedOrder.moDepositDeductionUsdCents ?? ''));
+    setRentalReasonInput('');
+    setRentalNotesInput('');
   }, [selectedOrder]);
 
   const statusFilterImpliesPaid = statusFilter !== 'all' && isPaidOrderStatus(statusFilter);
@@ -654,6 +706,25 @@ export default function MarketplaceOrdersPage() {
     },
   });
 
+  const rentalMutation = useMutation<
+    MarketplaceOrderDTO,
+    Error,
+    { id: string; payload: MarketplaceRentalUpdatePayload }
+  >({
+    mutationFn: ({ id, payload }) => Marketplace.updateRental(id, payload),
+    onSuccess: (data) => {
+      qc.setQueryData(['marketplace-orders', statusFilter], (prev: MarketplaceOrderDTO[] | undefined) =>
+        prev ? prev.map((order) => (order.moOrderId === data.moOrderId ? data : order)) : prev,
+      );
+      void qc.invalidateQueries({ queryKey: ['marketplace-orders'] });
+      setRentalStatusInput('');
+      setRentalEvidenceUrlInput('');
+      setRentalReasonInput('');
+      setRentalNotesInput('');
+      setToast('Renta actualizada');
+    },
+  });
+
   const handleRefresh = () => {
     void qc.invalidateQueries({ queryKey: ['marketplace-orders'] });
   };
@@ -701,9 +772,17 @@ export default function MarketplaceOrdersPage() {
     setFulfillmentTrackingInput('');
     setFulfillmentReasonInput('');
     setFulfillmentNotesInput('');
+    setRentalStatusInput('');
+    setRentalConditionOutInput('');
+    setRentalConditionInInput('');
+    setRentalEvidenceUrlInput('');
+    setRentalDepositDeductionInput('');
+    setRentalReasonInput('');
+    setRentalNotesInput('');
     setCopyMenuAnchorEl(null);
     updateMutation.reset();
     fulfillmentMutation.reset();
+    rentalMutation.reset();
   };
 
   const closeCopyMenu = () => {
@@ -778,6 +857,28 @@ export default function MarketplaceOrdersPage() {
     if (reasonCode) payload.mfuReasonCode = reasonCode;
     if (notes) payload.mfuNotes = notes;
     await fulfillmentMutation.mutateAsync({ id: selectedOrder.moOrderId, payload });
+  };
+
+  const handleRentalSave = async () => {
+    if (!selectedOrder || !rentalStatusInput) return;
+    const payload: MarketplaceRentalUpdatePayload = { mruStatus: rentalStatusInput };
+    const conditionOut = rentalConditionOutInput.trim();
+    const conditionIn = rentalConditionInInput.trim();
+    const evidenceUrl = rentalEvidenceUrlInput.trim();
+    const reasonCode = rentalReasonInput.trim();
+    const notes = rentalNotesInput.trim();
+    if (conditionOut) payload.mruConditionOut = conditionOut;
+    if (conditionIn) payload.mruConditionIn = conditionIn;
+    if (evidenceUrl) payload.mruEvidenceUrl = evidenceUrl;
+    if (
+      rentalDepositDeductionInput.trim()
+      && ['damage_review', 'deposit_refund_due', 'disputed'].includes(rentalStatusInput)
+    ) {
+      payload.mruDepositDeductionUsdCents = Number(rentalDepositDeductionInput);
+    }
+    if (reasonCode) payload.mruReasonCode = reasonCode;
+    if (notes) payload.mruNotes = notes;
+    await rentalMutation.mutateAsync({ id: selectedOrder.moOrderId, payload });
   };
 
   const handleCopyOrderId = async (orderId: string) => {
@@ -855,7 +956,10 @@ export default function MarketplaceOrdersPage() {
   const paymentProviderHelperText = paymentProviderRequiredForShortcut
     ? 'Requerido antes de marcar una orden como pagada.'
     : undefined;
-  const hasCanonicalFulfillment = Boolean(selectedOrder?.moFulfillmentMethod && selectedOrder.moFulfillmentStatus);
+  const isCanonicalRental = selectedOrder?.moOrderKind === 'rental';
+  const hasCanonicalFulfillment = Boolean(
+    !isCanonicalRental && selectedOrder?.moFulfillmentMethod && selectedOrder.moFulfillmentStatus,
+  );
   const showMarkPaidShortcut = Boolean(selectedOrder)
     && !hasCanonicalFulfillment
     && !isPaidOrderStatus(effectiveStatus)
@@ -886,6 +990,24 @@ export default function MarketplaceOrdersPage() {
     selectedOrder?.moFulfillmentMethod,
     selectedOrder?.moFulfillmentStatus,
   );
+  const availableRentalTransitions = selectedOrder?.moFulfillmentStatus
+    ? RENTAL_TRANSITIONS[selectedOrder.moFulfillmentStatus] ?? []
+    : [];
+  const selectedRentalTransition = availableRentalTransitions.includes(rentalStatusInput)
+    ? rentalStatusInput
+    : '';
+  const rentalConditionOutRequired = rentalStatusInput === 'checked_out'
+    && !rentalConditionOutInput.trim()
+    && !selectedOrder?.moConditionOut;
+  const rentalConditionInRequired = rentalStatusInput === 'returned_pending_inspection'
+    && !rentalConditionInInput.trim()
+    && !selectedOrder?.moConditionIn;
+  const parsedRentalDeduction = rentalDepositDeductionInput.trim() === ''
+    ? 0
+    : Number(rentalDepositDeductionInput);
+  const rentalDeductionInvalid = !Number.isSafeInteger(parsedRentalDeduction)
+    || parsedRentalDeduction < 0
+    || parsedRentalDeduction > (selectedOrder?.moSecurityDepositUsdCents ?? 0);
   const selectedFulfillmentTransition = availableFulfillmentTransitions.includes(fulfillmentStatusInput)
     ? fulfillmentStatusInput
     : '';
@@ -1545,6 +1667,28 @@ export default function MarketplaceOrdersPage() {
                             )}
                           </>
                         )}
+                        {isCanonicalRental && (
+                          <Stack spacing={0.5}>
+                            <Typography variant="body2">
+                              <strong>Renta:</strong> {rentalStatusLabel(selectedOrder.moFulfillmentStatus)}
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Fechas:</strong> {selectedOrder.moRentalStartDate} → {selectedOrder.moRentalEndDate} ({selectedOrder.moRentalDurationDays} día(s))
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Cargo:</strong> {selectedOrder.moRentalChargeUsdCents ?? 0} centavos · <strong>depósito:</strong> {selectedOrder.moSecurityDepositUsdCents ?? 0} centavos
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Estado del depósito:</strong> {selectedOrder.moDepositStatus ?? '—'}
+                              {(selectedOrder.moDepositDeductionUsdCents ?? 0) > 0
+                                ? ` · deducción propuesta ${selectedOrder.moDepositDeductionUsdCents} centavos`
+                                : ''}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              Términos {selectedOrder.moRentalTermsVersion ?? '—'} · {selectedOrder.moRentalTimezone ?? 'America/Guayaquil'}
+                            </Typography>
+                          </Stack>
+                        )}
                         {showLatestStatusChangeSummary && latestStatusChange && (
                           <Typography variant="body2" color="text.secondary">
                             Último cambio: {formatDate(latestStatusChange[1])}
@@ -1565,9 +1709,113 @@ export default function MarketplaceOrdersPage() {
                     </CardContent>
                   </Card>
                   <Card variant="outlined" sx={{ flex: 1 }}>
-                    <CardHeader title={hasCanonicalFulfillment ? 'Gestionar entrega' : 'Actualizar estado'} />
+                    <CardHeader title={isCanonicalRental ? 'Gestionar renta' : hasCanonicalFulfillment ? 'Gestionar entrega' : 'Actualizar estado'} />
                     <CardContent>
-                      {hasCanonicalFulfillment ? (
+                      {isCanonicalRental ? (
+                        <Stack spacing={2}>
+                          <Alert severity="info" variant="outlined">
+                            Pago, custodia y depósito son estados separados. Una deducción queda pendiente; no representa que el reembolso o cobro ya ocurrió.
+                          </Alert>
+                          <FormControl fullWidth>
+                            <InputLabel id="rental-status-input-label" shrink>Siguiente estado de renta</InputLabel>
+                            <Select
+                              labelId="rental-status-input-label"
+                              label="Siguiente estado de renta"
+                              value={selectedRentalTransition}
+                              displayEmpty
+                              renderValue={(value) => value ? rentalStatusLabel(String(value)) : 'Selecciona una transición'}
+                              onChange={(event) => setRentalStatusInput(event.target.value)}
+                            >
+                              <MenuItem value=""><em>Selecciona una transición</em></MenuItem>
+                              {availableRentalTransitions.map((status) => (
+                                <MenuItem key={status} value={status}>{rentalStatusLabel(status)}</MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                          {(rentalStatusInput === 'checked_out' || Boolean(selectedOrder.moConditionOut)) && (
+                            <TextField
+                              label="Condición al entregar"
+                              value={rentalConditionOutInput}
+                              onChange={(event) => setRentalConditionOutInput(event.target.value)}
+                              multiline
+                              minRows={2}
+                              required={rentalStatusInput === 'checked_out'}
+                              error={rentalConditionOutRequired}
+                              helperText={rentalConditionOutRequired ? 'El informe de salida es obligatorio antes de transferir custodia.' : undefined}
+                              inputProps={{ maxLength: 1000 }}
+                            />
+                          )}
+                          {(rentalStatusInput === 'returned_pending_inspection' || Boolean(selectedOrder.moConditionIn)) && (
+                            <TextField
+                              label="Condición al devolver"
+                              value={rentalConditionInInput}
+                              onChange={(event) => setRentalConditionInInput(event.target.value)}
+                              multiline
+                              minRows={2}
+                              required={rentalStatusInput === 'returned_pending_inspection'}
+                              error={rentalConditionInRequired}
+                              helperText={rentalConditionInRequired ? 'El informe de retorno es obligatorio antes de iniciar inspección.' : undefined}
+                              inputProps={{ maxLength: 1000 }}
+                            />
+                          )}
+                          <TextField
+                            label="Evidencia HTTPS (opcional)"
+                            value={rentalEvidenceUrlInput}
+                            onChange={(event) => setRentalEvidenceUrlInput(event.target.value)}
+                            inputProps={{ maxLength: 2048 }}
+                            placeholder="https://..."
+                          />
+                          {(rentalStatusInput === 'damage_review' || (selectedOrder.moDepositDeductionUsdCents ?? 0) > 0) && (
+                            <TextField
+                              label="Deducción propuesta del depósito (centavos)"
+                              type="number"
+                              value={rentalDepositDeductionInput}
+                              onChange={(event) => setRentalDepositDeductionInput(event.target.value)}
+                              inputProps={{ min: 0, max: selectedOrder.moSecurityDepositUsdCents ?? 0, step: 1 }}
+                              error={rentalDeductionInvalid}
+                              helperText={`Máximo: ${selectedOrder.moSecurityDepositUsdCents ?? 0} centavos. La propuesta no ejecuta un cobro ni un reembolso.`}
+                            />
+                          )}
+                          <TextField
+                            label="Código de motivo"
+                            value={rentalReasonInput}
+                            onChange={(event) => setRentalReasonInput(event.target.value)}
+                            inputProps={{ maxLength: 80 }}
+                          />
+                          <TextField
+                            label="Notas de operación"
+                            value={rentalNotesInput}
+                            onChange={(event) => setRentalNotesInput(event.target.value)}
+                            multiline
+                            minRows={2}
+                            inputProps={{ maxLength: 500 }}
+                          />
+                          {availableRentalTransitions.length === 0 ? (
+                            <Typography variant="body2" color="text.secondary">
+                              Este estado no tiene una transición operativa posterior.
+                            </Typography>
+                          ) : (
+                            <Button
+                              variant="contained"
+                              onClick={() => { void handleRentalSave(); }}
+                              disabled={
+                                !rentalStatusInput
+                                || rentalConditionOutRequired
+                                || rentalConditionInRequired
+                                || rentalDeductionInvalid
+                                || rentalMutation.isPending
+                              }
+                            >
+                              Guardar transición de renta
+                            </Button>
+                          )}
+                          {rentalMutation.isError && (
+                            <Alert severity="error">
+                              {rentalMutation.error?.message ?? 'No se pudo actualizar la renta'}
+                            </Alert>
+                          )}
+                        </Stack>
+                      ) : hasCanonicalFulfillment ? (
                         <Stack spacing={2}>
                           <Alert severity="info" variant="outlined">
                             El pago y la entrega son estados separados. El pago canónico solo cambia con evidencia verificada del proveedor o aprobación del pago manual.
@@ -1763,15 +2011,15 @@ export default function MarketplaceOrdersPage() {
                     </Stack>
                   </>
                 )}
-                {hasCanonicalFulfillment && (selectedOrder.moFulfillmentHistory?.length ?? 0) > 0 && (
+                {(hasCanonicalFulfillment || isCanonicalRental) && (selectedOrder.moFulfillmentHistory?.length ?? 0) > 0 && (
                   <>
                     <Divider />
                     <Stack spacing={1}>
-                      <Typography variant="h6">Historial de entrega</Typography>
+                      <Typography variant="h6">{isCanonicalRental ? 'Historial de renta' : 'Historial de entrega'}</Typography>
                       <Stack spacing={0.5}>
                         {selectedOrder.moFulfillmentHistory?.map(([status, occurredAt], index) => (
                           <Typography key={`${status}-${occurredAt}-${index}`} variant="body2" color="text.secondary">
-                            {formatDate(occurredAt)} — {fulfillmentStatusLabel(status)}
+                            {formatDate(occurredAt)} — {isCanonicalRental ? rentalStatusLabel(status) : fulfillmentStatusLabel(status)}
                           </Typography>
                         ))}
                       </Stack>

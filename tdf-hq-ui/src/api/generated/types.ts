@@ -2596,6 +2596,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/marketplace/{listingId}/rental-terms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                listingId: components["parameters"]["MarketplaceListingId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace and approve the active server-side rental rate and terms
+         * @description Operations-only full replacement. Public rental checkout is available only while the terms record is active and approved; existing orders retain immutable price and terms-version snapshots.
+         */
+        put: operations["updateMarketplaceRentalTerms"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/marketplace/cart": {
         parameters: {
             query?: never;
@@ -2644,8 +2666,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Add, replace, or remove one unique sale asset in a cart
-         * @description Rental listings and quantities greater than one are rejected until the date-aware rental domain is enabled.
+         * Add, replace, or remove one unique sale or dated rental asset
+         * @description Sale and rental assets use separate carts. Rentals require both inclusive dates and an approved active server-side terms version; quantities greater than one are rejected.
          */
         post: operations["upsertMarketplaceCartItem"];
         delete?: never;
@@ -2666,8 +2688,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Create an unpaid manual-payment sale order and atomic asset hold
-         * @description The Idempotency-Key binds an immutable checkout snapshot. Selecting bank transfer never confirms payment.
+         * Create an unpaid manual-payment marketplace order and atomic asset hold
+         * @description The Idempotency-Key binds an immutable sale or dated-rental checkout snapshot. Rental terms and identity fields are required for rentals; the full document number is validated and discarded. Selecting bank transfer never confirms payment.
          */
         post: operations["checkoutMarketplaceCart"];
         delete?: never;
@@ -2709,7 +2731,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create or recover a canonical Datafast sale checkout */
+        /** Create or recover a canonical Datafast sale or rental checkout */
         post: operations["createMarketplaceDatafastCheckout"];
         delete?: never;
         options?: never;
@@ -2748,7 +2770,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create or recover a canonical PayPal sale order */
+        /** Create or recover a canonical PayPal sale or rental order */
         post: operations["createMarketplacePaypalOrder"];
         delete?: never;
         options?: never;
@@ -2798,7 +2820,7 @@ export interface paths {
             query?: never;
             header?: never;
             path: {
-                /** @description Canonical marketplace sale order UUID. */
+                /** @description Canonical marketplace sale or rental order UUID. */
                 orderId: components["parameters"]["MarketplaceOrderId"];
             };
             cookie?: never;
@@ -2822,7 +2844,7 @@ export interface paths {
             query?: never;
             header?: never;
             path: {
-                /** @description Canonical marketplace sale order UUID. */
+                /** @description Canonical marketplace sale or rental order UUID. */
                 orderId: components["parameters"]["MarketplaceOrderId"];
             };
             cookie?: never;
@@ -2833,6 +2855,29 @@ export interface paths {
          * @description Payment is a separate state machine. Delivery and pickup transitions update asset custody only through database-enforced transitions.
          */
         put: operations["updateMarketplaceFulfillment"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/rental": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Apply a validated rental custody or inspection transition
+         * @description Payment, physical custody, and refundable-deposit settlement remain separate. Condition reports are required at handoff and return; a proposed deduction creates a due state and never fabricates a refund.
+         */
+        put: operations["updateMarketplaceRental"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3285,6 +3330,19 @@ export interface components {
             miPriceDisplay: string;
             miMarkupPct: number;
             miCurrency: string;
+            miRentalWeeklyPriceUsdCents: number | null;
+            miRentalWeeklyPriceDisplay: string | null;
+            miRentalSecurityDepositUsdCents: number | null;
+            miRentalSecurityDepositDisplay: string | null;
+            miRentalMinDays: number | null;
+            miRentalMaxDays: number | null;
+            miRentalLateFeeUsdCents: number | null;
+            miRentalLateFeeDisplay: string | null;
+            miRentalCancellationWindowHours: number | null;
+            /** @description Only present when an approved active rate/terms version permits public rental checkout. */
+            miRentalTermsVersion: string | null;
+            miRentalTermsSummary: string | null;
+            miRentalTimezone: string | null;
         };
         MarketplaceCartItem: {
             /** Format: uuid */
@@ -3298,6 +3356,17 @@ export interface components {
             mciSubtotalCents: number;
             mciUnitPriceDisplay: string;
             mciSubtotalDisplay: string;
+            /** @enum {string} */
+            mciPurpose: "sale" | "rent";
+            /** Format: date */
+            mciRentalStartDate: string | null;
+            /** Format: date */
+            mciRentalEndDate: string | null;
+            mciRentalDurationDays: number | null;
+            mciRentalChargeCents: number | null;
+            mciRentalChargeDisplay: string | null;
+            mciSecurityDepositCents: number | null;
+            mciSecurityDepositDisplay: string | null;
         };
         MarketplaceCart: {
             /** Format: uuid */
@@ -3310,8 +3379,18 @@ export interface components {
         MarketplaceCartItemUpdate: {
             /** Format: uuid */
             mciuListingId: string;
-            /** @description Zero removes the item; one reserves the unique sale asset in the cart. */
+            /** @description Zero removes the item; one selects the unique physical asset. */
             mciuQuantity: number;
+            /**
+             * Format: date
+             * @description Inclusive rental start; must be supplied together with the end date.
+             */
+            mciuRentalStartDate?: string;
+            /**
+             * Format: date
+             * @description Inclusive rental end; must be supplied together with the start date.
+             */
+            mciuRentalEndDate?: string;
         };
         MarketplaceShippingAddress: {
             msaAddressLine1: string;
@@ -3332,6 +3411,15 @@ export interface components {
              */
             mcrFulfillmentMethod: "pickup" | "local_delivery" | "shipping";
             mcrShippingAddress?: components["schemas"]["MarketplaceShippingAddress"];
+            /** @description Must be true for a rental and omitted for a sale. */
+            mcrRentalTermsAccepted?: boolean;
+            /**
+             * @description Required for a rental and omitted for a sale.
+             * @enum {string}
+             */
+            mcrIdentityDocumentType?: "cedula" | "passport" | "ruc";
+            /** @description Validated for rental handoff and discarded after retaining only its type and last four characters. */
+            mcrIdentityDocumentNumber?: string;
         };
         MarketplaceOrderItem: {
             /** Format: uuid */
@@ -3378,6 +3466,23 @@ export interface components {
             moHoldExpiresAt: string | null;
             moTrackingReference: string | null;
             moFulfillmentHistory: components["schemas"]["MarketplaceStateHistoryEntry"][];
+            /** @enum {string|null} */
+            moOrderKind: "sale" | "rental" | null;
+            /** Format: date */
+            moRentalStartDate: string | null;
+            /** Format: date */
+            moRentalEndDate: string | null;
+            moRentalDurationDays: number | null;
+            moRentalChargeUsdCents: number | null;
+            /** @description Refundable deposit collected separately from the rental charge. */
+            moSecurityDepositUsdCents: number | null;
+            /** @enum {string|null} */
+            moDepositStatus: "awaiting_payment" | "collected" | "inspection_pending" | "deduction_proposed" | "refund_due" | "partial_refund_due" | "refunded" | "partially_refunded" | "forfeited" | "disputed" | null;
+            moDepositDeductionUsdCents: number | null;
+            moRentalTermsVersion: string | null;
+            moRentalTimezone: string | null;
+            moConditionOut: string | null;
+            moConditionIn: string | null;
             /** Format: date-time */
             moCreatedAt: string;
             /** Format: date-time */
@@ -3402,6 +3507,31 @@ export interface components {
             mfuTrackingReference?: string;
             mfuReasonCode?: string;
             mfuNotes?: string;
+        };
+        MarketplaceRentalUpdate: {
+            /** @enum {string} */
+            mruStatus: "on_hold" | "confirmed" | "ready_for_handoff" | "checked_out" | "return_due" | "returned_pending_inspection" | "damage_review" | "deposit_refund_due" | "closed" | "cancellation_requested" | "cancelled" | "no_show" | "lost" | "disputed" | "expired";
+            mruConditionOut?: string;
+            mruConditionIn?: string;
+            /** Format: uri */
+            mruEvidenceUrl?: string;
+            mruDepositDeductionUsdCents?: number;
+            mruReasonCode?: string;
+            mruNotes?: string;
+        };
+        MarketplaceRentalTermsUpdate: {
+            mrtuDailyRateUsdCents: number;
+            mrtuWeeklyRateUsdCents: number | null;
+            mrtuSecurityDepositUsdCents: number;
+            mrtuLateFeeUsdCents: number;
+            mrtuMinDays: number;
+            mrtuMaxDays: number;
+            mrtuCancellationWindowHours: number;
+            /** @enum {string} */
+            mrtuTimezone: "America/Guayaquil";
+            mrtuTermsVersion: string;
+            mrtuTermsSummary: string;
+            mrtuActive: boolean;
         };
         ServiceStorefrontPackage: {
             /** Format: uuid */
@@ -6207,7 +6337,7 @@ export interface components {
         DdexExportId: number;
         MarketplaceListingId: string;
         MarketplaceCartId: string;
-        /** @description Canonical marketplace sale order UUID. */
+        /** @description Canonical marketplace sale or rental order UUID. */
         MarketplaceOrderId: string;
         ServiceStorefrontPackageId: string;
         /** @description Public order number or canonical UUID accepted by the service storefront. */
@@ -10862,6 +10992,60 @@ export interface operations {
             };
         };
     };
+    updateMarketplaceRentalTerms: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                listingId: components["parameters"]["MarketplaceListingId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceRentalTermsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated public listing projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceItem"];
+                };
+            };
+            /** @description Invalid price */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Listing not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Listing is not an active rental listing */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     createMarketplaceCart: {
         parameters: {
             query?: never;
@@ -11006,7 +11190,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Marketplace sales checkout is disabled */
+            /** @description The matching marketplace sales or rentals capability is disabled */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -11090,7 +11274,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Datafast or marketplace sales are disabled */
+            /** @description Datafast or the matching marketplace capability is disabled */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -11194,7 +11378,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description PayPal or marketplace sales are disabled */
+            /** @description PayPal or the matching marketplace capability is disabled */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -11290,7 +11474,7 @@ export interface operations {
                 "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
             };
             path: {
-                /** @description Canonical marketplace sale order UUID. */
+                /** @description Canonical marketplace sale or rental order UUID. */
                 orderId: components["parameters"]["MarketplaceOrderId"];
             };
             cookie?: never;
@@ -11320,7 +11504,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description Canonical marketplace sale order UUID. */
+                /** @description Canonical marketplace sale or rental order UUID. */
                 orderId: components["parameters"]["MarketplaceOrderId"];
             };
             cookie?: never;
@@ -11361,7 +11545,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description Canonical marketplace sale order UUID. */
+                /** @description Canonical marketplace sale or rental order UUID. */
                 orderId: components["parameters"]["MarketplaceOrderId"];
             };
             cookie?: never;
@@ -11403,6 +11587,61 @@ export interface operations {
                 content?: never;
             };
             /** @description Transition is invalid or payment is not verified */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateMarketplaceRental: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceRentalUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated rental state and immutable history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"];
+                };
+            };
+            /** @description Invalid transition or condition/deposit payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Canonical rental order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transition */
             409: {
                 headers: {
                     [name: string]: unknown;

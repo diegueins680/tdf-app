@@ -10,11 +10,15 @@ import type {
   StripePaymentIntentDTO,
   MarketplaceShippingAddress,
   MarketplaceFulfillmentUpdatePayload,
+  MarketplaceRentalUpdatePayload,
+  MarketplaceRentalTermsUpdatePayload,
 } from './types';
 
 export interface CartItemUpdate {
   mciuListingId: string;
   mciuQuantity: number;
+  mciuRentalStartDate?: string;
+  mciuRentalEndDate?: string;
 }
 
 export interface CheckoutRequest {
@@ -23,6 +27,9 @@ export interface CheckoutRequest {
   mcrBuyerPhone?: string | null;
   mcrFulfillmentMethod?: 'pickup' | 'local_delivery' | 'shipping';
   mcrShippingAddress?: MarketplaceShippingAddress;
+  mcrRentalTermsAccepted?: boolean;
+  mcrIdentityDocumentType?: 'cedula' | 'passport' | 'ruc';
+  mcrIdentityDocumentNumber?: string;
 }
 
 const lookupStorageKey = (orderId: string) => `tdf-marketplace-order-lookup:${orderId}`;
@@ -73,6 +80,8 @@ const lookupHeaders = (token: string): RequestInit => ({
 export const Marketplace = {
   list: () => get<MarketplaceItemDTO[]>('/marketplace'),
   detail: (listingId: string) => get<MarketplaceItemDTO>(`/marketplace/${listingId}`),
+  updateRentalTerms: (listingId: string, payload: MarketplaceRentalTermsUpdatePayload) =>
+    put<MarketplaceItemDTO>(`/marketplace/${listingId}/rental-terms`, payload),
   createCart: () => post<MarketplaceCartDTO>('/marketplace/cart', {}),
   getCart: (cartId: string) => get<MarketplaceCartDTO>(`/marketplace/cart/${cartId}`),
   upsertItem: (cartId: string, payload: CartItemUpdate) =>
@@ -119,4 +128,6 @@ export const Marketplace = {
     put<MarketplaceOrderDTO>(`/marketplace/orders/${orderId}`, payload),
   updateFulfillment: (orderId: string, payload: MarketplaceFulfillmentUpdatePayload) =>
     put<MarketplaceOrderDTO>(`/marketplace/orders/${orderId}/fulfillment`, payload),
+  updateRental: (orderId: string, payload: MarketplaceRentalUpdatePayload) =>
+    put<MarketplaceOrderDTO>(`/marketplace/orders/${orderId}/rental`, payload),
 };

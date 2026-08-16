@@ -47,6 +47,10 @@ export default function MarketplaceOrderTrackingPage() {
   const timeline = useMemo(() => order?.moStatusHistory ?? [], [order]);
   const fulfillmentTimeline = useMemo(() => order?.moFulfillmentHistory ?? [], [order]);
   const currentStatusMeta = useMemo(() => getOrderStatusMeta(order?.moStatus ?? ''), [order?.moStatus]);
+  const formatMinor = (amount?: number | null) => new Intl.NumberFormat('es-EC', {
+    style: 'currency',
+    currency: order?.moCurrency ?? 'USD',
+  }).format((amount ?? 0) / 100);
 
   const copyOrderId = () => {
     if (typeof window === 'undefined') return;
@@ -107,9 +111,30 @@ export default function MarketplaceOrderTrackingPage() {
                 )}
                 {order.moFulfillmentStatus && (
                   <Typography variant="body2" color="text.secondary">
-                    Entrega: {order.moFulfillmentStatus.replace(/_/g, ' ')}
+                    {order.moOrderKind === 'rental' ? 'Renta' : 'Entrega'}: {order.moFulfillmentStatus.replace(/_/g, ' ')}
                     {order.moTrackingReference ? ` · Guía: ${order.moTrackingReference}` : ''}
                   </Typography>
+                )}
+                {order.moOrderKind === 'rental' && (
+                  <Alert severity="info" variant="outlined" sx={{ mt: 1.5 }}>
+                    <Stack spacing={0.5}>
+                      <Typography variant="body2">
+                        Fechas: {order.moRentalStartDate} → {order.moRentalEndDate} ({order.moRentalDurationDays} día(s))
+                      </Typography>
+                      <Typography variant="body2">
+                        Renta: {formatMinor(order.moRentalChargeUsdCents)} · depósito reembolsable: {formatMinor(order.moSecurityDepositUsdCents)}
+                      </Typography>
+                      <Typography variant="body2">
+                        Estado del depósito: {(order.moDepositStatus ?? 'pendiente').replace(/_/g, ' ')}
+                        {(order.moDepositDeductionUsdCents ?? 0) > 0
+                          ? ` · deducción propuesta ${formatMinor(order.moDepositDeductionUsdCents)}`
+                          : ''}
+                      </Typography>
+                      <Typography variant="caption">
+                        El pago, la custodia del equipo y la devolución del depósito se confirman por separado.
+                      </Typography>
+                    </Stack>
+                  </Alert>
                 )}
                 <Divider sx={{ my: 2 }} />
                 <Stack spacing={0.75}>
@@ -135,7 +160,9 @@ export default function MarketplaceOrderTrackingPage() {
               <Card variant="outlined">
                 <CardContent>
                   <Stack spacing={1}>
-                    <Typography variant="subtitle1" fontWeight={700}>Historial de entrega</Typography>
+                    <Typography variant="subtitle1" fontWeight={700}>
+                      {order.moOrderKind === 'rental' ? 'Historial de renta' : 'Historial de entrega'}
+                    </Typography>
                     {fulfillmentTimeline.map(([fulfillmentStatus, timestamp]) => (
                       <Stack key={`${fulfillmentStatus}-${timestamp}`} direction="row" spacing={1} alignItems="center">
                         <Chip size="small" label={fulfillmentStatus.replace(/_/g, ' ')} />

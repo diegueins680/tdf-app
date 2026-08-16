@@ -56,8 +56,14 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
 - Marketplace equipment sales now link the legacy domain order to one canonical checkout with
   immutable per-asset line snapshots and a 15-minute atomic hold. One cart-level idempotency key is
   reused when the customer switches among Datafast, PayPal and manual payment; retries cannot create
-  a second internal order or stock hold. Rental listings fail closed because they still lack dates,
-  deposits and custody terms.
+  a second internal order or stock hold.
+- Marketplace rentals now use a dedicated dated runtime instead of the sale lifecycle. The server
+  calculates inclusive duration and daily/weekly pricing from an approved versioned terms record,
+  snapshots the rental charge separately from the refundable deposit, and enforces non-overlapping
+  asset holds in PostgreSQL. Verified payment confirms the reservation but never implies handoff.
+  Outbound/inbound condition reports, custody, inspection, damage review, deduction proposals and
+  deposit-refund-due states are separately audited. Raw government identifiers are validated and
+  discarded; only document type and last four characters are retained.
 - Marketplace Datafast and PayPal use the shared attempt, immutable provider binding, verified
   payment, receipt, ledger and reconciliation primitives. Verification includes environment,
   merchant, internal order, amount, currency, provider resource and resource path. Guest capture,
@@ -104,10 +110,11 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   sandbox evidence, reconciliation ownership, and production authorization are verified.
 - Production mixing/mastering checkout through its independent `commerce.mixing_mastering` database
   kill switch, in addition to the provider-specific switches.
-- Production marketplace sales through `commerce.marketplace_sales`; production remains off until
-  the additive migration, anonymized backfill report, provider sandbox verification, shipping/pickup
-  ownership, reconciliation alerts and a separately authorized low-value rollout pass. Marketplace
-  rentals remain independently disabled through `commerce.marketplace_rentals`.
+- The marketplace sale and rental domain rows, `commerce.marketplace_sales` and
+  `commerce.marketplace_rentals`, are enabled by the additive rollout migration. This exposes the
+  truthful domain workflows while Datafast/PayPal production execution remains independently off.
+  A production deployment, provider charging, and a low-value verification window still require
+  separate authorization, sandbox evidence, operational ownership, alerts, and rollback rehearsal.
 - Production asynchronous provider-event processing through
   `checkout.provider_event_worker`; sandbox is enabled for local/staging rehearsal while production
   remains off pending credentialed retry evidence and named alert ownership.
@@ -127,11 +134,11 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
 
 The following requested domains remain future phases and must not be represented as complete:
 
-- Wiring the canonical checkout aggregate into real rentals, room/resource bookings, courses, Domo
-  accepted quotes, public tickets, tips, memberships, provider services, and verified donations.
-- Marketplace carrier integrations and customer return/refund initiation; rental dates and deposit,
-  custody and damage workflows; booking deposits/balances; atomic course seats; and guest ticket
-  issuance through Datafast/PayPal.
+- Wiring the canonical checkout aggregate into room/resource bookings, courses, Domo accepted
+  quotes, public tickets, tips, memberships, provider services, and verified donations.
+- Marketplace carrier integrations and customer-initiated sale returns/refunds; automated rental
+  late-fee charging and non-zero-deposit provider refund execution; booking deposits/balances;
+  atomic course seats; and guest ticket issuance through Datafast/PayPal.
 - Mixing/mastering private object-store multipart upload, malware scanning, engineer workflow,
   deliverable version history, revision billing, notifications, and non-PayPal refund adapters.
 - Public event detail/storefront, distribution onboarding/release wizard, staff QC consoles,
@@ -153,18 +160,22 @@ after material checkout, product approval, distribution, royalty, or payout evid
 existing record was backfilled or rewritten in this branch; production dry-run counts still require
 a read-only staging/production snapshot.
 
-The read-only `marketplace_sale_checkout_backfill_report` classifies legacy marketplace rows as
+The read-only `marketplace_sale_checkout_backfill_report` classifies legacy marketplace sale rows as
 `linked`, `requires_payment_reconciliation`, `eligible_unpaid_manual_review`, or
 `historical_terminal_manual_review`. It never infers payment. The marketplace runtime rollback works
-before live links exist and refuses after any canonical sale linkage exists.
+before live links exist and refuses after any canonical sale linkage exists. Existing public rental
+listings are linked to an approved `marketplace-rental-v1` terms record without changing their
+published daily rate: weekly is six daily rates, deposit is explicitly zero, minimum/maximum are
+one/30 days, and the cancellation window is 24 hours. The migration records the system approval in
+append-only terms history; it does not classify any historical rental as paid or handed off.
 
 ## Release conclusion
 
 This branch is suitable for a draft review and an isolated migration/application staging exercise.
 It is not production-ready and does not satisfy the full multi-phase definition of done. Two
-low-risk domains—mixing/mastering and equipment sales—are now wired into the canonical
-checkout/receipt/ledger model. The next safe external step is credentialed Datafast and PayPal
-sandbox checkout/capture/webhook/reconciliation evidence for both domains. The next internally
-implementable domain slice is payable studio/DJ bookings or a date-aware rental aggregate; neither
-should reuse the sale lifecycle. Datafast refund or callback work remains blocked on a verified
-merchant contract.
+low-risk domains—mixing/mastering, equipment sales, and dated equipment rentals—are now wired into
+the canonical checkout/receipt/ledger model. The next safe external step is credentialed Datafast
+and PayPal sandbox checkout/capture/webhook/reconciliation evidence for these domains. The next
+internally implementable domain slice is payable studio/DJ bookings. Datafast refund or callback
+work and non-zero rental-deposit settlement remain blocked on verified merchant capabilities and
+operational approval.

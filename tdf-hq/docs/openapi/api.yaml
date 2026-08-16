@@ -3608,6 +3608,31 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/MarketplaceItem' }
         '404': { description: Listing not found }
+  /marketplace/{listingId}/rental-terms:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceListingId'
+    put:
+      tags: [Marketplace administration]
+      summary: Replace and approve the active server-side rental rate and terms
+      description: Operations-only full replacement. Public rental checkout is available only while the terms record is active and approved; existing orders retain immutable price and terms-version snapshots.
+      operationId: updateMarketplaceRentalTerms
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceRentalTermsUpdate' }
+      responses:
+        '200':
+          description: Updated public listing projection
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceItem' }
+        '400': { description: Invalid price, duration, timezone, or terms version }
+        '403': { description: Operations access required }
+        '404': { description: Listing not found }
+        '409': { description: Listing is not an active rental listing }
   /marketplace/cart:
     post:
       tags: [Marketplace]
@@ -3640,8 +3665,8 @@ paths:
       - $ref: '#/components/parameters/MarketplaceCartId'
     post:
       tags: [Marketplace]
-      summary: Add, replace, or remove one unique sale asset in a cart
-      description: Rental listings and quantities greater than one are rejected until the date-aware rental domain is enabled.
+      summary: Add, replace, or remove one unique sale or dated rental asset
+      description: Sale and rental assets use separate carts. Rentals require both inclusive dates and an approved active server-side terms version; quantities greater than one are rejected.
       operationId: upsertMarketplaceCartItem
       security: [ ]
       requestBody:
@@ -3655,7 +3680,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/MarketplaceCart' }
-        '400': { description: Invalid listing, quantity, or rental request }
+        '400': { description: Invalid listing, quantity, date range, or rental request }
         '404': { description: Cart or listing not found }
         '409': { description: Asset is no longer available }
   /marketplace/cart/{cartId}/checkout:
@@ -3663,8 +3688,8 @@ paths:
       - $ref: '#/components/parameters/MarketplaceCartId'
     post:
       tags: [Marketplace]
-      summary: Create an unpaid manual-payment sale order and atomic asset hold
-      description: The Idempotency-Key binds an immutable checkout snapshot. Selecting bank transfer never confirms payment.
+      summary: Create an unpaid manual-payment marketplace order and atomic asset hold
+      description: The Idempotency-Key binds an immutable sale or dated-rental checkout snapshot. Rental terms and identity fields are required for rentals; the full document number is validated and discarded. Selecting bank transfer never confirms payment.
       operationId: checkoutMarketplaceCart
       security: [ ]
       parameters:
@@ -3683,7 +3708,7 @@ paths:
         '400': { description: Invalid buyer, fulfillment, address, or cart snapshot }
         '409': { description: Idempotency conflict or asset is already held }
         '429': { description: Public request rate limit exceeded }
-        '503': { description: Marketplace sales checkout is disabled }
+        '503': { description: The matching marketplace sales or rentals capability is disabled }
   /marketplace/cart/{cartId}/stripe/payment-intent:
     parameters:
       - $ref: '#/components/parameters/MarketplaceCartId'
@@ -3707,7 +3732,7 @@ paths:
       - $ref: '#/components/parameters/MarketplaceCartId'
     post:
       tags: [Marketplace]
-      summary: Create or recover a canonical Datafast sale checkout
+      summary: Create or recover a canonical Datafast sale or rental checkout
       operationId: createMarketplaceDatafastCheckout
       security: [ ]
       parameters:
@@ -3726,7 +3751,7 @@ paths:
         '400': { description: Invalid cart, buyer, fulfillment, or environment configuration }
         '409': { description: Idempotency, asset-hold, or provider-binding conflict }
         '502': { description: Datafast did not create a verifiable checkout resource }
-        '503': { description: Datafast or marketplace sales are disabled }
+        '503': { description: Datafast or the matching marketplace capability is disabled }
   /marketplace/datafast/status:
     get:
       tags: [Marketplace]
@@ -3758,7 +3783,7 @@ paths:
       - $ref: '#/components/parameters/MarketplaceCartId'
     post:
       tags: [Marketplace]
-      summary: Create or recover a canonical PayPal sale order
+      summary: Create or recover a canonical PayPal sale or rental order
       operationId: createMarketplacePaypalOrder
       security: [ ]
       parameters:
@@ -3777,7 +3802,7 @@ paths:
         '400': { description: Invalid cart, buyer, fulfillment, or environment configuration }
         '409': { description: Idempotency, asset-hold, or provider-binding conflict }
         '502': { description: PayPal did not create an order }
-        '503': { description: PayPal or marketplace sales are disabled }
+        '503': { description: PayPal or the matching marketplace capability is disabled }
   /marketplace/paypal/capture:
     post:
       tags: [Marketplace]
@@ -3883,6 +3908,31 @@ paths:
         '403': { description: Operations access required }
         '404': { description: Canonical sale order not found }
         '409': { description: Transition is invalid or payment is not verified }
+  /marketplace/orders/{orderId}/rental:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceOrderId'
+    put:
+      tags: [Marketplace administration]
+      summary: Apply a validated rental custody or inspection transition
+      description: Payment, physical custody, and refundable-deposit settlement remain separate. Condition reports are required at handoff and return; a proposed deduction creates a due state and never fabricates a refund.
+      operationId: updateMarketplaceRental
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceRentalUpdate' }
+      responses:
+        '200':
+          description: Updated rental state and immutable history
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceOrder' }
+        '400': { description: Invalid transition or condition/deposit payload }
+        '403': { description: Operations access required }
+        '404': { description: Canonical rental order not found }
+        '409': { description: Transition, custody, payment, or deposit-settlement precondition failed }
   /services/storefront:
     get:
       tags: [Service storefront]
@@ -4440,7 +4490,7 @@ components:
       name: orderId
       in: path
       required: true
-      description: Canonical marketplace sale order UUID.
+      description: Canonical marketplace sale or rental order UUID.
       schema: { type: string, format: uuid }
     ServiceStorefrontPackageId:
       name: packageId
@@ -4468,7 +4518,7 @@ components:
   schemas:
     MarketplaceItem:
       type: object
-      required: [miListingId, miAssetId, miTitle, miPurpose, miCategory, miBrand, miModel, miPhotoUrl, miStatus, miCondition, miPriceUsdCents, miPriceDisplay, miMarkupPct, miCurrency]
+      required: [miListingId, miAssetId, miTitle, miPurpose, miCategory, miBrand, miModel, miPhotoUrl, miStatus, miCondition, miPriceUsdCents, miPriceDisplay, miMarkupPct, miCurrency, miRentalWeeklyPriceUsdCents, miRentalWeeklyPriceDisplay, miRentalSecurityDepositUsdCents, miRentalSecurityDepositDisplay, miRentalMinDays, miRentalMaxDays, miRentalLateFeeUsdCents, miRentalLateFeeDisplay, miRentalCancellationWindowHours, miRentalTermsVersion, miRentalTermsSummary, miRentalTimezone]
       properties:
         miListingId: { type: string, format: uuid }
         miAssetId: { type: string, format: uuid }
@@ -4484,9 +4534,21 @@ components:
         miPriceDisplay: { type: string }
         miMarkupPct: { type: integer }
         miCurrency: { type: string, minLength: 3, maxLength: 3 }
+        miRentalWeeklyPriceUsdCents: { type: integer, minimum: 1, nullable: true }
+        miRentalWeeklyPriceDisplay: { type: string, nullable: true }
+        miRentalSecurityDepositUsdCents: { type: integer, minimum: 0, nullable: true }
+        miRentalSecurityDepositDisplay: { type: string, nullable: true }
+        miRentalMinDays: { type: integer, minimum: 1, nullable: true }
+        miRentalMaxDays: { type: integer, minimum: 1, maximum: 366, nullable: true }
+        miRentalLateFeeUsdCents: { type: integer, minimum: 0, nullable: true }
+        miRentalLateFeeDisplay: { type: string, nullable: true }
+        miRentalCancellationWindowHours: { type: integer, minimum: 0, maximum: 8760, nullable: true }
+        miRentalTermsVersion: { type: string, nullable: true, description: Only present when an approved active rate/terms version permits public rental checkout. }
+        miRentalTermsSummary: { type: string, nullable: true }
+        miRentalTimezone: { type: string, nullable: true }
     MarketplaceCartItem:
       type: object
-      required: [mciListingId, mciTitle, mciCategory, mciBrand, mciModel, mciQuantity, mciUnitPriceUsdCents, mciSubtotalCents, mciUnitPriceDisplay, mciSubtotalDisplay]
+      required: [mciListingId, mciTitle, mciCategory, mciBrand, mciModel, mciQuantity, mciUnitPriceUsdCents, mciSubtotalCents, mciUnitPriceDisplay, mciSubtotalDisplay, mciPurpose, mciRentalStartDate, mciRentalEndDate, mciRentalDurationDays, mciRentalChargeCents, mciRentalChargeDisplay, mciSecurityDepositCents, mciSecurityDepositDisplay]
       properties:
         mciListingId: { type: string, format: uuid }
         mciTitle: { type: string }
@@ -4498,6 +4560,14 @@ components:
         mciSubtotalCents: { type: integer, minimum: 0 }
         mciUnitPriceDisplay: { type: string }
         mciSubtotalDisplay: { type: string }
+        mciPurpose: { type: string, enum: [sale, rent] }
+        mciRentalStartDate: { type: string, format: date, nullable: true }
+        mciRentalEndDate: { type: string, format: date, nullable: true }
+        mciRentalDurationDays: { type: integer, minimum: 1, maximum: 366, nullable: true }
+        mciRentalChargeCents: { type: integer, minimum: 1, nullable: true }
+        mciRentalChargeDisplay: { type: string, nullable: true }
+        mciSecurityDepositCents: { type: integer, minimum: 0, nullable: true }
+        mciSecurityDepositDisplay: { type: string, nullable: true }
     MarketplaceCart:
       type: object
       required: [mcCartId, mcItems, mcCurrency, mcSubtotalCents, mcSubtotalDisplay]
@@ -4515,7 +4585,9 @@ components:
       required: [mciuListingId, mciuQuantity]
       properties:
         mciuListingId: { type: string, format: uuid }
-        mciuQuantity: { type: integer, minimum: 0, maximum: 1, description: Zero removes the item; one reserves the unique sale asset in the cart. }
+        mciuQuantity: { type: integer, minimum: 0, maximum: 1, description: Zero removes the item; one selects the unique physical asset. }
+        mciuRentalStartDate: { type: string, format: date, description: Inclusive rental start; must be supplied together with the end date. }
+        mciuRentalEndDate: { type: string, format: date, description: Inclusive rental end; must be supplied together with the start date. }
     MarketplaceShippingAddress:
       type: object
       additionalProperties: false
@@ -4538,6 +4610,9 @@ components:
         mcrFulfillmentMethod: { type: string, enum: [pickup, local_delivery, shipping], default: pickup }
         mcrShippingAddress:
           $ref: '#/components/schemas/MarketplaceShippingAddress'
+        mcrRentalTermsAccepted: { type: boolean, description: Must be true for a rental and omitted for a sale. }
+        mcrIdentityDocumentType: { type: string, enum: [cedula, passport, ruc], description: Required for a rental and omitted for a sale. }
+        mcrIdentityDocumentNumber: { type: string, minLength: 5, maxLength: 32, writeOnly: true, description: Validated for rental handoff and discarded after retaining only its type and last four characters. }
     MarketplaceOrderItem:
       type: object
       required: [moiListingId, moiTitle, moiQuantity, moiUnitPriceUsdCents, moiSubtotalCents, moiUnitPriceDisplay, moiSubtotalDisplay]
@@ -4560,7 +4635,7 @@ components:
           - { type: string, format: date-time }
     MarketplaceOrder:
       type: object
-      required: [moOrderId, moCartId, moCurrency, moTotalUsdCents, moTotalDisplay, moStatus, moStatusHistory, moBuyerName, moBuyerEmail, moBuyerPhone, moPaymentProvider, moPaypalOrderId, moPaypalPayerEmail, moPaidAt, moLookupToken, moCheckoutStatus, moFulfillmentMethod, moFulfillmentStatus, moHoldExpiresAt, moTrackingReference, moFulfillmentHistory, moCreatedAt, moUpdatedAt, moItems]
+      required: [moOrderId, moCartId, moCurrency, moTotalUsdCents, moTotalDisplay, moStatus, moStatusHistory, moBuyerName, moBuyerEmail, moBuyerPhone, moPaymentProvider, moPaypalOrderId, moPaypalPayerEmail, moPaidAt, moLookupToken, moCheckoutStatus, moFulfillmentMethod, moFulfillmentStatus, moHoldExpiresAt, moTrackingReference, moFulfillmentHistory, moOrderKind, moRentalStartDate, moRentalEndDate, moRentalDurationDays, moRentalChargeUsdCents, moSecurityDepositUsdCents, moDepositStatus, moDepositDeductionUsdCents, moRentalTermsVersion, moRentalTimezone, moConditionOut, moConditionIn, moCreatedAt, moUpdatedAt, moItems]
       properties:
         moOrderId: { type: string, format: uuid }
         moCartId: { type: string, format: uuid, nullable: true }
@@ -4590,6 +4665,21 @@ components:
         moFulfillmentHistory:
           type: array
           items: { $ref: '#/components/schemas/MarketplaceStateHistoryEntry' }
+        moOrderKind: { type: string, enum: [sale, rental], nullable: true }
+        moRentalStartDate: { type: string, format: date, nullable: true }
+        moRentalEndDate: { type: string, format: date, nullable: true }
+        moRentalDurationDays: { type: integer, minimum: 1, maximum: 366, nullable: true }
+        moRentalChargeUsdCents: { type: integer, minimum: 1, nullable: true }
+        moSecurityDepositUsdCents: { type: integer, minimum: 0, nullable: true, description: Refundable deposit collected separately from the rental charge. }
+        moDepositStatus:
+          type: string
+          enum: [awaiting_payment, collected, inspection_pending, deduction_proposed, refund_due, partial_refund_due, refunded, partially_refunded, forfeited, disputed]
+          nullable: true
+        moDepositDeductionUsdCents: { type: integer, minimum: 0, nullable: true }
+        moRentalTermsVersion: { type: string, nullable: true }
+        moRentalTimezone: { type: string, nullable: true }
+        moConditionOut: { type: string, nullable: true }
+        moConditionIn: { type: string, nullable: true }
         moCreatedAt: { type: string, format: date-time }
         moUpdatedAt: { type: string, format: date-time }
         moItems:
@@ -4621,6 +4711,36 @@ components:
         mfuTrackingReference: { type: string, minLength: 1, maxLength: 160 }
         mfuReasonCode: { type: string, minLength: 1, maxLength: 80 }
         mfuNotes: { type: string, minLength: 1, maxLength: 500 }
+    MarketplaceRentalUpdate:
+      type: object
+      additionalProperties: false
+      required: [mruStatus]
+      properties:
+        mruStatus:
+          type: string
+          enum: [on_hold, confirmed, ready_for_handoff, checked_out, return_due, returned_pending_inspection, damage_review, deposit_refund_due, closed, cancellation_requested, cancelled, no_show, lost, disputed, expired]
+        mruConditionOut: { type: string, minLength: 1, maxLength: 1000 }
+        mruConditionIn: { type: string, minLength: 1, maxLength: 1000 }
+        mruEvidenceUrl: { type: string, format: uri, minLength: 1, maxLength: 2048 }
+        mruDepositDeductionUsdCents: { type: integer, minimum: 0 }
+        mruReasonCode: { type: string, minLength: 1, maxLength: 80 }
+        mruNotes: { type: string, minLength: 1, maxLength: 500 }
+    MarketplaceRentalTermsUpdate:
+      type: object
+      additionalProperties: false
+      required: [mrtuDailyRateUsdCents, mrtuWeeklyRateUsdCents, mrtuSecurityDepositUsdCents, mrtuLateFeeUsdCents, mrtuMinDays, mrtuMaxDays, mrtuCancellationWindowHours, mrtuTimezone, mrtuTermsVersion, mrtuTermsSummary, mrtuActive]
+      properties:
+        mrtuDailyRateUsdCents: { type: integer, minimum: 1, maximum: 2147483647 }
+        mrtuWeeklyRateUsdCents: { type: integer, minimum: 1, maximum: 2147483647, nullable: true }
+        mrtuSecurityDepositUsdCents: { type: integer, minimum: 0, maximum: 2147483647 }
+        mrtuLateFeeUsdCents: { type: integer, minimum: 0, maximum: 2147483647 }
+        mrtuMinDays: { type: integer, minimum: 1, maximum: 366 }
+        mrtuMaxDays: { type: integer, minimum: 1, maximum: 366 }
+        mrtuCancellationWindowHours: { type: integer, minimum: 0, maximum: 8760 }
+        mrtuTimezone: { type: string, enum: [America/Guayaquil] }
+        mrtuTermsVersion: { type: string, minLength: 1, maxLength: 80 }
+        mrtuTermsSummary: { type: string, minLength: 1, maxLength: 1000 }
+        mrtuActive: { type: boolean }
     ServiceStorefrontPackage:
       type: object
       required: [sspId, sspServiceKind, sspTier, sspName, sspDescription, sspPriceUsdCents, sspCurrency, sspMinSongCount, sspMaxSongCount, sspTurnaroundDays, sspRevisionCount, sspDeliverables, sspFeatures, sspActive, sspSortOrder]

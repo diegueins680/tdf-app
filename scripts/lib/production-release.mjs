@@ -1442,6 +1442,15 @@ BEGIN
     RAISE EXCEPTION 'Marketplace sale checkout runtime relations are missing';
   END IF;
 
+  IF to_regclass('public.marketplace_rental_listing_terms') IS NULL
+     OR to_regclass('public.marketplace_rental_cart_selection') IS NULL
+     OR to_regclass('public.marketplace_rental_listing_terms_history') IS NULL
+     OR to_regclass('public.marketplace_rental_order_runtime') IS NULL
+     OR to_regclass('public.marketplace_rental_event') IS NULL
+     OR to_regclass('public.marketplace_order_checkout_runtime') IS NULL THEN
+    RAISE EXCEPTION 'Marketplace rental checkout runtime relations are missing';
+  END IF;
+
   IF EXISTS (
     SELECT 1
     FROM (
@@ -1489,6 +1498,44 @@ BEGIN
     RAISE EXCEPTION 'Marketplace sale checkout runtime columns are missing or invalid';
   END IF;
 
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('marketplace_rental_listing_terms', 'listing_id', 'uuid', 'NO'),
+        ('marketplace_rental_listing_terms', 'daily_rate_usd_cents', 'bigint', 'NO'),
+        ('marketplace_rental_listing_terms', 'security_deposit_usd_cents', 'bigint', 'NO'),
+        ('marketplace_rental_listing_terms', 'terms_version', 'text', 'NO'),
+        ('marketplace_rental_listing_terms', 'active', 'boolean', 'NO'),
+        ('marketplace_rental_listing_terms', 'approved_at', 'timestamp with time zone', 'YES'),
+        ('marketplace_rental_cart_selection', 'cart_item_id', 'uuid', 'NO'),
+        ('marketplace_rental_cart_selection', 'start_date', 'date', 'NO'),
+        ('marketplace_rental_cart_selection', 'end_date', 'date', 'NO'),
+        ('marketplace_rental_order_runtime', 'order_id', 'uuid', 'NO'),
+        ('marketplace_rental_order_runtime', 'checkout_id', 'uuid', 'NO'),
+        ('marketplace_rental_order_runtime', 'asset_id', 'uuid', 'NO'),
+        ('marketplace_rental_order_runtime', 'rental_status', 'text', 'NO'),
+        ('marketplace_rental_order_runtime', 'deposit_status', 'text', 'NO'),
+        ('marketplace_rental_order_runtime', 'rental_charge_usd_cents', 'bigint', 'NO'),
+        ('marketplace_rental_order_runtime', 'security_deposit_usd_cents', 'bigint', 'NO'),
+        ('marketplace_rental_order_runtime', 'identity_document_type', 'text', 'NO'),
+        ('marketplace_rental_order_runtime', 'identity_document_last4', 'text', 'NO'),
+        ('marketplace_rental_order_runtime', 'condition_out', 'text', 'YES'),
+        ('marketplace_rental_order_runtime', 'condition_in', 'text', 'YES'),
+        ('marketplace_rental_event', 'order_id', 'uuid', 'NO'),
+        ('marketplace_rental_event', 'to_status', 'text', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Marketplace rental checkout runtime columns are missing or invalid';
+  END IF;
+
   IF to_regclass('public.marketplace_sale_order_runtime_pkey') IS NULL
      OR to_regclass('public.marketplace_sale_order_runtime_checkout_id_key') IS NULL
      OR to_regclass('public.marketplace_sale_order_runtime_lookup_token_hash_key') IS NULL
@@ -1498,12 +1545,34 @@ BEGIN
     RAISE EXCEPTION 'Marketplace sale checkout runtime indexes are incomplete';
   END IF;
 
+  IF to_regclass('public.marketplace_rental_order_runtime_pkey') IS NULL
+     OR to_regclass('public.marketplace_rental_order_runtime_checkout_id_key') IS NULL
+     OR to_regclass('public.marketplace_rental_order_runtime_lookup_token_hash_key') IS NULL
+     OR to_regclass('public.marketplace_rental_order_runtime_create_idempotency_key_key') IS NULL
+     OR to_regclass('public.idx_marketplace_rental_terms_active') IS NULL
+     OR to_regclass('public.idx_marketplace_rental_terms_history') IS NULL
+     OR to_regclass('public.idx_marketplace_rental_runtime_status') IS NULL
+     OR to_regclass('public.idx_marketplace_rental_event_order') IS NULL
+     OR NOT EXISTS (
+       SELECT 1 FROM pg_constraint
+       WHERE conrelid = 'public.marketplace_rental_order_runtime'::regclass
+         AND contype = 'x'
+         AND convalidated
+     ) THEN
+    RAISE EXCEPTION 'Marketplace rental uniqueness, date-exclusion, or runtime indexes are incomplete';
+  END IF;
+
   IF EXISTS (
     SELECT 1
     FROM (VALUES
       ('marketplace_sale_order_runtime', 'trg_marketplace_validate_sale_runtime'),
       ('marketplace_sale_order_runtime', 'trg_marketplace_validate_fulfillment_transition'),
       ('marketplace_sale_order_runtime', 'trg_marketplace_record_fulfillment_transition'),
+      ('marketplace_rental_listing_terms', 'trg_marketplace_validate_rental_terms'),
+      ('marketplace_rental_listing_terms', 'trg_marketplace_record_rental_terms_history'),
+      ('marketplace_rental_order_runtime', 'trg_marketplace_validate_rental_runtime'),
+      ('marketplace_rental_order_runtime', 'trg_marketplace_validate_rental_transition'),
+      ('marketplace_rental_order_runtime', 'trg_marketplace_record_rental_transition'),
       ('commerce_checkout_session', 'trg_marketplace_sync_verified_checkout'),
       ('marketplace_order', 'trg_marketplace_protect_canonical_payment_state')
     ) AS expected(table_name, trigger_name)
@@ -1524,9 +1593,9 @@ BEGIN
     ) AS expected(flag_key)
     LEFT JOIN revenue_feature_flag AS flag
       ON flag.flag_key = expected.flag_key AND flag.environment = 'production'
-    WHERE flag.flag_key IS NULL OR flag.enabled
+    WHERE flag.flag_key IS NULL OR NOT flag.enabled
   ) THEN
-    RAISE EXCEPTION 'Production marketplace capability gates must exist disabled';
+    RAISE EXCEPTION 'Production marketplace sales and rentals capability gates must exist enabled';
   END IF;
 
   IF EXISTS (

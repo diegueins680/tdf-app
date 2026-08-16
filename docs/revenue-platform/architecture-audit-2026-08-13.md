@@ -212,6 +212,8 @@ The accepted ADRs are:
 - [ADR-0104](../adr/0104-immutable-financial-ledger.md): immutable double-entry finance and manual payout gate.
 - [ADR-0105](../adr/0105-private-versioned-assets.md): private, checksummed, immutable asset versions.
 - [ADR-0106](../adr/0106-partner-profiled-ddex.md): partner-profiled DDEX with evidence-based status.
+- [ADR-0107](../adr/0107-marketplace-sale-holds-and-custody.md): unique-asset sale holds and separate physical custody.
+- [ADR-0108](../adr/0108-marketplace-rental-dates-deposits-and-custody.md): dated rental holds, condition evidence, and truthful deposit due states.
 
 ## Feature flags and phased rollout
 
@@ -222,8 +224,10 @@ production capability:
 
 - implemented keys: `checkout.datafast`, `checkout.paypal`, `checkout.paypal.webhooks`,
   `checkout.paypal.refunds`, `checkout.datafast.webhooks`, `checkout.datafast.refunds`,
-  `checkout.provider_event_worker`, `commerce.mixing_mastering`; planned provider/domain keys
-  must use the same registry rather than introducing an untracked environment-only bypass;
+  `checkout.provider_event_worker`, `commerce.mixing_mastering`, `commerce.marketplace_sales`, and
+  `commerce.marketplace_rentals`; the marketplace domain rows are enabled by the rental rollout,
+  while provider execution remains independently disabled; planned provider/domain keys must use
+  the same registry rather than introducing an untracked environment-only bypass;
 - domains: `COMMERCE_MIXING_ENABLED`, `COMMERCE_EQUIPMENT_SALES_ENABLED`,
   `COMMERCE_RENTALS_ENABLED`, `COMMERCE_BOOKINGS_ENABLED`, `COMMERCE_DOMO_ENABLED`,
   `COMMERCE_COURSES_ENABLED`, `COMMERCE_TICKETS_ENABLED`, `COMMERCE_TIPS_ENABLED`,

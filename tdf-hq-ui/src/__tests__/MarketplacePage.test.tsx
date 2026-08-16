@@ -8,7 +8,7 @@ import type { MarketplaceCartDTO, MarketplaceItemDTO, MarketplaceOrderDTO } from
 const listMock = jest.fn<() => Promise<MarketplaceItemDTO[]>>();
 const getCartMock = jest.fn<(cartId: string) => Promise<MarketplaceCartDTO>>();
 const createCartMock = jest.fn<() => Promise<MarketplaceCartDTO>>();
-const upsertItemMock = jest.fn<(cartId: string) => Promise<MarketplaceCartDTO>>();
+const upsertItemMock = jest.fn<(cartId: string, payload: unknown) => Promise<MarketplaceCartDTO>>();
 const checkoutMock = jest.fn<
   (cartId: string, payload: unknown, idempotencyKey: string) => Promise<MarketplaceOrderDTO>
 >();
@@ -23,7 +23,7 @@ jest.unstable_mockModule('../api/marketplace', () => ({
     list: () => listMock(),
     getCart: (cartId: string) => getCartMock(cartId),
     createCart: () => createCartMock(),
-    upsertItem: (cartId: string) => upsertItemMock(cartId),
+    upsertItem: (cartId: string, payload: unknown) => upsertItemMock(cartId, payload),
     checkout: (cartId: string, payload: unknown, idempotencyKey: string) =>
       checkoutMock(cartId, payload as never, idempotencyKey),
     datafastCheckout: (...args: unknown[]) => datafastCheckoutMock(...args),
@@ -385,7 +385,7 @@ describe('MarketplacePage', () => {
     document.body.removeChild(container);
   });
 
-  it('does not send rental listings through the sale checkout without dates and deposits', async () => {
+  it('keeps a rental disabled until approved server-side terms exist', async () => {
     listMock.mockResolvedValue([
       buildListing({ miPurpose: 'rent', miTitle: 'Rental Console' }),
     ]);
@@ -396,12 +396,74 @@ describe('MarketplacePage', () => {
 
     await waitForExpectation(() => {
       const rentalButton = Array.from(container.querySelectorAll('button')).find(
-        (button) => button.textContent?.trim() === 'Renta con fechas: próximamente',
+        (button) => button.textContent?.trim() === 'Renta en revisión',
       );
       expect(rentalButton).toBeDefined();
       expect(rentalButton?.disabled).toBe(true);
     });
     expect(upsertItemMock).not.toHaveBeenCalled();
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
+  it('adds an approved rental only after collecting both inclusive dates', async () => {
+    listMock.mockResolvedValue([
+      buildListing({
+        miPurpose: 'rent',
+        miTitle: 'Rental Console',
+        miRentalTermsVersion: 'rental-v1',
+        miRentalTermsSummary: 'Inspección de salida y retorno obligatoria.',
+        miRentalMinDays: 1,
+        miRentalMaxDays: 30,
+        miRentalSecurityDepositDisplay: 'USD $50.00',
+        miRentalTimezone: 'America/Guayaquil',
+      }),
+    ]);
+    createCartMock.mockResolvedValue(buildCart({ mcCartId: 'cart-rental', mcItems: [] }));
+    upsertItemMock.mockResolvedValue(buildCart({
+      mcCartId: 'cart-rental',
+      mcItems: [{
+        mciListingId: 'listing-1',
+        mciTitle: 'Rental Console',
+        mciCategory: 'Mics',
+        mciQuantity: 1,
+        mciPurpose: 'rent',
+        mciUnitPriceDisplay: 'USD $100.00',
+        mciSubtotalDisplay: 'USD $350.00',
+        mciRentalStartDate: '2030-01-10',
+        mciRentalEndDate: '2030-01-12',
+        mciRentalDurationDays: 3,
+        mciRentalChargeDisplay: 'USD $300.00',
+        mciSecurityDepositDisplay: 'USD $50.00',
+      }] as MarketplaceCartDTO['mcItems'],
+    }));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => expect(container.textContent).toContain('Elegir fechas'));
+    await act(async () => {
+      clickButtonByText('Elegir fechas');
+      await flushPromises();
+    });
+    setInputValue(getInputByLabel(document.body, 'Inicio'), '2030-01-10');
+    setInputValue(getInputByLabel(document.body, 'Devolución'), '2030-01-12');
+    await act(async () => {
+      await flushPromises();
+      clickButtonByText('Agregar renta');
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(upsertItemMock).toHaveBeenCalledWith('cart-rental', {
+        mciuListingId: 'listing-1',
+        mciuQuantity: 1,
+        mciuRentalStartDate: '2030-01-10',
+        mciuRentalEndDate: '2030-01-12',
+      });
+    });
 
     await cleanup();
     document.body.removeChild(container);

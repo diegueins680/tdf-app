@@ -17,6 +17,10 @@ Staff actions require least privilege and audit; a staff login does not make fin
 | Callback replay/reordering | Immutable encrypted PayPal inbox, event/hash dedupe, four-day/five-minute acceptance bounds, atomic claim/retry/dead-letter worker, metadata/checksum revalidation, audited strict-admin requeue | Add external alert delivery and credentialed delayed-event tests |
 | Duplicate order/capture/refund | One provider-neutral checkout key per cart, unique provider bindings and asset holds, bounded PayPal request IDs, checkout-locked refund reservation and immutable allocation | Apply orchestration to every remaining domain and add credentialed provider concurrency E2E |
 | Premature equipment sale or custody forgery | Payment only consumes the hold and moves fulfillment to ready; database transitions mark an asset sold only on delivery and append operator evidence | Add separation-of-duty policy for handoff and staging evidence for pickup shipping and returns |
+| Double-booked rental asset | Inclusive server dates, transaction locks and a PostgreSQL exclusion constraint prevent overlapping active ranges for one asset | Run concurrent HTTP contention tests against a production-like pool and monitor exclusion conflicts |
+| Rental custody or condition forgery | Verified payment only confirms the reservation; checkout and return require distinct condition reports, evidence references and append-only operator events | Add handoff identity verification policy, dual review for high-value assets and evidence-retention review |
+| Deposit represented as refunded without funds movement | Charge and deposit are separate snapshots; deductions are proposals; non-zero deposits cannot close without a terminal settlement state | Implement and certify provider/manual refund evidence adapters before allowing non-zero production deposits |
+| Government-ID disclosure or offline enumeration | Full document number is validated in request memory and discarded; only type and last four characters are retained | Confirm Ecuador privacy/retention policy and restrict operational display/access audit |
 | Guessing guest orders | Random lookup token stored as hash, constant-shape not-found response | Add verified-email recovery, rate limiter and abuse telemetry at ingress |
 | Raw card/secret leakage | Hosted provider model; secret values not documented; redaction boundary specified | Structured redaction tests, secret-manager rotation and log sampling in staging |
 | Privileged token in browser | Records demo/admin bearer removed | Bundle scan as a blocking CI check across all build variants |
@@ -47,6 +51,11 @@ Staff actions require least privilege and audit; a staff login does not make fin
     explicit authorization gates are incomplete.
 11. A marketplace payment cannot imply pickup, shipment, delivery, return, listing activation, or
     custody; those changes require their own valid audited transition.
+12. Rental date ranges for the same asset cannot overlap while either reservation is active.
+13. A rental charge and refundable deposit are distinct immutable amounts; a deduction proposal is
+    not a verified refund, capture, or forfeiture.
+14. A non-zero-deposit rental cannot close until settlement evidence reaches a terminal deposit
+    state, and raw customer identity numbers are never persisted.
 
 ## Abuse-test gates
 

@@ -187,6 +187,18 @@ export interface MarketplaceItemDTO {
   miPriceDisplay: string;
   miMarkupPct: number;
   miCurrency: string;
+  miRentalWeeklyPriceUsdCents?: number | null;
+  miRentalWeeklyPriceDisplay?: string | null;
+  miRentalSecurityDepositUsdCents?: number | null;
+  miRentalSecurityDepositDisplay?: string | null;
+  miRentalMinDays?: number | null;
+  miRentalMaxDays?: number | null;
+  miRentalLateFeeUsdCents?: number | null;
+  miRentalLateFeeDisplay?: string | null;
+  miRentalCancellationWindowHours?: number | null;
+  miRentalTermsVersion?: string | null;
+  miRentalTermsSummary?: string | null;
+  miRentalTimezone?: string | null;
 }
 
 export interface MarketplaceCartItemDTO {
@@ -200,6 +212,14 @@ export interface MarketplaceCartItemDTO {
   mciSubtotalCents: number;
   mciUnitPriceDisplay: string;
   mciSubtotalDisplay: string;
+  mciPurpose: 'sale' | 'rent';
+  mciRentalStartDate?: string | null;
+  mciRentalEndDate?: string | null;
+  mciRentalDurationDays?: number | null;
+  mciRentalChargeCents?: number | null;
+  mciRentalChargeDisplay?: string | null;
+  mciSecurityDepositCents?: number | null;
+  mciSecurityDepositDisplay?: string | null;
 }
 
 export interface MarketplaceCartDTO {
@@ -242,6 +262,18 @@ export interface MarketplaceOrderDTO {
   moHoldExpiresAt?: string | null;
   moTrackingReference?: string | null;
   moFulfillmentHistory?: [string, string][];
+  moOrderKind?: 'sale' | 'rental' | null;
+  moRentalStartDate?: string | null;
+  moRentalEndDate?: string | null;
+  moRentalDurationDays?: number | null;
+  moRentalChargeUsdCents?: number | null;
+  moSecurityDepositUsdCents?: number | null;
+  moDepositStatus?: string | null;
+  moDepositDeductionUsdCents?: number | null;
+  moRentalTermsVersion?: string | null;
+  moRentalTimezone?: string | null;
+  moConditionOut?: string | null;
+  moConditionIn?: string | null;
   moCreatedAt: string;
   moUpdatedAt: string;
   moItems: MarketplaceOrderItemDTO[];
@@ -294,6 +326,30 @@ export interface MarketplaceFulfillmentUpdatePayload {
   mfuTrackingReference?: string;
   mfuReasonCode?: string;
   mfuNotes?: string;
+}
+
+export interface MarketplaceRentalUpdatePayload {
+  mruStatus: string;
+  mruConditionOut?: string;
+  mruConditionIn?: string;
+  mruEvidenceUrl?: string;
+  mruDepositDeductionUsdCents?: number;
+  mruReasonCode?: string;
+  mruNotes?: string;
+}
+
+export interface MarketplaceRentalTermsUpdatePayload {
+  mrtuDailyRateUsdCents: number;
+  mrtuWeeklyRateUsdCents: number | null;
+  mrtuSecurityDepositUsdCents: number;
+  mrtuLateFeeUsdCents: number;
+  mrtuMinDays: number;
+  mrtuMaxDays: number;
+  mrtuCancellationWindowHours: number;
+  mrtuTimezone: 'America/Guayaquil';
+  mrtuTermsVersion: string;
+  mrtuTermsSummary: string;
+  mrtuActive: boolean;
 }
 
 export interface PaypalCaptureRequest {

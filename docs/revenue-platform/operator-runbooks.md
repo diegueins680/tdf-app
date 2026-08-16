@@ -54,7 +54,26 @@ If payment exists without a fulfillment transition, keep custody with TDF and as
 delivery evidence exists without verified payment, stop handoff and open a reconciliation incident.
 For a return, record the authorized transition and condition evidence; `returned` restores asset
 custody but must not silently reactivate the listing. Use compensating financial records for any
-refund. Never repurpose the sale lifecycle for a rental or invent rental dates/deposit evidence.
+refund. Never repurpose the sale lifecycle for a rental.
+
+## Marketplace rental hold, custody, or deposit mismatch
+
+Disable `commerce.marketplace_rentals` to stop new rental checkout while leaving sales and other
+domains available. Compare the immutable checkout line, rental runtime, date-exclusion hold,
+accepted terms version/history, provider binding, payment evidence, asset state, outbound/inbound
+condition reports, rental events, and deposit state under one order ID.
+
+Verified payment may produce `confirmed`, never `checked_out`. Do not hand off without the outbound
+report. A return must record the inbound report before inspection. `deduction_proposed`,
+`refund_due`, and `partial_refund_due` are work queues—not evidence that money moved. For a non-zero
+deposit, do not close the rental until a separately verified refund, partial refund, forfeiture, or
+dispute record exists. Never edit the deposit amount or historical terms in place; use a new terms
+version and compensating financial records.
+
+For a date conflict, do not delete the competing row. Identify the earlier accepted hold/payment,
+release only an expired or validly cancelled hold, and contact the affected customer. For loss or
+damage, preserve photos/documents in approved private evidence storage, follow the dispute window,
+and require the configured operator approvals before any financial settlement.
 
 ## Distribution dead letter or release-date risk
 

@@ -10,7 +10,9 @@ import {
   CardHeader,
   Chip,
   CircularProgress,
+  Checkbox,
   FormControl,
+  FormControlLabel,
   Grid,
   IconButton,
   Dialog,
@@ -146,6 +148,11 @@ const buildMarketplaceCheckoutRequest = (
   buyerName: string,
   buyerEmail: string,
   buyerPhone: string,
+  rental?: {
+    termsAccepted: boolean;
+    identityType: 'cedula' | 'passport' | 'ruc';
+    identityNumber: string;
+  },
 ): CheckoutRequest => {
   const normalizedPhone = normalizePhone(buyerPhone);
   return {
@@ -153,6 +160,13 @@ const buildMarketplaceCheckoutRequest = (
     mcrBuyerEmail: buyerEmail,
     mcrFulfillmentMethod: 'pickup',
     ...(normalizedPhone ? { mcrBuyerPhone: normalizedPhone } : {}),
+    ...(rental
+      ? {
+          mcrRentalTermsAccepted: rental.termsAccepted,
+          mcrIdentityDocumentType: rental.identityType,
+          mcrIdentityDocumentNumber: rental.identityNumber.trim(),
+        }
+      : {}),
   };
 };
 
@@ -492,6 +506,17 @@ export default function MarketplacePage() {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState<MarketplaceItemDTO | null>(null);
+  const [rentalDialogListing, setRentalDialogListing] = useState<MarketplaceItemDTO | null>(null);
+  const [rentalStartDate, setRentalStartDate] = useState('');
+  const [rentalEndDate, setRentalEndDate] = useState('');
+  const [rentalTermsAccepted, setRentalTermsAccepted] = useState(false);
+  const [rentalIdentityType, setRentalIdentityType] = useState<'cedula' | 'passport' | 'ruc'>('cedula');
+  const [rentalIdentityNumber, setRentalIdentityNumber] = useState('');
+  const [rentalTermsDialogListing, setRentalTermsDialogListing] = useState<MarketplaceItemDTO | null>(null);
+  const [rentalTermsForm, setRentalTermsForm] = useState({
+    dailyRate: '', weeklyRate: '', deposit: '', lateFee: '', minDays: '1', maxDays: '30',
+    cancellationHours: '24', version: '', summary: '', active: true,
+  });
   const [imagePreview, setImagePreview] = useState<{ src: string; alt: string } | null>(null);
   const [brokenPhotoUrls, setBrokenPhotoUrls] = useState<Set<string>>(() => new Set());
   const [showRestoreBanner, setShowRestoreBanner] = useState(false);
@@ -510,6 +535,8 @@ export default function MarketplacePage() {
   });
   const cart = cartQuery.data;
   const cartItems: MarketplaceCartItemDTO[] = cart?.mcItems ?? [];
+  const rentalCartItem = cartItems.find((item) => item.mciPurpose === 'rent') ?? null;
+  const isRentalCart = Boolean(rentalCartItem);
   const paypalCurrency = cart?.mcCurrency?.trim().toUpperCase() ?? null;
   const [savedCartMeta, setSavedCartMeta] = useState<{ cartId: string; count: number; updatedAt: number | null } | null>(() => {
     if (typeof window === 'undefined') return null;
@@ -549,6 +576,24 @@ export default function MarketplacePage() {
     const cleaned = normalizePhone(buyerPhone) ?? '';
     return cleaned.length >= 7;
   }, [buyerPhone, contactPref]);
+  const isValidRentalPhone = useMemo(
+    () => (buyerPhone.match(/[0-9]/g)?.length ?? 0) >= 8,
+    [buyerPhone],
+  );
+  const isValidRentalIdentity = useMemo(() => {
+    const normalized = rentalIdentityNumber.trim();
+    const canonical = normalized.replace(/[^A-Za-z0-9]/g, '');
+    return canonical.length >= 5
+      && canonical.length <= 32
+      && /^[A-Za-z0-9 .-]+$/.test(normalized);
+  }, [rentalIdentityNumber]);
+  const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const rentalDateError = useMemo(() => {
+    if (!rentalStartDate || !rentalEndDate) return 'Selecciona fecha de inicio y devolución.';
+    if (rentalStartDate < todayIso) return 'La fecha de inicio no puede estar en el pasado.';
+    if (rentalEndDate < rentalStartDate) return 'La devolución no puede ser anterior al inicio.';
+    return '';
+  }, [rentalEndDate, rentalStartDate, todayIso]);
 
   const listingsQuery = useQuery({
     queryKey: ['marketplace-listings'],
@@ -657,10 +702,20 @@ export default function MarketplacePage() {
     return promise;
   }, [cartId, createCartMutation]);
 
-  const upsertItemMutation = useMutation<MarketplaceCartDTO, Error, { listingId: string; quantity: number }>({
-    mutationFn: async ({ listingId, quantity }) => {
+  const upsertItemMutation = useMutation<
+    MarketplaceCartDTO,
+    Error,
+    { listingId: string; quantity: number; rentalStartDate?: string; rentalEndDate?: string }
+  >({
+    mutationFn: async ({ listingId, quantity, rentalStartDate: startDate, rentalEndDate: endDate }) => {
       const ensuredCart = await ensureCart();
-      return Marketplace.upsertItem(ensuredCart, { mciuListingId: listingId, mciuQuantity: quantity });
+      return Marketplace.upsertItem(ensuredCart, {
+        mciuListingId: listingId,
+        mciuQuantity: quantity,
+        ...(startDate && endDate
+          ? { mciuRentalStartDate: startDate, mciuRentalEndDate: endDate }
+          : {}),
+      });
     },
     onSuccess: (data) => {
       qc.setQueryData(['marketplace-cart', data.mcCartId], data);
@@ -699,12 +754,36 @@ export default function MarketplacePage() {
     fireCartMetaEvent();
   }, [qc]);
 
+  const checkoutRequest = useCallback(
+    () => buildMarketplaceCheckoutRequest(
+      buyerName,
+      buyerEmail,
+      buyerPhone,
+      isRentalCart
+        ? {
+            termsAccepted: rentalTermsAccepted,
+            identityType: rentalIdentityType,
+            identityNumber: rentalIdentityNumber,
+          }
+        : undefined,
+    ),
+    [
+      buyerEmail,
+      buyerName,
+      buyerPhone,
+      isRentalCart,
+      rentalIdentityNumber,
+      rentalIdentityType,
+      rentalTermsAccepted,
+    ],
+  );
+
   const checkoutMutation = useMutation({
     mutationFn: async () => {
       const ensuredCart = await ensureCart();
       const order = await Marketplace.checkout(
         ensuredCart,
-        buildMarketplaceCheckoutRequest(buyerName, buyerEmail, buyerPhone),
+        checkoutRequest(),
         getMarketplaceCheckoutIdempotencyKey(ensuredCart, 'bank_transfer'),
       );
       return order;
@@ -734,7 +813,7 @@ export default function MarketplacePage() {
       const ensuredCart = await ensureCart();
       return Marketplace.stripePaymentIntent(
         ensuredCart,
-        buildMarketplaceCheckoutRequest(buyerName, buyerEmail, buyerPhone),
+        checkoutRequest(),
         getMarketplaceCheckoutIdempotencyKey(ensuredCart, 'stripe'),
       );
     },
@@ -753,7 +832,7 @@ export default function MarketplacePage() {
       const ensuredCart = await ensureCart();
       return Marketplace.datafastCheckout(
         ensuredCart,
-        buildMarketplaceCheckoutRequest(buyerName, buyerEmail, buyerPhone),
+        checkoutRequest(),
         getMarketplaceCheckoutIdempotencyKey(ensuredCart, 'datafast'),
       );
     },
@@ -777,7 +856,7 @@ export default function MarketplacePage() {
       const ensuredCart = await ensureCart();
       return Marketplace.createPaypalOrder(
         ensuredCart,
-        buildMarketplaceCheckoutRequest(buyerName, buyerEmail, buyerPhone),
+        checkoutRequest(),
         getMarketplaceCheckoutIdempotencyKey(ensuredCart, 'paypal'),
       );
     },
@@ -859,6 +938,35 @@ export default function MarketplacePage() {
     },
   });
 
+  const updateRentalTermsMutation = useMutation({
+    mutationFn: () => {
+      if (!rentalTermsDialogListing) throw new Error('No rental listing selected');
+      const readInteger = (value: string) => Number(value.trim());
+      return Marketplace.updateRentalTerms(rentalTermsDialogListing.miListingId, {
+        mrtuDailyRateUsdCents: readInteger(rentalTermsForm.dailyRate),
+        mrtuWeeklyRateUsdCents: rentalTermsForm.weeklyRate.trim()
+          ? readInteger(rentalTermsForm.weeklyRate)
+          : null,
+        mrtuSecurityDepositUsdCents: readInteger(rentalTermsForm.deposit),
+        mrtuLateFeeUsdCents: readInteger(rentalTermsForm.lateFee),
+        mrtuMinDays: readInteger(rentalTermsForm.minDays),
+        mrtuMaxDays: readInteger(rentalTermsForm.maxDays),
+        mrtuCancellationWindowHours: readInteger(rentalTermsForm.cancellationHours),
+        mrtuTimezone: 'America/Guayaquil',
+        mrtuTermsVersion: rentalTermsForm.version.trim(),
+        mrtuTermsSummary: rentalTermsForm.summary.trim(),
+        mrtuActive: rentalTermsForm.active,
+      });
+    },
+    onSuccess: (updated) => {
+      qc.setQueryData<MarketplaceItemDTO[]>(['marketplace-listings'], (current) =>
+        current?.map((listing) => listing.miListingId === updated.miListingId ? updated : listing),
+      );
+      setRentalTermsDialogListing(null);
+      setToast(updated.miRentalTermsVersion ? 'Tarifa y términos de renta activados' : 'Renta desactivada');
+    },
+  });
+
   const listings = useMemo(() => listingsQuery.data ?? [], [listingsQuery.data]);
   const initialListingHandledRef = useRef(false);
   const categories = useMemo(
@@ -937,9 +1045,23 @@ export default function MarketplacePage() {
     if (!hasCartItems || cartItemCount === 0) return 'Agrega al menos un producto para continuar.';
     if (!isValidName) return 'Ingresa tu nombre para coordinar el pedido.';
     if (!isValidEmail) return 'Ingresa un correo válido.';
+    if (isRentalCart && !isValidRentalPhone) return 'La renta requiere un teléfono de contacto válido.';
+    if (isRentalCart && !isValidRentalIdentity) return 'Completa un documento válido para la entrega del equipo.';
+    if (isRentalCart && !rentalTermsAccepted) return 'Acepta los términos versionados de la renta.';
     if (!isValidPhone && contactPref === 'phone') return 'Agrega un teléfono para coordinar por WhatsApp.';
     return '';
-  }, [cartItemCount, contactPref, hasCartItems, isValidEmail, isValidName, isValidPhone]);
+  }, [
+    cartItemCount,
+    contactPref,
+    hasCartItems,
+    isRentalCart,
+    isValidEmail,
+    isValidName,
+    isValidPhone,
+    isValidRentalIdentity,
+    isValidRentalPhone,
+    rentalTermsAccepted,
+  ]);
   useEffect(() => {
     if (!paypalEnabled && (modules.has('ops') || modules.has('admin'))) {
       logger.warn('PayPal deshabilitado: falta VITE_PAYPAL_CLIENT_ID en build o runtime.');
@@ -1087,7 +1209,21 @@ export default function MarketplacePage() {
 
   const handleAdd = (listing: MarketplaceItemDTO) => {
     if (listing.miPurpose === 'rent') {
-      setToast('La renta estará disponible cuando podamos confirmar fechas, depósito y términos. No creamos una compra falsa.');
+      if (!listing.miRentalTermsVersion) {
+        setToast('Esta renta sigue bloqueada hasta que Operaciones apruebe su tarifa, depósito y términos.');
+        return;
+      }
+      if (cartItems.some((item) => item.mciPurpose !== 'rent')) {
+        setToast('Las ventas y rentas usan carritos separados. Vacía el carrito de venta para continuar.');
+        return;
+      }
+      setRentalDialogListing(listing);
+      setRentalStartDate('');
+      setRentalEndDate('');
+      return;
+    }
+    if (cartItems.some((item) => item.mciPurpose === 'rent')) {
+      setToast('Las ventas y rentas usan carritos separados. Vacía la renta para continuar con la compra.');
       return;
     }
     if (!isListingAvailable(listing.miStatus)) {
@@ -1101,6 +1237,25 @@ export default function MarketplacePage() {
       return;
     }
     upsertItemMutation.mutate({ listingId: listing.miListingId, quantity: 1 });
+  };
+
+  const confirmRentalDates = () => {
+    if (!rentalDialogListing || rentalDateError) return;
+    upsertItemMutation.mutate(
+      {
+        listingId: rentalDialogListing.miListingId,
+        quantity: 1,
+        rentalStartDate,
+        rentalEndDate,
+      },
+      {
+        onSuccess: () => {
+          setRentalDialogListing(null);
+          setRentalStartDate('');
+          setRentalEndDate('');
+        },
+      },
+    );
   };
 
   const handleUpdateQty = (item: MarketplaceCartItemDTO, quantity: number) => {
@@ -1119,8 +1274,8 @@ export default function MarketplacePage() {
   };
 
   const handleCheckout = () => {
-    if (!isValidName || !isValidEmail || (contactPref === 'phone' && !isValidPhone)) {
-      setToast('Completa tu nombre, correo y teléfono para continuar.');
+    if (checkoutDisabledReason) {
+      setToast(checkoutDisabledReason);
       return;
     }
     checkoutMutation.mutate();
@@ -1128,12 +1283,8 @@ export default function MarketplacePage() {
 
   const handleDatafastCheckout = () => {
     setDatafastError(null);
-    if (!hasCartItems || !isValidName || !isValidEmail || cartItemCount === 0 || (contactPref === 'phone' && !isValidPhone)) {
-      setDatafastError(
-        contactPref === 'phone'
-          ? 'Completa tu nombre, correo y teléfono para pagar con tarjeta.'
-          : 'Completa tu nombre y correo para pagar con tarjeta.',
-      );
+    if (checkoutDisabledReason) {
+      setDatafastError(checkoutDisabledReason);
       return;
     }
     datafastCheckoutMutation.mutate();
@@ -1145,12 +1296,8 @@ export default function MarketplacePage() {
       setStripeError('Stripe no está configurado en este entorno.');
       return;
     }
-    if (!hasCartItems || !isValidName || !isValidEmail || cartItemCount === 0 || (contactPref === 'phone' && !isValidPhone)) {
-      setStripeError(
-        contactPref === 'phone'
-          ? 'Completa tu nombre, correo y teléfono para pagar con Stripe.'
-          : 'Completa tu nombre y correo para pagar con Stripe.',
-      );
+    if (checkoutDisabledReason) {
+      setStripeError(checkoutDisabledReason);
       return;
     }
     stripePaymentIntentMutation.mutate();
@@ -1179,12 +1326,8 @@ export default function MarketplacePage() {
 
   const handlePaypalCheckout = () => {
     setPaypalError(null);
-    if (!hasCartItems || !isValidName || !isValidEmail || (contactPref === 'phone' && !isValidPhone)) {
-      setPaypalError(
-        contactPref === 'phone'
-          ? 'Completa tu nombre, correo y teléfono para pagar con PayPal.'
-          : 'Completa tu nombre y correo para pagar con PayPal.',
-      );
+    if (checkoutDisabledReason) {
+      setPaypalError(checkoutDisabledReason);
       return;
     }
     createPaypalOrderMutation.mutate();
@@ -1268,6 +1411,44 @@ export default function MarketplacePage() {
     setPendingPhotoUrl(null);
     updatePhotoMutation.mutate({ assetId: photoDialogListing.miAssetId, photoUrl: null });
   };
+
+  const openRentalTermsDialog = (listing: MarketplaceItemDTO) => {
+    if (!canManagePhotos || listing.miPurpose !== 'rent') return;
+    setRentalTermsDialogListing(listing);
+    setRentalTermsForm({
+      dailyRate: String(listing.miPriceUsdCents),
+      weeklyRate: listing.miRentalWeeklyPriceUsdCents == null ? '' : String(listing.miRentalWeeklyPriceUsdCents),
+      deposit: String(listing.miRentalSecurityDepositUsdCents ?? 0),
+      lateFee: String(listing.miRentalLateFeeUsdCents ?? listing.miPriceUsdCents),
+      minDays: String(listing.miRentalMinDays ?? 1),
+      maxDays: String(listing.miRentalMaxDays ?? 30),
+      cancellationHours: String(listing.miRentalCancellationWindowHours ?? 24),
+      version: listing.miRentalTermsVersion ?? '',
+      summary: listing.miRentalTermsSummary ?? '',
+      active: Boolean(listing.miRentalTermsVersion),
+    });
+    updateRentalTermsMutation.reset();
+  };
+
+  const rentalTermsFormInvalid = useMemo(() => {
+    const integerFields = [
+      rentalTermsForm.dailyRate,
+      rentalTermsForm.deposit,
+      rentalTermsForm.lateFee,
+      rentalTermsForm.minDays,
+      rentalTermsForm.maxDays,
+      rentalTermsForm.cancellationHours,
+      ...(rentalTermsForm.weeklyRate.trim() ? [rentalTermsForm.weeklyRate] : []),
+    ];
+    const values = integerFields.map(Number);
+    return values.some((value) => !Number.isSafeInteger(value) || value < 0)
+      || Number(rentalTermsForm.dailyRate) < 1
+      || Number(rentalTermsForm.minDays) < 1
+      || Number(rentalTermsForm.maxDays) < Number(rentalTermsForm.minDays)
+      || Number(rentalTermsForm.maxDays) > 366
+      || !rentalTermsForm.version.trim()
+      || !rentalTermsForm.summary.trim();
+  }, [rentalTermsForm]);
 
   const handleRestoreCart = () => {
     if (!savedCartMeta?.cartId) return;
@@ -1882,11 +2063,16 @@ export default function MarketplacePage() {
                       <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 'auto' }}>
                         <Tooltip
                           title={
-                            isListingAvailable(item.miStatus)
-                              ? ''
-                              : `No disponible para agregar (${item.miStatus ?? 'estado desconocido'})`
+                            item.miPurpose === 'rent' && !item.miRentalTermsVersion
+                              ? 'Operaciones todavía no ha aprobado una tarifa y términos activos para esta renta.'
+                              : isListingAvailable(item.miStatus)
+                                ? ''
+                                : `No disponible para agregar (${item.miStatus ?? 'estado desconocido'})`
                           }
-                          disableHoverListener={isListingAvailable(item.miStatus)}
+                          disableHoverListener={
+                            isListingAvailable(item.miStatus)
+                              && (item.miPurpose !== 'rent' || Boolean(item.miRentalTermsVersion))
+                          }
                         >
                           <span>
                             <Button
@@ -1894,10 +2080,25 @@ export default function MarketplacePage() {
                               size="small"
                               startIcon={<ShoppingCartIcon />}
                               onClick={() => handleAdd(item)}
-                              disabled={upsertItemMutation.isPending || !isListingAvailable(item.miStatus) || item.miPurpose === 'rent'}
+                              disabled={
+                                upsertItemMutation.isPending
+                                || !isListingAvailable(item.miStatus)
+                                || (item.miPurpose === 'rent' && !item.miRentalTermsVersion)
+                              }
                             >
-                              {item.miPurpose === 'rent' ? 'Renta con fechas: próximamente' : 'Agregar'}
+                              {item.miPurpose === 'rent'
+                                ? item.miRentalTermsVersion ? 'Elegir fechas' : 'Renta en revisión'
+                                : 'Agregar'}
                             </Button>
+                            {canManagePhotos && item.miPurpose === 'rent' && (
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={() => openRentalTermsDialog(item)}
+                              >
+                                Configurar renta
+                              </Button>
+                            )}
                           </span>
                         </Tooltip>
                       </Stack>
@@ -1978,6 +2179,16 @@ export default function MarketplacePage() {
                               <Typography variant="caption" color="text.secondary">
                                 {item.mciUnitPriceDisplay} · {item.mciCategory}
                               </Typography>
+                              {item.mciPurpose === 'rent' && (
+                                <Stack spacing={0.25} mt={0.5}>
+                                  <Typography variant="caption">
+                                    {item.mciRentalStartDate} → {item.mciRentalEndDate} · {item.mciRentalDurationDays} día(s)
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Renta: {item.mciRentalChargeDisplay} · Depósito reembolsable: {item.mciSecurityDepositDisplay}
+                                  </Typography>
+                                </Stack>
+                              )}
                             </Box>
                             <IconButton
                               aria-label="Quitar"
@@ -1987,6 +2198,7 @@ export default function MarketplacePage() {
                               <DeleteIcon fontSize="small" />
                             </IconButton>
                           </Stack>
+                          {item.mciPurpose === 'sale' ? (
                           <Stack direction="row" spacing={1} alignItems="center" mt={1}>
                             <IconButton
                               aria-label="Disminuir cantidad"
@@ -2019,6 +2231,14 @@ export default function MarketplacePage() {
                               {item.mciSubtotalDisplay}
                             </Typography>
                           </Stack>
+                          ) : (
+                            <Stack direction="row" justifyContent="space-between" alignItems="center" mt={1}>
+                              <Chip size="small" label="1 activo con fechas" />
+                              <Typography variant="body2" fontWeight={700}>
+                                Total retenido al pagar: {item.mciSubtotalDisplay}
+                              </Typography>
+                            </Stack>
+                          )}
                         </Box>
                       ))}
                       <Stack direction="row" justifyContent="space-between" alignItems="center" mt={1}>
@@ -2047,7 +2267,7 @@ export default function MarketplacePage() {
                             onClick={() => {
                               openReview();
                             }}
-                            disabled={!isValidName || !isValidEmail || cartItemCount === 0}
+                            disabled={Boolean(checkoutDisabledReason)}
                           >
                             Continuar al checkout
                           </Button>
@@ -2123,11 +2343,49 @@ export default function MarketplacePage() {
                         />
                         <TextField
                           type="tel"
-                          label="Teléfono (opcional)"
+                          label={isRentalCart ? 'Teléfono para entrega (obligatorio)' : 'Teléfono (opcional)'}
                           value={buyerPhone}
                           onChange={(e) => setBuyerPhone(e.target.value)}
                           fullWidth
                         />
+                        {isRentalCart && (
+                          <Stack spacing={1.25}>
+                            <Alert severity="info" variant="outlined">
+                              La renta y el depósito son conceptos separados. Pagar confirma la reserva; no significa que el equipo ya fue entregado ni que el depósito fue reembolsado.
+                            </Alert>
+                            <FormControl fullWidth size="small">
+                              <InputLabel id="marketplace-rental-identity-type-label">Documento</InputLabel>
+                              <Select
+                                labelId="marketplace-rental-identity-type-label"
+                                label="Documento"
+                                value={rentalIdentityType}
+                                onChange={(event) => setRentalIdentityType(event.target.value as 'cedula' | 'passport' | 'ruc')}
+                              >
+                                <MenuItem value="cedula">Cédula</MenuItem>
+                                <MenuItem value="passport">Pasaporte</MenuItem>
+                                <MenuItem value="ruc">RUC</MenuItem>
+                              </Select>
+                            </FormControl>
+                            <TextField
+                              label="Número de documento"
+                              value={rentalIdentityNumber}
+                              onChange={(event) => setRentalIdentityNumber(event.target.value)}
+                              inputProps={{ maxLength: 32, autoComplete: 'off' }}
+                              error={Boolean(rentalIdentityNumber) && !isValidRentalIdentity}
+                              helperText="Se valida para la entrega y el servidor conserva únicamente tipo y últimos cuatro caracteres."
+                              fullWidth
+                            />
+                            <FormControlLabel
+                              control={(
+                                <Checkbox
+                                  checked={rentalTermsAccepted}
+                                  onChange={(event) => setRentalTermsAccepted(event.target.checked)}
+                                />
+                              )}
+                              label={`Acepto los términos de renta ${rentalCartItem?.mciRentalStartDate ?? ''}–${rentalCartItem?.mciRentalEndDate ?? ''} y la inspección de salida/retorno.`}
+                            />
+                          </Stack>
+                        )}
                         <Stack spacing={0.5}>
                           <Typography variant="caption" color="text.secondary">
                             Preferencia de contacto
@@ -2507,6 +2765,158 @@ export default function MarketplacePage() {
           </Button>
         </DialogActions>
       </Dialog>
+      <Dialog
+        open={Boolean(rentalTermsDialogListing)}
+        onClose={() => setRentalTermsDialogListing(null)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Tarifa y términos de renta</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={1.5}>
+            <Alert severity="warning" variant="outlined">
+              Activar esta versión la publica para nuevos checkouts. Las órdenes existentes conservan sus fechas, importes y versión aceptada.
+            </Alert>
+            <Grid container spacing={1.5}>
+              {([
+                ['Tarifa diaria (centavos)', 'dailyRate'],
+                ['Tarifa semanal (centavos, opcional)', 'weeklyRate'],
+                ['Depósito reembolsable (centavos)', 'deposit'],
+                ['Cargo tardío (centavos)', 'lateFee'],
+                ['Días mínimos', 'minDays'],
+                ['Días máximos', 'maxDays'],
+                ['Ventana de cancelación (horas)', 'cancellationHours'],
+              ] as const).map(([label, key]) => (
+                <Grid item xs={12} sm={6} key={key}>
+                  <TextField
+                    label={label}
+                    type="number"
+                    value={rentalTermsForm[key as keyof typeof rentalTermsForm]}
+                    onChange={(event) => setRentalTermsForm((current) => ({ ...current, [key]: event.target.value }))}
+                    inputProps={{ min: key === 'dailyRate' || key === 'minDays' || key === 'maxDays' ? 1 : 0, step: 1 }}
+                    fullWidth
+                  />
+                </Grid>
+              ))}
+            </Grid>
+            <TextField
+              label="Versión de términos"
+              value={rentalTermsForm.version}
+              onChange={(event) => setRentalTermsForm((current) => ({ ...current, version: event.target.value }))}
+              inputProps={{ maxLength: 80 }}
+              helperText="Incrementa la versión cuando cambies tarifas, depósito, límites o políticas comerciales."
+              fullWidth
+            />
+            <TextField
+              label="Resumen mostrado al cliente"
+              value={rentalTermsForm.summary}
+              onChange={(event) => setRentalTermsForm((current) => ({ ...current, summary: event.target.value }))}
+              inputProps={{ maxLength: 1000 }}
+              multiline
+              minRows={3}
+              fullWidth
+            />
+            <FormControlLabel
+              control={(
+                <Checkbox
+                  checked={rentalTermsForm.active}
+                  onChange={(event) => setRentalTermsForm((current) => ({ ...current, active: event.target.checked }))}
+                />
+              )}
+              label="Versión activa y aprobada para checkout público"
+            />
+            {updateRentalTermsMutation.isError && (
+              <Alert severity="error">
+                {updateRentalTermsMutation.error?.message ?? 'No se pudieron guardar los términos.'}
+              </Alert>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRentalTermsDialogListing(null)} color="inherit">Cancelar</Button>
+          <Button
+            variant="contained"
+            disabled={rentalTermsFormInvalid || updateRentalTermsMutation.isPending}
+            onClick={() => updateRentalTermsMutation.mutate()}
+          >
+            {updateRentalTermsMutation.isPending ? 'Guardando…' : 'Guardar versión'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={Boolean(rentalDialogListing)}
+        onClose={() => setRentalDialogListing(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Elige las fechas de renta</DialogTitle>
+        <DialogContent dividers>
+          {rentalDialogListing && (
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle1" fontWeight={700}>
+                {rentalDialogListing.miTitle}
+              </Typography>
+              <Alert severity="info" variant="outlined">
+                El servidor volverá a calcular el precio y reservará el activo atómicamente. Esta selección todavía no es un pago ni una entrega.
+              </Alert>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <TextField
+                  type="date"
+                  label="Inicio"
+                  value={rentalStartDate}
+                  onChange={(event) => setRentalStartDate(event.target.value)}
+                  inputProps={{ min: todayIso }}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                />
+                <TextField
+                  type="date"
+                  label="Devolución"
+                  value={rentalEndDate}
+                  onChange={(event) => setRentalEndDate(event.target.value)}
+                  inputProps={{ min: rentalStartDate || todayIso }}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                />
+              </Stack>
+              {rentalDateError && (rentalStartDate || rentalEndDate) && (
+                <Alert severity="warning">{rentalDateError}</Alert>
+              )}
+              <Stack spacing={0.5}>
+                <Typography variant="body2">
+                  Tarifa diaria vigente: {rentalDialogListing.miPriceDisplay}
+                </Typography>
+                {rentalDialogListing.miRentalWeeklyPriceDisplay && (
+                  <Typography variant="body2">
+                    Tarifa semanal: {rentalDialogListing.miRentalWeeklyPriceDisplay}
+                  </Typography>
+                )}
+                <Typography variant="body2">
+                  Depósito reembolsable: {rentalDialogListing.miRentalSecurityDepositDisplay ?? 'USD 0,00'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Plazo permitido: {rentalDialogListing.miRentalMinDays ?? 1}–{rentalDialogListing.miRentalMaxDays ?? 366} días · zona horaria {rentalDialogListing.miRentalTimezone ?? 'America/Guayaquil'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Términos {rentalDialogListing.miRentalTermsVersion}: {rentalDialogListing.miRentalTermsSummary}
+                </Typography>
+              </Stack>
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRentalDialogListing(null)} color="inherit">
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            onClick={confirmRentalDates}
+            disabled={Boolean(rentalDateError) || upsertItemMutation.isPending}
+          >
+            {upsertItemMutation.isPending ? 'Verificando disponibilidad…' : 'Agregar renta'}
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Dialog open={reviewOpen} onClose={closeReview} maxWidth="sm" fullWidth>
         <DialogTitle>Revisa tu pedido</DialogTitle>
         <DialogContent dividers>
@@ -2519,11 +2929,23 @@ export default function MarketplacePage() {
             </Typography>
             <Stack spacing={0.5}>
               {cartItems.map((item) => (
-                <Typography key={item.mciListingId} variant="body2">
-                  {item.mciQuantity} × {item.mciTitle} — {item.mciSubtotalDisplay} ({item.mciUnitPriceDisplay} c/u)
-                </Typography>
+                <Box key={item.mciListingId}>
+                  <Typography variant="body2">
+                    {item.mciQuantity} × {item.mciTitle} — {item.mciSubtotalDisplay}
+                  </Typography>
+                  {item.mciPurpose === 'rent' && (
+                    <Typography variant="caption" color="text.secondary">
+                      {item.mciRentalStartDate} → {item.mciRentalEndDate}; renta {item.mciRentalChargeDisplay}; depósito reembolsable {item.mciSecurityDepositDisplay}
+                    </Typography>
+                  )}
+                </Box>
               ))}
             </Stack>
+            {isRentalCart && (
+              <Alert severity="info" variant="outlined">
+                Aceptaste los términos versionados. El pago confirmado reserva el activo; la entrega, inspección, deducción y devolución del depósito se registran por separado.
+              </Alert>
+            )}
             <Typography variant="body2" color="text.secondary">
               Método de pago: {paymentMethodLabel(paymentMethod)}
             </Typography>
@@ -2547,11 +2969,7 @@ export default function MarketplacePage() {
               capturePaypalMutation.isPending ||
               (paymentMethod === 'stripe' && !showStripeOption) ||
               (paymentMethod === 'paypal' && (!paypalClientId || !paypalReady)) ||
-              !isValidName ||
-              !isValidEmail ||
-              (contactPref === 'phone' && !isValidPhone) ||
-              !hasCartItems ||
-              cartItemCount === 0
+              Boolean(checkoutDisabledReason)
             }
           >
             {paymentMethod === 'stripe'
@@ -2651,6 +3069,11 @@ export default function MarketplacePage() {
                 <Typography variant="h5" fontWeight={800}>
                   {selectedListing.miPriceDisplay}
                 </Typography>
+                {selectedListing.miPurpose === 'rent' && (
+                  <Typography variant="caption" color="text.secondary">
+                    por día · depósito reembolsable {selectedListing.miRentalSecurityDepositDisplay ?? 'USD 0,00'} · términos {selectedListing.miRentalTermsVersion ?? 'pendientes'}
+                  </Typography>
+                )}
               </Stack>
               <Stack direction="row" spacing={1}>
                 <Button
@@ -2661,10 +3084,21 @@ export default function MarketplacePage() {
                     handleAdd(selectedListing);
                     closeDetail();
                   }}
-                  disabled={upsertItemMutation.isPending || !isListingAvailable(selectedListing.miStatus) || selectedListing.miPurpose === 'rent'}
+                  disabled={
+                    upsertItemMutation.isPending
+                    || !isListingAvailable(selectedListing.miStatus)
+                    || (selectedListing.miPurpose === 'rent' && !selectedListing.miRentalTermsVersion)
+                  }
                 >
-                  {selectedListing.miPurpose === 'rent' ? 'Renta con fechas: próximamente' : 'Agregar'}
+                  {selectedListing.miPurpose === 'rent'
+                    ? selectedListing.miRentalTermsVersion ? 'Elegir fechas' : 'Renta en revisión'
+                    : 'Agregar'}
                 </Button>
+                {canManagePhotos && selectedListing.miPurpose === 'rent' && (
+                  <Button size="small" variant="outlined" onClick={() => openRentalTermsDialog(selectedListing)}>
+                    Configurar renta
+                  </Button>
+                )}
                 <Button
                   size="small"
                   variant="outlined"

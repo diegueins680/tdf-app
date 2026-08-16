@@ -87,7 +87,7 @@ import           Database.Persist.Postgresql ()
 import           Database.PostgreSQL.Simple (SqlError (..))
 
 import           TDF.API
-import           TDF.API.Types (UserRoleSummaryDTO(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceFulfillmentUpdate(..), MarketplaceCheckoutReq(..), MarketplaceShippingAddress(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), LabelProjectNoteDTO(..), LabelProjectNoteCreate(..), LabelProjectNoteUpdate(..), DriveUploadDTO(..), DriveTokenExchangeRequest(..), DriveTokenRefreshRequest(..), DriveTokenResponse(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..), verifyMetaWebhookSignature)
+import           TDF.API.Types (UserRoleSummaryDTO(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceFulfillmentUpdate(..), MarketplaceRentalUpdate(..), MarketplaceRentalTermsUpdate(..), MarketplaceCheckoutReq(..), MarketplaceShippingAddress(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), LabelProjectNoteDTO(..), LabelProjectNoteCreate(..), LabelProjectNoteUpdate(..), DriveUploadDTO(..), DriveTokenExchangeRequest(..), DriveTokenRefreshRequest(..), DriveTokenResponse(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..), verifyMetaWebhookSignature)
 import           TDF.API.Types (maxMarketplaceCartItemQuantity)
 import qualified TDF.API.Types as APITypes
 import           TDF.API.WhatsApp (validateHookVerifyRequest)
@@ -180,6 +180,7 @@ import           TDF.Server.ServiceStorefront (serviceStorefrontPublicServer, se
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
+import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
 import           TDF.ServerFeedback (feedbackServer)
 import qualified TDF.Contracts.Server as Contracts
 import           TDF.ServerProposals (proposalsServer)
@@ -13609,9 +13610,11 @@ marketplacePublicServer =
 
 marketplaceAdminServer :: AuthedUser -> ServerT MarketplaceAdminAPI AppM
 marketplaceAdminServer user =
-       listMarketplaceOrders user
+       updateMarketplaceRentalTerms user
+  :<|> listMarketplaceOrders user
   :<|> updateMarketplaceOrder user
   :<|> updateMarketplaceFulfillment user
+  :<|> updateMarketplaceRental user
 
 labelServer :: AuthedUser -> ServerT LabelAPI AppM
 labelServer user =
@@ -13694,6 +13697,94 @@ getMarketplaceItem rawId = do
       mDto <- toMarketplaceDTO assetsBase row
       maybe (throwError marketplaceListingNotFound) pure mDto
 
+updateMarketplaceRentalTerms
+  :: AuthedUser
+  -> Text
+  -> MarketplaceRentalTermsUpdate
+  -> AppM MarketplaceItemDTO
+updateMarketplaceRentalTerms user rawId MarketplaceRentalTermsUpdate{..} = do
+  requireMarketplaceAccess user
+  listingKey <- parseListingId rawId
+  let upperMinorBound = 2147483647
+      termsVersion = T.strip mrtuTermsVersion
+      termsSummary = T.strip mrtuTermsSummary
+      timezone = T.strip mrtuTimezone
+      inMinorBounds amount = amount >= 0 && amount <= upperMinorBound
+  unless (mrtuDailyRateUsdCents >= 1 && mrtuDailyRateUsdCents <= upperMinorBound) $
+    throwError err400 { errBody = "Rental daily rate is outside the supported minor-unit range" }
+  unless (maybe True (\amount -> amount >= 1 && amount <= upperMinorBound) mrtuWeeklyRateUsdCents) $
+    throwError err400 { errBody = "Rental weekly rate is outside the supported minor-unit range" }
+  unless (inMinorBounds mrtuSecurityDepositUsdCents && inMinorBounds mrtuLateFeeUsdCents) $
+    throwError err400 { errBody = "Rental deposit or late fee is outside the supported minor-unit range" }
+  unless (mrtuMinDays >= 1 && mrtuMaxDays >= mrtuMinDays && mrtuMaxDays <= 366) $
+    throwError err400 { errBody = "Rental duration limits are invalid" }
+  unless (mrtuCancellationWindowHours >= 0 && mrtuCancellationWindowHours <= 8760) $
+    throwError err400 { errBody = "Rental cancellation window is invalid" }
+  unless (timezone == "America/Guayaquil") $
+    throwError err400 { errBody = "Marketplace rentals currently require America/Guayaquil" }
+  unless (not (T.null termsVersion) && T.length termsVersion <= 80) $
+    throwError err400 { errBody = "Rental terms version must contain 1 to 80 characters" }
+  unless (not (T.null termsSummary) && T.length termsSummary <= 1000) $
+    throwError err400 { errBody = "Rental terms summary must contain 1 to 1000 characters" }
+  void . either (throwError . marketplaceCheckoutBadRequest) pure $
+    MarketplaceRentals.calculateRentalPrice
+      mrtuDailyRateUsdCents
+      mrtuWeeklyRateUsdCents
+      mrtuSecurityDepositUsdCents
+      mrtuMinDays
+      mrtuMaxDays
+      mrtuMinDays
+  Env{ envPool } <- ask
+  let actor = "party:" <> T.pack (show (fromSqlKey (auPartyId user)))
+  result <- liftIO $ flip runSqlPool envPool $ do
+    mListing <- get listingKey
+    case mListing of
+      Nothing -> pure (Left marketplaceListingNotFound)
+      Just listing
+        | T.toLower (T.strip (ME.marketplaceListingPurpose listing)) /= "rent" ->
+            pure (Left err409 { errBody = "Rental terms can only be configured for a rent listing" })
+        | not (ME.marketplaceListingActive listing) ->
+            pure (Left err409 { errBody = "Activate the marketplace listing before enabling rental terms" })
+        | otherwise -> do
+            _ <- (rawSql "SELECT set_config('tdf.actor_id', ?, TRUE)"
+              [PersistText actor] :: SqlPersistT IO [Single Text])
+            rawExecute
+              "INSERT INTO marketplace_rental_listing_terms(\
+              \ listing_id, daily_rate_usd_cents, weekly_rate_usd_cents,\
+              \ security_deposit_usd_cents, late_fee_usd_cents, min_days, max_days,\
+              \ cancellation_window_hours, timezone, terms_version, terms_summary, active,\
+              \ approved_at, approved_by\
+              \) VALUES (?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,\
+              \ CASE WHEN ? THEN NOW() ELSE NULL END, CASE WHEN ? THEN ? ELSE NULL END)\
+              \ ON CONFLICT (listing_id) DO UPDATE SET\
+              \ daily_rate_usd_cents=EXCLUDED.daily_rate_usd_cents,\
+              \ weekly_rate_usd_cents=EXCLUDED.weekly_rate_usd_cents,\
+              \ security_deposit_usd_cents=EXCLUDED.security_deposit_usd_cents,\
+              \ late_fee_usd_cents=EXCLUDED.late_fee_usd_cents, min_days=EXCLUDED.min_days,\
+              \ max_days=EXCLUDED.max_days, cancellation_window_hours=EXCLUDED.cancellation_window_hours,\
+              \ timezone=EXCLUDED.timezone, terms_version=EXCLUDED.terms_version,\
+              \ terms_summary=EXCLUDED.terms_summary, active=EXCLUDED.active,\
+              \ approved_at=EXCLUDED.approved_at, approved_by=EXCLUDED.approved_by, updated_at=NOW()"
+              [ PersistText (toPathPiece listingKey)
+              , PersistInt64 (fromIntegral mrtuDailyRateUsdCents)
+              , maybe PersistNull (PersistInt64 . fromIntegral) mrtuWeeklyRateUsdCents
+              , PersistInt64 (fromIntegral mrtuSecurityDepositUsdCents)
+              , PersistInt64 (fromIntegral mrtuLateFeeUsdCents)
+              , PersistInt64 (fromIntegral mrtuMinDays)
+              , PersistInt64 (fromIntegral mrtuMaxDays)
+              , PersistInt64 (fromIntegral mrtuCancellationWindowHours)
+              , PersistText timezone
+              , PersistText termsVersion
+              , PersistText termsSummary
+              , PersistBool mrtuActive
+              , PersistBool mrtuActive
+              , PersistBool mrtuActive
+              , PersistText actor
+              ]
+            pure (Right ())
+  either throwError pure result
+  getMarketplaceItem rawId
+
 toMarketplaceDTO
   :: Text
   -> (Key ME.MarketplaceListing, ME.MarketplaceListing, Maybe ME.Asset)
@@ -13701,6 +13792,13 @@ toMarketplaceDTO
 toMarketplaceDTO _ (_, _, Nothing) = pure Nothing
 toMarketplaceDTO assetsBase (lid, listing, Just asset) = do
   mPhoto <- liftIO $ resolveMarketplacePhotoUrl assetsBase (ME.assetPhotoUrl asset)
+  Env{ envPool } <- ask
+  mRentalTerms <- liftIO $ flip runSqlPool envPool $ loadActiveMarketplaceRentalTerms lid
+  let listedPrice = maybe
+        (ME.marketplaceListingPriceUsdCents listing)
+        mrtDailyRateCents
+        mRentalTerms
+      currency = ME.marketplaceListingCurrency listing
   pure $ Just MarketplaceItemDTO
     { miListingId      = toPathPiece lid
     , miAssetId        = toPathPiece (ME.marketplaceListingAssetId listing)
@@ -13712,14 +13810,74 @@ toMarketplaceDTO assetsBase (lid, listing, Just asset) = do
     , miPhotoUrl       = mPhoto
     , miStatus         = Just (assetStatusLabel (ME.assetStatus asset))
     , miCondition      = Just (assetConditionLabel (ME.assetCondition asset))
-    , miPriceUsdCents  = ME.marketplaceListingPriceUsdCents listing
+    , miPriceUsdCents  = listedPrice
     , miPriceDisplay   =
         formatUsd
-          (ME.marketplaceListingPriceUsdCents listing)
-          (ME.marketplaceListingCurrency listing)
+          listedPrice
+          currency
     , miMarkupPct      = ME.marketplaceListingMarkupPct listing
-    , miCurrency       = ME.marketplaceListingCurrency listing
+    , miCurrency       = currency
+    , miRentalWeeklyPriceUsdCents = mrtWeeklyRateCents =<< mRentalTerms
+    , miRentalWeeklyPriceDisplay =
+        (\amount -> formatUsd amount currency) <$> (mrtWeeklyRateCents =<< mRentalTerms)
+    , miRentalSecurityDepositUsdCents = mrtSecurityDepositCents <$> mRentalTerms
+    , miRentalSecurityDepositDisplay =
+        (\terms -> formatUsd (mrtSecurityDepositCents terms) currency) <$> mRentalTerms
+    , miRentalMinDays = mrtMinDays <$> mRentalTerms
+    , miRentalMaxDays = mrtMaxDays <$> mRentalTerms
+    , miRentalLateFeeUsdCents = mrtLateFeeCents <$> mRentalTerms
+    , miRentalLateFeeDisplay =
+        (\terms -> formatUsd (mrtLateFeeCents terms) currency) <$> mRentalTerms
+    , miRentalCancellationWindowHours = mrtCancellationWindowHours <$> mRentalTerms
+    , miRentalTermsVersion = mrtTermsVersion <$> mRentalTerms
+    , miRentalTermsSummary = mrtTermsSummary <$> mRentalTerms
+    , miRentalTimezone = mrtTimezone <$> mRentalTerms
     }
+
+data MarketplaceRentalTerms = MarketplaceRentalTerms
+  { mrtDailyRateCents :: Int
+  , mrtWeeklyRateCents :: Maybe Int
+  , mrtSecurityDepositCents :: Int
+  , mrtLateFeeCents :: Int
+  , mrtMinDays :: Int
+  , mrtMaxDays :: Int
+  , mrtCancellationWindowHours :: Int
+  , mrtTimezone :: Text
+  , mrtTermsVersion :: Text
+  , mrtTermsSummary :: Text
+  } deriving (Eq, Show)
+
+loadActiveMarketplaceRentalTerms
+  :: Key ME.MarketplaceListing
+  -> SqlPersistT IO (Maybe MarketplaceRentalTerms)
+loadActiveMarketplaceRentalTerms listingKey = do
+  rows <- (rawSql
+    "SELECT daily_rate_usd_cents, weekly_rate_usd_cents, security_deposit_usd_cents,\
+    \ late_fee_usd_cents, min_days, max_days, cancellation_window_hours, timezone, terms_version, terms_summary\
+    \ FROM marketplace_rental_listing_terms\
+    \ WHERE listing_id = ?::uuid AND active AND approved_at IS NOT NULL"
+    [PersistText (toPathPiece listingKey)]
+    :: SqlPersistT IO
+      [( Single Int64, Single (Maybe Int64), Single Int64, Single Int64
+       , Single Int, Single Int, Single Int, Single Text, Single Text, Single Text
+       )])
+  pure $ case rows of
+    [( Single dailyRate, Single weeklyRate, Single securityDeposit, Single lateFee
+     , Single minDays, Single maxDays, Single cancellationWindowHours, Single timezone, Single termsVersion
+     , Single termsSummary
+     )] -> Just MarketplaceRentalTerms
+        { mrtDailyRateCents = fromIntegral dailyRate
+        , mrtWeeklyRateCents = fromIntegral <$> weeklyRate
+        , mrtSecurityDepositCents = fromIntegral securityDeposit
+        , mrtLateFeeCents = fromIntegral lateFee
+        , mrtMinDays = minDays
+        , mrtMaxDays = maxDays
+        , mrtCancellationWindowHours = cancellationWindowHours
+        , mrtTimezone = timezone
+        , mrtTermsVersion = termsVersion
+        , mrtTermsSummary = termsSummary
+        }
+    _ -> Nothing
 
 resolveMarketplacePhotoUrl :: Text -> Maybe Text -> IO (Maybe Text)
 resolveMarketplacePhotoUrl _ Nothing = pure Nothing
@@ -13778,41 +13936,138 @@ upsertCartItem rawId MarketplaceCartItemUpdate{..} = do
         pure (Left marketplaceCartNotFound)
       (_, Nothing) ->
         pure (Left marketplaceListingNotFound)
-      (Just _, Just listing) ->
+      (Just _, Just listing) -> do
+        let purpose = T.toLower (T.strip (ME.marketplaceListingPurpose listing))
         case validateMarketplacePublicListingActive (ME.marketplaceListingActive listing) of
           Left serverErr -> pure (Left serverErr)
-          Right () | mciuQuantity > 0
-                     && T.toLower (T.strip (ME.marketplaceListingPurpose listing)) /= "sale" ->
-            pure (Left err409
-              { errBody = "Rental listings require dates and the dedicated rental checkout"
-              })
           Right () | mciuQuantity > 1 ->
             pure (Left err409
               { errBody = "Each physical marketplace asset can only be added once"
               })
+          Right () | purpose `notElem` ["sale", "rent"] ->
+            pure (Left err409 { errBody = "Marketplace listing purpose is not supported" })
           Right () -> do
-            existing <-
-              selectFirst
-                [ ME.MarketplaceCartItemCartId ==. cartKey
-                , ME.MarketplaceCartItemListingId ==. listingKey
-                ]
-                []
-            case existing of
-              Nothing ->
-                if mciuQuantity == 0
-                  then pure ()
-                  else void $ insert ME.MarketplaceCartItem
-                         { ME.marketplaceCartItemCartId = cartKey
-                         , ME.marketplaceCartItemListingId = listingKey
-                         , ME.marketplaceCartItemQuantity = mciuQuantity
-                         }
-              Just (Entity itemId _) ->
-                if mciuQuantity == 0
-                  then delete itemId
-                  else update itemId [ME.MarketplaceCartItemQuantity =. mciuQuantity]
-            update cartKey [ME.MarketplaceCartUpdatedAt =. now]
-            maybe (Left marketplaceCartNotFound) Right <$> loadCartDTO (defaultCurrency envConfig) cartKey
+            existingCartItems <- selectList
+              [ME.MarketplaceCartItemCartId ==. cartKey] [Asc ME.MarketplaceCartItemId]
+            existingPurposes <- forM existingCartItems $ \(Entity itemId cartItem) -> do
+              existingListing <- getJust (ME.marketplaceCartItemListingId cartItem)
+              pure (itemId, T.toLower (T.strip (ME.marketplaceListingPurpose existingListing)))
+            let otherPurposes =
+                  [ existingPurpose
+                  | (itemId, existingPurpose) <- existingPurposes
+                  , Just (Entity currentItemId _) <-
+                      [find (\(Entity _ item) -> ME.marketplaceCartItemListingId item == listingKey) existingCartItems]
+                  , itemId /= currentItemId
+                  ]
+                  <> if any (\(Entity _ item) -> ME.marketplaceCartItemListingId item == listingKey) existingCartItems
+                       then []
+                       else map snd existingPurposes
+                mixedPurpose = any (/= purpose) otherPurposes
+                rentalHasOtherAsset = purpose == "rent" && not (null otherPurposes)
+            if mciuQuantity > 0 && (mixedPurpose || rentalHasOtherAsset)
+              then pure (Left err409
+                { errBody = "Sales and rentals use separate carts; each rental checkout contains one asset"
+                })
+              else do
+                selectionResult <- if mciuQuantity == 0
+                  then pure (Right Nothing)
+                  else validateMarketplaceCartSelection
+                    (utctDay now) listingKey listing mciuRentalStartDate mciuRentalEndDate
+                case selectionResult of
+                  Left serverErr -> pure (Left serverErr)
+                  Right selection -> do
+                    let existing = find
+                          (\(Entity _ item) -> ME.marketplaceCartItemListingId item == listingKey)
+                          existingCartItems
+                    storedItemId <- case existing of
+                      Nothing ->
+                        if mciuQuantity == 0
+                          then pure Nothing
+                          else Just <$> insert ME.MarketplaceCartItem
+                                 { ME.marketplaceCartItemCartId = cartKey
+                                 , ME.marketplaceCartItemListingId = listingKey
+                                 , ME.marketplaceCartItemQuantity = mciuQuantity
+                                 }
+                      Just (Entity itemId _) ->
+                        if mciuQuantity == 0
+                          then delete itemId >> pure Nothing
+                          else update itemId [ME.MarketplaceCartItemQuantity =. mciuQuantity]
+                                >> pure (Just itemId)
+                    case (storedItemId, selection) of
+                      (Just itemId, Just (startDate, endDate, durationDays)) ->
+                        rawExecute
+                          "INSERT INTO marketplace_rental_cart_selection(\
+                          \ cart_item_id, start_date, end_date, duration_days\
+                          \) VALUES (?::uuid, ?, ?, ?)\
+                          \ ON CONFLICT (cart_item_id) DO UPDATE SET\
+                          \ start_date = EXCLUDED.start_date, end_date = EXCLUDED.end_date,\
+                          \ duration_days = EXCLUDED.duration_days, updated_at = NOW()"
+                          [ PersistText (toPathPiece itemId)
+                          , PersistDay startDate
+                          , PersistDay endDate
+                          , PersistInt64 (fromIntegral durationDays)
+                          ]
+                      (Just itemId, Nothing) -> rawExecute
+                        "DELETE FROM marketplace_rental_cart_selection WHERE cart_item_id = ?::uuid"
+                        [PersistText (toPathPiece itemId)]
+                      _ -> pure ()
+                    update cartKey [ME.MarketplaceCartUpdatedAt =. now]
+                    maybe (Left marketplaceCartNotFound) Right
+                      <$> loadCartDTO (defaultCurrency envConfig) cartKey
   either throwError pure result
+
+validateMarketplaceCartSelection
+  :: Day
+  -> Key ME.MarketplaceListing
+  -> ME.MarketplaceListing
+  -> Maybe Day
+  -> Maybe Day
+  -> SqlPersistT IO (Either ServerError (Maybe (Day, Day, Int)))
+validateMarketplaceCartSelection today listingKey listing mStartDate mEndDate =
+  case T.toLower (T.strip (ME.marketplaceListingPurpose listing)) of
+    "sale" -> pure $ case (mStartDate, mEndDate) of
+      (Nothing, Nothing) -> Right Nothing
+      _ -> Left err400 { errBody = "Sale cart items must not include rental dates" }
+    "rent" -> case (mStartDate, mEndDate) of
+      (Just startDate, Just endDate)
+        | startDate < today -> pure (Left err400
+            { errBody = "Rental start date must not be in the past" })
+        | otherwise -> case MarketplaceRentals.rentalDurationDays startDate endDate of
+            Left message -> pure (Left (marketplaceCheckoutBadRequest message))
+            Right durationDays -> do
+              mTerms <- loadActiveMarketplaceRentalTerms listingKey
+              case mTerms of
+                Nothing -> pure (Left err409
+                  { errBody = "This rental listing does not have approved active terms" })
+                Just terms ->
+                  case MarketplaceRentals.calculateRentalPrice
+                    (mrtDailyRateCents terms)
+                    (mrtWeeklyRateCents terms)
+                    (mrtSecurityDepositCents terms)
+                    (mrtMinDays terms)
+                    (mrtMaxDays terms)
+                    durationDays of
+                      Left message -> pure (Left (marketplaceCheckoutBadRequest message))
+                      Right _ -> do
+                        overlap <- (rawSql
+                          "SELECT 1::bigint FROM marketplace_rental_order_runtime\
+                          \ WHERE listing_id = ?::uuid\
+                          \ AND rental_status IN ('on_hold','confirmed','ready_for_handoff',\
+                          \ 'checked_out','return_due','returned_pending_inspection','damage_review',\
+                          \ 'deposit_refund_due','lost','disputed')\
+                          \ AND daterange(start_date, end_date, '[]') && daterange(?::date, ?::date, '[]')\
+                          \ LIMIT 1"
+                          [ PersistText (toPathPiece listingKey)
+                          , PersistDay startDate
+                          , PersistDay endDate
+                          ] :: SqlPersistT IO [Single Int64])
+                        pure $ if null overlap
+                          then Right (Just (startDate, endDate, durationDays))
+                          else Left err409
+                            { errBody = "The rental asset is not available for the selected dates" }
+      _ -> pure (Left err400
+        { errBody = "Rental cart items require both start and end dates" })
+    _ -> pure (Left err409 { errBody = "Marketplace listing purpose is not supported" })
 
 data MarketplaceSaleCheckoutContext = MarketplaceSaleCheckoutContext
   { msccOrderKey :: Key ME.MarketplaceOrder
@@ -13823,6 +14078,7 @@ data MarketplaceSaleCheckoutContext = MarketplaceSaleCheckoutContext
   , msccCreated :: Bool
   , msccTotalCents :: Int
   , msccCurrency :: Text
+  , msccOrderKind :: Text
   }
 
 checkoutCart :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM MarketplaceOrderDTO
@@ -13889,6 +14145,13 @@ prepareMarketplaceSaleCheckout _provider rawCartId mIdempotency payload@Marketpl
         , "buyer_phone" .= buyerPhoneTxt
         , "fulfillment_method" .= methodText
         , "shipping_address" .= mcrShippingAddress
+        , "rental_terms_accepted" .= mcrRentalTermsAccepted
+        , "identity_document_type" .= (T.toLower . T.strip <$> mcrIdentityDocumentType)
+        -- The full document number is validated and then discarded.  Binding
+        -- idempotency to the type and last four characters avoids retaining a
+        -- cheaply reversible hash of a low-entropy government identifier.
+        , "identity_document_last4" .=
+            (T.takeEnd 4 . T.toUpper . T.filter isAlphaNum <$> mcrIdentityDocumentNumber)
         ]
       lookupToken = marketplaceSha256Text
         ("marketplace-order-lookup:" <> idempotencyKey <> ":" <> cartIdText)
@@ -13900,12 +14163,12 @@ prepareMarketplaceSaleCheckout _provider rawCartId mIdempotency payload@Marketpl
       [PersistText ("marketplace-sale:" <> idempotencyKey)]
       :: SqlPersistT IO [Single Int64])
     existingRows <- (rawSql
-      "SELECT order_id::text, checkout_id::text, create_request_sha256\
-      \ FROM marketplace_sale_order_runtime WHERE create_idempotency_key = ?"
+      "SELECT order_id::text, checkout_id::text, create_request_sha256, order_kind\
+      \ FROM marketplace_order_checkout_runtime WHERE create_idempotency_key = ?"
       [PersistText idempotencyKey]
-      :: SqlPersistT IO [(Single Text, Single Text, Single Text)])
+      :: SqlPersistT IO [(Single Text, Single Text, Single Text, Single Text)])
     case existingRows of
-      [(Single orderIdText, Single checkoutId, Single storedRequestHash)]
+      [(Single orderIdText, Single checkoutId, Single storedRequestHash, Single orderKind)]
         | storedRequestHash /= requestHash ->
             pure (Left (marketplaceCheckoutConflict
               "Idempotency key was already used for a different marketplace checkout"))
@@ -13934,8 +14197,9 @@ prepareMarketplaceSaleCheckout _provider rawCartId mIdempotency payload@Marketpl
                     , msccCreated = False
                     , msccTotalCents = ME.marketplaceOrderTotalUsdCents order
                     , msccCurrency = ME.marketplaceOrderCurrency order
+                    , msccOrderKind = orderKind
                     })
-      [] -> createMarketplaceSaleCheckout
+      [] -> createMarketplaceCheckout
         checkoutEnvironment
         now
         holdExpiresAt
@@ -13953,7 +14217,7 @@ prepareMarketplaceSaleCheckout _provider rawCartId mIdempotency payload@Marketpl
         "Marketplace idempotency lookup was ambiguous"))
   either throwError pure result
 
-createMarketplaceSaleCheckout
+createMarketplaceCheckout
   :: Checkout.CheckoutEnvironment
   -> UTCTime
   -> UTCTime
@@ -13968,13 +14232,7 @@ createMarketplaceSaleCheckout
   -> Key ME.MarketplaceCart
   -> MarketplaceCheckoutReq
   -> SqlPersistT IO (Either ServerError MarketplaceSaleCheckoutContext)
-createMarketplaceSaleCheckout checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupToken lookupHash methodText buyerNameTxt buyerEmailTxt buyerPhoneTxt cartKey payload = do
-  domainEnabled <- Checkout.domainEnabledForEnvironment checkoutEnvironment "marketplace_sales"
-  if not domainEnabled
-    then pure (Left err503
-      { errBody = "Marketplace sales checkout is disabled in this environment"
-      })
-    else do
+createMarketplaceCheckout checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupToken lookupHash methodText buyerNameTxt buyerEmailTxt buyerPhoneTxt cartKey payload = do
       _ <- (rawSql "SELECT marketplace_expire_sale_holds(?)"
         [PersistUTCTime now] :: SqlPersistT IO [Single Int])
       _ <- (rawSql
@@ -13987,10 +14245,32 @@ createMarketplaceSaleCheckout checkoutEnvironment now holdExpiresAt idempotencyK
       cartTotalsState <- loadCartTotals cartKey
       case requireMarketplaceCartTotals cartTotalsState of
         Left serverErr -> pure (Left serverErr)
-        Right (cartItems, totalCentsRaw, currency) ->
-          case validateMarketplaceSaleCart cartItems of
+        Right (cartItems, totalCentsRaw, currency) -> do
+          case resolveMarketplaceCartKind cartItems of
             Left serverErr -> pure (Left serverErr)
-            Right () ->
+            Right orderKind -> do
+              let domainFlag = case orderKind of
+                    MarketplaceCartSale -> "marketplace_sales"
+                    MarketplaceCartRental -> "marketplace_rentals"
+                  domainType = case orderKind of
+                    MarketplaceCartSale -> "marketplace_sale"
+                    MarketplaceCartRental -> "marketplace_rental"
+                  orderKindText = case orderKind of
+                    MarketplaceCartSale -> "sale"
+                    MarketplaceCartRental -> "rental"
+              domainEnabled <- Checkout.domainEnabledForEnvironment checkoutEnvironment domainFlag
+              if not domainEnabled
+                then pure (Left err503
+                  { errBody = BL.fromStrict . TE.encodeUtf8 $
+                      "Marketplace " <> orderKindText <> " checkout is disabled in this environment"
+                  })
+                else case validateMarketplaceCartForCheckout (utctDay now) orderKind payload cartItems of
+                  Left serverErr -> pure (Left serverErr)
+                  Right () -> do
+                    availability <- validateMarketplaceRentalAvailability orderKind cartItems
+                    case availability of
+                      Left serverErr -> pure (Left serverErr)
+                      Right () -> do {
               case validateMarketplaceOnlinePaymentTotal totalCentsRaw of
                 Left serverErr -> pure (Left serverErr)
                 Right totalCents -> do
@@ -14020,18 +14300,18 @@ createMarketplaceSaleCheckout checkoutEnvironment now holdExpiresAt idempotencyK
                         , ME.marketplaceOrderUpdatedAt = now
                         }
                   orderKey <- insert orderRecord
-                  forM_ cartItems $ \(_, listingEnt, _, qty) -> do
-                    let listing = entityVal listingEnt
-                        unitPrice = ME.marketplaceListingPriceUsdCents listing
+                  forM_ cartItems $ \line -> do
+                    let listingEnt = mclListing line
+                        unitPrice = mclUnitPriceCents line
                     void $ insert ME.MarketplaceOrderItem
                       { ME.marketplaceOrderItemOrderId = orderKey
                       , ME.marketplaceOrderItemListingId = entityKey listingEnt
-                      , ME.marketplaceOrderItemQuantity = qty
+                      , ME.marketplaceOrderItemQuantity = mclQuantity line
                       , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
-                      , ME.marketplaceOrderItemSubtotalUsdCents = unitPrice * qty
+                      , ME.marketplaceOrderItemSubtotalUsdCents = mclSubtotalCents line
                       }
                   let checkoutSnapshot = object
-                        [ "domain" .= ("marketplace_sale" :: Text)
+                        [ "domain" .= domainType
                         , "order_id" .= toPathPiece orderKey
                         , "cart_id" .= toPathPiece cartKey
                         , "currency" .= currency
@@ -14041,7 +14321,7 @@ createMarketplaceSaleCheckout checkoutEnvironment now holdExpiresAt idempotencyK
                         ]
                       checkoutLines = map marketplaceCheckoutLine cartItems
                   checkout <- Checkout.createCheckoutWithLines Checkout.CheckoutCreation
-                    { Checkout.ccDomainType = "marketplace_sale"
+                    { Checkout.ccDomainType = domainType
                     , Checkout.ccDomainOrderId = toPathPiece orderKey
                     , Checkout.ccEnvironment = checkoutEnvironment
                     , Checkout.ccCurrency = currency
@@ -14054,20 +14334,30 @@ createMarketplaceSaleCheckout checkoutEnvironment now holdExpiresAt idempotencyK
                     , Checkout.ccProductId = toPathPiece cartKey
                     , Checkout.ccProductVersion = T.pack
                         (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S%QZ" now)
-                    , Checkout.ccDescription = "TDF equipment sale"
+                    , Checkout.ccDescription = case orderKind of
+                        MarketplaceCartSale -> "TDF equipment sale"
+                        MarketplaceCartRental -> "TDF equipment rental"
                     , Checkout.ccSnapshot = checkoutSnapshot
                     , Checkout.ccCorrelationId = "marketplace-order:" <> toPathPiece orderKey
                     } checkoutLines
-                  insertMarketplaceRuntime
-                    orderKey checkout lookupHash idempotencyKey requestHash methodText
-                    buyerNameTxt buyerPhoneTxt holdExpiresAt (mcrShippingAddress payload)
-                  forM_ cartItems $ \(_, _, assetEnt, _) ->
+                  case orderKind of
+                    MarketplaceCartSale -> insertMarketplaceRuntime
+                      orderKey checkout lookupHash idempotencyKey requestHash methodText
+                      buyerNameTxt buyerPhoneTxt holdExpiresAt (mcrShippingAddress payload)
+                    MarketplaceCartRental -> insertMarketplaceRentalRuntime
+                      orderKey checkout lookupHash idempotencyKey requestHash methodText
+                      buyerNameTxt buyerPhoneTxt holdExpiresAt (mcrShippingAddress payload)
+                      payload cartItems
+                  forM_ cartItems $ \line ->
                     rawExecute
                       "INSERT INTO commerce_reservation_hold(\
                       \ checkout_id, resource_type, resource_id, quantity, status, expires_at\
-                      \) VALUES (?::uuid, 'marketplace_asset_sale', ?, 1, 'active', ?)"
+                      \) VALUES (?::uuid, ?, ?, 1, 'active', ?)"
                       [ PersistText (Checkout.checkoutReferenceId checkout)
-                      , PersistText (toPathPiece (entityKey assetEnt))
+                      , PersistText (case orderKind of
+                          MarketplaceCartSale -> "marketplace_asset_sale"
+                          MarketplaceCartRental -> "marketplace_asset_rental")
+                      , PersistText (toPathPiece (entityKey (mclAsset line)))
                       , PersistUTCTime holdExpiresAt
                       ]
                   pure (Right MarketplaceSaleCheckoutContext
@@ -14079,24 +14369,31 @@ createMarketplaceSaleCheckout checkoutEnvironment now holdExpiresAt idempotencyK
                     , msccCreated = True
                     , msccTotalCents = totalCents
                     , msccCurrency = currency
+                    , msccOrderKind = orderKindText
                     })
+              }
 
 marketplaceCheckoutLine
-  :: (Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)
+  :: MarketplaceCartLine
   -> Checkout.CheckoutLineCreation
-marketplaceCheckoutLine (_, listingEnt, assetEnt, quantity) =
+marketplaceCheckoutLine line =
   let listing = entityVal listingEnt
       asset = entityVal assetEnt
+      listingEnt = mclListing line
+      assetEnt = mclAsset line
+      quantity = mclQuantity line
+      mBreakdown = mclRentalBreakdown line
+      mTerms = mclRentalTerms line
   in Checkout.CheckoutLineCreation
-      { Checkout.clProductType = "marketplace_asset"
+      { Checkout.clProductType = if mclPurpose line == "rent"
+          then "marketplace_rental_asset" else "marketplace_asset"
       , Checkout.clProductId = toPathPiece (entityKey assetEnt)
       , Checkout.clProductVersion = T.pack
           (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S%QZ"
             (ME.marketplaceListingUpdatedAt listing))
       , Checkout.clDescription = ME.marketplaceListingTitle listing
       , Checkout.clQuantity = quantity
-      , Checkout.clUnitAmountMinor = fromIntegral
-          (ME.marketplaceListingPriceUsdCents listing)
+      , Checkout.clUnitAmountMinor = fromIntegral (mclSubtotalCents line)
       , Checkout.clSnapshot = object
           [ "listing_id" .= toPathPiece (entityKey listingEnt)
           , "asset_id" .= toPathPiece (entityKey assetEnt)
@@ -14105,8 +14402,16 @@ marketplaceCheckoutLine (_, listingEnt, assetEnt, quantity) =
           , "asset_category" .= ME.assetCategory asset
           , "asset_brand" .= ME.assetBrand asset
           , "asset_model" .= ME.assetModel asset
-          , "unit_amount_minor" .= ME.marketplaceListingPriceUsdCents listing
+          , "daily_rate_minor" .= mclUnitPriceCents line
+          , "line_total_minor" .= mclSubtotalCents line
           , "currency" .= ME.marketplaceListingCurrency listing
+          , "rental_start_date" .= mclRentalStartDate line
+          , "rental_end_date" .= mclRentalEndDate line
+          , "rental_duration_days" .= (MarketplaceRentals.rpbDurationDays <$> mBreakdown)
+          , "rental_charge_minor" .= (MarketplaceRentals.rpbRentalChargeMinor <$> mBreakdown)
+          , "security_deposit_minor" .= (MarketplaceRentals.rpbSecurityDepositMinor <$> mBreakdown)
+          , "rental_terms_version" .= (mrtTermsVersion <$> mTerms)
+          , "rental_timezone" .= (mrtTimezone <$> mTerms)
           ]
       }
 
@@ -14153,26 +14458,185 @@ insertMarketplaceRuntime orderKey checkout lookupHash idempotencyKey requestHash
     \ 'Asset hold created; payment and fulfillment remain separate')"
     [PersistText (toPathPiece orderKey)]
 
-validateMarketplaceSaleCart
-  :: [(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)]
+data MarketplaceCartKind = MarketplaceCartSale | MarketplaceCartRental
+  deriving (Eq, Show)
+
+resolveMarketplaceCartKind :: [MarketplaceCartLine] -> Either ServerError MarketplaceCartKind
+resolveMarketplaceCartKind cartItems =
+  case nub (map mclPurpose cartItems) of
+    ["sale"] -> Right MarketplaceCartSale
+    ["rent"]
+      | length cartItems == 1 -> Right MarketplaceCartRental
+      | otherwise -> Left err409
+          { errBody = "Each rental checkout must contain exactly one physical asset" }
+    [_] -> Left err409 { errBody = "Marketplace cart purpose is not supported" }
+    _ -> Left err409 { errBody = "Sales and rentals must use separate carts" }
+
+validateMarketplaceCartForCheckout
+  :: Day
+  -> MarketplaceCartKind
+  -> MarketplaceCheckoutReq
+  -> [MarketplaceCartLine]
   -> Either ServerError ()
-validateMarketplaceSaleCart cartItems = forM_ cartItems $ \(_, listingEnt, assetEnt, quantity) -> do
-  let listing = entityVal listingEnt
-      asset = entityVal assetEnt
-  unless (T.toLower (T.strip (ME.marketplaceListingPurpose listing)) == "sale") $
-    Left err409
-      { errBody = "Rental listings require dates, deposit terms, and the dedicated rental checkout"
-      }
-  unless (ME.marketplaceListingActive listing) $
-    Left marketplaceListingNotFound
-  unless (quantity == 1) $
-    Left err409
-      { errBody = "Each physical marketplace asset can only be purchased once"
-      }
-  unless (ME.assetStatus asset == ME.Active) $
-    Left err409
-      { errBody = "A marketplace asset is no longer available for sale"
-      }
+validateMarketplaceCartForCheckout today orderKind payload cartItems = do
+  forM_ cartItems $ \line -> do
+    let listing = entityVal (mclListing line)
+        asset = entityVal (mclAsset line)
+    unless (ME.marketplaceListingActive listing) (Left marketplaceListingNotFound)
+    unless (mclQuantity line == 1) $ Left err409
+      { errBody = "Each physical marketplace asset can only appear once" }
+    case orderKind of
+      MarketplaceCartSale -> do
+        unless (mclPurpose line == "sale") $ Left err409
+          { errBody = "Rental listings require the dedicated dated rental checkout" }
+        unless (ME.assetStatus asset == ME.Active) $ Left err409
+          { errBody = "A marketplace asset is no longer available for sale" }
+      MarketplaceCartRental -> do
+        unless (mclPurpose line == "rent") $ Left err409
+          { errBody = "A rental checkout cannot contain sale listings" }
+        unless (ME.assetStatus asset `elem` [ME.Active, ME.Booked]) $ Left err409
+          { errBody = "A marketplace asset is unavailable for rental" }
+        startDate <- maybe
+          (Left err409 { errBody = "Rental cart item is missing its start date" })
+          Right
+          (mclRentalStartDate line)
+        when (startDate < today) $ Left err409
+          { errBody = "Rental start date is now in the past; choose new dates" }
+        unless (isJust (mclRentalEndDate line)
+            && isJust (mclRentalBreakdown line)
+            && isJust (mclRentalTerms line)) $
+          Left err409 { errBody = "Rental price or approved terms are incomplete" }
+  case orderKind of
+    MarketplaceCartSale -> when
+      (isJust (mcrRentalTermsAccepted payload)
+        || isJust (mcrIdentityDocumentType payload)
+        || isJust (mcrIdentityDocumentNumber payload)) $
+      Left err400 { errBody = "Sale checkout must not include rental identity or terms fields" }
+    MarketplaceCartRental -> do
+      unless (mcrRentalTermsAccepted payload == Just True) $ Left err400
+        { errBody = "Rental terms must be explicitly accepted" }
+      when (isNothing (mcrBuyerPhone payload)) $ Left err400
+        { errBody = "Rental checkout requires a verified-format contact phone" }
+      void (validateMarketplaceRentalIdentity payload)
+
+validateMarketplaceRentalIdentity
+  :: MarketplaceCheckoutReq
+  -> Either ServerError (Text, Text)
+validateMarketplaceRentalIdentity MarketplaceCheckoutReq{..} = do
+  documentType <- case T.toLower . T.strip <$> mcrIdentityDocumentType of
+    Just value | value `elem` ["cedula", "passport", "ruc"] -> Right value
+    _ -> Left err400 { errBody = "Rental identity document type must be cedula, passport, or ruc" }
+  rawNumber <- maybe
+    (Left err400 { errBody = "Rental identity document number is required" })
+    Right
+    mcrIdentityDocumentNumber
+  let normalizedNumber = T.toUpper (T.strip rawNumber)
+      canonicalNumber = T.filter isAlphaNum normalizedNumber
+      validInputCharacter ch = isAlphaNum ch || ch `elem` ("- ." :: String)
+  unless (T.length canonicalNumber >= 5
+      && T.length canonicalNumber <= 32
+      && T.all validInputCharacter normalizedNumber
+      && T.all isAscii canonicalNumber) $
+    Left err400 { errBody = "Rental identity document number is invalid" }
+  pure (documentType, T.takeEnd 4 canonicalNumber)
+
+validateMarketplaceRentalAvailability
+  :: MarketplaceCartKind
+  -> [MarketplaceCartLine]
+  -> SqlPersistT IO (Either ServerError ())
+validateMarketplaceRentalAvailability MarketplaceCartSale _ = pure (Right ())
+validateMarketplaceRentalAvailability MarketplaceCartRental [line] =
+  case (mclRentalStartDate line, mclRentalEndDate line) of
+    (Just startDate, Just endDate) -> do
+      overlaps <- (rawSql
+        "SELECT 1::bigint FROM marketplace_rental_order_runtime\
+        \ WHERE asset_id = ?::uuid\
+        \ AND rental_status IN ('on_hold','confirmed','ready_for_handoff','checked_out',\
+        \ 'return_due','returned_pending_inspection','damage_review','deposit_refund_due',\
+        \ 'lost','disputed')\
+        \ AND daterange(start_date, end_date, '[]') && daterange(?::date, ?::date, '[]')\
+        \ LIMIT 1"
+        [ PersistText (toPathPiece (entityKey (mclAsset line)))
+        , PersistDay startDate
+        , PersistDay endDate
+        ] :: SqlPersistT IO [Single Int64])
+      pure $ if null overlaps
+        then Right ()
+        else Left err409 { errBody = "The rental asset is already held for the selected dates" }
+    _ -> pure (Left err409 { errBody = "Rental dates are missing" })
+validateMarketplaceRentalAvailability MarketplaceCartRental _ =
+  pure (Left err409 { errBody = "Each rental checkout must contain exactly one asset" })
+
+insertMarketplaceRentalRuntime
+  :: Key ME.MarketplaceOrder
+  -> Checkout.CheckoutReference
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> UTCTime
+  -> Maybe MarketplaceShippingAddress
+  -> MarketplaceCheckoutReq
+  -> [MarketplaceCartLine]
+  -> SqlPersistT IO ()
+insertMarketplaceRentalRuntime orderKey checkout lookupHash idempotencyKey requestHash methodText recipientName recipientPhone holdExpiresAt mAddress payload [line] =
+  case (mclRentalStartDate line, mclRentalEndDate line, mclRentalBreakdown line, mclRentalTerms line) of
+    (Just startDate, Just endDate, Just breakdown, Just terms) -> do
+      (documentType, last4) <-
+        either (liftIO . throwIO) pure (validateMarketplaceRentalIdentity payload)
+      rawExecute
+        "INSERT INTO marketplace_rental_order_runtime(\
+        \ order_id, checkout_id, listing_id, asset_id, lookup_token_hash,\
+        \ create_idempotency_key, create_request_sha256, fulfillment_method,\
+        \ rental_status, deposit_status, start_date, end_date, duration_days, timezone,\
+        \ daily_rate_usd_cents, weekly_rate_usd_cents, rental_charge_usd_cents,\
+        \ security_deposit_usd_cents, late_fee_usd_cents, terms_version, terms_accepted_at,\
+        \ identity_document_type, identity_document_last4,\
+        \ recipient_name, recipient_phone, address_line_1, address_line_2, city, province,\
+        \ postal_code, country_code, hold_expires_at\
+        \) VALUES (?::uuid, ?::uuid, ?::uuid, ?::uuid, ?, ?, ?, ?, 'on_hold',\
+        \ 'awaiting_payment', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        [ PersistText (toPathPiece orderKey)
+        , PersistText (Checkout.checkoutReferenceId checkout)
+        , PersistText (toPathPiece (entityKey (mclListing line)))
+        , PersistText (toPathPiece (entityKey (mclAsset line)))
+        , PersistText lookupHash
+        , PersistText idempotencyKey
+        , PersistText requestHash
+        , PersistText methodText
+        , PersistDay startDate
+        , PersistDay endDate
+        , PersistInt64 (fromIntegral (MarketplaceRentals.rpbDurationDays breakdown))
+        , PersistText (mrtTimezone terms)
+        , PersistInt64 (fromIntegral (mrtDailyRateCents terms))
+        , maybe PersistNull (PersistInt64 . fromIntegral) (mrtWeeklyRateCents terms)
+        , PersistInt64 (fromIntegral (MarketplaceRentals.rpbRentalChargeMinor breakdown))
+        , PersistInt64 (fromIntegral (MarketplaceRentals.rpbSecurityDepositMinor breakdown))
+        , PersistInt64 (fromIntegral (mrtLateFeeCents terms))
+        , PersistText (mrtTermsVersion terms)
+        , PersistText documentType
+        , PersistText last4
+        , PersistText recipientName
+        , maybe PersistNull PersistText recipientPhone
+        , maybe PersistNull (PersistText . msaAddressLine1) mAddress
+        , maybe PersistNull (maybe PersistNull PersistText . msaAddressLine2) mAddress
+        , maybe PersistNull (PersistText . msaCity) mAddress
+        , maybe PersistNull (PersistText . msaProvince) mAddress
+        , maybe PersistNull (maybe PersistNull PersistText . msaPostalCode) mAddress
+        , maybe PersistNull (PersistText . msaCountryCode) mAddress
+        , PersistUTCTime holdExpiresAt
+        ]
+      rawExecute
+        "INSERT INTO marketplace_rental_event(\
+        \ order_id, from_status, to_status, actor_type, reason_code, notes\
+        \) VALUES (?::uuid, NULL, 'on_hold', 'system', 'checkout_created',\
+        \ 'Date-aware asset hold created; payment, custody, and deposit settlement remain separate')"
+        [PersistText (toPathPiece orderKey)]
+    _ -> liftIO $ throwIO (marketplaceCheckoutInternal "Rental checkout snapshot is incomplete")
+insertMarketplaceRentalRuntime _ _ _ _ _ _ _ _ _ _ _ _ =
+  liftIO $ throwIO (marketplaceCheckoutInternal "Rental checkout must contain exactly one asset")
 
 validateMarketplaceShippingAddress
   :: MarketplaceSales.MarketplaceFulfillmentMethod
@@ -14304,14 +14768,14 @@ createLegacyMarketplaceStripePaymentIntent rawId _ payload = do
                     { ME.marketplaceOrderStripeIdempotencyKey = Just idempotencyKey
                     }
             update oid [ME.MarketplaceOrderStripeIdempotencyKey =. Just idempotencyKey]
-            forM_ cartItems $ \(_, listingEnt, _, qty) -> do
-              let listing   = entityVal listingEnt
-                  unitPrice = ME.marketplaceListingPriceUsdCents listing
-                  subtotal  = unitPrice * qty
+            forM_ cartItems $ \line -> do
+              let listingEnt = mclListing line
+                  unitPrice = mclUnitPriceCents line
+                  subtotal = mclSubtotalCents line
               void $ insert ME.MarketplaceOrderItem
                 { ME.marketplaceOrderItemOrderId           = oid
                 , ME.marketplaceOrderItemListingId         = entityKey listingEnt
-                , ME.marketplaceOrderItemQuantity          = qty
+                , ME.marketplaceOrderItemQuantity          = mclQuantity line
                 , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
                 , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
                 }
@@ -14603,7 +15067,7 @@ confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
   runtimeRows <- liftIO $ flip runSqlPool envPool $
     (rawSql
       "SELECT checkout_id::text, create_idempotency_key\
-      \ FROM marketplace_sale_order_runtime WHERE order_id = ?::uuid"
+      \ FROM marketplace_order_checkout_runtime WHERE order_id = ?::uuid"
       [PersistText (toPathPiece orderKey)]
       :: SqlPersistT IO [(Single Text, Single Text)])
   case runtimeRows of
@@ -14779,7 +15243,7 @@ capturePaypalOrder mLookupToken PaypalCaptureReq{..} = do
   runtimeRows <- liftIO $ flip runSqlPool envPool $
     (rawSql
       "SELECT runtime.checkout_id::text, runtime.create_idempotency_key, checkout.status\
-      \ FROM marketplace_sale_order_runtime runtime\
+      \ FROM marketplace_order_checkout_runtime runtime\
       \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
       \ WHERE runtime.order_id = ?::uuid"
       [PersistText (toPathPiece orderKey)]
@@ -15378,7 +15842,7 @@ updateMarketplaceOrder user rawId MarketplaceOrderUpdate{..} = do
   when (nextStatus == Just "paid") $ do
     canonicalRuntime <- liftIO $ flip runSqlPool envPool $
       (rawSql
-        "SELECT 1::bigint FROM marketplace_sale_order_runtime WHERE order_id = ?::uuid"
+        "SELECT 1::bigint FROM marketplace_order_checkout_runtime WHERE order_id = ?::uuid"
         [PersistText (toPathPiece orderKey)] :: SqlPersistT IO [Single Int64])
     unless (null canonicalRuntime) $
       throwError err409
@@ -15491,6 +15955,122 @@ updateMarketplaceFulfillment user rawId MarketplaceFulfillmentUpdate{..} = do
   mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
   either throwError pure (requireLoadedMarketplaceWriteResult "Marketplace order" mDto)
 
+updateMarketplaceRental
+  :: AuthedUser
+  -> Text
+  -> MarketplaceRentalUpdate
+  -> AppM MarketplaceOrderDTO
+updateMarketplaceRental user rawId MarketplaceRentalUpdate{..} = do
+  requireMarketplaceAccess user
+  orderKey <- parseOrderId rawId
+  nextState <- either (throwError . marketplaceCheckoutBadRequest) pure
+    (MarketplaceRentals.parseMarketplaceRentalState mruStatus)
+  conditionOut <- either throwError pure
+    (normalizeMarketplaceFulfillmentField "conditionOut" 1000 mruConditionOut)
+  conditionIn <- either throwError pure
+    (normalizeMarketplaceFulfillmentField "conditionIn" 1000 mruConditionIn)
+  evidenceUrl <- either throwError pure (validateMarketplaceRentalEvidenceUrl mruEvidenceUrl)
+  reasonCode <- either throwError pure
+    (normalizeMarketplaceFulfillmentField "reasonCode" 80 mruReasonCode)
+  notes <- either throwError pure
+    (normalizeMarketplaceFulfillmentField "notes" 1000 mruNotes)
+  deduction <- case mruDepositDeductionUsdCents of
+    Nothing -> pure Nothing
+    Just amount | amount >= 0 -> pure (Just amount)
+    Just _ -> throwError err400 { errBody = "Deposit deduction cannot be negative" }
+  Env{ envPool } <- ask
+  runtimeRows <- liftIO $ flip runSqlPool envPool $
+    (rawSql
+      "SELECT rental_status, deposit_status, security_deposit_usd_cents,\
+      \ deposit_deduction_usd_cents, condition_out, condition_in\
+      \ FROM marketplace_rental_order_runtime WHERE order_id = ?::uuid"
+      [PersistText (toPathPiece orderKey)]
+      :: SqlPersistT IO
+        [( Single Text, Single Text, Single Int64, Single Int64
+         , Single (Maybe Text), Single (Maybe Text)
+         )])
+  (currentStateText, depositStatus, securityDeposit, currentDeduction, storedConditionOut, storedConditionIn) <-
+    case runtimeRows of
+      [( Single stateValue, Single depositValue, Single depositAmount, Single deductionAmount
+       , Single outboundCondition, Single inboundCondition
+       )] -> pure
+          ( stateValue, depositValue, fromIntegral depositAmount, fromIntegral deductionAmount
+          , outboundCondition, inboundCondition
+          )
+      [] -> throwError err409 { errBody = "This order is not a canonical marketplace rental" }
+      _ -> throwError (marketplaceCheckoutInternal "Marketplace rental runtime lookup was ambiguous")
+  currentState <- either (throwError . marketplaceCheckoutInternal) pure
+    (MarketplaceRentals.parseMarketplaceRentalState currentStateText)
+  either (throwError . marketplaceCheckoutConflict) pure
+    (MarketplaceRentals.validateMarketplaceRentalTransition currentState nextState)
+  let finalDeduction = fromMaybe currentDeduction deduction
+      finalConditionOut = conditionOut <|> storedConditionOut
+      finalConditionIn = conditionIn <|> storedConditionIn
+  when (finalDeduction > securityDeposit) $
+    throwError err400 { errBody = "Deposit deduction cannot exceed the collected security deposit" }
+  when (isJust deduction && nextState `notElem`
+      [ MarketplaceRentals.RentalDamageReview
+      , MarketplaceRentals.RentalDepositRefundDue
+      , MarketplaceRentals.RentalDisputed
+      ]) $
+    throwError err400 { errBody = "Deposit deductions require damage review, refund due, or dispute state" }
+  when (nextState == MarketplaceRentals.RentalCheckedOut && isNothing finalConditionOut) $
+    throwError err400 { errBody = "Rental handoff requires an outbound condition report" }
+  when (nextState == MarketplaceRentals.RentalReturnedPendingInspection && isNothing finalConditionIn) $
+    throwError err400 { errBody = "Rental return requires an inbound condition report" }
+  when (nextState == MarketplaceRentals.RentalClosed
+      && securityDeposit > 0
+      && depositStatus `notElem` ["refunded", "partially_refunded", "forfeited"]) $
+    throwError err409
+      { errBody = "Rental cannot close until deposit settlement has verified terminal evidence" }
+  let nextStateText = MarketplaceRentals.marketplaceRentalStateText nextState
+      actorId = toPathPiece (auPartyId user)
+  updatedRows <- liftIO $ flip runSqlPool envPool $
+    (rawSql
+      "WITH actor_context AS MATERIALIZED (\
+      \ SELECT set_config('tdf.actor_type', 'operator', true),\
+      \ set_config('tdf.actor_id', ?, true), set_config('tdf.reason_code', ?, true),\
+      \ set_config('tdf.notes', ?, true)\
+      \) UPDATE marketplace_rental_order_runtime SET rental_status = ?,\
+      \ condition_out = COALESCE(?, condition_out), condition_in = COALESCE(?, condition_in),\
+      \ evidence_url = COALESCE(?, evidence_url),\
+      \ deposit_deduction_usd_cents = COALESCE(?, deposit_deduction_usd_cents),\
+      \ checked_out_at = CASE WHEN ? = 'checked_out' THEN COALESCE(checked_out_at, NOW()) ELSE checked_out_at END,\
+      \ returned_at = CASE WHEN ? = 'returned_pending_inspection' THEN COALESCE(returned_at, NOW()) ELSE returned_at END\
+      \ FROM actor_context WHERE order_id = ?::uuid AND rental_status = ?\
+      \ RETURNING marketplace_rental_order_runtime.rental_status"
+      [ PersistText actorId
+      , PersistText (fromMaybe "" reasonCode)
+      , PersistText (fromMaybe "" notes)
+      , PersistText nextStateText
+      , maybe PersistNull PersistText conditionOut
+      , maybe PersistNull PersistText conditionIn
+      , maybe PersistNull PersistText evidenceUrl
+      , maybe PersistNull (PersistInt64 . fromIntegral) deduction
+      , PersistText nextStateText
+      , PersistText nextStateText
+      , PersistText (toPathPiece orderKey)
+      , PersistText currentStateText
+      ] :: SqlPersistT IO [Single Text])
+  when (null updatedRows) $
+    throwError (marketplaceCheckoutConflict
+      "Marketplace rental state changed concurrently; reload the order before retrying")
+  mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
+  either throwError pure (requireLoadedMarketplaceWriteResult "Marketplace rental" mDto)
+
+validateMarketplaceRentalEvidenceUrl :: Maybe Text -> Either ServerError (Maybe Text)
+validateMarketplaceRentalEvidenceUrl Nothing = Right Nothing
+validateMarketplaceRentalEvidenceUrl (Just rawValue)
+  | T.null value || T.length value > 2048 = Left invalid
+  | T.any (\ch -> isControl ch || generalCategory ch == Format || isSpace ch) value = Left invalid
+  | "https://" `T.isPrefixOf` T.toLower value = Right (Just value)
+  | "/assets/" `T.isPrefixOf` value = Right (Just value)
+  | otherwise = Left invalid
+  where
+    value = T.strip rawValue
+    invalid = err400
+      { errBody = "evidenceUrl must be an HTTPS or private application asset reference" }
+
 normalizeMarketplaceFulfillmentField
   :: Text
   -> Int
@@ -15559,7 +16139,7 @@ requireMarketplaceOrderLookupToken orderKey mRawToken = do
   Env{ envPool } <- ask
   storedHashes <- liftIO $ flip runSqlPool envPool $
     (rawSql
-      "SELECT lookup_token_hash FROM marketplace_sale_order_runtime WHERE order_id = ?::uuid"
+      "SELECT lookup_token_hash FROM marketplace_order_checkout_runtime WHERE order_id = ?::uuid"
       [PersistText (toPathPiece orderKey)] :: SqlPersistT IO [Single Text])
   case storedHashes of
     [] -> pure ()
@@ -15654,6 +16234,7 @@ data MarketplaceCartTotalsState a
   = MarketplaceCartMissing
   | MarketplaceCartEmpty
   | MarketplaceCartInvalidQuantity Int
+  | MarketplaceCartInvalidRental Text
   | MarketplaceCartInvalidCurrency Text
   | MarketplaceCartMixedCurrencies [Text]
   | MarketplaceCartTotalsReady a
@@ -15668,9 +16249,24 @@ loadCartDTO configuredDefault cartId = do
       items <- loadCartLines cartId
       pure (Just (cartToDTO configuredDefault cartId items))
 
+data MarketplaceCartLine = MarketplaceCartLine
+  { mclCartItem :: Entity ME.MarketplaceCartItem
+  , mclListing :: Entity ME.MarketplaceListing
+  , mclAsset :: Entity ME.Asset
+  , mclQuantity :: Int
+  , mclPurpose :: Text
+  , mclUnitPriceCents :: Int
+  , mclSubtotalCents :: Int
+  , mclRentalStartDate :: Maybe Day
+  , mclRentalEndDate :: Maybe Day
+  , mclRentalBreakdown :: Maybe MarketplaceRentals.RentalPriceBreakdown
+  , mclRentalTerms :: Maybe MarketplaceRentalTerms
+  , mclPricingError :: Maybe Text
+  } deriving (Show)
+
 loadCartTotals
   :: Key ME.MarketplaceCart
-  -> SqlPersistT IO (MarketplaceCartTotalsState ([(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)], Int, Text))
+  -> SqlPersistT IO (MarketplaceCartTotalsState ([MarketplaceCartLine], Int, Text))
 loadCartTotals cartId = do
   mCart <- get cartId
   case mCart of
@@ -15680,19 +16276,18 @@ loadCartTotals cartId = do
       if null items
         then pure MarketplaceCartEmpty
         else do
-          let quantities = [ qty | (_, _, _, qty) <- items ]
+          let pricingErrors = mapMaybe mclPricingError items
+              quantities = map mclQuantity items
           case find isInvalidMarketplaceCartLineQuantity quantities of
             Just invalidQuantity ->
               pure (MarketplaceCartInvalidQuantity invalidQuantity)
+            Nothing | pricingError : _ <- pricingErrors ->
+              pure (MarketplaceCartInvalidRental pricingError)
             Nothing -> do
               let totalCents =
-                    sum [ qty * ME.marketplaceListingPriceUsdCents (entityVal listing)
-                        | (_, listing, _, qty) <- items
-                        ]
+                    sum (map mclSubtotalCents items)
                   rawCurrencies =
-                    [ ME.marketplaceListingCurrency (entityVal listing)
-                    | (_, listing, _, _) <- items
-                    ]
+                    map (ME.marketplaceListingCurrency . entityVal . mclListing) items
               case resolveMarketplaceCartCurrency rawCurrencies of
                 Left invalidCurrencyState -> pure invalidCurrencyState
                 Right currency ->
@@ -15705,6 +16300,8 @@ requireMarketplaceCartTotals MarketplaceCartEmpty =
   Left err400 { errBody = "El carrito esta vacio." }
 requireMarketplaceCartTotals (MarketplaceCartInvalidQuantity rawQuantity) =
   Left (marketplaceCartInvalidQuantityError rawQuantity)
+requireMarketplaceCartTotals (MarketplaceCartInvalidRental message) =
+  Left err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
 requireMarketplaceCartTotals (MarketplaceCartInvalidCurrency _) =
   Left err500 { errBody = "Stored marketplace listing currency is invalid" }
 requireMarketplaceCartTotals (MarketplaceCartMixedCurrencies currencies) =
@@ -15806,41 +16403,116 @@ isPaidMarketplaceOrderStatus rawStatus =
 
 loadCartLines
   :: Key ME.MarketplaceCart
-  -> SqlPersistT IO [(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)]
+  -> SqlPersistT IO [MarketplaceCartLine]
 loadCartLines cartId = do
   cartItems <- selectList [ME.MarketplaceCartItemCartId ==. cartId] [Asc ME.MarketplaceCartItemId]
   forM cartItems $ \ent@(Entity _ ci) -> do
     listing <- getJustEntity (ME.marketplaceCartItemListingId ci)
     asset   <- getJustEntity (ME.marketplaceListingAssetId (entityVal listing))
     let qty = ME.marketplaceCartItemQuantity ci
-    pure (ent, listing, asset, qty)
+        purpose = T.toLower (T.strip (ME.marketplaceListingPurpose (entityVal listing)))
+        saleLine = MarketplaceCartLine
+          { mclCartItem = ent
+          , mclListing = listing
+          , mclAsset = asset
+          , mclQuantity = qty
+          , mclPurpose = purpose
+          , mclUnitPriceCents = ME.marketplaceListingPriceUsdCents (entityVal listing)
+          , mclSubtotalCents = ME.marketplaceListingPriceUsdCents (entityVal listing) * qty
+          , mclRentalStartDate = Nothing
+          , mclRentalEndDate = Nothing
+          , mclRentalBreakdown = Nothing
+          , mclRentalTerms = Nothing
+          , mclPricingError = if purpose == "sale" then Nothing else Just "Unsupported marketplace cart line"
+          }
+    if purpose /= "rent"
+      then pure saleLine
+      else do
+        selectionRows <- (rawSql
+          "SELECT start_date, end_date, duration_days\
+          \ FROM marketplace_rental_cart_selection WHERE cart_item_id = ?::uuid"
+          [PersistText (toPathPiece (entityKey ent))]
+          :: SqlPersistT IO [(Single Day, Single Day, Single Int)])
+        mTerms <- loadActiveMarketplaceRentalTerms (entityKey listing)
+        pure $ case (selectionRows, mTerms) of
+          ([(Single startDate, Single endDate, Single durationDays)], Just terms) ->
+            case MarketplaceRentals.calculateRentalPrice
+              (mrtDailyRateCents terms)
+              (mrtWeeklyRateCents terms)
+              (mrtSecurityDepositCents terms)
+              (mrtMinDays terms)
+              (mrtMaxDays terms)
+              durationDays of
+                Left message -> saleLine
+                  { mclPurpose = "rent"
+                  , mclRentalStartDate = Just startDate
+                  , mclRentalEndDate = Just endDate
+                  , mclRentalTerms = Just terms
+                  , mclPricingError = Just message
+                  }
+                Right breakdown -> saleLine
+                  { mclPurpose = "rent"
+                  , mclUnitPriceCents = mrtDailyRateCents terms
+                  , mclSubtotalCents = MarketplaceRentals.rpbCheckoutTotalMinor breakdown
+                  , mclRentalStartDate = Just startDate
+                  , mclRentalEndDate = Just endDate
+                  , mclRentalBreakdown = Just breakdown
+                  , mclRentalTerms = Just terms
+                  , mclPricingError = Nothing
+                  }
+          ([], _) -> saleLine
+            { mclPurpose = "rent"
+            , mclPricingError = Just "Rental cart item is missing its date selection"
+            }
+          (_, Nothing) -> saleLine
+            { mclPurpose = "rent"
+            , mclPricingError = Just "Rental listing terms are no longer active"
+            }
+          _ -> saleLine
+            { mclPurpose = "rent"
+            , mclPricingError = Just "Rental cart date selection is ambiguous"
+            }
 
 cartToDTO
   :: Text
   -> Key ME.MarketplaceCart
-  -> [(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)]
+  -> [MarketplaceCartLine]
   -> MarketplaceCartDTO
 cartToDTO configuredDefault cartId items =
-  let currency = maybe configuredDefault (ME.marketplaceListingCurrency . entityVal) (listToMaybe [listing | (_, listing, _, _) <- items])
-      subtotal = sum [ ME.marketplaceListingPriceUsdCents (entityVal listing) * qty
-                     | (_, listing, _, qty) <- items
-                     ]
-      itemDtos = flip map items $ \(_, listingEnt, assetEnt, qty) ->
-        let listing = entityVal listingEnt
-            asset   = entityVal assetEnt
-            unitPrice = ME.marketplaceListingPriceUsdCents listing
-            subtotalC = unitPrice * qty
+  let currency = maybe configuredDefault
+        (ME.marketplaceListingCurrency . entityVal . mclListing) (listToMaybe items)
+      subtotal = sum (map mclSubtotalCents items)
+      itemDtos = flip map items $ \line ->
+        let listingEnt = mclListing line
+            assetEnt = mclAsset line
+            listing = entityVal listingEnt
+            asset = entityVal assetEnt
+            unitPrice = mclUnitPriceCents line
+            subtotalC = mclSubtotalCents line
+            mBreakdown = mclRentalBreakdown line
         in MarketplaceCartItemDTO
             { mciListingId         = toPathPiece (entityKey listingEnt)
             , mciTitle             = ME.marketplaceListingTitle listing
             , mciCategory          = ME.assetCategory asset
             , mciBrand             = ME.assetBrand asset
             , mciModel             = ME.assetModel asset
-            , mciQuantity          = qty
+            , mciQuantity          = mclQuantity line
             , mciUnitPriceUsdCents = unitPrice
             , mciSubtotalCents     = subtotalC
             , mciUnitPriceDisplay  = formatUsd unitPrice currency
             , mciSubtotalDisplay   = formatUsd subtotalC currency
+            , mciPurpose           = mclPurpose line
+            , mciRentalStartDate   = mclRentalStartDate line
+            , mciRentalEndDate     = mclRentalEndDate line
+            , mciRentalDurationDays = MarketplaceRentals.rpbDurationDays <$> mBreakdown
+            , mciRentalChargeCents = MarketplaceRentals.rpbRentalChargeMinor <$> mBreakdown
+            , mciRentalChargeDisplay =
+                (\breakdown -> formatUsd (MarketplaceRentals.rpbRentalChargeMinor breakdown) currency)
+                  <$> mBreakdown
+            , mciSecurityDepositCents = MarketplaceRentals.rpbSecurityDepositMinor <$> mBreakdown
+            , mciSecurityDepositDisplay =
+                (\breakdown -> formatUsd (MarketplaceRentals.rpbSecurityDepositMinor breakdown) currency)
+                  <$> mBreakdown
             }
   in MarketplaceCartDTO
       { mcCartId          = toPathPiece cartId
@@ -15861,32 +16533,71 @@ loadOrderDTO orderId = do
         mListing <- get (ME.marketplaceOrderItemListingId oi)
         pure (oi, mListing)
       runtimeRows <- (rawSql
-        "SELECT checkout.status, runtime.fulfillment_method, runtime.fulfillment_status,\
+        "SELECT checkout.status, runtime.order_kind, runtime.fulfillment_method, runtime.domain_status,\
         \ runtime.hold_expires_at, runtime.tracking_reference\
-        \ FROM marketplace_sale_order_runtime runtime\
+        \ FROM marketplace_order_checkout_runtime runtime\
         \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
         \ WHERE runtime.order_id = ?::uuid"
         [PersistText (toPathPiece orderId)]
         :: SqlPersistT IO
-          [(Single Text, Single Text, Single Text, Single UTCTime, Single (Maybe Text))])
-      fulfillmentHistory <- (rawSql
-        "SELECT to_status, created_at FROM marketplace_sale_fulfillment_event\
-        \ WHERE order_id = ?::uuid ORDER BY created_at, id"
+          [( Single Text, Single Text, Single Text, Single Text
+           , Single UTCTime, Single (Maybe Text)
+           )])
+      rentalRows <- (rawSql
+        "SELECT start_date, end_date, duration_days, rental_charge_usd_cents,\
+        \ security_deposit_usd_cents, deposit_status, deposit_deduction_usd_cents,\
+        \ terms_version, timezone, condition_out, condition_in\
+        \ FROM marketplace_rental_order_runtime WHERE order_id = ?::uuid"
         [PersistText (toPathPiece orderId)]
-        :: SqlPersistT IO [(Single Text, Single UTCTime)])
+        :: SqlPersistT IO
+          [( Single Day, Single Day, Single Int, Single Int64, Single Int64
+           , Single Text, Single Int64, Single Text, Single Text
+           , Single (Maybe Text), Single (Maybe Text)
+           )])
+      fulfillmentHistory <- case runtimeRows of
+        [(Single _, Single "rental", _, _, _, _)] -> (rawSql
+          "SELECT to_status, created_at FROM marketplace_rental_event\
+          \ WHERE order_id = ?::uuid ORDER BY created_at, id"
+          [PersistText (toPathPiece orderId)]
+          :: SqlPersistT IO [(Single Text, Single UTCTime)])
+        _ -> (rawSql
+          "SELECT to_status, created_at FROM marketplace_sale_fulfillment_event\
+          \ WHERE order_id = ?::uuid ORDER BY created_at, id"
+          [PersistText (toPathPiece orderId)]
+          :: SqlPersistT IO [(Single Text, Single UTCTime)])
       let baseDto = orderToDTO orderEnt listings
           history = [(status, occurredAt) | (Single status, Single occurredAt) <- fulfillmentHistory]
-      pure . Just $ case runtimeRows of
-        [(Single checkoutStatus, Single method, Single fulfillmentStatus, Single holdExpiresAt, Single trackingReference)] ->
-          baseDto
-            { moCheckoutStatus = Just checkoutStatus
+          withRuntime = case runtimeRows of
+            [( Single checkoutStatus, Single orderKind, Single method, Single domainStatus
+             , Single holdExpiresAt, Single trackingReference
+             )] -> baseDto
+              { moCheckoutStatus = Just checkoutStatus
+            , moOrderKind = Just orderKind
             , moFulfillmentMethod = Just method
-            , moFulfillmentStatus = Just fulfillmentStatus
+            , moFulfillmentStatus = Just domainStatus
             , moHoldExpiresAt = Just holdExpiresAt
             , moTrackingReference = trackingReference
             , moFulfillmentHistory = history
+              }
+            _ -> baseDto
+      pure . Just $ case rentalRows of
+        [( Single startDate, Single endDate, Single durationDays, Single rentalCharge
+         , Single securityDeposit, Single depositStatus, Single depositDeduction
+         , Single termsVersion, Single timezone, Single conditionOut, Single conditionIn
+         )] -> withRuntime
+            { moRentalStartDate = Just startDate
+            , moRentalEndDate = Just endDate
+            , moRentalDurationDays = Just durationDays
+            , moRentalChargeUsdCents = Just (fromIntegral rentalCharge)
+            , moSecurityDepositUsdCents = Just (fromIntegral securityDeposit)
+            , moDepositStatus = Just depositStatus
+            , moDepositDeductionUsdCents = Just (fromIntegral depositDeduction)
+            , moRentalTermsVersion = Just termsVersion
+            , moRentalTimezone = Just timezone
+            , moConditionOut = conditionOut
+            , moConditionIn = conditionIn
             }
-        _ -> baseDto
+        _ -> withRuntime
 
 orderToDTO
   :: Entity ME.MarketplaceOrder
@@ -15927,6 +16638,18 @@ orderToDTO (Entity oid order) items =
     , moHoldExpiresAt   = Nothing
     , moTrackingReference = Nothing
     , moFulfillmentHistory = []
+    , moOrderKind       = Nothing
+    , moRentalStartDate = Nothing
+    , moRentalEndDate   = Nothing
+    , moRentalDurationDays = Nothing
+    , moRentalChargeUsdCents = Nothing
+    , moSecurityDepositUsdCents = Nothing
+    , moDepositStatus = Nothing
+    , moDepositDeductionUsdCents = Nothing
+    , moRentalTermsVersion = Nothing
+    , moRentalTimezone = Nothing
+    , moConditionOut = Nothing
+    , moConditionIn = Nothing
     , moCreatedAt       = ME.marketplaceOrderCreatedAt order
     , moUpdatedAt       = ME.marketplaceOrderUpdatedAt order
     , moItems           = itemDtos
