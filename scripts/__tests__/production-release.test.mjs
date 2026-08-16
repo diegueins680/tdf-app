@@ -115,11 +115,15 @@ test('production migration manifest uses immutable full commit SHAs', () => {
   const resumeIndex = manifest.migrations.findIndex(
     ({ id }) => id === '2026-08-16_catalog_locale_preference_resume',
   );
+  const writerResumeIndex = manifest.migrations.findIndex(
+    ({ id }) => id === '2026-08-16_catalog_transitional_writer_resume',
+  );
   const backfillIndex = manifest.migrations.findIndex(
     ({ id }) => id === '2026-08-07_catalog_backfill_apply',
   );
   assert.ok(resumeIndex >= 0, 'resume migration must be registered');
-  assert.equal(backfillIndex, resumeIndex + 1, 'resume migration must run immediately before backfill');
+  assert.equal(writerResumeIndex, resumeIndex + 1, 'writer resume must follow locale recovery');
+  assert.equal(backfillIndex, writerResumeIndex + 1, 'writer resume must run immediately before backfill');
 });
 
 test('production release refuses to omit a migration outside the release ancestry', () => {
