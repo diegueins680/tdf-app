@@ -1,6 +1,21 @@
 -- Synthetic, non-production source rows required to exercise the fail-closed
 -- Records migration from the schema-only production baseline.
 
+INSERT INTO public.supported_currencies
+  (currency_code, symbol, decimal_places, decimal_separator, thousands_separator, enabled)
+VALUES ('USD', '$', 2, '.', ',', true)
+ON CONFLICT (currency_code) DO NOTHING;
+
+WITH fixture_party AS (
+  INSERT INTO public.party (display_name, is_org, created_at)
+  VALUES ('Catalog migration fixture', false, now())
+  RETURNING id
+)
+INSERT INTO public.user_locale_preferences
+  (user_id, locale, currency, timezone, country_code)
+SELECT id, 'es', 'USD', 'America/Guayaquil', 'EC'
+FROM fixture_party;
+
 INSERT INTO public.cms_content
   (slug, locale, version, status, title, payload, published_at)
 VALUES

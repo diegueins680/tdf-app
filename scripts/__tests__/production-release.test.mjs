@@ -223,6 +223,8 @@ test('security emergency readiness requires canonical coherence after migration'
     activeEmergencyAssignments: 2,
     distinctAssignedParties: 2,
     authenticatableParties: 2,
+    legacyAuthenticatableParties: 0,
+    coherentLegacyTargetRoles: 1,
     databaseCoherentPaths: 2,
     preMigrationReady: true,
     databaseReady: true,
@@ -247,6 +249,77 @@ test('security emergency readiness requires canonical coherence after migration'
     ),
     /1 coherent paths; 2 are required/i,
   );
+});
+
+test('partial canonical security may resume from legacy paths but cannot pass the post-migration gate', () => {
+  const report = parseSecurityEmergencyReadinessOutput(JSON.stringify({
+    kind: 'security-emergency-readiness',
+    schemaMode: 'canonical',
+    transactionReadOnly: 'on',
+    requiredIndependentPaths: 2,
+    activeEmergencyAssignments: 0,
+    distinctAssignedParties: 0,
+    authenticatableParties: 0,
+    legacyAuthenticatableParties: 2,
+    coherentLegacyTargetRoles: 1,
+    databaseCoherentPaths: 0,
+    preMigrationReady: true,
+    databaseReady: false,
+  }));
+
+  assert.equal(securityEmergencyReadinessBlocker(report), undefined);
+  assert.match(
+    securityEmergencyReadinessBlocker(report, { requireCanonical: true }),
+    /0 coherent paths; 2 are required/i,
+  );
+});
+
+test('partial canonical security cannot claim readiness without a coherent mapped target role', () => {
+  assert.throws(
+    () => parseSecurityEmergencyReadinessOutput(JSON.stringify({
+      kind: 'security-emergency-readiness',
+      schemaMode: 'canonical',
+      transactionReadOnly: 'on',
+      requiredIndependentPaths: 2,
+      activeEmergencyAssignments: 0,
+      distinctAssignedParties: 0,
+      authenticatableParties: 0,
+      legacyAuthenticatableParties: 2,
+      coherentLegacyTargetRoles: 0,
+      databaseCoherentPaths: 0,
+      preMigrationReady: true,
+      databaseReady: false,
+    })),
+    /inconsistent gate evidence/i,
+  );
+});
+
+test('catalog resume migration only relaxes copied preference evidence columns', () => {
+  const sql = readFileSync(
+    new URL('../../tdf-hq/sql/2026-08-16_catalog_locale_preference_resume.sql', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(sql, /locale_id[\s\S]*data_type = 'uuid'/i);
+  assert.match(sql, /currency_id[\s\S]*data_type = 'uuid'/i);
+  assert.match(sql, /ALTER COLUMN locale DROP NOT NULL/i);
+  assert.match(sql, /ALTER COLUMN currency DROP NOT NULL/i);
+  assert.doesNotMatch(sql, /\b(?:UPDATE|DELETE|INSERT)\b/i);
+});
+
+test('security readiness SQL keeps legacy recovery only as a pre-migration fallback', () => {
+  const sql = readFileSync(
+    new URL('../../tdf-hq/sql/preflight_security_emergency_readiness.sql', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(sql, /legacy_authenticatable_party/i);
+  assert.match(sql, /role\.code = 'admin'/i);
+  assert.match(
+    sql,
+    /preMigrationReady',[\s\S]*legacy_authenticatable_parties >= 2[\s\S]*coherent_legacy_target_roles = 1/i,
+  );
+  assert.match(sql, /databaseReady', database_coherent_paths >= 2/i);
 });
 
 test('security emergency readiness parser rejects missing, writable, and malformed reports', () => {
