@@ -337,6 +337,30 @@ test('catalog backfill confines the pipeline trigger bypass to its transaction',
   assert.ok(enableIndex > updateIndex, 'pipeline integrity trigger must be re-enabled after mapping');
 });
 
+test('pending canonical cutovers relax legacy evidence columns before clearing them', () => {
+  const pipelineSql = readFileSync(
+    new URL('../../tdf-hq/sql/2026-08-11_pipeline_workflow_cutover_apply.sql', import.meta.url),
+    'utf8',
+  );
+  const ddexSql = readFileSync(
+    new URL('../../tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql', import.meta.url),
+    'utf8',
+  );
+
+  for (const column of ['service_kind', 'stage']) {
+    assert.match(pipelineSql, new RegExp(`ALTER COLUMN ${column} DROP NOT NULL`, 'i'));
+  }
+  for (const clause of [
+    'ddex_import_plan ALTER COLUMN status',
+    'ddex_import_run ALTER COLUMN status',
+    'ddex_job ALTER COLUMN job_type',
+    'ddex_job ALTER COLUMN status',
+    'ddex_import_change ALTER COLUMN operation',
+  ]) {
+    assert.match(ddexSql, new RegExp(`ALTER TABLE ${clause} DROP NOT NULL`, 'i'));
+  }
+});
+
 test('security readiness SQL keeps legacy recovery only as a pre-migration fallback', () => {
   const sql = readFileSync(
     new URL('../../tdf-hq/sql/preflight_security_emergency_readiness.sql', import.meta.url),
