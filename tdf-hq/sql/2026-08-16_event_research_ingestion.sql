@@ -160,6 +160,12 @@ CREATE TRIGGER event_research_pilot_limit_trigger
 BEFORE INSERT OR UPDATE OF review_state, is_pilot ON event_research_candidate
 FOR EACH ROW EXECUTE FUNCTION enforce_event_research_pilot_limit();
 
+ALTER TABLE event_discovery_source
+  DROP CONSTRAINT IF EXISTS event_discovery_source_type_check;
+ALTER TABLE event_discovery_source
+  ADD CONSTRAINT event_discovery_source_type_check
+  CHECK (source_type IN ('ticketmaster', 'buenplan', 'ical', 'json', 'web'));
+
 -- Web sources are maintained for manual research only. The API and database keep
 -- them disabled so the structured-feed cron never attempts to scrape HTML.
 INSERT INTO event_discovery_source

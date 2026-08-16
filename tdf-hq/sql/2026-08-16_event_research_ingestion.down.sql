@@ -21,4 +21,10 @@ WHERE source_key IN (
 AND source_type = 'web'
 AND last_success_at IS NULL;
 
+ALTER TABLE event_discovery_source
+  DROP CONSTRAINT IF EXISTS event_discovery_source_type_check;
+ALTER TABLE event_discovery_source
+  ADD CONSTRAINT event_discovery_source_type_check
+  CHECK (source_type IN ('ticketmaster', 'buenplan', 'ical', 'json'));
+
 COMMIT;
