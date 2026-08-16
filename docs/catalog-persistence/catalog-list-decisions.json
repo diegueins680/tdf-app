@@ -354,16 +354,6 @@
       "reviewed": true
     },
     {
-      "id": "2891b05a8c69c9d5e0ce",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
-      "reviewed": true
-    },
-    {
       "id": "3391a96825357d78f794",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -2929,16 +2919,6 @@
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "61108c6acdbe84db6b6b",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-domain",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
@@ -7281,6 +7261,136 @@
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+     },
+    {
+      "id": "1d56da3a9a8587a4421e",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the ordered manifest can make a production release non-reproducible or apply schema revisions out of order.",
+      "justification": "Migration identifiers and ordered immutable script paths are deployment execution mechanics; every applied revision and checksum is persisted independently in the production migration ledger.",
+      "reviewed": true
+    },
+    {
+      "id": "f2263c4938549920d1af",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Client status rendering could diverge from the enforced rental state machine.",
+      "justification": "Rental status discriminants form a closed audited protocol enforced by Haskell transitions, OpenAPI, and PostgreSQL constraints; the UI map only renders that protocol.",
+      "reviewed": true
+    },
+    {
+      "id": "2fc9975280cb062972db",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unsupported client transition could skip payment, handoff, return, inspection, or deposit controls.",
+      "justification": "The client transition map mirrors the closed server/database rental state machine and is not editable commercial configuration.",
+      "reviewed": true
+    },
+    {
+      "id": "aa5cbbb6f1e3e1f604be",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "A client-only shortcut could falsely close a rental before deposit settlement evidence exists.",
+      "justification": "Refund-due transition targets mirror a closed server/database protocol; provider capability and settlement evidence remain independently configured.",
+      "reviewed": true
+    },
+    {
+      "id": "a381cb7e6b2c3eec3429",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Unknown sort or identity discriminants could bypass deterministic rendering or server validation.",
+      "justification": "These are finite implemented sort algorithms and rental identity-document parser codes; rates, terms, policies, and labels remain database-managed or localized separately.",
+      "reviewed": true
+    },
+    {
+      "id": "c95b31e9904617a462d9",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unknown deposit state would make settlement evidence uninterpretable across clients.",
+      "justification": "Deposit statuses are the exhaustive immutable settlement protocol shared by OpenAPI and database constraints; amounts and policies are persisted configuration.",
+      "reviewed": true
+    },
+    {
+      "id": "4e7bfcfcc072476b5afc",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unknown rental status could bypass transition validation or misrepresent custody.",
+      "justification": "Rental statuses are the exhaustive protocol enforced across Haskell, OpenAPI, and PostgreSQL rather than editable business configuration.",
+      "reviewed": true
+    },
+    {
+      "id": "3745b147633959802aae",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unsupported fulfillment discriminator would lack a validated custody path.",
+      "justification": "Pickup, local delivery, and shipping name the fulfillment algorithms implemented by the marketplace runtime; their commercial availability and fees remain persisted policy.",
+      "reviewed": true
+    },
+    {
+      "id": "b98be1c0fea641905719",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Database and application state machines could diverge and permit invalid custody transitions.",
+      "justification": "The database check is the authoritative closed rental-state protocol mirrored by typed Haskell and OpenAPI definitions.",
+      "reviewed": true
+    },
+    {
+      "id": "3aff147cb73e52815e8e",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Database and application deposit states could diverge and falsely imply settlement.",
+      "justification": "These values are the closed evidence protocol for deposit accounting; deposit amounts, deductions, and provider capabilities remain persisted and audited.",
+      "reviewed": true
+    },
+    {
+      "id": "abbb7014bdb6e63ac04a",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Unknown identity codes could bypass validation or create incompatible handoff evidence.",
+      "justification": "The launch identity codes are parser/database discriminants subject to legal review; the raw number is never persisted and public labels are not stored in this allowlist.",
+      "reviewed": true
+    },
+    {
+      "id": "d2ea23b7d44bbd50a610",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Unknown audit actor types would make transition provenance ambiguous.",
+      "justification": "Actor types are the closed audit-event protocol; actor identities, permissions, and evidence remain persisted records.",
+      "reviewed": true
+    },
+    {
+      "id": "92bdf7d80182ff259008",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unknown cart kind could mix incompatible inventory and fulfillment lifecycles.",
+      "justification": "The typed sale/rental sum is an exhaustive dispatch boundary; catalog prices and terms remain database-managed.",
       "reviewed": true
     }
   ]

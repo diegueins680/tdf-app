@@ -111,6 +111,19 @@ test('production migration manifest uses immutable full commit SHAs', () => {
   for (const migration of manifest.migrations) {
     assert.equal(normalizeFullSha(migration.introducedBy), migration.introducedBy);
   }
+
+  const resumeIndex = manifest.migrations.findIndex(
+    ({ id }) => id === '2026-08-16_catalog_locale_preference_resume',
+  );
+  const writerResumeIndex = manifest.migrations.findIndex(
+    ({ id }) => id === '2026-08-16_catalog_transitional_writer_resume',
+  );
+  const backfillIndex = manifest.migrations.findIndex(
+    ({ id }) => id === '2026-08-07_catalog_backfill_apply',
+  );
+  assert.ok(resumeIndex >= 0, 'resume migration must be registered');
+  assert.equal(writerResumeIndex, resumeIndex + 1, 'writer resume must follow locale recovery');
+  assert.equal(backfillIndex, writerResumeIndex + 1, 'writer resume must run immediately before backfill');
 });
 
 test('production release refuses to omit a migration outside the release ancestry', () => {
@@ -223,6 +236,8 @@ test('security emergency readiness requires canonical coherence after migration'
     activeEmergencyAssignments: 2,
     distinctAssignedParties: 2,
     authenticatableParties: 2,
+    legacyAuthenticatableParties: 0,
+    coherentLegacyTargetRoles: 1,
     databaseCoherentPaths: 2,
     preMigrationReady: true,
     databaseReady: true,
@@ -247,6 +262,152 @@ test('security emergency readiness requires canonical coherence after migration'
     ),
     /1 coherent paths; 2 are required/i,
   );
+});
+
+test('partial canonical security may resume from legacy paths but cannot pass the post-migration gate', () => {
+  const report = parseSecurityEmergencyReadinessOutput(JSON.stringify({
+    kind: 'security-emergency-readiness',
+    schemaMode: 'canonical',
+    transactionReadOnly: 'on',
+    requiredIndependentPaths: 2,
+    activeEmergencyAssignments: 0,
+    distinctAssignedParties: 0,
+    authenticatableParties: 0,
+    legacyAuthenticatableParties: 2,
+    coherentLegacyTargetRoles: 1,
+    databaseCoherentPaths: 0,
+    preMigrationReady: true,
+    databaseReady: false,
+  }));
+
+  assert.equal(securityEmergencyReadinessBlocker(report), undefined);
+  assert.match(
+    securityEmergencyReadinessBlocker(report, { requireCanonical: true }),
+    /0 coherent paths; 2 are required/i,
+  );
+});
+
+test('partial canonical security cannot claim readiness without a coherent mapped target role', () => {
+  assert.throws(
+    () => parseSecurityEmergencyReadinessOutput(JSON.stringify({
+      kind: 'security-emergency-readiness',
+      schemaMode: 'canonical',
+      transactionReadOnly: 'on',
+      requiredIndependentPaths: 2,
+      activeEmergencyAssignments: 0,
+      distinctAssignedParties: 0,
+      authenticatableParties: 0,
+      legacyAuthenticatableParties: 2,
+      coherentLegacyTargetRoles: 0,
+      databaseCoherentPaths: 0,
+      preMigrationReady: true,
+      databaseReady: false,
+    })),
+    /inconsistent gate evidence/i,
+  );
+});
+
+test('catalog locale resume migration only relaxes copied preference evidence columns', () => {
+  const sql = readFileSync(
+    new URL('../../tdf-hq/sql/2026-08-16_catalog_locale_preference_resume.sql', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(sql, /locale_id[\s\S]*data_type = 'uuid'/i);
+  assert.match(sql, /currency_id[\s\S]*data_type = 'uuid'/i);
+  assert.match(sql, /ALTER COLUMN locale DROP NOT NULL/i);
+  assert.match(sql, /ALTER COLUMN currency DROP NOT NULL/i);
+  assert.doesNotMatch(sql, /\b(?:UPDATE|DELETE|INSERT)\b/i);
+});
+
+test('catalog writer resume migration only removes premature canonical triggers', () => {
+  const sql = readFileSync(
+    new URL('../../tdf-hq/sql/2026-08-16_catalog_transitional_writer_resume.sql', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(sql, /DROP TRIGGER IF EXISTS catalog_pipeline_card_integrity ON pipeline_card/i);
+  assert.match(sql, /DROP TRIGGER IF EXISTS social_event_type_integrity ON social_event/i);
+  assert.match(sql, /DROP TRIGGER IF EXISTS social_event_workflow_state_integrity ON social_event/i);
+  assert.doesNotMatch(sql, /\b(?:UPDATE|DELETE|INSERT)\b/i);
+});
+
+test('catalog backfill locks pipeline writers around the transitional mapping', () => {
+  const sql = readFileSync(
+    new URL('../../tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql', import.meta.url),
+    'utf8',
+  );
+
+  const lockIndex = sql.indexOf(
+    'LOCK TABLE pipeline_card IN SHARE ROW EXCLUSIVE MODE;',
+  );
+  const updateIndex = sql.indexOf(
+    'UPDATE pipeline_card target SET service_offering_id=offering.id',
+  );
+  assert.ok(lockIndex >= 0, 'pipeline writers must be locked');
+  assert.match(
+    sql,
+    /FROM pipeline_card source\s+WHERE source\.service_kind IS NOT NULL/i,
+    'reruns must skip pipeline rows whose legacy evidence was already cleared',
+  );
+  assert.ok(updateIndex > lockIndex, 'pipeline mapping must run after the writer lock');
+});
+
+test('pending canonical cutovers relax legacy evidence columns before clearing them', () => {
+  const pipelineSql = readFileSync(
+    new URL('../../tdf-hq/sql/2026-08-11_pipeline_workflow_cutover_apply.sql', import.meta.url),
+    'utf8',
+  );
+  const ddexSql = readFileSync(
+    new URL('../../tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql', import.meta.url),
+    'utf8',
+  );
+
+  for (const column of ['service_kind', 'stage']) {
+    assert.match(pipelineSql, new RegExp(`ALTER COLUMN ${column} DROP NOT NULL`, 'i'));
+  }
+  for (const clause of [
+    'ddex_import_plan ALTER COLUMN status',
+    'ddex_import_run ALTER COLUMN status',
+    'ddex_job ALTER COLUMN job_type',
+    'ddex_job ALTER COLUMN status',
+    'ddex_import_change ALTER COLUMN operation',
+  ]) {
+    assert.match(ddexSql, new RegExp(`ALTER TABLE ${clause} DROP NOT NULL`, 'i'));
+  }
+});
+
+test('social event cutovers remove transitional triggers before canonical updates', () => {
+  const typeSql = readFileSync(
+    new URL('../../tdf-hq/sql/2026-08-11_social_event_type_cutover_apply.sql', import.meta.url),
+    'utf8',
+  );
+  const workflowSql = readFileSync(
+    new URL('../../tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql', import.meta.url),
+    'utf8',
+  );
+
+  assert.ok(typeSql.indexOf('DROP TRIGGER IF EXISTS social_event_type_integrity ON social_event;')
+    < typeSql.indexOf('UPDATE social_event target SET'));
+  assert.ok(typeSql.indexOf('DROP TRIGGER IF EXISTS social_event_workflow_state_integrity ON social_event;')
+    < typeSql.indexOf('UPDATE social_event target SET'));
+  assert.ok(workflowSql.indexOf('DROP TRIGGER IF EXISTS social_event_workflow_state_integrity ON social_event;')
+    < workflowSql.indexOf('UPDATE social_event target SET'));
+});
+
+test('security readiness SQL keeps legacy recovery only as a pre-migration fallback', () => {
+  const sql = readFileSync(
+    new URL('../../tdf-hq/sql/preflight_security_emergency_readiness.sql', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(sql, /legacy_authenticatable_party/i);
+  assert.match(sql, /role\.code = 'admin'/i);
+  assert.match(
+    sql,
+    /preMigrationReady',[\s\S]*legacy_authenticatable_parties >= 2[\s\S]*coherent_legacy_target_roles = 1/i,
+  );
+  assert.match(sql, /databaseReady', database_coherent_paths >= 2/i);
 });
 
 test('security emergency readiness parser rejects missing, writable, and malformed reports', () => {

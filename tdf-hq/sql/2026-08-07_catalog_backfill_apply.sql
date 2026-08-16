@@ -259,6 +259,7 @@ WITH reference_sources(source_table, source_column, source_record_id, original_v
       WHEN 'Mastering' THEN 'mastering' WHEN 'Rehearsal' THEN 'rehearsal'
       WHEN 'Classes' THEN 'classes' WHEN 'EventProduction' THEN 'event-production' END AND active)
   FROM pipeline_card source
+  WHERE source.service_kind IS NOT NULL
 )
 INSERT INTO catalog_migration_mapping (
   id, run_id, source_table, source_column, source_record_id, original_value,
@@ -775,6 +776,11 @@ UPDATE event_ticket_tier target SET currency_id=currency.id
 FROM currency_reference currency
 WHERE currency.code=target.currency AND currency.active
   AND target.currency_id IS DISTINCT FROM currency.id;
+
+-- The resume migration restores legacy-writer semantics before this pending
+-- backfill. Block concurrent writers while pairing the copied service label
+-- with its canonical offering so the mapping snapshot stays coherent.
+LOCK TABLE pipeline_card IN SHARE ROW EXCLUSIVE MODE;
 
 UPDATE pipeline_card target SET service_offering_id=offering.id
 FROM service_offering offering

@@ -125,6 +125,9 @@ WHERE source.run_id=:'backfill_run_id'::uuid
 ON CONFLICT (run_id, source_table, source_column, source_record_id, original_value)
 DO UPDATE SET entity_id=EXCLUDED.entity_id, status='mapped', evidence=EXCLUDED.evidence;
 
+DROP TRIGGER IF EXISTS social_event_type_integrity ON social_event;
+DROP TRIGGER IF EXISTS social_event_workflow_state_integrity ON social_event;
+
 UPDATE social_event target SET
   event_type_id=source.target_event_type_id,
   metadata=NULLIF((target.metadata::jsonb - 'eventType')::text, '{}')

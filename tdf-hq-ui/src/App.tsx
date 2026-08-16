@@ -5,14 +5,16 @@ import AppErrorBoundary from './routes/AppErrorBoundary';
 import RouteLoadingFallback from './routes/RouteLoadingFallback';
 import { renderProtectedRoutes } from './routes/protectedRoutes';
 import { renderPublicRoutes } from './routes/publicRoutes';
+import { useSession } from './session/SessionContext';
 import { lazyWithReload } from './utils/lazyWithReload';
-import { shouldHideRadioForRoute } from './utils/radioRouteVisibility';
+import { shouldRenderRadioWidget } from './utils/radioRouteVisibility';
 
 const RadioWidget = lazyWithReload(() => import('./components/RadioWidget'));
 
 function RoutedRadioWidget() {
   const location = useLocation();
-  if (shouldHideRadioForRoute(location.pathname, location.hash)) return null;
+  const { session, loading } = useSession();
+  if (!shouldRenderRadioWidget(location.pathname, location.hash, Boolean(session), loading)) return null;
   return (
     <Suspense fallback={null}>
       <RadioWidget />

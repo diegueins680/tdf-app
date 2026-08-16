@@ -127,6 +127,8 @@ export function parseSecurityEmergencyReadinessOutput(output) {
     'activeEmergencyAssignments',
     'distinctAssignedParties',
     'authenticatableParties',
+    'legacyAuthenticatableParties',
+    'coherentLegacyTargetRoles',
     'databaseCoherentPaths',
   ]) {
     if (report[field] !== undefined
@@ -134,6 +136,22 @@ export function parseSecurityEmergencyReadinessOutput(output) {
         && (!Number.isInteger(report[field]) || report[field] < 0)) {
       throw new Error(`Security emergency readiness preflight returned an invalid ${field}.`);
     }
+  }
+  if (report.schemaMode === 'canonical') {
+    if (!Number.isInteger(report.legacyAuthenticatableParties)
+        || !Number.isInteger(report.coherentLegacyTargetRoles)) {
+      throw new Error('Canonical security emergency readiness omitted transition evidence.');
+    }
+    const canonicalReady = (report.databaseCoherentPaths ?? 0) >= 2;
+    const legacyResumeReady = report.legacyAuthenticatableParties >= 2
+      && report.coherentLegacyTargetRoles === 1;
+    if (report.databaseReady !== canonicalReady
+        || report.preMigrationReady !== (canonicalReady || legacyResumeReady)) {
+      throw new Error('Canonical security emergency readiness returned inconsistent gate evidence.');
+    }
+  } else if (report.schemaMode === 'legacy'
+      && report.preMigrationReady !== ((report.authenticatableParties ?? 0) >= 2)) {
+    throw new Error('Legacy security emergency readiness returned inconsistent gate evidence.');
   }
   return report;
 }
@@ -149,7 +167,12 @@ export function securityEmergencyReadinessBlocker(report, options = {}) {
     return undefined;
   }
   if (!report.preMigrationReady) {
-    return `emergency recovery has ${report.authenticatableParties ?? 0} independently authenticatable parties; 2 are required before migration`;
+    const canonical = report.authenticatableParties ?? 0;
+    const legacy = report.legacyAuthenticatableParties;
+    const observed = legacy === undefined || legacy === null
+      ? `${canonical}`
+      : `${canonical} canonical and ${legacy} legacy`;
+    return `emergency recovery has ${observed} independently authenticatable parties; 2 are required before migration`;
   }
   return undefined;
 }
