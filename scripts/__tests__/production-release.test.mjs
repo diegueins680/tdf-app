@@ -303,7 +303,7 @@ test('partial canonical security cannot claim readiness without a coherent mappe
   );
 });
 
-test('catalog resume migration only relaxes copied preference evidence columns', () => {
+test('catalog resume migration performs bounded schema recovery without row writes', () => {
   const sql = readFileSync(
     new URL('../../tdf-hq/sql/2026-08-16_catalog_locale_preference_resume.sql', import.meta.url),
     'utf8',
@@ -313,28 +313,26 @@ test('catalog resume migration only relaxes copied preference evidence columns',
   assert.match(sql, /currency_id[\s\S]*data_type = 'uuid'/i);
   assert.match(sql, /ALTER COLUMN locale DROP NOT NULL/i);
   assert.match(sql, /ALTER COLUMN currency DROP NOT NULL/i);
+  assert.match(sql, /DROP TRIGGER IF EXISTS catalog_pipeline_card_integrity ON pipeline_card/i);
+  assert.match(sql, /DROP TRIGGER IF EXISTS social_event_type_integrity ON social_event/i);
+  assert.match(sql, /DROP TRIGGER IF EXISTS social_event_workflow_state_integrity ON social_event/i);
   assert.doesNotMatch(sql, /\b(?:UPDATE|DELETE|INSERT)\b/i);
 });
 
-test('catalog backfill confines the pipeline trigger bypass to its transaction', () => {
+test('catalog backfill locks pipeline writers around the transitional mapping', () => {
   const sql = readFileSync(
     new URL('../../tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql', import.meta.url),
     'utf8',
   );
 
-  const disableIndex = sql.indexOf(
-    'ALTER TABLE pipeline_card DISABLE TRIGGER catalog_pipeline_card_integrity;',
+  const lockIndex = sql.indexOf(
+    'LOCK TABLE pipeline_card IN SHARE ROW EXCLUSIVE MODE;',
   );
   const updateIndex = sql.indexOf(
     'UPDATE pipeline_card target SET service_offering_id=offering.id',
   );
-  const enableIndex = sql.indexOf(
-    'ALTER TABLE pipeline_card ENABLE TRIGGER catalog_pipeline_card_integrity;',
-  );
-
-  assert.ok(disableIndex >= 0, 'pipeline integrity trigger must be disabled');
-  assert.ok(updateIndex > disableIndex, 'pipeline mapping must run after the trigger is disabled');
-  assert.ok(enableIndex > updateIndex, 'pipeline integrity trigger must be re-enabled after mapping');
+  assert.ok(lockIndex >= 0, 'pipeline writers must be locked');
+  assert.ok(updateIndex > lockIndex, 'pipeline mapping must run after the writer lock');
 });
 
 test('pending canonical cutovers relax legacy evidence columns before clearing them', () => {
@@ -359,6 +357,24 @@ test('pending canonical cutovers relax legacy evidence columns before clearing t
   ]) {
     assert.match(ddexSql, new RegExp(`ALTER TABLE ${clause} DROP NOT NULL`, 'i'));
   }
+});
+
+test('social event cutovers remove transitional triggers before canonical updates', () => {
+  const typeSql = readFileSync(
+    new URL('../../tdf-hq/sql/2026-08-11_social_event_type_cutover_apply.sql', import.meta.url),
+    'utf8',
+  );
+  const workflowSql = readFileSync(
+    new URL('../../tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql', import.meta.url),
+    'utf8',
+  );
+
+  assert.ok(typeSql.indexOf('DROP TRIGGER IF EXISTS social_event_type_integrity ON social_event;')
+    < typeSql.indexOf('UPDATE social_event target SET'));
+  assert.ok(typeSql.indexOf('DROP TRIGGER IF EXISTS social_event_workflow_state_integrity ON social_event;')
+    < typeSql.indexOf('UPDATE social_event target SET'));
+  assert.ok(workflowSql.indexOf('DROP TRIGGER IF EXISTS social_event_workflow_state_integrity ON social_event;')
+    < workflowSql.indexOf('UPDATE social_event target SET'));
 });
 
 test('security readiness SQL keeps legacy recovery only as a pre-migration fallback', () => {
