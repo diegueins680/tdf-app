@@ -259,6 +259,7 @@ WITH reference_sources(source_table, source_column, source_record_id, original_v
       WHEN 'Mastering' THEN 'mastering' WHEN 'Rehearsal' THEN 'rehearsal'
       WHEN 'Classes' THEN 'classes' WHEN 'EventProduction' THEN 'event-production' END AND active)
   FROM pipeline_card source
+  WHERE source.service_kind IS NOT NULL
 )
 INSERT INTO catalog_migration_mapping (
   id, run_id, source_table, source_column, source_record_id, original_value,

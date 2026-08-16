@@ -303,7 +303,7 @@ test('partial canonical security cannot claim readiness without a coherent mappe
   );
 });
 
-test('catalog resume migration performs bounded schema recovery without row writes', () => {
+test('catalog locale resume migration only relaxes copied preference evidence columns', () => {
   const sql = readFileSync(
     new URL('../../tdf-hq/sql/2026-08-16_catalog_locale_preference_resume.sql', import.meta.url),
     'utf8',
@@ -313,6 +313,15 @@ test('catalog resume migration performs bounded schema recovery without row writ
   assert.match(sql, /currency_id[\s\S]*data_type = 'uuid'/i);
   assert.match(sql, /ALTER COLUMN locale DROP NOT NULL/i);
   assert.match(sql, /ALTER COLUMN currency DROP NOT NULL/i);
+  assert.doesNotMatch(sql, /\b(?:UPDATE|DELETE|INSERT)\b/i);
+});
+
+test('catalog writer resume migration only removes premature canonical triggers', () => {
+  const sql = readFileSync(
+    new URL('../../tdf-hq/sql/2026-08-16_catalog_transitional_writer_resume.sql', import.meta.url),
+    'utf8',
+  );
+
   assert.match(sql, /DROP TRIGGER IF EXISTS catalog_pipeline_card_integrity ON pipeline_card/i);
   assert.match(sql, /DROP TRIGGER IF EXISTS social_event_type_integrity ON social_event/i);
   assert.match(sql, /DROP TRIGGER IF EXISTS social_event_workflow_state_integrity ON social_event/i);
@@ -332,6 +341,11 @@ test('catalog backfill locks pipeline writers around the transitional mapping', 
     'UPDATE pipeline_card target SET service_offering_id=offering.id',
   );
   assert.ok(lockIndex >= 0, 'pipeline writers must be locked');
+  assert.match(
+    sql,
+    /FROM pipeline_card source\s+WHERE source\.service_kind IS NOT NULL/i,
+    'reruns must skip pipeline rows whose legacy evidence was already cleared',
+  );
   assert.ok(updateIndex > lockIndex, 'pipeline mapping must run after the writer lock');
 });
 
