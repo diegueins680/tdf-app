@@ -25,13 +25,16 @@ import TDF.Services.EventDiscovery
   , EventDiscoveryCity(..)
   , beginEventDiscoveryRun
   , buildTicketmasterRequestUrl
+  , countImportedDiscoveryEvents
   , normalizeTicketmasterResponse
   , normalizeUserCities
   , failEventDiscoveryRun
   , finishEventDiscoveryRun
+  , isDiscoveredEventKnown
   , reconcileImportedEvents
   , reconcileProviderEvents
   , syncDiscoveredEvent
+  , syncDiscoveredEventDraft
   )
 import qualified TDF.Models.SocialEventsModels as Social
 
@@ -230,6 +233,42 @@ spec = do
           metadata `shouldSatisfy` T.isInfixOf "\"isPublic\":false"
       (UUID.toText <$> (Social.socialEventWorkflowStateId =<< importedEventAfterReconcile))
         `shouldBe` Just "00000000-0000-4000-8000-000000000237"
+
+    it "keeps pilot imports private, idempotent, capped-countable, and timezone-explicit" $ do
+      event <- case eitherDecode ticketmasterFixture of
+        Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"
+        Right response ->
+          case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
+            [normalized] -> pure normalized
+            other -> expectationFailure ("Expected one normalized event, got " <> show other) >> fail "invalid normalized fixture"
+      pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+      runSqlPool initializeEventDiscoverySchema pool
+
+      firstStats <- syncDiscoveredEventDraft pool (fixtureTime 10 5) event
+      secondStats <- syncDiscoveredEventDraft pool (fixtureTime 10 10) event
+
+      discoveryEventsCreated firstStats `shouldBe` 1
+      discoveryEventsUpdated secondStats `shouldBe` 1
+      countImportedDiscoveryEvents pool `shouldReturn` 1
+      isDiscoveredEventKnown pool "ticketmaster" "tm-event-1" `shouldReturn` True
+
+      importedRef <-
+        runSqlPool
+          (getBy (Social.UniqueExternalEventRef "ticketmaster" "tm-event-1"))
+          pool
+      case importedRef of
+        Nothing -> expectationFailure "Expected a persisted draft source reference"
+        Just (Entity _ ref) -> do
+          Social.externalEventRefSourceStatus ref `shouldBe` "draft:on_sale"
+          importedEvent <- runSqlPool (get (Social.externalEventRefEventId ref)) pool
+          case importedEvent of
+            Nothing -> expectationFailure "Expected a persisted draft event"
+            Just row -> do
+              Social.socialEventTimezone row `shouldBe` Just "America/Guayaquil"
+              UUID.toText <$> Social.socialEventWorkflowStateId row
+                `shouldBe` Just "00000000-0000-4000-8000-000000000231"
+              Social.socialEventMetadata row
+                `shouldSatisfy` maybe False (T.isInfixOf "\"isPublic\":false")
 
     it "rejects an unknown provider event type before writing any event graph rows" $ do
       event <- case eitherDecode ticketmasterFixture of

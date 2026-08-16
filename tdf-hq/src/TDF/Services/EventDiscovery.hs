@@ -22,7 +22,10 @@ module TDF.Services.EventDiscovery
   , normalizeUserCities
   , reconcileImportedEvents
   , reconcileProviderEvents
+  , countImportedDiscoveryEvents
+  , isDiscoveredEventKnown
   , syncDiscoveredEvent
+  , syncDiscoveredEventDraft
   ) where
 
 import Control.Applicative ((<|>))
@@ -1560,7 +1563,32 @@ joinDescription parts =
 
 syncDiscoveredEvent :: ConnectionPool -> UTCTime -> DiscoveredEvent -> IO DiscoverySyncStats
 syncDiscoveredEvent pool now event =
-  runSqlPool (syncDiscoveredEventDb now event) pool
+  runSqlPool (syncDiscoveredEventDb True now event) pool
+
+-- | Persist or refresh an imported event without making it publicly listable.
+-- Re-ingesting the same provider/external ID updates the existing graph.
+syncDiscoveredEventDraft :: ConnectionPool -> UTCTime -> DiscoveredEvent -> IO DiscoverySyncStats
+syncDiscoveredEventDraft pool now event =
+  runSqlPool (syncDiscoveredEventDb False now event) pool
+
+isDiscoveredEventKnown :: ConnectionPool -> Text -> Text -> IO Bool
+isDiscoveredEventKnown pool provider externalId =
+  runSqlPool
+    (maybe False (const True) <$> getBy (Social.UniqueExternalEventRef provider externalId))
+    pool
+
+countImportedDiscoveryEvents :: ConnectionPool -> IO Int
+countImportedDiscoveryEvents pool = do
+  rows <-
+    runSqlPool
+      ( rawSql
+          "SELECT COUNT(DISTINCT event_id) FROM external_event_ref"
+          [] :: SqlPersistT IO [Single Int]
+      )
+      pool
+  pure $ case rows of
+    [Single total] -> total
+    _ -> 0
 
 -- | Keep imported lifecycle state aligned with the current subscription scope.
 -- Past imports complete automatically; future imports leave the public feed as
@@ -1750,6 +1778,10 @@ refreshCanonicalVisibility now eventKey = do
             | (priority, Entity _ ref) <- rankedRefs
             , sourceRefIsActive ref
             ]
+          hasDraftRef =
+            any
+              (isDraftSourceStatus . Social.externalEventRefSourceStatus . entityVal)
+              refs
           bestActiveRef =
             case sortOn (negate . fst) activeRefs of
               (_, ref) : _ -> Just ref
@@ -1758,6 +1790,7 @@ refreshCanonicalVisibility now eventKey = do
           isPublic = not ended && maybe False (const True) bestActiveRef
           status
             | ended = "completed"
+            | null activeRefs && hasDraftRef = "planning"
             | otherwise =
                 maybe
                   "unavailable"
@@ -1779,6 +1812,7 @@ refreshCanonicalVisibility now eventKey = do
 sourceRefIsActive :: Social.ExternalEventRef -> Bool
 sourceRefIsActive ref =
   Social.externalEventRefMissingRuns ref < 2
+    && not (isDraftSourceStatus (Social.externalEventRefSourceStatus ref))
     && normalizedStatus
       `notElem`
         [ "cancelled"
@@ -1792,6 +1826,9 @@ sourceRefIsActive ref =
     normalizedStatus =
       T.toCaseFold (T.strip (Social.externalEventRefSourceStatus ref))
 
+isDraftSourceStatus :: Text -> Bool
+isDraftSourceStatus = T.isPrefixOf "draft:" . T.toCaseFold . T.strip
+
 normalizeImportedSourceStatus :: Text -> Text
 normalizeImportedSourceStatus rawStatus
   | normalized `elem` ["onsale", "on_sale", "confirmed"] = "on_sale"
@@ -1800,10 +1837,12 @@ normalizeImportedSourceStatus rawStatus
   where
     normalized = T.toCaseFold (T.strip rawStatus)
 
-syncDiscoveredEventDb :: UTCTime -> DiscoveredEvent -> SqlPersistT IO DiscoverySyncStats
-syncDiscoveredEventDb now DiscoveredEvent{..} = do
+syncDiscoveredEventDb :: Bool -> UTCTime -> DiscoveredEvent -> SqlPersistT IO DiscoverySyncStats
+syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
   eventTypeUuid <- resolvePublishedEventTypeId now discoveredEventType
-  workflowStateId <- EventLifecycle.resolveActiveSocialEventStateId discoveredEventStatus
+  workflowStateId <-
+    EventLifecycle.resolveActiveSocialEventStateId
+      (if autoPublish then discoveredEventStatus else "planning")
   (venueKey, venueCreated) <-
     upsertDiscoveredVenue discoveredEventProvider now discoveredEventVenue
   artistResults <-
@@ -1812,7 +1851,11 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
       (upsertDiscoveredArtist discoveredEventProvider now)
   let artistKeys = map fst artistResults
       artistsCreated = length (filter snd artistResults)
-      metadata = encodeEventMetadataForImport DiscoveredEvent{..}
+      metadata = encodeEventMetadataForImport autoPublish DiscoveredEvent{..}
+      sourceStatus =
+        if autoPublish
+          then discoveredEventStatus
+          else "draft:" <> discoveredEventStatus
   existingRef <-
     getBy
       (Social.UniqueExternalEventRef discoveredEventProvider discoveredEventExternalId)
@@ -1821,7 +1864,9 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
       Just (Entity refKey ref) -> do
         let existingEventKey = Social.externalEventRefEventId ref
         shouldReplace <-
-          providerShouldReplaceCanonical discoveredEventProvider existingEventKey
+          if autoPublish
+            then providerShouldReplaceCanonical discoveredEventProvider existingEventKey
+            else draftMayReplaceCanonical existingEventKey
         if shouldReplace
           then
             update
@@ -1829,6 +1874,7 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
               [ Social.SocialEventTitle =. discoveredEventTitle
               , Social.SocialEventDescription =. discoveredEventDescription
               , Social.SocialEventVenueId =. Just venueKey
+              , Social.SocialEventTimezone =. importedEventTimeZone discoveredEventVenue
               , Social.SocialEventStartTime =. discoveredEventStart
               , Social.SocialEventEndTime =. discoveredEventEnd
               , Social.SocialEventPriceCents =. discoveredEventPriceCents
@@ -1848,7 +1894,7 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
           , Social.ExternalEventRefCurrency =. Just discoveredEventCurrency
           , Social.ExternalEventRefLastSeenAt =. now
           , Social.ExternalEventRefMissingRuns =. 0
-          , Social.ExternalEventRefSourceStatus =. discoveredEventStatus
+          , Social.ExternalEventRefSourceStatus =. sourceStatus
           ]
         pure (existingEventKey, False)
       Nothing -> do
@@ -1856,7 +1902,10 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
         (newEventKey, created) <-
           case mergeCandidate of
             Just candidateKey -> do
-              shouldReplace <- providerShouldReplaceCanonical discoveredEventProvider candidateKey
+              shouldReplace <-
+                if autoPublish
+                  then providerShouldReplaceCanonical discoveredEventProvider candidateKey
+                  else draftMayReplaceCanonical candidateKey
               if shouldReplace
                 then
                   update
@@ -1864,6 +1913,7 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
                     [ Social.SocialEventTitle =. discoveredEventTitle
                     , Social.SocialEventDescription =. discoveredEventDescription
                     , Social.SocialEventVenueId =. Just venueKey
+                    , Social.SocialEventTimezone =. importedEventTimeZone discoveredEventVenue
                     , Social.SocialEventStartTime =. discoveredEventStart
                     , Social.SocialEventEndTime =. discoveredEventEnd
                     , Social.SocialEventPriceCents =. discoveredEventPriceCents
@@ -1882,7 +1932,7 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
                     , Social.socialEventTitle = discoveredEventTitle
                     , Social.socialEventDescription = discoveredEventDescription
                     , Social.socialEventVenueId = Just venueKey
-                    , Social.socialEventTimezone = Nothing
+                    , Social.socialEventTimezone = importedEventTimeZone discoveredEventVenue
                     , Social.socialEventEventTypeId = Just eventTypeUuid
                     , Social.socialEventWorkflowStateId = Just workflowStateId
                     , Social.socialEventStartTime = discoveredEventStart
@@ -1909,7 +1959,7 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
               , Social.externalEventRefCurrency = Just discoveredEventCurrency
               , Social.externalEventRefLastSeenAt = now
               , Social.externalEventRefMissingRuns = 0
-              , Social.externalEventRefSourceStatus = discoveredEventStatus
+              , Social.externalEventRefSourceStatus = sourceStatus
               }
         pure (newEventKey, created)
   forM_ artistKeys $ \artistKey -> do
@@ -2007,6 +2057,17 @@ providerShouldReplaceCanonical provider eventKey = do
     forM refs (eventSourcePriority . Social.externalEventRefProvider . entityVal)
   pure (null existingPriorities || newPriority >= maximum existingPriorities)
 
+draftMayReplaceCanonical ::
+  Social.SocialEventId ->
+  SqlPersistT IO Bool
+draftMayReplaceCanonical eventKey = do
+  refs <- selectList [Social.ExternalEventRefEventId ==. eventKey] []
+  pure $
+    null refs
+      || all
+        (isDraftSourceStatus . Social.externalEventRefSourceStatus . entityVal)
+        refs
+
 eventSourcePriority :: Text -> SqlPersistT IO Int
 eventSourcePriority provider = do
   source <- getBy (Social.UniqueEventDiscoverySource provider)
@@ -2073,6 +2134,7 @@ upsertDiscoveredVenue provider now DiscoveredVenue{..} = do
         , Social.VenueCity =. Just discoveredVenueCity
         , Social.VenueCountry =. discoveredVenueCountry
         , Social.VenueCountryCode =. discoveredVenueCountryCode
+        , Social.VenueTimezone =. importedVenueTimeZone discoveredVenueCountryCode
         , Social.VenueLatitude =. discoveredVenueLatitude
         , Social.VenueLongitude =. discoveredVenueLongitude
         , Social.VenueContact =. contact
@@ -2091,7 +2153,7 @@ upsertDiscoveredVenue provider now DiscoveredVenue{..} = do
             , Social.venueCountryCode = discoveredVenueCountryCode
             , Social.venueCountryId = Nothing
             , Social.venueCityId = Nothing
-            , Social.venueTimezone = Nothing
+            , Social.venueTimezone = importedVenueTimeZone discoveredVenueCountryCode
             , Social.venueLatitude = discoveredVenueLatitude
             , Social.venueLongitude = discoveredVenueLongitude
             , Social.venueCapacity = Nothing
@@ -2187,19 +2249,32 @@ encodeVenueContact phone website state postalCode imageUrl
           , "imageUrl" .= imageUrl
           ]
 
-encodeEventMetadataForImport :: DiscoveredEvent -> Maybe Text
-encodeEventMetadataForImport DiscoveredEvent{..} =
+encodeEventMetadataForImport :: Bool -> DiscoveredEvent -> Maybe Text
+encodeEventMetadataForImport autoPublish DiscoveredEvent{..} =
   Just . TE.decodeUtf8 . BL.toStrict . encode $
     object
       [ "ticketUrl" .= discoveredEventTicketUrl
       , "imageUrl" .= discoveredEventImageUrl
       , "isPublic" .=
-          ( discoveredEventStatus
+          ( autoPublish
+              && discoveredEventStatus
               `notElem` ["cancelled", "canceled", "completed", "missing"]
           )
       , "currency" .= discoveredEventCurrency
       , "budgetCents" .= (Nothing :: Maybe Int)
       ]
+
+importedEventTimeZone :: DiscoveredVenue -> Maybe Text
+importedEventTimeZone venue
+  | fmap (T.toUpper . T.strip) (discoveredVenueCountryCode venue) == Just "EC" =
+      Just "America/Guayaquil"
+  | otherwise = Nothing
+
+importedVenueTimeZone :: Maybe Text -> Maybe Text
+importedVenueTimeZone countryCode
+  | fmap (T.toUpper . T.strip) countryCode == Just "EC" =
+      Just "America/Guayaquil"
+  | otherwise = Nothing
 
 resolvePublishedEventTypeId :: UTCTime -> Text -> SqlPersistT IO UUID
 resolvePublishedEventTypeId now eventTypeCode = do
