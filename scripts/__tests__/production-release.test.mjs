@@ -316,6 +316,27 @@ test('catalog resume migration only relaxes copied preference evidence columns',
   assert.doesNotMatch(sql, /\b(?:UPDATE|DELETE|INSERT)\b/i);
 });
 
+test('catalog backfill confines the pipeline trigger bypass to its transaction', () => {
+  const sql = readFileSync(
+    new URL('../../tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql', import.meta.url),
+    'utf8',
+  );
+
+  const disableIndex = sql.indexOf(
+    'ALTER TABLE pipeline_card DISABLE TRIGGER catalog_pipeline_card_integrity;',
+  );
+  const updateIndex = sql.indexOf(
+    'UPDATE pipeline_card target SET service_offering_id=offering.id',
+  );
+  const enableIndex = sql.indexOf(
+    'ALTER TABLE pipeline_card ENABLE TRIGGER catalog_pipeline_card_integrity;',
+  );
+
+  assert.ok(disableIndex >= 0, 'pipeline integrity trigger must be disabled');
+  assert.ok(updateIndex > disableIndex, 'pipeline mapping must run after the trigger is disabled');
+  assert.ok(enableIndex > updateIndex, 'pipeline integrity trigger must be re-enabled after mapping');
+});
+
 test('security readiness SQL keeps legacy recovery only as a pre-migration fallback', () => {
   const sql = readFileSync(
     new URL('../../tdf-hq/sql/preflight_security_emergency_readiness.sql', import.meta.url),

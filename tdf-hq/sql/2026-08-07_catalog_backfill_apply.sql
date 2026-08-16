@@ -776,6 +776,13 @@ FROM currency_reference currency
 WHERE currency.code=target.currency AND currency.active
   AND target.currency_id IS DISTINCT FROM currency.id;
 
+-- The canonical integrity trigger is already present when an interrupted
+-- production cutover resumes. Keep it disabled only inside this transaction
+-- while the legacy service label is paired with its canonical offering. The
+-- ALTER TABLE lock prevents concurrent writers from observing the temporary
+-- mixed representation, and a rollback restores the enabled trigger state.
+ALTER TABLE pipeline_card DISABLE TRIGGER catalog_pipeline_card_integrity;
+
 UPDATE pipeline_card target SET service_offering_id=offering.id
 FROM service_offering offering
 WHERE offering.code=CASE target.service_kind::text
@@ -783,6 +790,8 @@ WHERE offering.code=CASE target.service_kind::text
   WHEN 'Mastering' THEN 'mastering' WHEN 'Rehearsal' THEN 'rehearsal'
   WHEN 'Classes' THEN 'classes' WHEN 'EventProduction' THEN 'event-production' END
   AND target.service_offering_id IS DISTINCT FROM offering.id;
+
+ALTER TABLE pipeline_card ENABLE TRIGGER catalog_pipeline_card_integrity;
 
 -- Bootstrap provenance is reserved for the reviewed legacy migration. Existing
 -- canonical grants always win and are never overwritten by a rerun.

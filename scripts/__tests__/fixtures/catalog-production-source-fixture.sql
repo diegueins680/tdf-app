@@ -42,6 +42,11 @@ INSERT INTO public.user_locale_preferences
 SELECT id, 'es', 'USD', 'America/Guayaquil', 'EC'
 FROM fixture_party;
 
+INSERT INTO public.pipeline_card
+  (service_kind, title, stage, sort_order)
+VALUES
+  ('Recording', 'Catalog pipeline recovery fixture', 'inquiry', 1);
+
 INSERT INTO public.cms_content
   (slug, locale, version, status, title, payload, published_at)
 VALUES
