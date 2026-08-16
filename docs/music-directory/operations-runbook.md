@@ -27,6 +27,9 @@
 - Cuenta crea dos perfiles y solo puede editar los que administra.
 - Perfil con dos profesiones aparece en ambos filtros sin duplicarse.
 - Publicar anuncio multi-ciudad; otra cuenta postula; autor acepta y abre un único DM contextual.
+- Invitar desde un perfil administrador explícitamente seleccionado; antes de aceptar no hay DM,
+  después de aceptar el contexto solo sirve para esa pareja y bloquear impide contacto en ambos
+  sentidos.
 - Guardar búsqueda y ejecutar dos veces el mismo match produce una alerta.
 - Evento/venue publicado se lee sin token; borrador/suspendido no.
 - Cerrar anuncio como cubierto lo retira de resultados activos.

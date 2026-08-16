@@ -1,6 +1,6 @@
 # Evidencia de verificación
 
-Fecha: 2026-08-15. Esta evidencia corresponde a la rama de implementación; no demuestra un
+Fecha: 2026-08-16. Esta evidencia corresponde a la rama de implementación; no demuestra un
 despliegue en producción. Las capturas usan fixtures sintéticos identificados como tales y no
 contienen personas, eventos, direcciones, credenciales ni verificaciones inventadas.
 
@@ -9,9 +9,9 @@ contienen personas, eventos, direcciones, credenciales ni verificaciones inventa
 | Gate | Resultado |
 | --- | --- |
 | Backend Hspec/QuickCheck | 2.274 ejemplos, 0 fallos |
-| Web Jest | 151 suites, 1.602 pruebas, 0 fallos |
-| Móvil Jest | 51 suites, 262 pruebas, 0 fallos |
-| Migración PostgreSQL 16 | Pass: doble aplicación, backfill seco/aplicado/rollback/reaplicado, privacidad, claim, review, alertas, merge, 10.000 documentos y handler anónimo de taxonomías |
+| Web Jest | 151 suites, 1.603 pruebas, 0 fallos |
+| Móvil Jest | 51 suites, 263 pruebas, 0 fallos |
+| Migración PostgreSQL 16 | Pass: doble aplicación, backfill seco/aplicado/rollback/reaplicado, privacidad, claim, review, alertas, merge, 10.000 documentos, taxonomías e invitaciones con participantes exactos, aceptación contextual, preferencias de contacto general, bloqueo bidireccional y expiración |
 | OpenAPI/clientes | Pass: seguridad pública, PII, catálogos de servicio/moneda, separación patrocinada e idempotency keys; tipos web/móvil regenerados |
 | Feature registry | Pass: 131 features, 146 rutas web, 44 rutas móviles |
 | Autoridad de catálogos | Pass: 720 fingerprints revisados; 0 decisiones nuevas o caducas pendientes |
@@ -19,7 +19,7 @@ contienen personas, eventos, direcciones, credenciales ni verificaciones inventa
 | Manifiesto de release | 29 pruebas, 0 fallos; SHA inmutable, ancestry y streaming SQL validados |
 | TypeScript | Pass en web y móvil |
 | Lint | Pass: 0 errores; web conserva 90 warnings preexistentes, móvil 0 warnings |
-| Build web | Pass; presupuesto inicial 404.269 bytes gzip |
+| Build web | Pass; presupuesto inicial 404.268 bytes gzip |
 | Expo web export | Pass; 57 rutas estáticas |
 | Axe WCAG 2.2 AA | 0 violaciones en las cuatro superficies capturadas; quedan dos comprobaciones `incomplete` por superficie para revisión humana |
 

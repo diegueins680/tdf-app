@@ -18,12 +18,12 @@ datos de menores, tokens, reputación, orden de búsqueda y vínculos comerciale
 
 | Amenaza | Control requerido |
 |---|---|
-| Enumeración/IDOR | IDs UUID públicos, scopes por participantes/managers, 404 no revelador y pruebas cruzadas. |
+| Enumeración/IDOR | IDs UUID públicos, scopes por participantes/managers, vínculo exacto remitente-destinatario-contexto, 404 no revelador y pruebas cruzadas. |
 | Inyección SQL | parámetros SQL; nunca interpolar texto/filtros/orden. |
 | XSS/Unicode engañoso | límites, rechazo de controles/format marks peligrosos, render escapado, sanitización de rich text. |
 | Geolocalización de domicilio | tabla privada separada, centroide público, distancia redondeada, mínimo de precisión. |
 | Spam masivo | límites por IP/cuenta/perfil/acción, fingerprint, cooldown, reputación interna y challenge configurable. |
-| Invitaciones no deseadas | preferencias opt-in/out, bloqueos bidireccionales, idempotencia y límite diario. |
+| Invitaciones no deseadas | preferencias opt-in/out y completitud mínima, selección explícita del perfil remitente, bloqueos bidireccionales, aceptación antes del chat, idempotencia y límite diario. |
 | Duplicados/suplantación | similitud de nombre/ubicación/link, claim con evidencia, cola de merge, alias preservados. |
 | Fraude laboral o bienes robados | categorías/reglas, reportes, moderación, trazabilidad y retención de evidencia. |
 | Discriminación/contenido ilícito | política visible, taxonomía de reportes, revisión y apelación; validación jurídica antes de producción. |
@@ -32,6 +32,7 @@ datos de menores, tokens, reputación, orden de búsqueda y vínculos comerciale
 | Manipulación de ranking | pesos documentados, señales verificables, patrocinado separado, auditoría de cambios. |
 | Reseñas falsas | interacción elegible, unicidad y separación del estado de pago/cumplimiento. |
 | Replay | Idempotency-Key + fingerprint; mismo key/payload retorna original, payload distinto es 409. |
+| Reutilización de contexto | Una postulación/invitación aceptada autoriza únicamente su par exacto de perfiles; cambiar el destinatario produce 404 y no crea chat. |
 | Exfiltración analítica | no texto libre, PII ni coordenadas exactas en telemetría; retención y acceso acotados. |
 | Elevación por profesión | autorización no importa tablas de profesiones; prueba de propiedad I01. |
 

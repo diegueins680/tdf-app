@@ -110,9 +110,18 @@ existente.
 - Una postulación contiene mensaje, portfolio seleccionado, disponibilidad y propuesta económica.
 - El autor y managers autorizados del anuncio pueden verla; el postulante y managers de su perfil
   también; moderadores solo por permiso explícito y finalidad auditada.
-- Una invitación directa respeta preferencias, bloqueos, edad, límites y una clave idempotente.
-- Aceptar contacto crea/reutiliza el DM canónico y añade `directory_conversation_context`; no crea
-  otro sistema de mensajes.
+- Una invitación directa exige que la persona elija explícitamente cuál de sus perfiles actúa como
+  remitente. Respeta preferencias, completitud mínima, bloqueos bidireccionales, edad, límites y una
+  clave idempotente; si enlaza un clasificado, éste debe pertenecer al perfil remitente y seguir
+  publicado, permitido y vigente.
+- La aceptación es explícita: una postulación o invitación pendiente no puede saltar directamente a
+  `conversation_open`. Una invitación vencida pasa a `expired`; bloquearla crea además el bloqueo de
+  perfil en la misma transacción.
+- Abrir contacto exige que el par remitente/destinatario coincida exactamente con los participantes
+  de la postulación o invitación aceptada. Entonces crea/reutiliza el DM canónico y añade
+  `directory_conversation_context`; no crea otro sistema de mensajes. Esa aceptación específica
+  aporta consentimiento para el contexto aun si el perfil deshabilitó contacto general, pero nunca
+  anula un bloqueo entre perfiles.
 - Una coincidencia puede enlazarse a booking, service order, marketplace order o checkout existente.
   El enlace no modifica estados de pago ni cumplimiento.
 

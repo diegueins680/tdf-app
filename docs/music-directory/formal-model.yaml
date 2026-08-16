@@ -33,9 +33,9 @@ state_machines:
   application:
     initial: submitted
     transitions:
-      submitted: [viewed, shortlisted, accepted, rejected, withdrawn, conversation_open]
-      viewed: [shortlisted, accepted, rejected, withdrawn, conversation_open]
-      shortlisted: [accepted, rejected, withdrawn, conversation_open]
+      submitted: [viewed, shortlisted, accepted, rejected, withdrawn]
+      viewed: [shortlisted, accepted, rejected, withdrawn]
+      shortlisted: [accepted, rejected, withdrawn]
       accepted: [conversation_open, converted, withdrawn]
       conversation_open: [converted, withdrawn]
       converted: []
@@ -44,7 +44,7 @@ state_machines:
   invitation:
     initial: pending
     transitions:
-      pending: [accepted, declined, withdrawn, blocked, conversation_open]
+      pending: [accepted, declined, withdrawn, blocked, expired]
       accepted: [withdrawn, blocked, conversation_open, converted]
       conversation_open: [withdrawn, blocked, converted]
       converted: []
@@ -136,11 +136,18 @@ preconditions:
   submit_application:
     - caller manages applicant profile with contact capability
     - classified is published and unexpired
-    - applicant is not blocked and age controls pass
+    - neither profile blocks the other, target preferences and minimum completeness pass, and age controls pass
+    - uniqueness/idempotency scope is unused or payload-identical
+  send_invitation:
+    - caller manages the explicitly selected sender profile with contact capability
+    - sender and target are distinct published profiles
+    - neither profile blocks the other and target preferences and minimum completeness pass
+    - any linked classified is published, current and owned by the sender profile
     - uniqueness/idempotency scope is unused or payload-identical
   open_contact:
     - authenticated caller manages source profile
-    - target preferences allow request or an accepted application/invitation exists
+    - a profile context matches the target, or the exact application/invitation participant pair is accepted
+    - cold profile/classified contact passes target preferences and minimum completeness; explicit application/invitation acceptance supplies contextual consent
     - neither party blocks the other
   approve_claim:
     - reviewer has claims.approve permission
@@ -158,6 +165,11 @@ postconditions:
     - only target-profile managers may accept
     - application remains private
     - conversation context may be created exactly once
+  accept_invitation:
+    - only target-profile managers may accept
+    - an expired pending invitation transitions to expired instead of accepted
+    - blocking creates the target-to-sender profile block in the same transaction
+    - conversation context may be created only after acceptance and exactly once
   merge_profile:
     - source status is merged and canonical_profile_id points to target
     - every active slug remains resolvable
