@@ -775,6 +775,8 @@ data MarketplaceOrderDTO = MarketplaceOrderDTO
   , moPaidAt        :: Maybe UTCTime
   , moLookupToken   :: Maybe Text
   , moCheckoutStatus :: Maybe Text
+  , moManualPaymentStatus :: Maybe Text
+  , moManualPaymentSubmittedAt :: Maybe UTCTime
   , moFulfillmentMethod :: Maybe Text
   , moFulfillmentStatus :: Maybe Text
   , moHoldExpiresAt :: Maybe UTCTime
@@ -799,6 +801,52 @@ data MarketplaceOrderDTO = MarketplaceOrderDTO
 
 instance ToJSON MarketplaceOrderDTO
 instance FromJSON MarketplaceOrderDTO
+
+data MarketplaceManualEvidenceSubmit = MarketplaceManualEvidenceSubmit
+  { mmesCustomerReference :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceManualEvidenceSubmit
+instance FromJSON MarketplaceManualEvidenceSubmit where
+  parseJSON = genericParseJSON strictObjectOptions
+
+data MarketplaceManualPaymentReview = MarketplaceManualPaymentReview
+  { mmprAction      :: Text
+  , mmprReviewNotes :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceManualPaymentReview
+instance FromJSON MarketplaceManualPaymentReview where
+  parseJSON = genericParseJSON strictObjectOptions
+
+data MarketplaceManualEvidenceDTO = MarketplaceManualEvidenceDTO
+  { mmeEvidenceId           :: Text
+  , mmePaymentMethod        :: Text
+  , mmeStatus               :: Text
+  , mmeCustomerReference    :: Maybe Text
+  , mmeSubmittedAmountMinor :: Maybe Int64
+  , mmeCurrency             :: Maybe Text
+  , mmeSubmittedBy          :: Maybe Int64
+  , mmeSubmittedAt          :: Maybe UTCTime
+  , mmeReviewedBy           :: Maybe Int64
+  , mmeReviewedAt           :: Maybe UTCTime
+  , mmeReviewNotes          :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceManualEvidenceDTO
+instance FromJSON MarketplaceManualEvidenceDTO
+
+data MarketplaceCommerceDTO = MarketplaceCommerceDTO
+  { mpcOrderId       :: Text
+  , mpcCheckoutId    :: Text
+  , mpcPaymentStatus :: Text
+  , mpcHoldExpiresAt :: UTCTime
+  , mpcOrderKind     :: Text
+  , mpcManualEvidence :: Maybe MarketplaceManualEvidenceDTO
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceCommerceDTO
+instance FromJSON MarketplaceCommerceDTO
 
 data MarketplaceOrderUpdate = MarketplaceOrderUpdate
   { mouStatus          :: Maybe Text

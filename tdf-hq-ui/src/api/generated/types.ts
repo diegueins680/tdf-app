@@ -2839,6 +2839,72 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/marketplace/orders/{orderId}/manual-payment/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit customer bank-transfer evidence without marking the order paid
+         * @description Requires the scoped guest lookup token. The reference is private finance evidence and remains submitted or under review until an independent staff member verifies it.
+         */
+        post: operations["submitMarketplaceManualEvidence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/commerce": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        /** Read protected marketplace checkout and manual-payment evidence */
+        get: operations["getMarketplaceCommerce"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/manual-payment/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Independently approve or reject marketplace manual-payment evidence
+         * @description The reviewer must differ from the submitter. Approval verifies the active hold and immutable order, checkout, attempt, amount, currency, environment and evidence bindings before atomically posting payment, receipt and ledger entries. Payment never implies fulfillment or custody transfer.
+         */
+        post: operations["reviewMarketplaceManualPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/marketplace/orders/{orderId}/fulfillment": {
         parameters: {
             query?: never;
@@ -3864,6 +3930,13 @@ export interface components {
             /** @description Returned only when the order is first created. */
             moLookupToken: string | null;
             moCheckoutStatus: string | null;
+            /**
+             * @description Customer-safe evidence state; approved still requires the canonical checkout to report paid before payment is confirmed.
+             * @enum {string|null}
+             */
+            moManualPaymentStatus: "awaiting_evidence" | "submitted" | "under_review" | "approved" | "rejected" | "requires_reconciliation" | null;
+            /** Format: date-time */
+            moManualPaymentSubmittedAt: string | null;
             /** @enum {string|null} */
             moFulfillmentMethod: "pickup" | "local_delivery" | "shipping" | null;
             /** @enum {string|null} */
@@ -3894,6 +3967,47 @@ export interface components {
             /** Format: date-time */
             moUpdatedAt: string;
             moItems: components["schemas"]["MarketplaceOrderItem"][];
+        };
+        MarketplaceManualEvidenceSubmit: {
+            mmesCustomerReference: string;
+        };
+        MarketplaceManualPaymentReview: {
+            /** @enum {string} */
+            mmprAction: "approve" | "reject";
+            mmprReviewNotes: string;
+        };
+        MarketplaceManualEvidence: {
+            /** Format: uuid */
+            mmeEvidenceId: string;
+            /** @enum {string} */
+            mmePaymentMethod: "bank_transfer" | "cash" | "pos";
+            /** @enum {string} */
+            mmeStatus: "awaiting_evidence" | "submitted" | "under_review" | "approved" | "rejected";
+            mmeCustomerReference: string | null;
+            /** Format: int64 */
+            mmeSubmittedAmountMinor: number | null;
+            mmeCurrency: string | null;
+            /** Format: int64 */
+            mmeSubmittedBy: number | null;
+            /** Format: date-time */
+            mmeSubmittedAt: string | null;
+            /** Format: int64 */
+            mmeReviewedBy: number | null;
+            /** Format: date-time */
+            mmeReviewedAt: string | null;
+            mmeReviewNotes: string | null;
+        };
+        MarketplaceCommerce: {
+            /** Format: uuid */
+            mpcOrderId: string;
+            /** Format: uuid */
+            mpcCheckoutId: string;
+            mpcPaymentStatus: string;
+            /** Format: date-time */
+            mpcHoldExpiresAt: string;
+            /** @enum {string} */
+            mpcOrderKind: "sale" | "rental";
+            mpcManualEvidence: components["schemas"]["MarketplaceManualEvidence"] | null;
         };
         MarketplacePaypalCapture: {
             /** Format: uuid */
@@ -11939,6 +12053,142 @@ export interface operations {
                 content?: never;
             };
             /** @description Direct paid transition is prohibited for canonical orders */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitMarketplaceManualEvidence: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceManualEvidenceSubmit"];
+            };
+        };
+        responses: {
+            /** @description Customer-safe order with truthful manual-review status */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"];
+                };
+            };
+            /** @description Invalid transfer reference */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Evidence conflicts with the immutable checkout or is already under review */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMarketplaceCommerce: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Protected finance projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCommerce"];
+                };
+            };
+            /** @description Invoicing access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Historical or ambiguous checkout requires reconciliation */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reviewMarketplaceManualPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceManualPaymentReview"];
+            };
+        };
+        responses: {
+            /** @description Current protected commerce projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCommerce"];
+                };
+            };
+            /** @description Invalid action or review notes */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invoicing access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Separation-of-duties */
             409: {
                 headers: {
                     [name: string]: unknown;

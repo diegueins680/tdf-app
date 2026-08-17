@@ -12,6 +12,7 @@ import {
   Divider,
   Link,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -24,6 +25,9 @@ export default function MarketplaceOrderTrackingPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const [order, setOrder] = useState<MarketplaceOrderDTO | null>(null);
   const [status, setStatus] = useState<'loading' | 'error' | 'success'>('loading');
+  const [manualReference, setManualReference] = useState('');
+  const [manualSubmitting, setManualSubmitting] = useState(false);
+  const [manualError, setManualError] = useState<string | null>(null);
 
   useEffect(() => {
     const run = async () => {
@@ -56,6 +60,30 @@ export default function MarketplaceOrderTrackingPage() {
     if (typeof window === 'undefined') return;
     if (orderId && navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(orderId).catch((err) => logger.warn('No se pudo copiar el ID del pedido', err));
+    }
+  };
+
+  const submitManualEvidence = async () => {
+    if (!orderId || manualReference.trim().length < 3) return;
+    const lookupToken = loadMarketplaceLookupToken(orderId);
+    if (!lookupToken) {
+      setManualError('Falta la credencial segura de seguimiento. Abre el enlace desde este navegador o contacta soporte.');
+      return;
+    }
+    setManualSubmitting(true);
+    setManualError(null);
+    try {
+      const updated = await Marketplace.submitManualEvidence(
+        orderId,
+        manualReference.trim(),
+        lookupToken,
+      );
+      setOrder(updated);
+      setManualReference('');
+    } catch {
+      setManualError('No pudimos registrar la referencia. El pedido no fue marcado como pagado.');
+    } finally {
+      setManualSubmitting(false);
     }
   };
 
@@ -114,6 +142,77 @@ export default function MarketplaceOrderTrackingPage() {
                     {order.moOrderKind === 'rental' ? 'Renta' : 'Entrega'}: {order.moFulfillmentStatus.replace(/_/g, ' ')}
                     {order.moTrackingReference ? ` · Guía: ${order.moTrackingReference}` : ''}
                   </Typography>
+                )}
+                {order.moPaymentProvider === 'bank_transfer' && order.moCheckoutStatus !== 'paid' && (
+                  <Box sx={{ mt: 1.5 }}>
+                    {(!order.moManualPaymentStatus || order.moManualPaymentStatus === 'awaiting_evidence') && (
+                      <Alert severity="warning" variant="outlined">
+                        <Stack spacing={1}>
+                          <Typography variant="body2">
+                            El pedido está creado, pero no está pagado. Ingresa la referencia de tu transferencia para revisión.
+                          </Typography>
+                          <TextField
+                            label="Referencia de transferencia"
+                            value={manualReference}
+                            onChange={(event) => setManualReference(event.target.value)}
+                            inputProps={{ maxLength: 120 }}
+                            size="small"
+                          />
+                          <Button
+                            variant="contained"
+                            disabled={manualSubmitting || manualReference.trim().length < 3}
+                            onClick={() => { void submitManualEvidence(); }}
+                          >
+                            {manualSubmitting ? 'Enviando…' : 'Enviar evidencia para revisión'}
+                          </Button>
+                        </Stack>
+                      </Alert>
+                    )}
+                    {order.moManualPaymentStatus === 'submitted' && (
+                      <Alert severity="info" variant="outlined">
+                        Referencia recibida. Sigue pendiente de revisión; este pedido aún no está pagado.
+                      </Alert>
+                    )}
+                    {order.moManualPaymentStatus === 'under_review' && (
+                      <Alert severity="info" variant="outlined">
+                        La transferencia está bajo revisión. El pago todavía no está confirmado.
+                      </Alert>
+                    )}
+                    {order.moManualPaymentStatus === 'approved' && (
+                      <Alert severity="warning" variant="outlined">
+                        La evidencia fue aprobada, pero el estado canónico de pago aún requiere conciliación.
+                      </Alert>
+                    )}
+                    {order.moManualPaymentStatus === 'rejected' && (
+                      <Alert severity="error" variant="outlined">
+                        <Stack spacing={1}>
+                          <Typography variant="body2">
+                            La referencia fue rechazada. El pedido continúa impago; puedes enviar una referencia corregida.
+                          </Typography>
+                          <TextField
+                            label="Referencia corregida"
+                            value={manualReference}
+                            onChange={(event) => setManualReference(event.target.value)}
+                            inputProps={{ maxLength: 120 }}
+                            size="small"
+                          />
+                          <Button
+                            variant="contained"
+                            disabled={manualSubmitting || manualReference.trim().length < 3}
+                            onClick={() => { void submitManualEvidence(); }}
+                          >
+                            {manualSubmitting ? 'Enviando…' : 'Reenviar evidencia'}
+                          </Button>
+                        </Stack>
+                      </Alert>
+                    )}
+                    {order.moManualPaymentStatus === 'requires_reconciliation' && (
+                      <Alert severity="error" variant="outlined">
+                        La evidencia requiere conciliación de soporte. El pedido no se considera pagado.
+                      </Alert>
+                    )}
+                    {manualError && <Alert severity="error" sx={{ mt: 1 }}>{manualError}</Alert>}
+                  </Box>
                 )}
                 {order.moOrderKind === 'rental' && (
                   <Alert severity="info" variant="outlined" sx={{ mt: 1.5 }}>

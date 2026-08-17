@@ -299,6 +299,27 @@
       "apiScopes": [{ "pathPrefix": "/bookings/public", "methods": { "POST": "create" } }, { "pathPrefix": "/countries", "methods": { "GET": "view" } }, { "pathPrefix": "/engineers", "methods": { "GET": "view" } }]
     },
     {
+      "id": "bookings.public-order-tracking",
+      "parentId": "bookings.public",
+      "webRoute": "/reservas/orden/:bookingId",
+      "routeType": "contextual",
+      "classification": "record-detail-contextual-action",
+      "label": { "es": "Seguimiento de reserva", "en": "Booking tracking" },
+      "synonyms": { "es": ["reserva", "pago de reserva"], "en": ["booking", "booking payment"] },
+      "keywords": ["booking", "checkout", "tracking"],
+      "navigationGroup": "people",
+      "icon": "receipt",
+      "breadcrumb": ["bookings.public"],
+      "requiredAuth": "public",
+      "permissions": { "view": {}, "create": {} },
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "record",
+      "mobilePresentation": { "kind": "external-web", "destination": null, "documentedException": "Secure guest tracking links are opened contextually from booking confirmations." },
+      "accessRequestEligible": false,
+      "apiScopes": [{ "pathPrefix": "/bookings/public/orders", "methods": { "GET": "view", "POST": "create" } }]
+    },
+    {
       "id": "bookings.dj-booth",
       "parentId": "bookings.public",
       "webRoute": "/dj-booth",

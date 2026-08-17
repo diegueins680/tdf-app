@@ -49,6 +49,7 @@ import TDF.API.Types
     , LabelTrackUpdate (..)
     , MarketplaceOrderDTO (..)
     , MarketplaceOrderItemDTO (..)
+    , MarketplaceManualPaymentReview (..)
     , maxMarketplaceCartItemQuantity
     )
 import TDF.Auth
@@ -210,6 +211,7 @@ import TDF.Server
     , validateCourseSyllabusInputs
     , validateMarketplaceOrderListLimit
     , validateMarketplaceOrderListOffset
+    , validateMarketplaceManualReview
     , validateChatMessageListLookup
     , validateChatSendMessageBody
     , validateOptionalMarketplaceOrderStatus
@@ -8407,6 +8409,49 @@ spec = describe "TDF.Server helpers" $ do
             assertOffsetInvalid (validateMarketplaceOrderListOffset (Just (-1)))
             assertDeepOffsetInvalid (validateMarketplaceOrderListOffset (Just 10001))
 
+    describe "validateMarketplaceManualReview" $ do
+        it "normalizes the two explicit review decisions and requires meaningful notes" $ do
+            validateMarketplaceManualReview
+                MarketplaceManualPaymentReview
+                    { mmprAction = " APPROVE "
+                    , mmprReviewNotes = " Matched the independent bank statement. "
+                    }
+                `shouldBe` Right ("approve", "Matched the independent bank statement.")
+            validateMarketplaceManualReview
+                MarketplaceManualPaymentReview
+                    { mmprAction = "reject"
+                    , mmprReviewNotes = "Reference does not match."
+                    }
+                `shouldBe` Right ("reject", "Reference does not match.")
+
+        it "rejects unknown decisions, empty notes, and unsafe review text" $ do
+            let assertInvalid request expectedMessage =
+                    case validateMarketplaceManualReview request of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid marketplace manual review to fail, got: " <> show value)
+            assertInvalid
+                MarketplaceManualPaymentReview
+                    { mmprAction = "paid"
+                    , mmprReviewNotes = "Looks valid."
+                    }
+                "must be approve or reject"
+            assertInvalid
+                MarketplaceManualPaymentReview
+                    { mmprAction = "approve"
+                    , mmprReviewNotes = "  "
+                    }
+                "3 to 2000 characters"
+            assertInvalid
+                MarketplaceManualPaymentReview
+                    { mmprAction = "approve"
+                    , mmprReviewNotes = "valid\x202Einvalid"
+                    }
+                "unsupported characters"
+
     describe "validateOptionalMarketplaceOrderStatus" $ do
         it "keeps omitted filters absent and canonicalizes supported statuses" $ do
             validateOptionalMarketplaceOrderStatus Nothing `shouldBe` Right Nothing
@@ -8752,6 +8797,8 @@ spec = describe "TDF.Server helpers" $ do
                         , moPaidAt = Nothing
                         , moLookupToken = Just "secret-token"
                         , moCheckoutStatus = Just "awaiting_payment"
+                        , moManualPaymentStatus = Just "submitted"
+                        , moManualPaymentSubmittedAt = Just now
                         , moOrderKind = Just "sale"
                         , moFulfillmentMethod = Just "pickup"
                         , moFulfillmentStatus = Just "on_hold"
@@ -8786,6 +8833,8 @@ spec = describe "TDF.Server helpers" $ do
                     moBuyerPhone response `shouldBe` Nothing
                     moPaypalOrderId response `shouldBe` Nothing
                     moPaypalPayerEmail response `shouldBe` Nothing
+                    moManualPaymentStatus response `shouldBe` Just "submitted"
+                    moManualPaymentSubmittedAt response `shouldBe` Just now
 
             assertPublicOrderResponse redacted
             case requireLoadedMarketplacePublicOrderResponse

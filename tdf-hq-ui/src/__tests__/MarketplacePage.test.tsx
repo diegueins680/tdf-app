@@ -567,7 +567,8 @@ describe('MarketplacePage', () => {
       );
       expect(window.localStorage.getItem('tdf-marketplace-cart-id')).toBeNull();
       expect(window.localStorage.getItem('tdf-marketplace-cart-meta')).toBeNull();
-      expect(document.body.textContent).toContain('Pedido enviado');
+      expect(document.body.textContent).toContain('Pedido creado');
+      expect(document.body.textContent).toContain('pendiente de pago');
       expect(document.body.textContent).not.toContain('Tienes un carrito guardado');
     });
 

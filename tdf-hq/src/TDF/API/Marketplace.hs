@@ -16,6 +16,9 @@ import           TDF.API.Types
   , MarketplaceFulfillmentUpdate
   , MarketplaceRentalUpdate
   , MarketplaceRentalTermsUpdate
+  , MarketplaceManualEvidenceSubmit
+  , MarketplaceManualPaymentReview
+  , MarketplaceCommerceDTO
   , DatafastCheckoutDTO
   , PaypalCreateDTO
   , PaypalCaptureReq
@@ -35,10 +38,13 @@ type MarketplaceAPI =
   :<|> "cart" :> Capture "cartId" Text :> "paypal" :> "create" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] MarketplaceCheckoutReq :> Post '[JSON] PaypalCreateDTO
   :<|> "paypal" :> "capture" :> Header "X-Order-Lookup-Token" Text :> ReqBody '[JSON] PaypalCaptureReq :> Post '[JSON] MarketplaceOrderDTO
   :<|> "orders" :> Capture "orderId" Text :> Header "X-Order-Lookup-Token" Text :> Get '[JSON] MarketplaceOrderDTO
+  :<|> "orders" :> Capture "orderId" Text :> "manual-payment" :> "evidence" :> Header "X-Order-Lookup-Token" Text :> ReqBody '[JSON] MarketplaceManualEvidenceSubmit :> Post '[JSON] MarketplaceOrderDTO
 
 type MarketplaceAdminAPI =
        Capture "listingId" Text :> "rental-terms" :> ReqBody '[JSON] MarketplaceRentalTermsUpdate :> Put '[JSON] MarketplaceItemDTO
   :<|> "orders" :> QueryParam "status" Text :> QueryParam "limit" Int :> QueryParam "offset" Int :> Get '[JSON] [MarketplaceOrderDTO]
+  :<|> "orders" :> Capture "orderId" Text :> "commerce" :> Get '[JSON] MarketplaceCommerceDTO
+  :<|> "orders" :> Capture "orderId" Text :> "manual-payment" :> "review" :> ReqBody '[JSON] MarketplaceManualPaymentReview :> Post '[JSON] MarketplaceCommerceDTO
   :<|> "orders" :> Capture "orderId" Text :> ReqBody '[JSON] MarketplaceOrderUpdate :> Put '[JSON] MarketplaceOrderDTO
   :<|> "orders" :> Capture "orderId" Text :> "fulfillment" :> ReqBody '[JSON] MarketplaceFulfillmentUpdate :> Put '[JSON] MarketplaceOrderDTO
   :<|> "orders" :> Capture "orderId" Text :> "rental" :> ReqBody '[JSON] MarketplaceRentalUpdate :> Put '[JSON] MarketplaceOrderDTO

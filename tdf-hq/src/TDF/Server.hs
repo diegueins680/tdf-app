@@ -87,7 +87,7 @@ import           Database.Persist.Postgresql ()
 import           Database.PostgreSQL.Simple (SqlError (..))
 
 import           TDF.API
-import           TDF.API.Types (UserRoleSummaryDTO(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceFulfillmentUpdate(..), MarketplaceRentalUpdate(..), MarketplaceRentalTermsUpdate(..), MarketplaceCheckoutReq(..), MarketplaceShippingAddress(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), LabelProjectNoteDTO(..), LabelProjectNoteCreate(..), LabelProjectNoteUpdate(..), DriveUploadDTO(..), DriveTokenExchangeRequest(..), DriveTokenRefreshRequest(..), DriveTokenResponse(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..), verifyMetaWebhookSignature)
+import           TDF.API.Types (UserRoleSummaryDTO(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceFulfillmentUpdate(..), MarketplaceRentalUpdate(..), MarketplaceRentalTermsUpdate(..), MarketplaceManualEvidenceSubmit(..), MarketplaceManualPaymentReview(..), MarketplaceManualEvidenceDTO(..), MarketplaceCommerceDTO(..), MarketplaceCheckoutReq(..), MarketplaceShippingAddress(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), LabelProjectNoteDTO(..), LabelProjectNoteCreate(..), LabelProjectNoteUpdate(..), DriveUploadDTO(..), DriveTokenExchangeRequest(..), DriveTokenRefreshRequest(..), DriveTokenResponse(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..), verifyMetaWebhookSignature)
 import           TDF.API.Types (maxMarketplaceCartItemQuantity)
 import qualified TDF.API.Types as APITypes
 import           TDF.API.WhatsApp (validateHookVerifyRequest)
@@ -15347,11 +15347,14 @@ marketplacePublicServer =
   :<|> createPaypalOrder
   :<|> capturePaypalOrder
   :<|> getOrder
+  :<|> submitMarketplaceManualEvidence
 
 marketplaceAdminServer :: AuthedUser -> ServerT MarketplaceAdminAPI AppM
 marketplaceAdminServer user =
        updateMarketplaceRentalTerms user
   :<|> listMarketplaceOrders user
+  :<|> getMarketplaceCommerce user
+  :<|> reviewMarketplaceManualPayment user
   :<|> updateMarketplaceOrder user
   :<|> updateMarketplaceFulfillment user
   :<|> updateMarketplaceRental user
@@ -15826,6 +15829,12 @@ checkoutCart rawId mIdempotency payload = do
   context <- prepareMarketplaceSaleCheckout "bank_transfer" rawId mIdempotency payload
   now <- liftIO getCurrentTime
   Env{ envPool } <- ask
+  providerEnabled <- liftIO $ flip runSqlPool envPool $
+    Checkout.providerEnabledForEnvironment
+      (msccEnvironment context) Checkout.ProviderBankTransfer
+  unless providerEnabled $
+    throwError err503
+      { errBody = "Bank transfer checkout is disabled in this environment" }
   attemptResult <- liftIO $ flip runSqlPool envPool $
     Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
         { Checkout.pacCheckout = msccCheckout context
@@ -15862,7 +15871,7 @@ prepareMarketplaceSaleCheckout
   -> Maybe Text
   -> MarketplaceCheckoutReq
   -> AppM MarketplaceSaleCheckoutContext
-prepareMarketplaceSaleCheckout _provider rawCartId mIdempotency payload@MarketplaceCheckoutReq{..} = do
+prepareMarketplaceSaleCheckout provider rawCartId mIdempotency payload@MarketplaceCheckoutReq{..} = do
   idempotencyKey <- either (throwError . marketplaceCheckoutBadRequest) pure
     (ServiceStorefront.validateIdempotencyKey mIdempotency)
   buyerNameTxt <- either throwError pure (validateMarketplaceBuyerName mcrBuyerName)
@@ -15955,7 +15964,36 @@ prepareMarketplaceSaleCheckout _provider rawCartId mIdempotency payload@Marketpl
         payload
       _ -> pure (Left (marketplaceCheckoutInternal
         "Marketplace idempotency lookup was ambiguous"))
-  either throwError pure result
+  context <- either throwError pure result
+  ensureMarketplacePaymentRailAvailable provider context
+  pure context
+
+ensureMarketplacePaymentRailAvailable :: Text -> MarketplaceSaleCheckoutContext -> AppM ()
+ensureMarketplacePaymentRailAvailable rawProvider context = do
+  let provider = T.toLower (T.strip rawProvider)
+      checkoutId = Checkout.checkoutReferenceId (msccCheckout context)
+  conflicts <- runDB $ case provider of
+    "bank_transfer" -> rawSql
+      "SELECT 1::bigint FROM commerce_payment_attempt\
+      \ WHERE checkout_id = ?::uuid\
+      \ AND provider IN ('datafast','paypal','stripe')\
+      \ AND status IN ('requires_customer_action','processing') LIMIT 1"
+      [PersistText checkoutId]
+    "datafast" -> manualConflict checkoutId
+    "paypal" -> manualConflict checkoutId
+    _ -> pure []
+  unless (null (conflicts :: [Single Int64])) $
+    throwError err409
+      { errBody = if provider == "bank_transfer"
+          then "An online payment is awaiting customer action or processing; verify it before selecting bank transfer"
+          else "Manual payment evidence is under review; resolve it before starting an online payment"
+      }
+  where
+    manualConflict checkoutId = rawSql
+      "SELECT 1::bigint FROM commerce_manual_payment_evidence\
+      \ WHERE checkout_id = ?::uuid\
+      \ AND status IN ('submitted','under_review','approved') LIMIT 1"
+      [PersistText checkoutId]
 
 createMarketplaceCheckout
   :: Checkout.CheckoutEnvironment
@@ -17558,6 +17596,480 @@ isAsciiDecimalDigit :: Char -> Bool
 isAsciiDecimalDigit ch =
   ch >= '0' && ch <= '9'
 
+data MarketplacePaymentContext = MarketplacePaymentContext
+  { mpcxOrderKey      :: Key ME.MarketplaceOrder
+  , mpcxCheckout      :: Checkout.CheckoutReference
+  , mpcxCheckoutStatus :: Text
+  , mpcxEnvironment   :: Checkout.CheckoutEnvironment
+  , mpcxTotalMinor    :: Int64
+  , mpcxCurrency      :: Text
+  , mpcxHoldExpiresAt :: UTCTime
+  , mpcxOrderKind     :: Text
+  , mpcxBuyerName     :: Text
+  , mpcxBuyerEmail    :: Text
+  , mpcxBuyerPhone    :: Maybe Text
+  }
+
+type MarketplaceManualEvidenceRow =
+  ( Single Text, Single Text, Single Text, Single (Maybe Text)
+  , Single (Maybe Int64), Single (Maybe Text), Single (Maybe Int64)
+  , Single (Maybe UTCTime), Single (Maybe Int64), Single (Maybe UTCTime)
+  , Single (Maybe Text)
+  )
+
+loadMarketplacePaymentContext
+  :: Key ME.MarketplaceOrder
+  -> SqlPersistT IO (Either Text MarketplacePaymentContext)
+loadMarketplacePaymentContext orderKey = do
+  rows <- (rawSql
+    "SELECT checkout.id::text, checkout.status, checkout.environment,\
+    \ checkout.total_minor, checkout.currency, runtime.hold_expires_at,\
+    \ runtime.order_kind, orders.buyer_name, orders.buyer_email, orders.buyer_phone\
+    \ FROM marketplace_order_checkout_runtime runtime\
+    \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+    \ JOIN marketplace_order orders ON orders.id = runtime.order_id\
+    \ WHERE runtime.order_id = ?::uuid\
+    \ AND checkout.domain_order_id = runtime.order_id::text\
+    \ AND checkout.domain_type = CASE runtime.order_kind\
+    \   WHEN 'sale' THEN 'marketplace_sale' ELSE 'marketplace_rental' END\
+    \ AND checkout.total_minor = orders.total_usd_cents\
+    \ AND checkout.currency = orders.currency"
+    [PersistText (toPathPiece orderKey)]
+    :: SqlPersistT IO
+      [( Single Text, Single Text, Single Text, Single Int64, Single Text
+       , Single UTCTime, Single Text, Single Text, Single Text, Single (Maybe Text)
+       )])
+  pure $ case rows of
+    [( Single checkoutId, Single checkoutStatus, Single environmentText
+     , Single totalMinor, Single currency, Single holdExpiresAt, Single orderKind
+     , Single buyerName, Single buyerEmail, Single buyerPhone
+     )]
+      | totalMinor <= 0 -> Left "Marketplace checkout total is invalid"
+      | environmentText `notElem` ["sandbox", "production"] ->
+          Left "Marketplace checkout environment is invalid"
+      | otherwise -> Right MarketplacePaymentContext
+          { mpcxOrderKey = orderKey
+          , mpcxCheckout = Checkout.CheckoutReference checkoutId
+          , mpcxCheckoutStatus = checkoutStatus
+          , mpcxEnvironment = if environmentText == "production"
+              then Checkout.CheckoutProduction else Checkout.CheckoutSandbox
+          , mpcxTotalMinor = totalMinor
+          , mpcxCurrency = currency
+          , mpcxHoldExpiresAt = holdExpiresAt
+          , mpcxOrderKind = orderKind
+          , mpcxBuyerName = buyerName
+          , mpcxBuyerEmail = buyerEmail
+          , mpcxBuyerPhone = buyerPhone
+          }
+    [] -> Left "Marketplace order is not linked to a canonical checkout"
+    _ -> Left "Marketplace checkout context is ambiguous"
+
+requireMarketplacePaymentContext
+  :: Text
+  -> Maybe Text
+  -> AppM MarketplacePaymentContext
+requireMarketplacePaymentContext rawOrderId mLookupToken = do
+  orderKey <- parseOrderId rawOrderId
+  requireMarketplaceOrderLookupToken orderKey mLookupToken
+  context <- runDB (loadMarketplacePaymentContext orderKey)
+    >>= either (throwError . marketplaceCheckoutConflict) pure
+  now <- liftIO getCurrentTime
+  when
+      ( mpcxHoldExpiresAt context <= now
+        && mpcxCheckoutStatus context `elem` ["holding", "awaiting_payment", "failed"]
+      ) $ do
+    _ <- runDB (rawSql "SELECT marketplace_expire_sale_holds(?)"
+      [PersistUTCTime now] :: SqlPersistT IO [Single Int])
+    throwError err409
+      { errBody = "This marketplace checkout hold expired; start a new checkout before submitting payment evidence" }
+  pure context
+
+loadMarketplaceManualEvidenceRows
+  :: Checkout.CheckoutReference
+  -> SqlPersistT IO [MarketplaceManualEvidenceRow]
+loadMarketplaceManualEvidenceRows checkout = rawSql
+  "SELECT evidence.id::text, attempt.provider, evidence.status,\
+  \ evidence.customer_reference, evidence.submitted_amount_minor, evidence.currency,\
+  \ evidence.submitted_by, evidence.submitted_at, evidence.reviewed_by,\
+  \ evidence.reviewed_at, evidence.review_notes\
+  \ FROM commerce_manual_payment_evidence evidence\
+  \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+  \ WHERE evidence.checkout_id = ?::uuid\
+  \ AND attempt.checkout_id = evidence.checkout_id\
+  \ AND attempt.provider IN ('bank_transfer','cash','pos')\
+  \ AND attempt.operation = 'manual_verify'\
+  \ ORDER BY attempt.updated_at DESC, evidence.id DESC LIMIT 2"
+  [PersistText (Checkout.checkoutReferenceId checkout)]
+
+marketplaceManualEvidenceDTO
+  :: MarketplaceManualEvidenceRow
+  -> MarketplaceManualEvidenceDTO
+marketplaceManualEvidenceDTO
+    ( Single evidenceId, Single provider, Single status, Single customerReference
+    , Single submittedAmount, Single currency, Single submittedBy, Single submittedAt
+    , Single reviewedBy, Single reviewedAt, Single reviewNotes
+    ) = MarketplaceManualEvidenceDTO
+      { mmeEvidenceId = evidenceId
+      , mmePaymentMethod = provider
+      , mmeStatus = status
+      , mmeCustomerReference = customerReference
+      , mmeSubmittedAmountMinor = submittedAmount
+      , mmeCurrency = currency
+      , mmeSubmittedBy = submittedBy
+      , mmeSubmittedAt = submittedAt
+      , mmeReviewedBy = reviewedBy
+      , mmeReviewedAt = reviewedAt
+      , mmeReviewNotes = reviewNotes
+      }
+
+loadMarketplaceCommerceDTO
+  :: Key ME.MarketplaceOrder
+  -> SqlPersistT IO (Either Text MarketplaceCommerceDTO)
+loadMarketplaceCommerceDTO orderKey = do
+  contextResult <- loadMarketplacePaymentContext orderKey
+  case contextResult of
+    Left message -> pure (Left message)
+    Right context -> do
+      evidenceRows <- loadMarketplaceManualEvidenceRows (mpcxCheckout context)
+      pure $ case evidenceRows of
+        [] -> Right (toCommerce context Nothing)
+        [row] -> Right (toCommerce context (Just (marketplaceManualEvidenceDTO row)))
+        _ -> Left "Marketplace manual payment evidence is ambiguous and requires reconciliation"
+  where
+    toCommerce context evidence = MarketplaceCommerceDTO
+      { mpcOrderId = toPathPiece (mpcxOrderKey context)
+      , mpcCheckoutId = Checkout.checkoutReferenceId (mpcxCheckout context)
+      , mpcPaymentStatus = mpcxCheckoutStatus context
+      , mpcHoldExpiresAt = mpcxHoldExpiresAt context
+      , mpcOrderKind = mpcxOrderKind context
+      , mpcManualEvidence = evidence
+      }
+
+getMarketplaceCommerce :: AuthedUser -> Text -> AppM MarketplaceCommerceDTO
+getMarketplaceCommerce user rawOrderId = do
+  requireModule user ModuleInvoicing
+  orderKey <- parseOrderId rawOrderId
+  runDB (loadMarketplaceCommerceDTO orderKey)
+    >>= either (throwError . marketplaceCheckoutConflict) pure
+
+submitMarketplaceManualEvidence
+  :: Text
+  -> Maybe Text
+  -> MarketplaceManualEvidenceSubmit
+  -> AppM MarketplaceOrderDTO
+submitMarketplaceManualEvidence
+    rawOrderId mLookupToken MarketplaceManualEvidenceSubmit{..} = do
+  context <- requireMarketplacePaymentContext rawOrderId mLookupToken
+  customerReference <- either throwError pure $
+    validatePublicBookingManualReference mmesCustomerReference
+  customerParty <- ensurePartyRecord
+    (Just (mpcxBuyerName context)) (mpcxBuyerEmail context) (mpcxBuyerPhone context)
+  let customerId = fromSqlKey customerParty
+      checkoutId = Checkout.checkoutReferenceId (mpcxCheckout context)
+  outcome <- runDB $ do
+    rows <- (rawSql
+      "SELECT evidence.id::text, evidence.status, evidence.customer_reference,\
+      \ evidence.submitted_by, attempt.id::text, checkout.status,\
+      \ checkout.customer_party_id\
+      \ FROM commerce_manual_payment_evidence evidence\
+      \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+      \ JOIN commerce_checkout_session checkout ON checkout.id = evidence.checkout_id\
+      \ JOIN marketplace_order_checkout_runtime runtime ON runtime.checkout_id = checkout.id\
+      \ WHERE runtime.order_id = ?::uuid\
+      \ AND checkout.id = ?::uuid\
+      \ AND checkout.domain_order_id = runtime.order_id::text\
+      \ AND checkout.total_minor = ? AND checkout.currency = ?\
+      \ AND attempt.checkout_id = checkout.id\
+      \ AND attempt.provider = 'bank_transfer'\
+      \ AND attempt.operation = 'manual_verify'\
+      \ AND attempt.environment = checkout.environment\
+      \ AND attempt.amount_minor = checkout.total_minor\
+      \ AND attempt.currency = checkout.currency\
+      \ FOR UPDATE OF evidence, attempt, checkout"
+      [ PersistText (toPathPiece (mpcxOrderKey context))
+      , PersistText checkoutId
+      , PersistInt64 (mpcxTotalMinor context)
+      , PersistText (mpcxCurrency context)
+      ] :: SqlPersistT IO
+        [( Single Text, Single Text, Single (Maybe Text), Single (Maybe Int64)
+         , Single Text, Single Text, Single (Maybe Int64)
+         )])
+    case rows of
+      [( Single evidenceId, Single status, Single existingReference
+       , Single existingSubmitter, Single attemptId, Single checkoutStatus
+       , Single existingCustomer
+       )]
+        | maybe False (/= customerId) existingCustomer ->
+            pure (Left "Marketplace customer identity does not match the checkout")
+        | checkoutStatus == "paid" && status /= "approved" ->
+            pure (Left "This checkout is already paid by another payment attempt")
+        | status `elem` ["submitted", "under_review"]
+            && existingReference == Just customerReference
+            && existingSubmitter == Just customerId -> pure (Right ())
+        | status == "approved" -> pure (Right ())
+        | status `elem` ["submitted", "under_review"] ->
+            pure (Left "Different manual evidence is already under review")
+        | status `elem` ["awaiting_evidence", "rejected"] -> do
+            now <- liftIO getCurrentTime
+            rawExecute
+              "UPDATE commerce_checkout_session SET customer_party_id = COALESCE(customer_party_id, ?)\
+              \ WHERE id = ?::uuid"
+              [PersistInt64 customerId, PersistText checkoutId]
+            when (status == "rejected") $
+              Checkout.recordManualPaymentSelection
+                (mpcxCheckout context)
+                (Checkout.PaymentAttemptReference attemptId)
+                Checkout.ProviderBankTransfer
+                (marketplacePaymentCorrelationId context Checkout.ProviderBankTransfer "manual-resubmit")
+                now
+            rawExecute
+              "UPDATE commerce_manual_payment_evidence\
+              \ SET customer_reference = ?, submitted_amount_minor = ?, currency = ?,\
+              \ submitted_at = ?, submitted_by = ?, status = 'submitted',\
+              \ reviewed_by = NULL, reviewed_at = NULL, review_notes = NULL\
+              \ WHERE id = ?::uuid"
+              [ PersistText customerReference
+              , PersistInt64 (mpcxTotalMinor context)
+              , PersistText (mpcxCurrency context)
+              , PersistUTCTime now
+              , PersistInt64 customerId
+              , PersistText evidenceId
+              ]
+            rawExecute
+              "INSERT INTO commerce_checkout_audit_event(\
+              \ checkout_id, event_type, actor_type, actor_id, correlation_id, metadata\
+              \) VALUES (?::uuid, 'manual_payment_evidence_submitted', 'customer', ?, ?,\
+              \ jsonb_build_object('attempt_id', ?))"
+              [ PersistText checkoutId
+              , PersistText (T.pack (show customerId))
+              , PersistText (marketplacePaymentCorrelationId
+                  context Checkout.ProviderBankTransfer "manual-evidence")
+              , PersistText attemptId
+              ]
+            pure (Right ())
+        | otherwise -> pure (Left "Manual evidence cannot be submitted in its current state")
+      [] -> pure (Left "Select bank transfer before submitting evidence")
+      _ -> pure (Left "Marketplace manual payment evidence is ambiguous")
+  either (throwError . marketplaceCheckoutConflict) pure outcome
+  runDB (loadOrderDTO (mpcxOrderKey context))
+    >>= either throwError pure
+      . requireLoadedMarketplacePublicOrderResponse "Marketplace order"
+
+validateMarketplaceManualReview
+  :: MarketplaceManualPaymentReview
+  -> Either ServerError (Text, Text)
+validateMarketplaceManualReview MarketplaceManualPaymentReview{..}
+  | action `notElem` ["approve", "reject"] =
+      Left err400 { errBody = "Manual payment review action must be approve or reject" }
+  | T.length notes < 3 || T.length notes > 2000 =
+      Left err400 { errBody = "Manual payment review notes must contain 3 to 2000 characters" }
+  | T.any isUnsafeAccessRequestTextChar notes =
+      Left err400 { errBody = "Manual payment review notes contain unsupported characters" }
+  | otherwise = Right (action, notes)
+  where
+    action = T.toLower (T.strip mmprAction)
+    notes = T.strip mmprReviewNotes
+
+marketplacePaymentCorrelationId
+  :: MarketplacePaymentContext
+  -> Checkout.PaymentProvider
+  -> Text
+  -> Text
+marketplacePaymentCorrelationId context provider stage =
+  "marketplace-" <> mpcxOrderKind context <> ":"
+    <> toPathPiece (mpcxOrderKey context) <> ":"
+    <> Checkout.paymentProviderText provider <> ":" <> stage
+
+insertMarketplaceManualReviewAudit
+  :: MarketplacePaymentContext
+  -> Checkout.PaymentProvider
+  -> Int64
+  -> Text
+  -> Text
+  -> Text
+  -> SqlPersistT IO ()
+insertMarketplaceManualReviewAudit context provider reviewerId attemptId evidenceId eventType =
+  rawExecute
+    "INSERT INTO commerce_checkout_audit_event(\
+    \ checkout_id, event_type, actor_type, actor_id, correlation_id, metadata\
+    \) VALUES (?::uuid, ?, 'staff', ?, ?,\
+    \ jsonb_build_object('attempt_id', ?, 'evidence_id', ?))"
+    [ PersistText (Checkout.checkoutReferenceId (mpcxCheckout context))
+    , PersistText eventType
+    , PersistText (T.pack (show reviewerId))
+    , PersistText (marketplacePaymentCorrelationId context provider "manual-review")
+    , PersistText attemptId
+    , PersistText evidenceId
+    ]
+
+reviewMarketplaceManualPayment
+  :: AuthedUser
+  -> Text
+  -> MarketplaceManualPaymentReview
+  -> AppM MarketplaceCommerceDTO
+reviewMarketplaceManualPayment user rawOrderId request = do
+  requireModule user ModuleInvoicing
+  orderKey <- parseOrderId rawOrderId
+  context <- runDB (loadMarketplacePaymentContext orderKey)
+    >>= either (throwError . marketplaceCheckoutConflict) pure
+  (reviewAction, reviewNotes) <- either throwError pure $
+    validateMarketplaceManualReview request
+  now <- liftIO getCurrentTime
+  let reviewerId = fromSqlKey (auPartyId user)
+      checkoutId = Checkout.checkoutReferenceId (mpcxCheckout context)
+  outcome <- runDB $ do
+    rows <- (rawSql
+      "SELECT checkout.status, attempt.id::text, attempt.provider,\
+      \ attempt.merchant_account_ref, attempt.status, evidence.id::text,\
+      \ evidence.status, evidence.submitted_by, evidence.reviewed_by,\
+      \ EXISTS (SELECT 1 FROM commerce_reservation_hold hold\
+      \   WHERE hold.checkout_id = checkout.id AND hold.status = 'active'\
+      \   AND hold.expires_at > ?)\
+      \ FROM marketplace_order_checkout_runtime runtime\
+      \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+      \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id = checkout.id\
+      \ JOIN commerce_manual_payment_evidence evidence\
+      \   ON evidence.checkout_id = checkout.id\
+      \  AND evidence.payment_attempt_id = attempt.id\
+      \ WHERE runtime.order_id = ?::uuid AND checkout.id = ?::uuid\
+      \ AND checkout.domain_order_id = runtime.order_id::text\
+      \ AND checkout.environment = ? AND checkout.total_minor = ?\
+      \ AND checkout.currency = ? AND attempt.environment = checkout.environment\
+      \ AND attempt.amount_minor = checkout.total_minor\
+      \ AND attempt.currency = checkout.currency\
+      \ AND attempt.provider IN ('bank_transfer','cash','pos')\
+      \ AND attempt.operation = 'manual_verify'\
+      \ ORDER BY (attempt.status = 'succeeded') DESC, attempt.updated_at DESC\
+      \ FOR UPDATE OF checkout, attempt, evidence"
+      [ PersistUTCTime now
+      , PersistText (toPathPiece orderKey)
+      , PersistText checkoutId
+      , PersistText (Checkout.checkoutEnvironmentText (mpcxEnvironment context))
+      , PersistInt64 (mpcxTotalMinor context)
+      , PersistText (mpcxCurrency context)
+      ] :: SqlPersistT IO
+        [( Single Text, Single Text, Single Text, Single Text, Single Text
+         , Single Text, Single Text, Single (Maybe Int64), Single (Maybe Int64)
+         , Single Bool
+         )])
+    case rows of
+      [] -> pure (Left "No submitted manual payment evidence exists for this marketplace order")
+      [_first, _second] -> pure (Left "Marketplace manual payment evidence is ambiguous and requires reconciliation")
+      (_:_:_) -> pure (Left "Marketplace manual payment evidence is ambiguous and requires reconciliation")
+      [( Single checkoutStatus, Single attemptId, Single providerText, Single merchantRef
+       , Single attemptStatus, Single evidenceId, Single evidenceStatus
+       , Single mSubmittedBy, Single mReviewedBy, Single holdActive
+       )] -> case (mSubmittedBy, manualPaymentProviderFromText providerText) of
+        (Nothing, _) -> pure (Left "Manual payment evidence has no verified submitter")
+        (_, Nothing) -> pure (Left "Manual payment evidence uses an unsupported provider")
+        (Just submittedBy, Just provider)
+          | submittedBy == reviewerId ->
+              pure (Left "Manual payment evidence requires an independent reviewer")
+          | evidenceStatus == "approved" && reviewAction == "approve"
+              && checkoutStatus == "paid" && attemptStatus == "succeeded" -> pure (Right ())
+          | evidenceStatus == "approved" ->
+              pure (Left "Approved manual payment evidence cannot be changed")
+          | evidenceStatus == "rejected" && reviewAction == "reject" -> pure (Right ())
+          | evidenceStatus == "rejected" ->
+              pure (Left "Rejected evidence must be resubmitted before approval")
+          | evidenceStatus `notElem` ["submitted", "under_review"] ->
+              pure (Left "Manual payment evidence is not ready for review")
+          | evidenceStatus == "under_review" && mReviewedBy /= Just reviewerId ->
+              pure (Left "Manual payment evidence is already under review by another staff member")
+          | checkoutStatus == "paid" -> do
+              Checkout.recordReconciliationException
+                provider (mpcxEnvironment context) merchantRef
+                "manual_evidence_after_other_payment"
+                (toPathPiece orderKey) evidenceId
+                (mpcxTotalMinor context) (Just (mpcxTotalMinor context))
+                (mpcxCurrency context) now
+              pure (Left "This checkout is already paid by another payment attempt")
+          | reviewAction == "approve" && not holdActive -> do
+              Checkout.recordReconciliationException
+                provider (mpcxEnvironment context) merchantRef
+                "manual_payment_after_marketplace_hold_expiry"
+                (toPathPiece orderKey) evidenceId
+                (mpcxTotalMinor context) (Just (mpcxTotalMinor context))
+                (mpcxCurrency context) now
+              pure (Left "The marketplace hold expired; payment requires reconciliation and cannot confirm this order")
+          | reviewAction == "approve"
+              && checkoutStatus `notElem` ["awaiting_payment", "failed", "processing"] ->
+              pure (Left "This checkout no longer accepts manual payment approval")
+          | otherwise -> do
+              transactionSave
+              when (evidenceStatus == "submitted") $
+                rawExecute
+                  "UPDATE commerce_manual_payment_evidence\
+                  \ SET status = 'under_review', reviewed_by = ?, review_notes = ?\
+                  \ WHERE id = ?::uuid"
+                  [PersistInt64 reviewerId, PersistText reviewNotes, PersistText evidenceId]
+              if reviewAction == "reject"
+                then do
+                  rawExecute
+                    "UPDATE commerce_manual_payment_evidence\
+                    \ SET status = 'rejected', reviewed_at = ?, review_notes = ?\
+                    \ WHERE id = ?::uuid"
+                    [PersistUTCTime now, PersistText reviewNotes, PersistText evidenceId]
+                  Checkout.recordPaymentFailure
+                    (mpcxCheckout context) (Checkout.PaymentAttemptReference attemptId)
+                    provider "manual_evidence_rejected"
+                    (marketplacePaymentCorrelationId context provider "manual-review") now
+                  insertMarketplaceManualReviewAudit
+                    context provider reviewerId attemptId evidenceId "manual_payment_rejected"
+                  pure (Right ())
+                else do
+                  rawExecute
+                    "UPDATE commerce_manual_payment_evidence\
+                    \ SET status = 'approved', reviewed_at = ?, review_notes = ?\
+                    \ WHERE id = ?::uuid"
+                    [PersistUTCTime now, PersistText reviewNotes, PersistText evidenceId]
+                  binding <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
+                    { Checkout.pbcAttempt = Checkout.PaymentAttemptReference attemptId
+                    , Checkout.pbcCheckout = mpcxCheckout context
+                    , Checkout.pbcProvider = provider
+                    , Checkout.pbcEnvironment = mpcxEnvironment context
+                    , Checkout.pbcMerchantRef = merchantRef
+                    , Checkout.pbcResourceType = "manual_evidence"
+                    , Checkout.pbcProviderResource = evidenceId
+                    , Checkout.pbcResourcePath = Nothing
+                    , Checkout.pbcOrderReference = toPathPiece orderKey
+                    , Checkout.pbcAmountMinor = mpcxTotalMinor context
+                    , Checkout.pbcCurrency = mpcxCurrency context
+                    , Checkout.pbcStage = Checkout.AttemptProcessing
+                    , Checkout.pbcOccurredAt = now
+                    , Checkout.pbcCorrelationId = marketplacePaymentCorrelationId
+                        context provider "manual-review"
+                    }
+                  case binding of
+                    Left bindingError -> transactionUndo >> pure (Left bindingError)
+                    Right () -> do
+                      verified <- Checkout.recordApprovedManualPayment Checkout.VerifiedPayment
+                        { Checkout.vpAttempt = Checkout.PaymentAttemptReference attemptId
+                        , Checkout.vpCheckout = mpcxCheckout context
+                        , Checkout.vpProvider = provider
+                        , Checkout.vpEnvironment = mpcxEnvironment context
+                        , Checkout.vpMerchantRef = merchantRef
+                        , Checkout.vpResourceType = "manual_evidence"
+                        , Checkout.vpProviderResource = evidenceId
+                        , Checkout.vpProviderResourcePath = Nothing
+                        , Checkout.vpOrderReference = toPathPiece orderKey
+                        , Checkout.vpAmountMinor = mpcxTotalMinor context
+                        , Checkout.vpCurrency = mpcxCurrency context
+                        , Checkout.vpEvidence = "staff_verified_manual"
+                        , Checkout.vpOccurredAt = now
+                        , Checkout.vpCorrelationId = marketplacePaymentCorrelationId
+                            context provider "manual-review"
+                        }
+                      case verified of
+                        Left verificationError -> transactionUndo >> pure (Left verificationError)
+                        Right _ -> do
+                          insertMarketplaceManualReviewAudit
+                            context provider reviewerId attemptId evidenceId "manual_payment_approved"
+                          pure (Right ())
+  either (throwError . marketplaceCheckoutConflict) pure outcome
+  runDB (loadMarketplaceCommerceDTO orderKey)
+    >>= either (throwError . marketplaceCheckoutConflict) pure
+
 listMarketplaceOrders :: AuthedUser -> Maybe Text -> Maybe Int -> Maybe Int -> AppM [MarketplaceOrderDTO]
 listMarketplaceOrders user mStatus mLimit mOffset = do
   requireMarketplaceAccess user
@@ -18294,6 +18806,18 @@ loadOrderDTO orderId = do
            , Single Text, Single Int64, Single Text, Single Text
            , Single (Maybe Text), Single (Maybe Text)
            )])
+      manualRows <- (rawSql
+        "SELECT evidence.status, evidence.submitted_at\
+        \ FROM marketplace_order_checkout_runtime runtime\
+        \ JOIN commerce_manual_payment_evidence evidence ON evidence.checkout_id = runtime.checkout_id\
+        \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+        \ WHERE runtime.order_id = ?::uuid\
+        \ AND attempt.checkout_id = runtime.checkout_id\
+        \ AND attempt.provider IN ('bank_transfer','cash','pos')\
+        \ AND attempt.operation = 'manual_verify'\
+        \ ORDER BY attempt.updated_at DESC, evidence.id DESC LIMIT 2"
+        [PersistText (toPathPiece orderId)]
+        :: SqlPersistT IO [(Single Text, Single (Maybe UTCTime))])
       fulfillmentHistory <- case runtimeRows of
         [(Single _, Single "rental", _, _, _, _)] -> (rawSql
           "SELECT to_status, created_at FROM marketplace_rental_event\
@@ -18320,11 +18844,21 @@ loadOrderDTO orderId = do
             , moFulfillmentHistory = history
               }
             _ -> baseDto
+          withManual = case manualRows of
+            [(Single manualStatus, Single submittedAt)] -> withRuntime
+              { moManualPaymentStatus = Just manualStatus
+              , moManualPaymentSubmittedAt = submittedAt
+              }
+            [] -> withRuntime
+            _ -> withRuntime
+              { moManualPaymentStatus = Just "requires_reconciliation"
+              , moManualPaymentSubmittedAt = Nothing
+              }
       pure . Just $ case rentalRows of
         [( Single startDate, Single endDate, Single durationDays, Single rentalCharge
          , Single securityDeposit, Single depositStatus, Single depositDeduction
          , Single termsVersion, Single timezone, Single conditionOut, Single conditionIn
-         )] -> withRuntime
+         )] -> withManual
             { moRentalStartDate = Just startDate
             , moRentalEndDate = Just endDate
             , moRentalDurationDays = Just durationDays
@@ -18337,7 +18871,7 @@ loadOrderDTO orderId = do
             , moConditionOut = conditionOut
             , moConditionIn = conditionIn
             }
-        _ -> withRuntime
+        _ -> withManual
 
 orderToDTO
   :: Entity ME.MarketplaceOrder
@@ -18373,6 +18907,8 @@ orderToDTO (Entity oid order) items =
     , moPaidAt          = ME.marketplaceOrderPaidAt order
     , moLookupToken     = Nothing
     , moCheckoutStatus  = Nothing
+    , moManualPaymentStatus = Nothing
+    , moManualPaymentSubmittedAt = Nothing
     , moFulfillmentMethod = Nothing
     , moFulfillmentStatus = Nothing
     , moHoldExpiresAt   = Nothing

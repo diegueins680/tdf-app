@@ -68,4 +68,29 @@ describe('marketplace checkout API security contract', () => {
       headers: { 'X-Order-Lookup-Token': 'lookup-secret' },
     });
   });
+
+  it('submits manual evidence without a paid assertion and uses protected staff review routes', async () => {
+    postMock.mockResolvedValue({});
+    getMock.mockResolvedValue({});
+
+    await Marketplace.submitManualEvidence('order-1', 'BANK-REFERENCE-1', 'lookup-secret');
+    expect(postMock).toHaveBeenNthCalledWith(
+      1,
+      '/marketplace/orders/order-1/manual-payment/evidence',
+      { mmesCustomerReference: 'BANK-REFERENCE-1' },
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+    expect(postMock.mock.calls[0]?.[0]).not.toContain('lookup-secret');
+
+    await Marketplace.getCommerce('order-1');
+    expect(getMock).toHaveBeenCalledWith('/marketplace/orders/order-1/commerce', undefined);
+
+    await Marketplace.reviewManualPayment('order-1', 'approve', 'Matched bank statement.');
+    expect(postMock).toHaveBeenNthCalledWith(
+      2,
+      '/marketplace/orders/order-1/manual-payment/review',
+      { mmprAction: 'approve', mmprReviewNotes: 'Matched bank statement.' },
+      undefined,
+    );
+  });
 });

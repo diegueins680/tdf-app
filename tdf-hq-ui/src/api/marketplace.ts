@@ -12,6 +12,7 @@ import type {
   MarketplaceFulfillmentUpdatePayload,
   MarketplaceRentalUpdatePayload,
   MarketplaceRentalTermsUpdatePayload,
+  MarketplaceCommerceDTO,
 } from './types';
 
 export interface CartItemUpdate {
@@ -104,6 +105,12 @@ export const Marketplace = {
     post<MarketplaceOrderDTO>('/marketplace/paypal/capture', payload, lookupHeaders(lookupToken)),
   getOrder: (orderId: string, lookupToken: string) =>
     get<MarketplaceOrderDTO>(`/marketplace/orders/${orderId}`, lookupHeaders(lookupToken)),
+  submitManualEvidence: (orderId: string, customerReference: string, lookupToken: string) =>
+    post<MarketplaceOrderDTO>(
+      `/marketplace/orders/${orderId}/manual-payment/evidence`,
+      { mmesCustomerReference: customerReference },
+      lookupHeaders(lookupToken),
+    ),
   listOrders: (params?: { status?: string; limit?: number; offset?: number }) => {
     const qs = new URLSearchParams();
     const status = params?.status?.trim();
@@ -126,6 +133,13 @@ export const Marketplace = {
   },
   updateOrder: (orderId: string, payload: MarketplaceOrderUpdatePayload) =>
     put<MarketplaceOrderDTO>(`/marketplace/orders/${orderId}`, payload),
+  getCommerce: (orderId: string) =>
+    get<MarketplaceCommerceDTO>(`/marketplace/orders/${orderId}/commerce`),
+  reviewManualPayment: (orderId: string, action: 'approve' | 'reject', reviewNotes: string) =>
+    post<MarketplaceCommerceDTO>(`/marketplace/orders/${orderId}/manual-payment/review`, {
+      mmprAction: action,
+      mmprReviewNotes: reviewNotes,
+    }),
   updateFulfillment: (orderId: string, payload: MarketplaceFulfillmentUpdatePayload) =>
     put<MarketplaceOrderDTO>(`/marketplace/orders/${orderId}/fulfillment`, payload),
   updateRental: (orderId: string, payload: MarketplaceRentalUpdatePayload) =>

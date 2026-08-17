@@ -46,6 +46,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ClearIcon from '@mui/icons-material/Clear';
 import type {
   MarketplaceFulfillmentUpdatePayload,
+  MarketplaceCommerceDTO,
   MarketplaceOrderDTO,
   MarketplaceOrderUpdatePayload,
   MarketplaceRentalUpdatePayload,
@@ -299,6 +300,7 @@ export default function MarketplaceOrdersPage() {
   const [rentalDepositDeductionInput, setRentalDepositDeductionInput] = useState('');
   const [rentalReasonInput, setRentalReasonInput] = useState('');
   const [rentalNotesInput, setRentalNotesInput] = useState('');
+  const [manualReviewNotes, setManualReviewNotes] = useState('');
 
   const ordersQuery = useQuery<MarketplaceOrderDTO[], Error>({
     queryKey: ['marketplace-orders', statusFilter],
@@ -320,6 +322,14 @@ export default function MarketplaceOrdersPage() {
     () => sortedOrders.find((o) => o.moOrderId === selectedId) ?? null,
     [sortedOrders, selectedId],
   );
+  const marketplaceCommerceQuery = useQuery<MarketplaceCommerceDTO, Error>({
+    queryKey: ['marketplace-order-commerce', selectedId],
+    queryFn: () => Marketplace.getCommerce(selectedId!),
+    enabled: isAuthed
+      && Boolean(selectedId)
+      && ['bank_transfer', 'cash', 'pos'].includes(selectedOrder?.moPaymentProvider ?? ''),
+    retry: false,
+  });
 
   useEffect(() => {
     if (!selectedOrder) return;
@@ -338,6 +348,7 @@ export default function MarketplaceOrdersPage() {
     setRentalDepositDeductionInput(String(selectedOrder.moDepositDeductionUsdCents ?? ''));
     setRentalReasonInput('');
     setRentalNotesInput('');
+    setManualReviewNotes('');
   }, [selectedOrder]);
 
   const statusFilterImpliesPaid = statusFilter !== 'all' && isPaidOrderStatus(statusFilter);
@@ -725,6 +736,26 @@ export default function MarketplaceOrdersPage() {
     },
   });
 
+  const manualReviewMutation = useMutation<
+    MarketplaceCommerceDTO,
+    Error,
+    'approve' | 'reject'
+  >({
+    mutationFn: (action) => Marketplace.reviewManualPayment(
+      selectedId!,
+      action,
+      manualReviewNotes.trim(),
+    ),
+    onSuccess: (data, action) => {
+      qc.setQueryData(['marketplace-order-commerce', data.mpcOrderId], data);
+      void qc.invalidateQueries({ queryKey: ['marketplace-orders'] });
+      setManualReviewNotes('');
+      setToast(action === 'approve'
+        ? 'Pago manual verificado; la entrega o custodia sigue separada'
+        : 'Evidencia rechazada; la orden continúa impaga');
+    },
+  });
+
   const handleRefresh = () => {
     void qc.invalidateQueries({ queryKey: ['marketplace-orders'] });
   };
@@ -779,10 +810,12 @@ export default function MarketplaceOrdersPage() {
     setRentalDepositDeductionInput('');
     setRentalReasonInput('');
     setRentalNotesInput('');
+    setManualReviewNotes('');
     setCopyMenuAnchorEl(null);
     updateMutation.reset();
     fulfillmentMutation.reset();
     rentalMutation.reset();
+    manualReviewMutation.reset();
   };
 
   const closeCopyMenu = () => {
@@ -971,6 +1004,13 @@ export default function MarketplaceOrdersPage() {
   const showSelectedBuyerPhone = shouldShowBuyerPhoneDetail(selectedBuyerPhone, selectedBuyerIdentity);
   const selectedCartId = selectedOrder?.moCartId?.trim() ?? '';
   const selectedPaypalOrderId = selectedOrder?.moPaypalOrderId?.trim() ?? '';
+  const selectedManualEvidence = marketplaceCommerceQuery.data?.mpcManualEvidence ?? null;
+  const manualReviewReady = Boolean(
+    selectedManualEvidence
+      && ['submitted', 'under_review'].includes(selectedManualEvidence.mmeStatus),
+  );
+  const manualReviewNotesValid = manualReviewNotes.trim().length >= 3
+    && manualReviewNotes.trim().length <= 2000;
   const selectedStatusHistory = selectedOrder?.moStatusHistory ?? [];
   const latestStatusChange = selectedStatusHistory[selectedStatusHistory.length - 1];
   const showLatestStatusChangeSummary = selectedStatusHistory.length === 1 && Boolean(latestStatusChange);
@@ -1995,6 +2035,106 @@ export default function MarketplaceOrdersPage() {
                     </CardContent>
                   </Card>
                 </Stack>
+
+                {['bank_transfer', 'cash', 'pos'].includes(selectedOrder.moPaymentProvider ?? '') && (
+                  <Card variant="outlined">
+                    <CardHeader
+                      title="Revisión de pago manual"
+                      subheader="La evidencia del cliente no confirma pago por sí sola."
+                    />
+                    <CardContent>
+                      <Stack spacing={1.5}>
+                        {marketplaceCommerceQuery.isLoading && (
+                          <Typography variant="body2" color="text.secondary">
+                            Cargando evidencia protegida…
+                          </Typography>
+                        )}
+                        {marketplaceCommerceQuery.isError && (
+                          <Alert severity="error">
+                            No se pudo cargar la evidencia financiera. Se requiere acceso de facturación.
+                          </Alert>
+                        )}
+                        {marketplaceCommerceQuery.data && !selectedManualEvidence && (
+                          <Alert severity="info" variant="outlined">
+                            El cliente aún no ha enviado una referencia. La orden continúa impaga.
+                          </Alert>
+                        )}
+                        {selectedManualEvidence && (
+                          <>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                              <Chip label={selectedManualEvidence.mmeStatus.replace(/_/g, ' ')} size="small" />
+                              <Typography variant="body2">
+                                Método: {formatPaymentProvider(selectedManualEvidence.mmePaymentMethod)}
+                              </Typography>
+                              {selectedManualEvidence.mmeSubmittedAt && (
+                                <Typography variant="body2" color="text.secondary">
+                                  Enviada: {formatDate(selectedManualEvidence.mmeSubmittedAt)}
+                                </Typography>
+                              )}
+                            </Stack>
+                            <Typography variant="body2">
+                              <strong>Referencia:</strong> {selectedManualEvidence.mmeCustomerReference ?? '—'}
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Monto declarado:</strong> {selectedManualEvidence.mmeSubmittedAmountMinor ?? '—'} {selectedManualEvidence.mmeCurrency ?? ''}
+                            </Typography>
+                            {selectedManualEvidence.mmeReviewNotes && (
+                              <Typography variant="body2" color="text.secondary">
+                                Revisión: {selectedManualEvidence.mmeReviewNotes}
+                              </Typography>
+                            )}
+                            {manualReviewReady && (
+                              <>
+                                <TextField
+                                  label="Notas de revisión"
+                                  value={manualReviewNotes}
+                                  onChange={(event) => setManualReviewNotes(event.target.value)}
+                                  multiline
+                                  minRows={2}
+                                  inputProps={{ maxLength: 2000 }}
+                                  helperText="Compara la referencia con el estado bancario. Debe revisar una persona distinta del remitente."
+                                />
+                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                                  <Button
+                                    variant="contained"
+                                    color="success"
+                                    disabled={!manualReviewNotesValid || manualReviewMutation.isPending}
+                                    onClick={() => manualReviewMutation.mutate('approve')}
+                                  >
+                                    Aprobar pago verificado
+                                  </Button>
+                                  <Button
+                                    variant="outlined"
+                                    color="error"
+                                    disabled={!manualReviewNotesValid || manualReviewMutation.isPending}
+                                    onClick={() => manualReviewMutation.mutate('reject')}
+                                  >
+                                    Rechazar evidencia
+                                  </Button>
+                                </Stack>
+                              </>
+                            )}
+                            {selectedManualEvidence.mmeStatus === 'approved' && marketplaceCommerceQuery.data?.mpcPaymentStatus === 'paid' && (
+                              <Alert severity="success" variant="outlined">
+                                Pago manual verificado. La entrega, custodia y depósito siguen sus propios estados.
+                              </Alert>
+                            )}
+                            {selectedManualEvidence.mmeStatus === 'rejected' && (
+                              <Alert severity="warning" variant="outlined">
+                                Evidencia rechazada. La orden permanece impaga hasta que el cliente reenvíe evidencia.
+                              </Alert>
+                            )}
+                          </>
+                        )}
+                        {manualReviewMutation.isError && (
+                          <Alert severity="error">
+                            {manualReviewMutation.error?.message ?? 'No se pudo completar la revisión'}
+                          </Alert>
+                        )}
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {showStatusHistorySection && (
                   <>

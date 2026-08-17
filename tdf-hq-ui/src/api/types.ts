@@ -257,6 +257,8 @@ export interface MarketplaceOrderDTO {
   moPaidAt?: string | null;
   moLookupToken?: string | null;
   moCheckoutStatus?: string | null;
+  moManualPaymentStatus?: 'awaiting_evidence' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'requires_reconciliation' | null;
+  moManualPaymentSubmittedAt?: string | null;
   moFulfillmentMethod?: string | null;
   moFulfillmentStatus?: string | null;
   moHoldExpiresAt?: string | null;
@@ -277,6 +279,29 @@ export interface MarketplaceOrderDTO {
   moCreatedAt: string;
   moUpdatedAt: string;
   moItems: MarketplaceOrderItemDTO[];
+}
+
+export interface MarketplaceManualEvidenceDTO {
+  mmeEvidenceId: string;
+  mmePaymentMethod: 'bank_transfer' | 'cash' | 'pos';
+  mmeStatus: 'awaiting_evidence' | 'submitted' | 'under_review' | 'approved' | 'rejected';
+  mmeCustomerReference?: string | null;
+  mmeSubmittedAmountMinor?: number | null;
+  mmeCurrency?: string | null;
+  mmeSubmittedBy?: number | null;
+  mmeSubmittedAt?: string | null;
+  mmeReviewedBy?: number | null;
+  mmeReviewedAt?: string | null;
+  mmeReviewNotes?: string | null;
+}
+
+export interface MarketplaceCommerceDTO {
+  mpcOrderId: string;
+  mpcCheckoutId: string;
+  mpcPaymentStatus: string;
+  mpcHoldExpiresAt: string;
+  mpcOrderKind: 'sale' | 'rental';
+  mpcManualEvidence?: MarketplaceManualEvidenceDTO | null;
 }
 
 export interface MarketplaceOrderUpdatePayload {

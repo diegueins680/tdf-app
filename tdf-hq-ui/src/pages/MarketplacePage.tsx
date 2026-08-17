@@ -800,7 +800,7 @@ export default function MarketplacePage() {
         localStorage.removeItem(CART_META_KEY);
       }
       setToast(
-        `Pedido enviado. Te contactaremos por ${
+        `Pedido creado y pendiente de pago. Te contactaremos por ${
           contactPref === 'email' ? 'correo' : 'teléfono/WhatsApp'
         } en menos de 24 h.`,
       );
@@ -1507,7 +1507,7 @@ export default function MarketplacePage() {
     const lastUpdatedAt = lastOrder.moUpdatedAt ?? (lastHistoryEntry ? lastHistoryEntry[1] : null);
     return (
       <Card variant="outlined">
-        <CardHeader title="Pedido enviado" subheader={`Total: ${lastOrder.moTotalDisplay}`} />
+        <CardHeader title="Pedido creado" subheader={`Total: ${lastOrder.moTotalDisplay}`} />
         <CardContent>
           <Stack spacing={1}>
             {lastOrder.moItems.map((item) => (
@@ -1531,6 +1531,11 @@ export default function MarketplacePage() {
                 {statusMeta.desc || lastOrder.moStatus}
               </Typography>
             </Stack>
+            {lastOrder.moPaymentProvider === 'bank_transfer' && lastOrder.moCheckoutStatus !== 'paid' && (
+              <Alert severity="warning" variant="outlined">
+                El pedido existe, pero no está pagado. Abre el seguimiento para enviar la referencia de transferencia; la aprobación requiere revisión independiente.
+              </Alert>
+            )}
             <Button
               variant="text"
               size="small"

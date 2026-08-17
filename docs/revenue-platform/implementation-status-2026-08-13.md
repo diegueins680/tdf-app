@@ -74,6 +74,13 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   the order only to `ready_to_fulfill`; validated pickup/shipping/delivery/return transitions append
   immutable operator evidence. The asset becomes `Sold` only on delivery and a returned asset is not
   silently relisted. Fully refunded or disputed checkouts cannot start outbound fulfillment.
+- Marketplace bank-transfer checkout now completes the customer and finance workflow for both sales
+  and rentals. The scoped guest tracker accepts a transfer reference without claiming payment;
+  online rails cannot start while evidence is submitted or under review; and only an authenticated
+  Invoicing reviewer different from the submitter may approve or reject it. Approval requires the
+  exact checkout, attempt, environment, amount, currency, merchant reference and an unexpired asset
+  hold, then posts canonical payment/receipt/ledger evidence atomically. Payment still does not imply
+  sale fulfillment, rental handoff, custody, inspection, damage resolution or deposit settlement.
 - Public studio and DJ availability now resolves the selected offering, duration, default resources,
   and approved policy on the server. Canonical checkout creates an immutable full-price/deposit/
   balance snapshot, a service order, booking, guest lookup capability, 15-minute hold, and deposit-
