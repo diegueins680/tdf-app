@@ -51,6 +51,7 @@ module TDF.Server.SocialEventsHandlers (
     validateEventCreateUpdateDimensions,
     validateSocialEventsListOffset,
     validateSocialEventsListFilter,
+    validateDiscoverySourceWrite,
     validateVenueCreateUpdateFields,
     validateEventCurrencyInput,
     TicketCheckInLookup (..),
@@ -156,6 +157,7 @@ import Crypto.MAC.HMAC (HMAC, hmac, hmacGetDigest)
 import Data.Time.Clock (addUTCTime)
 import qualified System.Random as Random
 import TDF.API.SocialEventsAPI
+import qualified TDF.Server.EventResearch as EventResearch
 import TDF.Auth (AuthedUser (..), hasStrictAdminAccess, moduleName)
 import qualified TDF.Catalog.Models as Catalog
 import TDF.Config (AppConfig (..), EmailConfig, assetsRootDir, resolveConfiguredAssetsBase)
@@ -1623,8 +1625,8 @@ validateDiscoverySourceWrite DiscoverySourceWriteDTO{..} = do
         )
         "source name must be a safe value between 1 and 160 characters"
     unlessEither
-        (sourceType `elem` ["ticketmaster", "buenplan", "ical", "json"])
-        "source type must be one of: ticketmaster, buenplan, ical, json"
+        (sourceType `elem` ["ticketmaster", "buenplan", "ical", "json", "web"])
+        "source type must be one of: ticketmaster, buenplan, ical, json, web"
     unlessEither
         (discoverySourceWritePriority >= 0 && discoverySourceWritePriority <= 10000)
         "source priority must be between 0 and 10000"
@@ -1639,6 +1641,20 @@ validateDiscoverySourceWrite DiscoverySourceWriteDTO{..} = do
         "buenplan" -> do
             unlessEither (sourceKey == "buenplan") "Buen Plan must use the buenplan source key"
             unlessEither (isNothing feedUrl && isNothing cityKey) "Buen Plan does not accept a feed URL or city"
+        "web" -> do
+            url <-
+                maybe
+                    (Left err400{errBody = "Web research sources require an HTTPS homepage URL"})
+                    Right
+                    feedUrl
+            unlessEither
+                ( T.length url <= 2048
+                    && "https://" `T.isPrefixOf` T.toLower url
+                    && TrialsServer.isValidHttpUrl url
+                )
+                "Web research source URL must be a valid HTTPS URL"
+            unlessEither (isNothing cityKey) "Web research sources are not tied to one event city"
+            unlessEither (not discoverySourceWriteEnabled) "Web research sources must remain disabled for automated cron ingestion"
         _ -> do
             url <-
                 maybe
@@ -1722,6 +1738,7 @@ socialEventsServer user =
     eventsServer
         :<|> eventCitiesServer
         :<|> eventDiscoverySourcesServer
+        :<|> EventResearch.eventResearchServer user
         :<|> venuesServer
         :<|> artistsServer
         :<|> rsvpsServer
@@ -2151,6 +2168,7 @@ socialEventsServer user =
         now <- liftIO getCurrentTime
         titleVal <- either throwError pure (validateEventTitleInput (eventTitle dto))
         when (eventStart dto >= eventEnd dto) $ throwError err400{errBody = "start time must be before end time"}
+        timezoneVal <- traverse (either throwError pure . validateEventTimeZone) (eventTimezone dto)
         either throwError pure $
             validateEventCreateUpdateDimensions
                 (eventPriceCents dto)
@@ -2202,7 +2220,7 @@ socialEventsServer user =
                             , socialEventTitle = titleVal
                             , socialEventDescription = eventDescription dto
                             , socialEventVenueId = mVenueKey
-                            , socialEventTimezone = Nothing
+                            , socialEventTimezone = timezoneVal
                             , socialEventEventTypeId = Just eventTypeUuid
                             , socialEventWorkflowStateId = Just workflowStateId
                             , socialEventStartTime = eventStart dto
@@ -2228,7 +2246,7 @@ socialEventsServer user =
                     , socialEventTitle = titleVal
                     , socialEventDescription = eventDescription dto
                     , socialEventVenueId = mVenueKey
-                    , socialEventTimezone = Nothing
+                    , socialEventTimezone = timezoneVal
                     , socialEventEventTypeId = Just eventTypeUuid
                     , socialEventWorkflowStateId = Just workflowStateId
                     , socialEventStartTime = eventStart dto
@@ -2273,6 +2291,7 @@ socialEventsServer user =
                 >>= either throwError pure
         titleVal <- either throwError pure (validateEventTitleInput (eventTitle dto))
         when (eventStart dto >= eventEnd dto) $ throwError err400{errBody = "start time must be before end time"}
+        timezoneVal <- traverse (either throwError pure . validateEventTimeZone) (eventTimezone dto)
         either throwError pure $
             validateEventCreateUpdateDimensions
                 (eventPriceCents dto)
@@ -2308,6 +2327,7 @@ socialEventsServer user =
                     [ SocialEventTitle =. titleVal
                     , SocialEventDescription =. eventDescription dto
                     , SocialEventVenueId =. mVenueKey
+                    , SocialEventTimezone =. timezoneVal
                     , SocialEventStartTime =. eventStart dto
                     , SocialEventEndTime =. eventEnd dto
                     , SocialEventPriceCents =. eventPriceCents dto
@@ -2331,6 +2351,7 @@ socialEventsServer user =
                     { socialEventTitle = titleVal
                     , socialEventDescription = eventDescription dto
                     , socialEventVenueId = mVenueKey
+                    , socialEventTimezone = timezoneVal
                     , socialEventStartTime = eventStart dto
                     , socialEventEndTime = eventEnd dto
                     , socialEventPriceCents = eventPriceCents dto
@@ -8175,6 +8196,7 @@ eventEntityToDTO configuredDefault eid eventRow artists = do
                   , eventDescription = socialEventDescription eventRow
                   , eventStart = socialEventStartTime eventRow
                   , eventEnd = socialEventEndTime eventRow
+                  , eventTimezone = socialEventTimezone eventRow
                   , eventVenueId = fmap renderKeyText (socialEventVenueId eventRow)
                   , eventPriceCents = socialEventPriceCents eventRow
                   , eventCapacity = socialEventCapacity eventRow

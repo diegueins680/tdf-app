@@ -27,11 +27,12 @@ const CompaniesPage = lazy(() => import('../pages/CompaniesPage'));
 const CourseBuilderPage = lazy(() => import('../pages/CourseBuilderPage'));
 const CourseRegistrationsAdminPage = lazy(() => import('../pages/CourseRegistrationsAdminPage'));
 const DocsPage = lazy(() => import('../pages/DocsPage'));
+const DirectoryManagePage = lazy(() => import('../pages/DirectoryManagePage'));
+const DirectoryAdminPage = lazy(() => import('../pages/DirectoryAdminPage'));
 const EstebanMunozReportPage = lazy(() => import('../pages/EstebanMunozReportPage'));
 const EventDiscoverySourcesPage = lazy(() => import('../pages/EventDiscoverySourcesPage'));
 const DavidCelayaReportPage = lazy(() => import('../pages/DavidCelayaReportPage'));
 const WorkAccountReportBuilderPage = lazy(() => import('../pages/WorkAccountReportBuilderPage'));
-const FanHubPage = lazy(() => import('../pages/FanHubPage'));
 const FanClubPage = lazy(() => import('../pages/FanClubPage'));
 const FanClubMemberProfilePage = lazy(() => import('../pages/FanClubMemberProfilePage'));
 const InstagramConnectPage = lazy(() => import('../pages/InstagramConnectPage'));
@@ -96,8 +97,6 @@ export function renderProtectedRoutes() {
   return (
     <>
       <Route element={<Shell />}>
-        <Route path="/" element={<Navigate to="/inicio" replace />} />
-
         <Route path="/parties" element={<Navigate to="/crm/contactos" replace />} />
         <Route path="/bookings" element={<Navigate to="/estudio/calendario" replace />} />
         <Route path="/pipelines" element={<Navigate to="/estudio/pipelines" replace />} />
@@ -107,8 +106,9 @@ export function renderProtectedRoutes() {
         <Route path="/admin/roles" element={<Navigate to="/configuracion/roles-permisos" replace />} />
         <Route path="/operacion/control" element={<Navigate to="/dashboard/operations" replace />} />
 
-        <Route path="/inicio" element={<FanHubPage />} />
         <Route path="/dashboard/operations" element={<OperationsControlCenterPage />} />
+        <Route path="/mis-clasificados" element={<DirectoryManagePage />} />
+        <Route path="/admin/directorio" element={<DirectoryAdminPage />} />
         <Route path="/mi-profesor" element={<TeacherPortalPage />} />
         <Route path="/perfil/:partyId" element={<PublicProfilePage />} />
         <Route path="/social" element={<SocialPageView />} />

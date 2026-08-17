@@ -113,10 +113,12 @@ import qualified TDF.Catalog.CountryReferenceSeed as CountrySeed
 import qualified TDF.Catalog.RecordsSpec as CatalogRecordsSpec
 import qualified TDF.Catalog.SecuritySpec as CatalogSecuritySpec
 import qualified TDF.Catalog.PipelineSpec as CatalogPipelineSpec
+import qualified TDF.Directory.PolicySpec as DirectoryPolicySpec
 import TDF.Email (resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
+import qualified TDF.Server.EventResearchSpec as EventResearchSpec
 import TDF.Services.EventLogisticsRoutes (RouteEstimateResult (..), parseGoogleDurationSeconds, parseGoogleRouteResponse)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
@@ -15408,7 +15410,9 @@ main = hspec $ do
     CatalogPipelineSpec.spec
     DDEXParseSpec.spec
     DDEXBusinessRulesSpec.spec
+    DirectoryPolicySpec.spec
     EventDiscoverySpec.spec
+    EventResearchSpec.spec
     ArtistSpec.spec
     ServerAuthSpec.spec
     ServerSpec.spec

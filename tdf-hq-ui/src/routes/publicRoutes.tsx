@@ -11,6 +11,8 @@ const DatafastReturnPage = lazy(() => import('../pages/DatafastReturnPage'));
 const DonationPage = lazy(() => import('../pages/DonationPage'));
 const DistributionLandingPage = lazy(() => import('../pages/DistributionLandingPage'));
 const DomoVenuePage = lazy(() => import('../pages/DomoVenuePage'));
+const DirectorySearchPage = lazy(() => import('../pages/DirectorySearchPage'));
+const DirectoryPublicDetailPage = lazy(() => import('../pages/DirectoryPublicDetailPage'));
 const FanClubPage = lazy(() => import('../pages/FanClubPage'));
 const FanHubPage = lazy(() => import('../pages/FanHubPage'));
 const FeedbackPage = lazy(() => import('../pages/FeedbackPage'));
@@ -39,6 +41,7 @@ const TdfPlatformPage = lazy(() => import('../pages/TdfPlatformPage'));
 export function renderPublicRoutes() {
   return (
     <>
+      <Route path="/" element={<Navigate to="/inicio" replace />} />
       <Route path="/instagram" element={<Navigate to="/tdf?utm_source=instagram&utm_medium=social&utm_campaign=instagram_profile" replace />} />
       <Route path="/ig" element={<Navigate to="/tdf?utm_source=instagram&utm_medium=social&utm_campaign=instagram_profile" replace />} />
       <Route path="/tdf" element={<PublicBranding><TdfPlatformPage /></PublicBranding>} />
@@ -47,6 +50,12 @@ export function renderPublicRoutes() {
       <Route path="/distribucion" element={<PublicBranding><DistributionLandingPage /></PublicBranding>} />
       <Route path="/distribution" element={<Navigate to="/distribucion" replace />} />
       <Route path="/sobre-tdf" element={<Navigate to="/tdf" replace />} />
+      <Route path="/inicio" element={<PublicBranding><DirectorySearchPage /></PublicBranding>} />
+      <Route path="/buscar" element={<PublicBranding><DirectorySearchPage /></PublicBranding>} />
+      <Route path="/directorio/:slug" element={<PublicBranding><DirectoryPublicDetailPage kind="profile" /></PublicBranding>} />
+      <Route path="/clasificados/:slug" element={<PublicBranding><DirectoryPublicDetailPage kind="classified" /></PublicBranding>} />
+      <Route path="/eventos/:eventId" element={<PublicBranding><DirectoryPublicDetailPage kind="event" /></PublicBranding>} />
+      <Route path="/venues/:venueId" element={<PublicBranding><DirectoryPublicDetailPage kind="venue" /></PublicBranding>} />
       <Route path="/fans" element={<PublicBranding><FanHubPage /></PublicBranding>} />
       <Route path="/fans/clubs/:artistId" element={<PublicBranding><FanClubPage /></PublicBranding>} />
       <Route path="/mi-artista" element={<PublicBranding><FanHubPage focusArtist /></PublicBranding>} />

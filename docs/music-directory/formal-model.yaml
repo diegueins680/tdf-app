@@ -1,0 +1,231 @@
+version: 1
+system: tdf_music_directory
+
+principals:
+  account_party: authenticated Party associated with the active credential/token
+  profile_manager: explicit active directory_profile_manager grant
+  internal_role: canonical security_role grant used only for authorization
+  public_profession: catalog relationship used only for discovery and presentation
+
+state_machines:
+  profile:
+    initial: draft
+    transitions:
+      draft: [pending_review, published, archived]
+      pending_review: [published, draft, suspended]
+      published: [paused, archived, suspended, merged]
+      paused: [published, archived, suspended]
+      archived: []
+      suspended: [published, archived]
+      merged: []
+  classified:
+    initial: draft
+    transitions:
+      draft: [pending_moderation, published, withdrawn]
+      pending_moderation: [published, rejected, withdrawn]
+      published: [paused, filled, expired, withdrawn, moderated]
+      paused: [published, filled, expired, withdrawn, moderated]
+      filled: []
+      expired: [published, withdrawn]
+      withdrawn: []
+      rejected: [draft, withdrawn]
+      moderated: [draft, withdrawn]
+  application:
+    initial: submitted
+    transitions:
+      submitted: [viewed, shortlisted, accepted, rejected, withdrawn]
+      viewed: [shortlisted, accepted, rejected, withdrawn]
+      shortlisted: [accepted, rejected, withdrawn]
+      accepted: [conversation_open, converted, withdrawn]
+      conversation_open: [converted, withdrawn]
+      converted: []
+      rejected: []
+      withdrawn: []
+  invitation:
+    initial: pending
+    transitions:
+      pending: [accepted, declined, withdrawn, blocked, expired]
+      accepted: [withdrawn, blocked, conversation_open, converted]
+      conversation_open: [withdrawn, blocked, converted]
+      converted: []
+      declined: []
+      expired: []
+      withdrawn: []
+      blocked: []
+  claim:
+    initial: draft
+    transitions:
+      draft: [submitted, withdrawn]
+      submitted: [under_review, withdrawn]
+      under_review: [approved, rejected, more_evidence_requested, withdrawn]
+      more_evidence_requested: [submitted, withdrawn]
+      approved: []
+      rejected: [submitted]
+      withdrawn: []
+  moderation_case:
+    initial: open
+    transitions:
+      open: [triaged, dismissed]
+      triaged: [under_review, dismissed]
+      under_review: [actioned, dismissed, appealed]
+      actioned: [appealed, closed]
+      appealed: [appeal_review, closed]
+      appeal_review: [actioned, reversed, closed]
+      reversed: [closed]
+      dismissed: [closed]
+      closed: []
+  review:
+    initial: published
+    transitions:
+      pending: [published, hidden, removed]
+      published: [hidden, removed]
+      hidden: [published, removed]
+      removed: []
+
+invariants:
+  I01_profession_never_authorizes:
+    statement: Authorization decisions never read profile profession relationships or profession catalog values.
+    enforcement: code boundary plus property test over all professions and internal actions
+  I02_explicit_profile_management:
+    statement: An account may mutate a profile iff an active manager grant includes the requested capability or the caller has the explicit administrative permission.
+    enforcement: database uniqueness and handler scope guard
+  I03_unique_profile_professions:
+    statement: A profile may have many professions but at most one relationship per profile and profession.
+    enforcement: primary key (profile_id, profession_id)
+  I04_public_search_scope:
+    statement: Every organic result is public, published, effective, unexpired, unsuspended and moderation-allowed.
+    enforcement: public search view predicate plus property/integration tests
+  I05_public_location_privacy:
+    statement: Public DTO schemas contain neither exact_address nor private_latitude/private_longitude, and residential results never emit precise coordinates.
+    enforcement: separate private table, DTO allowlist and schema test
+  I06_authenticated_mutations:
+    statement: Publish, respond, invite, contact, save, report and conversion operations require a valid authenticated Party and record-scope authorization.
+    enforcement: ProtectedAPI plus scope guards
+  I07_declared_classified_transitions:
+    statement: Every classified state change belongs to the transition relation above.
+    enforcement: pure guard, database trigger and property test
+  I08_application_confidentiality:
+    statement: An application is readable only by applicant-profile managers, classified-profile managers or authorized moderators with audit purpose.
+    enforcement: participant query scope and IDOR tests
+  I09_verified_review_interaction:
+    statement: A review references exactly one completed, verified interaction whose two public participants are the managed author profile and the subject profile, in either order.
+    enforcement: foreign key, participant/status trigger, handler record-scope guard, unique interaction/author/subject relation and property/integration tests
+  I10_sponsored_separation:
+    statement: Sponsored results are never members of organicResults and always include sponsored=true and sponsorDisclosure.
+    enforcement: disjoint response collections and contract property test
+  I11_claim_approval_owns:
+    statement: A claim creates no manager grant before the approved transition commits.
+    enforcement: approval transaction and negative transition test
+  I12_idempotent_alerts_and_invites:
+    statement: Repeating an alert match or invitation request with the same scope/key returns the original resource; a different payload conflicts.
+    enforcement: unique scope plus request fingerprint
+  I13_profile_withdrawal_cascades_publicity:
+    statement: Archiving or suspending a profile removes its public document and pauses/removes dependent public classifieds atomically.
+    enforcement: trigger and integration test
+  I14_merge_preserves_references:
+    statement: Merge records source->target, preserves immutable child references and source slug resolution, records before/after counts and audit, and never deletes historical rows.
+    enforcement: locked idempotent merge transaction, canonical resolution view and reconciliation-count integration test
+  I15_no_public_sensitive_data:
+    statement: No public endpoint returns PII, credentials, tokens, private evidence, moderation notes or administrative fields.
+    enforcement: DTO allowlists, OpenAPI schema audit and endpoint tests
+
+preconditions:
+  publish_profile:
+    - caller has profile.publish grant
+    - profile is complete enough for its type
+    - age/contact controls pass
+    - current transition permits published
+  publish_classified:
+    - caller has classified.create through an active publishing profile
+    - category requirements pass
+    - expiration is in the future and at most the configured maximum
+    - moderation and spam policy choose a declared transition
+  submit_application:
+    - caller manages applicant profile with contact capability
+    - classified is published and unexpired
+    - neither profile blocks the other, target preferences and minimum completeness pass, and age controls pass
+    - uniqueness/idempotency scope is unused or payload-identical
+  send_invitation:
+    - caller manages the explicitly selected sender profile with contact capability
+    - sender and target are distinct published profiles
+    - neither profile blocks the other and target preferences and minimum completeness pass
+    - any linked classified is published, current and owned by the sender profile
+    - uniqueness/idempotency scope is unused or payload-identical
+  open_contact:
+    - authenticated caller manages source profile
+    - a profile context matches the target, or the exact application/invitation participant pair is accepted
+    - cold profile/classified contact passes target preferences and minimum completeness; explicit application/invitation acceptance supplies contextual consent
+    - neither party blocks the other
+  approve_claim:
+    - reviewer has claims.approve permission
+    - reviewer differs from claimant where policy requires
+    - evidence decision is recorded
+  create_review:
+    - caller is authenticated and has an active edit grant over author_profile_id
+    - caller passes adult or guardian-approved age assurance
+    - author and subject are distinct, current and published public profiles
+    - interaction is completed, has verified_at and contains exactly author and subject in either order
+    - neither profile blocks the other
+    - no review exists for interaction, author and subject
+    - idempotency scope is unused or payload-identical and the daily rate limit permits the request
+
+postconditions:
+  publish_classified:
+    - status is published
+    - published_at is set once
+    - expires_at defaults to published_at plus 30 days when omitted
+    - public search document is refreshed
+    - audit event records actor, transition and correlation id
+  accept_application:
+    - only target-profile managers may accept
+    - application remains private
+    - conversation context may be created exactly once
+  accept_invitation:
+    - only target-profile managers may accept
+    - an expired pending invitation transitions to expired instead of accepted
+    - blocking creates the target-to-sender profile block in the same transaction
+    - conversation context may be created only after acceptance and exactly once
+  merge_profile:
+    - source status is merged and canonical_profile_id points to target
+    - every active slug remains resolvable
+    - historical child references are unchanged
+    - before/after reference counts and audit are persisted
+  create_review:
+    - exactly one published review exists for interaction, author and subject
+    - the idempotency key replays the same review and a different payload conflicts
+    - the subject reputation aggregate is refreshed in the same transaction
+    - only a real insert may create an internal notification
+    - public DTOs omit Party identifiers, external interaction identifiers and administrative fields
+
+idempotency_scopes:
+  - invitation(sender_profile_id, target_profile_id, context_kind, context_id, idempotency_key)
+  - application(classified_id, applicant_profile_id, idempotency_key)
+  - saved_search_alert(saved_search_id, result_kind, result_id, result_version)
+  - contact_context(thread_id, context_kind, context_id)
+  - review_create(actor_party_id, idempotency_key, request_fingerprint)
+  - analytics_event(actor_scope, event_name, idempotency_key)
+
+privacy_projection:
+  allowed_public_location_fields:
+    - cityId
+    - cityName
+    - subdivisionName
+    - countryCode
+    - sectorLabel
+    - approximateDistanceKm
+    - precision
+    - publicLatitude
+    - publicLongitude
+  forbidden_public_fields:
+    - exactAddress
+    - privateLatitude
+    - privateLongitude
+    - primaryEmail
+    - primaryPhone
+    - whatsapp
+    - taxId
+    - emergencyContact
+    - credential
+    - apiToken
+    - evidencePayload
+    - moderatorNotes

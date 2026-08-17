@@ -6,9 +6,11 @@ interface MetaTags {
   ogImage?: string;
   ogType?: string;
   canonical?: string;
+  structuredData?: Record<string, unknown>;
+  robots?: string;
 }
 
-export function useMetaTags({ title, description, ogImage, ogType = 'website', canonical }: MetaTags) {
+export function useMetaTags({ title, description, ogImage, ogType = 'website', canonical, structuredData, robots = 'index,follow' }: MetaTags) {
   useEffect(() => {
     // Set document title
     document.title = `${title} · TDF Records`;
@@ -30,7 +32,13 @@ export function useMetaTags({ title, description, ogImage, ogType = 'website', c
     if (description) setMeta('og:description', description, true);
     setMeta('og:type', ogType, true);
     if (ogImage) setMeta('og:image', ogImage, true);
+    setMeta('twitter:card', ogImage ? 'summary_large_image' : 'summary');
+    setMeta('twitter:title', `${title} · TDF Records`);
+    if (description) setMeta('twitter:description', description);
+    if (ogImage) setMeta('twitter:image', ogImage);
+    setMeta('robots', robots);
     if (canonical) {
+      setMeta('og:url', canonical, true);
       let link = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
       if (!link) {
         link = document.createElement('link');
@@ -39,10 +47,21 @@ export function useMetaTags({ title, description, ogImage, ogType = 'website', c
       }
       link.href = canonical;
     }
+    if (structuredData) {
+      let script = document.querySelector<HTMLScriptElement>('script[data-tdf-structured-data="true"]');
+      if (!script) {
+        script = document.createElement('script');
+        script.type = 'application/ld+json';
+        script.dataset['tdfStructuredData'] = 'true';
+        document.head.appendChild(script);
+      }
+      script.textContent = JSON.stringify(structuredData);
+    }
 
     // Cleanup on unmount
     return () => {
       document.title = 'TDF Records';
+      document.querySelector('script[data-tdf-structured-data="true"]')?.remove();
     };
-  }, [title, description, ogImage, ogType, canonical]);
+  }, [title, description, ogImage, ogType, canonical, structuredData, robots]);
 }

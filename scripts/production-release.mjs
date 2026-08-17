@@ -11,6 +11,7 @@ import { promisify } from 'node:util';
 import {
   buildDatabaseSqlInvocation,
   buildDeployPlan,
+  buildMachineRollbackImage,
   buildMigrationBatchSql,
   buildSchemaPreflightSql,
   buildSchemaVerificationSql,
@@ -44,12 +45,14 @@ const productionProfile = Object.freeze({
 const stagedRuntimeEnv = Object.freeze({
   RUN_MIGRATIONS: 'false',
   EVENT_DISCOVERY_ENABLED: 'false',
+  DEFAULT_LOCALE: 'es',
 });
 const readRuntimeEnvCommand = [
   "sh -lc '",
-  'printf "RUN_MIGRATIONS=%s\\nEVENT_DISCOVERY_ENABLED=%s\\n" ',
+  'printf "RUN_MIGRATIONS=%s\\nEVENT_DISCOVERY_ENABLED=%s\\nDEFAULT_LOCALE=%s\\n" ',
   '"${RUN_MIGRATIONS-__UNSET__}" ',
-  '"${EVENT_DISCOVERY_ENABLED-__UNSET__}"',
+  '"${EVENT_DISCOVERY_ENABLED-__UNSET__}" ',
+  '"${DEFAULT_LOCALE-__UNSET__}"',
   "'",
 ].join('');
 
@@ -536,17 +539,7 @@ function deployArgs(context, selector, machineId, image = context.image, sha = c
 }
 
 function previousImage(machine) {
-  if (typeof machine.image_ref === 'string') return machine.image_ref;
-  const registry = machine.image_ref?.registry;
-  const repository = machine.image_ref?.repository;
-  if (registry && repository) {
-    const base = `${registry}/${repository}`;
-    if (/^sha256:[0-9a-f]{64}$/i.test(machine.image_ref?.digest ?? '')) {
-      return `${base}@${machine.image_ref.digest}`;
-    }
-    if (machine.image_ref?.tag) return `${base}:${machine.image_ref.tag}`;
-  }
-  return machine.config?.image;
+  return buildMachineRollbackImage(machine);
 }
 
 function previousSha(machine) {

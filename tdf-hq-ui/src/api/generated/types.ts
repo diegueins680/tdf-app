@@ -39,6 +39,113 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/social-events/event-research/pilot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read accumulated pilot state */
+        get: operations["getEventResearchPilot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/event-research/pilot/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record an explicit, immutable pilot approval */
+        post: operations["approveEventResearchPilot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/event-research/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List research runs and checkpoints */
+        get: operations["listEventResearchRuns"];
+        put?: never;
+        /** Idempotently start a research run by run key */
+        post: operations["createEventResearchRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/event-research/runs/{runId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Commit a run checkpoint or terminal status */
+        put: operations["updateEventResearchRun"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/event-research/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List accumulated research candidates */
+        get: operations["listEventResearchCandidates"];
+        /**
+         * Idempotently create, update, or reverify a candidate
+         * @description Uses provider plus external identifier as the canonical key. It never publishes a social event.
+         */
+        put: operations["upsertEventResearchCandidate"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/event-research/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List immutable candidate change records */
+        get: operations["listEventResearchChanges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/version": {
         parameters: {
             query?: never;
@@ -3609,6 +3716,551 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/directory/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search the public, current, moderated music directory */
+        get: operations["searchDirectory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["suggestDirectoryQuery"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/taxonomies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getDirectoryTaxonomies"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/profiles/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicDirectoryProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/profiles/{slug}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listPublicDirectoryReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/classifieds/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicClassified"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/events/{eventId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicDirectoryEvent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/venues/{venueId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicDirectoryVenue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/age-assurance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["setDirectoryAgeAssurance"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listManagedDirectoryProfiles"];
+        put?: never;
+        post: operations["createDirectoryProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/profiles/{profileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateDirectoryProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/profiles/{profileId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["transitionDirectoryProfile"];
+        trace?: never;
+    };
+    "/directory/classifieds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listManagedClassifieds"];
+        put?: never;
+        post: operations["createClassified"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/classifieds/{classifiedId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["transitionClassified"];
+        trace?: never;
+    };
+    "/directory/classifieds/{classifiedId}/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listClassifiedApplications"];
+        put?: never;
+        post: operations["createClassifiedApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/applications/{applicationId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["transitionClassifiedApplication"];
+        trace?: never;
+    };
+    "/directory/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listDirectoryInvitations"];
+        put?: never;
+        post: operations["createDirectoryInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/invitations/{invitationId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["transitionDirectoryInvitation"];
+        trace?: never;
+    };
+    "/directory/contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["contactDirectoryProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/review-eligibility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listDirectoryReviewEligibility"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createDirectoryReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/favorites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listDirectoryFavorites"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/favorites/{targetKind}/{targetId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["saveDirectoryFavorite"];
+        post?: never;
+        delete: operations["deleteDirectoryFavorite"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/saved-searches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listSavedDirectorySearches"];
+        put?: never;
+        post: operations["createSavedDirectorySearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/claims": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createDirectoryClaim"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/verifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createDirectoryVerificationRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reportDirectoryContent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/admin/claims": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listDirectoryClaimsForReview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/admin/claims/{claimId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["decideDirectoryClaim"];
+        trace?: never;
+    };
+    "/directory/admin/verifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listDirectoryVerificationsForReview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/admin/verifications/{verificationId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["decideDirectoryVerification"];
+        trace?: never;
+    };
+    "/directory/admin/moderation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listDirectoryModerationQueue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/admin/moderation/{caseId}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["decideDirectoryModerationCase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/admin/merges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["mergeDirectoryProfiles"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4701,6 +5353,118 @@ export interface components {
             emReactions: components["schemas"]["EventMomentReaction"][];
             emComments: components["schemas"]["EventMomentComment"][];
         };
+        EventResearchPilot: {
+            erPilotApproved: boolean;
+            /** Format: date-time */
+            erPilotApprovedAt?: string | null;
+            erPilotApprovedByPartyId?: string | null;
+            erPilotApprovalReference?: string | null;
+            /** @enum {integer} */
+            erPilotMaxActiveCandidates: 20;
+            erPilotActiveCandidates: number;
+            /** Format: date-time */
+            erPilotUpdatedAt: string;
+        };
+        EventResearchRunCreate: {
+            erRunKey: string;
+            erRunReconciliation: boolean;
+            erRunCheckpoint?: string | null;
+        };
+        EventResearchRunUpdate: {
+            /** @enum {string} */
+            erRunStatus: "running" | "completed" | "failed";
+            erRunCheckpoint?: string | null;
+            erRunCounters: {
+                [key: string]: unknown;
+            };
+            erRunErrorSummary?: string | null;
+        };
+        EventResearchRun: components["schemas"]["EventResearchRunCreate"] & components["schemas"]["EventResearchRunUpdate"] & {
+            erRunId: string;
+            /** Format: date-time */
+            erRunStartedAt: string;
+            /** Format: date-time */
+            erRunUpdatedAt: string;
+            /** Format: date-time */
+            erRunFinishedAt?: string | null;
+            erRunCreatedByPartyId: string;
+        };
+        EventResearchEvidence: {
+            /** Format: uri */
+            erEvidenceUrl: string;
+            erEvidenceKind: string;
+            /** Format: date-time */
+            erEvidenceConsultedAt: string;
+            erEvidenceNotes?: string | null;
+        };
+        EventResearchCandidateWrite: {
+            erCandidateProvider: string;
+            erCandidateExternalId: string;
+            erCandidateRunId: string;
+            erCandidateSourceId?: string | null;
+            /** @enum {string} */
+            erCandidateReviewState: "draft" | "review" | "discarded";
+            erCandidateTitle: string;
+            /** Format: date-time */
+            erCandidateStartTime?: string | null;
+            /** Format: date-time */
+            erCandidateEndTime?: string | null;
+            /** @example America/Guayaquil */
+            erCandidateTimezone: string;
+            erCandidateVenueName?: string | null;
+            erCandidateCity?: string | null;
+            erCandidateProvince?: string | null;
+            erCandidateCountryCode: string;
+            /** Format: uri */
+            erCandidateSourceUrl: string;
+            /** Format: uri */
+            erCandidateInfoUrl?: string | null;
+            /** Format: uri */
+            erCandidatePurchaseUrl?: string | null;
+            erCandidatePayload: {
+                [key: string]: unknown;
+            };
+            erCandidateEvidence: components["schemas"]["EventResearchEvidence"][];
+            /** @enum {string} */
+            erCandidateConfidence: "high" | "medium" | "low";
+            erCandidateManagedFields: string[];
+            /** Format: date-time */
+            erCandidateVerifiedAt: string;
+        };
+        EventResearchCandidate: components["schemas"]["EventResearchCandidateWrite"] & {
+            erCandidateId: string;
+            erCandidateEventId?: string | null;
+            erCandidateContentHash: string;
+            erCandidateIsPilot: boolean;
+            /** Format: date-time */
+            erCandidateCreatedAt: string;
+            /** Format: date-time */
+            erCandidateUpdatedAt: string;
+        };
+        EventResearchChange: {
+            erChangeId: string;
+            erChangeRunId: string;
+            erChangeCandidateId?: string | null;
+            erChangeEventId?: string | null;
+            /** @enum {string} */
+            erChangeAction: "created" | "updated" | "verified" | "discarded" | "materialized";
+            erChangeBeforeValue?: {
+                [key: string]: unknown;
+            } | null;
+            erChangeAfterValue?: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: uri */
+            erChangeSourceUrl: string;
+            /** @enum {string} */
+            erChangeConfidence: "high" | "medium" | "low";
+            /** Format: date-time */
+            erChangeConsultedAt: string;
+            erChangeExternalId: string;
+            erChangeResult: string;
+            /** Format: date-time */
+            erChangeCreatedAt: string;
+        };
         SocialEvent: {
             eventId?: string | null;
             eventOrganizerPartyId?: string | null;
@@ -4710,6 +5474,8 @@ export interface components {
             eventStart: string;
             /** Format: date-time */
             eventEnd: string;
+            /** @example America/Guayaquil */
+            eventTimezone?: string | null;
             eventVenueId?: string | null;
             eventPriceCents?: number | null;
             eventCapacity?: number | null;
@@ -6838,8 +7604,560 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        /** @enum {string} */
+        DirectoryEntityType: "profile" | "classified" | "event" | "venue";
+        /** @description Safe public location; exact residential address and private coordinates are structurally absent. */
+        PublicLocation: {
+            /** Format: uuid */
+            cityId?: string | null;
+            city?: string | null;
+            countryCode?: string | null;
+            sector?: string | null;
+            latitude?: number | null;
+            longitude?: number | null;
+            /** @enum {string|null} */
+            precision?: "country" | "region" | "metro" | "city" | "sector" | "commercial_exact" | null;
+            distanceKm?: number | null;
+        };
+        DirectorySearchItem: {
+            id: string;
+            type: components["schemas"]["DirectoryEntityType"];
+            slug: string;
+            title: string;
+            subtitle?: string | null;
+            summary?: string | null;
+            /** Format: uri */
+            imageUrl?: string | null;
+            location: components["schemas"]["PublicLocation"];
+            modality?: {
+                onsite?: boolean;
+                remote?: boolean;
+                travel?: boolean;
+            };
+            taxonomy: {
+                professionIds: string[];
+                serviceIds: string[];
+                instrumentIds: string[];
+                genreIds: string[];
+            };
+            score: number;
+            scoreBreakdown: {
+                [key: string]: number | null;
+            };
+            sponsored: boolean;
+            sponsorDisclosure?: string | null;
+            /** Format: date-time */
+            effectiveAt?: string | null;
+            /** Format: date-time */
+            expiresAt?: string | null;
+        };
+        DirectoryFacets: {
+            entityTypes: {
+                [key: string]: number;
+            };
+            cities: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                count: number;
+            }[];
+            total: number;
+        };
+        DirectorySearchResponse: {
+            items: components["schemas"]["DirectorySearchItem"][];
+            /** @description Always separate and explicitly labeled */
+            sponsoredItems: components["schemas"]["DirectorySearchItem"][];
+            facets: components["schemas"]["DirectoryFacets"];
+            nextCursor?: string | null;
+        };
+        ApiError: {
+            error: string;
+            code?: string;
+            correlationId?: string;
+        };
+        DirectorySuggestion: {
+            label: string;
+            canonicalQuery: string;
+            suggestionKind: string;
+            entityId?: string | null;
+        };
+        TaxonomyItem: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            slug?: string | null;
+            name: string;
+            /** Format: uuid */
+            parentId?: string | null;
+            requirements?: {
+                [key: string]: unknown;
+            };
+            metadata?: {
+                [key: string]: unknown;
+            };
+            /** Format: uuid */
+            countryId?: string;
+            /** Format: uuid */
+            currencyId?: string;
+            symbol?: string;
+            minorUnits?: number;
+            latitude?: number | null;
+            longitude?: number | null;
+        };
+        DirectoryTaxonomies: {
+            locale: string;
+            professions: components["schemas"]["TaxonomyItem"][];
+            classifiedCategories: components["schemas"]["TaxonomyItem"][];
+            compensationTypes: components["schemas"]["TaxonomyItem"][];
+            serviceOfferings: components["schemas"]["TaxonomyItem"][];
+            currencies: components["schemas"]["TaxonomyItem"][];
+            instruments: components["schemas"]["TaxonomyItem"][];
+            genres: components["schemas"]["TaxonomyItem"][];
+            cities: components["schemas"]["TaxonomyItem"][];
+        };
+        PublicTaxonomyMembership: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            headline?: string | null;
+            yearsExperience?: number | null;
+            proficiency?: string | null;
+        };
+        /** @description Public projection excludes Party PII and directory_private_location. */
+        PublicDirectoryProfile: {
+            /** Format: uuid */
+            id: string;
+            kind: string;
+            name: string;
+            slug: string;
+            bio?: string | null;
+            experience?: string | null;
+            creditsSummary?: string | null;
+            portfolio?: {
+                [key: string]: unknown;
+            }[];
+            links?: {
+                [key: string]: unknown;
+            }[];
+            equipment?: string | null;
+            rates?: {
+                /** Format: int64 */
+                minMinor?: number;
+                /** Format: int64 */
+                maxMinor?: number | null;
+                /** Format: uuid */
+                currencyId?: string | null;
+            } | null;
+            availability: {
+                status: string;
+                onsite: boolean;
+                remote: boolean;
+                travel: boolean;
+                radiusKm?: number | null;
+            };
+            locations: components["schemas"]["PublicLocation"][];
+            professions: components["schemas"]["PublicTaxonomyMembership"][];
+            instruments: components["schemas"]["PublicTaxonomyMembership"][];
+            genres: components["schemas"]["PublicTaxonomyMembership"][];
+            verification: {
+                type: string;
+                status: string;
+                /** Format: date-time */
+                verifiedAt?: string | null;
+            }[];
+            reputation: {
+                completeness?: number;
+                responseRate?: number;
+                medianResponseMinutes?: number;
+                completed?: number;
+                reviewAverage?: number;
+                reviewCount?: number;
+            };
+            canonicalUrl: string;
+        };
+        /** @enum {string} */
+        DirectoryInteractionType: "booking" | "service_order" | "marketplace_order" | "event_collaboration" | "confirmed_collaboration";
+        DirectoryProfileReference: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+        };
+        PublicDirectoryReview: {
+            /** Format: uuid */
+            id: string;
+            rating: number;
+            body?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            verifiedInteractionType: components["schemas"]["DirectoryInteractionType"];
+            authorProfile: components["schemas"]["DirectoryProfileReference"];
+        };
+        DirectoryReviewPage: {
+            summary: {
+                /** Format: uuid */
+                profileId: string;
+                average?: number | null;
+                count: number;
+            };
+            items: components["schemas"]["PublicDirectoryReview"][];
+            /** Format: uuid */
+            nextCursor?: string | null;
+        };
+        /** @description Published, current, moderated classified. */
+        PublicClassified: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            slug: string;
+            description: string;
+            category: components["schemas"]["PublicTaxonomyMembership"];
+            author: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                slug: string;
+            };
+            modality: {
+                onsite: boolean;
+                remote: boolean;
+                travel: boolean;
+            };
+            locations: components["schemas"]["PublicLocation"][];
+            compensation?: {
+                /** Format: uuid */
+                typeId?: string;
+                /** Format: int64 */
+                minMinor?: number | null;
+                /** Format: int64 */
+                maxMinor?: number | null;
+                /** Format: uuid */
+                currencyId?: string | null;
+                negotiable?: boolean;
+            } | null;
+            /** Format: date-time */
+            startsAt?: string | null;
+            /** Format: date-time */
+            endsAt?: string | null;
+            /** Format: date-time */
+            expiresAt: string;
+            canonicalUrl: string;
+        };
+        /** @description Public-listable event with approximate location. */
+        PublicDirectoryEvent: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+            description?: string | null;
+            /** Format: date-time */
+            startTime: string;
+            /** Format: date-time */
+            endTime?: string | null;
+            timezone: string;
+            /** Format: int64 */
+            priceCents?: number | null;
+            /** Format: uuid */
+            currencyId?: string | null;
+            capacity?: number | null;
+            venue?: {
+                /** Format: int64 */
+                id?: number;
+                name?: string;
+            } | null;
+            location: components["schemas"]["PublicLocation"];
+            canonicalUrl: string;
+        };
+        /** @description Venue used by public events; address and contact fields are structurally absent. */
+        PublicDirectoryVenue: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            capacity?: number | null;
+            location: components["schemas"]["PublicLocation"];
+            canonicalUrl: string;
+        };
+        AgeAssuranceRequest: {
+            adultAttestation: boolean;
+            /** Format: int64 */
+            guardianPartyId?: number;
+        };
+        ManagedDirectoryProfile: {
+            /** Format: uuid */
+            id: string;
+            kind: string;
+            name: string;
+            slug: string;
+            bio?: string | null;
+            status: string;
+            visibility: string;
+            moderationStatus: string;
+            /** Format: int64 */
+            version: number;
+            capabilities: {
+                [key: string]: boolean;
+            };
+        };
+        DirectoryProfileUpsert: {
+            profileKind: string;
+            publicName: string;
+            slug: string;
+            bio?: string;
+            professionIds: string[];
+            instrumentIds: string[];
+            genreIds: string[];
+            serviceOfferingIds: string[];
+            /** Format: uuid */
+            countryId: string;
+            /** Format: uuid */
+            cityId?: string;
+            /** Format: uuid */
+            metropolitanAreaId?: string;
+            onsite: boolean;
+            remote: boolean;
+            availableToTravel: boolean;
+            travelRadiusKm?: number;
+        };
+        StatusRequest: {
+            status: string;
+            reason?: string;
+        };
+        ManagedClassified: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            authorProfileId: string;
+            title: string;
+            slug: string;
+            status: string;
+            moderationStatus: string;
+            /** Format: date-time */
+            expiresAt?: string | null;
+            /** Format: int64 */
+            version: number;
+        };
+        ClassifiedCreate: {
+            /** Format: uuid */
+            authorProfileId: string;
+            /** Format: uuid */
+            categoryId: string;
+            title: string;
+            slug: string;
+            description: string;
+            professionIds: string[];
+            instrumentIds: string[];
+            genreIds: string[];
+            countryIds: string[];
+            cityIds: string[];
+            metropolitanAreaIds: string[];
+            onsite: boolean;
+            remote: boolean;
+            availableToTravel: boolean;
+            /** Format: date-time */
+            startsAt?: string;
+            /** Format: date-time */
+            endsAt?: string;
+            experienceLevel?: string;
+            /** Format: uuid */
+            compensationTypeId?: string;
+            /** Format: int64 */
+            budgetMinMinor?: number;
+            /** Format: int64 */
+            budgetMaxMinor?: number;
+            /** Format: uuid */
+            currencyId?: string;
+            budgetNegotiable: boolean;
+            /** Format: uuid */
+            serviceOfferingId?: string;
+            /** Format: int64 */
+            serviceAdId?: number;
+            /** Format: date-time */
+            expiresAt?: string;
+        };
+        /** @description Private to participants and authorized admins */
+        ClassifiedApplication: {
+            [key: string]: unknown;
+        };
+        ApplicationCreate: {
+            /** Format: uuid */
+            applicantProfileId: string;
+            message: string;
+            portfolio: {
+                [key: string]: unknown;
+            }[];
+            availability?: string;
+            /** Format: int64 */
+            proposedAmountMinor?: number;
+            /** Format: uuid */
+            currencyId?: string;
+        };
+        DirectoryClassifiedReference: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            slug: string;
+            status: string;
+        };
+        /** @description Participant-scoped invitation; contains public profile labels but no Party PII. */
+        DirectoryInvitation: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            senderProfileId: string;
+            /** Format: uuid */
+            targetProfileId: string;
+            /** Format: uuid */
+            classifiedId?: string | null;
+            message: string;
+            /** @enum {string} */
+            status: "pending" | "accepted" | "declined" | "withdrawn" | "blocked" | "conversation_open" | "converted" | "expired";
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: int64 */
+            version: number;
+            /** @enum {string} */
+            participantRole: "sender" | "target" | "admin";
+            senderProfile: components["schemas"]["DirectoryProfileReference"];
+            targetProfile: components["schemas"]["DirectoryProfileReference"];
+            classified?: components["schemas"]["DirectoryClassifiedReference"] | null;
+        };
+        InvitationCreate: {
+            /** Format: uuid */
+            senderProfileId: string;
+            /** Format: uuid */
+            targetProfileId: string;
+            /** Format: uuid */
+            classifiedId?: string;
+            message: string;
+        };
+        DirectoryContact: {
+            /** Format: uuid */
+            senderProfileId: string;
+            /** Format: uuid */
+            targetProfileId: string;
+            /** @enum {string} */
+            contextKind: "profile" | "classified" | "application" | "invitation";
+            /** Format: uuid */
+            contextId: string;
+            message: string;
+        };
+        DirectoryReviewEligibility: {
+            /** Format: uuid */
+            interactionId: string;
+            interactionKind: components["schemas"]["DirectoryInteractionType"];
+            /** Format: date-time */
+            verifiedAt: string;
+            authorProfile: components["schemas"]["DirectoryProfileReference"];
+            subjectProfile: components["schemas"]["DirectoryProfileReference"];
+        };
+        DirectoryReviewCreate: {
+            /** Format: uuid */
+            interactionId: string;
+            /** Format: uuid */
+            authorProfileId: string;
+            /** Format: uuid */
+            subjectProfileId: string;
+            rating: number;
+            body?: string | null;
+        };
+        DirectoryReview: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            interactionId: string;
+            rating: number;
+            body?: string | null;
+            /** @enum {string} */
+            status: "pending" | "published" | "hidden" | "removed";
+            /** Format: date-time */
+            createdAt: string;
+            verifiedInteractionType: components["schemas"]["DirectoryInteractionType"];
+            authorProfile: components["schemas"]["DirectoryProfileReference"];
+            subjectProfile: components["schemas"]["DirectoryProfileReference"];
+        };
+        DirectoryFavorite: {
+            targetKind: components["schemas"]["DirectoryEntityType"];
+            targetId: string;
+            /** Format: date-time */
+            createdAt: string;
+            result?: components["schemas"]["DirectorySearchItem"];
+        };
+        SavedSearchCreate: {
+            name: string;
+            canonicalQuery: {
+                [key: string]: unknown;
+            };
+            alertsEnabled: boolean;
+            /** @enum {string} */
+            alertFrequency: "instant" | "daily" | "weekly" | "off";
+        };
+        SavedDirectorySearch: components["schemas"]["SavedSearchCreate"] & {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            lastEvaluatedAt?: string | null;
+        };
+        ClaimCreate: {
+            /** Format: uuid */
+            profileId: string;
+            /** @enum {string} */
+            claimType: "profile" | "organization" | "venue" | "administration" | "credit";
+            evidence: {
+                [key: string]: unknown;
+            }[];
+        };
+        VerificationCreate: {
+            /** Format: uuid */
+            profileId: string;
+            /** @enum {string} */
+            verificationType: "identity" | "organization" | "venue" | "ownership" | "administration" | "professional_credit";
+            evidence: {
+                [key: string]: unknown;
+            }[];
+        };
+        ReportCreate: {
+            /** @enum {string} */
+            targetKind: "profile" | "classified" | "application" | "invitation" | "event" | "venue" | "message" | "review";
+            targetId: string;
+            reasonCode: string;
+            details?: string;
+        };
+        ModerationDecision: {
+            /** @enum {string} */
+            decision: "dismiss" | "warn" | "pause" | "remove" | "suspend" | "close";
+            reasonCode: string;
+            notes: string;
+        };
+        ProfileMerge: {
+            /** Format: uuid */
+            sourceProfileId: string;
+            /** Format: uuid */
+            targetProfileId: string;
+            reason: string;
+        };
     };
-    responses: never;
+    responses: {
+        /** @description Invalid input */
+        BadRequest: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ApiError"];
+            };
+        };
+        /** @description Not found or not publicly eligible */
+        NotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ApiError"];
+            };
+        };
+    };
     parameters: {
         PublicBookingId: number;
         CatalogCode: string;
@@ -6867,6 +8185,16 @@ export interface components {
         OrderLookupToken: string;
         /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
         IdempotencyKey: string;
+        SearchQuery: string;
+        /** @description Opaque stable keyset cursor */
+        Cursor: string;
+        Limit: number;
+        Slug: string;
+        "parameters-IdempotencyKey": string;
+        ProfileId: string;
+        ClassifiedId: string;
+        TargetKind: components["schemas"]["DirectoryEntityType"];
+        TargetId: string;
     };
     requestBodies: never;
     headers: never;
@@ -6968,6 +8296,230 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    getEventResearchPilot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pilot approval and active-candidate count */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchPilot"];
+                };
+            };
+            /** @description Strict administrator access is required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    approveEventResearchPilot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    erPilotApprovalReference: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Approved pilot state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchPilot"];
+                };
+            };
+            /** @description Strict administrator access is required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The pilot has a different existing approval reference */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listEventResearchRuns: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Research runs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchRun"][];
+                };
+            };
+        };
+    };
+    createEventResearchRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventResearchRunCreate"];
+            };
+        };
+        responses: {
+            /** @description Existing or newly created run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchRun"];
+                };
+            };
+        };
+    };
+    updateEventResearchRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventResearchRunUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchRun"];
+                };
+            };
+            /** @description A completed run cannot be reopened */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listEventResearchCandidates: {
+        parameters: {
+            query?: {
+                provider?: string;
+                review_state?: "draft" | "review" | "discarded";
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Research candidates */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchCandidate"][];
+                };
+            };
+        };
+    };
+    upsertEventResearchCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventResearchCandidateWrite"];
+            };
+        };
+        responses: {
+            /** @description Upserted candidate */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchCandidate"];
+                };
+            };
+            /** @description Pilot cap reached or a closed run received a material change */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listEventResearchChanges: {
+        parameters: {
+            query?: {
+                run_id?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Auditable candidate changes */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchChange"][];
+                };
             };
         };
     };
@@ -13812,6 +15364,950 @@ export interface operations {
             };
             /** @description Evidence */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    searchDirectory: {
+        parameters: {
+            query?: {
+                q?: components["parameters"]["SearchQuery"];
+                entityType?: components["schemas"]["DirectoryEntityType"];
+                cityId?: string;
+                /** @description Consented ephemeral search latitude */
+                latitude?: number;
+                /** @description Consented ephemeral search longitude */
+                longitude?: number;
+                radiusKm?: number;
+                professionId?: string;
+                serviceId?: string;
+                instrumentId?: string;
+                genreId?: string;
+                remote?: boolean;
+                available?: boolean;
+                dateFrom?: string;
+                dateTo?: string;
+                /** @description Opaque stable keyset cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Organic results */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectorySearchResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+        };
+    };
+    suggestDirectoryQuery: {
+        parameters: {
+            query?: {
+                q?: components["parameters"]["SearchQuery"];
+                cityId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Canonical taxonomy and entity suggestions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectorySuggestion"][];
+                };
+            };
+        };
+    };
+    getDirectoryTaxonomies: {
+        parameters: {
+            query?: {
+                locale?: "es" | "en" | "pt";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Database-governed directory options */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryTaxonomies"];
+                };
+            };
+        };
+    };
+    getPublicDirectoryProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: components["parameters"]["Slug"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Safe public profile projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDirectoryProfile"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listPublicDirectoryReviews: {
+        parameters: {
+            query?: {
+                /** @description Last visible review id from the previous stable page */
+                cursor?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                slug: components["parameters"]["Slug"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published reviews backed by verified completed interactions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryReviewPage"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getPublicClassified: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: components["parameters"]["Slug"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published and unexpired classified */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicClassified"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getPublicDirectoryEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public-listable event without privileged browser credentials */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDirectoryEvent"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getPublicDirectoryVenue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Safe public venue projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDirectoryVenue"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    setDirectoryAgeAssurance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgeAssuranceRequest"];
+            };
+        };
+        responses: {
+            /** @description Restricted age-assurance state; adult attestation is not identity verification */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listManagedDirectoryProfiles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Explicitly managed profiles */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedDirectoryProfile"][];
+                };
+            };
+        };
+    };
+    createDirectoryProfile: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DirectoryProfileUpsert"];
+            };
+        };
+        responses: {
+            /** @description Draft profile with an explicit manager grant */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedDirectoryProfile"];
+                };
+            };
+        };
+    };
+    updateDirectoryProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: components["parameters"]["ProfileId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DirectoryProfileUpsert"];
+            };
+        };
+        responses: {
+            /** @description Updated explicitly managed profile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    transitionDirectoryProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: components["parameters"]["ProfileId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Transitioned profile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listManagedClassifieds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Classifieds authored by explicitly managed profiles */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedClassified"][];
+                };
+            };
+        };
+    };
+    createClassified: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassifiedCreate"];
+            };
+        };
+        responses: {
+            /** @description Draft classified */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedClassified"];
+                };
+            };
+        };
+    };
+    transitionClassified: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classifiedId: components["parameters"]["ClassifiedId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Classified state transition */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listClassifiedApplications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classifiedId: components["parameters"]["ClassifiedId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private participant-scoped applications */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassifiedApplication"][];
+                };
+            };
+        };
+    };
+    createClassifiedApplication: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path: {
+                classifiedId: components["parameters"]["ClassifiedId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplicationCreate"];
+            };
+        };
+        responses: {
+            /** @description Idempotent application */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassifiedApplication"];
+                };
+            };
+        };
+    };
+    transitionClassifiedApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                applicationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Participant-authorized transition */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listDirectoryInvitations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Participant-scoped invitations */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryInvitation"][];
+                };
+            };
+        };
+    };
+    createDirectoryInvitation: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvitationCreate"];
+            };
+        };
+        responses: {
+            /** @description Preference-checked invitation */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryInvitation"];
+                };
+            };
+        };
+    };
+    transitionDirectoryInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Participant-authorized transition */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    contactDirectoryProfile: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DirectoryContact"];
+            };
+        };
+        responses: {
+            /** @description Existing chat thread linked to directory context */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listDirectoryReviewEligibility: {
+        parameters: {
+            query?: {
+                authorProfileId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private review directions for explicitly managed profiles and verified completed interactions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryReviewEligibility"][];
+                };
+            };
+        };
+    };
+    createDirectoryReview: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DirectoryReviewCreate"];
+            };
+        };
+        responses: {
+            /** @description Idempotent review backed by an eligible verified completed interaction */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryReview"];
+                };
+            };
+            /** @description Interaction is not eligible or was already reviewed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listDirectoryFavorites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current user's favorites */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryFavorite"][];
+                };
+            };
+        };
+    };
+    saveDirectoryFavorite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                targetKind: components["parameters"]["TargetKind"];
+                targetId: components["parameters"]["TargetId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Idempotently saved favorite */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteDirectoryFavorite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                targetKind: components["parameters"]["TargetKind"];
+                targetId: components["parameters"]["TargetId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Favorite removed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listSavedDirectorySearches: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Saved searches and alert preferences */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedDirectorySearch"][];
+                };
+            };
+        };
+    };
+    createSavedDirectorySearch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavedSearchCreate"];
+            };
+        };
+        responses: {
+            /** @description Idempotent saved search; alert deliveries are deduplicated by result version */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createDirectoryClaim: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClaimCreate"];
+            };
+        };
+        responses: {
+            /** @description Submitted claim; it grants no management before approval */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createDirectoryVerificationRequest: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerificationCreate"];
+            };
+        };
+        responses: {
+            /** @description Submitted independent verification request */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reportDirectoryContent: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportCreate"];
+            };
+        };
+        responses: {
+            /** @description Deduplicated community report */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listDirectoryClaimsForReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Admin-only claim queue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    decideDirectoryClaim: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                claimId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Reviewed claim; only approval can create a manager grant */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listDirectoryVerificationsForReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Admin-only verification queue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    decideDirectoryVerification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                verificationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Independent verification decision */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listDirectoryModerationQueue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Admin-only moderation cases and reports */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    decideDirectoryModerationCase: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path: {
+                caseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModerationDecision"];
+            };
+        };
+        responses: {
+            /** @description Auditable moderation decision */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    mergeDirectoryProfiles: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileMerge"];
+            };
+        };
+        responses: {
+            /** @description Non-destructive */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

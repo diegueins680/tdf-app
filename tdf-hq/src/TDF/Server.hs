@@ -182,6 +182,7 @@ import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
 import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
 import qualified TDF.Commerce.ServiceBookings as ServiceBookings
+import qualified TDF.Server.Directory as DirectoryServer
 import           TDF.ServerFeedback (feedbackServer)
 import qualified TDF.Contracts.Server as Contracts
 import           TDF.ServerProposals (proposalsServer)
@@ -726,6 +727,7 @@ server env =
   :<|> inventoryPublicServer
   :<|> feedbackServer
   :<|> CatalogServer.publicCatalogServer
+  :<|> DirectoryServer.directoryPublicServer
   :<|> protectedServer
   :<|> marketplacePublicServer
   :<|> radioPresencePublicServer
@@ -3755,6 +3757,7 @@ protectedServer user =
   :<|> serviceStorefrontAdminServer user
   :<|> accessRequestsServer user
   :<|> navigationPreferencesServer user
+  :<|> DirectoryServer.directoryProtectedServer user
   :<|> OperationsServer.operationsServer user
   :<|> CommerceOperationsServer.commerceOperationsServer user
 

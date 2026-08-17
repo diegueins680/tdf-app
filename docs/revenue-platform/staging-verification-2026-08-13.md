@@ -28,23 +28,25 @@ The final command transcript is summarized here after the branch-wide verificati
 | Provider-event backend invariants | Stack-built `tdf-hq-test --match 'service storefront commercial invariants'` | Pass: 19 examples, including 300 property cases, zero failures; immutable event metadata/provider/environment tampering, invalid replay reasons, and oversized PayPal request IDs are rejected |
 | Marketplace rental backend invariants | Stack-built `tdf-hq-test --match 'marketplace rental'` | Pass: 5 examples, including 100 property cases, zero failures; inclusive dates, weekly pricing, separate deposits, overflow rejection, terminal-state closure and no skipped payment/handoff/inspection states |
 | Service booking backend invariants | Stack-built `tdf-hq-test --match 'service booking pricing and fulfillment invariants'` | Pass: 4 examples, including 100 property cases, zero failures; server minor-unit totals, duration/policy limits, overflow rejection, and no skipped deposit/fulfillment states |
-| Backend test/build | `stack test --fast` with the default optimized Stack profile | Pass: 2,344 examples, zero failures; executable and all 162 test modules compiled and linked |
+| Backend test/build | `stack test --fast` with the default optimized Stack profile | Pass after current-main synchronization: 2,360 examples, zero failures; executable and all 169 test compilation units compiled and linked |
 | Web regression/accessibility | Jest: five changed suites | Pass: 16 tests, zero failures |
 | Provider-event operator UI/access | Jest: provider-event page and access-control suites | Pass: 14 tests, zero failures; raw payload and merchant binding are absent from the UI contract |
 | Marketplace web regressions | Jest: marketplace admin, API, Datafast return and storefront suites | Pass: 71 tests, zero failures; canonical payment is read-only in operations, fulfillment uses its dedicated transition API, one checkout key survives provider switching, lookup secrets stay in headers/session storage, and missing lookup/provider failure never clear the cart |
 | Marketplace rental web regressions | Jest: marketplace storefront and rental-operations suites | Pass: 67 tests, zero failures; unapproved rentals fail closed, approved rentals require inclusive dates, and custody transfer requires an outbound condition report without sending a deposit deduction |
 | Marketplace reviewed manual payment | Hspec validation plus Jest API/tracker/storefront suites | Pass: approve/reject input validation, scoped lookup header, idempotent evidence submission, truthful unpaid/submitted/review copy, protected finance projection, independent review controls, competing-rail exclusion, provider feature flag and expired-hold rejection |
 | Public booking web regressions | Jest: public booking, order-tracking and booking API contract suites | Pass: 27 tests, zero failures; lookup secrets stay in headers/session storage, Datafast browser return remains processing until server verification, PayPal approval calls server capture, manual evidence remains pending review, and only a server-paid checkout is described as verified |
-| Full web regression | `npm test --workspace=tdf-hq-ui -- --silent` | Pass: 151 suites, 1,611 tests, zero failures |
+| Full web regression | `npm test --workspace=tdf-hq-ui` | Pass after current-main synchronization: 155 suites, 1,622 tests, zero failures |
 | Web type safety | `npm run typecheck:ui` | Pass |
-| Web production build | `npm run build --workspace=tdf-hq-ui` | Pass: 12,384 modules; bundle/secret gate 5 preloads and 403,507 gzip bytes |
-| Release/CI contracts | `npm run test:production-release`; `npm run test:ci-pipeline` | Pass: 37 + 12 tests |
-| Registered production batch | Restore schema-only fixture plus three synthetic published Records rows; read-only preflight; render/apply twice; schema verification before and after the rerun on PostgreSQL 17 | Pass: all 49/49 migrations were recorded, the exact second run skipped all 49 entries idempotently, marketplace sales/rentals and reviewed manual methods remained enabled, Datafast/PayPal and service bookings remained disabled, active booking policies and provider bindings remained zero |
-| OpenAPI/generated clients | `npm run generate:api` for web and mobile | Pass: canonical service-storefront, marketplace sale/rental, booking checkout, Datafast/PayPal actions, manual-evidence submission, protected finance projection, and independent review contracts generated for both clients; mobile submodule commit `e2cb667` |
+| Web production build | `npm run build --workspace=tdf-hq-ui` | Pass after current-main synchronization: 12,390 modules; bundle/secret gate 5 preloads and 407,515 gzip bytes |
+| Release/CI contracts | `npm run test:production-release`; `npm run test:ci-pipeline` | Pass: 39 + 12 tests |
+| Prior registered production batch | Restore schema-only fixture plus three synthetic published Records rows; read-only preflight; render/apply twice; schema verification before and after the rerun on PostgreSQL 17 | Pass before current-main synchronization: all 49/49 then-registered migrations were recorded, the exact second run skipped all 49 entries idempotently, marketplace sales/rentals and reviewed manual methods remained enabled, Datafast/PayPal and service bookings remained disabled, active booking policies and provider bindings remained zero |
+| Current merged migration manifest | JSON uniqueness/immutability contracts plus dedicated PostgreSQL 17 rehearsals for the three current-main additions | Pass: 52 unique manifest entries; event-research ingestion passed seed, pilot-cap, idempotency, replacement, rollback and reapply checks; music-directory migrations passed restart, backfill, rollback/reapply, privacy, claim, verified-review, alert, merge, search-volume, taxonomy, invitation, blocking and expiry checks. A new aggregate 52-entry snapshot apply remains a required staging exercise. |
+| OpenAPI/generated clients | `npm run generate:api` for web and mobile | Pass: canonical service-storefront, marketplace sale/rental, booking checkout, Datafast/PayPal actions, manual-evidence submission, protected finance projection, independent review, and music-directory contracts generated for both clients; mobile submodule commit `904f409` |
 | Mobile type safety | `npm run typecheck:mobile` | Pass |
-| Mobile regression | `npm run test:mobile -- --runInBand` | Pass: 49 suites, 256 tests, zero failures |
-| Formal-method audit | `npm run verify:formal` | Pass: 0 critical, 0 errors; repository warnings remain advisory |
-| Catalog authority audit | `npm run audit:catalog-lists` | Pass: configured refund reasons are database-managed; provider/environment discriminants have reviewed technical-constant decisions |
+| Mobile regression | `npm run test:mobile -- --runInBand` | Pass after current-main synchronization: 51 suites, 264 tests, zero failures |
+| Feature-registry audit | `npm run audit:features` | Pass: 135 features, 152 web routes and 44 mobile routes |
+| Formal-method audit | `npm run verify:formal` | Pass: 8,404 findings scanned, 0 critical, 0 errors; 285 repository warnings remain advisory |
+| Catalog authority audit | `npm run audit:catalog-lists` | Pass: 827 unique reviewed decisions, no stale or unreviewed entries; configured refund reasons are database-managed and provider/environment discriminants have reviewed technical-constant decisions |
 
 The focused backend groups were: service storefront (5), checkout state machine (6), distribution
 state machine (5), DDEX intake truthfulness (3), ERN parser (20), and business rules (11). A first
@@ -128,11 +130,15 @@ lookup capability; the public tracker continues to say unpaid while evidence awa
 protected marketplace operations screen exposes the canonical finance projection and permits
 approve/reject only through the Invoicing boundary and an independent reviewer. Approval is refused
 after the asset hold expires or when another payment already won, and those conflicts remain
-reconciliation work rather than fabricated payment. Final local verification passed 2,344 backend
-examples, 151 web suites/1,611 tests, 49 mobile suites/256 tests, the three marketplace/manual
-database rehearsals, production UI build, feature-registry audit, release/CI contracts, formal audit
-and catalog-authority audit. No external provider call, manual payment approval, inventory handoff,
-deposit refund, staging deployment or production mutation occurred.
+reconciliation work rather than fabricated payment. After synchronizing current `main`, final local
+verification passed 2,360 backend examples, 155 web suites/1,622 tests, 51 mobile suites/264 tests,
+the three marketplace/manual database rehearsals, the event-research and music-directory migration
+rehearsals, production UI build, feature-registry audit, release/CI contracts, formal audit and
+catalog-authority audit. The merged manifest contains 52 unique immutable entries; the earlier
+49-entry aggregate apply evidence remains valid for that exact revision, while an aggregate
+52-entry snapshot apply is explicitly still required in staging. No external provider call, manual
+payment approval, inventory handoff, deposit refund, staging deployment or production mutation
+occurred.
 
 ## Required staging exercise
 

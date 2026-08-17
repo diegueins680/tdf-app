@@ -541,6 +541,10 @@ seedCatalogDefinitions =
       , technical "ddex-validation-layers" "ddex_validation_layer" "Capas de validación DDEX" "DDEX validation layers"
       , dynamic "content-reaction-types" "content_reaction_type" "Reacciones de contenido" "Content reactions" True
       , dynamic "creator-badge-types" "creator_badge_type" "Insignias de creadores" "Creator badges" True
+      , dynamic "professions" "profession" "Profesiones musicales" "Music professions" True
+      , dynamic "classified-categories" "classified_category" "Categorías de clasificados" "Classified categories" True
+      , dynamic "compensation-types" "compensation_type" "Tipos de compensación" "Compensation types" True
+      , governed "metropolitan-areas" "metropolitan_area" "Áreas metropolitanas" "Metropolitan areas" True
       ]
     dynamic code entityKind nameEs nameEn publicRead = (code, "dynamic-business-catalog", entityKind, nameEs, nameEn, publicRead, False, "catalog-publication")
     governed code entityKind nameEs nameEn publicRead = (code, "governed-reference-data", entityKind, nameEs, nameEn, publicRead, True, "governed-import")

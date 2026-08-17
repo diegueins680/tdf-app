@@ -41,9 +41,11 @@ executable tdf-hq-exe
     TDF.Contracts.Types
     TDF.Courses.Production
     TDF.API.SocialEventsAPI
+    TDF.API.EventResearchAPI
     TDF.API.Types
     TDF.API.WhatsApp
     TDF.API.DDEX
+    TDF.API.Directory
     TDF.API.Catalog
     TDF.API.ServiceStorefront
     TDF.API.ServiceStorefrontTypes
@@ -66,6 +68,7 @@ executable tdf-hq-exe
     TDF.DB
     TDF.DTO
     TDF.DTO.SocialEventsDTO
+    TDF.DTO.EventResearchDTO
     TDF.DTO.SocialDiscoveryDTO
     TDF.DTO.SocialSyncDTO
     TDF.Distribution.StateMachine
@@ -110,7 +113,9 @@ executable tdf-hq-exe
     TDF.ServerProposals
     TDF.ServerInternships
     TDF.Server.SocialEventsHandlers
+    TDF.Server.EventResearch
     TDF.Server.DDEX
+    TDF.Server.Directory
     TDF.Server.Catalog
     TDF.Server.ServiceStorefront
     TDF.ServerLiveSessions
@@ -132,6 +137,7 @@ executable tdf-hq-exe
       TDF.Catalog.Security
       TDF.Catalog.Seed
     TDF.Catalog.Types
+    TDF.Directory.Policy
     TDF.DDEX.Types
     TDF.DDEX.Models
     TDF.DDEX.DB
@@ -251,8 +257,10 @@ test-suite tdf-hq-test
     TDF.API.Rooms
     TDF.API.Sessions
     TDF.API.SocialEventsAPI
+    TDF.API.EventResearchAPI
     TDF.API.Types
     TDF.API.WhatsApp
+    TDF.API.Directory
     TDF.APITypesSpec
     TDF.Artists.Promotion
     TDF.Artists.PromotionSpec
@@ -275,6 +283,7 @@ test-suite tdf-hq-test
     TDF.DB
     TDF.DTO
     TDF.DTO.SocialEventsDTO
+    TDF.DTO.EventResearchDTO
     TDF.DTO.SocialDiscoveryDTO
     TDF.DTO.SocialSyncDTO
     TDF.Distribution.StateMachine
@@ -298,6 +307,8 @@ test-suite tdf-hq-test
     TDF.Catalog.RecordsSpec
     TDF.Catalog.PipelineSpec
     TDF.Catalog.Types
+    TDF.Directory.Policy
+    TDF.Directory.PolicySpec
     TDF.Profiles.Artist
     TDF.Profiles.ArtistSpec
     TDF.RagStore
@@ -308,6 +319,7 @@ test-suite tdf-hq-test
     TDF.Server.Catalog
     TDF.Server.CommerceOperations
     TDF.Server.DDEX
+    TDF.Server.Directory
     TDF.Server.ServiceStorefront
     TDF.ServerAuth
     TDF.ServerAuthSpec
@@ -320,6 +332,7 @@ test-suite tdf-hq-test
     TDF.Server.SocialDiscovery
     TDF.Server.SocialSync
     TDF.Server.SocialEventsHandlers
+    TDF.Server.EventResearch
     TDF.SocialEventLifecycle
     TDF.ServerFuture
     TDF.ServerLiveSessions
@@ -338,6 +351,7 @@ test-suite tdf-hq-test
     TDF.Services.EventDiscovery
     TDF.Services.EventLogisticsRoutes
     TDF.Services.EventDiscoverySpec
+    TDF.Server.EventResearchSpec
     TDF.Services.InstagramSync
     TDF.Services.Stripe
     TDF.Trials.API

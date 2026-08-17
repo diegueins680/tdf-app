@@ -94,6 +94,142 @@ paths:
                 $ref: '#/components/schemas/EventMoment'
         '422':
           description: Reaction type UUID is unknown, inactive, deprecated, or unpublished
+  /social-events/event-research/pilot:
+    get:
+      tags: [Event research]
+      summary: Read accumulated pilot state
+      operationId: getEventResearchPilot
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Pilot approval and active-candidate count
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventResearchPilot' }
+        '403': { description: Strict administrator access is required }
+  /social-events/event-research/pilot/approve:
+    post:
+      tags: [Event research]
+      summary: Record an explicit, immutable pilot approval
+      operationId: approveEventResearchPilot
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [erPilotApprovalReference]
+              properties:
+                erPilotApprovalReference: { type: string, minLength: 1, maxLength: 500 }
+      responses:
+        '200':
+          description: Approved pilot state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventResearchPilot' }
+        '403': { description: Strict administrator access is required }
+        '409': { description: The pilot has a different existing approval reference }
+  /social-events/event-research/runs:
+    get:
+      tags: [Event research]
+      summary: List research runs and checkpoints
+      operationId: listEventResearchRuns
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 } }
+      responses:
+        '200':
+          description: Research runs
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/EventResearchRun' } }
+    post:
+      tags: [Event research]
+      summary: Idempotently start a research run by run key
+      operationId: createEventResearchRun
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventResearchRunCreate' }
+      responses:
+        '200':
+          description: Existing or newly created run
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventResearchRun' }
+  /social-events/event-research/runs/{runId}:
+    put:
+      tags: [Event research]
+      summary: Commit a run checkpoint or terminal status
+      operationId: updateEventResearchRun
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: runId, in: path, required: true, schema: { type: string, pattern: '^[1-9][0-9]*$' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventResearchRunUpdate' }
+      responses:
+        '200':
+          description: Updated run
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventResearchRun' }
+        '409': { description: A completed run cannot be reopened }
+  /social-events/event-research/candidates:
+    get:
+      tags: [Event research]
+      summary: List accumulated research candidates
+      operationId: listEventResearchCandidates
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: provider, in: query, schema: { type: string } }
+        - { name: review_state, in: query, schema: { type: string, enum: [draft, review, discarded] } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 } }
+      responses:
+        '200':
+          description: Research candidates
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/EventResearchCandidate' } }
+    put:
+      tags: [Event research]
+      summary: Idempotently create, update, or reverify a candidate
+      description: Uses provider plus external identifier as the canonical key. It never publishes a social event.
+      operationId: upsertEventResearchCandidate
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventResearchCandidateWrite' }
+      responses:
+        '200':
+          description: Upserted candidate
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventResearchCandidate' }
+        '409': { description: Pilot cap reached or a closed run received a material change }
+  /social-events/event-research/changes:
+    get:
+      tags: [Event research]
+      summary: List immutable candidate change records
+      operationId: listEventResearchChanges
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: run_id, in: query, schema: { type: string, pattern: '^[1-9][0-9]*$' } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 } }
+      responses:
+        '200':
+          description: Auditable candidate changes
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/EventResearchChange' } }
   /version:
     get:
       summary: Get API Version
@@ -4733,6 +4869,41 @@ paths:
         '403': { description: Invoicing access required or separation of duties failed }
         '404': { description: Canonical booking commerce order not found }
         '409': { description: Evidence, checkout, hold, ledger, receipt, or immutable binding conflict }
+  /directory/search: { $ref: './directory.yaml#/paths/~1directory~1search' }
+  /directory/suggestions: { $ref: './directory.yaml#/paths/~1directory~1suggestions' }
+  /directory/taxonomies: { $ref: './directory.yaml#/paths/~1directory~1taxonomies' }
+  /directory/profiles/{slug}: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{slug}' }
+  /directory/profiles/{slug}/reviews: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{slug}~1reviews' }
+  /directory/classifieds/{slug}: { $ref: './directory.yaml#/paths/~1directory~1classifieds~1{slug}' }
+  /directory/events/{eventId}: { $ref: './directory.yaml#/paths/~1directory~1events~1{eventId}' }
+  /directory/venues/{venueId}: { $ref: './directory.yaml#/paths/~1directory~1venues~1{venueId}' }
+  /directory/age-assurance: { $ref: './directory.yaml#/paths/~1directory~1age-assurance' }
+  /directory/profiles: { $ref: './directory.yaml#/paths/~1directory~1profiles' }
+  /directory/profiles/{profileId}: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{profileId}' }
+  /directory/profiles/{profileId}/status: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{profileId}~1status' }
+  /directory/classifieds: { $ref: './directory.yaml#/paths/~1directory~1classifieds' }
+  /directory/classifieds/{classifiedId}/status: { $ref: './directory.yaml#/paths/~1directory~1classifieds~1{classifiedId}~1status' }
+  /directory/classifieds/{classifiedId}/applications: { $ref: './directory.yaml#/paths/~1directory~1classifieds~1{classifiedId}~1applications' }
+  /directory/applications/{applicationId}/status: { $ref: './directory.yaml#/paths/~1directory~1applications~1{applicationId}~1status' }
+  /directory/invitations: { $ref: './directory.yaml#/paths/~1directory~1invitations' }
+  /directory/invitations/{invitationId}/status: { $ref: './directory.yaml#/paths/~1directory~1invitations~1{invitationId}~1status' }
+  /directory/contact: { $ref: './directory.yaml#/paths/~1directory~1contact' }
+  /directory/review-eligibility: { $ref: './directory.yaml#/paths/~1directory~1review-eligibility' }
+  /directory/reviews: { $ref: './directory.yaml#/paths/~1directory~1reviews' }
+  /directory/favorites: { $ref: './directory.yaml#/paths/~1directory~1favorites' }
+  /directory/favorites/{targetKind}/{targetId}: { $ref: './directory.yaml#/paths/~1directory~1favorites~1{targetKind}~1{targetId}' }
+  /directory/saved-searches: { $ref: './directory.yaml#/paths/~1directory~1saved-searches' }
+  /directory/claims: { $ref: './directory.yaml#/paths/~1directory~1claims' }
+  /directory/verifications: { $ref: './directory.yaml#/paths/~1directory~1verifications' }
+  /directory/reports: { $ref: './directory.yaml#/paths/~1directory~1reports' }
+  /directory/admin/claims: { $ref: './directory.yaml#/paths/~1directory~1admin~1claims' }
+  /directory/admin/claims/{claimId}/status: { $ref: './directory.yaml#/paths/~1directory~1admin~1claims~1{claimId}~1status' }
+  /directory/admin/verifications: { $ref: './directory.yaml#/paths/~1directory~1admin~1verifications' }
+  /directory/admin/verifications/{verificationId}/status: { $ref: './directory.yaml#/paths/~1directory~1admin~1verifications~1{verificationId}~1status' }
+  /directory/admin/moderation: { $ref: './directory.yaml#/paths/~1directory~1admin~1moderation' }
+  /directory/admin/moderation/{caseId}/decisions: { $ref: './directory.yaml#/paths/~1directory~1admin~1moderation~1{caseId}~1decisions' }
+  /directory/admin/merges: { $ref: './directory.yaml#/paths/~1directory~1admin~1merges' }
+
 security:
   - bearerAuth: [ ]
 
@@ -6085,6 +6256,126 @@ components:
         emComments:
           type: array
           items: { $ref: '#/components/schemas/EventMomentComment' }
+    EventResearchPilot:
+      type: object
+      required: [erPilotApproved, erPilotMaxActiveCandidates, erPilotActiveCandidates, erPilotUpdatedAt]
+      properties:
+        erPilotApproved: { type: boolean }
+        erPilotApprovedAt: { type: string, format: date-time, nullable: true }
+        erPilotApprovedByPartyId: { type: string, nullable: true }
+        erPilotApprovalReference: { type: string, nullable: true }
+        erPilotMaxActiveCandidates: { type: integer, enum: [20] }
+        erPilotActiveCandidates: { type: integer, minimum: 0, maximum: 20 }
+        erPilotUpdatedAt: { type: string, format: date-time }
+    EventResearchRunCreate:
+      type: object
+      additionalProperties: false
+      required: [erRunKey, erRunReconciliation]
+      properties:
+        erRunKey: { type: string, minLength: 1, maxLength: 160 }
+        erRunReconciliation: { type: boolean }
+        erRunCheckpoint: { type: string, maxLength: 2000, nullable: true }
+    EventResearchRunUpdate:
+      type: object
+      additionalProperties: false
+      required: [erRunStatus, erRunCounters]
+      properties:
+        erRunStatus: { type: string, enum: [running, completed, failed] }
+        erRunCheckpoint: { type: string, maxLength: 2000, nullable: true }
+        erRunCounters: { type: object, additionalProperties: true }
+        erRunErrorSummary: { type: string, maxLength: 4000, nullable: true }
+    EventResearchRun:
+      allOf:
+        - { $ref: '#/components/schemas/EventResearchRunCreate' }
+        - { $ref: '#/components/schemas/EventResearchRunUpdate' }
+        - type: object
+          required: [erRunId, erRunStartedAt, erRunUpdatedAt, erRunCreatedByPartyId]
+          properties:
+            erRunId: { type: string }
+            erRunStartedAt: { type: string, format: date-time }
+            erRunUpdatedAt: { type: string, format: date-time }
+            erRunFinishedAt: { type: string, format: date-time, nullable: true }
+            erRunCreatedByPartyId: { type: string }
+    EventResearchEvidence:
+      type: object
+      additionalProperties: false
+      required: [erEvidenceUrl, erEvidenceKind, erEvidenceConsultedAt]
+      properties:
+        erEvidenceUrl: { type: string, format: uri, pattern: '^https://' }
+        erEvidenceKind: { type: string, maxLength: 80 }
+        erEvidenceConsultedAt: { type: string, format: date-time }
+        erEvidenceNotes: { type: string, maxLength: 1000, nullable: true }
+    EventResearchCandidateWrite:
+      type: object
+      additionalProperties: false
+      required:
+        - erCandidateProvider
+        - erCandidateExternalId
+        - erCandidateRunId
+        - erCandidateReviewState
+        - erCandidateTitle
+        - erCandidateTimezone
+        - erCandidateCountryCode
+        - erCandidateSourceUrl
+        - erCandidatePayload
+        - erCandidateEvidence
+        - erCandidateConfidence
+        - erCandidateManagedFields
+        - erCandidateVerifiedAt
+      properties:
+        erCandidateProvider: { type: string, maxLength: 80 }
+        erCandidateExternalId: { type: string, maxLength: 512 }
+        erCandidateRunId: { type: string, pattern: '^[1-9][0-9]*$' }
+        erCandidateSourceId: { type: string, pattern: '^[1-9][0-9]*$', nullable: true }
+        erCandidateReviewState: { type: string, enum: [draft, review, discarded] }
+        erCandidateTitle: { type: string, maxLength: 240 }
+        erCandidateStartTime: { type: string, format: date-time, nullable: true }
+        erCandidateEndTime: { type: string, format: date-time, nullable: true }
+        erCandidateTimezone: { type: string, example: America/Guayaquil }
+        erCandidateVenueName: { type: string, maxLength: 240, nullable: true }
+        erCandidateCity: { type: string, maxLength: 160, nullable: true }
+        erCandidateProvince: { type: string, maxLength: 160, nullable: true }
+        erCandidateCountryCode: { type: string, pattern: '^[A-Z]{2}$' }
+        erCandidateSourceUrl: { type: string, format: uri, pattern: '^https://' }
+        erCandidateInfoUrl: { type: string, format: uri, pattern: '^https://', nullable: true }
+        erCandidatePurchaseUrl: { type: string, format: uri, pattern: '^https://', nullable: true }
+        erCandidatePayload: { type: object, additionalProperties: true }
+        erCandidateEvidence:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/EventResearchEvidence' }
+        erCandidateConfidence: { type: string, enum: [high, medium, low] }
+        erCandidateManagedFields: { type: array, items: { type: string } }
+        erCandidateVerifiedAt: { type: string, format: date-time }
+    EventResearchCandidate:
+      allOf:
+        - { $ref: '#/components/schemas/EventResearchCandidateWrite' }
+        - type: object
+          required: [erCandidateId, erCandidateContentHash, erCandidateIsPilot, erCandidateCreatedAt, erCandidateUpdatedAt]
+          properties:
+            erCandidateId: { type: string }
+            erCandidateEventId: { type: string, nullable: true }
+            erCandidateContentHash: { type: string, pattern: '^[0-9a-f]{64}$' }
+            erCandidateIsPilot: { type: boolean }
+            erCandidateCreatedAt: { type: string, format: date-time }
+            erCandidateUpdatedAt: { type: string, format: date-time }
+    EventResearchChange:
+      type: object
+      required: [erChangeId, erChangeRunId, erChangeAction, erChangeSourceUrl, erChangeConfidence, erChangeConsultedAt, erChangeExternalId, erChangeResult, erChangeCreatedAt]
+      properties:
+        erChangeId: { type: string }
+        erChangeRunId: { type: string }
+        erChangeCandidateId: { type: string, nullable: true }
+        erChangeEventId: { type: string, nullable: true }
+        erChangeAction: { type: string, enum: [created, updated, verified, discarded, materialized] }
+        erChangeBeforeValue: { type: object, additionalProperties: true, nullable: true }
+        erChangeAfterValue: { type: object, additionalProperties: true, nullable: true }
+        erChangeSourceUrl: { type: string, format: uri }
+        erChangeConfidence: { type: string, enum: [high, medium, low] }
+        erChangeConsultedAt: { type: string, format: date-time }
+        erChangeExternalId: { type: string }
+        erChangeResult: { type: string }
+        erChangeCreatedAt: { type: string, format: date-time }
     SocialEvent:
       type: object
       additionalProperties: false
@@ -6107,6 +6398,10 @@ components:
         eventEnd:
           type: string
           format: date-time
+        eventTimezone:
+          type: string
+          nullable: true
+          example: America/Guayaquil
         eventVenueId:
           type: string
           nullable: true

@@ -1,0 +1,189 @@
+{
+  "runKey": "ecuador-events-2026-08-16",
+  "researchedAt": "2026-08-16T10:46:20-05:00",
+  "researchWindow": { "from": "2026-08-16", "through": "2027-08-16" },
+  "defaultTimezone": "America/Guayaquil",
+  "sundayFullReconciliation": true,
+  "checkpoint": "reconciliation-complete:candidates-verified:20:api-write-not-started",
+  "result": "blocked_before_write",
+  "blockers": [
+    "The attached administrative browser redirected to login; no authenticated API session was available.",
+    "The production schema has no research candidate, evidence, pilot-control, or change-audit contract.",
+    "Passline presented a Cloudflare challenge and Feel The Tickets presented a Queue-it waiting room; neither control was bypassed."
+  ],
+  "productionSnapshot": {
+    "environment": "production",
+    "baseUrl": "https://tdf-hq.fly.dev",
+    "health": "ok",
+    "productionCommit": "d10e7cdf",
+    "pilotApprovalFound": false,
+    "eventsWritten": 0,
+    "eventsPublished": 0,
+    "existingEventsInHorizon": 7,
+    "existingEventsWithTimezone": 0,
+    "existingEventsWithSource": 0,
+    "existingExternalReferences": 0,
+    "exactDuplicateReview": ["social_event:88", "social_event:89"]
+  },
+  "sourcesReviewed": [
+    "https://www.instagram.com/meet2go/",
+    "https://www.instagram.com/passline.ec/",
+    "https://www.instagram.com/buenplantickets/",
+    "https://www.instagram.com/feelthetickets.ec/",
+    "https://www.instagram.com/ticketshow/",
+    "https://www.meet2go.com/",
+    "https://www.buenplan.com.ec/",
+    "https://www.ticketshow.com.ec/",
+    "https://www.feelthetickets.com/",
+    "https://www.ontimetickets.com/",
+    "https://conciertos.output.ec/",
+    "https://visitquito.ec/es/grandes-eventos-calendario/"
+  ],
+  "newOfficialSources": [
+    { "name": "On Time Tickets", "kind": "ticket_seller", "url": "https://www.ontimetickets.com/" },
+    { "name": "Output Concerts", "kind": "organizer_promoter", "url": "https://conciertos.output.ec/" },
+    { "name": "Visit Quito", "kind": "municipal_verification", "url": "https://visitquito.ec/es/grandes-eventos-calendario/" }
+  ],
+  "candidates": [
+    {
+      "provider": "buenplan", "externalId": "metal-sinfonico-quito-2026-08-21", "title": "Metal Sinfónico", "slug": "metal-sinfonico-quito-2026",
+      "localDate": "2026-08-21", "startTime": "2026-08-21T19:00:00-05:00", "endTime": null, "timezone": "America/Guayaquil",
+      "venue": "Teatro Nacional de la Casa de la Cultura Ecuatoriana", "address": null, "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["Fabio Lione", "Edu Falaschi", "Christian Bertoncelli"], "organizer": null, "promoter": null, "ticketSeller": "BuenPlan",
+      "purchaseUrl": null, "sourceUrl": "https://www.buenplan.com.ec/", "prices": [{"category":"Box","amount":75,"currency":"USD"},{"category":"Black","amount":40,"currency":"USD"},{"category":"VIP","amount":25,"currency":"USD"}],
+      "ageRestriction": "Todo público", "eventType": "concert", "genres": ["metal", "symphonic metal"], "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "medium",
+      "reviewReason": "The official seller confirms essentials, but no stable direct event URL was found.", "inferences": [], "description": "Concierto sinfónico de metal con tres vocalistas internacionales y acompañamiento orquestal.",
+      "image": {"url":null,"source":"https://www.buenplan.com.ec/","attribution":"BuenPlan; permission pending"}, "evidence": [{"url":"https://www.buenplan.com.ec/","kind":"official_sale_listing","consultedAt":"2026-08-16T10:46:20-05:00"}]
+    },
+    {
+      "provider": "buenplan", "externalId": "ken-y-2026-quito", "title": "Ken-Y en Quito", "slug": "ken-y-quito-2026",
+      "localDate": "2026-09-11", "startTime": "2026-09-11T19:00:00-05:00", "endTime": null, "timezone": "America/Guayaquil",
+      "venue": "Ágora de la Casa de la Cultura Ecuatoriana", "address": null, "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["Ken-Y"], "organizer": "Street Show", "promoter": "Street Show", "ticketSeller": "BuenPlan", "purchaseUrl": "https://www.buenplan.com.ec/event/ken-y-2026-quito", "sourceUrl": "https://www.buenplan.com.ec/event/ken-y-2026-quito",
+      "prices": [{"category":"General","amount":20,"currency":"USD","fees":"USD 3 IVA"},{"category":"Preferencia","amount":35,"currency":"USD","fees":"USD 5.25 IVA"}], "ageRestriction": "16+", "eventType": "concert", "genres": ["reggaeton", "latin urban"],
+      "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "high", "reviewReason": "Pilot is not approved.", "inferences": [], "description": "Presentación en Quito del repertorio urbano y romántico de Ken-Y.",
+      "image": {"url":null,"source":"https://www.buenplan.com.ec/event/ken-y-2026-quito","attribution":"BuenPlan; permission pending"}, "evidence": [{"url":"https://www.buenplan.com.ec/event/ken-y-2026-quito","kind":"official_sale","consultedAt":"2026-08-16T10:46:20-05:00"}]
+    },
+    {
+      "provider": "buenplan", "externalId": "trueno-turrazo-quito", "title": "Trueno — Tour Turr4zo", "slug": "trueno-tour-turr4zo-quito-2026",
+      "localDate": "2026-09-19", "startTime": "2026-09-19T19:00:00-05:00", "endTime": null, "timezone": "America/Guayaquil", "venue": "Coliseo General Rumiñahui", "address": null, "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["Trueno"], "organizer": "Pulso", "promoter": "Pulso", "ticketSeller": "BuenPlan", "purchaseUrl": "https://www.buenplan.com.ec/event/trueno-turrazo-quito", "sourceUrl": "https://www.buenplan.com.ec/event/trueno-turrazo-quito",
+      "prices": [{"category":"Top","amount":120,"currency":"USD","fees":"IVA adicional"},{"category":"Tier 2","amount":70,"currency":"USD","fees":"IVA adicional"},{"category":"Tier 3","amount":50,"currency":"USD","fees":"IVA adicional"},{"category":"Tier 4","amount":35,"currency":"USD","fees":"IVA adicional"}], "ageRestriction": "Todo público", "eventType": "concert", "genres": ["hip hop", "latin urban"],
+      "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "high", "reviewReason": "Pilot is not approved.", "inferences": [], "description": "Fecha quiteña de la gira Turr4zo del rapero argentino Trueno.", "image": {"url":null,"source":"https://www.buenplan.com.ec/event/trueno-turrazo-quito","attribution":"BuenPlan; permission pending"}, "evidence": [{"url":"https://www.buenplan.com.ec/event/trueno-turrazo-quito","kind":"official_sale","consultedAt":"2026-08-16T10:46:20-05:00"}]
+    },
+    {
+      "provider": "buenplan", "externalId": "sonata-arctica-2026-quito", "title": "Sonata Arctica — Rock United", "slug": "sonata-arctica-rock-united-quito-2026",
+      "localDate": "2026-09-23", "startTime": "2026-09-23T20:00:00-05:00", "endTime": null, "timezone": "America/Guayaquil", "venue": "Teatro San Gabriel", "address": null, "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["Sonata Arctica", "Black Sun", "Kill City"], "organizer": "Alive", "promoter": "Alive", "ticketSeller": "BuenPlan", "purchaseUrl": "https://www.buenplan.com.ec/event/sonata-arctica-2026-quito", "sourceUrl": "https://www.buenplan.com.ec/event/sonata-arctica-2026-quito",
+      "prices": [{"category":"Tier 1","amount":69.99,"currency":"USD"},{"category":"Tier 2","amount":59.99,"currency":"USD"}], "ageRestriction": "16+", "eventType": "concert", "genres": ["power metal"], "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "high", "reviewReason": "Pilot is not approved.", "inferences": [], "description": "Sonata Arctica encabeza una noche de power metal junto a Black Sun y Kill City.",
+      "image": {"url":null,"source":"https://www.buenplan.com.ec/event/sonata-arctica-2026-quito","attribution":"BuenPlan; permission pending"}, "evidence": [{"url":"https://www.buenplan.com.ec/event/sonata-arctica-2026-quito","kind":"official_sale","consultedAt":"2026-08-16T10:46:20-05:00"}]
+    },
+    {
+      "provider": "buenplan", "externalId": "akriila-2026-quito", "title": "Akriila — El Tour de Lucy", "slug": "akriila-tour-de-lucy-quito-2026",
+      "localDate": "2026-10-24", "startTime": "2026-10-24T20:00:00-05:00", "endTime": null, "timezone": "America/Guayaquil", "venue": "Teatro San Gabriel", "address": null, "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["Akriila"], "organizer": "Pulso", "promoter": "Pulso", "ticketSeller": "BuenPlan", "purchaseUrl": "https://www.buenplan.com.ec/event/akriila-2026-quito", "sourceUrl": "https://www.buenplan.com.ec/event/akriila-2026-quito",
+      "prices": [{"category":"Tier 1","amount":50,"currency":"USD"},{"category":"Tier 2","amount":40,"currency":"USD"},{"category":"Tier 3","amount":30,"currency":"USD"}], "ageRestriction": "Todo público", "eventType": "concert", "genres": ["latin urban", "alternative pop"], "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "high", "reviewReason": "Pilot is not approved; an earlier tier appeared sold out, not the full event.", "inferences": [], "description": "Akriila presenta en Quito su gira El Tour de Lucy.",
+      "image": {"url":null,"source":"https://www.buenplan.com.ec/event/akriila-2026-quito","attribution":"BuenPlan; permission pending"}, "evidence": [{"url":"https://www.buenplan.com.ec/event/akriila-2026-quito","kind":"official_sale","consultedAt":"2026-08-16T10:46:20-05:00"}]
+    },
+    {
+      "provider": "buenplan", "externalId": "iron-maiden-quito-2026", "title": "Iron Maiden — Run For Your Lives", "slug": "iron-maiden-run-for-your-lives-quito-2026",
+      "localDate": "2026-10-14", "startTime": "2026-10-14T21:00:00-05:00", "endTime": null, "timezone": "America/Guayaquil", "venue": "Estadio Olímpico Atahualpa", "address": null, "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["Iron Maiden", "The Raven Age"], "organizer": "Move Concerts", "promoter": "Move Concerts / Sight Concerts", "ticketSeller": "BuenPlan", "purchaseUrl": "https://www.buenplan.com.ec/ironmaiden/", "sourceUrl": "https://www.buenplan.com.ec/ironmaiden/",
+      "prices": [{"category":"Tier 1","amount":185,"currency":"USD","fees":"27.75 servicio + 31.91 IVA"},{"category":"Tier 2","amount":155,"currency":"USD","fees":"23.25 servicio + 26.74 IVA"},{"category":"Tier 3","amount":125,"currency":"USD","fees":"18.75 servicio + 21.56 IVA"},{"category":"Tier 4","amount":99,"currency":"USD","fees":"14.85 servicio + 17.08 IVA"},{"category":"Tier 5","amount":65,"currency":"USD","fees":"9.75 servicio + 11.21 IVA"},{"category":"Tier 6","amount":55,"currency":"USD","fees":"8.25 servicio + 9.49 IVA"}], "ageRestriction": null, "eventType": "concert", "genres": ["heavy metal"],
+      "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "high", "reviewReason": "Pilot is not approved.", "inferences": [], "description": "Iron Maiden llega a Quito con la gira Run For Your Lives y The Raven Age como invitado.", "image": {"url":null,"source":"https://www.buenplan.com.ec/ironmaiden/","attribution":"BuenPlan / promoter; permission pending"}, "evidence": [{"url":"https://www.buenplan.com.ec/ironmaiden/","kind":"official_sale","consultedAt":"2026-08-16T10:46:20-05:00"}]
+    },
+    {
+      "provider": "ticketshow", "externalId": "ZHAMIRA-QUITO-2026", "title": "Zhamira Zambrano en Quito", "slug": "zhamira-zambrano-quito-2026",
+      "localDate": "2026-08-23", "startTime": "2026-08-23T20:00:00-05:00", "endTime": null, "timezone": "America/Guayaquil", "venue": "Teatro San Gabriel", "address": null, "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["Zhamira Zambrano"], "organizer": "Output", "promoter": "Output", "ticketSeller": "TicketShow", "purchaseUrl": "https://www.ticketshow.com.ec/evento/ZHAMIRA-QUITO-2026", "sourceUrl": "https://www.ticketshow.com.ec/evento/ZHAMIRA-QUITO-2026", "prices": [], "ageRestriction": null, "eventType": "concert", "genres": ["latin pop"],
+      "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "high", "reviewReason": "Pilot is not approved; seller labels availability as preventa.", "inferences": [], "description": "Concierto de Zhamira Zambrano en el Teatro San Gabriel.", "image": {"url":null,"source":"https://www.ticketshow.com.ec/evento/ZHAMIRA-QUITO-2026","attribution":"TicketShow / Output; permission pending"}, "evidence": [{"url":"https://www.ticketshow.com.ec/evento/ZHAMIRA-QUITO-2026","kind":"official_sale","consultedAt":"2026-08-16T10:46:20-05:00"}]
+    },
+    {
+      "provider": "ticketshow", "externalId": "RAWAYANA-QUITO-2026", "title": "Rawayana en Quito", "slug": "rawayana-quito-2026",
+      "localDate": "2026-08-27", "startTime": "2026-08-27T20:30:00-05:00", "endTime": null, "timezone": "America/Guayaquil", "venue": "Coliseo General Rumiñahui", "address": null, "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["Rawayana"], "organizer": "Output", "promoter": "Output", "ticketSeller": "TicketShow", "purchaseUrl": "https://www.ticketshow.com.ec/evento/RAWAYANA-QUITO-2026", "sourceUrl": "https://www.ticketshow.com.ec/evento/RAWAYANA-QUITO-2026",
+      "prices": [{"category":"Tier 1","amount":30,"currency":"USD"},{"category":"Tier 2","amount":60,"currency":"USD"},{"category":"Tier 3","amount":90,"currency":"USD"},{"category":"Tier 4","amount":130,"currency":"USD"},{"category":"Tier 5","amount":160,"currency":"USD"}], "ageRestriction": null, "eventType": "concert", "genres": ["latin alternative", "reggae"],
+      "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "high", "reviewReason": "Pilot is not approved; seller time 20:30 overrides organizer page time 20:00 under the source hierarchy.", "inferences": [], "description": "Rawayana presenta su gira en el Coliseo General Rumiñahui.", "image": {"url":null,"source":"https://www.ticketshow.com.ec/evento/RAWAYANA-QUITO-2026","attribution":"TicketShow / Output; permission pending"}, "evidence": [{"url":"https://www.ticketshow.com.ec/evento/RAWAYANA-QUITO-2026","kind":"official_sale","consultedAt":"2026-08-16T10:46:20-05:00"},{"url":"https://conciertos.output.ec/conciertos/rawayana/","kind":"official_organizer","consultedAt":"2026-08-16T10:46:20-05:00","notes":"Conflicting 20:00 show time; official sale page is primary."}]
+    },
+    {
+      "provider": "ticketshow", "externalId": "SEATTLE-SUPERSONICS-QUITO-2026", "title": "Seattle Supersonics en Quito", "slug": "seattle-supersonics-quito-2026",
+      "localDate": "2026-08-29", "startTime": "2026-08-29T20:00:00-05:00", "endTime": null, "timezone": "America/Guayaquil", "venue": "Teatro San Gabriel", "address": null, "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["Seattle Supersonics"], "organizer": "Sandra Lorena Fernández Alvarado", "promoter": null, "ticketSeller": "TicketShow", "purchaseUrl": "https://www.ticketshow.com.ec/evento/SEATTLE-SUPERSONICS-QUITO-2026", "sourceUrl": "https://www.ticketshow.com.ec/evento/SEATTLE-SUPERSONICS-QUITO-2026", "prices": [], "ageRestriction": null, "eventType": "concert", "genres": ["rock tribute"],
+      "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "high", "reviewReason": "Pilot is not approved; seller marks ticket exchange available.", "inferences": [], "description": "Espectáculo tributo al grunge de Nirvana a cargo de Seattle Supersonics.", "image": {"url":null,"source":"https://www.ticketshow.com.ec/evento/SEATTLE-SUPERSONICS-QUITO-2026","attribution":"TicketShow; permission pending"}, "evidence": [{"url":"https://www.ticketshow.com.ec/evento/SEATTLE-SUPERSONICS-QUITO-2026","kind":"official_sale","consultedAt":"2026-08-16T10:46:20-05:00"}]
+    },
+    {
+      "provider": "ticketshow", "externalId": "CARLOS-VIVES-QUITO-2026", "title": "Carlos Vives en Quito", "slug": "carlos-vives-quito-2026",
+      "localDate": "2026-09-03", "startTime": "2026-09-03T20:00:00-05:00", "endTime": null, "timezone": "America/Guayaquil", "venue": "Coliseo General Rumiñahui", "address": null, "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["Carlos Vives"], "organizer": "Top Shows", "promoter": "Top Shows", "ticketSeller": "TicketShow", "purchaseUrl": "https://www.ticketshow.com.ec/evento/CARLOS-VIVES-QUITO-2026", "sourceUrl": "https://www.ticketshow.com.ec/evento/CARLOS-VIVES-QUITO-2026", "prices": [], "ageRestriction": null, "eventType": "concert", "genres": ["vallenato", "latin pop"],
+      "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "high", "reviewReason": "Pilot is not approved; seller labels availability as pre-sale.", "inferences": [], "description": "Carlos Vives vuelve a Quito con un repertorio de pop colombiano y vallenato.", "image": {"url":null,"source":"https://www.ticketshow.com.ec/evento/CARLOS-VIVES-QUITO-2026","attribution":"TicketShow / Top Shows; permission pending"}, "evidence": [{"url":"https://www.ticketshow.com.ec/evento/CARLOS-VIVES-QUITO-2026","kind":"official_sale","consultedAt":"2026-08-16T10:46:20-05:00"}]
+    },
+    {
+      "provider": "passline", "externalId": "los-reyes-de-la-cumbia", "title": "Los Reyes de la Cumbia", "slug": "los-reyes-de-la-cumbia-quito-2026",
+      "localDate": "2026-10-02", "startTime": "2026-10-02T18:00:00-05:00", "endTime": null, "timezone": "America/Guayaquil", "venue": "Coliseo General Rumiñahui", "address": "Av. Diego Ladrón de Guevara, Quito", "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": [], "organizer": null, "promoter": null, "ticketSeller": "Passline", "purchaseUrl": "https://www.passline.com/eventos/los-reyes-de-la-cumbia", "sourceUrl": "https://www.passline.com/eventos/los-reyes-de-la-cumbia",
+      "prices": [{"category":"Tier 1 total","amount":23,"currency":"USD"},{"category":"Tier 2 total","amount":34.5,"currency":"USD"},{"category":"Tier 3 total","amount":46,"currency":"USD"},{"category":"Tier 4 total","amount":57.5,"currency":"USD"},{"category":"Tier 5 total","amount":80.5,"currency":"USD"}], "ageRestriction": null, "eventType": "concert", "genres": ["cumbia"],
+      "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "medium", "reviewReason": "Official page conflicts on America Box: prose totals USD 920 while the price table shows USD 820; the browser also presented a Cloudflare challenge.", "inferences": [], "description": "Encuentro de referentes de la cumbia en el Coliseo General Rumiñahui.", "image": {"url":null,"source":"https://www.passline.com/eventos/los-reyes-de-la-cumbia","attribution":"Passline; permission pending"}, "evidence": [{"url":"https://www.passline.com/eventos/los-reyes-de-la-cumbia","kind":"official_sale","consultedAt":"2026-08-16T10:46:20-05:00","notes":"Price conflict retained for review."}]
+    },
+    {
+      "provider": "feelthetickets", "externalId": "ftc-live-al-parque-quito-2026-08-29", "title": "FTC Live al Parque", "slug": "ftc-live-al-parque-quito-2026",
+      "localDate": "2026-08-29", "startTime": null, "endTime": null, "timezone": "America/Guayaquil", "venue": "Parque Bicentenario", "address": "Antiguo aeropuerto, Quito", "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["Maroon 5", "Yandel Sinfónico", "Myke Towers", "Lost Frequencies", "Fruko y sus Tesos"], "organizer": "Feel The Club", "promoter": "Feel The Club", "ticketSeller": "Feel The Tickets", "purchaseUrl": null, "sourceUrl": "https://visitquito.ec/es/grandes-eventos-calendario/ftc-live-al-parque-29-agosto/", "prices": [], "ageRestriction": null, "eventType": "festival", "genres": ["pop", "latin urban", "electronic", "salsa"],
+      "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "medium", "reviewReason": "Municipal and promoter sources confirm date, venue, and lineup; the sale page was inaccessible behind Queue-it and the first published set time is not treated as the gate time.", "inferences": [], "description": "Festival de gran formato con pop, música urbana, electrónica y salsa en el Parque Bicentenario.", "image": {"url":null,"source":"https://www.instagram.com/feelthetickets.ec/","attribution":"Feel The Club; permission pending"}, "evidence": [{"url":"https://visitquito.ec/es/grandes-eventos-calendario/ftc-live-al-parque-29-agosto/","kind":"official_municipal","consultedAt":"2026-08-16T10:46:20-05:00"},{"url":"https://www.instagram.com/feelthetickets.ec/","kind":"official_promoter_social","consultedAt":"2026-08-16T10:46:20-05:00","notes":"Official set-time artwork reviewed."}]
+    },
+    {
+      "provider": "feelthetickets", "externalId": "romeo-prince-royce-quito-2026", "title": "Romeo Santos + Prince Royce", "slug": "romeo-santos-prince-royce-quito-2026",
+      "localDate": "2026-09-26", "startTime": null, "endTime": null, "timezone": "America/Guayaquil", "venue": "Estadio Olímpico Atahualpa", "address": null, "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["Romeo Santos", "Prince Royce"], "organizer": "Feel The Club", "promoter": "Feel The Club", "ticketSeller": "Feel The Tickets", "purchaseUrl": "https://www.feelthetickets.com/romeoprinceroyce/", "sourceUrl": "https://www.feelthetickets.com/romeoprinceroyce/", "prices": [], "ageRestriction": null, "eventType": "concert", "genres": ["bachata"],
+      "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "medium", "reviewReason": "Date, city, venue, and sale page are official, but no exact start time was confirmed; General, Preferencia, and Tribuna are sold out while other categories remain available.", "inferences": [], "description": "Romeo Santos y Prince Royce comparten escenario en una fecha dedicada a la bachata.", "image": {"url":null,"source":"https://www.feelthetickets.com/romeoprinceroyce/","attribution":"Feel The Club; permission pending"}, "evidence": [{"url":"https://www.feelthetickets.com/romeoprinceroyce/","kind":"official_sale","consultedAt":"2026-08-16T10:46:20-05:00"},{"url":"https://www.instagram.com/feelthetickets.ec/","kind":"official_ticket_seller_social","consultedAt":"2026-08-16T10:46:20-05:00"}]
+    },
+    {
+      "provider": "feelthetickets", "externalId": "the-strokes-quito-2026-11-24", "title": "The Strokes en Quito", "slug": "the-strokes-quito-2026",
+      "localDate": "2026-11-24", "startTime": null, "endTime": null, "timezone": "America/Guayaquil", "venue": "Estadio Olímpico Atahualpa", "address": null, "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["The Strokes"], "organizer": "Feel The Club", "promoter": "Feel The Club", "ticketSeller": "Feel The Tickets", "purchaseUrl": null, "sourceUrl": "https://www.instagram.com/feelthetickets.ec/", "prices": [], "ageRestriction": null, "eventType": "concert", "genres": ["indie rock"],
+      "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "medium", "reviewReason": "Official promoter communication confirms date and venue, but an accessible direct sale page and exact start time were not confirmed.", "inferences": [], "description": "The Strokes se presenta por primera vez en Quito en el Estadio Olímpico Atahualpa.", "image": {"url":null,"source":"https://www.instagram.com/feelthetickets.ec/","attribution":"Feel The Club; permission pending"}, "evidence": [{"url":"https://www.instagram.com/feelthetickets.ec/","kind":"official_promoter_social","consultedAt":"2026-08-16T10:46:20-05:00"}]
+    },
+    {
+      "provider": "meet2go", "externalId": "funk-tribu-quito-2026-10-08", "title": "Bassick presenta Funk Tribu", "slug": "bassick-funk-tribu-quito-2026",
+      "localDate": "2026-10-08", "startTime": null, "endTime": null, "timezone": "America/Guayaquil", "venue": null, "address": null, "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["Funk Tribu"], "organizer": "Bassick", "promoter": "Bassick", "ticketSeller": "Meet2Go", "purchaseUrl": null, "sourceUrl": "https://www.meet2go.com/", "prices": [], "ageRestriction": null, "eventType": "dj_set", "genres": ["electronic"],
+      "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "medium", "reviewReason": "Official listings confirm Quito/Puembo and the date, but exact time and the Soundgarden Open Air venue identity/address remain ambiguous.", "inferences": [], "description": "Bassick presenta un set de Funk Tribu en el sector de Puembo.", "image": {"url":null,"source":"https://www.instagram.com/meet2go/","attribution":"Meet2Go / Bassick; permission pending"}, "evidence": [{"url":"https://www.meet2go.com/","kind":"official_sale_listing","consultedAt":"2026-08-16T10:46:20-05:00"},{"url":"https://www.instagram.com/meet2go/","kind":"official_ticket_seller_social","consultedAt":"2026-08-16T10:46:20-05:00"}]
+    },
+    {
+      "provider": "meet2go", "externalId": "jazeuio", "title": "Jaze — Quizá no es para tanto Tour II", "slug": "jaze-quiza-no-es-para-tanto-quito-2026",
+      "localDate": "2026-10-24", "startTime": null, "endTime": null, "timezone": "America/Guayaquil", "venue": "Auditorio del Colegio de Economistas de Pichincha", "address": "Iñaquito y Juan Pablo Sanz, Quito", "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["Jaze"], "organizer": "Distin Shows", "promoter": "Distin Shows", "ticketSeller": "Meet2Go", "purchaseUrl": "https://www.meet2go.com/ev/jazeuio", "sourceUrl": "https://www.meet2go.com/ev/jazeuio", "prices": [{"category":"Tier 1","amount":78,"currency":"USD"},{"category":"Tier 2","amount":68,"currency":"USD"},{"category":"Tier 3","amount":58,"currency":"USD"},{"category":"Tier 4","amount":48,"currency":"USD"}], "ageRestriction": null, "eventType": "concert", "genres": ["hip hop", "latin alternative"],
+      "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "medium", "reviewReason": "Official sale page confirms date and venue but not an exact start time.", "inferences": [], "description": "Jaze trae a Quito la segunda etapa de su gira Quizá no es para tanto.", "image": {"url":null,"source":"https://www.meet2go.com/ev/jazeuio","attribution":"Meet2Go / Distin Shows; permission pending"}, "evidence": [{"url":"https://www.meet2go.com/ev/jazeuio","kind":"official_sale","consultedAt":"2026-08-16T10:46:20-05:00"}]
+    },
+    {
+      "provider": "meet2go", "externalId": "padreguilhermequito2", "title": "DJ Padre Guilherme en Quito", "slug": "dj-padre-guilherme-quito-2026",
+      "localDate": "2026-11-21", "startTime": null, "endTime": null, "timezone": "America/Guayaquil", "venue": "Centro de Exposiciones Quito", "address": "Av. Río Amazonas 3461, Quito", "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["Padre Guilherme"], "organizer": "El Zello", "promoter": "El Zello", "ticketSeller": "Meet2Go", "purchaseUrl": "https://www.meet2go.com/ev/padreguilhermequito2", "sourceUrl": "https://www.meet2go.com/ev/padreguilhermequito2", "prices": [], "ageRestriction": "18+", "eventType": "dj_set", "genres": ["electronic"],
+      "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "medium", "reviewReason": "Official sale page confirms date, venue, city, and age restriction but not an exact start time.", "inferences": [], "description": "El DJ portugués Padre Guilherme presenta su propuesta electrónica en Quito.", "image": {"url":null,"source":"https://www.meet2go.com/ev/padreguilhermequito2","attribution":"Meet2Go / El Zello; permission pending"}, "evidence": [{"url":"https://www.meet2go.com/ev/padreguilhermequito2","kind":"official_sale","consultedAt":"2026-08-16T10:46:20-05:00"}]
+    },
+    {
+      "provider": "meet2go", "externalId": "jorgedrexler2027", "title": "Jorge Drexler — Gira Taracá", "slug": "jorge-drexler-gira-taraca-quito-2027",
+      "localDate": "2027-02-17", "startTime": null, "endTime": null, "timezone": "America/Guayaquil", "venue": "Medio Coliseo General Rumiñahui", "address": "Diego Ladrón de Guevara, Quito", "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["Jorge Drexler"], "organizer": "Star Shows", "promoter": "Star Shows", "ticketSeller": "Meet2Go", "purchaseUrl": "https://www.meet2go.com/ev/jorgedrexler2027", "sourceUrl": "https://www.meet2go.com/ev/jorgedrexler2027", "prices": [{"category":"Tier 1","amount":149.5,"currency":"USD"},{"category":"Tier 2","amount":126.5,"currency":"USD"},{"category":"Tier 3","amount":103.5,"currency":"USD"},{"category":"Tier 4","amount":86.25,"currency":"USD"},{"category":"Tier 5","amount":46,"currency":"USD"}], "ageRestriction": null, "eventType": "concert", "genres": ["singer-songwriter", "latin pop"],
+      "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "medium", "reviewReason": "Official sale page confirms date and venue but not an exact start time.", "inferences": [], "description": "Jorge Drexler presenta en Quito su gira Taracá 2026–2027.", "image": {"url":null,"source":"https://www.meet2go.com/ev/jorgedrexler2027","attribution":"Meet2Go / Star Shows; permission pending"}, "evidence": [{"url":"https://www.meet2go.com/ev/jorgedrexler2027","kind":"official_sale","consultedAt":"2026-08-16T10:46:20-05:00"}]
+    },
+    {
+      "provider": "ontime", "externalId": "rocklatam-2026-quito-1", "title": "RockLatam 2026 Quito", "slug": "rocklatam-2026-quito",
+      "localDate": "2026-10-16", "startTime": "2026-10-16T20:00:00-05:00", "endTime": "2026-10-16T23:50:00-05:00", "timezone": "America/Guayaquil", "venue": "Coliseo General Rumiñahui", "address": null, "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["Vilma Palma e Vampiros", "Los Auténticos Decadentes", "Los Prisioneros de Miguel Tapia"], "organizer": null, "promoter": null, "ticketSeller": "On Time Tickets", "purchaseUrl": "https://www.ontimetickets.com/event-details/rocklatam-2026-quito-1", "sourceUrl": "https://www.ontimetickets.com/event-details/rocklatam-2026-quito-1", "prices": [], "ageRestriction": null, "eventType": "concert", "genres": ["latin rock"],
+      "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "high", "reviewReason": "Pilot is not approved; the official ticket listing says sales have not opened yet.", "inferences": [], "description": "Tres bandas emblemáticas del rock latino se reúnen en una fecha conjunta en Quito.", "image": {"url":null,"source":"https://www.ontimetickets.com/event-details/rocklatam-2026-quito-1","attribution":"On Time Tickets; permission pending"}, "evidence": [{"url":"https://www.ontimetickets.com/event-details/rocklatam-2026-quito-1","kind":"official_sale_listing","consultedAt":"2026-08-16T10:46:20-05:00","notes":"Tickets not yet on sale."}]
+    },
+    {
+      "provider": "output", "externalId": "grupo-frontera-quito-2026-10-09", "title": "Grupo Frontera — Tour Ecuador", "slug": "grupo-frontera-quito-2026",
+      "localDate": "2026-10-09", "startTime": "2026-10-09T20:30:00-05:00", "endTime": null, "timezone": "America/Guayaquil", "venue": "Coliseo General Rumiñahui", "address": null, "city": "Quito", "province": "Pichincha", "country": "EC", "coordinates": null,
+      "lineup": ["Grupo Frontera"], "organizer": "Output", "promoter": "Output", "ticketSeller": null, "purchaseUrl": null, "sourceUrl": "https://conciertos.output.ec/conciertos/grupo-frontera/", "prices": [{"category":"VIP","amount":40,"currency":"USD"},{"category":"Fan","amount":80,"currency":"USD"},{"category":"Butaca","amount":100,"currency":"USD"},{"category":"Output Box","amount":120,"currency":"USD"},{"category":"Frontera Box","amount":160,"currency":"USD"}], "ageRestriction": null, "eventType": "concert", "genres": ["regional Mexican"],
+      "candidateState": "review", "plannedTdfStatus": "draft", "confidence": "medium", "reviewReason": "Official organizer confirms doors 18:00 and show 20:30; the direct seller behind its purchase button was not independently verified.", "inferences": [], "description": "Grupo Frontera lleva su Tour Ecuador al Coliseo General Rumiñahui.", "image": {"url":null,"source":"https://conciertos.output.ec/conciertos/grupo-frontera/","attribution":"Output; permission pending"}, "evidence": [{"url":"https://conciertos.output.ec/conciertos/grupo-frontera/","kind":"official_organizer","consultedAt":"2026-08-16T10:46:20-05:00"}]
+    }
+  ],
+  "excludedOrQueued": [
+    {"title":"Vadhir — Fantasy Tour Quito","reason":"Official sale page has a date but no confirmed venue."},
+    {"title":"Opera IX Quito","reason":"Official listing lacks a confirmed venue and start time."},
+    {"title":"Amazonika / Hugel","reason":"Official communication confirms date but no exact start time; excluded to keep the accumulated pilot at 20."},
+    {"title":"WWE Live Quito","reason":"Public but outside the music and music-industry scope."},
+    {"title":"Existing Domo events 83–89","reason":"No sufficient primary corroboration found; events 88 and 89 are an exact duplicate pair and require manual review, never automatic deletion."}
+  ]
+}

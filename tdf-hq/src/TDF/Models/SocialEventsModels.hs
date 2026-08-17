@@ -157,6 +157,86 @@ EventDiscoverySource sql=event_discovery_source
     UniqueEventDiscoverySource sourceKey
     deriving Show Generic
 
+EventResearchPilotControl sql=event_research_pilot_control
+    controlKey Text
+    approved Bool default=FALSE
+    approvedAt UTCTime Maybe
+    approvedByPartyId Text Maybe
+    approvalReference Text Maybe
+    maxActiveCandidates Int default=20
+    updatedAt UTCTime default=now()
+    UniqueEventResearchPilotControl controlKey
+    deriving Show Generic
+
+EventResearchPilotAudit sql=event_research_pilot_audit
+    controlId EventResearchPilotControlId
+    approved Bool
+    approvedByPartyId Text
+    approvalReference Text
+    createdAt UTCTime default=now()
+    deriving Show Generic
+
+EventResearchRun sql=event_research_run
+    runKey Text
+    status Text
+    reconciliation Bool default=FALSE
+    checkpoint Text Maybe
+    counters Text default='{}'
+    errorSummary Text Maybe
+    startedAt UTCTime
+    updatedAt UTCTime
+    finishedAt UTCTime Maybe
+    createdByPartyId Text
+    UniqueEventResearchRun runKey
+    deriving Show Generic
+
+EventResearchCandidate sql=event_research_candidate
+    provider Text
+    externalId Text
+    runId EventResearchRunId
+    sourceId EventDiscoverySourceId Maybe
+    eventId SocialEventId Maybe
+    reviewState Text
+    title Text
+    startTime UTCTime Maybe
+    endTime UTCTime Maybe
+    timezone Text
+    venueName Text Maybe
+    city Text Maybe
+    province Text Maybe
+    countryCode Text
+    sourceUrl Text
+    infoUrl Text Maybe
+    purchaseUrl Text Maybe
+    payload Text
+    evidence Text
+    confidence Text
+    managedFields Text default='[]'
+    contentHash Text
+    verifiedAt UTCTime
+    isPilot Bool default=TRUE
+    createdAt UTCTime
+    updatedAt UTCTime
+    UniqueEventResearchCandidate provider externalId
+    deriving Show Generic
+
+EventResearchChange sql=event_research_change
+    runId EventResearchRunId
+    candidateId EventResearchCandidateId Maybe
+    eventId SocialEventId Maybe
+    action Text
+    beforeValue Text Maybe
+    afterValue Text Maybe
+    sourceUrl Text
+    confidence Text
+    consultedAt UTCTime
+    externalId Text
+    result Text
+    dedupeKey Text
+    createdAt UTCTime
+    UniqueEventResearchChange dedupeKey
+    deriving Show Generic
+
 EventArtist
     eventId SocialEventId
     artistId ArtistProfileId

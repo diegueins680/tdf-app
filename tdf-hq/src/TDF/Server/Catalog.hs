@@ -159,6 +159,13 @@ catalogTableSpec entityKind =
     "appearance_mode_option" -> Just appearanceMode
     "genre" -> Just (hierarchy "genre" True)
     "instrument" -> Just (hierarchy "instrument" True)
+    "profession" -> Just (hierarchy "profession" False)
+    "classified_category" -> Just (hierarchy "classified_category" False)
+    "compensation_type" -> Just (flatCatalog "compensation_type" False)
+    -- Metropolitan areas require a country and governed provenance. Public
+    -- reads use the common adapter; writes go through the reviewed geography
+    -- import flow instead of a generic catalog mutation.
+    "metropolitan_area" -> Just (readOnlyCatalog "metropolitan_area" "NULL::uuid" True)
     "event_type" -> Just (flatCatalog "event_type" True)
     "booking_type" -> Just (flatCatalog "booking_type" True)
     "feedback_category" -> Just ((flatCatalog "feedback_category" True) { ctsDefaultScopeKind = Just "feedback-category" })
