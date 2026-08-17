@@ -109,6 +109,11 @@ state_machines:
       - legacy public staff and canonical bookings share the same exclusion backed calendar
       - verified deposit payment only moves on_hold to confirmed and never starts or completes work
       - paid requires succeeded matching provider evidence or approved manual evidence
+      - Datafast verification binds the exact stored checkout and resource path; PayPal verification binds the exact stored order and capture
+      - provider amount currency environment merchant and internal booking reference equal the immutable deposit checkout
+      - browser return and browser approval cannot transition payment
+      - failed provider attempts expire and release allocations at the original hold deadline
+      - payment first verified after allocation expiry creates a reconciliation exception and cannot silently reconfirm fulfillment
       - balance due completion no show overtime cancellation and dispute remain explicit fulfillment states
   quote:
     initial: draft

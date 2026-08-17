@@ -1,5 +1,5 @@
 import { get, post, put } from './client';
-import type { BookingDTO } from './types';
+import type { BookingDTO, DatafastCheckoutDTO, PaypalCreateDTO } from './types';
 import { decodeLegacyServiceOfferingId } from './services';
 
 const requirePositiveInteger = (value: number, field: string): number => {
@@ -71,6 +71,7 @@ export interface PublicBookingCheckoutDTO {
   fulfillmentStatus: string;
   holdExpiresAt: string;
   quote: PublicBookingQuoteDTO;
+  paymentMethods: Array<'datafast' | 'paypal'>;
 }
 
 export interface PublicBookingCheckoutPayload {
@@ -86,6 +87,26 @@ export interface PublicBookingCheckoutPayload {
   pbcResourceIds?: string[] | null;
   pbcTermsAccepted: boolean;
 }
+
+const publicBookingLookupStorageKey = (bookingId: number): string =>
+  `tdf-service-booking-order-lookup:${requirePositiveInteger(bookingId, 'bookingId')}`;
+
+export const storePublicBookingLookupToken = (
+  bookingId: number,
+  lookupToken?: string | null,
+): void => {
+  if (!lookupToken || typeof window === 'undefined') return;
+  window.sessionStorage.setItem(publicBookingLookupStorageKey(bookingId), lookupToken);
+};
+
+export const loadPublicBookingLookupToken = (bookingId: number): string | null => {
+  if (typeof window === 'undefined') return null;
+  return window.sessionStorage.getItem(publicBookingLookupStorageKey(bookingId));
+};
+
+const publicBookingLookupHeaders = (lookupToken: string): RequestInit => ({
+  headers: { 'X-Order-Lookup-Token': lookupToken },
+});
 
 export const Bookings = {
   publicAvailability: (params: {
@@ -160,4 +181,36 @@ export const Bookings = {
       `/bookings/public/orders/${requirePositiveInteger(bookingId, 'bookingId')}`,
       { headers: { 'X-Order-Lookup-Token': lookupToken } },
     ),
+  createPublicDatafastCheckout: (bookingId: number, lookupToken: string) =>
+    post<DatafastCheckoutDTO>(
+      `/bookings/public/orders/${requirePositiveInteger(bookingId, 'bookingId')}/datafast/checkout`,
+      {},
+      publicBookingLookupHeaders(lookupToken),
+    ),
+  confirmPublicDatafastStatus: (
+    bookingId: number,
+    resourcePath: string,
+    lookupToken: string,
+  ) => {
+    const search = new URLSearchParams({ resourcePath });
+    return get<PublicBookingCheckoutDTO>(
+      `/bookings/public/orders/${requirePositiveInteger(bookingId, 'bookingId')}/datafast/status?${search.toString()}`,
+      publicBookingLookupHeaders(lookupToken),
+    );
+  },
+  createPublicPaypalOrder: (bookingId: number, lookupToken: string) =>
+    post<PaypalCreateDTO>(
+      `/bookings/public/orders/${requirePositiveInteger(bookingId, 'bookingId')}/paypal/create`,
+      {},
+      publicBookingLookupHeaders(lookupToken),
+    ),
+  capturePublicPaypalOrder: (
+    bookingId: number,
+    paypalOrderId: string,
+    lookupToken: string,
+  ) => post<PublicBookingCheckoutDTO>(
+    `/bookings/public/orders/${requirePositiveInteger(bookingId, 'bookingId')}/paypal/capture`,
+    { paypalOrderId },
+    publicBookingLookupHeaders(lookupToken),
+  ),
 };

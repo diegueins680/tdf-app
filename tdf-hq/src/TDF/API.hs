@@ -43,7 +43,7 @@ import           TDF.API.Proposals (ProposalsAPI)
 import           TDF.API.Rooms     (RoomsAPI, RoomsPublicAPI)
 import           TDF.API.Sessions  (SessionsAPI)
 import           TDF.API.Drive     (DriveAPI)
-import           TDF.API.Types     (ArtistTipRequest, ArtistTipResponse, PartyRelatedDTO, RawJSON, UserRoleSummaryDTO)
+import           TDF.API.Types     (ArtistTipRequest, ArtistTipResponse, DatafastCheckoutDTO, PaypalCreateDTO, PartyRelatedDTO, RawJSON, UserRoleSummaryDTO)
 import           TDF.API.Radio     (RadioAPI)
 import           TDF.DTO
 import           TDF.Meta         (MetaAPI)
@@ -337,6 +337,24 @@ type BookingPublicAPI =
   :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
          :> Header "X-Order-Lookup-Token" Text
          :> Get '[JSON] PublicBookingCheckoutDTO
+  :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
+         :> "datafast" :> "checkout"
+         :> Header "X-Order-Lookup-Token" Text
+         :> Post '[JSON] DatafastCheckoutDTO
+  :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
+         :> "datafast" :> "status"
+         :> Header "X-Order-Lookup-Token" Text
+         :> QueryParam' '[Required] "resourcePath" Text
+         :> Get '[JSON] PublicBookingCheckoutDTO
+  :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
+         :> "paypal" :> "create"
+         :> Header "X-Order-Lookup-Token" Text
+         :> Post '[JSON] PaypalCreateDTO
+  :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
+         :> "paypal" :> "capture"
+         :> Header "X-Order-Lookup-Token" Text
+         :> ReqBody '[JSON] PublicBookingPaypalCaptureReq
+         :> Post '[JSON] PublicBookingCheckoutDTO
 
 type ServiceMarketplaceAPI =
        "service-marketplace" :> "ads" :> Get '[JSON] [ServiceAdDTO]
@@ -742,9 +760,21 @@ data PublicBookingCheckoutDTO = PublicBookingCheckoutDTO
   , pbcFulfillmentStatus :: Text
   , pbcHoldExpiresAt     :: UTCTime
   , pbcQuote             :: PublicBookingQuoteDTO
+  , pbcPaymentMethods    :: [Text]
   } deriving (Show, Generic)
 instance ToJSON PublicBookingCheckoutDTO where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+data PublicBookingPaypalCaptureReq = PublicBookingPaypalCaptureReq
+  { pbpcPaypalOrderId :: Text
+  } deriving (Show, Generic)
+instance ToJSON PublicBookingPaypalCaptureReq where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
+instance FromJSON PublicBookingPaypalCaptureReq where
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 4
+    , rejectUnknownFields = True
+    }
 
 data PublicEngineerDTO = PublicEngineerDTO
   { peId   :: Int64

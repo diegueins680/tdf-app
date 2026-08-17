@@ -96,6 +96,8 @@ create_base_schema
 apply_file tdf-hq/sql/2026-08-13_unified_checkout_core.sql
 apply_file tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql
 apply_file tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql
+apply_file tdf-hq/sql/2026-08-17_service_booking_provider_actions.sql
+apply_file tdf-hq/sql/2026-08-17_service_booking_provider_actions.sql
 
 currency_id="c1000000-0000-4000-8000-000000000001"
 tax_id="c2000000-0000-4000-8000-000000000001"
@@ -117,6 +119,7 @@ psql_exec -c "
 
 # Re-run once data exists so the migration's catalog-preserving draft seed is exercised.
 apply_file tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql
+apply_file tdf-hq/sql/2026-08-17_service_booking_provider_actions.sql
 
 assert_equal "$(psql_exec -Atc "SELECT approval_status || ':' || active::text || ':' || rate_minor::text || ':' || tax_bps::text FROM service_booking_commerce_policy WHERE service_offering_id='$offering_id';")" \
   "draft:false:2500:1200" "Catalog-preserving draft policy"
@@ -238,6 +241,58 @@ psql_exec -c "
 assert_equal "$(psql_exec -Atc "SELECT fulfillment_status || ':' || allocation_status FROM service_booking_checkout_runtime JOIN service_booking_resource_allocation USING (booking_id) WHERE booking_id=1;")" \
   "completed:completed" "Service completion and calendar release"
 
+# A failed rail remains retryable during the hold, but must not retain a room
+# forever after the immutable deadline.
+psql_exec -c "
+  INSERT INTO resource(id, name, slug, resource_type, active)
+    VALUES (2, 'Studio B', 'studio-b', 'Room', TRUE);
+  INSERT INTO service_order(
+    id, customer_id, catalog_id, service_offering_id, service_kind, title,
+    status, price_quoted_cents, quote_sent_at, scheduled_start, scheduled_end, created_at
+  ) VALUES (
+    3, 103, 1, '$offering_id', 'Recording', 'Expired failed rail', 'deposit_due', 5600,
+    NOW() - INTERVAL '2 hours', '2030-02-10 15:00:00+00', '2030-02-10 17:00:00+00',
+    NOW() - INTERVAL '2 hours'
+  );
+  INSERT INTO booking(
+    id, title, service_order_id, party_id, service_offering_id, starts_at,
+    ends_at, status, created_at
+  ) VALUES (
+    3, 'Expired failed rail', 3, 103, '$offering_id', '2030-02-10 15:00:00+00',
+    '2030-02-10 17:00:00+00', 'Tentative', NOW() - INTERVAL '2 hours'
+  );
+  INSERT INTO commerce_checkout_session(
+    id, domain_type, domain_order_id, status, environment, currency,
+    subtotal_minor, total_minor, customer_email, lookup_token_hash,
+    idempotency_key, expires_at, created_at, updated_at
+  ) VALUES (
+    'c5000000-0000-4000-8000-000000000002', 'service_booking', '3', 'failed',
+    'sandbox', 'USD', 2800, 2800, 'failed@example.com', repeat('4',64),
+    'service-booking-idempotency-0002', NOW() - INTERVAL '1 hour',
+    NOW() - INTERVAL '2 hours', NOW() - INTERVAL '1 hour'
+  );
+  INSERT INTO service_booking_checkout_runtime(
+    booking_id, service_order_id, checkout_id, service_offering_id, policy_id,
+    policy_version, lookup_token_hash, create_idempotency_key, create_request_sha256,
+    fulfillment_status, deposit_status, balance_status, starts_at, ends_at, timezone,
+    duration_minutes, currency, rate_minor, rate_unit_minutes, tax_bps, deposit_bps,
+    subtotal_minor, tax_minor, total_minor, deposit_minor, balance_minor,
+    terms_version, terms_accepted_at, hold_expires_at, created_at, updated_at
+  ) VALUES (
+    3, 3, 'c5000000-0000-4000-8000-000000000002', '$offering_id', '$policy_id',
+    'studio-approved-v1', repeat('5',64), 'service-booking-runtime-0002', repeat('6',64),
+    'on_hold', 'awaiting_payment', 'not_due', '2030-02-10 15:00:00+00',
+    '2030-02-10 17:00:00+00', 'America/Guayaquil', 120, 'USD', 2500, 60,
+    1200, 5000, 5000, 600, 5600, 2800, 2800, 'studio-terms-v1',
+    NOW() - INTERVAL '2 hours', NOW() - INTERVAL '1 hour',
+    NOW() - INTERVAL '2 hours', NOW() - INTERVAL '1 hour'
+  );
+  INSERT INTO booking_resource(booking_id, resource_id, role) VALUES (3, 2, 'primary');
+  SELECT service_booking_expire_holds(NOW());
+" >/dev/null
+assert_equal "$(psql_exec -Atc "SELECT checkout.status || ':' || runtime.fulfillment_status || ':' || allocation.allocation_status FROM commerce_checkout_session checkout JOIN service_booking_checkout_runtime runtime ON runtime.checkout_id=checkout.id JOIN service_booking_resource_allocation allocation ON allocation.booking_id=runtime.booking_id WHERE runtime.booking_id=3;")" \
+  "expired:expired:released" "Failed provider attempt hold expiry"
+
 if apply_file tdf-hq/sql/2026-08-16_service_booking_checkout_runtime_rollback.sql; then
   echo "Rollback removed service booking runtime containing canonical records" >&2
   exit 1
@@ -248,9 +303,12 @@ psql_exec -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;' >/dev/null
 create_base_schema
 apply_file tdf-hq/sql/2026-08-13_unified_checkout_core.sql
 apply_file tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql
+apply_file tdf-hq/sql/2026-08-17_service_booking_provider_actions.sql
+apply_file tdf-hq/sql/2026-08-17_service_booking_provider_actions_rollback.sql
 apply_file tdf-hq/sql/2026-08-16_service_booking_checkout_runtime_rollback.sql
 assert_equal "$(psql_exec -Atc "SELECT to_regclass('public.service_booking_checkout_runtime') IS NULL;")" \
   "t" "Empty runtime rollback"
 apply_file tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql
+apply_file tdf-hq/sql/2026-08-17_service_booking_provider_actions.sql
 
 echo "Service booking checkout runtime migration tests passed"

@@ -10,6 +10,10 @@ import {
   Card,
   CardContent,
   Divider,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Chip,
   Checkbox,
   CircularProgress,
@@ -31,10 +35,16 @@ import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
 import PersonIcon from '@mui/icons-material/Person';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { DateTime } from 'luxon';
-import { Bookings, type PublicBookingCheckoutDTO, type PublicBookingQuoteDTO } from '../api/bookings';
+import {
+  Bookings,
+  loadPublicBookingLookupToken,
+  storePublicBookingLookupToken,
+  type PublicBookingCheckoutDTO,
+  type PublicBookingQuoteDTO,
+} from '../api/bookings';
 import { API_BASE_URL } from '../api/client';
 import { Meta } from '../api/meta';
-import type { BookingDTO, ServiceCatalogDTO } from '../api/types';
+import type { BookingDTO, DatafastCheckoutDTO, ServiceCatalogDTO } from '../api/types';
 import { Engineers, type PublicEngineer } from '../api/engineers';
 import { Services } from '../api/services';
 import { STUDIO_MAP_URL, STUDIO_WHATSAPP_URL } from '../config/appConfig';
@@ -399,6 +409,17 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   const [success, setSuccess] = useState<BookingDTO | null>(null);
   const [checkoutSuccess, setCheckoutSuccess] = useState<PublicBookingCheckoutDTO | null>(null);
   const [authoritativeQuote, setAuthoritativeQuote] = useState<PublicBookingQuoteDTO | null>(null);
+  const [paymentBusy, setPaymentBusy] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
+  const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
+  const [datafastWidgetKey, setDatafastWidgetKey] = useState(0);
+  const datafastFormRef = useRef<HTMLDivElement>(null);
+  const [paypalReady, setPaypalReady] = useState(false);
+  const [paypalDialogOpen, setPaypalDialogOpen] = useState(false);
+  const [paypalOrderId, setPaypalOrderId] = useState<string | null>(null);
+  const paypalButtonRef = useRef<HTMLDivElement>(null);
+  const paypalClientId = useMemo(() => env.read('VITE_PAYPAL_CLIENT_ID') ?? '', []);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const checkoutIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const [rememberProfile, setRememberProfile] = useState(false);
@@ -559,6 +580,11 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     setSuccess(null);
     setCheckoutSuccess(null);
     setAuthoritativeQuote(null);
+    setPaymentError(null);
+    setDatafastCheckout(null);
+    setDatafastDialogOpen(false);
+    setPaypalOrderId(null);
+    setPaypalDialogOpen(false);
     setTermsAccepted(false);
     checkoutIdempotency.current = null;
     setError(null);
@@ -764,6 +790,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
           checkoutPayload,
           checkoutIdempotency.current.key,
         );
+        storePublicBookingLookupToken(checkout.booking.bookingId, checkout.lookupToken);
         setCheckoutSuccess(checkout);
         setSuccess(checkout.booking);
       } else {
@@ -1120,6 +1147,147 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     return slots.slice(0, 12);
   }, [form.durationMinutes, form.startsAt, studioTimeZone, studioZoneLabel, userTimeZone, userZoneLabel]);
 
+  const checkoutLookupToken = useMemo(() => {
+    if (!checkoutSuccess) return null;
+    return checkoutSuccess.lookupToken
+      ?? loadPublicBookingLookupToken(checkoutSuccess.booking.bookingId);
+  }, [checkoutSuccess]);
+  const datafastReturnUrl = useMemo(() => {
+    if (!checkoutSuccess || typeof window === 'undefined') return '';
+    return new URL(
+      `/reservas/orden/${checkoutSuccess.booking.bookingId}`,
+      window.location.origin,
+    ).toString();
+  }, [checkoutSuccess]);
+
+  const handleDatafastDeposit = useCallback(async () => {
+    if (!checkoutSuccess || !checkoutLookupToken) {
+      setPaymentError('No encontramos el acceso seguro de esta orden. Crea una nueva reserva.');
+      return;
+    }
+    setPaymentBusy(true);
+    setPaymentError(null);
+    try {
+      const providerCheckout = await Bookings.createPublicDatafastCheckout(
+        checkoutSuccess.booking.bookingId,
+        checkoutLookupToken,
+      );
+      setDatafastCheckout(providerCheckout);
+      setDatafastDialogOpen(true);
+      setDatafastWidgetKey((current) => current + 1);
+    } catch {
+      setPaymentError('No pudimos iniciar Datafast. La reserva sigue sin pago confirmado.');
+    } finally {
+      setPaymentBusy(false);
+    }
+  }, [checkoutLookupToken, checkoutSuccess]);
+
+  const handlePaypalDeposit = useCallback(async () => {
+    if (!checkoutSuccess || !checkoutLookupToken) {
+      setPaymentError('No encontramos el acceso seguro de esta orden. Crea una nueva reserva.');
+      return;
+    }
+    if (!paypalClientId) {
+      setPaymentError('PayPal no está disponible en este navegador. La reserva sigue sin pago.');
+      return;
+    }
+    setPaymentBusy(true);
+    setPaymentError(null);
+    try {
+      const providerOrder = await Bookings.createPublicPaypalOrder(
+        checkoutSuccess.booking.bookingId,
+        checkoutLookupToken,
+      );
+      setPaypalOrderId(providerOrder.pcPaypalOrderId);
+      setPaypalDialogOpen(true);
+    } catch {
+      setPaymentError('No pudimos crear la orden PayPal. La reserva sigue sin pago confirmado.');
+    } finally {
+      setPaymentBusy(false);
+    }
+  }, [checkoutLookupToken, checkoutSuccess, paypalClientId]);
+
+  useEffect(() => {
+    if (!datafastDialogOpen || !datafastCheckout || typeof window === 'undefined') return;
+    if (datafastFormRef.current) datafastFormRef.current.innerHTML = '';
+    window.wpwlOptions = { locale: 'es', style: 'card' };
+    const script = document.createElement('script');
+    script.src = datafastCheckout.dcWidgetUrl;
+    script.async = true;
+    script.onerror = () => setPaymentError(
+      'No se pudo cargar el formulario Datafast. No se confirmó ningún pago.',
+    );
+    document.body.appendChild(script);
+    return () => script.remove();
+  }, [datafastCheckout, datafastDialogOpen, datafastWidgetKey]);
+
+  useEffect(() => {
+    const paypalOffered = checkoutSuccess?.paymentMethods?.includes('paypal') ?? false;
+    if (!paypalOffered || !paypalClientId || typeof window === 'undefined') return;
+    if (window.paypal) {
+      setPaypalReady(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalClientId)}&currency=${encodeURIComponent(checkoutSuccess?.quote.currency ?? 'USD')}`;
+    script.async = true;
+    script.onload = () => setPaypalReady(true);
+    script.onerror = () => setPaymentError(
+      'No se pudo cargar PayPal. La reserva continúa sin pago confirmado.',
+    );
+    document.body.appendChild(script);
+    return () => script.remove();
+  }, [checkoutSuccess?.paymentMethods, checkoutSuccess?.quote.currency, paypalClientId]);
+
+  useEffect(() => {
+    if (
+      !paypalDialogOpen
+      || !paypalReady
+      || !paypalOrderId
+      || !checkoutSuccess
+      || !checkoutLookupToken
+      || !paypalButtonRef.current
+      || typeof window === 'undefined'
+      || !window.paypal
+    ) return;
+    paypalButtonRef.current.innerHTML = '';
+    const buttons = window.paypal.Buttons({
+      createOrder: () => paypalOrderId,
+      onApprove: async (data) => {
+        if (data.orderID !== paypalOrderId) {
+          setPaymentError('PayPal devolvió una referencia distinta. No se capturó el pago.');
+          return;
+        }
+        setPaymentBusy(true);
+        try {
+          const updated = await Bookings.capturePublicPaypalOrder(
+            checkoutSuccess.booking.bookingId,
+            paypalOrderId,
+            checkoutLookupToken,
+          );
+          setCheckoutSuccess({ ...updated, lookupToken: checkoutLookupToken });
+          setSuccess(updated.booking);
+          setPaypalDialogOpen(false);
+          setPaypalOrderId(null);
+          setSnackbar({
+            open: true,
+            message: updated.paymentStatus === 'paid'
+              ? 'PayPal verificó el depósito en el servidor.'
+              : 'PayPal respondió, pero el depósito todavía no está confirmado.',
+          });
+        } catch {
+          setPaymentError('No pudimos verificar la captura PayPal. No mostramos el depósito como pagado.');
+        } finally {
+          setPaymentBusy(false);
+        }
+      },
+      onCancel: () => setPaymentError('Cancelaste PayPal. La reserva continúa sin pago.'),
+      onError: () => setPaymentError('PayPal no completó la operación. La reserva continúa sin pago.'),
+    });
+    void buttons.render(paypalButtonRef.current);
+    return () => buttons.close?.();
+  }, [checkoutLookupToken, checkoutSuccess, paypalDialogOpen, paypalOrderId, paypalReady]);
+
   if (success) {
     const successWithAliases = success as BookingWithAliases | null;
     const successStartIso =
@@ -1162,6 +1330,9 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
             `tdf-booking-${success.bookingId}@tdf`,
           )
         : null;
+    const depositPaid = checkoutSuccess?.paymentStatus === 'paid';
+    const depositProcessing = checkoutSuccess?.paymentStatus === 'processing';
+    const paymentMethods = checkoutSuccess?.paymentMethods ?? [];
 
     return (
       <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
@@ -1182,19 +1353,31 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                   {pageEyebrow}
                 </Typography>
                 <Typography variant="h4" fontWeight={800}>
-                  {checkoutSuccess ? 'Orden creada · depósito pendiente' : 'Reserva enviada'}
+                  {checkoutSuccess
+                    ? depositPaid
+                      ? 'Depósito verificado · reserva confirmada'
+                      : depositProcessing
+                        ? 'Depósito en verificación'
+                        : 'Orden creada · depósito pendiente'
+                    : 'Reserva enviada'}
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
                   {checkoutSuccess
-                    ? 'El horario está retenido temporalmente, pero todavía no está pagado ni confirmado. Solo una verificación del proveedor puede confirmar el depósito.'
+                    ? depositPaid
+                      ? 'El servidor verificó el depósito. El saldo y la prestación del servicio permanecen en estados separados.'
+                      : depositProcessing
+                        ? 'El proveedor todavía no confirmó el resultado. Esta pantalla no representa un pago exitoso.'
+                        : 'El horario está retenido temporalmente, pero todavía no está pagado ni confirmado. Solo una verificación del proveedor puede confirmar el depósito.'
                     : 'Revisa tu correo para la confirmación. Si necesitas ajustar horario o salas, responde al correo o escríbenos por WhatsApp y lo coordinamos contigo.'}
                 </Typography>
               </Stack>
 
               <Grid container spacing={2}>
                 <Grid item xs={12}>
-                  <Alert severity={checkoutSuccess ? 'info' : 'success'}>
-                    {checkoutSuccess ? 'Orden creada, pago pendiente' : 'Reserva creada'}. ID{' '}
+                  <Alert severity={checkoutSuccess ? (depositPaid ? 'success' : 'info') : 'success'}>
+                    {checkoutSuccess
+                      ? depositPaid ? 'Depósito pagado y verificado' : depositProcessing ? 'Pago en verificación' : 'Orden creada, pago pendiente'
+                      : 'Reserva creada'}. ID{' '}
                     <strong>{success.bookingId}</strong> · Servicio:{' '}
                     <strong>{success.serviceType ?? form.serviceType}</strong>
                     {checkoutSuccess && (
@@ -1232,6 +1415,46 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                     </CardContent>
                   </Card>
                 </Grid>
+                {checkoutSuccess && !depositPaid && (
+                  <Grid item xs={12}>
+                    <Card variant="outlined">
+                      <CardContent>
+                        <Stack spacing={1.5}>
+                          <Typography variant="subtitle1" fontWeight={800}>Pagar depósito</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Elige únicamente un método habilitado por el servidor. Abrir un proveedor no confirma el pago.
+                          </Typography>
+                          {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+                          {paymentMethods.length === 0 && (
+                            <Alert severity="info" variant="outlined">
+                              No hay un rail en línea habilitado para esta orden. El horario sigue solamente en retención temporal.
+                            </Alert>
+                          )}
+                          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                            {paymentMethods.includes('datafast') && (
+                              <Button
+                                variant="contained"
+                                disabled={paymentBusy}
+                                onClick={() => void handleDatafastDeposit()}
+                              >
+                                Pagar con tarjeta · Datafast
+                              </Button>
+                            )}
+                            {paymentMethods.includes('paypal') && paypalClientId && (
+                              <Button
+                                variant="outlined"
+                                disabled={paymentBusy}
+                                onClick={() => void handlePaypalDeposit()}
+                              >
+                                Pagar con PayPal
+                              </Button>
+                            )}
+                          </Stack>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                )}
                 <Grid item xs={12}>
                   <Alert severity="info" variant="outlined">
                     <Typography variant="subtitle2" fontWeight={800} gutterBottom>
@@ -1239,12 +1462,16 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       {checkoutSuccess
-                        ? `• Retención hasta ${DateTime.fromISO(checkoutSuccess.holdExpiresAt).setZone(userTimeZone).toLocaleString(DateTime.DATETIME_MED)}; no constituye pago.`
+                        ? depositPaid
+                          ? '• Depósito verificado por el servidor; revisa el saldo antes de la sesión.'
+                          : `• Retención hasta ${DateTime.fromISO(checkoutSuccess.holdExpiresAt).setZone(userTimeZone).toLocaleString(DateTime.DATETIME_MED)}; no constituye pago.`
                         : '• Te confirmamos por correo (y te contactamos si necesitamos ajustar recursos).'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       {checkoutSuccess
-                        ? '• El selector Datafast/PayPal permanece oculto hasta que el rail esté habilitado; no mostramos un éxito simulado.'
+                        ? paymentMethods.length > 0
+                          ? '• El estado cambia solo después de una verificación del servidor.'
+                          : '• Datafast/PayPal permanecen ocultos mientras el servidor no habilite un rail real.'
                         : '• Llega 10 minutos antes para hacer check-in y preparar la sala.'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -1257,10 +1484,12 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                     <Button
                       variant="outlined"
                       component={RouterLink}
-                      to="/login?redirect=/estudio/calendario"
+                      to={checkoutSuccess
+                        ? `/reservas/orden/${success.bookingId}`
+                        : '/login?redirect=/estudio/calendario'}
                       size="medium"
                     >
-                      Ver mi reserva
+                      {checkoutSuccess ? 'Seguir esta orden' : 'Ver mi reserva'}
                     </Button>
                     <Button variant="contained" size="medium" onClick={resetForm}>
                       Crear otra reserva
@@ -1301,6 +1530,55 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
             </Stack>
           </CardContent>
         </Card>
+        <Dialog
+          open={datafastDialogOpen}
+          onClose={() => setDatafastDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>Pagar depósito con Datafast</DialogTitle>
+          <DialogContent dividers>
+            <Stack spacing={1.5}>
+              <Alert severity="info" variant="outlined">
+                El formulario es alojado por el proveedor. Al volver, TDF consultará el estado en el servidor antes de confirmar.
+              </Alert>
+              {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+              {datafastCheckout && datafastReturnUrl && (
+                <Box ref={datafastFormRef} key={datafastWidgetKey} sx={{ minHeight: 360 }}>
+                  <form
+                    action={datafastReturnUrl}
+                    className="paymentWidgets"
+                    data-brands="VISA MASTER DINERS AMEX DISCOVER"
+                  />
+                </Box>
+              )}
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDatafastWidgetKey((current) => current + 1)}>Reintentar carga</Button>
+            <Button onClick={() => setDatafastDialogOpen(false)} color="inherit">Cerrar</Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog
+          open={paypalDialogOpen}
+          onClose={() => setPaypalDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>Pagar depósito con PayPal</DialogTitle>
+          <DialogContent dividers>
+            <Stack spacing={1.5}>
+              <Alert severity="info" variant="outlined">
+                Aprobar en PayPal no es confirmación. TDF capturará y verificará importe, moneda, comercio y referencia en el servidor.
+              </Alert>
+              {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+              <Box ref={paypalButtonRef} sx={{ minHeight: 48 }} />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setPaypalDialogOpen(false)} color="inherit">Cerrar</Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     );
   }

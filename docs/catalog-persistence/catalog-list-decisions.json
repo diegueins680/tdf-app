@@ -444,16 +444,6 @@
       "reviewed": true
     },
     {
-      "id": "77983ac9623dca9e186a",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
-      "reviewed": true
-    },
-    {
       "id": "2b3298639b9f369f55bc",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -7264,16 +7254,6 @@
       "reviewed": true
      },
     {
-      "id": "1d56da3a9a8587a4421e",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the ordered manifest can make a production release non-reproducible or apply schema revisions out of order.",
-      "justification": "Migration identifiers and ordered immutable script paths are deployment execution mechanics; every applied revision and checksum is persisted independently in the production migration ledger.",
-      "reviewed": true
-    },
-    {
       "id": "f2263c4938549920d1af",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -7391,6 +7371,96 @@
       "priority": "P3-retain",
       "risk": "An unknown cart kind could mix incompatible inventory and fulfillment lifecycles.",
       "justification": "The typed sale/rental sum is an exhaustive dispatch boundary; catalog prices and terms remain database-managed.",
+      "reviewed": true
+    },
+    {
+      "id": "d235aa90d8ec49226679",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the ordered manifest can make a production release non-reproducible or apply schema revisions out of order.",
+      "justification": "Migration identifiers and ordered immutable script paths are deployment execution mechanics; every applied revision and checksum is persisted independently in the production migration ledger.",
+      "reviewed": true
+    },
+    {
+      "id": "2c52c29631a0a9991e39",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing generated request method dispatch could break the public booking API contract.",
+      "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
+      "reviewed": true
+    },
+    {
+      "id": "8f947bb3d6c6009a5757",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Client rendering could falsely label an unverified deposit as paid if it diverges from the canonical payment protocol.",
+      "justification": "These exhaustive payment-state discriminants only determine truthful status presentation; provider availability, prices, and policies remain persisted configuration.",
+      "reviewed": true
+    },
+    {
+      "id": "6237f283465fb123ee9d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Unknown booking-policy lifecycle states could bypass approval or activate unreviewed commercial policy.",
+      "justification": "Policy lifecycle values are the closed approval protocol; rates, deposits, hold duration, cancellation terms, and active versions remain database-managed.",
+      "reviewed": true
+    },
+    {
+      "id": "ea4e7fb616117e5c1209",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Database and application state machines could diverge and skip booking fulfillment controls.",
+      "justification": "Booking fulfillment states are the exhaustive transition protocol enforced across database constraints and backend logic; commercial policy remains persisted separately.",
+      "reviewed": true
+    },
+    {
+      "id": "5a037f6044ec0cc0f263",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unknown deposit payment state could falsely confirm a booking or obscure a refund or dispute.",
+      "justification": "Deposit payment states are the closed financial evidence protocol; amounts, provider capabilities, and policies remain persisted and audited.",
+      "reviewed": true
+    },
+    {
+      "id": "a71126d54d99b03eb9e3",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unknown balance state could misstate customer liability or settlement evidence.",
+      "justification": "Balance states form the exhaustive accounting protocol for a booking; the balance amount and collection policy remain immutable persisted records.",
+      "reviewed": true
+    },
+    {
+      "id": "16f06a4cf232083bb4e8",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Unknown allocation states could permit double booking or lose a held room, engineer, or asset.",
+      "justification": "Resource-allocation states are a closed concurrency protocol enforced by exclusion constraints and transactional transitions; resource selection remains database-managed.",
+      "reviewed": true
+    },
+    {
+      "id": "6f3c9c7c76c6566116b5",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Unknown audit actor types would make booking and payment transition provenance ambiguous.",
+      "justification": "Actor types are the closed booking audit-event protocol; actor identities, permissions, provider evidence, and customer lookup records remain persisted.",
       "reviewed": true
     }
   ]

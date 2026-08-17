@@ -34,9 +34,18 @@ provider bindings, or approved manual-payment evidence.
 Guest tracking deterministically derives a high-entropy lookup token from the caller's random
 idempotency key and stores only its hash, so a lost create response can be replayed without losing
 the tracking capability. Unknown booking IDs and wrong tokens return the same not-found response.
-The production domain flag starts disabled. Provider
-selection remains unavailable until a real Datafast or PayPal action is bound to this checkout and
-the matching environment capability is enabled.
+The production domain flag starts disabled. Datafast checkout creation/status and PayPal Orders v2
+creation/capture act only on the existing deposit checkout after validating the scoped guest token.
+They reuse canonical idempotent attempts and immutable provider bindings. Datafast status is queried
+server-to-server and PayPal capture must match merchant, capture, amount, currency, environment, and
+internal booking reference before payment changes. The UI lists only rails that have valid matching
+configuration and enabled environment capabilities. A browser return or PayPal approval remains
+non-authoritative.
+
+Failed provider attempts can be retried only during the original hold. They are included in the
+bounded expiry function so a failed rail cannot retain a room indefinitely. A Datafast payment first
+observed after hold expiry creates a reconciliation exception and does not silently reconfirm the
+released booking.
 
 ## Alternatives
 
@@ -55,6 +64,6 @@ the matching environment capability is enabled.
 
 Operations must approve one policy version before canonical public checkout can be enabled for an
 offering. Historical overlapping future bookings must be reviewed before the exclusion constraint
-can be applied. Datafast/PayPal production actions, balance collection, automated refunds,
-notifications, package credits, and production deployment remain separately gated and cannot be
-inferred from this booking runtime.
+can be applied. Datafast/PayPal production execution and sandbox evidence, balance collection,
+automated refunds, notifications, package credits, and production deployment remain separately
+gated and cannot be inferred from this booking runtime.

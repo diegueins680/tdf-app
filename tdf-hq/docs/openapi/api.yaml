@@ -4496,6 +4496,91 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/PublicBookingCheckout' }
         '404': { description: Booking order not found }
+  /bookings/public/orders/{bookingId}/datafast/checkout:
+    post:
+      tags: [Public bookings, Checkout]
+      summary: Create or replay the booking deposit's bound Datafast checkout
+      description: Requires the scoped guest lookup capability. Creating a hosted checkout never marks the deposit paid or confirms fulfillment.
+      operationId: createPublicBookingDatafastCheckout
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/PublicBookingId'
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Bound Datafast hosted-checkout resource
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DatafastCheckout' }
+        '404': { description: Booking order not found }
+        '409': { description: Expired/already-paid booking or immutable provider-binding conflict }
+        '503': { description: Booking domain or Datafast rail is disabled/misconfigured }
+  /bookings/public/orders/{bookingId}/datafast/status:
+    get:
+      tags: [Public bookings, Checkout]
+      summary: Verify the booking deposit against Datafast server-to-server
+      description: A browser return is not payment evidence. The supplied path must exactly match the stored checkout binding; only the server-held merchant credential queries Datafast.
+      operationId: confirmPublicBookingDatafastStatus
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/PublicBookingId'
+        - $ref: '#/components/parameters/OrderLookupToken'
+        - name: resourcePath
+          in: query
+          required: true
+          schema: { type: string, pattern: '^/v1/checkouts/[A-Za-z0-9_.-]+/payment$' }
+      responses:
+        '200':
+          description: Current server-verified payment and separate fulfillment state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicBookingCheckout' }
+        '404': { description: Booking order not found }
+        '409': { description: Binding conflict or verified late payment requires staff reconciliation }
+        '502': { description: Provider failure or amount/currency/reference mismatch }
+  /bookings/public/orders/{bookingId}/paypal/create:
+    post:
+      tags: [Public bookings, Checkout]
+      summary: Create or replay the booking deposit's bound PayPal order
+      description: Uses an immutable provider request ID and does not mark the booking paid.
+      operationId: createPublicBookingPaypalOrder
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/PublicBookingId'
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Bound PayPal Orders v2 resource
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaypalCreate' }
+        '404': { description: Booking order not found }
+        '409': { description: Expired/already-paid booking or immutable provider-binding conflict }
+        '503': { description: Booking domain or PayPal rail is disabled/misconfigured }
+  /bookings/public/orders/{bookingId}/paypal/capture:
+    post:
+      tags: [Public bookings, Checkout]
+      summary: Capture and server-verify the booking deposit's bound PayPal order
+      description: Browser approval alone is not success. The server validates order, merchant, amount, currency, capture ID, and internal booking reference before payment transition.
+      operationId: capturePublicBookingPaypalOrder
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/PublicBookingId'
+        - $ref: '#/components/parameters/OrderLookupToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PublicBookingPaypalCapture' }
+      responses:
+        '200':
+          description: Current server-verified payment and separate fulfillment state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicBookingCheckout' }
+        '404': { description: Booking order not found }
+        '409': { description: Expired booking or PayPal order/binding conflict }
+        '502': { description: Provider failure or amount/currency/reference mismatch }
 security:
   - bearerAuth: [ ]
 
@@ -4506,6 +4591,11 @@ components:
       scheme: bearer
       bearerFormat: JWT
   parameters:
+    PublicBookingId:
+      name: bookingId
+      in: path
+      required: true
+      schema: { type: integer, format: int64, minimum: 1 }
     CatalogCode:
       name: catalogCode
       in: path
@@ -4693,7 +4783,7 @@ components:
         quote: { allOf: [{ $ref: '#/components/schemas/PublicBookingQuote' }], nullable: true }
     PublicBookingCheckout:
       type: object
-      required: [booking, checkoutId, lookupToken, paymentStatus, fulfillmentStatus, holdExpiresAt, quote]
+      required: [booking, checkoutId, lookupToken, paymentStatus, fulfillmentStatus, holdExpiresAt, quote, paymentMethods]
       properties:
         booking: { $ref: '#/components/schemas/Booking' }
         checkoutId: { type: string, format: uuid }
@@ -4702,6 +4792,21 @@ components:
         fulfillmentStatus: { type: string, enum: [on_hold, confirmed, scheduled, in_progress, balance_due, completed, reschedule_requested, cancellation_requested, cancelled, no_show, overtime_review, disputed, expired] }
         holdExpiresAt: { type: string, format: date-time }
         quote: { $ref: '#/components/schemas/PublicBookingQuote' }
+        paymentMethods:
+          type: array
+          description: Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown.
+          uniqueItems: true
+          items: { type: string, enum: [datafast, paypal] }
+    PublicBookingPaypalCapture:
+      type: object
+      additionalProperties: false
+      required: [paypalOrderId]
+      properties:
+        paypalOrderId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[A-Za-z0-9_-]+$'
     MarketplaceItem:
       type: object
       required: [miListingId, miAssetId, miTitle, miPurpose, miCategory, miBrand, miModel, miPhotoUrl, miStatus, miCondition, miPriceUsdCents, miPriceDisplay, miMarkupPct, miCurrency, miRentalWeeklyPriceUsdCents, miRentalWeeklyPriceDisplay, miRentalSecurityDepositUsdCents, miRentalSecurityDepositDisplay, miRentalMinDays, miRentalMaxDays, miRentalLateFeeUsdCents, miRentalLateFeeDisplay, miRentalCancellationWindowHours, miRentalTermsVersion, miRentalTermsSummary, miRentalTimezone]

@@ -132,6 +132,7 @@ const createPublicCheckoutMock = jest.fn<
       depositBps: number;
       termsVersion: string;
     };
+    paymentMethods: Array<'datafast' | 'paypal'>;
   }>
 >(() => Promise.resolve({
   booking: {
@@ -161,7 +162,9 @@ const createPublicCheckoutMock = jest.fn<
     depositBps: 5000,
     termsVersion: 'studio-terms-v1',
   },
+  paymentMethods: [],
 }));
+const storePublicBookingLookupTokenMock = jest.fn();
 const logoutMock = jest.fn();
 const listPublicServicesMock = jest.fn<() => Promise<PublicServiceCatalogItem[]>>(
   () => Promise.resolve([]),
@@ -177,9 +180,14 @@ const listPublicRoomsMock = jest.fn<() => Promise<PublicRoomItem[]>>(
 );
 
 jest.unstable_mockModule('../api/bookings', () => ({
+  loadPublicBookingLookupToken: () => 'lookup-secret',
+  storePublicBookingLookupToken: storePublicBookingLookupTokenMock,
   Bookings: {
     createPublic: createPublicMock,
     createPublicCheckout: createPublicCheckoutMock,
+    createPublicDatafastCheckout: jest.fn(),
+    createPublicPaypalOrder: jest.fn(),
+    capturePublicPaypalOrder: jest.fn(),
   },
 }));
 
@@ -313,6 +321,7 @@ describe('PublicBookingPage', () => {
   beforeEach(() => {
     createPublicMock.mockClear();
     createPublicCheckoutMock.mockClear();
+    storePublicBookingLookupTokenMock.mockClear();
     listPublicServicesMock.mockReset();
     listPublicServicesMock.mockResolvedValue(defaultPublicServices);
     listPublicEngineersMock.mockReset();
@@ -491,6 +500,7 @@ describe('PublicBookingPage', () => {
       pbcResourceIds: null,
     });
     expect(idempotencyKey).toMatch(/^service-booking-/);
+    expect(storePublicBookingLookupTokenMock).toHaveBeenCalledWith(456, 'lookup-secret');
     expect(container.textContent).toContain('Orden creada · depósito pendiente');
     expect(container.textContent).toContain('todavía no está pagado ni confirmado');
     expect(container.textContent).not.toContain('Pago confirmado');

@@ -10,6 +10,13 @@ module TDF.Server.ServiceStorefront
   , validateDatafastEnvironmentBase
   , isDatafastCheckoutCreationSuccess
   , isDatafastPaymentSuccess
+  , ServiceDatafastEnv(..)
+  , ServiceDatafastPaymentStatus(..)
+  , loadServiceDatafastEnv
+  , requestDatafastCheckoutForService
+  , checkDatafastPaymentStatus
+  , validateDatafastSuccessfulPayment
+  , parseDatafastCents
   , validateIdempotencyKey
   , validateServiceFulfillmentTransition
   , ServicePaypalCaptureOutcome(..)

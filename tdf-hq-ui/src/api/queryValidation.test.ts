@@ -286,6 +286,37 @@ describe('API query/id validation', () => {
       { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
     );
 
+    await Bookings.createPublicDatafastCheckout(42, 'lookup-secret');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42/datafast/checkout',
+      {},
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.confirmPublicDatafastStatus(
+      42,
+      '/v1/checkouts/provider-checkout/payment',
+      'lookup-secret',
+    );
+    expect(getMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42/datafast/status?resourcePath=%2Fv1%2Fcheckouts%2Fprovider-checkout%2Fpayment',
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.createPublicPaypalOrder(42, 'lookup-secret');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42/paypal/create',
+      {},
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.capturePublicPaypalOrder(42, 'PAYPAL-ORDER-1', 'lookup-secret');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42/paypal/capture',
+      { paypalOrderId: 'PAYPAL-ORDER-1' },
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
     expect(() => Bookings.publicAvailability({ serviceOfferingId, startsAt, durationMinutes: 0 }))
       .toThrow('durationMinutes debe ser un entero positivo.');
     expect(() => Bookings.getPublicCheckout(0, 'lookup-secret'))

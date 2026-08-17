@@ -9618,6 +9618,10 @@ bookingPublicServer =
   :<|> createPublicBooking
   :<|> createPublicBookingCheckout
   :<|> getPublicBookingCheckout
+  :<|> createPublicBookingDatafastCheckout
+  :<|> confirmPublicBookingDatafastStatus
+  :<|> createPublicBookingPaypalOrder
+  :<|> capturePublicBookingPaypalOrder
 
 inventoryStaticServer :: FilePath -> ServerT Api.AssetsAPI AppM
 inventoryStaticServer assetsRoot =
@@ -9977,26 +9981,70 @@ loadPublicBookingCheckoutDTO bookingKey lookupToken = do
       _ -> pure Nothing
   case loaded of
     Nothing -> throwError serviceBookingLookupNotFound
-    Just (dto, ServiceBookingRuntimeView{..}) -> pure Api.PublicBookingCheckoutDTO
-      { Api.pbcBooking = dto
-      , Api.pbcCheckoutId = sbrvCheckoutId
-      , Api.pbcLookupToken = lookupToken
-      , Api.pbcPaymentStatus = sbrvPaymentStatus
-      , Api.pbcFulfillmentStatus = sbrvFulfillmentStatus
-      , Api.pbcHoldExpiresAt = sbrvHoldExpiresAt
-      , Api.pbcQuote = Api.PublicBookingQuoteDTO
-          { Api.pbqPolicyVersion = sbrvPolicyVersion
-          , Api.pbqCurrency = sbrvCurrency
-          , Api.pbqDurationMinutes = sbrvDurationMinutes
-          , Api.pbqSubtotalMinor = sbrvSubtotalMinor
-          , Api.pbqTaxMinor = sbrvTaxMinor
-          , Api.pbqTotalMinor = sbrvTotalMinor
-          , Api.pbqDepositMinor = sbrvDepositMinor
-          , Api.pbqBalanceMinor = sbrvBalanceMinor
-          , Api.pbqDepositBps = sbrvDepositBps
-          , Api.pbqTermsVersion = sbrvTermsVersion
-          }
-      }
+    Just (dto, ServiceBookingRuntimeView{..}) -> do
+      paymentMethods <- loadPublicBookingPaymentMethods
+        (Checkout.CheckoutReference sbrvCheckoutId)
+        sbrvPaymentStatus
+        sbrvHoldExpiresAt
+      pure Api.PublicBookingCheckoutDTO
+        { Api.pbcBooking = dto
+        , Api.pbcCheckoutId = sbrvCheckoutId
+        , Api.pbcLookupToken = lookupToken
+        , Api.pbcPaymentStatus = sbrvPaymentStatus
+        , Api.pbcFulfillmentStatus = sbrvFulfillmentStatus
+        , Api.pbcHoldExpiresAt = sbrvHoldExpiresAt
+        , Api.pbcQuote = Api.PublicBookingQuoteDTO
+            { Api.pbqPolicyVersion = sbrvPolicyVersion
+            , Api.pbqCurrency = sbrvCurrency
+            , Api.pbqDurationMinutes = sbrvDurationMinutes
+            , Api.pbqSubtotalMinor = sbrvSubtotalMinor
+            , Api.pbqTaxMinor = sbrvTaxMinor
+            , Api.pbqTotalMinor = sbrvTotalMinor
+            , Api.pbqDepositMinor = sbrvDepositMinor
+            , Api.pbqBalanceMinor = sbrvBalanceMinor
+            , Api.pbqDepositBps = sbrvDepositBps
+            , Api.pbqTermsVersion = sbrvTermsVersion
+            }
+        , Api.pbcPaymentMethods = paymentMethods
+        }
+
+loadPublicBookingPaymentMethods
+  :: Checkout.CheckoutReference
+  -> Text
+  -> UTCTime
+  -> AppM [Text]
+loadPublicBookingPaymentMethods checkout paymentStatus holdExpiresAt = do
+  now <- liftIO getCurrentTime
+  if paymentStatus `notElem` ["awaiting_payment", "failed"] || holdExpiresAt <= now
+    then pure []
+    else do
+      storedEnvironment <- runDB (Checkout.loadCheckoutEnvironment checkout)
+        >>= either (const (pure Nothing)) (pure . Just)
+      case storedEnvironment of
+        Nothing -> pure []
+        Just checkoutEnvironment -> do
+          domainEnabled <- runDB $
+            Checkout.domainEnabledForEnvironment checkoutEnvironment "service_bookings"
+          if not domainEnabled
+            then pure []
+            else do
+              datafastEnabled <- ((\datafast -> do
+                  if ServiceStorefront.sdfEnvironment datafast /= checkoutEnvironment
+                    then pure False
+                    else runDB $ Checkout.providerEnabledForEnvironment
+                      checkoutEnvironment Checkout.ProviderDatafast)
+                =<< ServiceStorefront.loadServiceDatafastEnv)
+                `catchError` const (pure False)
+              paypalEnabled <- ((\(_, _, _, paypalEnvironment, _) -> do
+                  if paypalEnvironment /= checkoutEnvironment
+                    then pure False
+                    else runDB $ Checkout.providerEnabledForEnvironment
+                      checkoutEnvironment Checkout.ProviderPayPal)
+                =<< ServiceStorefront.loadPaypalEnvForService)
+                `catchError` const (pure False)
+              pure $
+                ["datafast" | datafastEnabled]
+                  <> ["paypal" | paypalEnabled]
 
 serviceBookingLookupNotFound :: ServerError
 serviceBookingLookupNotFound = err404 { errBody = "Booking order not found" }
@@ -10008,6 +10056,11 @@ getPublicBookingCheckout
 getPublicBookingCheckout rawBookingId mLookupToken = do
   bookingId <- either throwError pure (validatePositiveIdField "bookingId" rawBookingId)
   let bookingKey = toSqlKey (fromIntegral bookingId) :: Key Booking
+  requirePublicBookingLookupToken bookingKey mLookupToken
+  loadPublicBookingCheckoutDTO bookingKey Nothing
+
+requirePublicBookingLookupToken :: Key Booking -> Maybe Text -> AppM ()
+requirePublicBookingLookupToken bookingKey mLookupToken = do
   suppliedToken <- maybe (throwError serviceBookingLookupNotFound) (pure . T.strip) mLookupToken
   storedHashes <- runDB (rawSql
     "SELECT lookup_token_hash FROM service_booking_checkout_runtime WHERE booking_id = ?"
@@ -10018,7 +10071,582 @@ getPublicBookingCheckout rawBookingId mLookupToken = do
   let suppliedHash = marketplaceSha256Text suppliedToken
   unless (constEq (TE.encodeUtf8 storedHash) (TE.encodeUtf8 suppliedHash)) $
     throwError serviceBookingLookupNotFound
-  loadPublicBookingCheckoutDTO bookingKey Nothing
+
+data ServiceBookingPaymentContext = ServiceBookingPaymentContext
+  { sbpcBookingKey :: Key Booking
+  , sbpcCheckout :: Checkout.CheckoutReference
+  , sbpcCreateIdempotencyKey :: Text
+  , sbpcCheckoutStatus :: Text
+  , sbpcEnvironment :: Checkout.CheckoutEnvironment
+  , sbpcDepositMinor :: Int64
+  , sbpcCurrency :: Text
+  , sbpcHoldExpiresAt :: UTCTime
+  , sbpcBuyerName :: Text
+  , sbpcBuyerEmail :: Text
+  , sbpcBuyerPhone :: Maybe Text
+  } deriving (Eq, Show)
+
+loadServiceBookingPaymentContext
+  :: Key Booking
+  -> AppM ServiceBookingPaymentContext
+loadServiceBookingPaymentContext bookingKey = do
+  rows <- runDB (rawSql
+    "SELECT runtime.checkout_id::text, runtime.create_idempotency_key, checkout.status,\
+    \ checkout.environment, runtime.deposit_minor, runtime.currency, runtime.hold_expires_at,\
+    \ party.display_name, party.primary_email, party.primary_phone\
+    \ FROM service_booking_checkout_runtime runtime\
+    \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+    \ JOIN booking booked ON booked.id = runtime.booking_id\
+    \ JOIN party party ON party.id = booked.party_id\
+    \ WHERE runtime.booking_id = ?\
+    \ AND checkout.domain_type = 'service_booking'\
+    \ AND checkout.domain_order_id = runtime.booking_id::text\
+    \ AND checkout.total_minor = runtime.deposit_minor\
+    \ AND checkout.currency = runtime.currency"
+    [toPersistValue bookingKey]
+    :: SqlPersistT IO
+      [( Single Text, Single Text, Single Text, Single Text, Single Int64
+       , Single Text, Single UTCTime, Single Text, Single (Maybe Text), Single (Maybe Text)
+       )])
+  case rows of
+    [( Single checkoutId, Single createKey, Single checkoutStatus, Single environmentText
+     , Single depositMinor, Single currency, Single holdExpiresAt, Single buyerName
+     , Single mBuyerEmail, Single buyerPhone
+     )] -> do
+      checkoutEnvironment <- either
+        (throwError . marketplaceCheckoutInternal)
+        pure
+        (Checkout.resolveCheckoutEnvironment (Just (T.unpack environmentText)))
+      buyerEmail <- maybe
+        (throwError (marketplaceCheckoutInternal
+          "Service booking customer email is missing"))
+        pure
+        mBuyerEmail
+      pure ServiceBookingPaymentContext
+        { sbpcBookingKey = bookingKey
+        , sbpcCheckout = Checkout.CheckoutReference checkoutId
+        , sbpcCreateIdempotencyKey = createKey
+        , sbpcCheckoutStatus = checkoutStatus
+        , sbpcEnvironment = checkoutEnvironment
+        , sbpcDepositMinor = depositMinor
+        , sbpcCurrency = currency
+        , sbpcHoldExpiresAt = holdExpiresAt
+        , sbpcBuyerName = buyerName
+        , sbpcBuyerEmail = buyerEmail
+        , sbpcBuyerPhone = buyerPhone
+        }
+    [] -> throwError serviceBookingLookupNotFound
+    _ -> throwError (marketplaceCheckoutInternal
+      "Service booking payment context is ambiguous")
+
+requireServiceBookingPaymentContext
+  :: Int64
+  -> Maybe Text
+  -> AppM ServiceBookingPaymentContext
+requireServiceBookingPaymentContext rawBookingId mLookupToken = do
+  context <- authorizeServiceBookingPaymentContext rawBookingId mLookupToken
+  now <- liftIO getCurrentTime
+  when
+      ( sbpcHoldExpiresAt context <= now
+        && sbpcCheckoutStatus context `elem` ["holding", "awaiting_payment", "failed"]
+      ) $ do
+    _ <- runDB (rawSql "SELECT service_booking_expire_holds(?)"
+      [PersistUTCTime now] :: SqlPersistT IO [Single Int])
+    throwError err409
+      { errBody = "This booking checkout hold expired; choose availability again" }
+  unless
+      (sbpcCheckoutStatus context `elem`
+        ["holding", "awaiting_payment", "processing", "failed", "paid"]) $
+    throwError err409
+      { errBody = "This booking checkout no longer accepts payment actions" }
+  pure context
+
+authorizeServiceBookingPaymentContext
+  :: Int64
+  -> Maybe Text
+  -> AppM ServiceBookingPaymentContext
+authorizeServiceBookingPaymentContext rawBookingId mLookupToken = do
+  bookingId <- either throwError pure (validatePositiveIdField "bookingId" rawBookingId)
+  let bookingKey = toSqlKey bookingId :: Key Booking
+  requirePublicBookingLookupToken bookingKey mLookupToken
+  loadServiceBookingPaymentContext bookingKey
+
+requireServiceBookingProvider
+  :: ServiceBookingPaymentContext
+  -> Checkout.CheckoutEnvironment
+  -> Checkout.PaymentProvider
+  -> AppM ()
+requireServiceBookingProvider context configuredEnvironment provider = do
+  unless (configuredEnvironment == sbpcEnvironment context) $
+    throwError err503
+      { errBody = "Configured provider environment does not match this immutable booking checkout" }
+  domainEnabled <- runDB $
+    Checkout.domainEnabledForEnvironment configuredEnvironment "service_bookings"
+  unless domainEnabled $
+    throwError err503
+      { errBody = "Public service booking checkout is disabled in this environment" }
+  providerEnabled <- runDB $
+    Checkout.providerEnabledForEnvironment configuredEnvironment provider
+  unless providerEnabled $
+    throwError err503
+      { errBody = "Payment provider is disabled for this checkout environment" }
+
+serviceBookingPaymentIdempotencyKey
+  :: ServiceBookingPaymentContext
+  -> Checkout.PaymentProvider
+  -> Checkout.PaymentOperation
+  -> Text
+serviceBookingPaymentIdempotencyKey context provider operation =
+  marketplaceSha256Text $
+    "service-booking-payment:"
+      <> sbpcCreateIdempotencyKey context
+      <> ":" <> Checkout.paymentProviderText provider
+      <> ":" <> case operation of
+        Checkout.OperationCreate -> "create"
+        Checkout.OperationAuthorize -> "authorize"
+        Checkout.OperationCapture -> "capture"
+        Checkout.OperationManualVerify -> "manual-verify"
+
+serviceBookingPaymentCorrelationId
+  :: ServiceBookingPaymentContext
+  -> Checkout.PaymentProvider
+  -> Text
+  -> Text
+serviceBookingPaymentCorrelationId context provider operation =
+  "service-booking:"
+    <> toPathPiece (sbpcBookingKey context)
+    <> ":" <> Checkout.paymentProviderText provider
+    <> ":" <> operation
+
+beginServiceBookingPaymentAttempt
+  :: ServiceBookingPaymentContext
+  -> Checkout.PaymentProvider
+  -> Checkout.PaymentOperation
+  -> Text
+  -> Text
+  -> AppM Checkout.PaymentAttemptReference
+beginServiceBookingPaymentAttempt context provider operation merchantRef operationLabel = do
+  now <- liftIO getCurrentTime
+  result <- runDB $ Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+    { Checkout.pacCheckout = sbpcCheckout context
+    , Checkout.pacProvider = provider
+    , Checkout.pacEnvironment = sbpcEnvironment context
+    , Checkout.pacOperation = operation
+    , Checkout.pacAmountMinor = sbpcDepositMinor context
+    , Checkout.pacCurrency = sbpcCurrency context
+    , Checkout.pacMerchantRef = merchantRef
+    , Checkout.pacIdempotencyKey = serviceBookingPaymentIdempotencyKey context provider operation
+    , Checkout.pacCreatedAt = now
+    , Checkout.pacCorrelationId = serviceBookingPaymentCorrelationId
+        context provider operationLabel
+    }
+  either (throwError . marketplaceCheckoutConflict) pure result
+
+failServiceBookingPaymentAttempt
+  :: ServiceBookingPaymentContext
+  -> Checkout.PaymentAttemptReference
+  -> Checkout.PaymentProvider
+  -> Text
+  -> ServerError
+  -> AppM a
+failServiceBookingPaymentAttempt context attempt provider failureCode providerError = do
+  now <- liftIO getCurrentTime
+  runDB $ Checkout.recordPaymentFailure
+    (sbpcCheckout context)
+    attempt
+    provider
+    failureCode
+    (serviceBookingPaymentCorrelationId context provider "provider-error")
+    now
+  throwError providerError
+
+loadServiceBookingProviderBinding
+  :: ServiceBookingPaymentContext
+  -> Checkout.PaymentProvider
+  -> Text
+  -> Text
+  -> AppM (Maybe (Text, Maybe Text))
+loadServiceBookingProviderBinding context provider merchantRef resourceType = do
+  rows <- runDB (rawSql
+    "SELECT binding.provider_resource_id, binding.provider_resource_path\
+    \ FROM commerce_provider_binding binding\
+    \ JOIN commerce_payment_attempt attempt ON attempt.id = binding.payment_attempt_id\
+    \ WHERE attempt.checkout_id = ?::uuid AND attempt.provider = ?\
+    \ AND attempt.environment = ? AND attempt.merchant_account_ref = ?\
+    \ AND binding.provider = attempt.provider\
+    \ AND binding.environment = attempt.environment\
+    \ AND binding.merchant_account_ref = attempt.merchant_account_ref\
+    \ AND binding.resource_type = ? AND binding.merchant_reference = ?\
+    \ AND binding.amount_minor = ? AND binding.currency = ?"
+    [ PersistText (Checkout.checkoutReferenceId (sbpcCheckout context))
+    , PersistText (Checkout.paymentProviderText provider)
+    , PersistText (Checkout.checkoutEnvironmentText (sbpcEnvironment context))
+    , PersistText merchantRef
+    , PersistText resourceType
+    , PersistText (toPathPiece (sbpcBookingKey context))
+    , PersistInt64 (sbpcDepositMinor context)
+    , PersistText (sbpcCurrency context)
+    ] :: SqlPersistT IO [(Single Text, Single (Maybe Text))])
+  case rows of
+    [] -> pure Nothing
+    [(Single resourceId, Single resourcePath)] -> pure (Just (resourceId, resourcePath))
+    _ -> throwError (marketplaceCheckoutInternal
+      "Service booking provider binding is ambiguous")
+
+bindServiceBookingProviderResource
+  :: ServiceBookingPaymentContext
+  -> Checkout.PaymentAttemptReference
+  -> Checkout.PaymentProvider
+  -> Checkout.CheckoutEnvironment
+  -> Text
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> Checkout.PaymentAttemptStage
+  -> Text
+  -> AppM ()
+bindServiceBookingProviderResource
+    context attempt provider environment merchantRef resourceType resourceId resourcePath stage operationLabel = do
+  now <- liftIO getCurrentTime
+  result <- runDB $ Checkout.bindProviderResource Checkout.ProviderBindingCreation
+    { Checkout.pbcAttempt = attempt
+    , Checkout.pbcCheckout = sbpcCheckout context
+    , Checkout.pbcProvider = provider
+    , Checkout.pbcEnvironment = environment
+    , Checkout.pbcMerchantRef = merchantRef
+    , Checkout.pbcResourceType = resourceType
+    , Checkout.pbcProviderResource = resourceId
+    , Checkout.pbcResourcePath = resourcePath
+    , Checkout.pbcOrderReference = toPathPiece (sbpcBookingKey context)
+    , Checkout.pbcAmountMinor = sbpcDepositMinor context
+    , Checkout.pbcCurrency = sbpcCurrency context
+    , Checkout.pbcStage = stage
+    , Checkout.pbcOccurredAt = now
+    , Checkout.pbcCorrelationId = serviceBookingPaymentCorrelationId
+        context provider operationLabel
+    }
+  either (throwError . marketplaceCheckoutConflict) pure result
+
+createPublicBookingDatafastCheckout
+  :: Int64
+  -> Maybe Text
+  -> AppM DatafastCheckoutDTO
+createPublicBookingDatafastCheckout rawBookingId mLookupToken = do
+  context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
+  when (sbpcCheckoutStatus context == "paid") $
+    throwError err409 { errBody = "This booking deposit is already paid" }
+  datafast <- ServiceStorefront.loadServiceDatafastEnv
+  requireServiceBookingProvider
+    context (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
+  attempt <- beginServiceBookingPaymentAttempt
+    context Checkout.ProviderDatafast Checkout.OperationCreate
+    (ServiceStorefront.sdfEntityId datafast) "create"
+  existing <- loadServiceBookingProviderBinding
+    context Checkout.ProviderDatafast (ServiceStorefront.sdfEntityId datafast) "checkout"
+  (checkoutId, widgetUrl) <- case existing of
+    Just (storedCheckoutId, _) -> pure
+      ( storedCheckoutId
+      , normalizeBaseUrl (ServiceStorefront.sdfBaseUrl datafast)
+          <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack storedCheckoutId
+      )
+    Nothing -> ServiceStorefront.requestDatafastCheckoutForService
+      (toPathPiece (sbpcBookingKey context))
+      (fromIntegral (sbpcDepositMinor context))
+      (sbpcCurrency context)
+      (sbpcBuyerName context)
+      (sbpcBuyerEmail context)
+      (sbpcBuyerPhone context)
+      `catchError` failServiceBookingPaymentAttempt
+        context attempt Checkout.ProviderDatafast "datafast_checkout_create"
+  let resourcePath = "/v1/checkouts/" <> checkoutId <> "/payment"
+  bindServiceBookingProviderResource
+    context attempt Checkout.ProviderDatafast (ServiceStorefront.sdfEnvironment datafast)
+    (ServiceStorefront.sdfEntityId datafast) "checkout" checkoutId
+    (Just resourcePath) Checkout.AttemptRequiresCustomerAction "create"
+  pure DatafastCheckoutDTO
+    { dcOrderId = toPathPiece (sbpcBookingKey context)
+    , dcCheckoutId = checkoutId
+    , dcWidgetUrl = T.pack widgetUrl
+    , dcAmount = Internationalization.formatMinorUnitsDecimal
+        (sbpcCurrency context) (fromIntegral (sbpcDepositMinor context))
+    , dcCurrency = sbpcCurrency context
+    , dcLookupToken = Nothing
+    }
+
+confirmPublicBookingDatafastStatus
+  :: Int64
+  -> Maybe Text
+  -> Text
+  -> AppM Api.PublicBookingCheckoutDTO
+confirmPublicBookingDatafastStatus rawBookingId mLookupToken rawResourcePath = do
+  initialContext <- authorizeServiceBookingPaymentContext rawBookingId mLookupToken
+  nowBeforeVerification <- liftIO getCurrentTime
+  when
+      ( sbpcHoldExpiresAt initialContext <= nowBeforeVerification
+        && sbpcCheckoutStatus initialContext `elem` ["holding", "awaiting_payment", "failed"]
+      ) $ do
+    _ <- runDB (rawSql "SELECT service_booking_expire_holds(?)"
+      [PersistUTCTime nowBeforeVerification] :: SqlPersistT IO [Single Int])
+    pure ()
+  context <- loadServiceBookingPaymentContext (sbpcBookingKey initialContext)
+  if sbpcCheckoutStatus context == "paid"
+    then loadPublicBookingCheckoutDTO (sbpcBookingKey context) Nothing
+    else do
+      datafast <- ServiceStorefront.loadServiceDatafastEnv
+      unless (ServiceStorefront.sdfEnvironment datafast == sbpcEnvironment context) $
+        throwError err503
+          { errBody = "Configured Datafast environment does not match this immutable booking checkout" }
+      existing <- loadServiceBookingProviderBinding
+        context Checkout.ProviderDatafast (ServiceStorefront.sdfEntityId datafast) "checkout"
+      (checkoutId, storedResourcePath) <- maybe
+        (throwError err409 { errBody = "This booking has no bound Datafast checkout" })
+        pure
+        existing
+      resourcePath <- either
+        (throwError . marketplaceCheckoutBadRequest)
+        pure
+        (ServiceStorefront.validateDatafastOrderResourcePath (Just checkoutId) rawResourcePath)
+      unless (storedResourcePath == Just resourcePath) $
+        throwError err409
+          { errBody = "Datafast resource path does not match the immutable booking binding" }
+      attempt <- beginServiceBookingPaymentAttempt
+        context Checkout.ProviderDatafast Checkout.OperationCreate
+        (ServiceStorefront.sdfEntityId datafast) "create"
+      providerStatus <- ServiceStorefront.checkDatafastPaymentStatus resourcePath
+        `catchError` failServiceBookingPaymentAttempt
+          context attempt Checkout.ProviderDatafast "datafast_status_request"
+      now <- liftIO getCurrentTime
+      let resultCode = ServiceStorefront.sdfpsResultCode providerStatus
+          success = ServiceStorefront.isDatafastPaymentSuccess
+            (ServiceStorefront.sdfEnvironment datafast) resultCode
+          pending = resultCode == "000.200.000"
+      if success
+        then do
+          case ServiceStorefront.validateDatafastSuccessfulPayment
+              (toPathPiece (sbpcBookingKey context))
+              (fromIntegral (sbpcDepositMinor context))
+              (sbpcCurrency context)
+              providerStatus of
+            Left validationMessage -> do
+              let actualAmount = ServiceStorefront.sdfpsAmount providerStatus
+                    >>= either (const Nothing) Just . ServiceStorefront.parseDatafastCents
+                  providerRef = fromMaybe checkoutId
+                    (ServiceStorefront.sdfpsPaymentId providerStatus)
+              runDB $ do
+                Checkout.recordReconciliationException
+                  Checkout.ProviderDatafast (sbpcEnvironment context)
+                  (ServiceStorefront.sdfEntityId datafast)
+                  "provider_binding_mismatch"
+                  (toPathPiece (sbpcBookingKey context))
+                  providerRef
+                  (sbpcDepositMinor context)
+                  (fromIntegral <$> actualAmount)
+                  (sbpcCurrency context)
+                  now
+                Checkout.recordPaymentFailure
+                  (sbpcCheckout context) attempt Checkout.ProviderDatafast
+                  "provider_binding_mismatch"
+                  (serviceBookingPaymentCorrelationId context Checkout.ProviderDatafast "status")
+                  now
+              throwError err502
+                { errBody = BL.fromStrict (TE.encodeUtf8 validationMessage) }
+            Right () -> pure ()
+          when (sbpcCheckoutStatus context == "expired") $ do
+            let actualAmount = ServiceStorefront.sdfpsAmount providerStatus
+                  >>= either (const Nothing) Just . ServiceStorefront.parseDatafastCents
+                providerRef = fromMaybe checkoutId
+                  (ServiceStorefront.sdfpsPaymentId providerStatus)
+            runDB $ Checkout.recordReconciliationException
+              Checkout.ProviderDatafast (sbpcEnvironment context)
+              (ServiceStorefront.sdfEntityId datafast)
+              "payment_after_booking_hold_expiry"
+              (toPathPiece (sbpcBookingKey context))
+              providerRef
+              (sbpcDepositMinor context)
+              (fromIntegral <$> actualAmount)
+              (sbpcCurrency context)
+              now
+            throwError err409
+              { errBody = "Datafast reports payment after this booking hold expired; staff reconciliation is required and the booking is not confirmed" }
+          paymentId <- maybe
+            (throwError err502 { errBody = "Datafast payment ID is missing" })
+            pure
+            (ServiceStorefront.sdfpsPaymentId providerStatus)
+          bindServiceBookingProviderResource
+            context attempt Checkout.ProviderDatafast (sbpcEnvironment context)
+            (ServiceStorefront.sdfEntityId datafast) "payment" paymentId
+            (Just resourcePath) Checkout.AttemptProcessing "status"
+          verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+            { Checkout.vpAttempt = attempt
+            , Checkout.vpCheckout = sbpcCheckout context
+            , Checkout.vpProvider = Checkout.ProviderDatafast
+            , Checkout.vpEnvironment = sbpcEnvironment context
+            , Checkout.vpMerchantRef = ServiceStorefront.sdfEntityId datafast
+            , Checkout.vpResourceType = "checkout"
+            , Checkout.vpProviderResource = checkoutId
+            , Checkout.vpProviderResourcePath = Just resourcePath
+            , Checkout.vpOrderReference = toPathPiece (sbpcBookingKey context)
+            , Checkout.vpAmountMinor = sbpcDepositMinor context
+            , Checkout.vpCurrency = sbpcCurrency context
+            , Checkout.vpEvidence = "server_to_server"
+            , Checkout.vpOccurredAt = now
+            , Checkout.vpCorrelationId = serviceBookingPaymentCorrelationId
+                context Checkout.ProviderDatafast "status"
+            }
+          either (throwError . marketplaceCheckoutConflict) (const (pure ())) verified
+        else if sbpcCheckoutStatus context == "expired"
+          then pure ()
+          else if pending
+          then runDB $ Checkout.recordPaymentProcessing
+            (sbpcCheckout context) attempt Checkout.ProviderDatafast
+            (serviceBookingPaymentCorrelationId context Checkout.ProviderDatafast "status")
+            now
+          else runDB $ Checkout.recordPaymentFailure
+            (sbpcCheckout context) attempt Checkout.ProviderDatafast resultCode
+            (serviceBookingPaymentCorrelationId context Checkout.ProviderDatafast "status")
+            now
+      loadPublicBookingCheckoutDTO (sbpcBookingKey context) Nothing
+
+createPublicBookingPaypalOrder
+  :: Int64
+  -> Maybe Text
+  -> AppM PaypalCreateDTO
+createPublicBookingPaypalOrder rawBookingId mLookupToken = do
+  context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
+  when (sbpcCheckoutStatus context == "paid") $
+    throwError err409 { errBody = "This booking deposit is already paid" }
+  (clientId, clientSecret, baseUrl, paypalEnvironment, merchantRef) <-
+    ServiceStorefront.loadPaypalEnvForService
+  requireServiceBookingProvider context paypalEnvironment Checkout.ProviderPayPal
+  attempt <- beginServiceBookingPaymentAttempt
+    context Checkout.ProviderPayPal Checkout.OperationCreate merchantRef "create"
+  existing <- loadServiceBookingProviderBinding
+    context Checkout.ProviderPayPal merchantRef "order"
+  (paypalOrderId, approvalUrl) <- case existing of
+    Just (storedOrderId, _) -> pure (storedOrderId, Nothing)
+    Nothing -> ServiceStorefront.createPaypalOrderRemoteForService
+      sharedTlsManager clientId clientSecret baseUrl
+      (toPathPiece (sbpcBookingKey context))
+      (fromIntegral (sbpcDepositMinor context))
+      (sbpcCurrency context)
+      (sbpcBuyerName context)
+      (sbpcBuyerEmail context)
+      `catchError` failServiceBookingPaymentAttempt
+        context attempt Checkout.ProviderPayPal "paypal_create_order"
+  bindServiceBookingProviderResource
+    context attempt Checkout.ProviderPayPal paypalEnvironment merchantRef
+    "order" paypalOrderId (Just ("/v2/checkout/orders/" <> paypalOrderId))
+    Checkout.AttemptRequiresCustomerAction "create"
+  pure PaypalCreateDTO
+    { pcOrderId = toPathPiece (sbpcBookingKey context)
+    , pcPaypalOrderId = paypalOrderId
+    , pcApprovalUrl = approvalUrl
+    , pcLookupToken = Nothing
+    }
+
+capturePublicBookingPaypalOrder
+  :: Int64
+  -> Maybe Text
+  -> Api.PublicBookingPaypalCaptureReq
+  -> AppM Api.PublicBookingCheckoutDTO
+capturePublicBookingPaypalOrder
+    rawBookingId mLookupToken Api.PublicBookingPaypalCaptureReq{..} = do
+  context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
+  if sbpcCheckoutStatus context == "paid"
+    then loadPublicBookingCheckoutDTO (sbpcBookingKey context) Nothing
+    else do
+      suppliedPaypalOrderId <- either throwError pure $
+        validatePayPalCaptureOrderId pbpcPaypalOrderId
+      (clientId, clientSecret, baseUrl, paypalEnvironment, merchantRef) <-
+        ServiceStorefront.loadPaypalEnvForService
+      requireServiceBookingProvider context paypalEnvironment Checkout.ProviderPayPal
+      existing <- loadServiceBookingProviderBinding
+        context Checkout.ProviderPayPal merchantRef "order"
+      storedPaypalOrderId <- maybe
+        (throwError err409 { errBody = "This booking has no bound PayPal order" })
+        (pure . fst)
+        existing
+      unless (storedPaypalOrderId == suppliedPaypalOrderId) $
+        throwError err409
+          { errBody = "PayPal order does not match the immutable booking binding" }
+      attempt <- beginServiceBookingPaymentAttempt
+        context Checkout.ProviderPayPal Checkout.OperationCapture merchantRef "capture"
+      outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
+        sharedTlsManager clientId clientSecret baseUrl suppliedPaypalOrderId
+        `catchError` failServiceBookingPaymentAttempt
+          context attempt Checkout.ProviderPayPal "paypal_capture_request"
+      now <- liftIO getCurrentTime
+      case ServiceStorefront.spcoStatus outcome of
+        "COMPLETED" -> do
+          case ServiceStorefront.validatePaypalSuccessfulCapture
+              (toPathPiece (sbpcBookingKey context))
+              (fromIntegral (sbpcDepositMinor context))
+              (sbpcCurrency context)
+              merchantRef
+              outcome of
+            Left validationMessage -> do
+              let actualAmount = ServiceStorefront.spcoAmount outcome
+                    >>= either (const Nothing) Just . ServiceStorefront.parseDatafastCents
+              runDB $ do
+                Checkout.recordReconciliationException
+                  Checkout.ProviderPayPal paypalEnvironment merchantRef
+                  "provider_binding_mismatch"
+                  (toPathPiece (sbpcBookingKey context))
+                  suppliedPaypalOrderId
+                  (sbpcDepositMinor context)
+                  (fromIntegral <$> actualAmount)
+                  (sbpcCurrency context)
+                  now
+                Checkout.recordPaymentFailure
+                  (sbpcCheckout context) attempt Checkout.ProviderPayPal
+                  "provider_binding_mismatch"
+                  (serviceBookingPaymentCorrelationId context Checkout.ProviderPayPal "capture")
+                  now
+              throwError err502
+                { errBody = BL.fromStrict (TE.encodeUtf8 validationMessage) }
+            Right () -> pure ()
+          captureId <- maybe
+            (throwError err502 { errBody = "PayPal capture ID is missing" })
+            pure
+            (ServiceStorefront.spcoCaptureId outcome)
+          bindServiceBookingProviderResource
+            context attempt Checkout.ProviderPayPal paypalEnvironment merchantRef
+            "capture" captureId
+            (Just ("/v2/checkout/orders/" <> suppliedPaypalOrderId <> "/capture"))
+            Checkout.AttemptProcessing "capture"
+          verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+            { Checkout.vpAttempt = attempt
+            , Checkout.vpCheckout = sbpcCheckout context
+            , Checkout.vpProvider = Checkout.ProviderPayPal
+            , Checkout.vpEnvironment = paypalEnvironment
+            , Checkout.vpMerchantRef = merchantRef
+            , Checkout.vpResourceType = "capture"
+            , Checkout.vpProviderResource = captureId
+            , Checkout.vpProviderResourcePath = Just
+                ("/v2/checkout/orders/" <> suppliedPaypalOrderId <> "/capture")
+            , Checkout.vpOrderReference = toPathPiece (sbpcBookingKey context)
+            , Checkout.vpAmountMinor = sbpcDepositMinor context
+            , Checkout.vpCurrency = sbpcCurrency context
+            , Checkout.vpEvidence = "server_to_server"
+            , Checkout.vpOccurredAt = now
+            , Checkout.vpCorrelationId = serviceBookingPaymentCorrelationId
+                context Checkout.ProviderPayPal "capture"
+            }
+          either (throwError . marketplaceCheckoutConflict) (const (pure ())) verified
+        "APPROVED" -> runDB $ Checkout.recordPaymentProcessing
+          (sbpcCheckout context) attempt Checkout.ProviderPayPal
+          (serviceBookingPaymentCorrelationId context Checkout.ProviderPayPal "capture")
+          now
+        "PENDING" -> runDB $ Checkout.recordPaymentProcessing
+          (sbpcCheckout context) attempt Checkout.ProviderPayPal
+          (serviceBookingPaymentCorrelationId context Checkout.ProviderPayPal "capture")
+          now
+        status -> runDB $ Checkout.recordPaymentFailure
+          (sbpcCheckout context) attempt Checkout.ProviderPayPal
+          ("paypal_" <> T.toLower status)
+          (serviceBookingPaymentCorrelationId context Checkout.ProviderPayPal "capture")
+          now
+      loadPublicBookingCheckoutDTO (sbpcBookingKey context) Nothing
 
 createPublicBookingCheckout
   :: Maybe Text

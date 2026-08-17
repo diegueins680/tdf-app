@@ -114,7 +114,8 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   pilot, or unavailable and do not display invented distribution prices.
 - OpenAPI, generated web types, and the mobile generated client are synchronized for the service
   storefront and marketplace public checkout, webhook, tracking, fulfillment, refund,
-  reconciliation, provider-event operations, and administration contracts.
+  reconciliation, provider-event operations, booking deposit provider actions, and administration
+  contracts.
 
 ## Explicitly feature-disabled
 
@@ -123,8 +124,9 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
 - Production mixing/mastering checkout through its independent `commerce.mixing_mastering` database
   kill switch, in addition to the provider-specific switches.
 - Canonical public studio/DJ checkout through `commerce.service_bookings`. Its production row starts
-  disabled; each offering also requires one approved active policy, and Datafast/PayPal action
-  endpoints remain unavailable until their canonical binding is implemented and sandbox-verified.
+  disabled; each offering also requires one approved active policy. Datafast create/status and
+  PayPal create/capture actions now use canonical immutable bindings, but remain unavailable in
+  production until their rail flags, merchant configuration, and sandbox evidence are verified.
 - The marketplace sale and rental domain rows, `commerce.marketplace_sales` and
   `commerce.marketplace_rentals`, are enabled by the additive rollout migration. This exposes the
   truthful domain workflows while Datafast/PayPal production execution remains independently off.
@@ -152,8 +154,8 @@ The following requested domains remain future phases and must not be represented
 - Wiring the canonical checkout aggregate into courses, Domo accepted quotes, public tickets, tips,
   memberships, provider services, and verified donations.
 - Marketplace carrier integrations and customer-initiated sale returns/refunds; automated rental
-  late-fee charging and non-zero-deposit provider refund execution; booking provider actions,
-  balance collection, refunds, rescheduling/no-show/overtime operator APIs and notifications;
+  late-fee charging and non-zero-deposit provider refund execution; booking balance collection,
+  refunds, rescheduling/no-show/overtime operator APIs and notifications;
   atomic course seats; and guest ticket issuance through Datafast/PayPal.
 - Mixing/mastering private object-store multipart upload, malware scanning, engineer workflow,
   deliverable version history, revision billing, notifications, and non-PayPal refund adapters.
@@ -195,10 +197,10 @@ booking links exist and refuses after material runtime data exists.
 
 This branch is suitable for a draft review and an isolated migration/application staging exercise.
 It is not production-ready and does not satisfy the full multi-phase definition of done. Three
-low-risk domains—mixing/mastering, equipment sales, and dated equipment rentals—are now wired into
-the canonical checkout/receipt/ledger model. The next safe external step is credentialed Datafast
-and PayPal sandbox checkout/capture/webhook/reconciliation evidence for these domains. The next
-internally implemented slice is the provider-neutral payable studio/DJ booking foundation; its
-provider actions and production policy activation remain deliberately disabled. Datafast refund or
-callback work and non-zero rental-deposit settlement remain blocked on verified merchant
-capabilities and operational approval.
+low-risk domains—mixing/mastering, equipment sales, and dated equipment rentals—are wired into the
+canonical checkout/receipt/ledger model, and studio/DJ bookings now have canonical deposit checkout
+plus Datafast/PayPal actions behind independent gates. The next safe external step is credentialed
+Datafast and PayPal sandbox checkout/capture/webhook/reconciliation evidence for these domains.
+Booking production policy activation, Datafast refund/callback work, balance collection, and
+non-zero rental-deposit settlement remain blocked on verified merchant capabilities and operational
+approval.

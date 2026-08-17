@@ -3386,6 +3386,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/bookings/public/orders/{bookingId}/datafast/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create or replay the booking deposit's bound Datafast checkout
+         * @description Requires the scoped guest lookup capability. Creating a hosted checkout never marks the deposit paid or confirms fulfillment.
+         */
+        post: operations["createPublicBookingDatafastCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}/datafast/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify the booking deposit against Datafast server-to-server
+         * @description A browser return is not payment evidence. The supplied path must exactly match the stored checkout binding; only the server-held merchant credential queries Datafast.
+         */
+        get: operations["confirmPublicBookingDatafastStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}/paypal/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create or replay the booking deposit's bound PayPal order
+         * @description Uses an immutable provider request ID and does not mark the booking paid.
+         */
+        post: operations["createPublicBookingPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}/paypal/capture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Capture and server-verify the booking deposit's bound PayPal order
+         * @description Browser approval alone is not success. The server validates order, merchant, amount, currency, capture ID, and internal booking reference before payment transition.
+         */
+        post: operations["capturePublicBookingPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3497,6 +3577,11 @@ export interface components {
             /** Format: date-time */
             holdExpiresAt: string;
             quote: components["schemas"]["PublicBookingQuote"];
+            /** @description Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown. */
+            paymentMethods: ("datafast" | "paypal")[];
+        };
+        PublicBookingPaypalCapture: {
+            paypalOrderId: string;
         };
         MarketplaceItem: {
             /** Format: uuid */
@@ -6509,6 +6594,7 @@ export interface components {
     };
     responses: never;
     parameters: {
+        PublicBookingId: number;
         CatalogCode: string;
         /** @description Immutable canonical UUID of a persisted catalog item. */
         CatalogItemId: string;
@@ -12963,6 +13049,196 @@ export interface operations {
             };
             /** @description Booking order not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicBookingDatafastCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound Datafast hosted-checkout resource */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatafastCheckout"];
+                };
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Expired/already-paid booking or immutable provider-binding conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Booking domain or Datafast rail is disabled/misconfigured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmPublicBookingDatafastStatus: {
+        parameters: {
+            query: {
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current server-verified payment and separate fulfillment state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingCheckout"];
+                };
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Binding conflict or verified late payment requires staff reconciliation */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider failure or amount/currency/reference mismatch */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicBookingPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound PayPal Orders v2 resource */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaypalCreate"];
+                };
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Expired/already-paid booking or immutable provider-binding conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Booking domain or PayPal rail is disabled/misconfigured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    capturePublicBookingPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicBookingPaypalCapture"];
+            };
+        };
+        responses: {
+            /** @description Current server-verified payment and separate fulfillment state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingCheckout"];
+                };
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Expired booking or PayPal order/binding conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider failure or amount/currency/reference mismatch */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };
