@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 
-const getMock = jest.fn<(path: string) => Promise<unknown>>();
-const postMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
+const getMock = jest.fn<(path: string, init?: RequestInit) => Promise<unknown>>();
+const postMock = jest.fn<(path: string, body: unknown, init?: RequestInit) => Promise<unknown>>();
 const patchMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
 const putMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
 const delMock = jest.fn<(path: string) => Promise<unknown>>();
@@ -251,6 +251,45 @@ describe('API query/id validation', () => {
         pbEngineerPartyId: -3,
       }),
     ).toThrow('pbEngineerPartyId debe ser un entero positivo.');
+  });
+
+  it('uses canonical public booking availability, idempotency, and lookup headers', async () => {
+    const serviceOfferingId = '11111111-1111-4111-8111-111111111111';
+    const startsAt = '2026-03-01T10:00:00Z';
+
+    await Bookings.publicAvailability({ serviceOfferingId, startsAt, durationMinutes: 120 });
+    expect(getMock).toHaveBeenCalledWith(
+      `/bookings/public/availability?serviceOfferingId=${serviceOfferingId}&startsAt=2026-03-01T10%3A00%3A00Z&durationMinutes=120`,
+    );
+
+    const checkoutPayload = {
+      pbcFullName: 'Ana Perez',
+      pbcEmail: 'ana@example.com',
+      pbcPhone: '+593999999999',
+      pbcServiceOfferingId: serviceOfferingId,
+      pbcStartsAt: startsAt,
+      pbcDurationMinutes: 120,
+      pbcEngineerPartyId: 9,
+      pbcResourceIds: null,
+      pbcTermsAccepted: true,
+    };
+    await Bookings.createPublicCheckout(checkoutPayload, 'service-booking-test-key');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/public/checkout',
+      checkoutPayload,
+      { headers: { 'Idempotency-Key': 'service-booking-test-key' } },
+    );
+
+    await Bookings.getPublicCheckout(42, 'lookup-secret');
+    expect(getMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42',
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    expect(() => Bookings.publicAvailability({ serviceOfferingId, startsAt, durationMinutes: 0 }))
+      .toThrow('durationMinutes debe ser un entero positivo.');
+    expect(() => Bookings.getPublicCheckout(0, 'lookup-secret'))
+      .toThrow('bookingId debe ser un entero positivo.');
   });
 
   it('validates chat ids and sanitizes optional list query params', async () => {

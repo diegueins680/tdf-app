@@ -85,6 +85,31 @@ state_machines:
       - returned_pending_inspection requires an inbound condition report and restores TDF custody
       - a deduction proposal is not provider or bank settlement evidence
       - a nonzero deposit cannot close before refunded partially_refunded or forfeited evidence
+  service_booking_fulfillment:
+    initial: on_hold
+    transitions:
+      on_hold: [confirmed, cancelled, expired]
+      confirmed: [scheduled, reschedule_requested, cancellation_requested, no_show]
+      scheduled: [in_progress, reschedule_requested, cancellation_requested, no_show]
+      in_progress: [balance_due, overtime_review, disputed]
+      balance_due: [completed, disputed]
+      overtime_review: [balance_due, disputed]
+      reschedule_requested: [confirmed, cancellation_requested]
+      cancellation_requested: [cancelled]
+      disputed: [balance_due, cancelled]
+      completed: []
+      cancelled: []
+      no_show: [balance_due, cancelled]
+      expired: []
+    invariants:
+      - rate tax deposit duration and terms come from one approved immutable policy snapshot
+      - total deposit and balance use integer minor units and deposit plus balance equals total
+      - booking checkout contains the deposit only and never permits a client supplied total
+      - active allocations for the same room engineer or equipment resource cannot overlap
+      - legacy public staff and canonical bookings share the same exclusion backed calendar
+      - verified deposit payment only moves on_hold to confirmed and never starts or completes work
+      - paid requires succeeded matching provider evidence or approved manual evidence
+      - balance due completion no show overtime cancellation and dispute remain explicit fulfillment states
   quote:
     initial: draft
     transitions:
@@ -186,6 +211,9 @@ idempotency:
     - marketplace_sale(cart_id, checkout_client_request_key)
     - marketplace_rental(cart_id, checkout_client_request_key)
     - marketplace_rental_active_range(asset_id, inclusive_date_range)
+    - service_booking(booking_id, checkout_client_request_key)
+    - service_booking_policy(service_offering_id, policy_version)
+    - service_booking_active_range(resource_id, utc_time_range)
     - provider_order(provider, merchant_account, provider_order_id)
     - provider_resource(provider, merchant_account, provider_resource_id)
     - provider_event(provider, merchant_account, provider_event_id)
@@ -205,6 +233,7 @@ holds:
     - expiration is monotonic and releases inventory exactly once
     - paid checkout consumes its holds exactly once
     - marketplace rental holds use an inclusive date range and conflict per asset
+    - public and staff service bookings use one UTC range and conflict per resource
 
 provider_verification:
   required_bindings:

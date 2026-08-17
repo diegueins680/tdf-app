@@ -1019,7 +1019,7 @@ loadBoundPaypalCaptureBy bindingPredicate environment merchantRef providerResour
      \  AND order_binding.merchant_account_ref = attempt.merchant_account_ref\
      \  AND order_binding.merchant_reference = checkout.domain_order_id\
      \  AND order_binding.resource_type = 'order'\
-     \ WHERE checkout.domain_type IN ('mixing_mastering','marketplace_sale','marketplace_rental')\
+     \ WHERE checkout.domain_type IN ('mixing_mastering','marketplace_sale','marketplace_rental','service_booking')\
      \ AND attempt.provider = 'paypal' AND attempt.environment = ?\
      \ AND attempt.merchant_account_ref = ? AND " <> bindingPredicate)
     [ PersistText (Checkout.checkoutEnvironmentText environment)

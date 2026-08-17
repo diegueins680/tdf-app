@@ -181,6 +181,7 @@ import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
 import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
+import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import           TDF.ServerFeedback (feedbackServer)
 import qualified TDF.Contracts.Server as Contracts
 import           TDF.ServerProposals (proposalsServer)
@@ -7743,6 +7744,51 @@ ensurePartyWithAccount mName emailAddr mPhone = do
       pure (Just (username, tempPassword))
   pure (partyId, newCred)
 
+-- Guest commerce creates only the customer Party. Account creation remains an
+-- explicit post-purchase choice; creating a credential without delivering its
+-- random password would leave the customer with an inaccessible account.
+ensurePartyRecord :: Maybe Text -> Text -> Maybe Text -> AppM (Key Party)
+ensurePartyRecord mName emailAddr mPhone = do
+  now <- liftIO getCurrentTime
+  let display = case fmap T.strip mName of
+        Just nameTxt | not (T.null nameTxt) -> nameTxt
+        _                                   -> emailAddr
+      phoneClean = mPhone >>= normalizePhone
+  partyResult <- runDB $ do
+    mPartyOrErr <- selectUniquePartyByPrimaryEmail emailAddr
+    case mPartyOrErr of
+      Left serverErr -> pure (Left serverErr)
+      Right mParty -> fmap Right $ case mParty of
+        Just (Entity pid party) -> do
+          let updates = catMaybes
+                [ if not (T.null (M.partyDisplayName party)) || T.null display
+                    then Nothing
+                    else Just (PartyDisplayName =. display)
+                , case phoneClean of
+                    Just phone | isNothing (partyPrimaryPhone party) ->
+                      Just (PartyPrimaryPhone =. Just phone)
+                    _ -> Nothing
+                ]
+          unless (null updates) (update pid updates)
+          pure pid
+        Nothing -> insert Party
+          { partyLegalName = Nothing
+          , partyDisplayName = display
+          , partyIsOrg = False
+          , partyTaxId = Nothing
+          , partyPrimaryEmail = Just emailAddr
+          , partyPrimaryPhone = phoneClean
+          , partyWhatsapp = Nothing
+          , partyInstagram = Nothing
+          , partyEmergencyContact = Nothing
+          , partyNotes = Nothing
+          , partyStripeCustomerId = Nothing
+          , partyCountryCode = Nothing
+          , partyCountryId = Nothing
+          , partyCreatedAt = now
+          }
+  either throwError pure partyResult
+
 selectUniquePartyByPrimaryEmail
   :: Text
   -> SqlPersistT IO (Either ServerError (Maybe (Entity Party)))
@@ -9567,7 +9613,11 @@ parsePaymentMethodText (Just rawPaymentMethod)
 
 -- Bookings
 bookingPublicServer :: ServerT Api.BookingPublicAPI AppM
-bookingPublicServer = createPublicBooking
+bookingPublicServer =
+       getPublicBookingAvailability
+  :<|> createPublicBooking
+  :<|> createPublicBookingCheckout
+  :<|> getPublicBookingCheckout
 
 inventoryStaticServer :: FilePath -> ServerT Api.AssetsAPI AppM
 inventoryStaticServer assetsRoot =
@@ -9677,6 +9727,582 @@ courseCalendarBookings = do
                , courseLocation     = Trials.courseLocationLabel course
                }
     pure (zipWith mkBooking [1 :: Int ..] sessions)
+
+data ApprovedServiceBookingPolicy = ApprovedServiceBookingPolicy
+  { asbpId :: Text
+  , asbpVersion :: Text
+  , asbpCurrency :: Text
+  , asbpRateMinor :: Int64
+  , asbpRateUnitMinutes :: Int
+  , asbpTaxBps :: Int
+  , asbpDepositBps :: Int
+  , asbpHoldMinutes :: Int
+  , asbpMinDurationMinutes :: Int
+  , asbpMaxDurationMinutes :: Int
+  , asbpDurationStepMinutes :: Int
+  , asbpTimezone :: Text
+  , asbpTermsVersion :: Text
+  } deriving (Eq, Show)
+
+loadApprovedServiceBookingPolicy
+  :: UTCTime
+  -> Key Catalog.ServiceOffering
+  -> SqlPersistT IO (Maybe ApprovedServiceBookingPolicy)
+loadApprovedServiceBookingPolicy now offeringKey = do
+  coreRows <- (rawSql
+    "SELECT id::text, policy_version, currency, rate_minor, rate_unit_minutes,\
+    \ tax_bps, deposit_bps, hold_minutes, min_duration_minutes, max_duration_minutes\
+    \ FROM service_booking_commerce_policy\
+    \ WHERE service_offering_id = ?::uuid AND active\
+    \ AND approval_status = 'approved' AND approved_at IS NOT NULL\
+    \ AND (effective_from IS NULL OR effective_from <= ?)\
+    \ AND (effective_until IS NULL OR effective_until > ?)"
+    [ PersistText (toPathPiece offeringKey)
+    , PersistUTCTime now
+    , PersistUTCTime now
+    ] :: SqlPersistT IO
+      [( Single Text, Single Text, Single Text, Single Int64, Single Int
+       , Single Int, Single Int, Single Int, Single Int, Single Int
+       )])
+  case coreRows of
+    [( Single policyId, Single version, Single currency, Single rateMinor
+     , Single rateUnitMinutes, Single taxBps, Single depositBps, Single holdMinutes
+     , Single minDurationMinutes, Single maxDurationMinutes
+     )] -> do
+      detailRows <- (rawSql
+        "SELECT duration_step_minutes, timezone, terms_version\
+        \ FROM service_booking_commerce_policy WHERE id = ?::uuid"
+        [PersistText policyId]
+        :: SqlPersistT IO [(Single Int, Single Text, Single Text)])
+      pure $ case detailRows of
+        [(Single durationStepMinutes, Single timezone, Single termsVersion)] ->
+          Just ApprovedServiceBookingPolicy
+            { asbpId = policyId
+            , asbpVersion = version
+            , asbpCurrency = currency
+            , asbpRateMinor = rateMinor
+            , asbpRateUnitMinutes = rateUnitMinutes
+            , asbpTaxBps = taxBps
+            , asbpDepositBps = depositBps
+            , asbpHoldMinutes = holdMinutes
+            , asbpMinDurationMinutes = minDurationMinutes
+            , asbpMaxDurationMinutes = maxDurationMinutes
+            , asbpDurationStepMinutes = durationStepMinutes
+            , asbpTimezone = timezone
+            , asbpTermsVersion = termsVersion
+            }
+        _ -> Nothing
+    _ -> pure Nothing
+
+calculateApprovedServiceBookingPrice
+  :: ApprovedServiceBookingPolicy
+  -> Int
+  -> Either ServerError ServiceBookings.BookingPriceBreakdown
+calculateApprovedServiceBookingPrice ApprovedServiceBookingPolicy{..} durationMinutes =
+  either
+    (Left . (\message -> err422 { errBody = BL.fromStrict (TE.encodeUtf8 message) }))
+    Right
+    (ServiceBookings.calculateBookingPrice
+      asbpRateMinor
+      asbpRateUnitMinutes
+      asbpTaxBps
+      asbpDepositBps
+      asbpMinDurationMinutes
+      asbpMaxDurationMinutes
+      asbpDurationStepMinutes
+      durationMinutes)
+
+serviceBookingQuoteDTO
+  :: ApprovedServiceBookingPolicy
+  -> ServiceBookings.BookingPriceBreakdown
+  -> Api.PublicBookingQuoteDTO
+serviceBookingQuoteDTO ApprovedServiceBookingPolicy{..} price =
+  Api.PublicBookingQuoteDTO
+    { Api.pbqPolicyVersion = asbpVersion
+    , Api.pbqCurrency = asbpCurrency
+    , Api.pbqDurationMinutes = ServiceBookings.bpbDurationMinutes price
+    , Api.pbqSubtotalMinor = ServiceBookings.bpbSubtotalMinor price
+    , Api.pbqTaxMinor = ServiceBookings.bpbTaxMinor price
+    , Api.pbqTotalMinor = ServiceBookings.bpbTotalMinor price
+    , Api.pbqDepositMinor = ServiceBookings.bpbDepositMinor price
+    , Api.pbqBalanceMinor = ServiceBookings.bpbBalanceMinor price
+    , Api.pbqDepositBps = asbpDepositBps
+    , Api.pbqTermsVersion = asbpTermsVersion
+    }
+
+getPublicBookingAvailability
+  :: UUID.UUID
+  -> UTCTime
+  -> Int
+  -> AppM Api.PublicBookingAvailabilityDTO
+getPublicBookingAvailability offeringId requestedStart requestedDuration = do
+  now <- liftIO getCurrentTime
+  durationMinutes <- either throwError pure $
+    validatePublicBookingDurationMinutes (Just requestedDuration)
+  startsAtClean <- either throwError pure $
+    validatePublicBookingStartAt now requestedStart
+  offering@(Entity offeringKey _) <- runDB $
+    loadSelectableServiceOffering now offeringId
+  let endsAtClean = addUTCTime (fromIntegral durationMinutes * 60) startsAtClean
+  mPolicy <- runDB (loadApprovedServiceBookingPolicy now offeringKey)
+  case mPolicy of
+    Just policy -> case calculateApprovedServiceBookingPrice policy durationMinutes of
+      Left serverErr -> pure Api.PublicBookingAvailabilityDTO
+        { Api.pbaAvailable = False
+        , Api.pbaReason = Just (bookingServerErrorText serverErr)
+        , Api.pbaServiceOfferingId = offeringId
+        , Api.pbaStartsAt = startsAtClean
+        , Api.pbaEndsAt = endsAtClean
+        , Api.pbaResourceIds = []
+        , Api.pbaResourceNames = []
+        , Api.pbaQuote = Nothing
+        }
+      Right price -> resolveAvailability offering (Just (serviceBookingQuoteDTO policy price)) startsAtClean endsAtClean
+    Nothing -> resolveAvailability offering Nothing startsAtClean endsAtClean
+  where
+    resolveAvailability offering quote startsAtClean endsAtClean = do
+      resolved <- (Right <$> runDB
+          (resolveResourcesForBooking (Just offering) [] startsAtClean endsAtClean))
+        `catchError` \serverErr ->
+          if errHTTPCode serverErr == 409
+            then pure (Left serverErr)
+            else throwError serverErr
+      case resolved of
+        Left serverErr -> pure Api.PublicBookingAvailabilityDTO
+          { Api.pbaAvailable = False
+          , Api.pbaReason = Just (bookingServerErrorText serverErr)
+          , Api.pbaServiceOfferingId = offeringId
+          , Api.pbaStartsAt = startsAtClean
+          , Api.pbaEndsAt = endsAtClean
+          , Api.pbaResourceIds = []
+          , Api.pbaResourceNames = []
+          , Api.pbaQuote = quote
+          }
+        Right resourceKeys -> do
+          resourcesFound <- runDB (mapM getJust resourceKeys)
+          pure Api.PublicBookingAvailabilityDTO
+            { Api.pbaAvailable = True
+            , Api.pbaReason = Nothing
+            , Api.pbaServiceOfferingId = offeringId
+            , Api.pbaStartsAt = startsAtClean
+            , Api.pbaEndsAt = endsAtClean
+            , Api.pbaResourceIds = map toPathPiece resourceKeys
+            , Api.pbaResourceNames = map resourceName resourcesFound
+            , Api.pbaQuote = quote
+            }
+
+bookingServerErrorText :: ServerError -> Text
+bookingServerErrorText =
+  T.strip . TE.decodeUtf8With TEE.lenientDecode . BL.toStrict . errBody
+
+data ServiceBookingRuntimeView = ServiceBookingRuntimeView
+  { sbrvCheckoutId :: Text
+  , sbrvPaymentStatus :: Text
+  , sbrvFulfillmentStatus :: Text
+  , sbrvHoldExpiresAt :: UTCTime
+  , sbrvPolicyVersion :: Text
+  , sbrvCurrency :: Text
+  , sbrvDurationMinutes :: Int
+  , sbrvSubtotalMinor :: Int64
+  , sbrvTaxMinor :: Int64
+  , sbrvTotalMinor :: Int64
+  , sbrvDepositMinor :: Int64
+  , sbrvBalanceMinor :: Int64
+  , sbrvDepositBps :: Int
+  , sbrvTermsVersion :: Text
+  }
+
+loadServiceBookingRuntimeView
+  :: Key Booking
+  -> SqlPersistT IO (Maybe ServiceBookingRuntimeView)
+loadServiceBookingRuntimeView bookingKey = do
+  coreRows <- (rawSql
+    "SELECT runtime.checkout_id::text, checkout.status, runtime.fulfillment_status,\
+    \ runtime.hold_expires_at, runtime.policy_version, runtime.currency,\
+    \ runtime.duration_minutes, runtime.subtotal_minor, runtime.tax_minor, runtime.total_minor\
+    \ FROM service_booking_checkout_runtime runtime\
+    \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+    \ WHERE runtime.booking_id = ?"
+    [toPersistValue bookingKey]
+    :: SqlPersistT IO
+      [( Single Text, Single Text, Single Text, Single UTCTime, Single Text
+       , Single Text, Single Int, Single Int64, Single Int64, Single Int64
+       )])
+  case coreRows of
+    [( Single checkoutId, Single paymentStatus, Single fulfillmentStatus
+     , Single holdExpiresAt, Single policyVersion, Single currency
+     , Single durationMinutes, Single subtotalMinor, Single taxMinor, Single totalMinor
+     )] -> do
+      detailRows <- (rawSql
+        "SELECT deposit_minor, balance_minor, deposit_bps, terms_version\
+        \ FROM service_booking_checkout_runtime WHERE booking_id = ?"
+        [toPersistValue bookingKey]
+        :: SqlPersistT IO [(Single Int64, Single Int64, Single Int, Single Text)])
+      pure $ case detailRows of
+        [(Single depositMinor, Single balanceMinor, Single depositBps, Single termsVersion)] ->
+          Just ServiceBookingRuntimeView
+            { sbrvCheckoutId = checkoutId
+            , sbrvPaymentStatus = paymentStatus
+            , sbrvFulfillmentStatus = fulfillmentStatus
+            , sbrvHoldExpiresAt = holdExpiresAt
+            , sbrvPolicyVersion = policyVersion
+            , sbrvCurrency = currency
+            , sbrvDurationMinutes = durationMinutes
+            , sbrvSubtotalMinor = subtotalMinor
+            , sbrvTaxMinor = taxMinor
+            , sbrvTotalMinor = totalMinor
+            , sbrvDepositMinor = depositMinor
+            , sbrvBalanceMinor = balanceMinor
+            , sbrvDepositBps = depositBps
+            , sbrvTermsVersion = termsVersion
+            }
+        _ -> Nothing
+    _ -> pure Nothing
+
+loadPublicBookingCheckoutDTO
+  :: Key Booking
+  -> Maybe Text
+  -> AppM Api.PublicBookingCheckoutDTO
+loadPublicBookingCheckoutDTO bookingKey lookupToken = do
+  Env{ envPool } <- ask
+  loaded <- liftIO $ flip runSqlPool envPool $ do
+    mBooking <- getEntity bookingKey
+    mRuntime <- loadServiceBookingRuntimeView bookingKey
+    case (mBooking, mRuntime) of
+      (Just bookingEntity, Just runtimeView) -> do
+        dtos <- buildBookingDTOs [bookingEntity]
+        pure $ case requirePersistedBookingDTO dtos of
+          Left _ -> Nothing
+          Right dto -> Just (dto, runtimeView)
+      _ -> pure Nothing
+  case loaded of
+    Nothing -> throwError serviceBookingLookupNotFound
+    Just (dto, ServiceBookingRuntimeView{..}) -> pure Api.PublicBookingCheckoutDTO
+      { Api.pbcBooking = dto
+      , Api.pbcCheckoutId = sbrvCheckoutId
+      , Api.pbcLookupToken = lookupToken
+      , Api.pbcPaymentStatus = sbrvPaymentStatus
+      , Api.pbcFulfillmentStatus = sbrvFulfillmentStatus
+      , Api.pbcHoldExpiresAt = sbrvHoldExpiresAt
+      , Api.pbcQuote = Api.PublicBookingQuoteDTO
+          { Api.pbqPolicyVersion = sbrvPolicyVersion
+          , Api.pbqCurrency = sbrvCurrency
+          , Api.pbqDurationMinutes = sbrvDurationMinutes
+          , Api.pbqSubtotalMinor = sbrvSubtotalMinor
+          , Api.pbqTaxMinor = sbrvTaxMinor
+          , Api.pbqTotalMinor = sbrvTotalMinor
+          , Api.pbqDepositMinor = sbrvDepositMinor
+          , Api.pbqBalanceMinor = sbrvBalanceMinor
+          , Api.pbqDepositBps = sbrvDepositBps
+          , Api.pbqTermsVersion = sbrvTermsVersion
+          }
+      }
+
+serviceBookingLookupNotFound :: ServerError
+serviceBookingLookupNotFound = err404 { errBody = "Booking order not found" }
+
+getPublicBookingCheckout
+  :: Int64
+  -> Maybe Text
+  -> AppM Api.PublicBookingCheckoutDTO
+getPublicBookingCheckout rawBookingId mLookupToken = do
+  bookingId <- either throwError pure (validatePositiveIdField "bookingId" rawBookingId)
+  let bookingKey = toSqlKey (fromIntegral bookingId) :: Key Booking
+  suppliedToken <- maybe (throwError serviceBookingLookupNotFound) (pure . T.strip) mLookupToken
+  storedHashes <- runDB (rawSql
+    "SELECT lookup_token_hash FROM service_booking_checkout_runtime WHERE booking_id = ?"
+    [toPersistValue bookingKey] :: SqlPersistT IO [Single Text])
+  storedHash <- case storedHashes of
+    [Single value] -> pure value
+    _ -> throwError serviceBookingLookupNotFound
+  let suppliedHash = marketplaceSha256Text suppliedToken
+  unless (constEq (TE.encodeUtf8 storedHash) (TE.encodeUtf8 suppliedHash)) $
+    throwError serviceBookingLookupNotFound
+  loadPublicBookingCheckoutDTO bookingKey Nothing
+
+createPublicBookingCheckout
+  :: Maybe Text
+  -> Api.PublicBookingCheckoutReq
+  -> AppM Api.PublicBookingCheckoutDTO
+createPublicBookingCheckout mIdempotency Api.PublicBookingCheckoutReq{..} = do
+  unless pbcTermsAccepted $
+    throwError err400 { errBody = "Booking terms must be accepted before checkout" }
+  idempotencyKey <- either (throwError . marketplaceCheckoutBadRequest) pure $
+    ServiceStorefront.validateIdempotencyKey mIdempotency
+  fullNameClean <- either throwError pure (validatePublicBookingFullName pbcFullName)
+  (emailClean, phoneClean) <- either throwError pure $
+    validatePublicBookingContactDetails pbcEmail pbcPhone
+  durationMinutes <- either throwError pure $
+    validatePublicBookingDurationMinutes (Just pbcDurationMinutes)
+  now <- liftIO getCurrentTime
+  startsAtClean <- either throwError pure $
+    validatePublicBookingStartAt now pbcStartsAt
+  offering@(Entity offeringKey offeringValue) <- runDB $
+    loadSelectableServiceOffering now pbcServiceOfferingId
+  policy <- runDB (loadApprovedServiceBookingPolicy now offeringKey)
+    >>= maybe (throwError err409
+          { errBody = "This service does not have an approved active booking price and policy" }) pure
+  price <- either throwError pure $
+    calculateApprovedServiceBookingPrice policy durationMinutes
+  when (ServiceBookings.bpbTotalMinor price > fromIntegral (maxBound :: Int)) $
+    throwError err409 { errBody = "Booking quote exceeds the supported service-order range" }
+  checkoutEnvironment <- loadMarketplaceCheckoutEnvironment
+  domainEnabled <- runDB $
+    Checkout.domainEnabledForEnvironment checkoutEnvironment "service_bookings"
+  unless domainEnabled $
+    throwError err503 { errBody = "Public service booking checkout is disabled in this environment" }
+  engineerIdClean <- either throwError pure $
+    validateOptionalPositiveIdField "engineerPartyId" pbcEngineerPartyId
+  let engineerNameClean = normalizeOptionalInput pbcEngineerName
+  case validateEngineer
+      (Catalog.serviceOfferingRequiresEngineer offeringValue)
+      engineerIdClean engineerNameClean of
+    Left message -> throwBadRequest message
+    Right () -> pure ()
+  mEngineerParty <- runDB (resolveOptionalBookingEngineerReference engineerIdClean)
+    >>= either throwError pure
+  notesClean <- either throwError pure (validatePublicBookingNotes pbcNotes)
+  let endsAtClean = addUTCTime (fromIntegral durationMinutes * 60) startsAtClean
+      requestedResourceIds = fromMaybe [] pbcResourceIds
+      requestHash = marketplaceSha256Text . TE.decodeUtf8 . BL.toStrict . encode $ object
+        [ "full_name" .= fullNameClean
+        , "email" .= emailClean
+        , "phone" .= phoneClean
+        , "service_offering_id" .= UUID.toText pbcServiceOfferingId
+        , "starts_at" .= startsAtClean
+        , "duration_minutes" .= durationMinutes
+        , "notes" .= notesClean
+        , "engineer_party_id" .= engineerIdClean
+        , "engineer_name" .= engineerNameClean
+        , "resource_ids" .= requestedResourceIds
+        , "terms_version" .= asbpTermsVersion policy
+        ]
+  existing <- lookupServiceBookingIdempotency idempotencyKey
+  let lookupToken = marketplaceSha256Text
+        ("service-booking-order-lookup:" <> idempotencyKey)
+  case existing of
+    Just (existingBookingKey, storedHash)
+      | storedHash == requestHash ->
+          loadPublicBookingCheckoutDTO existingBookingKey (Just lookupToken)
+      | otherwise -> throwError err409
+          { errBody = "Idempotency key was already used for a different booking checkout" }
+    Nothing -> do
+      partyId <- ensurePartyRecord (Just fullNameClean) emailClean phoneClean
+      resourceKeys <- runDB $
+        resolveResourcesForBooking (Just offering) requestedResourceIds startsAtClean endsAtClean
+      let lookupHash = marketplaceSha256Text lookupToken
+          holdExpiresAt = addUTCTime (fromIntegral (asbpHoldMinutes policy) * 60) now
+          resolvedEngineerName = resolveBookingEngineerName engineerNameClean mEngineerParty
+      creation <- createServiceBookingCheckoutTransaction
+        checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupHash
+        fullNameClean emailClean notesClean partyId mEngineerParty resolvedEngineerName
+        offering policy price startsAtClean endsAtClean resourceKeys
+      case creation of
+        Left serverErr -> throwError serverErr
+        Right bookingKey -> loadPublicBookingCheckoutDTO bookingKey (Just lookupToken)
+
+lookupServiceBookingIdempotency
+  :: Text
+  -> AppM (Maybe (Key Booking, Text))
+lookupServiceBookingIdempotency idempotencyKey = do
+  rows <- runDB (rawSql
+    "SELECT booking_id, create_request_sha256\
+    \ FROM service_booking_checkout_runtime WHERE create_idempotency_key = ?"
+    [PersistText idempotencyKey]
+    :: SqlPersistT IO [(Single Int64, Single Text)])
+  pure $ case rows of
+    [(Single bookingId, Single requestHash)] ->
+      Just (toSqlKey bookingId, requestHash)
+    _ -> Nothing
+
+createServiceBookingCheckoutTransaction
+  :: Checkout.CheckoutEnvironment
+  -> UTCTime
+  -> UTCTime
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> Key Party
+  -> Maybe (Entity Party)
+  -> Maybe Text
+  -> Entity Catalog.ServiceOffering
+  -> ApprovedServiceBookingPolicy
+  -> ServiceBookings.BookingPriceBreakdown
+  -> UTCTime
+  -> UTCTime
+  -> [Key Resource]
+  -> AppM (Either ServerError (Key Booking))
+createServiceBookingCheckoutTransaction
+    checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupHash
+    fullNameClean emailClean notesClean partyId mEngineerParty resolvedEngineerName
+    (Entity offeringKey offering) policy price startsAtClean endsAtClean resourceKeys = do
+  Env{ envPool } <- ask
+  result <- liftIO $
+    (try (flip runSqlPool envPool transactionBody)
+      :: IO (Either SomeException (Either ServerError (Key Booking))))
+  case result of
+    Right value -> pure value
+    Left exception -> case fromException exception :: Maybe SomeAsyncException of
+      Just _ -> liftIO (throwIO exception)
+      Nothing -> case fromException exception :: Maybe SqlError of
+        Just sqlError | sqlState sqlError == "23P01" -> pure (Left err409
+          { errBody = "The selected room or resource was reserved by another request" })
+        _ -> liftIO (throwIO exception)
+  where
+    transactionBody = do
+      _ <- (rawSql
+        "SELECT 1::bigint FROM (SELECT pg_advisory_xact_lock(hashtextextended(?, 0))) locked"
+        [PersistText ("service-booking:" <> idempotencyKey)]
+        :: SqlPersistT IO [Single Int64])
+      existing <- (rawSql
+        "SELECT booking_id, create_request_sha256\
+        \ FROM service_booking_checkout_runtime WHERE create_idempotency_key = ?"
+        [PersistText idempotencyKey]
+        :: SqlPersistT IO [(Single Int64, Single Text)])
+      case existing of
+        [(Single existingBookingId, Single storedHash)]
+          | storedHash == requestHash -> pure (Right (toSqlKey existingBookingId))
+          | otherwise -> pure (Left err409
+              { errBody = "Idempotency key was already used for a different booking checkout" })
+        [] -> createNew
+        _ -> pure (Left err500 { errBody = "Booking idempotency lookup was ambiguous" })
+    createNew = do
+      _ <- (rawSql "SELECT service_booking_expire_holds(?)"
+        [PersistUTCTime now] :: SqlPersistT IO [Single Int])
+      forM_ resourceKeys $ \resourceKey -> do
+        _ <- (rawSql "SELECT id FROM resource WHERE id = ? FOR UPDATE"
+          [toPersistValue resourceKey] :: SqlPersistT IO [Single Int64])
+        pure ()
+      catalogKey <- case Catalog.serviceOfferingLegacyServiceCatalogId offering of
+        Just catalogId -> pure (toSqlKey catalogId :: Key ServiceCatalog)
+        Nothing -> liftIO . throwIO $ err409
+          { errBody = "Approved booking service is not linked to the service-order catalog" }
+      mCatalog <- get catalogKey
+      catalog <- maybe (liftIO . throwIO $ err409
+          { errBody = "Approved booking service references a missing service-order catalog" }) pure mCatalog
+      let totalMinorInt = fromIntegral (ServiceBookings.bpbTotalMinor price)
+          serviceLabel = Catalog.serviceOfferingNameEs offering
+      serviceOrderKey <- insert ServiceOrder
+        { serviceOrderCustomerId = partyId
+        , serviceOrderArtistId = entityKey <$> mEngineerParty
+        , serviceOrderCatalogId = catalogKey
+        , serviceOrderServiceOfferingId = serviceOfferingUUIDFromKey offeringKey
+        , serviceOrderServiceKind = serviceCatalogKind catalog
+        , serviceOrderTitle = Just (serviceLabel <> " · " <> fullNameClean)
+        , serviceOrderDescription = notesClean
+        , serviceOrderStatus = "deposit_due"
+        , serviceOrderPriceQuotedCents = Just totalMinorInt
+        , serviceOrderQuoteSentAt = Just now
+        , serviceOrderScheduledStart = Just startsAtClean
+        , serviceOrderScheduledEnd = Just endsAtClean
+        , serviceOrderCreatedAt = now
+        }
+      bookingKey <- insert Booking
+        { bookingTitle = serviceLabel <> " · " <> fullNameClean
+        , bookingServiceOrderId = Just serviceOrderKey
+        , bookingPartyId = Just partyId
+        , bookingServiceType = Nothing
+        , bookingServiceOfferingId = serviceOfferingUUIDFromKey offeringKey
+        , bookingBookingTypeId = Nothing
+        , bookingWorkflowStateId = Nothing
+        , bookingEngineerPartyId = entityKey <$> mEngineerParty
+        , bookingEngineerName = resolvedEngineerName
+        , bookingStartsAt = startsAtClean
+        , bookingEndsAt = endsAtClean
+        , bookingStatus = Tentative
+        , bookingCreatedBy = Nothing
+        , bookingNotes = notesClean
+        , bookingCreatedAt = now
+        }
+      let checkoutSnapshot = object
+            [ "domain" .= ("service_booking" :: Text)
+            , "booking_id" .= fromSqlKey bookingKey
+            , "service_order_id" .= fromSqlKey serviceOrderKey
+            , "service_offering_id" .= toPathPiece offeringKey
+            , "policy_id" .= asbpId policy
+            , "policy_version" .= asbpVersion policy
+            , "starts_at" .= startsAtClean
+            , "ends_at" .= endsAtClean
+            , "duration_minutes" .= ServiceBookings.bpbDurationMinutes price
+            , "rate_minor" .= asbpRateMinor policy
+            , "rate_unit_minutes" .= asbpRateUnitMinutes policy
+            , "tax_bps" .= asbpTaxBps policy
+            , "deposit_bps" .= asbpDepositBps policy
+            , "subtotal_minor" .= ServiceBookings.bpbSubtotalMinor price
+            , "tax_minor" .= ServiceBookings.bpbTaxMinor price
+            , "total_minor" .= ServiceBookings.bpbTotalMinor price
+            , "deposit_minor" .= ServiceBookings.bpbDepositMinor price
+            , "balance_minor" .= ServiceBookings.bpbBalanceMinor price
+            , "terms_version" .= asbpTermsVersion policy
+            , "resource_ids" .= map toPathPiece resourceKeys
+            ]
+      checkout <- Checkout.createCheckout Checkout.CheckoutCreation
+        { Checkout.ccDomainType = "service_booking"
+        , Checkout.ccDomainOrderId = T.pack (show (fromSqlKey bookingKey))
+        , Checkout.ccEnvironment = checkoutEnvironment
+        , Checkout.ccCurrency = asbpCurrency policy
+        , Checkout.ccAmountMinor = ServiceBookings.bpbDepositMinor price
+        , Checkout.ccCustomerEmail = emailClean
+        , Checkout.ccLookupTokenHash = lookupHash
+        , Checkout.ccIdempotencyKey = idempotencyKey
+        , Checkout.ccExpiresAt = holdExpiresAt
+        , Checkout.ccProductType = "service_booking_deposit"
+        , Checkout.ccProductId = toPathPiece offeringKey
+        , Checkout.ccProductVersion = asbpVersion policy
+        , Checkout.ccDescription = serviceLabel <> " — confirmation deposit"
+        , Checkout.ccSnapshot = checkoutSnapshot
+        , Checkout.ccCorrelationId = "service-booking-create:" <> T.pack (show (fromSqlKey bookingKey))
+        }
+      rawExecute
+        "INSERT INTO service_booking_checkout_runtime(\
+        \ booking_id, service_order_id, checkout_id, service_offering_id, policy_id, policy_version,\
+        \ lookup_token_hash, create_idempotency_key, create_request_sha256, fulfillment_status,\
+        \ deposit_status, balance_status, starts_at, ends_at, timezone, duration_minutes, currency,\
+        \ rate_minor, rate_unit_minutes, tax_bps, deposit_bps, subtotal_minor, tax_minor, total_minor,\
+        \ deposit_minor, balance_minor, terms_version, terms_accepted_at, hold_expires_at\
+        \) VALUES (?, ?, ?::uuid, ?::uuid, ?::uuid, ?, ?, ?, ?, 'on_hold',\
+        \ 'awaiting_payment', 'not_due', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)"
+        [ toPersistValue bookingKey
+        , toPersistValue serviceOrderKey
+        , PersistText (Checkout.checkoutReferenceId checkout)
+        , PersistText (toPathPiece offeringKey)
+        , PersistText (asbpId policy)
+        , PersistText (asbpVersion policy)
+        , PersistText lookupHash
+        , PersistText idempotencyKey
+        , PersistText requestHash
+        , PersistUTCTime startsAtClean
+        , PersistUTCTime endsAtClean
+        , PersistText (asbpTimezone policy)
+        , PersistInt64 (fromIntegral (ServiceBookings.bpbDurationMinutes price))
+        , PersistText (asbpCurrency policy)
+        , PersistInt64 (asbpRateMinor policy)
+        , PersistInt64 (fromIntegral (asbpRateUnitMinutes policy))
+        , PersistInt64 (fromIntegral (asbpTaxBps policy))
+        , PersistInt64 (fromIntegral (asbpDepositBps policy))
+        , PersistInt64 (ServiceBookings.bpbSubtotalMinor price)
+        , PersistInt64 (ServiceBookings.bpbTaxMinor price)
+        , PersistInt64 (ServiceBookings.bpbTotalMinor price)
+        , PersistInt64 (ServiceBookings.bpbDepositMinor price)
+        , PersistInt64 (ServiceBookings.bpbBalanceMinor price)
+        , PersistText (asbpTermsVersion policy)
+        , PersistUTCTime holdExpiresAt
+        ]
+      forM_ (zip [0 :: Int ..] (nub resourceKeys)) $ \(index, resourceKey) ->
+        insert_ BookingResource
+          { bookingResourceBookingId = bookingKey
+          , bookingResourceResourceId = resourceKey
+          , bookingResourceRole = if index == 0 then "primary" else "secondary"
+          }
+      rawExecute
+        "INSERT INTO service_booking_event(booking_id, from_status, to_status, actor_type, reason_code, notes)\
+        \ VALUES (?, NULL, 'on_hold', 'system', 'checkout_created',\
+        \ 'Atomic resource hold created; deposit payment and service fulfillment remain separate')"
+        [toPersistValue bookingKey]
+      pure (Right bookingKey)
 
 createPublicBooking :: PublicBookingReq -> AppM BookingDTO
 createPublicBooking PublicBookingReq{..} = do

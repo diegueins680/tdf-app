@@ -74,6 +74,18 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   the order only to `ready_to_fulfill`; validated pickup/shipping/delivery/return transitions append
   immutable operator evidence. The asset becomes `Sold` only on delivery and a returned asset is not
   silently relisted. Fully refunded or disputed checkouts cannot start outbound fulfillment.
+- Public studio and DJ availability now resolves the selected offering, duration, default resources,
+  and approved policy on the server. Canonical checkout creates an immutable full-price/deposit/
+  balance snapshot, a service order, booking, guest lookup capability, 15-minute hold, and deposit-
+  only checkout in one transaction. The browser presents `order created` and `deposit pending`; it
+  never presents paid or confirmed from checkout creation.
+- All booking resource writers now share an exclusion-backed UTC calendar. Concurrent legacy,
+  authenticated staff, and canonical booking inserts cannot overlap an active room/resource range.
+  Verified deposit evidence confirms only the held booking; scheduling, work, balance due, no-show,
+  overtime, completion, cancellation, rescheduling, and dispute remain separate formal states.
+- Existing service-offering rate/tax/currency values are copied only into inactive draft policies.
+  They require explicit approval and activation before an authoritative public quote or checkout is
+  possible, so this migration does not silently authorize a new deposit policy.
 - The public Records page no longer installs a demo/admin bearer token. It uses the existing public
   booking path.
 - Provider-neutral persistence exists for immutable checkout snapshots, attempts and provider
@@ -110,6 +122,9 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   sandbox evidence, reconciliation ownership, and production authorization are verified.
 - Production mixing/mastering checkout through its independent `commerce.mixing_mastering` database
   kill switch, in addition to the provider-specific switches.
+- Canonical public studio/DJ checkout through `commerce.service_bookings`. Its production row starts
+  disabled; each offering also requires one approved active policy, and Datafast/PayPal action
+  endpoints remain unavailable until their canonical binding is implemented and sandbox-verified.
 - The marketplace sale and rental domain rows, `commerce.marketplace_sales` and
   `commerce.marketplace_rentals`, are enabled by the additive rollout migration. This exposes the
   truthful domain workflows while Datafast/PayPal production execution remains independently off.
@@ -134,10 +149,11 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
 
 The following requested domains remain future phases and must not be represented as complete:
 
-- Wiring the canonical checkout aggregate into room/resource bookings, courses, Domo accepted
-  quotes, public tickets, tips, memberships, provider services, and verified donations.
+- Wiring the canonical checkout aggregate into courses, Domo accepted quotes, public tickets, tips,
+  memberships, provider services, and verified donations.
 - Marketplace carrier integrations and customer-initiated sale returns/refunds; automated rental
-  late-fee charging and non-zero-deposit provider refund execution; booking deposits/balances;
+  late-fee charging and non-zero-deposit provider refund execution; booking provider actions,
+  balance collection, refunds, rescheduling/no-show/overtime operator APIs and notifications;
   atomic course seats; and guest ticket issuance through Datafast/PayPal.
 - Mixing/mastering private object-store multipart upload, malware scanning, engineer workflow,
   deliverable version history, revision billing, notifications, and non-PayPal refund adapters.
@@ -169,13 +185,20 @@ published daily rate: weekly is six daily rates, deposit is explicitly zero, min
 one/30 days, and the cancellation window is 24 hours. The migration records the system approval in
 append-only terms history; it does not classify any historical rental as paid or handed off.
 
+The service-booking migration backfills only resource-time allocations for existing bookings and
+copies current offering commerce values into inactive draft policies. It does not create checkout,
+infer payment, approve a deposit, or activate public checkout. Any overlapping active/future legacy
+booking fails the migration for explicit operator review. The rollback works before canonical
+booking links exist and refuses after material runtime data exists.
+
 ## Release conclusion
 
 This branch is suitable for a draft review and an isolated migration/application staging exercise.
-It is not production-ready and does not satisfy the full multi-phase definition of done. Two
+It is not production-ready and does not satisfy the full multi-phase definition of done. Three
 low-risk domains—mixing/mastering, equipment sales, and dated equipment rentals—are now wired into
 the canonical checkout/receipt/ledger model. The next safe external step is credentialed Datafast
 and PayPal sandbox checkout/capture/webhook/reconciliation evidence for these domains. The next
-internally implementable domain slice is payable studio/DJ bookings. Datafast refund or callback
-work and non-zero rental-deposit settlement remain blocked on verified merchant capabilities and
-operational approval.
+internally implemented slice is the provider-neutral payable studio/DJ booking foundation; its
+provider actions and production policy activation remain deliberately disabled. Datafast refund or
+callback work and non-zero rental-deposit settlement remain blocked on verified merchant
+capabilities and operational approval.

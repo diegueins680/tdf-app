@@ -4403,6 +4403,99 @@ paths:
         '403': { description: Strict Admin role required }
         '404': { description: Provider event not found }
         '409': { description: Event is not currently dead-lettered }
+  /bookings/public/availability:
+    get:
+      tags: [Public bookings]
+      summary: Check authoritative room availability and approved booking price
+      description: Availability is advisory until checkout atomically creates the exclusion-backed hold. Quote is omitted when no approved active commerce policy exists.
+      operationId: getPublicBookingAvailability
+      security: [ ]
+      parameters:
+        - name: serviceOfferingId
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - name: startsAt
+          in: query
+          required: true
+          schema: { type: string, format: date-time }
+        - name: durationMinutes
+          in: query
+          required: true
+          schema: { type: integer, minimum: 30, maximum: 840 }
+      responses:
+        '200':
+          description: Availability and optional server-authoritative quote
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicBookingAvailability' }
+        '400': { description: Invalid schedule input }
+        '422': { description: Service offering is not selectable }
+  /bookings/public:
+    post:
+      tags: [Public bookings]
+      summary: Create an honest unpaid tentative booking
+      description: Compatibility path used when no approved payable-booking policy is active. It never reports payment or confirmation.
+      operationId: createPublicTentativeBooking
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PublicBookingCreate' }
+      responses:
+        '200':
+          description: Tentative booking created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Booking' }
+        '409': { description: Resource was reserved by another request }
+        '422': { description: Invalid service relationship }
+  /bookings/public/checkout:
+    post:
+      tags: [Public bookings, Checkout]
+      summary: Create a canonical confirmation-deposit checkout and atomic resource hold
+      description: Requires an approved versioned policy. The response is awaiting_payment; creating it does not mean the deposit is paid or the session confirmed.
+      operationId: createPublicBookingCheckout
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PublicBookingCheckoutCreate' }
+      responses:
+        '200':
+          description: Canonical checkout and temporary resource hold
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicBookingCheckout' }
+        '409': { description: Idempotency conflict, missing approved policy, or atomic resource contention }
+        '503': { description: Domain checkout is disabled in this environment }
+  /bookings/public/orders/{bookingId}:
+    get:
+      tags: [Public bookings, Checkout]
+      summary: Read customer-safe booking checkout status
+      description: Unknown orders and invalid lookup tokens return the same response to resist enumeration.
+      operationId: getPublicBookingCheckout
+      security: [ ]
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+        - name: X-Order-Lookup-Token
+          in: header
+          required: true
+          schema: { type: string, minLength: 32, writeOnly: true }
+      responses:
+        '200':
+          description: Current payment and separate fulfillment state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicBookingCheckout' }
+        '404': { description: Booking order not found }
 security:
   - bearerAuth: [ ]
 
@@ -4514,8 +4607,101 @@ components:
       in: header
       required: true
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
-      schema: { type: string, minLength: 8, maxLength: 200 }
+      schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    BookingResource:
+      type: object
+      required: [brRoomId, brRoomName, brRole]
+      properties:
+        brRoomId: { type: string }
+        brRoomName: { type: string }
+        brRole: { type: string }
+    Booking:
+      type: object
+      required: [bookingId, title, startsAt, endsAt, status, resources]
+      properties:
+        bookingId: { type: integer, format: int64 }
+        title: { type: string }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }
+        status: { type: string }
+        notes: { type: string, nullable: true }
+        partyId: { type: integer, format: int64, nullable: true }
+        engineerPartyId: { type: integer, format: int64, nullable: true }
+        engineerName: { type: string, nullable: true }
+        serviceOfferingId: { type: string, format: uuid, nullable: true }
+        serviceType: { type: string, nullable: true }
+        serviceOrderId: { type: integer, format: int64, nullable: true }
+        serviceOrderTitle: { type: string, nullable: true }
+        customerName: { type: string, nullable: true }
+        partyDisplayName: { type: string, nullable: true }
+        resources: { type: array, items: { $ref: '#/components/schemas/BookingResource' } }
+    PublicBookingCreate:
+      type: object
+      required: [pbFullName, pbEmail, pbServiceOfferingId, pbStartsAt]
+      properties:
+        pbFullName: { type: string, minLength: 1, maxLength: 160 }
+        pbEmail: { type: string, format: email }
+        pbPhone: { type: string, nullable: true }
+        pbServiceOfferingId: { type: string, format: uuid }
+        pbStartsAt: { type: string, format: date-time }
+        pbDurationMinutes: { type: integer, minimum: 30, maximum: 840 }
+        pbNotes: { type: string, nullable: true, maxLength: 5000 }
+        pbEngineerPartyId: { type: integer, format: int64, nullable: true }
+        pbEngineerName: { type: string, nullable: true }
+        pbResourceIds: { type: array, nullable: true, maxItems: 20, items: { type: string } }
+    PublicBookingCheckoutCreate:
+      type: object
+      required: [pbcFullName, pbcEmail, pbcServiceOfferingId, pbcStartsAt, pbcDurationMinutes, pbcTermsAccepted]
+      properties:
+        pbcFullName: { type: string, minLength: 1, maxLength: 160 }
+        pbcEmail: { type: string, format: email }
+        pbcPhone: { type: string, nullable: true }
+        pbcServiceOfferingId: { type: string, format: uuid }
+        pbcStartsAt: { type: string, format: date-time }
+        pbcDurationMinutes: { type: integer, minimum: 30, maximum: 840 }
+        pbcNotes: { type: string, nullable: true, maxLength: 5000 }
+        pbcEngineerPartyId: { type: integer, format: int64, nullable: true }
+        pbcEngineerName: { type: string, nullable: true }
+        pbcResourceIds: { type: array, nullable: true, maxItems: 20, items: { type: string } }
+        pbcTermsAccepted: { type: boolean, enum: [true] }
+    PublicBookingQuote:
+      type: object
+      required: [policyVersion, currency, durationMinutes, subtotalMinor, taxMinor, totalMinor, depositMinor, balanceMinor, depositBps, termsVersion]
+      properties:
+        policyVersion: { type: string }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        durationMinutes: { type: integer, minimum: 1 }
+        subtotalMinor: { type: integer, format: int64, minimum: 1 }
+        taxMinor: { type: integer, format: int64, minimum: 0 }
+        totalMinor: { type: integer, format: int64, minimum: 1 }
+        depositMinor: { type: integer, format: int64, minimum: 1 }
+        balanceMinor: { type: integer, format: int64, minimum: 0 }
+        depositBps: { type: integer, minimum: 1, maximum: 10000 }
+        termsVersion: { type: string }
+    PublicBookingAvailability:
+      type: object
+      required: [available, reason, serviceOfferingId, startsAt, endsAt, resourceIds, resourceNames, quote]
+      properties:
+        available: { type: boolean }
+        reason: { type: string, nullable: true }
+        serviceOfferingId: { type: string, format: uuid }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }
+        resourceIds: { type: array, items: { type: string } }
+        resourceNames: { type: array, items: { type: string } }
+        quote: { allOf: [{ $ref: '#/components/schemas/PublicBookingQuote' }], nullable: true }
+    PublicBookingCheckout:
+      type: object
+      required: [booking, checkoutId, lookupToken, paymentStatus, fulfillmentStatus, holdExpiresAt, quote]
+      properties:
+        booking: { $ref: '#/components/schemas/Booking' }
+        checkoutId: { type: string, format: uuid }
+        lookupToken: { type: string, nullable: true, description: Returned only by creation; subsequent status responses return null. }
+        paymentStatus: { type: string, enum: [awaiting_payment, processing, paid, failed, cancelled, expired, partially_refunded, refunded, disputed, chargeback] }
+        fulfillmentStatus: { type: string, enum: [on_hold, confirmed, scheduled, in_progress, balance_due, completed, reschedule_requested, cancellation_requested, cancelled, no_show, overtime_review, disputed, expired] }
+        holdExpiresAt: { type: string, format: date-time }
+        quote: { $ref: '#/components/schemas/PublicBookingQuote' }
     MarketplaceItem:
       type: object
       required: [miListingId, miAssetId, miTitle, miPurpose, miCategory, miBrand, miModel, miPhotoUrl, miStatus, miCondition, miPriceUsdCents, miPriceDisplay, miMarkupPct, miCurrency, miRentalWeeklyPriceUsdCents, miRentalWeeklyPriceDisplay, miRentalSecurityDepositUsdCents, miRentalSecurityDepositDisplay, miRentalMinDays, miRentalMaxDays, miRentalLateFeeUsdCents, miRentalLateFeeDisplay, miRentalCancellationWindowHours, miRentalTermsVersion, miRentalTermsSummary, miRentalTimezone]

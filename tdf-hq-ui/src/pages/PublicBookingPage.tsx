@@ -31,7 +31,7 @@ import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
 import PersonIcon from '@mui/icons-material/Person';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { DateTime } from 'luxon';
-import { Bookings } from '../api/bookings';
+import { Bookings, type PublicBookingCheckoutDTO, type PublicBookingQuoteDTO } from '../api/bookings';
 import { API_BASE_URL } from '../api/client';
 import { Meta } from '../api/meta';
 import type { BookingDTO, ServiceCatalogDTO } from '../api/types';
@@ -80,6 +80,19 @@ const MAX_DURATION_MINUTES = (OPEN_HOURS.end - OPEN_HOURS.start) * 60;
 const QUICK_SLOT_STEP_MINUTES = 30;
 const BOOKING_STEPS = ['Contacto', 'Horario', 'Confirmación'] as const;
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
+
+const createBookingIdempotencyKey = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `service-booking-${crypto.randomUUID()}`;
+  }
+  return `service-booking-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+};
+
+const formatMinorAmount = (currency: string, amountMinor: number): string =>
+  `${currency} ${(amountMinor / 100).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 
 const PUBLIC_BOOKING_PRESETS: Record<
   PublicBookingPreset,
@@ -384,6 +397,10 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<BookingDTO | null>(null);
+  const [checkoutSuccess, setCheckoutSuccess] = useState<PublicBookingCheckoutDTO | null>(null);
+  const [authoritativeQuote, setAuthoritativeQuote] = useState<PublicBookingQuoteDTO | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const checkoutIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const [rememberProfile, setRememberProfile] = useState(false);
   const [engineers, setEngineers] = useState<PublicEngineer[]>([]);
   const [engineersLoading, setEngineersLoading] = useState(false);
@@ -540,6 +557,10 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
 
   const resetForm = useCallback(() => {
     setSuccess(null);
+    setCheckoutSuccess(null);
+    setAuthoritativeQuote(null);
+    setTermsAccepted(false);
+    checkoutIdempotency.current = null;
     setError(null);
     setSubmitting(false);
     setActiveStep(0);
@@ -559,6 +580,13 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     if (!parsed.isValid) {
       setAvailabilityStatus('idle');
       setAvailabilityNote(null);
+      setAuthoritativeQuote(null);
+      return;
+    }
+    if (!form.serviceOfferingId) {
+      setAvailabilityStatus('idle');
+      setAvailabilityNote(null);
+      setAuthoritativeQuote(null);
       return;
     }
     const controller = new AbortController();
@@ -571,11 +599,19 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     if (!startsAtUtc) return () => window.clearTimeout(timeoutId);
     setAvailabilityStatus('checking');
     setAvailabilityNote(null);
-    const url = `${API_BASE_URL}/bookings/public/availability?startsAt=${encodeURIComponent(startsAtUtc)}&durationMinutes=${duration}`;
+    setTermsAccepted(false);
+    checkoutIdempotency.current = null;
+    const url = `${API_BASE_URL}/bookings/public/availability?serviceOfferingId=${encodeURIComponent(form.serviceOfferingId)}&startsAt=${encodeURIComponent(startsAtUtc)}&durationMinutes=${duration}`;
     fetch(url, { signal: controller.signal })
       .then(async (res) => {
         if (!res.ok) throw new Error(`status ${res.status}`);
-        const data = (await res.json()) as { available?: boolean; isAvailable?: boolean; reason?: string } | null;
+        const data = (await res.json()) as {
+          available?: boolean;
+          isAvailable?: boolean;
+          reason?: string;
+          quote?: PublicBookingQuoteDTO | null;
+        } | null;
+        setAuthoritativeQuote(data?.quote ?? null);
         const isAvailable = data?.available ?? data?.isAvailable;
         if (isAvailable === false) {
           setAvailabilityStatus('unavailable');
@@ -589,6 +625,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
         }
       })
       .catch((err) => {
+        setAuthoritativeQuote(null);
         if (controller.signal.aborted) {
           if (!didTimeout) return;
           setAvailabilityStatus('unknown');
@@ -603,7 +640,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
       window.clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [availabilityNonce, form.durationMinutes, form.startsAt, userTimeZone]);
+  }, [availabilityNonce, form.durationMinutes, form.serviceOfferingId, form.startsAt, userTimeZone]);
 
   const validateContactStep = () => {
     if (!form.fullName.trim()) return 'Agrega tu nombre para continuar.';
@@ -700,19 +737,50 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     const engineerName = assignEngineerLater ? null : form.engineerName.trim() || null;
     try {
       const startsAtIso = parsedStartLocal.toUTC().toISO();
-      const dto = await Bookings.createPublic({
-        pbFullName: form.fullName.trim(),
-        pbEmail: form.email.trim(),
-        pbPhone: form.phone.trim() || null,
-        pbServiceOfferingId: selectedService.id,
-        pbStartsAt: startsAtIso,
-        pbDurationMinutes: durationMinutes,
-        pbNotes: form.notes.trim() || null,
-        pbEngineerPartyId: engineerPartyId,
-        pbEngineerName: engineerName,
-        pbResourceIds: null,
-      });
-      setSuccess(dto);
+      if (!startsAtIso) throw new Error('No pudimos normalizar la hora seleccionada.');
+      if (authoritativeQuote) {
+        if (!termsAccepted) {
+          setError('Acepta la política y el precio de la reserva para crear el checkout del depósito.');
+          return;
+        }
+        const checkoutPayload = {
+          pbcFullName: form.fullName.trim(),
+          pbcEmail: form.email.trim(),
+          pbcPhone: form.phone.trim() || null,
+          pbcServiceOfferingId: selectedService.id,
+          pbcStartsAt: startsAtIso,
+          pbcDurationMinutes: durationMinutes,
+          pbcNotes: form.notes.trim() || null,
+          pbcEngineerPartyId: engineerPartyId,
+          pbcEngineerName: engineerName,
+          pbcResourceIds: null,
+          pbcTermsAccepted: true,
+        };
+        const fingerprint = JSON.stringify(checkoutPayload);
+        if (!checkoutIdempotency.current || checkoutIdempotency.current.fingerprint !== fingerprint) {
+          checkoutIdempotency.current = { fingerprint, key: createBookingIdempotencyKey() };
+        }
+        const checkout = await Bookings.createPublicCheckout(
+          checkoutPayload,
+          checkoutIdempotency.current.key,
+        );
+        setCheckoutSuccess(checkout);
+        setSuccess(checkout.booking);
+      } else {
+        const dto = await Bookings.createPublic({
+          pbFullName: form.fullName.trim(),
+          pbEmail: form.email.trim(),
+          pbPhone: form.phone.trim() || null,
+          pbServiceOfferingId: selectedService.id,
+          pbStartsAt: startsAtIso,
+          pbDurationMinutes: durationMinutes,
+          pbNotes: form.notes.trim() || null,
+          pbEngineerPartyId: engineerPartyId,
+          pbEngineerName: engineerName,
+          pbResourceIds: null,
+        });
+        setSuccess(dto);
+      }
     } catch (err) {
       setError(toFriendlyBookingError(err));
     } finally {
@@ -758,6 +826,9 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     return map;
   }, [services]);
   const estimatePriceLabel = useMemo(() => {
+    if (authoritativeQuote && authoritativeQuote.durationMinutes === normalizeDurationMinutes(form.durationMinutes)) {
+      return `${formatMinorAmount(authoritativeQuote.currency, authoritativeQuote.totalMinor)} total · depósito ${formatMinorAmount(authoritativeQuote.currency, authoritativeQuote.depositMinor)}`;
+    }
     const svc = services.find((service) => service.id === form.serviceOfferingId);
     if (svc?.priceCents == null) return null;
     const base = `${svc.currency} ${(svc.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
@@ -767,7 +838,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
       return `${svc.currency} ${total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} aprox (${hours.toFixed(1)}h)`;
     }
     return `${base}${svc.billingUnit ? ` / ${svc.billingUnit}` : ''}`;
-  }, [form.durationMinutes, form.serviceOfferingId, services]);
+  }, [authoritativeQuote, form.durationMinutes, form.serviceOfferingId, services]);
   const selectedPrice = servicePriceLookup.get(form.serviceOfferingId);
 
   const priceBanner = useMemo(() => {
@@ -1111,18 +1182,26 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                   {pageEyebrow}
                 </Typography>
                 <Typography variant="h4" fontWeight={800}>
-                  Reserva enviada
+                  {checkoutSuccess ? 'Orden creada · depósito pendiente' : 'Reserva enviada'}
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                  Revisa tu correo para la confirmación. Si necesitas ajustar horario o salas, responde al correo o escríbenos por WhatsApp y lo coordinamos contigo.
+                  {checkoutSuccess
+                    ? 'El horario está retenido temporalmente, pero todavía no está pagado ni confirmado. Solo una verificación del proveedor puede confirmar el depósito.'
+                    : 'Revisa tu correo para la confirmación. Si necesitas ajustar horario o salas, responde al correo o escríbenos por WhatsApp y lo coordinamos contigo.'}
                 </Typography>
               </Stack>
 
               <Grid container spacing={2}>
                 <Grid item xs={12}>
-                  <Alert severity="success">
-                    Reserva creada. ID <strong>{success.bookingId}</strong> · Servicio:{' '}
+                  <Alert severity={checkoutSuccess ? 'info' : 'success'}>
+                    {checkoutSuccess ? 'Orden creada, pago pendiente' : 'Reserva creada'}. ID{' '}
+                    <strong>{success.bookingId}</strong> · Servicio:{' '}
                     <strong>{success.serviceType ?? form.serviceType}</strong>
+                    {checkoutSuccess && (
+                      <>
+                        {' '}· Depósito: <strong>{formatMinorAmount(checkoutSuccess.quote.currency, checkoutSuccess.quote.depositMinor)}</strong>
+                      </>
+                    )}
                   </Alert>
                 </Grid>
                 <Grid item xs={12}>
@@ -1143,6 +1222,12 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                         <Chip label={`Servicio: ${success.serviceType ?? form.serviceType}`} size="small" />
                         {successRooms.length > 0 && <Chip label={`Salas: ${successRooms.join(' + ')}`} size="small" />}
                         {successEngineer && <Chip label={`Ingeniero: ${successEngineer}`} size="small" />}
+                        {checkoutSuccess && (
+                          <Chip
+                            label={`Saldo posterior: ${formatMinorAmount(checkoutSuccess.quote.currency, checkoutSuccess.quote.balanceMinor)}`}
+                            size="small"
+                          />
+                        )}
                       </Stack>
                     </CardContent>
                   </Card>
@@ -1153,10 +1238,14 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                       Qué sigue
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      • Te confirmamos por correo (y te contactamos si necesitamos ajustar recursos).
+                      {checkoutSuccess
+                        ? `• Retención hasta ${DateTime.fromISO(checkoutSuccess.holdExpiresAt).setZone(userTimeZone).toLocaleString(DateTime.DATETIME_MED)}; no constituye pago.`
+                        : '• Te confirmamos por correo (y te contactamos si necesitamos ajustar recursos).'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      • Llega 10 minutos antes para hacer check-in y preparar la sala.
+                      {checkoutSuccess
+                        ? '• El selector Datafast/PayPal permanece oculto hasta que el rail esté habilitado; no mostramos un éxito simulado.'
+                        : '• Llega 10 minutos antes para hacer check-in y preparar la sala.'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       • Si vas tarde o necesitas mover el horario, escríbenos por WhatsApp.
@@ -1247,7 +1336,11 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                 Horario del estudio: <strong>{studioZoneLabel}</strong>. Tu zona: <strong>{userZoneLabel}</strong>.
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Precios de referencia en <strong>{studioCurrency}</strong>; confirmamos el total contigo antes de agendar.
+                {authoritativeQuote ? (
+                  <>Precio y depósito calculados por el servidor en <strong>{authoritativeQuote.currency}</strong>.</>
+                ) : (
+                  <>Precios de referencia en <strong>{studioCurrency}</strong>; confirmamos el total contigo antes de agendar.</>
+                )}
               </Typography>
               {priceBanner && (
                 <Alert severity="info" variant="outlined">
@@ -1831,7 +1924,13 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                                       variant="outlined"
                                     />
                                     <Chip
-                                      label={selectedPrice ? `Referencia: ${selectedPrice}` : 'Precio se confirma contigo'}
+                                      label={
+                                        authoritativeQuote
+                                          ? `Total: ${formatMinorAmount(authoritativeQuote.currency, authoritativeQuote.totalMinor)}`
+                                          : selectedPrice
+                                            ? `Referencia: ${selectedPrice}`
+                                            : 'Precio se confirma contigo'
+                                      }
                                       size="small"
                                       variant="outlined"
                                     />
@@ -1859,8 +1958,26 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                                   </Typography>
                                   {estimatePriceLabel && (
                                     <Typography variant="subtitle2" sx={{ mt: 1 }}>
-                                      Estimado: {estimatePriceLabel}
+                                      {authoritativeQuote ? 'Precio autorizado' : 'Estimado'}: {estimatePriceLabel}
                                     </Typography>
+                                  )}
+                                  {authoritativeQuote && (
+                                    <Stack direction="row" spacing={1} alignItems="flex-start">
+                                      <Checkbox
+                                        checked={termsAccepted}
+                                        onChange={(event) => setTermsAccepted(event.target.checked)}
+                                        size="small"
+                                        disabled={formDisabled}
+                                        inputProps={{ 'aria-label': 'Aceptar precio y política de reserva' }}
+                                      />
+                                      <Typography variant="body2" color="text.secondary" sx={{ pt: 0.75 }}>
+                                        Acepto la política {authoritativeQuote.termsVersion}, el total de{' '}
+                                        <strong>{formatMinorAmount(authoritativeQuote.currency, authoritativeQuote.totalMinor)}</strong>{' '}
+                                        y el depósito de{' '}
+                                        <strong>{formatMinorAmount(authoritativeQuote.currency, authoritativeQuote.depositMinor)}</strong>.
+                                        Crear la orden no significa que el depósito esté pagado.
+                                      </Typography>
+                                    </Stack>
                                   )}
                                 </Stack>
                               </CardContent>
@@ -1875,7 +1992,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                               <Button
                                 variant="text"
                                 onClick={() => setActiveStep(1)}
-                                disabled={formDisabled}
+                                disabled={formDisabled || Boolean(authoritativeQuote && !termsAccepted)}
                                 fullWidth={isMobile}
                               >
                                 Volver
@@ -1887,7 +2004,13 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                                 disabled={formDisabled}
                                 fullWidth={isMobile}
                               >
-                                {success ? 'Reserva enviada' : submitting ? 'Enviando…' : 'Confirmar reserva'}
+                                {success
+                                  ? 'Reserva enviada'
+                                  : submitting
+                                    ? 'Creando…'
+                                    : authoritativeQuote
+                                      ? 'Crear orden y retener horario'
+                                      : 'Confirmar reserva'}
                               </Button>
                             </Stack>
                           </Grid>

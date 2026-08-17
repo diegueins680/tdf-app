@@ -20,17 +20,20 @@ The final command transcript is summarized here after the branch-wide verificati
 | Provider-event operations migration | `./scripts/test-provider-event-operations-migration.sh` | Pass: rerun, clean rollback, formal status transitions, control-safe audited dead-letter requeue, event-scoped transition authorization, duplicate prevention, sandbox-on/production-off worker gates, immutable action evidence; rollback correctly refused after replay evidence |
 | Marketplace sale checkout runtime | `./scripts/test-marketplace-sale-checkout-runtime-migration.sh` | Pass on PostgreSQL 17: rerun, clean rollback/reapply, one active hold per unique asset, direct paid transition rejected, verified payment separated from fulfillment, fully refunded outbound fulfillment rejected, pickup/delivery custody, return without relisting, immutable history; rollback correctly refused after a live link |
 | Marketplace rental checkout runtime | `./scripts/test-marketplace-rental-checkout-runtime-migration.sh` | Pass on PostgreSQL 17: rerun, approved legacy-rate migration with append-only history, both marketplace domain gates enabled, same-version commercial mutation rejected, inclusive date exclusion, direct paid transition rejected, verified payment separated from custody, handoff/return condition reports, truthful deposit-deduction/refund-due states, non-zero deposit closure gate; rollback correctly refused after a live link |
+| Service booking checkout runtime | `./scripts/test-service-booking-checkout-runtime-migration.sh` | Pass on PostgreSQL 17: rerun, inactive draft policy preservation, production-off domain gate, atomic resource hold, direct paid rejection, verified deposit confirmation separated from fulfillment, legacy-writer overlap rejection, legal fulfillment sequence, clean rollback/reapply, and rollback refusal after a canonical link |
 | Distribution accounting migration | `./scripts/test-distribution-accounting-migration.sh` | Pass: rollback, lifecycle, splits, package/evidence, royalty, separation of duties, payout gates |
 | Versioned revenue products | `./scripts/test-versioned-revenue-products-migration.sh` | Pass: inactive legacy Domo rate, approval/immutability, production flag |
 | Distribution pricing seeds | `./scripts/test-distribution-product-seeds-migration.sh` | Pass: 14 inactive bilingual seeds, activation/mutation/rollback gates |
 | Backend focused tests | Stack-built `tdf-hq-test --match …` | Pass: 50 examples, including 800 property cases, zero failures |
 | Provider-event backend invariants | Stack-built `tdf-hq-test --match 'service storefront commercial invariants'` | Pass: 19 examples, including 300 property cases, zero failures; immutable event metadata/provider/environment tampering, invalid replay reasons, and oversized PayPal request IDs are rejected |
 | Marketplace rental backend invariants | Stack-built `tdf-hq-test --match 'marketplace rental'` | Pass: 5 examples, including 100 property cases, zero failures; inclusive dates, weekly pricing, separate deposits, overflow rejection, terminal-state closure and no skipped payment/handoff/inspection states |
+| Service booking backend invariants | Stack-built `tdf-hq-test --match 'service booking pricing and fulfillment invariants'` | Pass: 4 examples, including 100 property cases, zero failures; server minor-unit totals, duration/policy limits, overflow rejection, and no skipped deposit/fulfillment states |
 | Backend build | `stack test --fast --no-run-tests` with the default optimized Stack profile | Pass: executable and all 161 test modules compiled and linked |
 | Web regression/accessibility | Jest: five changed suites | Pass: 16 tests, zero failures |
 | Provider-event operator UI/access | Jest: provider-event page and access-control suites | Pass: 14 tests, zero failures; raw payload and merchant binding are absent from the UI contract |
 | Marketplace web regressions | Jest: marketplace admin, API, Datafast return and storefront suites | Pass: 71 tests, zero failures; canonical payment is read-only in operations, fulfillment uses its dedicated transition API, one checkout key survives provider switching, lookup secrets stay in headers/session storage, and missing lookup/provider failure never clear the cart |
 | Marketplace rental web regressions | Jest: marketplace storefront and rental-operations suites | Pass: 67 tests, zero failures; unapproved rentals fail closed, approved rentals require inclusive dates, and custody transfer requires an outbound condition report without sending a deposit deduction |
+| Public booking web regressions | Jest: public booking page and booking API contract suites | Pass: 24 tests, zero failures; availability includes offering/date/duration, checkout uses an idempotency header, lookup secrets stay in headers, authoritative terms are accepted explicitly, and checkout creation is shown as deposit pending rather than paid |
 | Web type safety | `npm run typecheck:ui` | Pass |
 | Web production build | `npm run build --workspace=tdf-hq-ui` | Pass: 12,383 modules; bundle/secret gate 5 preloads and 403,432 gzip bytes |
 | Release/CI contracts | `npm run test:production-release`; `npm run test:ci-pipeline` | Pass: 37 + 12 tests |
@@ -88,6 +91,12 @@ public rental's existing daily rate, records the approved initial terms in appen
 enables the sale/rental domain flags while leaving production provider execution independently
 disabled. No provider request, customer charge, deposit refund, physical handoff, staging
 deployment, or production migration was made.
+
+The 2026-08-17 service-booking follow-up compiled the backend, passed four focused formal examples
+including 100 property cases, passed the PostgreSQL 17 runtime rehearsal, and passed 24 focused web
+tests plus UI type checking. It created no approved rate, provider resource, payment, notification,
+staging deployment, or production migration. Datafast and PayPal booking actions remain an explicit
+follow-up gate rather than a simulated selector.
 
 ## Required staging exercise
 

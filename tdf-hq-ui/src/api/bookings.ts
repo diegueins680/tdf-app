@@ -39,7 +39,66 @@ export interface BookingUpdatePayload {
   ubEngineerName?: string | null;
 }
 
+export interface PublicBookingQuoteDTO {
+  policyVersion: string;
+  currency: string;
+  durationMinutes: number;
+  subtotalMinor: number;
+  taxMinor: number;
+  totalMinor: number;
+  depositMinor: number;
+  balanceMinor: number;
+  depositBps: number;
+  termsVersion: string;
+}
+
+export interface PublicBookingAvailabilityDTO {
+  available: boolean;
+  reason?: string | null;
+  serviceOfferingId: string;
+  startsAt: string;
+  endsAt: string;
+  resourceIds: string[];
+  resourceNames: string[];
+  quote?: PublicBookingQuoteDTO | null;
+}
+
+export interface PublicBookingCheckoutDTO {
+  booking: BookingDTO;
+  checkoutId: string;
+  lookupToken?: string | null;
+  paymentStatus: string;
+  fulfillmentStatus: string;
+  holdExpiresAt: string;
+  quote: PublicBookingQuoteDTO;
+}
+
+export interface PublicBookingCheckoutPayload {
+  pbcFullName: string;
+  pbcEmail: string;
+  pbcPhone?: string | null;
+  pbcServiceOfferingId: string;
+  pbcStartsAt: string;
+  pbcDurationMinutes: number;
+  pbcNotes?: string | null;
+  pbcEngineerPartyId?: number | null;
+  pbcEngineerName?: string | null;
+  pbcResourceIds?: string[] | null;
+  pbcTermsAccepted: boolean;
+}
+
 export const Bookings = {
+  publicAvailability: (params: {
+    serviceOfferingId: string;
+    startsAt: string;
+    durationMinutes: number;
+  }) => {
+    const search = new URLSearchParams();
+    search.set('serviceOfferingId', params.serviceOfferingId);
+    search.set('startsAt', params.startsAt);
+    search.set('durationMinutes', String(requirePositiveInteger(params.durationMinutes, 'durationMinutes')));
+    return get<PublicBookingAvailabilityDTO>(`/bookings/public/availability?${search.toString()}`);
+  },
   list: (params?: { bookingId?: number; partyId?: number; engineerPartyId?: number }) => {
     const search = new URLSearchParams();
     setOptionalPositiveIntParam(search, 'bookingId', params?.bookingId);
@@ -89,4 +148,16 @@ export const Bookings = {
       pbEngineerPartyId: normalizeOptionalPositiveInteger(body.pbEngineerPartyId, 'pbEngineerPartyId'),
     });
   },
+  createPublicCheckout: (body: PublicBookingCheckoutPayload, idempotencyKey: string) =>
+    post<PublicBookingCheckoutDTO>('/bookings/public/checkout', {
+      ...body,
+      pbcEngineerPartyId: normalizeOptionalPositiveInteger(body.pbcEngineerPartyId, 'pbcEngineerPartyId'),
+    }, {
+      headers: { 'Idempotency-Key': idempotencyKey },
+    }),
+  getPublicCheckout: (bookingId: number, lookupToken: string) =>
+    get<PublicBookingCheckoutDTO>(
+      `/bookings/public/orders/${requirePositiveInteger(bookingId, 'bookingId')}`,
+      { headers: { 'X-Order-Lookup-Token': lookupToken } },
+    ),
 };

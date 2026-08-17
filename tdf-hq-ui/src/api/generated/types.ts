@@ -3306,10 +3306,198 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/bookings/public/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check authoritative room availability and approved booking price
+         * @description Availability is advisory until checkout atomically creates the exclusion-backed hold. Quote is omitted when no approved active commerce policy exists.
+         */
+        get: operations["getPublicBookingAvailability"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an honest unpaid tentative booking
+         * @description Compatibility path used when no approved payable-booking policy is active. It never reports payment or confirmation.
+         */
+        post: operations["createPublicTentativeBooking"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a canonical confirmation-deposit checkout and atomic resource hold
+         * @description Requires an approved versioned policy. The response is awaiting_payment; creating it does not mean the deposit is paid or the session confirmed.
+         */
+        post: operations["createPublicBookingCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read customer-safe booking checkout status
+         * @description Unknown orders and invalid lookup tokens return the same response to resist enumeration.
+         */
+        get: operations["getPublicBookingCheckout"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        BookingResource: {
+            brRoomId: string;
+            brRoomName: string;
+            brRole: string;
+        };
+        Booking: {
+            /** Format: int64 */
+            bookingId: number;
+            title: string;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string;
+            status: string;
+            notes?: string | null;
+            /** Format: int64 */
+            partyId?: number | null;
+            /** Format: int64 */
+            engineerPartyId?: number | null;
+            engineerName?: string | null;
+            /** Format: uuid */
+            serviceOfferingId?: string | null;
+            serviceType?: string | null;
+            /** Format: int64 */
+            serviceOrderId?: number | null;
+            serviceOrderTitle?: string | null;
+            customerName?: string | null;
+            partyDisplayName?: string | null;
+            resources: components["schemas"]["BookingResource"][];
+        };
+        PublicBookingCreate: {
+            pbFullName: string;
+            /** Format: email */
+            pbEmail: string;
+            pbPhone?: string | null;
+            /** Format: uuid */
+            pbServiceOfferingId: string;
+            /** Format: date-time */
+            pbStartsAt: string;
+            pbDurationMinutes?: number;
+            pbNotes?: string | null;
+            /** Format: int64 */
+            pbEngineerPartyId?: number | null;
+            pbEngineerName?: string | null;
+            pbResourceIds?: string[] | null;
+        };
+        PublicBookingCheckoutCreate: {
+            pbcFullName: string;
+            /** Format: email */
+            pbcEmail: string;
+            pbcPhone?: string | null;
+            /** Format: uuid */
+            pbcServiceOfferingId: string;
+            /** Format: date-time */
+            pbcStartsAt: string;
+            pbcDurationMinutes: number;
+            pbcNotes?: string | null;
+            /** Format: int64 */
+            pbcEngineerPartyId?: number | null;
+            pbcEngineerName?: string | null;
+            pbcResourceIds?: string[] | null;
+            /** @enum {boolean} */
+            pbcTermsAccepted: true;
+        };
+        PublicBookingQuote: {
+            policyVersion: string;
+            currency: string;
+            durationMinutes: number;
+            /** Format: int64 */
+            subtotalMinor: number;
+            /** Format: int64 */
+            taxMinor: number;
+            /** Format: int64 */
+            totalMinor: number;
+            /** Format: int64 */
+            depositMinor: number;
+            /** Format: int64 */
+            balanceMinor: number;
+            depositBps: number;
+            termsVersion: string;
+        };
+        PublicBookingAvailability: {
+            available: boolean;
+            reason: string | null;
+            /** Format: uuid */
+            serviceOfferingId: string;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string;
+            resourceIds: string[];
+            resourceNames: string[];
+            quote: components["schemas"]["PublicBookingQuote"] | null;
+        };
+        PublicBookingCheckout: {
+            booking: components["schemas"]["Booking"];
+            /** Format: uuid */
+            checkoutId: string;
+            /** @description Returned only by creation; subsequent status responses return null. */
+            lookupToken: string | null;
+            /** @enum {string} */
+            paymentStatus: "awaiting_payment" | "processing" | "paid" | "failed" | "cancelled" | "expired" | "partially_refunded" | "refunded" | "disputed" | "chargeback";
+            /** @enum {string} */
+            fulfillmentStatus: "on_hold" | "confirmed" | "scheduled" | "in_progress" | "balance_due" | "completed" | "reschedule_requested" | "cancellation_requested" | "cancelled" | "no_show" | "overtime_review" | "disputed" | "expired";
+            /** Format: date-time */
+            holdExpiresAt: string;
+            quote: components["schemas"]["PublicBookingQuote"];
+        };
         MarketplaceItem: {
             /** Format: uuid */
             miListingId: string;
@@ -12627,6 +12815,154 @@ export interface operations {
             };
             /** @description Event is not currently dead-lettered */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicBookingAvailability: {
+        parameters: {
+            query: {
+                serviceOfferingId: string;
+                startsAt: string;
+                durationMinutes: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Availability and optional server-authoritative quote */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingAvailability"];
+                };
+            };
+            /** @description Invalid schedule input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Service offering is not selectable */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicTentativeBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicBookingCreate"];
+            };
+        };
+        responses: {
+            /** @description Tentative booking created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"];
+                };
+            };
+            /** @description Resource was reserved by another request */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid service relationship */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicBookingCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicBookingCheckoutCreate"];
+            };
+        };
+        responses: {
+            /** @description Canonical checkout and temporary resource hold */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingCheckout"];
+                };
+            };
+            /** @description Idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Domain checkout is disabled in this environment */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicBookingCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Order-Lookup-Token": string;
+            };
+            path: {
+                bookingId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current payment and separate fulfillment state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingCheckout"];
+                };
+            };
+            /** @description Booking order not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

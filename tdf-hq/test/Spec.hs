@@ -103,6 +103,7 @@ import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
 import qualified TDF.Commerce.CheckoutStore as CheckoutStore
 import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
 import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
+import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Commerce.ProviderEventStore as ProviderEventStore
 import qualified TDF.Commerce.ProviderEventWorker as ProviderEventWorker
 import qualified TDF.Commerce.RefundStore as RefundStore
@@ -1226,6 +1227,65 @@ main = hspec $ do
               MarketplaceRentals.RentalReadyForHandoff
               MarketplaceRentals.RentalCheckedOut
               `shouldBe` Right ()
+
+    describe "service booking pricing and fulfillment invariants" $ do
+        it "calculates tax, deposit, and balance from approved integer policy values" $ do
+            ServiceBookings.calculateBookingPrice 2500 60 1200 5000 60 480 60 180
+              `shouldBe` Right ServiceBookings.BookingPriceBreakdown
+                { ServiceBookings.bpbDurationMinutes = 180
+                , ServiceBookings.bpbBillingUnits = 3
+                , ServiceBookings.bpbSubtotalMinor = 7500
+                , ServiceBookings.bpbTaxMinor = 900
+                , ServiceBookings.bpbTotalMinor = 8400
+                , ServiceBookings.bpbDepositMinor = 4200
+                , ServiceBookings.bpbBalanceMinor = 4200
+                }
+
+        it "rejects client durations that would require silent price rounding" $ do
+            ServiceBookings.calculateBookingPrice 2500 60 1200 5000 60 480 30 90
+              `shouldSatisfy` isLeft
+            ServiceBookings.calculateBookingPrice 2500 60 1200 5000 60 480 60 45
+              `shouldSatisfy` isLeft
+
+        it "never equates deposit confirmation with service completion" $ do
+            ServiceBookings.validateServiceBookingTransition
+              ServiceBookings.BookingOnHold
+              ServiceBookings.BookingCompleted
+              `shouldSatisfy` isLeft
+            ServiceBookings.validateServiceBookingTransition
+              ServiceBookings.BookingOnHold
+              ServiceBookings.BookingConfirmed
+              `shouldBe` Right ()
+            ServiceBookings.validateServiceBookingTransition
+              ServiceBookings.BookingConfirmed
+              ServiceBookings.BookingScheduled
+              `shouldBe` Right ()
+
+        it "keeps completed, cancelled, and expired bookings terminal" $
+            QC.property $ \(QC.NonNegative rawState) ->
+                let states =
+                      [ ServiceBookings.BookingOnHold
+                      , ServiceBookings.BookingConfirmed
+                      , ServiceBookings.BookingScheduled
+                      , ServiceBookings.BookingInProgress
+                      , ServiceBookings.BookingBalanceDue
+                      , ServiceBookings.BookingCompleted
+                      , ServiceBookings.BookingRescheduleRequested
+                      , ServiceBookings.BookingCancellationRequested
+                      , ServiceBookings.BookingCancelled
+                      , ServiceBookings.BookingNoShow
+                      , ServiceBookings.BookingOvertimeReview
+                      , ServiceBookings.BookingDisputed
+                      , ServiceBookings.BookingExpired
+                      ]
+                    candidate = states !! (rawState `mod` length states)
+                    closed terminal = candidate == terminal
+                      || isLeft (ServiceBookings.validateServiceBookingTransition terminal candidate)
+                in all closed
+                    [ ServiceBookings.BookingCompleted
+                    , ServiceBookings.BookingCancelled
+                    , ServiceBookings.BookingExpired
+                    ]
 
     describe "provider-neutral checkout state machine" $ do
         let verifiedPayment = Commerce.PaymentVerification

@@ -324,7 +324,19 @@ type BookingAPI =
   :<|> Capture "bookingId" Int64 :> ReqBody '[JSON] UpdateBookingReq :> Put '[JSON] BookingDTO
 
 type BookingPublicAPI =
-       "bookings" :> "public" :> ReqBody '[JSON] PublicBookingReq :> Post '[JSON] BookingDTO
+       "bookings" :> "public" :> "availability"
+         :> QueryParam' '[Required] "serviceOfferingId" UUID
+         :> QueryParam' '[Required] "startsAt" UTCTime
+         :> QueryParam' '[Required] "durationMinutes" Int
+         :> Get '[JSON] PublicBookingAvailabilityDTO
+  :<|> "bookings" :> "public" :> ReqBody '[JSON] PublicBookingReq :> Post '[JSON] BookingDTO
+  :<|> "bookings" :> "public" :> "checkout"
+         :> Header "Idempotency-Key" Text
+         :> ReqBody '[JSON] PublicBookingCheckoutReq
+         :> Post '[JSON] PublicBookingCheckoutDTO
+  :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
+         :> Header "X-Order-Lookup-Token" Text
+         :> Get '[JSON] PublicBookingCheckoutDTO
 
 type ServiceMarketplaceAPI =
        "service-marketplace" :> "ads" :> Get '[JSON] [ServiceAdDTO]
@@ -676,6 +688,63 @@ instance FromJSON PublicBookingReq where
               "pbDurationMinutes must be omitted instead of null "
                 <> "to use the default 60-minute duration"
           _ -> pure ()
+
+data PublicBookingQuoteDTO = PublicBookingQuoteDTO
+  { pbqPolicyVersion   :: Text
+  , pbqCurrency        :: Text
+  , pbqDurationMinutes :: Int
+  , pbqSubtotalMinor   :: Int64
+  , pbqTaxMinor        :: Int64
+  , pbqTotalMinor      :: Int64
+  , pbqDepositMinor    :: Int64
+  , pbqBalanceMinor    :: Int64
+  , pbqDepositBps      :: Int
+  , pbqTermsVersion    :: Text
+  } deriving (Show, Generic)
+instance ToJSON PublicBookingQuoteDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+data PublicBookingAvailabilityDTO = PublicBookingAvailabilityDTO
+  { pbaAvailable         :: Bool
+  , pbaReason            :: Maybe Text
+  , pbaServiceOfferingId :: UUID
+  , pbaStartsAt          :: UTCTime
+  , pbaEndsAt            :: UTCTime
+  , pbaResourceIds       :: [Text]
+  , pbaResourceNames     :: [Text]
+  , pbaQuote             :: Maybe PublicBookingQuoteDTO
+  } deriving (Show, Generic)
+instance ToJSON PublicBookingAvailabilityDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+data PublicBookingCheckoutReq = PublicBookingCheckoutReq
+  { pbcFullName          :: Text
+  , pbcEmail             :: Text
+  , pbcPhone             :: Maybe Text
+  , pbcServiceOfferingId :: UUID
+  , pbcStartsAt          :: UTCTime
+  , pbcDurationMinutes   :: Int
+  , pbcNotes             :: Maybe Text
+  , pbcEngineerPartyId   :: Maybe Int64
+  , pbcEngineerName      :: Maybe Text
+  , pbcResourceIds       :: Maybe [Text]
+  , pbcTermsAccepted     :: Bool
+  } deriving (Show, Generic)
+instance ToJSON PublicBookingCheckoutReq
+instance FromJSON PublicBookingCheckoutReq where
+  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
+
+data PublicBookingCheckoutDTO = PublicBookingCheckoutDTO
+  { pbcBooking           :: BookingDTO
+  , pbcCheckoutId        :: Text
+  , pbcLookupToken       :: Maybe Text
+  , pbcPaymentStatus     :: Text
+  , pbcFulfillmentStatus :: Text
+  , pbcHoldExpiresAt     :: UTCTime
+  , pbcQuote             :: PublicBookingQuoteDTO
+  } deriving (Show, Generic)
+instance ToJSON PublicBookingCheckoutDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
 
 data PublicEngineerDTO = PublicEngineerDTO
   { peId   :: Int64
