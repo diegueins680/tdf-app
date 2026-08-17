@@ -6,7 +6,7 @@ import Data.Aeson (eitherDecode)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Control.Monad.Logger (runNoLoggingT)
 import Data.Pool (destroyAllResources)
-import Data.Time (UTCTime(..), fromGregorian, secondsToDiffTime)
+import Data.Time (UTCTime(..), addUTCTime, fromGregorian, secondsToDiffTime)
 import Database.Persist (Entity(..), Filter, count, get, getBy)
 import Database.Persist.Sql (SqlPersistT, rawExecute, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePool)
@@ -26,6 +26,7 @@ import TDF.Services.EventDiscovery
   , beginEventDiscoveryRun
   , buildTicketmasterRequestUrl
   , countImportedDiscoveryEvents
+  , decodeBuenPlanResponse
   , normalizeTicketmasterResponse
   , normalizeUserCities
   , failEventDiscoveryRun
@@ -85,6 +86,53 @@ spec = do
               0
       requestUrl `shouldContain` "city=Helsinki"
       requestUrl `shouldNotContain` "countryCode="
+
+    it "formats fractional UTC values with the second precision required by Ticketmaster" $ do
+      let requestUrl =
+            buildTicketmasterRequestUrl
+              "https://app.ticketmaster.com/discovery/v2"
+              (Just "EC")
+              "test-key"
+              "Quito"
+              (addUTCTime 0.987 (fixtureTime 12 0))
+              (addUTCTime 0.321 (fixtureTime 15 0))
+              0
+      requestUrl `shouldContain` "startDateTime=2026-08-01T12%3A00%3A00Z"
+      requestUrl `shouldContain` "endDateTime=2026-08-01T15%3A00%3A00Z"
+      requestUrl `shouldNotContain` "%2E987"
+      requestUrl `shouldNotContain` "%2E321"
+
+  describe "Buen Plan event normalization" $ do
+    it "decodes the live response shape and requires explicit Quito title or slug evidence" $ do
+      let now = fixtureTime 10 0
+          cities = [EventDiscoveryCity "QUITO" "EC" (Just "America/Guayaquil")]
+      case
+          decodeBuenPlanResponse
+            "USD"
+            cities
+            now
+            (addUTCTime (90 * 86400) now)
+            buenPlanFixture
+        of
+          Right [event] -> do
+            discoveredEventExternalId event `shouldBe` "bp-quito"
+            discoveredEventTitle event `shouldBe` "Festival Sonoro - Quito"
+            discoveredVenueCity (discoveredEventVenue event) `shouldBe` "QUITO"
+            discoveredEventTicketUrl event
+              `shouldBe` Just "https://www.buenplan.com.ec/event/festival-sonoro-quito"
+          Right events -> expectationFailure ("Expected one safe Quito event, got " <> show events)
+          Left err -> expectationFailure ("Expected Buen Plan fixture to decode, got " <> T.unpack err)
+
+    it "fails loudly when a non-empty provider page contains no decodable records" $ do
+      let now = fixtureTime 10 0
+          result =
+            decodeBuenPlanResponse
+              "USD"
+              [EventDiscoveryCity "Quito" "EC" (Just "America/Guayaquil")]
+              now
+              (addUTCTime (90 * 86400) now)
+              "{\"data\":[{\"title\":\"Missing required fields\"}],\"meta\":{\"pageCount\":1}}"
+      result `shouldBe` Left "Buen Plan returned no usable event records"
 
   describe "Ticketmaster event normalization" $ do
     it "creates a complete graph while ignoring malformed provider records and other cities" $ do
@@ -332,6 +380,19 @@ fixtureTime hour minute =
 
 ticketmasterFixture :: BL8.ByteString
 ticketmasterFixture = ticketmasterFixtureWithStatus "onsale"
+
+buenPlanFixture :: BL8.ByteString
+buenPlanFixture =
+  "{\"data\":["
+    <> "{\"id\":\"bp-quito\",\"title\":\"Festival Sonoro - Quito\","
+    <> "\"description\":\"Una fecha confirmada en Quito.\","
+    <> "\"url\":\"festival-sonoro-quito\",\"startDate\":\"2026-08-22T00:00:00.000Z\","
+    <> "\"timeZone\":\"America/Guayaquil\",\"currency\":\"USD\",\"sellActive\":true},"
+    <> "{\"id\":\"bp-guayaquil\",\"title\":\"Festival Sonoro - Guayaquil\","
+    <> "\"description\":\"La gira tambien visita Quito.\","
+    <> "\"url\":\"festival-sonoro-guayaquil\",\"startDate\":\"2026-08-23T00:00:00.000Z\","
+    <> "\"timeZone\":\"America/Guayaquil\",\"currency\":\"USD\",\"sellActive\":true},"
+    <> "{\"title\":\"Malformed item\"}],\"meta\":{\"pageCount\":1}}"
 
 ticketmasterFixtureWithStatus :: BL8.ByteString -> BL8.ByteString
 ticketmasterFixtureWithStatus sourceStatus =

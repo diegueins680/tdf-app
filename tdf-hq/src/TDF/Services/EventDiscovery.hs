@@ -18,6 +18,7 @@ module TDF.Services.EventDiscovery
   , finishEventDiscoveryRun
   , loadActiveUserCities
   , loadSubscribedDiscoveryCities
+  , decodeBuenPlanResponse
   , normalizeTicketmasterResponse
   , normalizeUserCities
   , reconcileImportedEvents
@@ -59,14 +60,14 @@ import Data.Char
 import Data.Function (on)
 import Data.List (maximumBy, nubBy, sortOn)
 import qualified Data.Map.Strict as Map
-import Data.Maybe (catMaybes, fromMaybe, listToMaybe, mapMaybe)
+import Data.Maybe (catMaybes, fromMaybe, isJust, listToMaybe, mapMaybe)
 import Data.Ord (comparing)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Data.Time (UTCTime, addUTCTime, diffUTCTime, utctDay)
-import Data.Time.Format (defaultTimeLocale, parseTimeM)
-import Data.Time.Format.ISO8601 (iso8601ParseM, iso8601Show)
+import Data.Time.Format (defaultTimeLocale, formatTime, parseTimeM)
+import Data.Time.Format.ISO8601 (iso8601ParseM)
 import Data.UUID (UUID)
 import Database.Persist
   ( Entity(..)
@@ -562,13 +563,16 @@ instance FromJSON BuenPlanMeta where
 
 data BuenPlanResponse = BuenPlanResponse
   { buenPlanEvents :: [BuenPlanEvent]
+  , buenPlanRawEventCount :: Int
   , buenPlanMeta :: BuenPlanMeta
   }
 
 instance FromJSON BuenPlanResponse where
-  parseJSON = withObject "BuenPlanResponse" $ \o ->
+  parseJSON = withObject "BuenPlanResponse" $ \o -> do
+    rawEvents <- o .:? "data" .!= []
     BuenPlanResponse
-      <$> (decodeValidProviderItems <$> (o .:? "data" .!= []))
+      <$> pure (decodeValidProviderItems rawEvents)
+      <*> pure (length rawEvents)
       <*> o .: "meta"
 
 buenPlanApiBase :: Text
@@ -622,18 +626,20 @@ fetchBuenPlanEvents cfg cities now
                           if BL.length body > 25 * 1024 * 1024
                             then pure (Left "Buen Plan response exceeded the 25 MB safety limit")
                             else
-                              case eitherDecode body of
-                                Left _ -> pure (Left "Buen Plan returned an invalid event response")
-                                Right decoded -> do
-                                  let normalized =
-                                        mapMaybe
-                                          (normalizeBuenPlanEvent (defaultCurrency cfg) providerCities now endTime)
-                                          (buenPlanEvents decoded)
-                                      nextCollected = collected ++ normalized
-                                      pageCount = buenPlanPageCount (buenPlanMeta decoded)
-                                  if pageNumber >= pageCount
-                                    then pure (Right nextCollected)
-                                    else fetchPage (pageNumber + 1) nextCollected
+                              case
+                                  decodeBuenPlanPage
+                                    (defaultCurrency cfg)
+                                    providerCities
+                                    now
+                                    endTime
+                                    body
+                                of
+                                  Left err -> pure (Left err)
+                                  Right (pageCount, normalized) -> do
+                                    let nextCollected = collected ++ normalized
+                                    if pageNumber >= pageCount
+                                      then pure (Right nextCollected)
+                                      else fetchPage (pageNumber + 1) nextCollected
 
     buildBuenPlanRequestUrl pageNumber =
       T.unpack
@@ -661,8 +667,8 @@ normalizeBuenPlanEvent configuredDefault cities now endTime BuenPlanEvent{..} = 
   externalId <- cleanIdentifier buenPlanEventId
   title <- cleanSingleLine 160 buenPlanEventTitle
   whenMaybe (buenPlanEventStart < now || buenPlanEventStart > endTime) Nothing
-  city <- matchBuenPlanCity cities title buenPlanEventDescription
   slug <- cleanIdentifier buenPlanEventSlug
+  city <- matchBuenPlanCity cities title slug buenPlanEventDescription
   let description = buenPlanEventDescription >>= cleanMultiline 5000
       venueName =
         fromMaybe
@@ -718,23 +724,74 @@ normalizeBuenPlanEvent configuredDefault cities now endTime BuenPlanEvent{..} = 
       , discoveredEventStatus = status
       }
 
+decodeBuenPlanResponse ::
+  Text ->
+  [EventDiscoveryCity] ->
+  UTCTime ->
+  UTCTime ->
+  BL.ByteString ->
+  Either Text [DiscoveredEvent]
+decodeBuenPlanResponse configuredDefault cities now endTime =
+  fmap snd . decodeBuenPlanPage configuredDefault cities now endTime
+
+decodeBuenPlanPage ::
+  Text ->
+  [EventDiscoveryCity] ->
+  UTCTime ->
+  UTCTime ->
+  BL.ByteString ->
+  Either Text (Int, [DiscoveredEvent])
+decodeBuenPlanPage configuredDefault cities now endTime body =
+  case eitherDecode body of
+    Left _ -> Left "Buen Plan returned an invalid event response"
+    Right decoded
+      | buenPlanRawEventCount decoded > 0 && null decodedEvents ->
+          Left "Buen Plan returned no usable event records"
+      | not (null targetedEvents) && null normalized ->
+          Left "Buen Plan returned targeted records but none were usable"
+      | otherwise -> Right (buenPlanPageCount (buenPlanMeta decoded), normalized)
+      where
+        decodedEvents = buenPlanEvents decoded
+        targetedEvents =
+          filter
+            ( \event ->
+                isJust
+                  ( matchBuenPlanCity
+                      cities
+                      (buenPlanEventTitle event)
+                      (buenPlanEventSlug event)
+                      (buenPlanEventDescription event)
+                  )
+            )
+            decodedEvents
+        normalized =
+          mapMaybe
+            (normalizeBuenPlanEvent configuredDefault cities now endTime)
+            decodedEvents
+
 matchBuenPlanCity ::
   [EventDiscoveryCity] ->
   Text ->
+  Text ->
   Maybe Text ->
   Maybe EventDiscoveryCity
-matchBuenPlanCity cities title description =
-  listToMaybe
-    ( sortOn
-        (negate . T.length . eventDiscoveryCityName)
-        [ city
-        | city <- cities
-        , normalizeEventText (eventDiscoveryCityName city)
-            `T.isInfixOf` searchable
-        ]
-    )
+matchBuenPlanCity cities title slug description =
+  findCity explicitSearchable <|> findCity locationSearchable
   where
-    searchable = normalizeEventText (title <> " " <> fromMaybe "" description)
+    explicitSearchable = normalizeEventText (title <> " " <> slug)
+    locationSearchable =
+      normalizeEventText
+        (fromMaybe "" (description >>= extractBuenPlanVenueName))
+    findCity searchable =
+      listToMaybe
+        ( sortOn
+            (negate . T.length . eventDiscoveryCityName)
+            [ city
+            | city <- cities
+            , normalizeEventText (eventDiscoveryCityName city)
+                `T.isInfixOf` searchable
+            ]
+        )
     normalizeEventText =
       T.unwords
         . T.words
@@ -1161,8 +1218,8 @@ buildTicketmasterRequestUrl apiBase countryCode apiKey city startsAt endsAt page
     queryPairs =
       [ ("apikey", TE.encodeUtf8 apiKey)
       , ("city", TE.encodeUtf8 city)
-      , ("startDateTime", TE.encodeUtf8 (T.pack (iso8601Show startsAt)))
-      , ("endDateTime", TE.encodeUtf8 (T.pack (iso8601Show endsAt)))
+      , ("startDateTime", TE.encodeUtf8 (formatTicketmasterUtc startsAt))
+      , ("endDateTime", TE.encodeUtf8 (formatTicketmasterUtc endsAt))
       , ("includeTBA", "no")
       , ("includeTBD", "no")
       , ("includeTest", "no")
@@ -1172,6 +1229,10 @@ buildTicketmasterRequestUrl apiBase countryCode apiKey city startsAt endsAt page
       ]
         ++ maybe [] (\country -> [("countryCode", TE.encodeUtf8 country)]) countryCode
     query = TE.decodeUtf8 (renderSimpleQuery True queryPairs)
+
+formatTicketmasterUtc :: UTCTime -> Text
+formatTicketmasterUtc =
+  T.pack . formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ"
 
 fetchTicketmasterEvents ::
   AppConfig ->
