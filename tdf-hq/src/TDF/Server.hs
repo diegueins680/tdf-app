@@ -173,6 +173,7 @@ import           TDF.ServerFuture (futureServer)
 import           TDF.ServerRadio (radioServer)
 import           TDF.ServerLiveSessions (liveSessionsServer)
 import           TDF.Server.ServiceStorefront (serviceStorefrontPublicServer, serviceStorefrontAdminServer)
+import qualified TDF.Server.Directory as DirectoryServer
 import           TDF.ServerFeedback (feedbackServer)
 import qualified TDF.Contracts.Server as Contracts
 import           TDF.ServerProposals (proposalsServer)
@@ -717,6 +718,7 @@ server env =
   :<|> inventoryPublicServer
   :<|> feedbackServer
   :<|> CatalogServer.publicCatalogServer
+  :<|> DirectoryServer.directoryPublicServer
   :<|> protectedServer
   :<|> marketplacePublicServer
   :<|> radioPresencePublicServer
@@ -3744,6 +3746,7 @@ protectedServer user =
   :<|> serviceStorefrontAdminServer
   :<|> accessRequestsServer user
   :<|> navigationPreferencesServer user
+  :<|> DirectoryServer.directoryProtectedServer user
   :<|> OperationsServer.operationsServer user
 
 navigationPreferencesServer :: AuthedUser -> ServerT NavigationPreferencesAPI AppM

@@ -64,6 +64,7 @@ import           TDF.Contracts.API (ContractsAPI)
 import           TDF.API.DDEX (DDEXAPI)
 import           TDF.API.Catalog (CatalogAPI, PublicCatalogAPI, SecurityGrantRevisionDTO, SelfFanRoleRequest)
 import           TDF.API.ServiceStorefront (ServiceStorefrontPublicAPI, ServiceStorefrontAdminAPI)
+import           TDF.API.Directory (DirectoryPublicAPI, DirectoryProtectedAPI)
 import           TDF.Operations.API (OperationsAPI)
 
 type InventoryItem = ME.Asset
@@ -550,6 +551,7 @@ type ProtectedAPI =
   :<|> ServiceStorefrontAdminAPI
   :<|> "access-requests" :> AccessRequestsAPI
   :<|> "navigation" :> "preferences" :> NavigationPreferencesAPI
+  :<|> DirectoryProtectedAPI
   :<|> OperationsAPI
 
 type API =
@@ -579,6 +581,7 @@ type API =
   :<|> InventoryPublicAPI
   :<|> FeedbackAPI
   :<|> PublicCatalogAPI
+  :<|> DirectoryPublicAPI
   -- Keep the authenticated marketplace branch ahead of the public one so
   -- /marketplace/orders is not consumed by the public /marketplace/:id capture.
   :<|> AuthProtect "bearer-token" :> ProtectedAPI

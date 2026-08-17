@@ -190,6 +190,16 @@
       "id": "2026-08-16_event_research_ingestion",
       "path": "tdf-hq/sql/2026-08-16_event_research_ingestion.sql",
       "introducedBy": "6198311849a0e12d7e44499051a88188b1ef3fd9"
+    },
+    {
+      "id": "2026-08-14_music_directory_core",
+      "path": "tdf-hq/sql/2026-08-14_music_directory_core.sql",
+      "introducedBy": "6dfc2281dce1837189fba869dc80ea548b2e942f"
+    },
+    {
+      "id": "2026-08-16_music_directory_verified_reviews",
+      "path": "tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql",
+      "introducedBy": "657198a14cb2a6bc20279ee47ffd5696144a74ba"
     }
   ]
 }
