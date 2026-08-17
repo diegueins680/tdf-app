@@ -1,6 +1,6 @@
 import { get, post, put } from './client';
 
-export type EventDiscoverySourceType = 'ticketmaster' | 'buenplan' | 'ical' | 'json';
+export type EventDiscoverySourceType = 'ticketmaster' | 'buenplan' | 'ical' | 'json' | 'web';
 
 export interface EventDiscoverySource {
   discoverySourceId: string;

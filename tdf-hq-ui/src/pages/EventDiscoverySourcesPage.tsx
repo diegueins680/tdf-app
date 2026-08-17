@@ -37,6 +37,7 @@ const sourceTypes: { value: EventDiscoverySourceType; label: string }[] = [
   { value: 'json', label: 'Venue JSON' },
   { value: 'ticketmaster', label: 'Ticketmaster' },
   { value: 'buenplan', label: 'Buen Plan' },
+  { value: 'web', label: 'Web oficial (investigación manual)' },
 ];
 
 const draftFromSource = (source: EventDiscoverySource): SourceDraft => ({
@@ -61,6 +62,9 @@ const emptyDraft = (): SourceDraft => ({
 
 const isVenueFeed = (sourceType: EventDiscoverySourceType) =>
   sourceType === 'ical' || sourceType === 'json';
+
+const hasSourceUrl = (sourceType: EventDiscoverySourceType) =>
+  isVenueFeed(sourceType) || sourceType === 'web';
 
 const formatTimestamp = (value?: string | null) => {
   if (!value) return 'Nunca';
@@ -221,13 +225,14 @@ export default function EventDiscoverySourcesPage() {
 
 function normalizeDraft(draft: SourceDraft): SourceDraft {
   const venueFeed = isVenueFeed(draft.discoverySourceWriteType);
+  const sourceUrl = hasSourceUrl(draft.discoverySourceWriteType);
   const normalizedFeedUrl = draft.discoverySourceWriteFeedUrl?.trim() ?? null;
   const normalizedCityId = draft.discoverySourceWriteCityId?.trim() ?? null;
   return {
     ...draft,
     discoverySourceWriteKey: draft.discoverySourceWriteKey.trim().toLowerCase(),
     discoverySourceWriteName: draft.discoverySourceWriteName.trim(),
-    discoverySourceWriteFeedUrl: venueFeed
+    discoverySourceWriteFeedUrl: sourceUrl
       ? normalizedFeedUrl
       : null,
     discoverySourceWriteCityId: venueFeed
@@ -249,9 +254,11 @@ function SourceFields({
   onChange: (update: Partial<SourceDraft>) => void;
 }) {
   const venueFeed = isVenueFeed(draft.discoverySourceWriteType);
+  const sourceUrl = hasSourceUrl(draft.discoverySourceWriteType);
+  const manualWeb = draft.discoverySourceWriteType === 'web';
   const availableSourceTypes = lockProviderIdentity
     ? sourceTypes
-    : sourceTypes.filter((sourceType) => isVenueFeed(sourceType.value));
+    : sourceTypes.filter((sourceType) => isVenueFeed(sourceType.value) || sourceType.value === 'web');
   return (
     <Stack spacing={1.25}>
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.25}>
@@ -276,9 +283,13 @@ function SourceFields({
           select
           label="Tipo"
           value={draft.discoverySourceWriteType}
-          onChange={(event) =>
-            onChange({ discoverySourceWriteType: event.target.value as EventDiscoverySourceType })
-          }
+          onChange={(event) => {
+            const nextType = event.target.value as EventDiscoverySourceType;
+            onChange({
+              discoverySourceWriteType: nextType,
+              ...(nextType === 'web' ? { discoverySourceWriteEnabled: false } : {}),
+            });
+          }}
           disabled={lockProviderIdentity}
           size="small"
           fullWidth
@@ -290,17 +301,17 @@ function SourceFields({
           ))}
         </TextField>
       </Stack>
-      {venueFeed && (
+      {sourceUrl && (
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.25}>
           <TextField
-            label="URL HTTPS del feed"
+            label={manualWeb ? 'URL HTTPS oficial' : 'URL HTTPS del feed'}
             value={draft.discoverySourceWriteFeedUrl ?? ''}
             onChange={(event) => onChange({ discoverySourceWriteFeedUrl: event.target.value })}
             size="small"
             fullWidth
             inputProps={{ maxLength: 2048 }}
           />
-          <TextField
+          {venueFeed && <TextField
             select
             label="Ciudad"
             value={draft.discoverySourceWriteCityId ?? ''}
@@ -313,7 +324,7 @@ function SourceFields({
                 {city.eventCityName} · {city.eventCityCountryCode}
               </MenuItem>
             ))}
-          </TextField>
+          </TextField>}
         </Stack>
       )}
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
@@ -331,6 +342,7 @@ function SourceFields({
           control={(
             <Switch
               checked={draft.discoverySourceWriteEnabled}
+              disabled={manualWeb}
               onChange={(event) =>
                 onChange({ discoverySourceWriteEnabled: event.target.checked })
               }

@@ -185,6 +185,11 @@
       "id": "2026-08-12_ddex_operational_cutover_apply",
       "path": "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
       "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39"
+    },
+    {
+      "id": "2026-08-16_event_research_ingestion",
+      "path": "tdf-hq/sql/2026-08-16_event_research_ingestion.sql",
+      "introducedBy": "6198311849a0e12d7e44499051a88188b1ef3fd9"
     }
   ]
 }

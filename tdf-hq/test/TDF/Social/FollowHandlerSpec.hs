@@ -579,6 +579,7 @@ socialEventUpdateHandlerFor user =
         eventsServer
             :<|> _cities
             :<|> _sources
+            :<|> _research
             :<|> _venues
             :<|> _artists
             :<|> _rsvps
@@ -605,6 +606,7 @@ socialEventGetHandlerFor user =
         eventsServer
             :<|> _cities
             :<|> _sources
+            :<|> _research
             :<|> _venues
             :<|> _artists
             :<|> _rsvps
@@ -631,6 +633,7 @@ artistGetHandlerFor user =
         _events
             :<|> _cities
             :<|> _sources
+            :<|> _research
             :<|> _venues
             :<|> artistsServer
             :<|> _rsvps
@@ -659,6 +662,7 @@ socialEventInvitationCreateHandlerFor user eventIdText =
         _events
             :<|> _cities
             :<|> _sources
+            :<|> _research
             :<|> _venues
             :<|> _artists
             :<|> _rsvps
@@ -718,6 +722,7 @@ socialEventUpdatePayload title =
                 , eventDescription = Nothing
                 , eventStart = socialEventStartFixture
                 , eventEnd = socialEventEndFixture
+                , eventTimezone = Just "America/Guayaquil"
                 , eventVenueId = Nothing
                 , eventPriceCents = Nothing
                 , eventCapacity = Nothing
