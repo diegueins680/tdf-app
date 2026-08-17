@@ -54,6 +54,18 @@ paths:
       responses:
         '200': { description: Safe public profile projection, content: { application/json: { schema: { $ref: '#/components/schemas/PublicDirectoryProfile' } } } }
         '404': { $ref: '#/components/responses/NotFound' }
+  /directory/profiles/{slug}/reviews:
+    get:
+      tags: [Music directory trust]
+      operationId: listPublicDirectoryReviews
+      security: []
+      parameters:
+        - { $ref: '#/components/parameters/Slug' }
+        - { name: cursor, in: query, schema: { type: string, format: uuid }, description: Last visible review id from the previous stable page }
+        - { $ref: '#/components/parameters/Limit' }
+      responses:
+        '200': { description: Published reviews backed by verified completed interactions, content: { application/json: { schema: { $ref: '#/components/schemas/DirectoryReviewPage' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
   /directory/classifieds/{slug}:
     get:
       tags: [Music classifieds]
@@ -189,6 +201,23 @@ paths:
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/DirectoryContact' } } } }
       responses: { '201': { description: Existing chat thread linked to directory context } }
+  /directory/review-eligibility:
+    get:
+      tags: [Music directory trust]
+      operationId: listDirectoryReviewEligibility
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: authorProfileId, in: query, schema: { type: string, format: uuid } }]
+      responses: { '200': { description: Private review directions for explicitly managed profiles and verified completed interactions, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/DirectoryReviewEligibility' } } } } } }
+  /directory/reviews:
+    post:
+      tags: [Music directory trust]
+      operationId: createDirectoryReview
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/DirectoryReviewCreate' } } } }
+      responses:
+        '201': { description: Idempotent review backed by an eligible verified completed interaction, content: { application/json: { schema: { $ref: '#/components/schemas/DirectoryReview' } } } }
+        '409': { description: Interaction is not eligible or was already reviewed }
   /directory/favorites:
     get:
       tags: [Music directory account]
@@ -523,11 +552,72 @@ components:
         targetProfile: { $ref: '#/components/schemas/DirectoryProfileReference' }
         classified: { allOf: [{ $ref: '#/components/schemas/DirectoryClassifiedReference' }], nullable: true }
     DirectoryContact: { type: object, required: [senderProfileId, targetProfileId, contextKind, contextId, message], properties: { senderProfileId: { type: string, format: uuid }, targetProfileId: { type: string, format: uuid }, contextKind: { type: string, enum: [profile, classified, application, invitation] }, contextId: { type: string, format: uuid }, message: { type: string, minLength: 1, maxLength: 5000 } } }
+    DirectoryInteractionType: { type: string, enum: [booking, service_order, marketplace_order, event_collaboration, confirmed_collaboration] }
+    DirectoryReviewCreate:
+      type: object
+      additionalProperties: false
+      required: [interactionId, authorProfileId, subjectProfileId, rating]
+      properties:
+        interactionId: { type: string, format: uuid }
+        authorProfileId: { type: string, format: uuid }
+        subjectProfileId: { type: string, format: uuid }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        body: { type: string, minLength: 10, maxLength: 2000, nullable: true }
+    PublicDirectoryReview:
+      type: object
+      additionalProperties: false
+      required: [id, rating, createdAt, verifiedInteractionType, authorProfile]
+      properties:
+        id: { type: string, format: uuid }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        body: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        verifiedInteractionType: { $ref: '#/components/schemas/DirectoryInteractionType' }
+        authorProfile: { $ref: '#/components/schemas/DirectoryProfileReference' }
+    DirectoryReview:
+      type: object
+      additionalProperties: false
+      required: [id, interactionId, rating, status, createdAt, verifiedInteractionType, authorProfile, subjectProfile]
+      properties:
+        id: { type: string, format: uuid }
+        interactionId: { type: string, format: uuid }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        body: { type: string, nullable: true }
+        status: { type: string, enum: [pending, published, hidden, removed] }
+        createdAt: { type: string, format: date-time }
+        verifiedInteractionType: { $ref: '#/components/schemas/DirectoryInteractionType' }
+        authorProfile: { $ref: '#/components/schemas/DirectoryProfileReference' }
+        subjectProfile: { $ref: '#/components/schemas/DirectoryProfileReference' }
+    DirectoryReviewEligibility:
+      type: object
+      additionalProperties: false
+      required: [interactionId, interactionKind, verifiedAt, authorProfile, subjectProfile]
+      properties:
+        interactionId: { type: string, format: uuid }
+        interactionKind: { $ref: '#/components/schemas/DirectoryInteractionType' }
+        verifiedAt: { type: string, format: date-time }
+        authorProfile: { $ref: '#/components/schemas/DirectoryProfileReference' }
+        subjectProfile: { $ref: '#/components/schemas/DirectoryProfileReference' }
+    DirectoryReviewPage:
+      type: object
+      additionalProperties: false
+      required: [summary, items]
+      properties:
+        summary:
+          type: object
+          additionalProperties: false
+          required: [profileId, count]
+          properties:
+            profileId: { type: string, format: uuid }
+            average: { type: number, minimum: 1, maximum: 5, nullable: true }
+            count: { type: integer, minimum: 0 }
+        items: { type: array, items: { $ref: '#/components/schemas/PublicDirectoryReview' } }
+        nextCursor: { type: string, format: uuid, nullable: true }
     DirectoryFavorite: { type: object, required: [targetKind, targetId, createdAt], properties: { targetKind: { $ref: '#/components/schemas/DirectoryEntityType' }, targetId: { type: string }, createdAt: { type: string, format: date-time }, result: { $ref: '#/components/schemas/DirectorySearchItem', nullable: true } } }
     SavedSearchCreate: { type: object, required: [name, canonicalQuery, alertsEnabled, alertFrequency], properties: { name: { type: string, minLength: 1, maxLength: 120 }, canonicalQuery: { type: object, additionalProperties: true }, alertsEnabled: { type: boolean }, alertFrequency: { type: string, enum: [instant, daily, weekly, off] } } }
     SavedDirectorySearch: { allOf: [{ $ref: '#/components/schemas/SavedSearchCreate' }, { type: object, required: [id, createdAt], properties: { id: { type: string, format: uuid }, createdAt: { type: string, format: date-time }, lastEvaluatedAt: { type: string, format: date-time, nullable: true } } }] }
     ClaimCreate: { type: object, required: [profileId, claimType, evidence], properties: { profileId: { type: string, format: uuid }, claimType: { type: string, enum: [profile, organization, venue, administration, credit] }, evidence: { type: array, items: { type: object, additionalProperties: true } } } }
     VerificationCreate: { type: object, required: [profileId, verificationType, evidence], properties: { profileId: { type: string, format: uuid }, verificationType: { type: string, enum: [identity, organization, venue, ownership, administration, professional_credit] }, evidence: { type: array, items: { type: object, additionalProperties: true } } } }
-    ReportCreate: { type: object, required: [targetKind, targetId, reasonCode], properties: { targetKind: { type: string }, targetId: { type: string }, reasonCode: { type: string }, details: { type: string, minLength: 10, maxLength: 3000 } } }
+    ReportCreate: { type: object, required: [targetKind, targetId, reasonCode], properties: { targetKind: { type: string, enum: [profile, classified, application, invitation, event, venue, message, review] }, targetId: { type: string }, reasonCode: { type: string }, details: { type: string, minLength: 10, maxLength: 3000 } } }
     ModerationDecision: { type: object, required: [decision, reasonCode, notes], properties: { decision: { type: string, enum: [dismiss, warn, pause, remove, suspend, close] }, reasonCode: { type: string }, notes: { type: string, minLength: 10, maxLength: 5000 } } }
     ProfileMerge: { type: object, additionalProperties: false, required: [sourceProfileId, targetProfileId, reason], properties: { sourceProfileId: { type: string, format: uuid }, targetProfileId: { type: string, format: uuid }, reason: { type: string, minLength: 10, maxLength: 2000 } } }

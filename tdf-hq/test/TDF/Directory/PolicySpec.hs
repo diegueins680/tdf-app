@@ -58,6 +58,16 @@ spec = describe "music directory formal invariants" $ do
       applicationVisibleTo viewer applicant author (Set.fromList adminIds)
         == ((viewer :: Integer) == applicant || viewer == author || viewer `elem` adminIds)
 
+  it "I09: a review requires an explicitly managed author and the exact verified completed pair" $
+    property $ \verified managed author subject profileA profileB ->
+      verifiedReviewEligible "completed" verified managed author subject profileA profileB
+        == (verified && managed && author /= subject
+          && ((author == profileA && subject == profileB) || (author == profileB && subject == profileA)))
+
+  it "I09: pending, confirmed, cancelled, or disputed interactions never qualify" $ do
+    map (\status -> verifiedReviewEligible status True True 1 2 1 2)
+      ["pending","confirmed","cancelled","disputed"] `shouldBe` replicate 4 False
+
   it "minor or unknown age assurance cannot publish or respond independently" $ do
     minorMayPublishOrRespond "unknown" `shouldBe` False
     minorMayPublishOrRespond "minor_restricted" `shouldBe` False

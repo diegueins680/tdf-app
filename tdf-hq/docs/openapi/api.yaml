@@ -3583,6 +3583,7 @@ paths:
   /directory/suggestions: { $ref: './directory.yaml#/paths/~1directory~1suggestions' }
   /directory/taxonomies: { $ref: './directory.yaml#/paths/~1directory~1taxonomies' }
   /directory/profiles/{slug}: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{slug}' }
+  /directory/profiles/{slug}/reviews: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{slug}~1reviews' }
   /directory/classifieds/{slug}: { $ref: './directory.yaml#/paths/~1directory~1classifieds~1{slug}' }
   /directory/events/{eventId}: { $ref: './directory.yaml#/paths/~1directory~1events~1{eventId}' }
   /directory/venues/{venueId}: { $ref: './directory.yaml#/paths/~1directory~1venues~1{venueId}' }
@@ -3597,6 +3598,8 @@ paths:
   /directory/invitations: { $ref: './directory.yaml#/paths/~1directory~1invitations' }
   /directory/invitations/{invitationId}/status: { $ref: './directory.yaml#/paths/~1directory~1invitations~1{invitationId}~1status' }
   /directory/contact: { $ref: './directory.yaml#/paths/~1directory~1contact' }
+  /directory/review-eligibility: { $ref: './directory.yaml#/paths/~1directory~1review-eligibility' }
+  /directory/reviews: { $ref: './directory.yaml#/paths/~1directory~1reviews' }
   /directory/favorites: { $ref: './directory.yaml#/paths/~1directory~1favorites' }
   /directory/favorites/{targetKind}/{targetId}: { $ref: './directory.yaml#/paths/~1directory~1favorites~1{targetKind}~1{targetId}' }
   /directory/saved-searches: { $ref: './directory.yaml#/paths/~1directory~1saved-searches' }

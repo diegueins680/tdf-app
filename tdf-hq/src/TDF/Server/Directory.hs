@@ -79,6 +79,7 @@ directoryPublicServer =
   :<|> suggestDirectory
   :<|> directoryTaxonomies
   :<|> publicProfile
+  :<|> publicProfileReviews
   :<|> publicClassified
   :<|> publicEvent
   :<|> publicVenue
@@ -189,6 +190,12 @@ valueCursor (Object value) = case KeyMap.lookup (Key.fromText "cursor") value of
   _ -> Nothing
 valueCursor _ = Nothing
 
+valueUuid :: Text -> Value -> Maybe UUID
+valueUuid key (Object value) = case KeyMap.lookup (Key.fromText key) value of
+  Just (String identifier) -> UUID.fromText identifier
+  _ -> Nothing
+valueUuid _ _ = Nothing
+
 suggestDirectory mQuery mCityId = do
   query <- validateQuery mQuery
   rows <- jsonRows
@@ -253,6 +260,35 @@ publicProfile slugValue =
     "SELECT jsonb_build_object('id',profile.id,'kind',profile.profile_kind,'name',profile.public_name,'slug',profile.slug,'bio',profile.bio,'experience',profile.experience_summary,'creditsSummary',profile.credits_summary,'portfolio',profile.portfolio,'links',profile.links,'equipment',profile.equipment_summary,'rates',CASE WHEN profile.rate_min_minor IS NULL THEN NULL ELSE jsonb_build_object('minMinor',profile.rate_min_minor,'maxMinor',profile.rate_max_minor,'currencyId',profile.currency_id) END,'availability',jsonb_build_object('status',profile.availability_status,'onsite',profile.onsite,'remote',profile.remote,'travel',profile.available_to_travel,'radiusKm',profile.travel_radius_km),'locations',coalesce((SELECT jsonb_agg(jsonb_build_object('cityId',location.city_id,'city',city.name_es,'countryCode',country.alpha2,'sector',location.sector_label,'latitude',location.public_latitude,'longitude',location.public_longitude,'precision',location.precision)) FROM directory_profile_location location JOIN country_reference country ON country.id=location.country_id LEFT JOIN city_reference city ON city.id=location.city_id WHERE location.profile_id=profile.id),'[]'::jsonb),'professions',coalesce((SELECT jsonb_agg(jsonb_build_object('id',term.id,'code',term.code,'name',term.name_es,'headline',member.headline,'yearsExperience',member.years_experience) ORDER BY member.sort_order) FROM directory_profile_profession member JOIN profession term ON term.id=member.profession_id WHERE member.profile_id=profile.id),'[]'::jsonb),'instruments',coalesce((SELECT jsonb_agg(jsonb_build_object('id',term.id,'code',term.code,'name',term.name_es,'proficiency',member.proficiency) ORDER BY member.sort_order) FROM directory_profile_instrument member JOIN instrument term ON term.id=member.instrument_id WHERE member.profile_id=profile.id),'[]'::jsonb),'genres',coalesce((SELECT jsonb_agg(jsonb_build_object('id',term.id,'code',term.code,'name',term.name_es) ORDER BY member.sort_order) FROM directory_profile_genre member JOIN genre term ON term.id=member.genre_id WHERE member.profile_id=profile.id),'[]'::jsonb),'verification',coalesce((SELECT jsonb_agg(jsonb_build_object('type',verification.verification_type,'status',verification.status,'verifiedAt',verification.verified_at)) FROM directory_verification verification WHERE verification.profile_id=profile.id AND verification.status='verified'),'[]'::jsonb),'reputation',jsonb_build_object('completeness',profile.completeness_score,'responseRate',profile.response_rate,'medianResponseMinutes',profile.median_response_minutes,'completed',profile.completed_interactions,'reviewAverage',profile.review_average,'reviewCount',profile.review_count),'canonicalUrl','/directorio/'||profile.slug) FROM directory_public_profile_resolution profile WHERE profile.requested_slug=?"
     [PersistText (T.toLower (T.strip slugValue))]
 
+publicProfileReviews slugValue mCursor mLimit = do
+  let limit = min 50 (max 1 (fromMaybe 20 mLimit))
+      slug = T.toLower (T.strip slugValue)
+  summary <- jsonOne err404
+    "SELECT jsonb_build_object('profileId',profile.id,'average',profile.review_average,'count',profile.review_count) FROM directory_public_profile_resolution profile WHERE profile.requested_slug=?"
+    [PersistText slug]
+  ranked <- jsonRows
+    ( "WITH resolved AS (SELECT id FROM directory_public_profile_resolution WHERE requested_slug=?), "
+   <> "review_rows AS (SELECT review.id,review.rating,review.body,review.created_at,interaction.interaction_kind,"
+   <> "author.id author_id,author.public_name author_name,author.slug author_slug "
+   <> "FROM directory_review review JOIN directory_interaction interaction ON interaction.id=review.interaction_id "
+   <> "JOIN directory_profile raw_subject ON raw_subject.id=review.subject_profile_id "
+   <> "JOIN directory_profile raw_author ON raw_author.id=review.author_profile_id "
+   <> "JOIN directory_public_profile author ON author.id=coalesce(raw_author.canonical_profile_id,raw_author.id) "
+   <> "CROSS JOIN resolved WHERE coalesce(raw_subject.canonical_profile_id,raw_subject.id)=resolved.id "
+   <> "AND author.id<>resolved.id AND review.status='published' AND interaction.status='completed' AND interaction.verified_at IS NOT NULL "
+   <> "AND ((interaction.profile_a_id=review.author_profile_id AND interaction.profile_b_id=review.subject_profile_id) OR (interaction.profile_b_id=review.author_profile_id AND interaction.profile_a_id=review.subject_profile_id))), "
+   <> "boundary AS (SELECT review.created_at,review.id FROM directory_review review "
+   <> "JOIN directory_profile boundary_subject ON boundary_subject.id=review.subject_profile_id CROSS JOIN resolved "
+   <> "WHERE review.id=?::uuid AND coalesce(boundary_subject.canonical_profile_id,boundary_subject.id)=resolved.id) "
+   <> "SELECT jsonb_build_object('id',review.id,'rating',review.rating,'body',review.body,'createdAt',review.created_at,"
+   <> "'verifiedInteractionType',review.interaction_kind,'authorProfile',jsonb_build_object('id',review.author_id,'name',review.author_name,'slug',review.author_slug)) "
+   <> "FROM review_rows review WHERE ?::uuid IS NULL OR EXISTS (SELECT 1 FROM boundary WHERE (review.created_at,review.id)<(boundary.created_at,boundary.id)) "
+   <> "ORDER BY review.created_at DESC,review.id DESC LIMIT ?" )
+    [PersistText slug,optionalUuid mCursor,optionalUuid mCursor,PersistInt64 (fromIntegral (limit+1))]
+  let visible = take limit ranked
+      next = if length ranked>limit then valueUuid "id" (last visible) else Nothing
+  pure DirectoryReviewPage {summary,items=visible,nextCursor=next}
+
 publicClassified slugValue =
   jsonOne err404
     "SELECT jsonb_build_object('id',classified.id,'title',classified.title,'slug',classified.slug,'description',classified.description,'category',jsonb_build_object('id',category.id,'code',category.code,'name',category.name_es),'author',jsonb_build_object('id',profile.id,'name',profile.public_name,'slug',profile.slug),'modality',jsonb_build_object('onsite',classified.onsite,'remote',classified.remote,'travel',classified.available_to_travel),'locations',coalesce((SELECT jsonb_agg(jsonb_build_object('cityId',location.city_id,'city',city.name_es,'countryCode',country.alpha2,'metroId',location.metropolitan_area_id,'radiusKm',location.service_radius_km)) FROM classified_location location JOIN country_reference country ON country.id=location.country_id LEFT JOIN city_reference city ON city.id=location.city_id WHERE location.classified_id=classified.id),'[]'::jsonb),'compensation',CASE WHEN classified.compensation_type_id IS NULL THEN NULL ELSE jsonb_build_object('typeId',classified.compensation_type_id,'minMinor',classified.budget_min_minor,'maxMinor',classified.budget_max_minor,'currencyId',classified.currency_id,'negotiable',classified.budget_negotiable) END,'startsAt',classified.starts_at,'endsAt',classified.ends_at,'expiresAt',classified.expires_at,'canonicalUrl','/clasificados/'||classified.slug) FROM classified JOIN classified_category category ON category.id=classified.category_id JOIN directory_public_profile profile ON profile.id=classified.author_profile_id WHERE classified.slug=? AND classified.status='published' AND classified.moderation_status='allowed' AND classified.expires_at>now()"
@@ -281,6 +317,8 @@ directoryProtectedServer user =
   :<|> createInvitation user
   :<|> changeInvitationStatus user
   :<|> contactProfile user
+  :<|> listReviewEligibility user
+  :<|> createReview user
   :<|> listFavorites user
   :<|> addFavorite user
   :<|> removeFavorite user
@@ -667,6 +705,77 @@ contactProfile user idempotency request@DirectoryContactRequest
       recordAuthenticatedEvent user "contact_started" contextKind (UUID.toText contextId)
       pure thread
 
+listReviewEligibility user mAuthorProfileId =
+  jsonRows
+    ( "SELECT jsonb_build_object('interactionId',interaction.id,'interactionKind',interaction.interaction_kind,'verifiedAt',interaction.verified_at,"
+   <> "'authorProfile',jsonb_build_object('id',author.id,'name',author.public_name,'slug',author.slug),"
+   <> "'subjectProfile',jsonb_build_object('id',subject.id,'name',subject.public_name,'slug',subject.slug)) "
+   <> "FROM directory_interaction interaction "
+   <> "CROSS JOIN LATERAL (VALUES (interaction.profile_a_id,interaction.profile_b_id),(interaction.profile_b_id,interaction.profile_a_id)) pair(author_id,subject_id) "
+   <> "JOIN directory_profile_manager manager ON manager.profile_id=pair.author_id AND manager.account_party_id=? AND manager.active AND manager.can_edit "
+   <> "JOIN directory_public_profile author ON author.id=pair.author_id "
+   <> "JOIN directory_public_profile subject ON subject.id=pair.subject_id "
+   <> "WHERE interaction.status='completed' AND interaction.verified_at IS NOT NULL "
+   <> "AND (?::uuid IS NULL OR author.id=?::uuid) "
+   <> "AND NOT EXISTS (SELECT 1 FROM directory_review review WHERE review.interaction_id=interaction.id AND review.author_profile_id=author.id AND review.subject_profile_id=subject.id) "
+   <> "AND NOT EXISTS (SELECT 1 FROM directory_profile_block block WHERE (block.blocker_profile_id=author.id AND block.blocked_profile_id=subject.id) OR (block.blocker_profile_id=subject.id AND block.blocked_profile_id=author.id)) "
+   <> "ORDER BY interaction.verified_at DESC,interaction.id,author.id" )
+    [toPersistValue (auPartyId user),optionalUuid mAuthorProfileId,optionalUuid mAuthorProfileId]
+
+createReview user idempotency request@DirectoryReviewCreateRequest
+  {interactionId,authorProfileId,subjectProfileId,rating,body} = do
+  requireProfileCapability user authorProfileId "edit"
+  requireAdult user
+  when (authorProfileId==subjectProfileId) $
+    throwError err400 {errBody="a profile cannot review itself"}
+  when (rating<1 || rating>5) $
+    throwError err400 {errBody="rating must be between 1 and 5"}
+  validateReviewBody body
+  reviewId <- reserveIdempotency user "review.create" idempotency request "review"
+  existing <- jsonRows reviewSummarySql [toPersistValue reviewId]
+  case existing of
+    prior:_ -> pure prior
+    [] -> do
+      eligible <- jsonRows
+        ( "SELECT to_jsonb(TRUE) FROM directory_interaction interaction "
+       <> "JOIN directory_public_profile author ON author.id=? "
+       <> "JOIN directory_public_profile subject ON subject.id=? "
+       <> "WHERE interaction.id=? AND interaction.status='completed' AND interaction.verified_at IS NOT NULL "
+       <> "AND ((interaction.profile_a_id=author.id AND interaction.profile_b_id=subject.id) OR (interaction.profile_b_id=author.id AND interaction.profile_a_id=subject.id)) "
+       <> "AND NOT EXISTS (SELECT 1 FROM directory_profile_block block WHERE (block.blocker_profile_id=author.id AND block.blocked_profile_id=subject.id) OR (block.blocker_profile_id=subject.id AND block.blocked_profile_id=author.id))" )
+        [toPersistValue authorProfileId,toPersistValue subjectProfileId,toPersistValue interactionId]
+      when (null eligible) $
+        throwError err409 {errBody="review requires an eligible verified completed interaction between public profiles"}
+      duplicate <- jsonRows
+        "SELECT to_jsonb(TRUE) FROM directory_review WHERE interaction_id=? AND author_profile_id=? AND subject_profile_id=?"
+        [toPersistValue interactionId,toPersistValue authorProfileId,toPersistValue subjectProfileId]
+      unless (null duplicate) $
+        throwError err409 {errBody="this interaction has already been reviewed by the author profile"}
+      consumeRate user "review" 10
+      runDB $ do
+        rawExecute
+          "INSERT INTO directory_review(id,interaction_id,author_profile_id,subject_profile_id,rating,body,status) VALUES (?,?,?,?,?,?,'published') ON CONFLICT(interaction_id,author_profile_id,subject_profile_id) DO NOTHING"
+          [toPersistValue reviewId,toPersistValue interactionId,toPersistValue authorProfileId,toPersistValue subjectProfileId,PersistInt64 (fromIntegral rating),optionalText (T.strip <$> body)]
+        rawExecute
+          "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,is_read,created_at) SELECT DISTINCT manager.account_party_id,'directory.review-created','Nueva reseña verificada','Un perfil con una interacción completada publicó una reseña.','directory_review',FALSE,now() FROM directory_profile_manager manager WHERE manager.profile_id=? AND manager.active AND manager.can_manage AND manager.account_party_id<>? AND EXISTS (SELECT 1 FROM directory_review review WHERE review.id=?)"
+          [toPersistValue subjectProfileId,toPersistValue (auPartyId user),toPersistValue reviewId]
+      created <- jsonRows reviewSummarySql [toPersistValue reviewId]
+      case created of
+        value:_ -> pure value
+        [] -> throwError err409 {errBody="the review was concurrently created with another idempotency key"}
+
+reviewSummarySql :: Text
+reviewSummarySql =
+  "SELECT jsonb_build_object('id',review.id,'interactionId',review.interaction_id,'rating',review.rating,'body',review.body,'status',review.status,'createdAt',review.created_at,'verifiedInteractionType',interaction.interaction_kind,'authorProfile',jsonb_build_object('id',author.id,'name',author.public_name,'slug',author.slug),'subjectProfile',jsonb_build_object('id',subject.id,'name',subject.public_name,'slug',subject.slug)) FROM directory_review review JOIN directory_interaction interaction ON interaction.id=review.interaction_id JOIN directory_profile author ON author.id=review.author_profile_id JOIN directory_profile subject ON subject.id=review.subject_profile_id WHERE review.id=?"
+
+validateReviewBody :: Maybe Text -> AppM ()
+validateReviewBody Nothing = pure ()
+validateReviewBody (Just value) =
+  when (T.length (T.strip value)<10 || T.length value>2000 || T.any unsafeControl value) $
+    throwError err400 {errBody="review body must contain 10-2000 safe characters"}
+  where
+    unsafeControl character = isControl character && character `notElem` ['\n','\r','\t']
+
 listFavorites user = jsonRows
   "SELECT jsonb_build_object('targetKind',favorite.target_kind,'targetId',favorite.target_id,'createdAt',favorite.created_at,'result',CASE WHEN document.entity_id IS NULL THEN NULL ELSE jsonb_build_object('type',document.entity_kind,'id',document.entity_id,'slug',document.slug,'title',document.title,'city',document.city_name) END) FROM directory_favorite favorite LEFT JOIN directory_public_search_document document ON document.entity_kind=favorite.target_kind AND document.entity_id=favorite.target_id WHERE favorite.account_party_id=? ORDER BY favorite.created_at DESC"
   [toPersistValue (auPartyId user)]
@@ -718,7 +827,7 @@ createVerification user idempotency request@VerificationCreateRequest{profileId,
   jsonOne err500 "SELECT jsonb_build_object('id',id,'profileId',profile_id,'verificationType',verification_type,'status',status,'createdAt',created_at) FROM directory_verification WHERE id=?" [toPersistValue verificationId]
 
 createReport user idempotency request@ReportCreateRequest{targetKind,targetId,reasonCode,details} = do
-  validateTarget targetKind targetId
+  validateReportTarget targetKind targetId
   when (T.length (T.strip reasonCode)<2 || T.length reasonCode>120 || T.any isControl reasonCode) $
     throwError err400 {errBody="invalid reasonCode"}
   when (maybe False (\value -> T.length (T.strip value)<10 || T.length value>3000 || T.any isControl value) details) $
@@ -728,6 +837,13 @@ createReport user idempotency request@ReportCreateRequest{targetKind,targetId,re
   runDB $ rawExecute "INSERT INTO directory_moderation_case(target_kind,target_id,status,priority) VALUES (?,?,'open','normal') ON CONFLICT(target_kind,target_id) WHERE status IN ('open','triaged','under_review','actioned','appealed','appeal_review') DO NOTHING" [PersistText targetKind,PersistText targetId]
   recordAuthenticatedEvent user "report_created" targetKind targetId
   jsonOne err500 "SELECT jsonb_build_object('id',id,'targetKind',target_kind,'targetId',target_id,'reasonCode',reason_code,'status',status,'createdAt',created_at) FROM directory_moderation_report WHERE id=? AND reporter_party_id=?" [toPersistValue reportId,toPersistValue (auPartyId user)]
+
+validateReportTarget :: Text -> Text -> AppM ()
+validateReportTarget kind identifier = do
+  unless (kind `Set.member` Set.fromList ["profile","classified","application","invitation","event","venue","message","review"]) $
+    throwError err400 {errBody="invalid report targetKind"}
+  when (T.null (T.strip identifier) || T.length identifier>160) $
+    throwError err400 {errBody="invalid report targetId"}
 
 requireDirectoryAdmin :: AuthedUser -> AppM ()
 requireDirectoryAdmin user = unless (isDirectoryAdmin user) (throwError err403 {errBody="directory administration requires the Admin module"})
@@ -798,6 +914,8 @@ applyModerationTarget (Object values) action = case (KeyMap.lookup "kind" values
   (Just (String "classified"),Just (String targetId)) | action `elem` ["pause","remove"] -> do
     rawExecute "UPDATE classified SET status=CASE WHEN ?='pause' THEN 'paused' ELSE 'moderated' END,moderation_status=CASE WHEN ?='pause' THEN moderation_status ELSE 'blocked' END,updated_at=now() WHERE id::text=?" [PersistText action,PersistText action,PersistText targetId]
     rawExecute "DELETE FROM directory_search_document WHERE entity_kind='classified' AND entity_id=?" [PersistText targetId]
+  (Just (String "review"),Just (String targetId)) | action `elem` ["pause","remove"] ->
+    rawExecute "UPDATE directory_review SET status=CASE WHEN ?='pause' THEN 'hidden' ELSE 'removed' END,updated_at=now() WHERE id::text=?" [PersistText action,PersistText targetId]
   _ -> pure ()
 applyModerationTarget _ _ = pure ()
 

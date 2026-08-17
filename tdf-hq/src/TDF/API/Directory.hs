@@ -29,6 +29,13 @@ data DirectorySuggestion = DirectorySuggestion
   } deriving (Show, Generic)
 instance ToJSON DirectorySuggestion
 
+data DirectoryReviewPage = DirectoryReviewPage
+  { summary :: Value
+  , items :: [Value]
+  , nextCursor :: Maybe UUID
+  } deriving (Show, Generic)
+instance ToJSON DirectoryReviewPage
+
 data DirectoryProfileUpsert = DirectoryProfileUpsert
   { profileKind :: Text
   , publicName :: Text
@@ -116,6 +123,16 @@ data DirectoryContactRequest = DirectoryContactRequest
 instance FromJSON DirectoryContactRequest
 instance ToJSON DirectoryContactRequest
 
+data DirectoryReviewCreateRequest = DirectoryReviewCreateRequest
+  { interactionId :: UUID
+  , authorProfileId :: UUID
+  , subjectProfileId :: UUID
+  , rating :: Int
+  , body :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON DirectoryReviewCreateRequest
+instance ToJSON DirectoryReviewCreateRequest
+
 data SavedSearchCreateRequest = SavedSearchCreateRequest
   { name :: Text
   , canonicalQuery :: Value
@@ -195,6 +212,7 @@ type DirectoryPublicAPI = "directory" :>
     :<|> "suggestions" :> QueryParam "q" Text :> QueryParam "cityId" UUID :> Get '[JSON] [DirectorySuggestion]
     :<|> "taxonomies" :> QueryParam "locale" Text :> Get '[JSON] Value
     :<|> "profiles" :> Capture "slug" Text :> Get '[JSON] Value
+    :<|> "profiles" :> Capture "slug" Text :> "reviews" :> QueryParam "cursor" UUID :> QueryParam "limit" Int :> Get '[JSON] DirectoryReviewPage
     :<|> "classifieds" :> Capture "slug" Text :> Get '[JSON] Value
     :<|> "events" :> Capture "eventId" Int64 :> Get '[JSON] Value
     :<|> "venues" :> Capture "venueId" Int64 :> Get '[JSON] Value
@@ -218,6 +236,8 @@ type DirectoryProtectedAPI = "directory" :>
     :<|> "invitations" :> RequiredIdempotency :> ReqBody '[JSON] InvitationCreateRequest :> PostCreated '[JSON] Value
     :<|> "invitations" :> Capture "invitationId" UUID :> "status" :> ReqBody '[JSON] DirectoryStatusRequest :> Patch '[JSON] Value
     :<|> "contact" :> RequiredIdempotency :> ReqBody '[JSON] DirectoryContactRequest :> PostCreated '[JSON] Value
+    :<|> "review-eligibility" :> QueryParam "authorProfileId" UUID :> Get '[JSON] [Value]
+    :<|> "reviews" :> RequiredIdempotency :> ReqBody '[JSON] DirectoryReviewCreateRequest :> PostCreated '[JSON] Value
     :<|> "favorites" :> Get '[JSON] [Value]
     :<|> "favorites" :> Capture "targetKind" Text :> Capture "targetId" Text :> Put '[JSON] NoContent
     :<|> "favorites" :> Capture "targetKind" Text :> Capture "targetId" Text :> Delete '[JSON] NoContent

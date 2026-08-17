@@ -15,6 +15,7 @@ module TDF.Directory.Policy
   , permissionsFromProfessions
   , publicSearchEligible
   , applicationVisibleTo
+  , verifiedReviewEligible
   , minorMayPublishOrRespond
   ) where
 
@@ -133,6 +134,15 @@ publicSearchEligible lifecycle visibility moderation current =
 applicationVisibleTo :: Integer -> Integer -> Integer -> Set Integer -> Bool
 applicationVisibleTo viewer applicant author administrators =
   viewer == applicant || viewer == author || viewer `Set.member` administrators
+
+verifiedReviewEligible
+  :: Text -> Bool -> Bool -> Integer -> Integer -> Integer -> Integer -> Bool
+verifiedReviewEligible interactionStatus verified authorManaged author subject profileA profileB =
+  interactionStatus == "completed"
+    && verified
+    && authorManaged
+    && author /= subject
+    && ((author == profileA && subject == profileB) || (author == profileB && subject == profileA))
 
 minorMayPublishOrRespond :: Text -> Bool
 minorMayPublishOrRespond assurance = assurance `elem` ["adult_attested", "adult_verified", "guardian_approved"]

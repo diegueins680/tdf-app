@@ -94,6 +94,12 @@ psql_file() {
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-14_music_directory_core.sql" >/dev/null
 # A restart/retry before the migration ledger is committed must be harmless.
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-14_music_directory_core.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql" >/dev/null
+# Exercise the actual incremental deploy retry and operational rollback path.
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-16_music_directory_verified_reviews_rollback.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql" >/dev/null
 
 psql_exec <<'SQL' >/dev/null
 INSERT INTO party(display_name,is_org,created_at)
@@ -263,6 +269,8 @@ SELECT 'd2000000-0000-4000-8000-000000000004'::uuid,'d2000000-0000-4000-8000-000
 FROM classified_category WHERE code='collaboration';
 INSERT INTO directory_invitation(id,sender_profile_id,target_profile_id,classified_id,message,status,idempotency_key,request_fingerprint,created_at,expires_at)
 VALUES ('d2000000-0000-4000-8000-000000000005','d2000000-0000-4000-8000-000000000001','d2000000-0000-4000-8000-000000000002',NULL,'Synthetic expired invitation for transition enforcement.','pending','synthetic-expired-invitation','synthetic-expired-fingerprint',now()-interval '31 days',now()-interval '1 day');
+INSERT INTO directory_interaction(id,interaction_kind,external_id,profile_a_id,profile_b_id,status,verified_at)
+VALUES ('d2000000-0000-4000-8000-000000000006','confirmed_collaboration','synthetic-runtime-review-source','d2000000-0000-4000-8000-000000000001','d2000000-0000-4000-8000-000000000002','completed',now());
 SQL
 
 # Exercise the anonymous taxonomy handler against the migrated database. This catches
@@ -370,6 +378,115 @@ curl -fsS -X POST "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/contact" \
   -H 'Content-Type: application/json' \
   --data "{\"senderProfileId\":\"d2000000-0000-4000-8000-000000000001\",\"targetProfileId\":\"d2000000-0000-4000-8000-000000000002\",\"contextKind\":\"invitation\",\"contextId\":\"$invitation_id\",\"message\":\"Synthetic accepted contact remains participant scoped.\"}" >/dev/null
 
+curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/review-eligibility?authorProfileId=d2000000-0000-4000-8000-000000000001" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' |
+  node -e '
+    let raw = "";
+    process.stdin.on("data", (chunk) => { raw += chunk; });
+    process.stdin.on("end", () => {
+      const value = JSON.parse(raw);
+      if (value.length !== 1 || value[0].interactionId !== "d2000000-0000-4000-8000-000000000006") throw new Error("verified review eligibility is missing");
+      if (value[0].authorProfile?.id !== "d2000000-0000-4000-8000-000000000001" || value[0].subjectProfile?.id !== "d2000000-0000-4000-8000-000000000002") throw new Error("review direction is not participant scoped");
+      if ("externalId" in value[0] || "partyId" in value[0]) throw new Error("review eligibility exposed an external identifier or Party id");
+    });
+  '
+
+unauthorized_review_status=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/reviews" \
+  -H 'Authorization: Bearer synthetic-directory-target-token' \
+  -H 'Idempotency-Key: synthetic-review-wrong-manager' \
+  -H 'Content-Type: application/json' \
+  --data '{"interactionId":"d2000000-0000-4000-8000-000000000006","authorProfileId":"d2000000-0000-4000-8000-000000000001","subjectProfileId":"d2000000-0000-4000-8000-000000000002","rating":5,"body":"Synthetic unauthorized review must be rejected."}')
+test "$unauthorized_review_status" = "404"
+
+review_id=$(curl -fsS -X POST "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/reviews" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' \
+  -H 'Idempotency-Key: synthetic-review-create-1' \
+  -H 'Content-Type: application/json' \
+  --data '{"interactionId":"d2000000-0000-4000-8000-000000000006","authorProfileId":"d2000000-0000-4000-8000-000000000001","subjectProfileId":"d2000000-0000-4000-8000-000000000002","rating":5,"body":"Synthetic verified runtime review for authorization testing."}' |
+  node -e '
+    let raw = "";
+    process.stdin.on("data", (chunk) => { raw += chunk; });
+    process.stdin.on("end", () => {
+      const value = JSON.parse(raw);
+      if (!/^[0-9a-f-]{36}$/.test(value.id ?? "") || value.status !== "published") throw new Error("review response is incomplete");
+      if (value.authorProfile?.name !== "Synthetic invitation sender" || value.subjectProfile?.name !== "Synthetic invitation target") throw new Error("review response lacks safe participant labels");
+      if ("externalId" in value || "partyId" in value) throw new Error("review response exposed an external identifier or Party id");
+      process.stdout.write(value.id);
+    });
+  ')
+
+retry_review_id=$(curl -fsS -X POST "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/reviews" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' \
+  -H 'Idempotency-Key: synthetic-review-create-1' \
+  -H 'Content-Type: application/json' \
+  --data '{"interactionId":"d2000000-0000-4000-8000-000000000006","authorProfileId":"d2000000-0000-4000-8000-000000000001","subjectProfileId":"d2000000-0000-4000-8000-000000000002","rating":5,"body":"Synthetic verified runtime review for authorization testing."}' |
+  node -pe 'JSON.parse(require("fs").readFileSync(0,"utf8")).id')
+test "$retry_review_id" = "$review_id"
+
+duplicate_review_status=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/reviews" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' \
+  -H 'Idempotency-Key: synthetic-review-create-2' \
+  -H 'Content-Type: application/json' \
+  --data '{"interactionId":"d2000000-0000-4000-8000-000000000006","authorProfileId":"d2000000-0000-4000-8000-000000000001","subjectProfileId":"d2000000-0000-4000-8000-000000000002","rating":4,"body":"Synthetic duplicate review must not create another record."}')
+test "$duplicate_review_status" = "409"
+
+curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/profiles/synthetic-invitation-target/reviews?limit=20" |
+  node -e '
+    let raw = "";
+    process.stdin.on("data", (chunk) => { raw += chunk; });
+    process.stdin.on("end", () => {
+      const value = JSON.parse(raw);
+      if (value.summary?.count !== 1 || Number(value.summary?.average) !== 5 || value.items?.length !== 1) throw new Error("public review aggregate is not derived from the verified review");
+      if (value.items[0].authorProfile?.name !== "Synthetic invitation sender") throw new Error("public review author projection is missing");
+      if ("interactionId" in value.items[0] || "externalId" in value.items[0] || "partyId" in value.items[0]) throw new Error("public review exposed a private interaction or Party identifier");
+    });
+  '
+
+curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/profiles/synthetic-invitation-target" |
+  node -e '
+    let raw = "";
+    process.stdin.on("data", (chunk) => { raw += chunk; });
+    process.stdin.on("end", () => {
+      const value = JSON.parse(raw);
+      if (value.reputation?.reviewCount !== 1 || Number(value.reputation?.reviewAverage) !== 5 || value.reputation?.completed !== 1) throw new Error("profile reputation aggregates are stale");
+    });
+  '
+
+psql_exec -c "UPDATE directory_interaction SET status='cancelled' WHERE id='d2000000-0000-4000-8000-000000000006';" >/dev/null
+cancelled_review_count=$(psql_exec -Atc "SELECT review_count FROM directory_profile WHERE id='d2000000-0000-4000-8000-000000000002';")
+test "$cancelled_review_count" = "0"
+curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/profiles/synthetic-invitation-target/reviews?limit=20" |
+  node -e '
+    let raw = "";
+    process.stdin.on("data", (chunk) => { raw += chunk; });
+    process.stdin.on("end", () => {
+      const value = JSON.parse(raw);
+      if (value.summary?.count !== 0 || value.items?.length !== 0) throw new Error("cancelled interaction remained in public reputation");
+    });
+  '
+psql_exec -c "UPDATE directory_interaction SET status='completed' WHERE id='d2000000-0000-4000-8000-000000000006';" >/dev/null
+restored_review_count=$(psql_exec -Atc "SELECT review_count FROM directory_profile WHERE id='d2000000-0000-4000-8000-000000000002';")
+test "$restored_review_count" = "1"
+
+psql_exec -c "UPDATE directory_profile SET profile_status='paused' WHERE id='d2000000-0000-4000-8000-000000000001';" >/dev/null
+paused_author_review_count=$(psql_exec -Atc "SELECT review_count FROM directory_profile WHERE id='d2000000-0000-4000-8000-000000000002';")
+test "$paused_author_review_count" = "0"
+psql_exec -c "UPDATE directory_profile SET profile_status='published' WHERE id='d2000000-0000-4000-8000-000000000001';" >/dev/null
+republished_author_review_count=$(psql_exec -Atc "SELECT review_count FROM directory_profile WHERE id='d2000000-0000-4000-8000-000000000002';")
+test "$republished_author_review_count" = "1"
+
+curl -fsS -X POST "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/reports" \
+  -H 'Authorization: Bearer synthetic-directory-target-token' \
+  -H 'Idempotency-Key: synthetic-review-report-1' \
+  -H 'Content-Type: application/json' \
+  --data "{\"targetKind\":\"review\",\"targetId\":\"$review_id\",\"reasonCode\":\"community-report\"}" >/dev/null
+psql_exec -c "UPDATE directory_review SET status='hidden' WHERE id='$review_id';" >/dev/null
+hidden_review_count=$(psql_exec -Atc "SELECT review_count FROM directory_profile WHERE id='d2000000-0000-4000-8000-000000000002';")
+test "$hidden_review_count" = "0"
+psql_exec -c "UPDATE directory_review SET status='published' WHERE id='$review_id';" >/dev/null
+restored_after_moderation_count=$(psql_exec -Atc "SELECT review_count FROM directory_profile WHERE id='d2000000-0000-4000-8000-000000000002';")
+test "$restored_after_moderation_count" = "1"
+
 curl -fsS -X PATCH "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/invitations/$invitation_id/status" \
   -H 'Authorization: Bearer synthetic-directory-target-token' \
   -H 'Content-Type: application/json' \
@@ -407,4 +524,4 @@ expired_state=$(psql_exec -Atc "SELECT status FROM directory_invitation WHERE id
 test "$expired_state" = "expired"
 stop_api
 
-echo "Music directory migration passed restart, backfill, rollback/reapply, privacy, claim, review, alert, merge, search-volume, taxonomy, invitation-participant, blocking, expiry, and invariant checks."
+echo "Music directory migration passed restart, backfill, rollback/reapply, privacy, claim, verified-review API and aggregation, alert, merge, search-volume, taxonomy, invitation-participant, blocking, expiry, and invariant checks."

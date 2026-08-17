@@ -17,6 +17,7 @@ const publicPaths = [
   '/directory/suggestions',
   '/directory/taxonomies',
   '/directory/profiles/{slug}',
+  '/directory/profiles/{slug}/reviews',
   '/directory/classifieds/{slug}',
   '/directory/events/{eventId}',
   '/directory/venues/{venueId}',
@@ -29,6 +30,7 @@ const publicSchemas = [
   'PublicLocation',
   'DirectorySearchItem',
   'PublicDirectoryProfile',
+  'PublicDirectoryReview',
   'PublicClassified',
   'PublicDirectoryEvent',
   'PublicDirectoryVenue',
@@ -36,7 +38,7 @@ const publicSchemas = [
 const forbidden = new Set([
   'exactAddress', 'privateLatitude', 'privateLongitude', 'primaryEmail',
   'primaryPhone', 'whatsapp', 'taxId', 'credential', 'apiToken',
-  'evidence', 'reviewerNotes', 'moderatorNotes',
+  'evidence', 'reviewerNotes', 'moderatorNotes', 'externalId', 'partyId',
 ]);
 const collectPropertyNames = (schema, names = new Set()) => {
   if (!schema || typeof schema !== 'object') return names;
@@ -74,6 +76,12 @@ assert.equal(spec.components.schemas.DirectoryInvitation.additionalProperties, f
 for (const field of ['participantRole', 'senderProfile', 'targetProfile']) {
   assert(spec.components.schemas.DirectoryInvitation.required.includes(field));
 }
+assert.equal(spec.components.schemas.DirectoryReviewPage.additionalProperties, false);
+assert.equal(spec.components.schemas.DirectoryReviewEligibility.additionalProperties, false);
+assert(!collectPropertyNames(spec.components.schemas.DirectoryReviewEligibility).has('externalId'));
+assert.equal(spec.components.schemas.DirectoryReview.additionalProperties, false);
+for (const key of forbidden) assert(!collectPropertyNames(spec.components.schemas.DirectoryReview).has(key), `DirectoryReview exposes forbidden field ${key}`);
+assert.deepEqual(spec.components.schemas.ReportCreate.properties.targetKind.enum.includes('review'), true);
 
 const idempotentOperations = [
   ['/directory/profiles', 'post'],
@@ -81,6 +89,7 @@ const idempotentOperations = [
   ['/directory/classifieds/{classifiedId}/applications', 'post'],
   ['/directory/invitations', 'post'],
   ['/directory/contact', 'post'],
+  ['/directory/reviews', 'post'],
   ['/directory/saved-searches', 'post'],
   ['/directory/claims', 'post'],
   ['/directory/verifications', 'post'],
