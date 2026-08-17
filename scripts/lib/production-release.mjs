@@ -127,6 +127,8 @@ export function parseSecurityEmergencyReadinessOutput(output) {
     'activeEmergencyAssignments',
     'distinctAssignedParties',
     'authenticatableParties',
+    'legacyAuthenticatableParties',
+    'coherentLegacyTargetRoles',
     'databaseCoherentPaths',
   ]) {
     if (report[field] !== undefined
@@ -134,6 +136,22 @@ export function parseSecurityEmergencyReadinessOutput(output) {
         && (!Number.isInteger(report[field]) || report[field] < 0)) {
       throw new Error(`Security emergency readiness preflight returned an invalid ${field}.`);
     }
+  }
+  if (report.schemaMode === 'canonical') {
+    if (!Number.isInteger(report.legacyAuthenticatableParties)
+        || !Number.isInteger(report.coherentLegacyTargetRoles)) {
+      throw new Error('Canonical security emergency readiness omitted transition evidence.');
+    }
+    const canonicalReady = (report.databaseCoherentPaths ?? 0) >= 2;
+    const legacyResumeReady = report.legacyAuthenticatableParties >= 2
+      && report.coherentLegacyTargetRoles === 1;
+    if (report.databaseReady !== canonicalReady
+        || report.preMigrationReady !== (canonicalReady || legacyResumeReady)) {
+      throw new Error('Canonical security emergency readiness returned inconsistent gate evidence.');
+    }
+  } else if (report.schemaMode === 'legacy'
+      && report.preMigrationReady !== ((report.authenticatableParties ?? 0) >= 2)) {
+    throw new Error('Legacy security emergency readiness returned inconsistent gate evidence.');
   }
   return report;
 }
@@ -149,7 +167,12 @@ export function securityEmergencyReadinessBlocker(report, options = {}) {
     return undefined;
   }
   if (!report.preMigrationReady) {
-    return `emergency recovery has ${report.authenticatableParties ?? 0} independently authenticatable parties; 2 are required before migration`;
+    const canonical = report.authenticatableParties ?? 0;
+    const legacy = report.legacyAuthenticatableParties;
+    const observed = legacy === undefined || legacy === null
+      ? `${canonical}`
+      : `${canonical} canonical and ${legacy} legacy`;
+    return `emergency recovery has ${observed} independently authenticatable parties; 2 are required before migration`;
   }
   return undefined;
 }
@@ -234,6 +257,7 @@ export function validateFlyConfig(toml) {
   const healthChecks = tables.get('services.http_checks') ?? [];
   const runMigrations = String(env.get('RUN_MIGRATIONS') ?? '').trim().toLowerCase();
   const eventDiscovery = String(env.get('EVENT_DISCOVERY_ENABLED') ?? '').trim().toLowerCase();
+  const defaultLocale = String(env.get('DEFAULT_LOCALE') ?? '').trim().toLowerCase();
   const hasHealthCheck = services.length === 1 && healthChecks.some((check) => (
     String(check.get('path') ?? '').trim() === '/health'
       && String(check.get('protocol') ?? '').trim().toLowerCase() === 'http'
@@ -252,6 +276,9 @@ export function validateFlyConfig(toml) {
   if (eventDiscovery !== 'false') {
     throw new Error('fly.toml must stage EVENT_DISCOVERY_ENABLED="false" during rollout.');
   }
+  if (defaultLocale !== 'es') {
+    throw new Error('fly.toml must set DEFAULT_LOCALE="es" to match the persisted production default.');
+  }
   if (!hasHealthCheck) {
     throw new Error('fly.toml must define an HTTP /health readiness check.');
   }
@@ -262,10 +289,38 @@ export function validateFlyConfig(toml) {
   return {
     runMigrations: false,
     eventDiscoveryEnabled: false,
+    defaultLocale: 'es',
     healthCheckPath: '/health',
     strategy: 'rolling',
     maxUnavailable: 1,
   };
+}
+
+export function buildMachineRollbackImage(machine) {
+  const normalize = (value) => {
+    if (typeof value !== 'string' || !value.trim()) return undefined;
+    return value
+      .trim()
+      .replace(/^docker-hub-mirror\.fly\.io\//i, '')
+      .replace(/(@sha256:[0-9a-f]{64})(?:\1)+$/i, '$1');
+  };
+  const imageRef = machine?.image_ref;
+  if (typeof imageRef === 'string') return normalize(imageRef);
+
+  const registry = String(imageRef?.registry ?? '').trim();
+  const repository = String(imageRef?.repository ?? '')
+    .trim()
+    .replace(/@sha256:[0-9a-f]{64}$/i, '');
+  if (registry && repository) {
+    const base = registry.toLowerCase() === 'docker-hub-mirror.fly.io'
+      ? repository
+      : `${registry}/${repository}`;
+    if (/^sha256:[0-9a-f]{64}$/i.test(imageRef?.digest ?? '')) {
+      return `${base}@${imageRef.digest}`;
+    }
+    if (imageRef?.tag) return `${base}:${imageRef.tag}`;
+  }
+  return normalize(machine?.config?.image);
 }
 
 function sqlLiteral(value) {

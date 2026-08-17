@@ -37,6 +37,7 @@ export interface SocialEventDTO {
   eventDescription?: string | null;
   eventStart: string;
   eventEnd: string;
+  eventTimezone?: string | null;
   eventVenueId?: string | null;
   eventPriceCents?: number | null;
   eventCapacity?: number | null;

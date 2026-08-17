@@ -64,3 +64,15 @@ psql "$TDF_CATALOG_TEST_DATABASE_URL" -X -v ON_ERROR_STOP=1 -Atqc "
   FROM catalog_backfill_run
   WHERE candidate_revision='${TDF_CATALOG_TEST_REVISION}' AND NOT dry_run AND status='completed';
 " | grep -qx ok
+
+security_report="$(
+  psql "$TDF_CATALOG_TEST_DATABASE_URL" -X -qAt -v ON_ERROR_STOP=1 \
+    -f "$TDF_CATALOG_TEST_ROOT/tdf-hq/sql/preflight_security_emergency_readiness.sql" \
+    | tail -1
+)"
+node -e '
+  const report = JSON.parse(process.argv[1]);
+  if (report.schemaMode !== "canonical"
+      || report.databaseCoherentPaths < 2
+      || report.databaseReady !== true) process.exit(1);
+' "$security_report"

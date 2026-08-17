@@ -1,6 +1,52 @@
 -- Synthetic, non-production source rows required to exercise the fail-closed
 -- Records migration from the schema-only production baseline.
 
+INSERT INTO public.party (display_name, is_org, created_at)
+VALUES
+  ('Catalog recovery fixture A', false, now()),
+  ('Catalog recovery fixture B', false, now());
+
+INSERT INTO public.user_credential (party_id, username, password_hash, active)
+SELECT
+  id,
+  CASE display_name
+    WHEN 'Catalog recovery fixture A' THEN 'catalog-recovery-a'
+    ELSE 'catalog-recovery-b'
+  END,
+  'non-production-fixture-hash',
+  true
+FROM public.party
+WHERE display_name IN ('Catalog recovery fixture A', 'Catalog recovery fixture B');
+
+ALTER TABLE public.party_role DISABLE TRIGGER operations_party_role_scope_sync;
+
+INSERT INTO public.party_role (party_id, role, active)
+SELECT id, 'Admin', true
+FROM public.party
+WHERE display_name IN ('Catalog recovery fixture A', 'Catalog recovery fixture B');
+
+ALTER TABLE public.party_role ENABLE TRIGGER operations_party_role_scope_sync;
+
+INSERT INTO public.supported_currencies
+  (currency_code, symbol, decimal_places, decimal_separator, thousands_separator, enabled)
+VALUES ('USD', '$', 2, '.', ',', true)
+ON CONFLICT (currency_code) DO NOTHING;
+
+WITH fixture_party AS (
+  INSERT INTO public.party (display_name, is_org, created_at)
+  VALUES ('Catalog migration fixture', false, now())
+  RETURNING id
+)
+INSERT INTO public.user_locale_preferences
+  (user_id, locale, currency, timezone, country_code)
+SELECT id, 'es', 'USD', 'America/Guayaquil', 'EC'
+FROM fixture_party;
+
+INSERT INTO public.pipeline_card
+  (service_kind, title, stage, sort_order)
+VALUES
+  ('Recording', 'Catalog pipeline recovery fixture', 'inquiry', 1);
+
 INSERT INTO public.cms_content
   (slug, locale, version, status, title, payload, published_at)
 VALUES

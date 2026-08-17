@@ -2134,7 +2134,8 @@ upsertDiscoveredVenue provider now DiscoveredVenue{..} = do
         , Social.VenueCity =. Just discoveredVenueCity
         , Social.VenueCountry =. discoveredVenueCountry
         , Social.VenueCountryCode =. discoveredVenueCountryCode
-        , Social.VenueTimezone =. importedVenueTimeZone discoveredVenueCountryCode
+        , Social.VenueTimezone =.
+            importedVenueTimeZone discoveredVenueCountryCode discoveredVenueCountry
         , Social.VenueLatitude =. discoveredVenueLatitude
         , Social.VenueLongitude =. discoveredVenueLongitude
         , Social.VenueContact =. contact
@@ -2153,7 +2154,8 @@ upsertDiscoveredVenue provider now DiscoveredVenue{..} = do
             , Social.venueCountryCode = discoveredVenueCountryCode
             , Social.venueCountryId = Nothing
             , Social.venueCityId = Nothing
-            , Social.venueTimezone = importedVenueTimeZone discoveredVenueCountryCode
+            , Social.venueTimezone =
+                importedVenueTimeZone discoveredVenueCountryCode discoveredVenueCountry
             , Social.venueLatitude = discoveredVenueLatitude
             , Social.venueLongitude = discoveredVenueLongitude
             , Social.venueCapacity = Nothing
@@ -2265,16 +2267,19 @@ encodeEventMetadataForImport autoPublish DiscoveredEvent{..} =
       ]
 
 importedEventTimeZone :: DiscoveredVenue -> Maybe Text
-importedEventTimeZone venue
-  | fmap (T.toUpper . T.strip) (discoveredVenueCountryCode venue) == Just "EC" =
-      Just "America/Guayaquil"
-  | otherwise = Nothing
+importedEventTimeZone venue =
+  importedVenueTimeZone
+    (discoveredVenueCountryCode venue)
+    (discoveredVenueCountry venue)
 
-importedVenueTimeZone :: Maybe Text -> Maybe Text
-importedVenueTimeZone countryCode
-  | fmap (T.toUpper . T.strip) countryCode == Just "EC" =
+importedVenueTimeZone :: Maybe Text -> Maybe Text -> Maybe Text
+importedVenueTimeZone countryCode countryName
+  | normalizeCountry countryCode == Just "ec"
+      || normalizeCountry countryName == Just "ecuador" =
       Just "America/Guayaquil"
   | otherwise = Nothing
+  where
+    normalizeCountry = fmap (T.toCaseFold . T.strip)
 
 resolvePublishedEventTypeId :: UTCTime -> Text -> SqlPersistT IO UUID
 resolvePublishedEventTypeId now eventTypeCode = do

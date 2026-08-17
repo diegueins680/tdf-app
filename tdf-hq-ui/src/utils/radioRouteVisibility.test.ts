@@ -1,4 +1,4 @@
-import { shouldHideRadioForRoute } from './radioRouteVisibility';
+import { shouldHideRadioForRoute, shouldRenderRadioWidget } from './radioRouteVisibility';
 
 describe('shouldHideRadioForRoute', () => {
   it('keeps the radio widget off the dense course registrations admin page', () => {
@@ -16,5 +16,12 @@ describe('shouldHideRadioForRoute', () => {
     expect(shouldHideRadioForRoute('/tdf')).toBe(true);
     expect(shouldHideRadioForRoute('/tdf/artistas')).toBe(true);
     expect(shouldHideRadioForRoute('/tdf', '#radio')).toBe(false);
+  });
+
+  it('does not mount the protected radio client before an authenticated session is ready', () => {
+    expect(shouldRenderRadioWidget('/domo-del-pululahua', '', false, false)).toBe(false);
+    expect(shouldRenderRadioWidget('/domo-del-pululahua', '', true, true)).toBe(false);
+    expect(shouldRenderRadioWidget('/domo-del-pululahua', '', true, false)).toBe(true);
+    expect(shouldRenderRadioWidget('/login', '', true, false)).toBe(false);
   });
 });

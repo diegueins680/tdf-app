@@ -494,7 +494,7 @@
       "reviewed": true
     },
     {
-      "id": "6a994b43b0a60d8b3030",
+      "id": "51b43e3c0476c26bf606",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
@@ -2464,7 +2464,7 @@
       "reviewed": true
     },
     {
-      "id": "acbd8cc20115d7d88c03",
+      "id": "17ba38f46aff91a21784",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
@@ -5094,7 +5094,7 @@
       "reviewed": true
     },
     {
-      "id": "70d5cbc3cf57ec5ff385",
+      "id": "3f00137f715a55f77dc3",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -6494,7 +6494,7 @@
       "reviewed": true
     },
     {
-      "id": "470693b769b0b47b4836",
+      "id": "f05c06694360cdca11e5",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -6581,6 +6581,106 @@
       "priority": "P1-cross-platform",
       "risk": "Mapping review states can diverge between genre/country ingestion, administration, reporting, and remediation jobs.",
       "justification": "Mapped, unresolved, and ambiguous are operational workflow states shown in review queues and reports and must use a persisted governed workflow.",
+      "reviewed": true
+    },
+    {
+      "id": "45ae335358b3aca8ae1b",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "event_research_confidence, event_research_candidate.confidence_id",
+      "priority": "P1-cross-platform",
+      "risk": "Confidence labels and publication eligibility can diverge between ingestion, administration, and reporting.",
+      "justification": "Research confidence is persisted, displayed, filtered, and used by the publication gate, so it requires one governed set shared by the API and clients.",
+      "reviewed": true
+    },
+    {
+      "id": "cd20caaccdeb5777d35d",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Candidate review states can diverge between the ingestion API, admin queue, reporting, and pilot cap enforcement.",
+      "justification": "Draft, review, and discarded are persisted operational workflow states and must use the governed workflow model as the authoritative source.",
+      "reviewed": true
+    },
+    {
+      "id": "48faaec5aef65c661663",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Run lifecycle states can diverge between resumable processing, checkpoints, administration, and audit reports.",
+      "justification": "Running, completed, and failed are persisted ingestion-run workflow states and require one governed lifecycle contract across backend and clients.",
+      "reviewed": true
+    },
+    {
+      "id": "ddf50cf95b5f5d545cff",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Renaming a typed client operation without its server contract would break request dispatch at compile time or runtime.",
+      "justification": "These names are methods of the typed event-research HTTP client and are implementation mechanics, not selectable or reportable domain values.",
+      "reviewed": true
+    },
+    {
+      "id": "0bd65c3e920d79f4244e",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "event_discovery_source, event_discovery_source_type",
+      "priority": "P1-cross-platform",
+      "risk": "Rollback source-type validation can diverge from the persisted source registry and reject otherwise recoverable data.",
+      "justification": "The reversible migration preserves the former discovery-source values while the governed source registry remains the intended authority after cutover.",
+      "reviewed": true
+    },
+    {
+      "id": "dc6c6597683d6ff100b9",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Migration constraints can diverge from the governed ingestion-run lifecycle and reject valid resumable states.",
+      "justification": "The migration bootstraps persisted run workflow values; the governed workflow model is the target authority for lifecycle labels and transitions.",
+      "reviewed": true
+    },
+    {
+      "id": "8de9886e85da6298e67a",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Migration constraints can diverge from candidate review queues and pilot cap enforcement.",
+      "justification": "The migration bootstraps candidate review states; the governed workflow model is the target authority for labels, transitions, and availability.",
+      "reviewed": true
+    },
+    {
+      "id": "dcb9e8ac9a1de3ba1f87",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "event_research_confidence, event_research_candidate.confidence_id",
+      "priority": "P1-cross-platform",
+      "risk": "Migration constraints can diverge from publication confidence policy and research reporting.",
+      "justification": "The migration bootstraps persisted confidence codes; a governed confidence model is the target authority for labels and publication eligibility.",
+      "reviewed": true
+    },
+    {
+      "id": "1273bfdd57643fef70ca",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "event_research_change_action, event_research_change.action_id",
+      "priority": "P1-cross-platform",
+      "risk": "Audit action codes can diverge between change history, reporting, and replay diagnostics.",
+      "justification": "Research change actions are persisted and reportable audit taxonomy values and require governed identities shared by ingestion and administration.",
+      "reviewed": true
+    },
+    {
+      "id": "cd168824dbabcf3e70ac",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "event_discovery_source, event_discovery_source_type",
+      "priority": "P1-cross-platform",
+      "risk": "Discovery-source validation can diverge between persisted registries, API clients, and manual research ingestion.",
+      "justification": "The migration expands persisted discovery-source types for official web research while the source registry remains the intended business authority.",
       "reviewed": true
     }
   ]
