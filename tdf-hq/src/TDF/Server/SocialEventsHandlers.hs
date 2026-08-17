@@ -79,6 +79,7 @@ module TDF.Server.SocialEventsHandlers (
     isImageUpload,
     validateEventImageUploadSize,
     validateEventTitleInput,
+    validateEventTimeRange,
     validateArtistName,
     validateSocialEventsFeatureAction,
     validateArtistProfileCreateParty,
@@ -2166,7 +2167,7 @@ socialEventsServer user =
         Env{..} <- ask
         now <- liftIO getCurrentTime
         titleVal <- either throwError pure (validateEventTitleInput (eventTitle dto))
-        when (eventStart dto >= eventEnd dto) $ throwError err400{errBody = "start time must be before end time"}
+        either throwError pure (validateEventTimeRange (eventStart dto) (eventEnd dto))
         timezoneVal <- traverse (either throwError pure . validateEventTimeZone) (eventTimezone dto)
         either throwError pure $
             validateEventCreateUpdateDimensions
@@ -2289,7 +2290,7 @@ socialEventsServer user =
             liftIO (runSqlPool (loadSelectableEventTypeId now requestedEventTypeId) envPool)
                 >>= either throwError pure
         titleVal <- either throwError pure (validateEventTitleInput (eventTitle dto))
-        when (eventStart dto >= eventEnd dto) $ throwError err400{errBody = "start time must be before end time"}
+        either throwError pure (validateEventTimeRange (eventStart dto) (eventEnd dto))
         timezoneVal <- traverse (either throwError pure . validateEventTimeZone) (eventTimezone dto)
         either throwError pure $
             validateEventCreateUpdateDimensions
@@ -7056,6 +7057,14 @@ validateEventTitleInput rawTitle
         Right titleVal
   where
     titleVal = T.strip rawTitle
+
+-- An event may legitimately have no confirmed end yet. When an end is
+-- supplied, keep the invariant strict instead of deriving a duration.
+validateEventTimeRange :: UTCTime -> Maybe UTCTime -> Either ServerError ()
+validateEventTimeRange _ Nothing = Right ()
+validateEventTimeRange startTime (Just endTime)
+    | startTime < endTime = Right ()
+    | otherwise = Left err400{errBody = "start time must be before end time"}
 
 maxEventTitleChars :: Int
 maxEventTitleChars = 160

@@ -64,7 +64,7 @@ SocialEvent
     workflowStateId UUID Maybe
     timezone Text Maybe
     startTime UTCTime
-    endTime UTCTime
+    endTime UTCTime Maybe
     priceCents Int Maybe
     currencyId UUID Maybe
     capacity Int Maybe

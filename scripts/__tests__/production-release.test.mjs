@@ -625,6 +625,8 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     'ddex_standard_version',
     'standard_version_id',
     'workflow_state_id',
+    'social_event_time_order',
+    'end_time',
     'allowed_versions',
     'records-cms-cutover-2026-08-07',
     'ddex-operational-cutover-2026-08-12',
@@ -632,6 +634,8 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     assert.match(sql, new RegExp(requiredObject), `verification must inspect ${requiredObject}`);
   }
   assert.match(sql, /RAISE\s+EXCEPTION|\\quit/i, 'schema drift must terminate verification');
+  assert.match(sql, /social_event[\s\S]*end_time[\s\S]*is_nullable\s*=\s*'YES'/i);
+  assert.match(sql, /social_event_time_order[\s\S]*convalidated/i);
 });
 
 test('buildSchemaPreflightSql is read-only and accepts unapplied release tables', () => {
