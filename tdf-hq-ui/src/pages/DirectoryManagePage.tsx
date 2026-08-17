@@ -12,6 +12,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   FormControl,
   FormControlLabel,
   InputLabel,
@@ -28,6 +29,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import EditIcon from '@mui/icons-material/Edit';
 import PublishIcon from '@mui/icons-material/Publish';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
@@ -36,6 +38,9 @@ import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import {
   Directory,
   type DirectoryInvitation,
+  type DirectoryPortfolioItem,
+  type DirectoryProfileLink,
+  type DirectoryProfileUpsert,
   type DirectoryTaxonomies,
   type DirectoryTaxonomyItem,
   type ManagedClassified,
@@ -49,6 +54,7 @@ export default function DirectoryManagePage() {
   const [params, setParams] = useSearchParams();
   const [tab, setTab] = useState(params.has('apply') || params.has('contact') || params.has('invite') ? 2 : 0);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [editingProfile, setEditingProfile] = useState<ManagedDirectoryProfile>();
   const [classifiedOpen, setClassifiedOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const contextParam = params.get('contextKind');
@@ -82,12 +88,12 @@ export default function DirectoryManagePage() {
           <Tab label="Invitaciones" />
         </Tabs>
 
-        {tab === 0 && <ProfilePanel profiles={profiles.data ?? []} loading={profiles.isLoading} onCreate={() => setProfileOpen(true)} onRefresh={refresh} />}
+        {tab === 0 && <ProfilePanel profiles={profiles.data ?? []} loading={profiles.isLoading} onCreate={() => { setEditingProfile(undefined); setProfileOpen(true); }} onEdit={(profile) => { setEditingProfile(profile); setProfileOpen(true); }} onRefresh={refresh} />}
         {tab === 1 && <ClassifiedPanel classifieds={classifieds.data ?? []} loading={classifieds.isLoading} onCreate={() => setClassifiedOpen(true)} onRefresh={refresh} />}
         {tab === 2 && <OpportunityActionPanel profiles={profiles.data ?? []} classifieds={classifieds.data ?? []} applyId={params.get('apply')} contactId={params.get('contact')} inviteId={params.get('invite')} contextKind={contextKind} onDone={() => { setNotice('Acción enviada de forma segura.'); setParams({}); }} />}
         {tab === 3 && <InvitationPanel />}
 
-        <ProfileDialog open={profileOpen} onClose={() => setProfileOpen(false)} taxonomies={taxonomies.data} onCreated={() => { setProfileOpen(false); void refresh(); setNotice('Perfil creado como borrador.'); }} />
+        <ProfileDialog profile={editingProfile} open={profileOpen} onClose={() => setProfileOpen(false)} taxonomies={taxonomies.data} onSaved={() => { setProfileOpen(false); void refresh(); setNotice(editingProfile ? 'Perfil actualizado.' : 'Perfil creado como borrador.'); }} />
         <ClassifiedDialog open={classifiedOpen} onClose={() => setClassifiedOpen(false)} profiles={profiles.data ?? []} taxonomies={taxonomies.data} onCreated={() => { setClassifiedOpen(false); void refresh(); setNotice('Clasificado creado como borrador. Revísalo y publícalo cuando esté listo.'); }} />
         <Snackbar open={Boolean(notice)} autoHideDuration={6000} onClose={() => setNotice(null)} message={notice} />
       </Stack>
@@ -95,14 +101,14 @@ export default function DirectoryManagePage() {
   );
 }
 
-function ProfilePanel({ profiles, loading, onCreate, onRefresh }: { profiles: ManagedDirectoryProfile[]; loading: boolean; onCreate: () => void; onRefresh: () => Promise<unknown> }) {
+function ProfilePanel({ profiles, loading, onCreate, onEdit, onRefresh }: { profiles: ManagedDirectoryProfile[]; loading: boolean; onCreate: () => void; onEdit: (profile: ManagedDirectoryProfile) => void; onRefresh: () => Promise<unknown> }) {
   const status = useMutation({ mutationFn: ({ id, value }: { id: string; value: string }) => Directory.setProfileStatus(id, value), onSuccess: onRefresh });
   if (loading) return <CircularProgress />;
   return <Stack spacing={2}>
     <Button variant="contained" startIcon={<AddIcon />} onClick={onCreate} sx={{ alignSelf: 'flex-start' }}>Crear perfil</Button>
     {profiles.length === 0 && <Alert severity="info">Crea tu primer perfil profesional. Una misma cuenta puede administrar varios perfiles autorizados.</Alert>}
     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2,minmax(0,1fr))' }, gap: 2 }}>
-      {profiles.map((profile) => <Card key={profile.id} variant="outlined"><CardContent><Stack direction="row" justifyContent="space-between" gap={2}><Box><Typography variant="h5" fontWeight={800}>{profile.name}</Typography><Typography color="text.secondary">{profile.kind} · /directorio/{profile.slug}</Typography></Box><Chip label={profile.status} color={profile.status === 'published' ? 'success' : 'default'} /></Stack></CardContent><CardActions><Button component={RouterLink} to={`/directorio/${profile.slug}`}>Vista pública</Button>{profile.status !== 'published' && profile.capabilities['publish'] && <Button startIcon={<PublishIcon />} onClick={() => status.mutate({ id: profile.id, value: 'published' })}>Publicar</Button>}{profile.status === 'published' && <Button onClick={() => status.mutate({ id: profile.id, value: 'paused' })}>Pausar</Button>}</CardActions></Card>)}
+      {profiles.map((profile) => <Card key={profile.id} variant="outlined"><CardContent><Stack direction="row" justifyContent="space-between" gap={2}><Box><Typography variant="h5" fontWeight={800}>{profile.name}</Typography><Typography color="text.secondary">{profile.kind} · /directorio/{profile.slug}</Typography><Typography variant="body2" color="text.secondary" mt={0.5}>{profile.professionIds.length} profesiones · {profile.serviceAreas.length} áreas de servicio</Typography></Box><Chip label={profile.status} color={profile.status === 'published' ? 'success' : 'default'} /></Stack></CardContent><CardActions><Button component={RouterLink} to={`/directorio/${profile.slug}`}>Vista pública</Button>{profile.capabilities['edit'] && <Button startIcon={<EditIcon />} onClick={() => onEdit(profile)}>Editar</Button>}{profile.status !== 'published' && profile.capabilities['publish'] && <Button startIcon={<PublishIcon />} onClick={() => status.mutate({ id: profile.id, value: 'published' })}>Publicar</Button>}{profile.status === 'published' && profile.capabilities['publish'] && <Button onClick={() => status.mutate({ id: profile.id, value: 'paused' })}>Pausar</Button>}</CardActions></Card>)}
     </Box>
   </Stack>;
 }
@@ -190,41 +196,235 @@ function InvitationCard({ invitation }: { invitation: DirectoryInvitation }) {
   </Stack></Paper>;
 }
 
-function ProfileDialog({ open, onClose, taxonomies, onCreated }: { open: boolean; onClose: () => void; taxonomies?: DirectoryTaxonomies; onCreated: () => void }) {
+type ProfessionFormDetail = { headline: string; yearsExperience: string; rateMin: string; rateMax: string; currencyId: string };
+
+function ProfileDialog({ profile, open, onClose, taxonomies, onSaved }: { profile?: ManagedDirectoryProfile; open: boolean; onClose: () => void; taxonomies?: DirectoryTaxonomies; onSaved: () => void }) {
   const [name, setName] = useState('');
-  const [kind, setKind] = useState('person');
+  const [kind, setKind] = useState<DirectoryProfileUpsert['profileKind']>('person');
   const [bio, setBio] = useState('');
+  const [experience, setExperience] = useState('');
+  const [credits, setCredits] = useState('');
+  const [equipment, setEquipment] = useState('');
+  const [availabilityStatus, setAvailabilityStatus] = useState<NonNullable<DirectoryProfileUpsert['availabilityStatus']>>('ask');
   const [professions, setProfessions] = useState<string[]>([]);
+  const [professionDetails, setProfessionDetails] = useState<Record<string, ProfessionFormDetail>>({});
   const [instruments, setInstruments] = useState<string[]>([]);
+  const [instrumentLevels, setInstrumentLevels] = useState<Record<string, NonNullable<DirectoryProfileUpsert['instrumentDetails']>[number]['proficiency']>>({});
   const [genres, setGenres] = useState<string[]>([]);
   const [services, setServices] = useState<string[]>([]);
-  const [cityId, setCityId] = useState('');
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [languageLevels, setLanguageLevels] = useState<Record<string, NonNullable<DirectoryProfileUpsert['languages']>[number]['proficiency']>>({});
+  const [cityIds, setCityIds] = useState<string[]>([]);
+  const [primaryCityId, setPrimaryCityId] = useState('');
+  const [serviceRadiusKm, setServiceRadiusKm] = useState('');
   const [onsite, setOnsite] = useState(true);
   const [remote, setRemote] = useState(false);
   const [availableToTravel, setAvailableToTravel] = useState(false);
   const [travelRadiusKm, setTravelRadiusKm] = useState('');
+  const [rateMin, setRateMin] = useState('');
+  const [rateMax, setRateMax] = useState('');
+  const [currencyId, setCurrencyId] = useState('');
+  const [portfolio, setPortfolio] = useState<DirectoryPortfolioItem[]>([]);
+  const [links, setLinks] = useState<DirectoryProfileLink[]>([]);
+  const preservedServiceAreas = profile?.serviceAreas.filter((area) => !area.cityId) ?? [];
+  const preservedPrimaryArea = preservedServiceAreas.find((area) => area.primaryLocation);
+
+  useEffect(() => {
+    if (!open) return;
+    const defaultCurrencyId = profile?.rates?.currencyId ?? taxonomies?.currencies.find((item) => item.code === 'USD')?.id ?? taxonomies?.currencies[0]?.id ?? '';
+    const defaultMinorUnits = taxonomies?.currencies.find((item) => item.id === defaultCurrencyId)?.minorUnits ?? 2;
+    const profileCities = profile?.serviceAreas.flatMap((area) => area.cityId ? [area.cityId] : []) ?? [];
+    const primary = profile?.serviceAreas.find((area) => area.primaryLocation)?.cityId ?? profileCities[0] ?? (profile ? '' : taxonomies?.cities[0]?.id ?? '');
+    setName(profile?.name ?? '');
+    setKind(profile?.kind ?? 'person');
+    setBio(profile?.bio ?? '');
+    setExperience(profile?.experienceSummary ?? '');
+    setCredits(profile?.creditsSummary ?? '');
+    setEquipment(profile?.equipmentSummary ?? '');
+    setAvailabilityStatus(profile?.availabilityStatus ?? 'ask');
+    setProfessions(profile?.professionIds ?? []);
+    setProfessionDetails(Object.fromEntries((profile?.professionDetails ?? []).map((detail) => {
+      const detailCurrency = detail.currencyId ?? defaultCurrencyId;
+      const minorUnits = taxonomies?.currencies.find((item) => item.id === detailCurrency)?.minorUnits ?? 2;
+      return [detail.professionId, {
+        headline: detail.headline ?? '',
+        yearsExperience: detail.yearsExperience === undefined ? '' : String(detail.yearsExperience),
+        rateMin: minorToMoney(detail.rateMinMinor, minorUnits),
+        rateMax: minorToMoney(detail.rateMaxMinor, minorUnits),
+        currencyId: detailCurrency,
+      }];
+    })));
+    setInstruments(profile?.instrumentIds ?? []);
+    setInstrumentLevels(Object.fromEntries((profile?.instrumentDetails ?? []).map((detail) => [detail.instrumentId, detail.proficiency ?? 'professional'])));
+    setGenres(profile?.genreIds ?? []);
+    setServices(profile?.serviceOfferingIds ?? []);
+    setLanguages((profile?.languages ?? []).map((language) => language.languageId));
+    setLanguageLevels(Object.fromEntries((profile?.languages ?? []).map((language) => [language.languageId, language.proficiency ?? 'professional'])));
+    setCityIds(profile ? profileCities : primary ? [primary] : []);
+    setPrimaryCityId(primary);
+    setServiceRadiusKm(profile?.serviceAreas.find((area) => area.primaryLocation)?.serviceRadiusKm?.toString() ?? '');
+    setOnsite(profile?.onsite ?? true);
+    setRemote(profile?.remote ?? false);
+    setAvailableToTravel(profile?.availableToTravel ?? false);
+    setTravelRadiusKm(profile?.travelRadiusKm?.toString() ?? '');
+    setRateMin(minorToMoney(profile?.rates?.minMinor ?? undefined, defaultMinorUnits));
+    setRateMax(minorToMoney(profile?.rates?.maxMinor ?? undefined, defaultMinorUnits));
+    setCurrencyId(defaultCurrencyId);
+    setPortfolio(profile?.portfolio.map((item) => ({ ...item })) ?? []);
+    setLinks(profile?.links.map((item) => ({ ...item })) ?? []);
+  }, [open, profile, taxonomies]);
+
+  const setSelectedProfessions = (ids: string[]) => {
+    setProfessions(ids);
+    setProfessionDetails((current) => Object.fromEntries(ids.map((id) => [id, current[id] ?? { headline: '', yearsExperience: '', rateMin: '', rateMax: '', currencyId }])));
+  };
+  const setSelectedInstruments = (ids: string[]) => {
+    setInstruments(ids);
+    setInstrumentLevels((current) => Object.fromEntries(ids.map((id) => [id, current[id] ?? 'professional'])));
+  };
+  const setSelectedLanguages = (ids: string[]) => {
+    setLanguages(ids);
+    setLanguageLevels((current) => Object.fromEntries(ids.map((id) => [id, current[id] ?? 'professional'])));
+  };
+  const setSelectedCities = (ids: string[]) => {
+    setCityIds(ids);
+    if (!ids.includes(primaryCityId)) setPrimaryCityId(ids[0] ?? '');
+  };
+  const selectedCurrency = taxonomies?.currencies.find((item) => item.id === currencyId);
+  const minMinor = moneyToMinor(rateMin, selectedCurrency?.minorUnits);
+  const maxMinor = moneyToMinor(rateMax, selectedCurrency?.minorUnits);
+  const validationError = profileFormError({ name, cityIds, primaryCityId, hasPreservedPrimaryArea: Boolean(preservedPrimaryArea), onsite, remote, availableToTravel, rateMin, rateMax, portfolio, links });
   const mutation = useMutation({ mutationFn: () => {
-    const city = taxonomies?.cities.find((item) => item.id === cityId);
-    if (!city?.countryId) throw new Error('Selecciona una ciudad.');
-    return Directory.createProfile({
+    const primaryCity = taxonomies?.cities.find((item) => item.id === primaryCityId);
+    const primaryArea = primaryCity?.countryId ? { countryId: primaryCity.countryId, cityId: primaryCity.id } : preservedPrimaryArea;
+    if (!primaryArea?.countryId) throw new Error('Selecciona una ciudad principal válida.');
+    const cityServiceAreas: NonNullable<DirectoryProfileUpsert['serviceAreas']> = cityIds.map((cityId) => {
+      const city = taxonomies?.cities.find((item) => item.id === cityId);
+      if (!city?.countryId) throw new Error('Una de las ciudades seleccionadas no tiene país.');
+      return {
+        countryId: city.countryId,
+        cityId,
+        serviceRadiusKm: serviceRadiusKm ? Number(serviceRadiusKm) : undefined,
+        primaryLocation: cityId === primaryCityId,
+        onsite,
+      };
+    });
+    const retainedServiceAreas: NonNullable<DirectoryProfileUpsert['serviceAreas']> = preservedServiceAreas.map((area) => ({
+      ...area,
+      primaryLocation: primaryCity ? false : area.primaryLocation,
+    }));
+    const body: DirectoryProfileUpsert = {
       profileKind: kind,
       publicName: name.trim(),
-      slug: slugify(name),
+      slug: profile?.slug ?? slugify(name),
       bio: bio.trim() || undefined,
+      experienceSummary: experience.trim(),
+      creditsSummary: credits.trim(),
+      portfolio,
+      links,
+      equipmentSummary: equipment.trim(),
+      rateMinMinor: minMinor,
+      rateMaxMinor: maxMinor,
+      currencyId: minMinor !== undefined || maxMinor !== undefined ? currencyId : undefined,
+      clearRates: Boolean(profile?.rates && minMinor === undefined && maxMinor === undefined),
+      availabilityStatus,
       professionIds: professions,
+      professionDetails: professions.map((professionId) => {
+        const detail = professionDetails[professionId] ?? { headline: '', yearsExperience: '', rateMin: '', rateMax: '', currencyId };
+        const detailCurrency = taxonomies?.currencies.find((item) => item.id === detail.currencyId);
+        return {
+          professionId,
+          headline: detail.headline.trim() || undefined,
+          yearsExperience: detail.yearsExperience ? Number(detail.yearsExperience) : undefined,
+          rateMinMinor: moneyToMinor(detail.rateMin, detailCurrency?.minorUnits),
+          rateMaxMinor: moneyToMinor(detail.rateMax, detailCurrency?.minorUnits),
+          currencyId: detail.rateMin || detail.rateMax ? detail.currencyId : undefined,
+        };
+      }),
       instrumentIds: instruments,
+      instrumentDetails: instruments.map((instrumentId) => ({ instrumentId, proficiency: instrumentLevels[instrumentId] ?? 'professional' })),
       genreIds: genres,
       serviceOfferingIds: services,
-      countryId: city.countryId,
-      cityId,
+      languages: languages.map((languageId) => ({ languageId, proficiency: languageLevels[languageId] ?? 'professional' })),
+      serviceAreas: [...cityServiceAreas, ...retainedServiceAreas],
+      countryId: primaryArea.countryId,
+      cityId: primaryCity?.id,
       onsite,
       remote,
       availableToTravel,
       travelRadiusKm: availableToTravel && travelRadiusKm ? Number(travelRadiusKm) : undefined,
-    });
-  }, onSuccess: onCreated });
-  const validModality = onsite || remote || availableToTravel;
-  return <Dialog open={open} onClose={onClose} fullWidth maxWidth="md"><DialogTitle>Crear perfil público</DialogTitle><DialogContent><Stack spacing={2} pt={1}><TextField label="Nombre público" value={name} onChange={(event) => setName(event.target.value)} required inputProps={{ maxLength: 160 }} /><FormControl><InputLabel>Tipo</InputLabel><Select label="Tipo" value={kind} onChange={(event) => setKind(event.target.value)}>{[['person','Persona'],['artist','Artista'],['band','Banda'],['project','Proyecto'],['organization','Organización'],['venue','Venue'],['studio','Estudio'],['agency','Agencia'],['label','Sello'],['distributor','Distribuidora'],['school','Escuela']].map(([value,label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}</Select></FormControl><TextField label="Biografía" multiline minRows={4} value={bio} onChange={(event) => setBio(event.target.value)} /><TaxonomyMultiSelect label="Profesiones" items={taxonomies?.professions ?? []} values={professions} onChange={setProfessions} /><TaxonomyMultiSelect label="Instrumentos" items={taxonomies?.instruments ?? []} values={instruments} onChange={setInstruments} /><TaxonomyMultiSelect label="Géneros" items={taxonomies?.genres ?? []} values={genres} onChange={setGenres} /><TaxonomyMultiSelect label="Servicios" items={taxonomies?.serviceOfferings ?? []} values={services} onChange={setServices} /><FormControl><InputLabel>Ciudad principal</InputLabel><Select label="Ciudad principal" value={cityId} onChange={(event) => setCityId(event.target.value)}>{(taxonomies?.cities ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</Select></FormControl><Stack direction={{ xs: 'column', sm: 'row' }} gap={1}><FormControlLabel control={<Switch checked={onsite} onChange={(event) => setOnsite(event.target.checked)} />} label="Presencial" /><FormControlLabel control={<Switch checked={remote} onChange={(event) => setRemote(event.target.checked)} />} label="Remoto" /><FormControlLabel control={<Switch checked={availableToTravel} onChange={(event) => setAvailableToTravel(event.target.checked)} />} label="Disponible para viajar" /></Stack>{availableToTravel && <TextField label="Radio de viaje (km)" type="number" value={travelRadiusKm} onChange={(event) => setTravelRadiusKm(event.target.value)} inputProps={{ min: 0, max: 20000 }} />}{!validModality && <Alert severity="warning">Selecciona al menos una modalidad de trabajo.</Alert>}{mutation.error && <Alert severity="error">{mutation.error.message}</Alert>}</Stack></DialogContent><DialogActions><Button onClick={onClose}>Cancelar</Button><Button variant="contained" onClick={() => mutation.mutate()} disabled={!name.trim() || !cityId || !validModality || mutation.isPending}>Crear borrador</Button></DialogActions></Dialog>;
+    };
+    return profile ? Directory.updateProfile(profile.id, body) : Directory.createProfile(body);
+  }, onSuccess: onSaved });
+  return <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg"><DialogTitle>{profile ? 'Editar perfil público' : 'Crear perfil público'}</DialogTitle><DialogContent><Stack spacing={2.5} pt={1}>
+    <Typography variant="h6" fontWeight={800}>Identidad pública</Typography>
+    <TextField label="Nombre público" value={name} onChange={(event) => setName(event.target.value)} required inputProps={{ maxLength: 160 }} />
+    <FormControl><InputLabel>Tipo</InputLabel><Select label="Tipo" value={kind} onChange={(event) => setKind(event.target.value as DirectoryProfileUpsert['profileKind'])}>{[['person','Persona'],['artist','Artista'],['band','Banda'],['project','Proyecto'],['organization','Organización'],['company','Empresa'],['venue','Venue'],['studio','Estudio'],['agency','Agencia'],['label','Sello'],['distributor','Distribuidora'],['school','Escuela']].map(([value,label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}</Select></FormControl>
+    <TextField label="Biografía" multiline minRows={4} value={bio} onChange={(event) => setBio(event.target.value)} inputProps={{ maxLength: 10000 }} />
+    <TextField label="Experiencia" multiline minRows={3} value={experience} onChange={(event) => setExperience(event.target.value)} inputProps={{ maxLength: 5000 }} />
+    <TextField label="Créditos y discografía" multiline minRows={3} value={credits} onChange={(event) => setCredits(event.target.value)} inputProps={{ maxLength: 5000 }} />
+    <TextField label="Equipos disponibles" multiline minRows={2} value={equipment} onChange={(event) => setEquipment(event.target.value)} inputProps={{ maxLength: 5000 }} />
+    <Divider />
+    <Typography variant="h6" fontWeight={800}>Especialidades</Typography>
+    <TaxonomyMultiSelect label="Profesiones" items={taxonomies?.professions ?? []} values={professions} onChange={setSelectedProfessions} />
+    {professions.map((id) => {
+      const detail = professionDetails[id] ?? { headline: '', yearsExperience: '', rateMin: '', rateMax: '', currencyId };
+      const update = (next: Partial<ProfessionFormDetail>) => setProfessionDetails((current) => ({ ...current, [id]: { ...detail, ...next } }));
+      return <Paper key={id} variant="outlined" sx={{ p: 2 }}><Stack spacing={1.5}><Typography fontWeight={800}>{taxonomies?.professions.find((item) => item.id === id)?.name ?? 'Profesión'}</Typography><TextField label="Descripción de este rol" value={detail.headline} onChange={(event) => update({ headline: event.target.value })} inputProps={{ maxLength: 160 }} /><Stack direction={{ xs: 'column', md: 'row' }} gap={1.5}><TextField fullWidth label="Años de experiencia" type="number" value={detail.yearsExperience} onChange={(event) => update({ yearsExperience: event.target.value })} inputProps={{ min: 0, max: 100, step: 0.5 }} /><TextField fullWidth label="Tarifa mínima" type="number" value={detail.rateMin} onChange={(event) => update({ rateMin: event.target.value })} inputProps={{ min: 0, step: '0.01' }} /><TextField fullWidth label="Tarifa máxima" type="number" value={detail.rateMax} onChange={(event) => update({ rateMax: event.target.value })} inputProps={{ min: 0, step: '0.01' }} /><CurrencySelect currencies={taxonomies?.currencies ?? []} value={detail.currencyId} onChange={(value) => update({ currencyId: value })} /></Stack></Stack></Paper>;
+    })}
+    <TaxonomyMultiSelect label="Instrumentos" items={taxonomies?.instruments ?? []} values={instruments} onChange={setSelectedInstruments} />
+    {instruments.map((id) => <Stack key={id} direction={{ xs: 'column', sm: 'row' }} gap={2} alignItems={{ sm: 'center' }}><Typography sx={{ minWidth: 180 }}>{taxonomies?.instruments.find((item) => item.id === id)?.name ?? 'Instrumento'}</Typography><FormControl fullWidth><InputLabel>Nivel</InputLabel><Select label="Nivel" value={instrumentLevels[id] ?? 'professional'} onChange={(event) => setInstrumentLevels((current) => ({ ...current, [id]: event.target.value as typeof instrumentLevels[string] }))}>{[['beginner','Principiante'],['intermediate','Intermedio'],['advanced','Avanzado'],['professional','Profesional'],['virtuoso','Virtuoso']].map(([value,label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}</Select></FormControl></Stack>)}
+    <TaxonomyMultiSelect label="Géneros" items={taxonomies?.genres ?? []} values={genres} onChange={setGenres} />
+    <TaxonomyMultiSelect label="Servicios" items={taxonomies?.serviceOfferings ?? []} values={services} onChange={setServices} />
+    <TaxonomyMultiSelect label="Idiomas" items={taxonomies?.languages ?? []} values={languages} onChange={setSelectedLanguages} />
+    {languages.map((id) => <Stack key={id} direction={{ xs: 'column', sm: 'row' }} gap={2} alignItems={{ sm: 'center' }}><Typography sx={{ minWidth: 180 }}>{taxonomies?.languages.find((item) => item.id === id)?.name ?? 'Idioma'}</Typography><FormControl fullWidth><InputLabel>Dominio</InputLabel><Select label="Dominio" value={languageLevels[id] ?? 'professional'} onChange={(event) => setLanguageLevels((current) => ({ ...current, [id]: event.target.value as typeof languageLevels[string] }))}>{[['basic','Básico'],['conversational','Conversacional'],['professional','Profesional'],['native','Nativo']].map(([value,label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}</Select></FormControl></Stack>)}
+    <Divider />
+    <Typography variant="h6" fontWeight={800}>Disponibilidad y cobertura</Typography>
+    <FormControl><InputLabel>Disponibilidad</InputLabel><Select label="Disponibilidad" value={availabilityStatus} onChange={(event) => setAvailabilityStatus(event.target.value as typeof availabilityStatus)}>{[['available','Disponible'],['limited','Limitada'],['unavailable','No disponible'],['ask','Consultar']].map(([value,label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}</Select></FormControl>
+    <TaxonomyMultiSelect label="Ciudades y áreas de servicio" items={taxonomies?.cities ?? []} values={cityIds} onChange={setSelectedCities} required={!preservedPrimaryArea} />
+    {preservedServiceAreas.length > 0 && <Alert severity="info">Las áreas regionales o nacionales existentes que este selector todavía no edita se conservarán al guardar.</Alert>}
+    <FormControl required={!preservedPrimaryArea}><InputLabel>Ciudad principal</InputLabel><Select label="Ciudad principal" value={primaryCityId} onChange={(event) => setPrimaryCityId(event.target.value)}>{cityIds.map((id) => <MenuItem key={id} value={id}>{taxonomies?.cities.find((item) => item.id === id)?.name ?? id}</MenuItem>)}</Select></FormControl>
+    <TextField label="Radio de servicio presencial (km)" type="number" value={serviceRadiusKm} onChange={(event) => setServiceRadiusKm(event.target.value)} inputProps={{ min: 0, max: 20000 }} />
+    <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}><FormControlLabel control={<Switch checked={onsite} onChange={(event) => setOnsite(event.target.checked)} />} label="Presencial" /><FormControlLabel control={<Switch checked={remote} onChange={(event) => setRemote(event.target.checked)} />} label="Remoto" /><FormControlLabel control={<Switch checked={availableToTravel} onChange={(event) => setAvailableToTravel(event.target.checked)} />} label="Disponible para viajar" /></Stack>
+    {availableToTravel && <TextField label="Radio de viaje (km)" type="number" value={travelRadiusKm} onChange={(event) => setTravelRadiusKm(event.target.value)} inputProps={{ min: 0, max: 20000 }} />}
+    <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}><TextField fullWidth label="Tarifa general mínima" type="number" value={rateMin} onChange={(event) => setRateMin(event.target.value)} inputProps={{ min: 0, step: '0.01' }} /><TextField fullWidth label="Tarifa general máxima" type="number" value={rateMax} onChange={(event) => setRateMax(event.target.value)} inputProps={{ min: 0, step: '0.01' }} /><CurrencySelect currencies={taxonomies?.currencies ?? []} value={currencyId} onChange={setCurrencyId} /></Stack>
+    <Divider />
+    <Stack direction="row" justifyContent="space-between" alignItems="center"><Typography variant="h6" fontWeight={800}>Portafolio</Typography><Button startIcon={<AddIcon />} onClick={() => setPortfolio((current) => [...current, { itemType: 'other', title: '', url: '' }])}>Agregar</Button></Stack>
+    {portfolio.length === 0 && <Typography color="text.secondary">Agrega audio, video, imágenes, releases o créditos mediante enlaces HTTP(S) o rutas internas de TDF.</Typography>}
+    {portfolio.map((item, index) => <Paper key={index} variant="outlined" sx={{ p: 2 }}><Stack spacing={1.5}><Stack direction={{ xs: 'column', sm: 'row' }} gap={1.5}><FormControl sx={{ minWidth: 160 }}><InputLabel>Tipo</InputLabel><Select label="Tipo" value={item.itemType} onChange={(event) => setPortfolio((current) => current.map((value, i) => i === index ? { ...value, itemType: event.target.value as DirectoryPortfolioItem['itemType'] } : value))}>{['audio','video','image','release','credit','document','other'].map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl><TextField fullWidth label="URL HTTP(S) o ruta TDF" value={item.url} onChange={(event) => setPortfolio((current) => current.map((value, i) => i === index ? { ...value, url: event.target.value } : value))} /><TextField fullWidth label="Título" value={item.title} onChange={(event) => setPortfolio((current) => current.map((value, i) => i === index ? { ...value, title: event.target.value } : value))} inputProps={{ maxLength: 160 }} /></Stack><TextField label="Descripción" value={item.description ?? ''} onChange={(event) => setPortfolio((current) => current.map((value, i) => i === index ? { ...value, description: event.target.value || undefined } : value))} inputProps={{ maxLength: 1000 }} /><Button color="error" sx={{ alignSelf: 'flex-start' }} onClick={() => setPortfolio((current) => current.filter((_, i) => i !== index))}>Quitar</Button></Stack></Paper>)}
+    <Stack direction="row" justifyContent="space-between" alignItems="center"><Typography variant="h6" fontWeight={800}>Enlaces y redes</Typography><Button startIcon={<AddIcon />} onClick={() => setLinks((current) => [...current, { label: '', url: '' }])}>Agregar</Button></Stack>
+    {links.map((item, index) => <Paper key={index} variant="outlined" sx={{ p: 2 }}><Stack direction={{ xs: 'column', sm: 'row' }} gap={1.5}><TextField fullWidth label="Etiqueta" value={item.label} onChange={(event) => setLinks((current) => current.map((value, i) => i === index ? { ...value, label: event.target.value } : value))} inputProps={{ maxLength: 80 }} /><TextField fullWidth label="URL HTTP(S) o ruta TDF" value={item.url} onChange={(event) => setLinks((current) => current.map((value, i) => i === index ? { ...value, url: event.target.value } : value))} /><Button color="error" onClick={() => setLinks((current) => current.filter((_, i) => i !== index))}>Quitar</Button></Stack></Paper>)}
+    <Alert severity="info">Las coordenadas residenciales y direcciones exactas no forman parte de este formulario ni de los DTO públicos. Solo se publica la ciudad y el sector que decidas indicar.</Alert>
+    {validationError && <Alert severity="warning">{validationError}</Alert>}{mutation.error && <Alert severity="error">{mutation.error.message}</Alert>}
+  </Stack></DialogContent><DialogActions><Button onClick={onClose}>Cancelar</Button><Button variant="contained" onClick={() => mutation.mutate()} disabled={Boolean(validationError) || mutation.isPending}>{profile ? 'Guardar cambios' : 'Crear borrador'}</Button></DialogActions></Dialog>;
+}
+
+function CurrencySelect({ currencies, value, onChange }: { currencies: DirectoryTaxonomyItem[]; value: string; onChange: (value: string) => void }) {
+  return <FormControl sx={{ minWidth: 150 }}><InputLabel>Moneda</InputLabel><Select label="Moneda" value={value} onChange={(event) => onChange(event.target.value)}>{currencies.map((item) => <MenuItem key={item.id} value={item.id}>{item.code} · {item.symbol ?? item.name}</MenuItem>)}</Select></FormControl>;
+}
+
+const isHttpUrl = (value: string) => {
+  const trimmed = value.trim();
+  if (/[\\\s\u0000-\u001f\u007f]/u.test(trimmed)) return false;
+  if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return true;
+  try {
+    const parsed = new URL(trimmed);
+    return (parsed.protocol === 'http:' || parsed.protocol === 'https:') && !parsed.username && !parsed.password;
+  } catch {
+    return false;
+  }
+};
+
+export function profileFormError(input: { name: string; cityIds: string[]; primaryCityId: string; hasPreservedPrimaryArea?: boolean; onsite: boolean; remote: boolean; availableToTravel: boolean; rateMin: string; rateMax: string; portfolio: DirectoryPortfolioItem[]; links: DirectoryProfileLink[] }): string | null {
+  if (!input.name.trim()) return 'Indica un nombre público.';
+  if ((!input.cityIds.length || !input.primaryCityId || !input.cityIds.includes(input.primaryCityId)) && !input.hasPreservedPrimaryArea) return 'Selecciona al menos una ciudad y marca la principal.';
+  if (!input.onsite && !input.remote && !input.availableToTravel) return 'Selecciona al menos una modalidad de trabajo.';
+  if ([input.rateMin, input.rateMax].some((value) => value && (!Number.isFinite(Number(value)) || Number(value) < 0))) return 'Las tarifas deben ser números no negativos.';
+  if (input.rateMax && !input.rateMin) return 'Indica la tarifa mínima antes de la máxima.';
+  if (input.rateMin && input.rateMax && Number(input.rateMax) < Number(input.rateMin)) return 'La tarifa máxima no puede ser menor que la mínima.';
+  if (input.portfolio.some((item) => !item.title.trim() || !isHttpUrl(item.url))) return 'Cada elemento del portafolio necesita título y una URL HTTP(S) o ruta interna válida sin credenciales.';
+  if (input.links.some((item) => !item.label.trim() || !isHttpUrl(item.url))) return 'Cada enlace necesita etiqueta y una URL HTTP(S) o ruta interna válida sin credenciales.';
+  return null;
 }
 
 function ClassifiedDialog({ open, onClose, profiles, taxonomies, onCreated }: { open: boolean; onClose: () => void; profiles: ManagedDirectoryProfile[]; taxonomies?: DirectoryTaxonomies; onCreated: () => void }) {
@@ -316,6 +516,8 @@ export const moneyToMinor = (value: string, minorUnits = 2): number | undefined 
   const amount = Number(value);
   return Number.isFinite(amount) && amount >= 0 ? Math.round(amount * (10 ** minorUnits)) : undefined;
 };
+export const minorToMoney = (value: number | null | undefined, minorUnits = 2): string =>
+  value == null ? '' : String(value / (10 ** minorUnits));
 
 export function classifiedFormError(input: { required: Set<string>; cityIds: string[]; remote: boolean; availableToTravel: boolean; professionIds: string[]; instrumentIds: string[]; genreIds: string[]; startsAt: string; endsAt: string; compensationTypeId: string; budgetMode?: string; budgetMin: string; budgetMax: string; serviceOfferingId: string }): string | null {
   const { required } = input;
