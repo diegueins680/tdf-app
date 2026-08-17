@@ -66,6 +66,24 @@ describe('web music directory canonical API', () => {
     expect(mockPost).toHaveBeenLastCalledWith('/directory/contact', expect.objectContaining({ contextKind: 'invitation' }), { headers: { 'Idempotency-Key': 'web-invitation-contact-1' } });
   });
 
+  it('keeps verified reviews public, participant-scoped, and idempotent', async () => {
+    mockGet.mockResolvedValue({});
+    mockPost.mockResolvedValue({});
+    await Directory.profileReviews('perfil & quito', '11111111-1111-4111-8111-111111111111', 10);
+    expect(mockGet).toHaveBeenCalledWith('/directory/profiles/perfil%20%26%20quito/reviews?limit=10&cursor=11111111-1111-4111-8111-111111111111');
+    await Directory.reviewEligibility('22222222-2222-4222-8222-222222222222');
+    expect(mockGet).toHaveBeenLastCalledWith('/directory/review-eligibility?authorProfileId=22222222-2222-4222-8222-222222222222');
+    const request = {
+      interactionId: '33333333-3333-4333-8333-333333333333',
+      authorProfileId: '22222222-2222-4222-8222-222222222222',
+      subjectProfileId: '44444444-4444-4444-8444-444444444444',
+      rating: 5,
+      body: 'Una colaboración profesional y verificable.',
+    };
+    await Directory.createReview(request, 'web-review-retry-1');
+    expect(mockPost).toHaveBeenLastCalledWith('/directory/reviews', request, { headers: { 'Idempotency-Key': 'web-review-retry-1' } });
+  });
+
   it('exposes the explicit non-destructive admin merge contract', async () => {
     mockPost.mockResolvedValue({});
     const request = {

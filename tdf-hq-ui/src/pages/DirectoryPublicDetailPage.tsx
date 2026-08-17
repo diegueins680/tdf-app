@@ -6,8 +6,14 @@ import {
   CircularProgress,
   Container,
   Divider,
+  FormControl,
+  InputLabel,
+  MenuItem,
   Paper,
+  Rating,
+  Select,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -15,10 +21,11 @@ import LoginIcon from '@mui/icons-material/Login';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import ShareIcon from '@mui/icons-material/Share';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { Link as RouterLink, useLocation, useParams } from 'react-router-dom';
 
-import { Directory, type DirectoryEntityType } from '../api/directory';
+import { Directory, type DirectoryEntityType, type DirectoryReviewEligibility, type DirectoryReviewPage } from '../api/directory';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
@@ -26,6 +33,7 @@ import { buildLoginRedirectPath } from '../utils/loginRouting';
 type DetailKind = Exclude<DirectoryEntityType, never>;
 
 const text = (value: unknown): string | undefined => typeof value === 'string' ? value : undefined;
+const number = (value: unknown): number | undefined => typeof value === 'number' ? value : undefined;
 const record = (value: unknown): Record<string, unknown> | undefined =>
   typeof value === 'object' && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : undefined;
 const rows = (value: unknown): Record<string, unknown>[] =>
@@ -53,6 +61,9 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
   const canonical = `${window.location.origin}${canonicalPath}`;
   const categoryCode = text(record(value['category'])?.['code']);
   const profileKind = text(value['kind']);
+  const reputation = record(value['reputation']);
+  const reviewAverage = number(reputation?.['reviewAverage']);
+  const reviewCount = number(reputation?.['reviewCount']) ?? 0;
   const schemaType = kind === 'event' ? 'MusicEvent'
     : kind === 'venue' ? 'MusicVenue'
       : kind === 'classified' && categoryCode === 'paid-work' ? 'JobPosting'
@@ -72,6 +83,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
       name: title,
       description,
       url: canonical,
+      ...(reviewAverage && reviewCount > 0 ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: reviewAverage, reviewCount } } : {}),
     },
   });
 
@@ -136,6 +148,8 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
                 </Stack>
               )}
 
+              {kind === 'profile' && <ProfileReviews slug={identifier} profileId={targetId} authenticated={Boolean(session)} />}
+
               <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
                 <Typography variant="h5" fontWeight={800}>{kind === 'classified' ? '¿Te interesa esta oportunidad?' : '¿Quieres contactar este perfil?'}</Typography>
                 <Typography color="text.secondary" mt={1}>TDF mantiene tu correo y teléfono ocultos hasta que decidas compartirlos.</Typography>
@@ -161,4 +175,107 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
 
 function TagSection({ title, values }: { title: string; values: string[] }) {
   return <Box><Typography variant="subtitle2" gutterBottom>{title}</Typography><Stack direction="row" gap={1} flexWrap="wrap">{values.map((value) => <Chip key={value} label={value} />)}</Stack></Box>;
+}
+
+function ProfileReviews({ slug, profileId, authenticated }: { slug: string; profileId: string; authenticated: boolean }) {
+  const queryClient = useQueryClient();
+  const [interactionId, setInteractionId] = useState('');
+  const [rating, setRating] = useState<number | null>(5);
+  const [body, setBody] = useState('');
+  const reviews = useInfiniteQuery({
+    queryKey: ['directory-profile-reviews', slug],
+    queryFn: ({ pageParam }) => Directory.profileReviews(slug, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+  });
+  const eligibility = useQuery({
+    queryKey: ['directory-review-eligibility'],
+    queryFn: () => Directory.reviewEligibility(),
+    enabled: authenticated,
+  });
+  const eligible = (eligibility.data ?? []).filter((item) => item.subjectProfile.id === profileId);
+  const selected = eligible.find((item) => item.interactionId === interactionId);
+  const create = useMutation({
+    mutationFn: () => {
+      if (!selected || !rating) throw new Error('Selecciona una interacción y una calificación.');
+      return Directory.createReview({
+        interactionId: selected.interactionId,
+        authorProfileId: selected.authorProfile.id,
+        subjectProfileId: selected.subjectProfile.id,
+        rating,
+        body: body.trim() || null,
+      });
+    },
+    onSuccess: async () => {
+      setInteractionId('');
+      setRating(5);
+      setBody('');
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['directory-profile-reviews', slug] }),
+        queryClient.invalidateQueries({ queryKey: ['directory-review-eligibility'] }),
+        queryClient.invalidateQueries({ queryKey: ['directory', 'profile', slug] }),
+      ]);
+    },
+  });
+  const items = reviews.data?.pages.flatMap((page) => page.items) ?? [];
+  const summary = reviews.data?.pages[0]?.summary;
+  const validBody = body.trim().length === 0 || (body.trim().length >= 10 && body.length <= 2000);
+
+  return <Paper component="section" aria-labelledby="directory-reviews-title" variant="outlined" sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 3 }}>
+    <Stack spacing={2.5}>
+      <Box>
+        <Typography id="directory-reviews-title" variant="h4" fontWeight={850}>Reseñas verificadas</Typography>
+        <Typography color="text.secondary">
+          {summary?.count ? `${summary.average?.toFixed(1) ?? '—'} de 5 · ${summary.count} reseña${summary.count === 1 ? '' : 's'}` : 'Todavía no hay reseñas públicas.'}
+        </Typography>
+      </Box>
+      {reviews.isLoading && <CircularProgress size={24} />}
+      {reviews.isError && <Alert severity="error">No pudimos cargar las reseñas.</Alert>}
+      {items.map((review) => <ReviewCard key={review.id} review={review} authenticated={authenticated} />)}
+      {reviews.hasNextPage && <Button onClick={() => { void reviews.fetchNextPage(); }} disabled={reviews.isFetchingNextPage}>{reviews.isFetchingNextPage ? 'Cargando…' : 'Ver más reseñas'}</Button>}
+      <Divider />
+      {!authenticated ? (
+        <Alert severity="info">Inicia sesión para reseñar después de una reserva, orden o colaboración completada y verificada.</Alert>
+      ) : eligibility.isLoading ? <CircularProgress size={24} /> : eligibility.isError ? (
+        <Alert severity="error">No pudimos comprobar tus interacciones elegibles.</Alert>
+      ) : eligible.length === 0 ? (
+        <Alert severity="info">No tienes una interacción completada y verificada pendiente de reseña con este perfil.</Alert>
+      ) : (
+        <Stack component="form" spacing={2} onSubmit={(event) => { event.preventDefault(); create.mutate(); }}>
+          <Typography variant="h5" fontWeight={800}>Escribir una reseña</Typography>
+          <FormControl required>
+            <InputLabel>Interacción verificada</InputLabel>
+            <Select label="Interacción verificada" value={interactionId} onChange={(event) => setInteractionId(event.target.value)}>
+              <MenuItem value="" disabled>Selecciona el perfil con el que actuaste</MenuItem>
+              {eligible.map((item) => <MenuItem key={item.interactionId} value={item.interactionId}>{reviewEligibilityLabel(item)}</MenuItem>)}
+            </Select>
+          </FormControl>
+          <Box><Typography component="legend">Calificación</Typography><Rating value={rating} onChange={(_event, value) => setRating(value)} /></Box>
+          <TextField label="Comentario opcional" multiline minRows={3} value={body} onChange={(event) => setBody(event.target.value)} inputProps={{ minLength: 10, maxLength: 2000 }} helperText="Si escribes un comentario, usa entre 10 y 2.000 caracteres." error={!validBody} />
+          {create.error && <Alert severity="error">{create.error.message}</Alert>}
+          {create.isSuccess && <Alert severity="success">Reseña publicada y vinculada a la interacción verificada.</Alert>}
+          <Button type="submit" variant="contained" disabled={!selected || !rating || !validBody || create.isPending}>{create.isPending ? 'Publicando…' : 'Publicar reseña'}</Button>
+        </Stack>
+      )}
+    </Stack>
+  </Paper>;
+}
+
+function ReviewCard({ review, authenticated }: { review: DirectoryReviewPage['items'][number]; authenticated: boolean }) {
+  const report = useMutation({ mutationFn: () => Directory.report({ targetKind: 'review', targetId: review.id, reasonCode: 'community-report' }) });
+  return <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+    <Stack spacing={1}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
+        <Box><Typography component={RouterLink} to={`/directorio/${review.authorProfile.slug}`} color="text.primary" fontWeight={800} sx={{ textDecoration: 'none' }}>{review.authorProfile.name}</Typography><Typography variant="body2" color="text.secondary">Interacción completada verificada</Typography></Box>
+        <Rating value={review.rating} readOnly size="small" aria-label={`${review.rating} de 5 estrellas`} />
+      </Stack>
+      {review.body && <Typography sx={{ whiteSpace: 'pre-wrap' }}>{review.body}</Typography>}
+      <Typography variant="caption" color="text.secondary">{new Date(review.createdAt).toLocaleDateString()}</Typography>
+      {authenticated && <Button size="small" color="inherit" sx={{ alignSelf: 'flex-start' }} disabled={report.isPending || report.isSuccess} onClick={() => report.mutate()}>{report.isSuccess ? 'Reportada' : 'Reportar reseña'}</Button>}
+    </Stack>
+  </Paper>;
+}
+
+function reviewEligibilityLabel(item: DirectoryReviewEligibility): string {
+  return `${item.authorProfile.name} · ${item.interactionKind.replace(/_/g, ' ')}`;
 }

@@ -11,6 +11,9 @@ export type DirectoryTaxonomies = components['schemas']['DirectoryTaxonomies'];
 export type ManagedDirectoryProfile = components['schemas']['ManagedDirectoryProfile'];
 export type ManagedClassified = components['schemas']['ManagedClassified'];
 export type DirectoryInvitation = components['schemas']['DirectoryInvitation'];
+export type DirectoryReviewPage = components['schemas']['DirectoryReviewPage'];
+export type DirectoryReviewEligibility = components['schemas']['DirectoryReviewEligibility'];
+export type DirectoryReview = components['schemas']['DirectoryReview'];
 
 const idempotencyHeaders = (key?: string) => ({ headers: { 'Idempotency-Key': key ?? crypto.randomUUID() } });
 
@@ -34,6 +37,11 @@ export const Directory = {
   taxonomies: (locale = 'es') =>
     get<DirectoryTaxonomies>(`/directory/taxonomies?locale=${encodeURIComponent(locale)}`),
   profile: (slug: string) => get<components['schemas']['PublicDirectoryProfile']>(`/directory/profiles/${encodeURIComponent(slug)}`),
+  profileReviews: (slug: string, cursor?: string, limit = 20) => {
+    const params = new URLSearchParams({ limit: String(limit) });
+    append(params, 'cursor', cursor);
+    return get<DirectoryReviewPage>(`/directory/profiles/${encodeURIComponent(slug)}/reviews?${params.toString()}`);
+  },
   classified: (slug: string) => get<components['schemas']['PublicClassified']>(`/directory/classifieds/${encodeURIComponent(slug)}`),
   event: (id: string) => get<components['schemas']['PublicDirectoryEvent']>(`/directory/events/${encodeURIComponent(id)}`),
   venue: (id: string) => get<components['schemas']['PublicDirectoryVenue']>(`/directory/venues/${encodeURIComponent(id)}`),
@@ -57,6 +65,10 @@ export const Directory = {
     patch<Record<string, unknown>>(`/directory/applications/${encodeURIComponent(applicationId)}/status`, { status }),
   contact: (body: components['schemas']['DirectoryContact'], idempotencyKey?: string) =>
     post<Record<string, unknown>>('/directory/contact', body, idempotencyHeaders(idempotencyKey)),
+  reviewEligibility: (authorProfileId?: string) =>
+    get<DirectoryReviewEligibility[]>(`/directory/review-eligibility${authorProfileId ? `?authorProfileId=${encodeURIComponent(authorProfileId)}` : ''}`),
+  createReview: (body: components['schemas']['DirectoryReviewCreate'], idempotencyKey?: string) =>
+    post<DirectoryReview>('/directory/reviews', body, idempotencyHeaders(idempotencyKey)),
   invitations: () => get<components['schemas']['DirectoryInvitation'][]>('/directory/invitations'),
   invite: (body: components['schemas']['InvitationCreate'], idempotencyKey?: string) =>
     post<components['schemas']['DirectoryInvitation']>('/directory/invitations', body, idempotencyHeaders(idempotencyKey)),

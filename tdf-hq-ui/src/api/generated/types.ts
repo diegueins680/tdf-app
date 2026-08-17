@@ -2625,6 +2625,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/directory/profiles/{slug}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listPublicDirectoryReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/directory/classifieds/{slug}": {
         parameters: {
             query?: never;
@@ -2843,6 +2859,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["contactDirectoryProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/review-eligibility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listDirectoryReviewEligibility"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createDirectoryReview"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5782,6 +5830,35 @@ export interface components {
             };
             canonicalUrl: string;
         };
+        /** @enum {string} */
+        DirectoryInteractionType: "booking" | "service_order" | "marketplace_order" | "event_collaboration" | "confirmed_collaboration";
+        DirectoryProfileReference: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+        };
+        PublicDirectoryReview: {
+            /** Format: uuid */
+            id: string;
+            rating: number;
+            body?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            verifiedInteractionType: components["schemas"]["DirectoryInteractionType"];
+            authorProfile: components["schemas"]["DirectoryProfileReference"];
+        };
+        DirectoryReviewPage: {
+            summary: {
+                /** Format: uuid */
+                profileId: string;
+                average?: number | null;
+                count: number;
+            };
+            items: components["schemas"]["PublicDirectoryReview"][];
+            /** Format: uuid */
+            nextCursor?: string | null;
+        };
         /** @description Published, current, moderated classified. */
         PublicClassified: {
             /** Format: uuid */
@@ -5968,12 +6045,6 @@ export interface components {
             /** Format: uuid */
             currencyId?: string;
         };
-        DirectoryProfileReference: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            slug: string;
-        };
         DirectoryClassifiedReference: {
             /** Format: uuid */
             id: string;
@@ -6024,6 +6095,40 @@ export interface components {
             contextId: string;
             message: string;
         };
+        DirectoryReviewEligibility: {
+            /** Format: uuid */
+            interactionId: string;
+            interactionKind: components["schemas"]["DirectoryInteractionType"];
+            /** Format: date-time */
+            verifiedAt: string;
+            authorProfile: components["schemas"]["DirectoryProfileReference"];
+            subjectProfile: components["schemas"]["DirectoryProfileReference"];
+        };
+        DirectoryReviewCreate: {
+            /** Format: uuid */
+            interactionId: string;
+            /** Format: uuid */
+            authorProfileId: string;
+            /** Format: uuid */
+            subjectProfileId: string;
+            rating: number;
+            body?: string | null;
+        };
+        DirectoryReview: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            interactionId: string;
+            rating: number;
+            body?: string | null;
+            /** @enum {string} */
+            status: "pending" | "published" | "hidden" | "removed";
+            /** Format: date-time */
+            createdAt: string;
+            verifiedInteractionType: components["schemas"]["DirectoryInteractionType"];
+            authorProfile: components["schemas"]["DirectoryProfileReference"];
+            subjectProfile: components["schemas"]["DirectoryProfileReference"];
+        };
         DirectoryFavorite: {
             targetKind: components["schemas"]["DirectoryEntityType"];
             targetId: string;
@@ -6067,7 +6172,8 @@ export interface components {
             }[];
         };
         ReportCreate: {
-            targetKind: string;
+            /** @enum {string} */
+            targetKind: "profile" | "classified" | "application" | "invitation" | "event" | "venue" | "message" | "review";
             targetId: string;
             reasonCode: string;
             details?: string;
@@ -10837,6 +10943,33 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    listPublicDirectoryReviews: {
+        parameters: {
+            query?: {
+                /** @description Last visible review id from the previous stable page */
+                cursor?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                slug: components["parameters"]["Slug"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published reviews backed by verified completed interactions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryReviewPage"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
     getPublicClassified: {
         parameters: {
             query?: never;
@@ -11253,6 +11386,61 @@ export interface operations {
         responses: {
             /** @description Existing chat thread linked to directory context */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listDirectoryReviewEligibility: {
+        parameters: {
+            query?: {
+                authorProfileId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private review directions for explicitly managed profiles and verified completed interactions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryReviewEligibility"][];
+                };
+            };
+        };
+    };
+    createDirectoryReview: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DirectoryReviewCreate"];
+            };
+        };
+        responses: {
+            /** @description Idempotent review backed by an eligible verified completed interaction */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryReview"];
+                };
+            };
+            /** @description Interaction is not eligible or was already reviewed */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
