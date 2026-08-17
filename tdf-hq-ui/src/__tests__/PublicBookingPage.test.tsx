@@ -132,7 +132,12 @@ const createPublicCheckoutMock = jest.fn<
       depositBps: number;
       termsVersion: string;
     };
-    paymentMethods: Array<'datafast' | 'paypal'>;
+    paymentMethods: Array<'datafast' | 'paypal' | 'bank_transfer'>;
+    manualPayment?: {
+      paymentMethod: 'bank_transfer';
+      status: 'awaiting_evidence' | 'submitted' | 'under_review' | 'approved' | 'rejected';
+      submittedAt?: string | null;
+    } | null;
   }>
 >(() => Promise.resolve({
   booking: {
@@ -188,6 +193,8 @@ jest.unstable_mockModule('../api/bookings', () => ({
     createPublicDatafastCheckout: jest.fn(),
     createPublicPaypalOrder: jest.fn(),
     capturePublicPaypalOrder: jest.fn(),
+    selectPublicManualPayment: jest.fn(),
+    submitPublicManualEvidence: jest.fn(),
   },
 }));
 

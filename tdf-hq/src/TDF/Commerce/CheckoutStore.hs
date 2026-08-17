@@ -25,6 +25,8 @@ module TDF.Commerce.CheckoutStore
   , recordPaymentProcessing
   , recordManualPaymentSelection
   , recordVerifiedPayment
+  , recordApprovedManualPayment
+  , validateApprovedManualPayment
   , recordReconciliationException
   , providerEnabledForEnvironment
   , domainEnabledForEnvironment
@@ -546,7 +548,7 @@ recordManualPaymentSelection checkout attempt provider correlationId occurredAt 
     (objectText "provider" (paymentProviderText provider))
 
 recordVerifiedPayment :: VerifiedPayment -> SqlPersistT IO (Either Text Bool)
-recordVerifiedPayment VerifiedPayment{..}
+recordVerifiedPayment payment@VerifiedPayment{..}
   | vpEvidence `notElem` ["server_to_server", "signature_verified_webhook"] =
       pure (Left "Payment evidence is not authoritative")
   | vpAmountMinor <= 0 = pure (Left "Verified amount must be positive")
@@ -586,45 +588,122 @@ recordVerifiedPayment VerifiedPayment{..}
         , maybe PersistNull PersistText vpProviderResourcePath
         ] :: SqlPersistT IO [(Single Text, Single Text)])
       case paymentStates of
-        [(Single currentStatus, Single attemptStatus)] -> do
-          ledgerStatus <- existingLedgerStatus vpAttempt
-          receiptValid <- existingReceiptIsCompatible vpCheckout vpAmountMinor vpCurrency
-          case ledgerStatus of
-            Just status | status /= "posted" ->
-              pure (Left "Existing payment ledger transaction is not posted")
-            _ | currentStatus == "paid" && attemptStatus /= "succeeded" ->
-              pure (Left "Checkout is already paid by another payment attempt")
-            _ | not receiptValid ->
-              pure (Left "Existing payment receipt conflicts with verified payment")
-            _ -> do
-              rawExecute
-                "UPDATE commerce_payment_attempt\
-                \ SET status = 'succeeded', failure_code = NULL, failure_summary = NULL, updated_at = ?\
-                \ WHERE id = ?::uuid"
-                [PersistUTCTime vpOccurredAt, PersistText (paymentAttemptReferenceId vpAttempt)]
-              rawExecute
-                "UPDATE commerce_checkout_session\
-                \ SET status = 'paid', paid_minor = total_minor, paid_at = COALESCE(paid_at, ?), updated_at = ?\
-                \ WHERE id = ?::uuid"
-                [ PersistUTCTime vpOccurredAt
-                , PersistUTCTime vpOccurredAt
-                , PersistText (checkoutReferenceId vpCheckout)
-                ]
-              when (ledgerStatus == Nothing) (postPaymentLedger VerifiedPayment{..})
-              ensurePaymentReceipt VerifiedPayment{..}
-              let newlyPaid = currentStatus /= "paid"
-              when newlyPaid $
-                insertAudit
-                  (checkoutReferenceId vpCheckout)
-                  "payment_verified"
-                  (Just currentStatus)
-                  (Just "paid")
-                  (paymentProviderText vpProvider)
-                  vpCorrelationId
-                  (objectText "evidence" vpEvidence)
-              pure (Right newlyPaid)
+        [(Single currentStatus, Single attemptStatus)] ->
+          completeVerifiedPayment payment currentStatus attemptStatus
         [] -> pure (Left "Verified payment does not match the stored checkout and provider binding")
         _ -> pure (Left "Verified payment matched multiple immutable bindings")
+
+-- | Finalize a manual settlement only after an independently reviewed evidence
+-- row and its immutable provider binding agree with the checkout. Customer
+-- submission alone can never reach this function's success path.
+recordApprovedManualPayment :: VerifiedPayment -> SqlPersistT IO (Either Text Bool)
+recordApprovedManualPayment payment@VerifiedPayment{..}
+  | Left validationError <- validateApprovedManualPayment payment =
+      pure (Left validationError)
+  | otherwise = do
+      paymentStates <- (rawSql
+        "SELECT checkout.status, attempt.status FROM commerce_checkout_session checkout\
+        \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id = checkout.id\
+        \ JOIN commerce_provider_binding binding ON binding.payment_attempt_id = attempt.id\
+        \ JOIN commerce_manual_payment_evidence evidence\
+        \   ON evidence.checkout_id = checkout.id\
+        \  AND evidence.payment_attempt_id = attempt.id\
+        \ WHERE checkout.id = ?::uuid AND attempt.id = ?::uuid\
+        \ AND checkout.domain_order_id = ?\
+        \ AND checkout.environment = ? AND attempt.environment = checkout.environment\
+        \ AND checkout.total_minor = ? AND attempt.amount_minor = checkout.total_minor\
+        \ AND checkout.currency = ? AND attempt.currency = checkout.currency\
+        \ AND attempt.provider = ? AND attempt.operation = 'manual_verify'\
+        \ AND attempt.merchant_account_ref = ?\
+        \ AND binding.provider = attempt.provider\
+        \ AND binding.environment = attempt.environment\
+        \ AND binding.merchant_account_ref = attempt.merchant_account_ref\
+        \ AND binding.resource_type = 'manual_evidence'\
+        \ AND binding.provider_resource_id = evidence.id::text\
+        \ AND binding.provider_resource_id = ?\
+        \ AND binding.provider_resource_path IS NOT DISTINCT FROM ?\
+        \ AND binding.merchant_reference = checkout.domain_order_id\
+        \ AND binding.amount_minor = checkout.total_minor\
+        \ AND binding.currency = checkout.currency\
+        \ AND evidence.status = 'approved'\
+        \ AND evidence.submitted_amount_minor = checkout.total_minor\
+        \ AND evidence.currency = checkout.currency\
+        \ AND evidence.submitted_by IS NOT NULL\
+        \ AND evidence.reviewed_by IS NOT NULL\
+        \ AND evidence.reviewed_by <> evidence.submitted_by\
+        \ AND evidence.reviewed_at IS NOT NULL\
+        \ AND checkout.status IN ('awaiting_payment','processing','failed','paid')\
+        \ FOR UPDATE OF checkout, attempt, evidence"
+        [ PersistText (checkoutReferenceId vpCheckout)
+        , PersistText (paymentAttemptReferenceId vpAttempt)
+        , PersistText vpOrderReference
+        , PersistText (checkoutEnvironmentText vpEnvironment)
+        , PersistInt64 vpAmountMinor
+        , PersistText (normalizeCurrency vpCurrency)
+        , PersistText (paymentProviderText vpProvider)
+        , PersistText vpMerchantRef
+        , PersistText vpProviderResource
+        , maybe PersistNull PersistText vpProviderResourcePath
+        ] :: SqlPersistT IO [(Single Text, Single Text)])
+      case paymentStates of
+        [(Single currentStatus, Single attemptStatus)] ->
+          completeVerifiedPayment payment currentStatus attemptStatus
+        [] -> pure (Left "Approved manual payment does not match immutable evidence and binding")
+        _ -> pure (Left "Approved manual payment matched multiple immutable evidence rows")
+
+validateApprovedManualPayment :: VerifiedPayment -> Either Text ()
+validateApprovedManualPayment VerifiedPayment{..}
+  | vpEvidence /= "staff_verified_manual" =
+      Left "Manual payment evidence is not staff verified"
+  | vpProvider `notElem` [ProviderBankTransfer, ProviderCash, ProviderPos] =
+      Left "Manual payment provider is invalid"
+  | vpResourceType /= "manual_evidence" =
+      Left "Manual payment binding type is invalid"
+  | vpAmountMinor <= 0 = Left "Verified amount must be positive"
+  | otherwise = Right ()
+
+completeVerifiedPayment
+  :: VerifiedPayment
+  -> Text
+  -> Text
+  -> SqlPersistT IO (Either Text Bool)
+completeVerifiedPayment payment@VerifiedPayment{..} currentStatus attemptStatus = do
+  ledgerStatus <- existingLedgerStatus vpAttempt
+  receiptValid <- existingReceiptIsCompatible vpCheckout vpAmountMinor vpCurrency
+  case ledgerStatus of
+    Just status | status /= "posted" ->
+      pure (Left "Existing payment ledger transaction is not posted")
+    _ | currentStatus == "paid" && attemptStatus /= "succeeded" ->
+      pure (Left "Checkout is already paid by another payment attempt")
+    _ | not receiptValid ->
+      pure (Left "Existing payment receipt conflicts with verified payment")
+    _ -> do
+      rawExecute
+        "UPDATE commerce_payment_attempt\
+        \ SET status = 'succeeded', failure_code = NULL, failure_summary = NULL, updated_at = ?\
+        \ WHERE id = ?::uuid"
+        [PersistUTCTime vpOccurredAt, PersistText (paymentAttemptReferenceId vpAttempt)]
+      rawExecute
+        "UPDATE commerce_checkout_session\
+        \ SET status = 'paid', paid_minor = total_minor, paid_at = COALESCE(paid_at, ?), updated_at = ?\
+        \ WHERE id = ?::uuid"
+        [ PersistUTCTime vpOccurredAt
+        , PersistUTCTime vpOccurredAt
+        , PersistText (checkoutReferenceId vpCheckout)
+        ]
+      when (ledgerStatus == Nothing) (postPaymentLedger payment)
+      ensurePaymentReceipt payment
+      let newlyPaid = currentStatus /= "paid"
+      when newlyPaid $
+        insertAudit
+          (checkoutReferenceId vpCheckout)
+          "payment_verified"
+          (Just currentStatus)
+          (Just "paid")
+          (paymentProviderText vpProvider)
+          vpCorrelationId
+          (objectText "evidence" vpEvidence)
+      pure (Right newlyPaid)
 
 recordReconciliationException
   :: PaymentProvider
@@ -665,8 +744,6 @@ providerEnabledForEnvironment
   -> PaymentProvider
   -> SqlPersistT IO Bool
 providerEnabledForEnvironment CheckoutSandbox _ = pure True
-providerEnabledForEnvironment CheckoutProduction provider
-  | provider `elem` [ProviderBankTransfer, ProviderCash, ProviderPos] = pure True
 providerEnabledForEnvironment CheckoutProduction provider = do
   rows <- rawSql
     "SELECT enabled FROM revenue_feature_flag\

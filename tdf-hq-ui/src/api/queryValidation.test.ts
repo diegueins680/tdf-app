@@ -317,6 +317,29 @@ describe('API query/id validation', () => {
       { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
     );
 
+    await Bookings.selectPublicManualPayment(42, 'lookup-secret');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42/manual-payment',
+      { paymentMethod: 'bank_transfer' },
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.submitPublicManualEvidence(42, 'BANK-REFERENCE-1', 'lookup-secret');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42/manual-payment/evidence',
+      { customerReference: 'BANK-REFERENCE-1' },
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.getCommerce(42);
+    expect(getMock).toHaveBeenCalledWith('/bookings/42/commerce');
+
+    await Bookings.reviewManualPayment(42, 'approve', 'Matched bank statement.');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/42/manual-payment/review',
+      { action: 'approve', reviewNotes: 'Matched bank statement.' },
+    );
+
     expect(() => Bookings.publicAvailability({ serviceOfferingId, startsAt, durationMinutes: 0 }))
       .toThrow('durationMinutes debe ser un entero positivo.');
     expect(() => Bookings.getPublicCheckout(0, 'lookup-secret'))

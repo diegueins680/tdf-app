@@ -82,7 +82,7 @@ import           Text.Read (readMaybe)
 import           Web.PathPieces (fromPathPiece, toPathPiece)
 
 import           Database.Persist
-import           Database.Persist.Sql (SqlBackend, SqlPersistT, Single(..), fromSqlKey, rawExecute, rawSql, runSqlPool, toSqlKey, updateWhereCount)
+import           Database.Persist.Sql (SqlBackend, SqlPersistT, Single(..), fromSqlKey, rawExecute, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, updateWhereCount)
 import           Database.Persist.Postgresql ()
 import           Database.PostgreSQL.Simple (SqlError (..))
 
@@ -9622,6 +9622,8 @@ bookingPublicServer =
   :<|> confirmPublicBookingDatafastStatus
   :<|> createPublicBookingPaypalOrder
   :<|> capturePublicBookingPaypalOrder
+  :<|> selectPublicBookingManualPayment
+  :<|> submitPublicBookingManualEvidence
 
 inventoryStaticServer :: FilePath -> ServerT Api.AssetsAPI AppM
 inventoryStaticServer assetsRoot =
@@ -9636,6 +9638,301 @@ bookingServer user =
        listBookings user
   :<|> createBooking user
   :<|> updateBooking user
+  :<|> getServiceBookingCommerce user
+  :<|> reviewServiceBookingManualPayment user
+
+loadServiceBookingManualEvidenceDTO
+  :: Checkout.CheckoutReference
+  -> SqlPersistT IO (Maybe Api.ServiceBookingManualEvidenceDTO)
+loadServiceBookingManualEvidenceDTO checkout = do
+  rows <- (rawSql
+    "SELECT evidence.id::text, attempt.provider, evidence.status,\
+    \ evidence.customer_reference, evidence.submitted_amount_minor, evidence.currency,\
+    \ evidence.submitted_by, evidence.submitted_at, evidence.reviewed_by,\
+    \ evidence.reviewed_at, evidence.review_notes\
+    \ FROM commerce_manual_payment_evidence evidence\
+    \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+    \ WHERE evidence.checkout_id = ?::uuid\
+    \ AND attempt.checkout_id = evidence.checkout_id\
+    \ AND attempt.provider IN ('bank_transfer','cash','pos')\
+    \ ORDER BY (attempt.status = 'succeeded') DESC, attempt.updated_at DESC, evidence.id DESC\
+    \ LIMIT 1"
+    [PersistText (Checkout.checkoutReferenceId checkout)]
+    :: SqlPersistT IO
+      [( Single Text, Single Text, Single Text, Single (Maybe Text), Single (Maybe Int64)
+       , Single (Maybe Text), Single (Maybe Int64), Single (Maybe UTCTime)
+       , Single (Maybe Int64), Single (Maybe UTCTime), Single (Maybe Text)
+       )])
+  pure $ case rows of
+    [( Single evidenceId, Single paymentMethod, Single status, Single customerReference
+     , Single submittedAmountMinor, Single currency, Single submittedBy, Single submittedAt
+     , Single reviewedBy, Single reviewedAt, Single reviewNotes
+     )] -> Just Api.ServiceBookingManualEvidenceDTO
+        { Api.sbmeEvidenceId = evidenceId
+        , Api.sbmePaymentMethod = paymentMethod
+        , Api.sbmeStatus = status
+        , Api.sbmeCustomerReference = customerReference
+        , Api.sbmeSubmittedAmountMinor = submittedAmountMinor
+        , Api.sbmeCurrency = currency
+        , Api.sbmeSubmittedBy = submittedBy
+        , Api.sbmeSubmittedAt = submittedAt
+        , Api.sbmeReviewedBy = reviewedBy
+        , Api.sbmeReviewedAt = reviewedAt
+        , Api.sbmeReviewNotes = reviewNotes
+        }
+    _ -> Nothing
+
+loadServiceBookingCommerceDTO
+  :: Key Booking
+  -> SqlPersistT IO (Maybe Api.ServiceBookingCommerceDTO)
+loadServiceBookingCommerceDTO bookingKey = do
+  mRuntime <- loadServiceBookingRuntimeView bookingKey
+  case mRuntime of
+    Nothing -> pure Nothing
+    Just ServiceBookingRuntimeView{..} -> do
+      manualEvidence <- loadServiceBookingManualEvidenceDTO
+        (Checkout.CheckoutReference sbrvCheckoutId)
+      pure $ Just Api.ServiceBookingCommerceDTO
+        { Api.sbmcBookingId = fromSqlKey bookingKey
+        , Api.sbmcCheckoutId = sbrvCheckoutId
+        , Api.sbmcPaymentStatus = sbrvPaymentStatus
+        , Api.sbmcFulfillmentStatus = sbrvFulfillmentStatus
+        , Api.sbmcDepositMinor = sbrvDepositMinor
+        , Api.sbmcCurrency = sbrvCurrency
+        , Api.sbmcHoldExpiresAt = sbrvHoldExpiresAt
+        , Api.sbmcManualEvidence = manualEvidence
+        }
+
+getServiceBookingCommerce
+  :: AuthedUser
+  -> Int64
+  -> AppM Api.ServiceBookingCommerceDTO
+getServiceBookingCommerce user rawBookingId = do
+  requireModule user ModuleInvoicing
+  bookingId <- either throwError pure $
+    validatePositiveIdField "bookingId" rawBookingId
+  let bookingKey = toSqlKey bookingId :: Key Booking
+  runDB (loadServiceBookingCommerceDTO bookingKey)
+    >>= maybe (throwError err404 { errBody = "Booking commerce order not found" }) pure
+
+validateServiceBookingManualReview
+  :: Api.ServiceBookingManualReviewReq
+  -> Either ServerError (Text, Text)
+validateServiceBookingManualReview Api.ServiceBookingManualReviewReq{..}
+  | action `notElem` ["approve", "reject"] =
+      Left err400 { errBody = "Manual payment review action must be approve or reject" }
+  | T.length notes < 3 || T.length notes > 2000 =
+      Left err400 { errBody = "Manual payment review notes must contain 3 to 2000 characters" }
+  | T.any isUnsafeAccessRequestTextChar notes =
+      Left err400 { errBody = "Manual payment review notes contain unsupported characters" }
+  | otherwise = Right (action, notes)
+  where
+    action = T.toLower (T.strip sbmrAction)
+    notes = T.strip sbmrReviewNotes
+
+manualPaymentProviderFromText :: Text -> Maybe Checkout.PaymentProvider
+manualPaymentProviderFromText provider = case provider of
+  "bank_transfer" -> Just Checkout.ProviderBankTransfer
+  "cash" -> Just Checkout.ProviderCash
+  "pos" -> Just Checkout.ProviderPos
+  _ -> Nothing
+
+reviewServiceBookingManualPayment
+  :: AuthedUser
+  -> Int64
+  -> Api.ServiceBookingManualReviewReq
+  -> AppM Api.ServiceBookingCommerceDTO
+reviewServiceBookingManualPayment user rawBookingId request = do
+  requireModule user ModuleInvoicing
+  bookingId <- either throwError pure $
+    validatePositiveIdField "bookingId" rawBookingId
+  (reviewAction, reviewNotes) <- either throwError pure $
+    validateServiceBookingManualReview request
+  let bookingKey = toSqlKey bookingId :: Key Booking
+      reviewerId = fromSqlKey (auPartyId user)
+  context <- loadServiceBookingPaymentContext bookingKey
+  now <- liftIO getCurrentTime
+  outcome <- runDB $ do
+    rows <- (rawSql
+      "SELECT checkout.status, runtime.hold_expires_at, attempt.id::text,\
+      \ attempt.provider, attempt.merchant_account_ref, attempt.status,\
+      \ evidence.id::text, evidence.status, evidence.submitted_by, evidence.reviewed_by\
+      \ FROM service_booking_checkout_runtime runtime\
+      \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+      \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id = checkout.id\
+      \ JOIN commerce_manual_payment_evidence evidence\
+      \   ON evidence.checkout_id = checkout.id\
+      \  AND evidence.payment_attempt_id = attempt.id\
+      \ WHERE runtime.booking_id = ?\
+      \ AND checkout.id = ?::uuid\
+      \ AND checkout.domain_type = 'service_booking'\
+      \ AND checkout.domain_order_id = ?\
+      \ AND checkout.environment = ?\
+      \ AND checkout.total_minor = ?\
+      \ AND checkout.currency = ?\
+      \ AND attempt.environment = checkout.environment\
+      \ AND attempt.amount_minor = checkout.total_minor\
+      \ AND attempt.currency = checkout.currency\
+      \ AND attempt.provider IN ('bank_transfer','cash','pos')\
+      \ AND attempt.operation = 'manual_verify'\
+      \ ORDER BY (attempt.status = 'succeeded') DESC, attempt.updated_at DESC, evidence.id DESC\
+      \ FOR UPDATE OF runtime, checkout, attempt, evidence"
+      [ toPersistValue bookingKey
+      , PersistText (Checkout.checkoutReferenceId (sbpcCheckout context))
+      , PersistText (toPathPiece bookingKey)
+      , PersistText (Checkout.checkoutEnvironmentText (sbpcEnvironment context))
+      , PersistInt64 (sbpcDepositMinor context)
+      , PersistText (sbpcCurrency context)
+      ] :: SqlPersistT IO
+        [( Single Text, Single UTCTime, Single Text, Single Text, Single Text
+         , Single Text, Single Text, Single Text, Single (Maybe Int64), Single (Maybe Int64)
+         )])
+    case rows of
+      [] -> pure (Left "No submitted manual payment evidence exists for this booking")
+      [_first, _second] -> pure (Left "Manual payment evidence is ambiguous and requires reconciliation")
+      (_:_:_) -> pure (Left "Manual payment evidence is ambiguous and requires reconciliation")
+      [( Single checkoutStatus, Single holdExpiresAt, Single attemptId, Single providerText
+       , Single merchantRef, Single attemptStatus, Single evidenceId, Single evidenceStatus
+       , Single mSubmittedBy, Single mReviewedBy
+       )] -> case (mSubmittedBy, manualPaymentProviderFromText providerText) of
+        (Nothing, _) -> pure (Left "Manual payment evidence has no verified submitter")
+        (_, Nothing) -> pure (Left "Manual payment evidence uses an unsupported provider")
+        (Just submittedBy, Just provider)
+          | submittedBy == reviewerId ->
+              pure (Left "Manual payment evidence requires an independent reviewer")
+          | evidenceStatus == "approved"
+              && reviewAction == "approve"
+              && checkoutStatus == "paid"
+              && attemptStatus == "succeeded" -> pure (Right ())
+          | evidenceStatus == "approved" ->
+              pure (Left "Approved manual payment evidence cannot be changed")
+          | evidenceStatus == "rejected" && reviewAction == "reject" -> pure (Right ())
+          | evidenceStatus == "rejected" ->
+              pure (Left "Rejected evidence must be resubmitted before approval")
+          | evidenceStatus `notElem` ["submitted", "under_review"] ->
+              pure (Left "Manual payment evidence is not ready for review")
+          | evidenceStatus == "under_review" && mReviewedBy /= Just reviewerId ->
+              pure (Left "Manual payment evidence is already under review by another staff member")
+          | checkoutStatus == "paid" -> do
+              Checkout.recordReconciliationException
+                provider (sbpcEnvironment context) merchantRef
+                "manual_evidence_after_other_payment"
+                (toPathPiece bookingKey) evidenceId
+                (sbpcDepositMinor context) (Just (sbpcDepositMinor context))
+                (sbpcCurrency context) now
+              pure (Left "This checkout is already paid by another payment attempt")
+          | reviewAction == "approve" && holdExpiresAt <= now -> do
+              Checkout.recordReconciliationException
+                provider (sbpcEnvironment context) merchantRef
+                "manual_payment_after_booking_hold_expiry"
+                (toPathPiece bookingKey) evidenceId
+                (sbpcDepositMinor context) (Just (sbpcDepositMinor context))
+                (sbpcCurrency context) now
+              pure (Left "The booking hold expired; payment requires reconciliation and cannot confirm this booking")
+          | reviewAction == "approve"
+              && checkoutStatus `notElem` ["awaiting_payment","failed","processing"] ->
+              pure (Left "This checkout no longer accepts manual payment approval")
+          | otherwise -> do
+              transactionSave
+              when (evidenceStatus == "submitted") $
+                rawExecute
+                  "UPDATE commerce_manual_payment_evidence\
+                  \ SET status = 'under_review', reviewed_by = ?, review_notes = ?\
+                  \ WHERE id = ?::uuid"
+                  [PersistInt64 reviewerId, PersistText reviewNotes, PersistText evidenceId]
+              if reviewAction == "reject"
+                then do
+                  rawExecute
+                    "UPDATE commerce_manual_payment_evidence\
+                    \ SET status = 'rejected', reviewed_at = ?, review_notes = ?\
+                    \ WHERE id = ?::uuid"
+                    [PersistUTCTime now, PersistText reviewNotes, PersistText evidenceId]
+                  Checkout.recordPaymentFailure
+                    (sbpcCheckout context)
+                    (Checkout.PaymentAttemptReference attemptId)
+                    provider
+                    "manual_evidence_rejected"
+                    (serviceBookingPaymentCorrelationId context provider "manual-review")
+                    now
+                  insertServiceBookingManualReviewAudit
+                    context provider reviewerId attemptId evidenceId "manual_payment_rejected"
+                  pure (Right ())
+                else do
+                  rawExecute
+                    "UPDATE commerce_manual_payment_evidence\
+                    \ SET status = 'approved', reviewed_at = ?, review_notes = ?\
+                    \ WHERE id = ?::uuid"
+                    [PersistUTCTime now, PersistText reviewNotes, PersistText evidenceId]
+                  binding <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
+                    { Checkout.pbcAttempt = Checkout.PaymentAttemptReference attemptId
+                    , Checkout.pbcCheckout = sbpcCheckout context
+                    , Checkout.pbcProvider = provider
+                    , Checkout.pbcEnvironment = sbpcEnvironment context
+                    , Checkout.pbcMerchantRef = merchantRef
+                    , Checkout.pbcResourceType = "manual_evidence"
+                    , Checkout.pbcProviderResource = evidenceId
+                    , Checkout.pbcResourcePath = Nothing
+                    , Checkout.pbcOrderReference = toPathPiece bookingKey
+                    , Checkout.pbcAmountMinor = sbpcDepositMinor context
+                    , Checkout.pbcCurrency = sbpcCurrency context
+                    , Checkout.pbcStage = Checkout.AttemptProcessing
+                    , Checkout.pbcOccurredAt = now
+                    , Checkout.pbcCorrelationId = serviceBookingPaymentCorrelationId
+                        context provider "manual-review"
+                    }
+                  case binding of
+                    Left bindingError -> transactionUndo >> pure (Left bindingError)
+                    Right () -> do
+                      verified <- Checkout.recordApprovedManualPayment Checkout.VerifiedPayment
+                        { Checkout.vpAttempt = Checkout.PaymentAttemptReference attemptId
+                        , Checkout.vpCheckout = sbpcCheckout context
+                        , Checkout.vpProvider = provider
+                        , Checkout.vpEnvironment = sbpcEnvironment context
+                        , Checkout.vpMerchantRef = merchantRef
+                        , Checkout.vpResourceType = "manual_evidence"
+                        , Checkout.vpProviderResource = evidenceId
+                        , Checkout.vpProviderResourcePath = Nothing
+                        , Checkout.vpOrderReference = toPathPiece bookingKey
+                        , Checkout.vpAmountMinor = sbpcDepositMinor context
+                        , Checkout.vpCurrency = sbpcCurrency context
+                        , Checkout.vpEvidence = "staff_verified_manual"
+                        , Checkout.vpOccurredAt = now
+                        , Checkout.vpCorrelationId = serviceBookingPaymentCorrelationId
+                            context provider "manual-review"
+                        }
+                      case verified of
+                        Left verificationError -> transactionUndo >> pure (Left verificationError)
+                        Right _ -> do
+                          insertServiceBookingManualReviewAudit
+                            context provider reviewerId attemptId evidenceId "manual_payment_approved"
+                          pure (Right ())
+  either (throwError . marketplaceCheckoutConflict) pure outcome
+  runDB (loadServiceBookingCommerceDTO bookingKey)
+    >>= maybe (throwError (marketplaceCheckoutInternal
+          "Reviewed booking commerce order could not be reloaded")) pure
+
+insertServiceBookingManualReviewAudit
+  :: ServiceBookingPaymentContext
+  -> Checkout.PaymentProvider
+  -> Int64
+  -> Text
+  -> Text
+  -> Text
+  -> SqlPersistT IO ()
+insertServiceBookingManualReviewAudit context provider reviewerId attemptId evidenceId eventType =
+  rawExecute
+    "INSERT INTO commerce_checkout_audit_event(\
+    \ checkout_id, event_type, actor_type, actor_id, correlation_id, metadata\
+    \) VALUES (?::uuid, ?, 'staff', ?, ?,\
+    \ jsonb_build_object('attempt_id', ?, 'evidence_id', ?))"
+    [ PersistText (Checkout.checkoutReferenceId (sbpcCheckout context))
+    , PersistText eventType
+    , PersistText (T.pack (show reviewerId))
+    , PersistText (serviceBookingPaymentCorrelationId
+        context provider "manual-review")
+    , PersistText attemptId
+    , PersistText evidenceId
+    ]
 
 listBookings :: AuthedUser -> Maybe Int64 -> Maybe Int64 -> Maybe Int64 -> AppM [BookingDTO]
 listBookings user mBookingId mPartyId mEngineerPartyId = do
@@ -9963,6 +10260,30 @@ loadServiceBookingRuntimeView bookingKey = do
         _ -> Nothing
     _ -> pure Nothing
 
+loadPublicBookingManualPayment
+  :: Checkout.CheckoutReference
+  -> SqlPersistT IO (Maybe Api.PublicBookingManualPaymentDTO)
+loadPublicBookingManualPayment checkout = do
+  rows <- (rawSql
+    "SELECT attempt.provider, evidence.status, evidence.submitted_at\
+    \ FROM commerce_manual_payment_evidence evidence\
+    \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+    \ WHERE evidence.checkout_id = ?::uuid\
+    \ AND attempt.checkout_id = evidence.checkout_id\
+    \ AND attempt.provider IN ('bank_transfer','cash','pos')\
+    \ ORDER BY (attempt.status = 'succeeded') DESC, attempt.updated_at DESC, evidence.id DESC\
+    \ LIMIT 1"
+    [PersistText (Checkout.checkoutReferenceId checkout)]
+    :: SqlPersistT IO [(Single Text, Single Text, Single (Maybe UTCTime))])
+  pure $ case rows of
+    [(Single paymentMethod, Single status, Single submittedAt)] ->
+      Just Api.PublicBookingManualPaymentDTO
+        { Api.pbmpPaymentMethod = paymentMethod
+        , Api.pbmpStatus = status
+        , Api.pbmpSubmittedAt = submittedAt
+        }
+    _ -> Nothing
+
 loadPublicBookingCheckoutDTO
   :: Key Booking
   -> Maybe Text
@@ -9982,10 +10303,13 @@ loadPublicBookingCheckoutDTO bookingKey lookupToken = do
   case loaded of
     Nothing -> throwError serviceBookingLookupNotFound
     Just (dto, ServiceBookingRuntimeView{..}) -> do
+      let checkout = Checkout.CheckoutReference sbrvCheckoutId
+      manualPayment <- runDB (loadPublicBookingManualPayment checkout)
       paymentMethods <- loadPublicBookingPaymentMethods
-        (Checkout.CheckoutReference sbrvCheckoutId)
+        checkout
         sbrvPaymentStatus
         sbrvHoldExpiresAt
+        (Api.pbmpStatus <$> manualPayment)
       pure Api.PublicBookingCheckoutDTO
         { Api.pbcBooking = dto
         , Api.pbcCheckoutId = sbrvCheckoutId
@@ -10006,16 +10330,20 @@ loadPublicBookingCheckoutDTO bookingKey lookupToken = do
             , Api.pbqTermsVersion = sbrvTermsVersion
             }
         , Api.pbcPaymentMethods = paymentMethods
+        , Api.pbcManualPayment = manualPayment
         }
 
 loadPublicBookingPaymentMethods
   :: Checkout.CheckoutReference
   -> Text
   -> UTCTime
+  -> Maybe Text
   -> AppM [Text]
-loadPublicBookingPaymentMethods checkout paymentStatus holdExpiresAt = do
+loadPublicBookingPaymentMethods checkout paymentStatus holdExpiresAt manualStatus = do
   now <- liftIO getCurrentTime
-  if paymentStatus `notElem` ["awaiting_payment", "failed"] || holdExpiresAt <= now
+  if paymentStatus `notElem` ["awaiting_payment", "failed"]
+      || holdExpiresAt <= now
+      || manualStatus `elem` [Just "submitted", Just "under_review"]
     then pure []
     else do
       storedEnvironment <- runDB (Checkout.loadCheckoutEnvironment checkout)
@@ -10042,9 +10370,12 @@ loadPublicBookingPaymentMethods checkout paymentStatus holdExpiresAt = do
                       checkoutEnvironment Checkout.ProviderPayPal)
                 =<< ServiceStorefront.loadPaypalEnvForService)
                 `catchError` const (pure False)
+              bankTransferEnabled <- runDB $ Checkout.providerEnabledForEnvironment
+                checkoutEnvironment Checkout.ProviderBankTransfer
               pure $
                 ["datafast" | datafastEnabled]
                   <> ["paypal" | paypalEnabled]
+                  <> ["bank_transfer" | bankTransferEnabled]
 
 serviceBookingLookupNotFound :: ServerError
 serviceBookingLookupNotFound = err404 { errBody = "Booking order not found" }
@@ -10191,6 +10522,40 @@ requireServiceBookingProvider context configuredEnvironment provider = do
     throwError err503
       { errBody = "Payment provider is disabled for this checkout environment" }
 
+ensureNoSubmittedServiceBookingManualEvidence
+  :: ServiceBookingPaymentContext
+  -> AppM ()
+ensureNoSubmittedServiceBookingManualEvidence context = do
+  rows <- runDB (rawSql
+    "SELECT EXISTS (\
+    \ SELECT 1 FROM commerce_manual_payment_evidence evidence\
+    \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+    \ WHERE evidence.checkout_id = ?::uuid\
+    \ AND attempt.checkout_id = evidence.checkout_id\
+    \ AND attempt.provider IN ('bank_transfer','cash','pos')\
+    \ AND evidence.status IN ('submitted','under_review'))"
+    [PersistText (Checkout.checkoutReferenceId (sbpcCheckout context))]
+    :: SqlPersistT IO [Single Bool])
+  when (rows == [Single True]) $
+    throwError err409
+      { errBody = "Manual payment evidence is under review; another charge cannot be started" }
+
+ensureNoActiveServiceBookingOnlineAttempt
+  :: ServiceBookingPaymentContext
+  -> AppM ()
+ensureNoActiveServiceBookingOnlineAttempt context = do
+  rows <- runDB (rawSql
+    "SELECT EXISTS (\
+    \ SELECT 1 FROM commerce_payment_attempt\
+    \ WHERE checkout_id = ?::uuid\
+    \ AND provider NOT IN ('bank_transfer','cash','pos')\
+    \ AND status IN ('requires_customer_action','processing'))"
+    [PersistText (Checkout.checkoutReferenceId (sbpcCheckout context))]
+    :: SqlPersistT IO [Single Bool])
+  when (rows == [Single True]) $
+    throwError err409
+      { errBody = "An online payment attempt is still active; verify or cancel it before selecting manual payment" }
+
 serviceBookingPaymentIdempotencyKey
   :: ServiceBookingPaymentContext
   -> Checkout.PaymentProvider
@@ -10335,6 +10700,7 @@ createPublicBookingDatafastCheckout rawBookingId mLookupToken = do
   context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
   when (sbpcCheckoutStatus context == "paid") $
     throwError err409 { errBody = "This booking deposit is already paid" }
+  ensureNoSubmittedServiceBookingManualEvidence context
   datafast <- ServiceStorefront.loadServiceDatafastEnv
   requireServiceBookingProvider
     context (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
@@ -10515,6 +10881,7 @@ createPublicBookingPaypalOrder rawBookingId mLookupToken = do
   context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
   when (sbpcCheckoutStatus context == "paid") $
     throwError err409 { errBody = "This booking deposit is already paid" }
+  ensureNoSubmittedServiceBookingManualEvidence context
   (clientId, clientSecret, baseUrl, paypalEnvironment, merchantRef) <-
     ServiceStorefront.loadPaypalEnvForService
   requireServiceBookingProvider context paypalEnvironment Checkout.ProviderPayPal
@@ -10555,6 +10922,7 @@ capturePublicBookingPaypalOrder
   if sbpcCheckoutStatus context == "paid"
     then loadPublicBookingCheckoutDTO (sbpcBookingKey context) Nothing
     else do
+      ensureNoSubmittedServiceBookingManualEvidence context
       suppliedPaypalOrderId <- either throwError pure $
         validatePayPalCaptureOrderId pbpcPaypalOrderId
       (clientId, clientSecret, baseUrl, paypalEnvironment, merchantRef) <-
@@ -10647,6 +11015,124 @@ capturePublicBookingPaypalOrder
           (serviceBookingPaymentCorrelationId context Checkout.ProviderPayPal "capture")
           now
       loadPublicBookingCheckoutDTO (sbpcBookingKey context) Nothing
+
+selectPublicBookingManualPayment
+  :: Int64
+  -> Maybe Text
+  -> Api.PublicBookingManualPaymentReq
+  -> AppM Api.PublicBookingCheckoutDTO
+selectPublicBookingManualPayment
+    rawBookingId mLookupToken Api.PublicBookingManualPaymentReq{..} = do
+  context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
+  let method = T.toLower (T.strip pbmprPaymentMethod)
+  unless (method == "bank_transfer") $
+    throwError err400 { errBody = "Only bank transfer is available for public manual payment" }
+  when (sbpcCheckoutStatus context == "processing") $
+    throwError err409
+      { errBody = "Another payment rail is currently processing; verify it before switching methods" }
+  ensureNoActiveServiceBookingOnlineAttempt context
+  requireServiceBookingProvider
+    context (sbpcEnvironment context) Checkout.ProviderBankTransfer
+  attempt <- beginServiceBookingPaymentAttempt
+    context Checkout.ProviderBankTransfer Checkout.OperationManualVerify
+    "tdf-manual-settlement" "manual-select"
+  now <- liftIO getCurrentTime
+  runDB $ Checkout.recordManualPaymentSelection
+    (sbpcCheckout context) attempt Checkout.ProviderBankTransfer
+    (serviceBookingPaymentCorrelationId context Checkout.ProviderBankTransfer "manual-select")
+    now
+  loadPublicBookingCheckoutDTO (sbpcBookingKey context) Nothing
+
+validatePublicBookingManualReference :: Text -> Either ServerError Text
+validatePublicBookingManualReference raw
+  | T.length clean < 3 || T.length clean > 120 =
+      Left err400 { errBody = "Bank transfer reference must contain 3 to 120 characters" }
+  | T.any isUnsafeAccessRequestTextChar clean =
+      Left err400 { errBody = "Bank transfer reference contains unsupported characters" }
+  | otherwise = Right clean
+  where
+    clean = T.strip raw
+
+submitPublicBookingManualEvidence
+  :: Int64
+  -> Maybe Text
+  -> Api.PublicBookingManualEvidenceReq
+  -> AppM Api.PublicBookingCheckoutDTO
+submitPublicBookingManualEvidence
+    rawBookingId mLookupToken Api.PublicBookingManualEvidenceReq{..} = do
+  context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
+  customerReference <- either throwError pure $
+    validatePublicBookingManualReference pbmeCustomerReference
+  outcome <- runDB $ do
+    rows <- (rawSql
+      "SELECT evidence.id::text, evidence.status, evidence.customer_reference,\
+      \ evidence.submitted_by, attempt.id::text, booked.party_id\
+      \ FROM commerce_manual_payment_evidence evidence\
+      \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+      \ JOIN service_booking_checkout_runtime runtime ON runtime.checkout_id = evidence.checkout_id\
+      \ JOIN booking booked ON booked.id = runtime.booking_id\
+      \ WHERE evidence.checkout_id = ?::uuid\
+      \ AND attempt.checkout_id = evidence.checkout_id\
+      \ AND attempt.provider = 'bank_transfer'\
+      \ AND attempt.operation = 'manual_verify'\
+      \ FOR UPDATE OF evidence, attempt"
+      [PersistText (Checkout.checkoutReferenceId (sbpcCheckout context))]
+      :: SqlPersistT IO
+        [( Single Text, Single Text, Single (Maybe Text), Single (Maybe Int64)
+         , Single Text, Single (Maybe Int64)
+         )])
+    case rows of
+      [( Single evidenceId, Single status, Single existingReference
+       , Single existingSubmitter, Single attemptId, Single mCustomerId
+       )] -> case mCustomerId of
+        Nothing -> pure (Left "Booking customer identity is missing")
+        Just customerId
+          | status `elem` ["submitted", "under_review"]
+              && existingReference == Just customerReference
+              && existingSubmitter == Just customerId -> pure (Right ())
+          | status == "approved" -> pure (Right ())
+          | status `elem` ["submitted", "under_review"] ->
+              pure (Left "Different manual evidence is already under review")
+          | status `elem` ["awaiting_evidence", "rejected"] -> do
+              now <- liftIO getCurrentTime
+              when (status == "rejected") $
+                Checkout.recordManualPaymentSelection
+                  (sbpcCheckout context)
+                  (Checkout.PaymentAttemptReference attemptId)
+                  Checkout.ProviderBankTransfer
+                  (serviceBookingPaymentCorrelationId
+                    context Checkout.ProviderBankTransfer "manual-resubmit")
+                  now
+              rawExecute
+                "UPDATE commerce_manual_payment_evidence\
+                \ SET customer_reference = ?, submitted_amount_minor = ?, currency = ?,\
+                \ submitted_at = ?, submitted_by = ?, status = 'submitted',\
+                \ reviewed_by = NULL, reviewed_at = NULL, review_notes = NULL\
+                \ WHERE id = ?::uuid"
+                [ PersistText customerReference
+                , PersistInt64 (sbpcDepositMinor context)
+                , PersistText (sbpcCurrency context)
+                , PersistUTCTime now
+                , PersistInt64 customerId
+                , PersistText evidenceId
+                ]
+              rawExecute
+                "INSERT INTO commerce_checkout_audit_event(\
+                \ checkout_id, event_type, actor_type, actor_id, correlation_id, metadata\
+                \) VALUES (?::uuid, 'manual_payment_evidence_submitted', 'customer', ?, ?,\
+                \ jsonb_build_object('attempt_id', ?))"
+                [ PersistText (Checkout.checkoutReferenceId (sbpcCheckout context))
+                , PersistText (T.pack (show customerId))
+                , PersistText (serviceBookingPaymentCorrelationId
+                    context Checkout.ProviderBankTransfer "manual-evidence")
+                , PersistText attemptId
+                ]
+              pure (Right ())
+          | otherwise -> pure (Left "Manual evidence cannot be submitted in its current state")
+      [] -> pure (Left "Select bank transfer before submitting evidence")
+      _ -> pure (Left "Manual payment evidence is ambiguous")
+  either (throwError . marketplaceCheckoutConflict) pure outcome
+  loadPublicBookingCheckoutDTO (sbpcBookingKey context) Nothing
 
 createPublicBookingCheckout
   :: Maybe Text
@@ -15345,7 +15831,7 @@ checkoutCart rawId mIdempotency payload = do
         { Checkout.pacCheckout = msccCheckout context
         , Checkout.pacProvider = Checkout.ProviderBankTransfer
         , Checkout.pacEnvironment = msccEnvironment context
-        , Checkout.pacOperation = Checkout.OperationCreate
+        , Checkout.pacOperation = Checkout.OperationManualVerify
         , Checkout.pacAmountMinor = fromIntegral (msccTotalCents context)
         , Checkout.pacCurrency = msccCurrency context
         , Checkout.pacMerchantRef = "tdf-marketplace-manual"

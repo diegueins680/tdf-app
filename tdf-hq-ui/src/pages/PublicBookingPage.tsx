@@ -420,6 +420,8 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   const [paypalOrderId, setPaypalOrderId] = useState<string | null>(null);
   const paypalButtonRef = useRef<HTMLDivElement>(null);
   const paypalClientId = useMemo(() => env.read('VITE_PAYPAL_CLIENT_ID') ?? '', []);
+  const [manualDialogOpen, setManualDialogOpen] = useState(false);
+  const [manualReference, setManualReference] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const checkoutIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const [rememberProfile, setRememberProfile] = useState(false);
@@ -585,6 +587,8 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     setDatafastDialogOpen(false);
     setPaypalOrderId(null);
     setPaypalDialogOpen(false);
+    setManualDialogOpen(false);
+    setManualReference('');
     setTermsAccepted(false);
     checkoutIdempotency.current = null;
     setError(null);
@@ -1207,6 +1211,56 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     }
   }, [checkoutLookupToken, checkoutSuccess, paypalClientId]);
 
+  const handleManualDeposit = useCallback(async () => {
+    if (!checkoutSuccess || !checkoutLookupToken) {
+      setPaymentError('No encontramos el acceso seguro de esta orden. Crea una nueva reserva.');
+      return;
+    }
+    setPaymentBusy(true);
+    setPaymentError(null);
+    try {
+      const updated = await Bookings.selectPublicManualPayment(
+        checkoutSuccess.booking.bookingId,
+        checkoutLookupToken,
+      );
+      setCheckoutSuccess({ ...updated, lookupToken: checkoutLookupToken });
+      setManualDialogOpen(true);
+    } catch {
+      setPaymentError('No pudimos seleccionar transferencia. La reserva sigue sin pago confirmado.');
+    } finally {
+      setPaymentBusy(false);
+    }
+  }, [checkoutLookupToken, checkoutSuccess]);
+
+  const handleManualEvidenceSubmit = useCallback(async () => {
+    if (!checkoutSuccess || !checkoutLookupToken) return;
+    const reference = manualReference.trim();
+    if (reference.length < 3 || reference.length > 120) {
+      setPaymentError('Ingresa una referencia bancaria de 3 a 120 caracteres.');
+      return;
+    }
+    setPaymentBusy(true);
+    setPaymentError(null);
+    try {
+      const updated = await Bookings.submitPublicManualEvidence(
+        checkoutSuccess.booking.bookingId,
+        reference,
+        checkoutLookupToken,
+      );
+      setCheckoutSuccess({ ...updated, lookupToken: checkoutLookupToken });
+      setManualDialogOpen(false);
+      setManualReference('');
+      setSnackbar({
+        open: true,
+        message: 'Referencia enviada para revisión. El depósito todavía no está confirmado.',
+      });
+    } catch {
+      setPaymentError('No pudimos enviar la referencia. No se confirmó ningún pago.');
+    } finally {
+      setPaymentBusy(false);
+    }
+  }, [checkoutLookupToken, checkoutSuccess, manualReference]);
+
   useEffect(() => {
     if (!datafastDialogOpen || !datafastCheckout || typeof window === 'undefined') return;
     if (datafastFormRef.current) datafastFormRef.current.innerHTML = '';
@@ -1333,6 +1387,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     const depositPaid = checkoutSuccess?.paymentStatus === 'paid';
     const depositProcessing = checkoutSuccess?.paymentStatus === 'processing';
     const paymentMethods = checkoutSuccess?.paymentMethods ?? [];
+    const manualPayment = checkoutSuccess?.manualPayment;
 
     return (
       <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
@@ -1425,6 +1480,21 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                             Elige únicamente un método habilitado por el servidor. Abrir un proveedor no confirma el pago.
                           </Typography>
                           {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+                          {manualPayment?.status === 'submitted' && (
+                            <Alert severity="info" variant="outlined">
+                              Referencia recibida. Permanece pendiente hasta que una persona autorizada la compare con el estado bancario.
+                            </Alert>
+                          )}
+                          {manualPayment?.status === 'under_review' && (
+                            <Alert severity="info" variant="outlined">
+                              Transferencia en revisión. Este estado no significa pago confirmado.
+                            </Alert>
+                          )}
+                          {manualPayment?.status === 'rejected' && (
+                            <Alert severity="warning" variant="outlined">
+                              La evidencia anterior fue rechazada. Verifica la referencia y vuelve a enviarla.
+                            </Alert>
+                          )}
                           {paymentMethods.length === 0 && (
                             <Alert severity="info" variant="outlined">
                               No hay un rail en línea habilitado para esta orden. El horario sigue solamente en retención temporal.
@@ -1447,6 +1517,15 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                                 onClick={() => void handlePaypalDeposit()}
                               >
                                 Pagar con PayPal
+                              </Button>
+                            )}
+                            {paymentMethods.includes('bank_transfer') && (
+                              <Button
+                                variant="outlined"
+                                disabled={paymentBusy}
+                                onClick={() => void handleManualDeposit()}
+                              >
+                                Registrar transferencia
                               </Button>
                             )}
                           </Stack>
@@ -1577,6 +1656,46 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setPaypalDialogOpen(false)} color="inherit">Cerrar</Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog
+          open={manualDialogOpen}
+          onClose={() => { if (!paymentBusy) setManualDialogOpen(false); }}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>Registrar transferencia bancaria</DialogTitle>
+          <DialogContent dividers>
+            <Stack spacing={1.5}>
+              <Alert severity="warning" variant="outlined">
+                Enviar una referencia no confirma el depósito. TDF debe verificar el movimiento bancario y el importe exacto antes de confirmar la reserva.
+              </Alert>
+              <Typography variant="body2" color="text.secondary">
+                Usa únicamente las instrucciones bancarias oficiales que TDF te haya proporcionado. No incluyas claves, números completos de cuenta ni datos de tarjeta.
+              </Typography>
+              <TextField
+                label="Referencia o comprobante bancario"
+                value={manualReference}
+                onChange={(event) => setManualReference(event.target.value)}
+                inputProps={{ maxLength: 120 }}
+                helperText="3–120 caracteres. La referencia queda protegida para revisión financiera."
+                autoComplete="off"
+                fullWidth
+              />
+              {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setManualDialogOpen(false)} disabled={paymentBusy} color="inherit">
+              Cerrar
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => void handleManualEvidenceSubmit()}
+              disabled={paymentBusy || manualReference.trim().length < 3}
+            >
+              Enviar para revisión
+            </Button>
           </DialogActions>
         </Dialog>
       </Box>

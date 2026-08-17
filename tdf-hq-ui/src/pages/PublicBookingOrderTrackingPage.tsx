@@ -163,6 +163,26 @@ export default function PublicBookingOrderTrackingPage() {
                   Depósito: <strong>{order.quote.currency} {(order.quote.depositMinor / 100).toFixed(2)}</strong>
                   {' '}· Saldo posterior: <strong>{order.quote.currency} {(order.quote.balanceMinor / 100).toFixed(2)}</strong>
                 </Typography>
+                {order.manualPayment?.status === 'awaiting_evidence' && (
+                  <Alert severity="info" variant="outlined">
+                    Elegiste transferencia bancaria, pero todavía no enviaste una referencia para revisión. No existe un pago confirmado.
+                  </Alert>
+                )}
+                {order.manualPayment?.status === 'submitted' && (
+                  <Alert severity="info" variant="outlined">
+                    La referencia bancaria fue recibida y espera revisión independiente. Esto todavía no confirma el depósito.
+                  </Alert>
+                )}
+                {order.manualPayment?.status === 'under_review' && (
+                  <Alert severity="info" variant="outlined">
+                    La referencia bancaria está bajo revisión financiera. La reserva permanece pendiente hasta una aprobación verificada.
+                  </Alert>
+                )}
+                {order.manualPayment?.status === 'rejected' && (
+                  <Alert severity="warning" variant="outlined">
+                    La evidencia bancaria fue rechazada. Regresa al flujo de reserva o contacta a TDF para corregirla; no se confirmó ningún pago.
+                  </Alert>
+                )}
               </>
             )}
 

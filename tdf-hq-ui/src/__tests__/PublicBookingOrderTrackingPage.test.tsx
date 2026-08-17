@@ -116,4 +116,29 @@ describe('PublicBookingOrderTrackingPage', () => {
     expect(container.textContent).toContain('Depósito verificado');
     expect(container.textContent).toContain('Pago: paid');
   });
+
+  it('shows manual evidence review without claiming payment success', async () => {
+    getPublicCheckoutMock.mockResolvedValue({
+      ...checkoutFixture('awaiting_payment'),
+      manualPayment: {
+        paymentMethod: 'bank_transfer',
+        status: 'under_review',
+        submittedAt: '2030-01-01T15:05:00Z',
+      },
+    });
+    await act(async () => {
+      root.render(
+        <MemoryRouter initialEntries={['/reservas/orden/456']}>
+          <Routes>
+            <Route path="/reservas/orden/:bookingId" element={<PublicBookingOrderTrackingPage />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+    });
+    await flush();
+
+    expect(container.textContent).toContain('está bajo revisión financiera');
+    expect(container.textContent).toContain('Pago: awaiting_payment');
+    expect(container.textContent).not.toContain('Depósito verificado');
+  });
 });

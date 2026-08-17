@@ -60,6 +60,9 @@ create_base_schema() {
     CREATE TABLE service_catalog (
       id BIGINT PRIMARY KEY, name TEXT NOT NULL, kind TEXT NOT NULL
     );
+    CREATE TABLE party (
+      id BIGINT PRIMARY KEY
+    );
     CREATE TABLE service_offering (
       id UUID PRIMARY KEY, legacy_service_catalog_id BIGINT,
       code TEXT NOT NULL, default_rate_cents INTEGER, currency_id UUID NOT NULL,
@@ -98,6 +101,8 @@ apply_file tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql
 apply_file tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql
 apply_file tdf-hq/sql/2026-08-17_service_booking_provider_actions.sql
 apply_file tdf-hq/sql/2026-08-17_service_booking_provider_actions.sql
+apply_file tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql
+apply_file tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql
 
 currency_id="c1000000-0000-4000-8000-000000000001"
 tax_id="c2000000-0000-4000-8000-000000000001"
@@ -106,10 +111,14 @@ policy_id="c4000000-0000-4000-8000-000000000001"
 checkout_id="c5000000-0000-4000-8000-000000000001"
 attempt_id="c6000000-0000-4000-8000-000000000001"
 binding_id="c7000000-0000-4000-8000-000000000001"
+manual_checkout_id="c5000000-0000-4000-8000-000000000003"
+manual_attempt_id="c6000000-0000-4000-8000-000000000003"
+manual_evidence_id="c8000000-0000-4000-8000-000000000003"
 
 psql_exec -c "
   INSERT INTO currency_reference VALUES ('$currency_id', 'USD', TRUE);
   INSERT INTO tax_rate_reference VALUES ('$tax_id', 1200, TRUE);
+  INSERT INTO party(id) VALUES (101), (102), (103), (201), (202);
   INSERT INTO service_catalog VALUES (1, 'Studio recording', 'Recording');
   INSERT INTO service_offering(
     id, legacy_service_catalog_id, code, default_rate_cents, currency_id,
@@ -120,11 +129,70 @@ psql_exec -c "
 # Re-run once data exists so the migration's catalog-preserving draft seed is exercised.
 apply_file tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql
 apply_file tdf-hq/sql/2026-08-17_service_booking_provider_actions.sql
+apply_file tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql
 
 assert_equal "$(psql_exec -Atc "SELECT approval_status || ':' || active::text || ':' || rate_minor::text || ':' || tax_bps::text FROM service_booking_commerce_policy WHERE service_offering_id='$offering_id';")" \
   "draft:false:2500:1200" "Catalog-preserving draft policy"
 assert_equal "$(psql_exec -Atc "SELECT enabled::text FROM revenue_feature_flag WHERE flag_key='commerce.service_bookings' AND environment='production';")" \
   "false" "Production service booking gate"
+assert_equal "$(psql_exec -Atc "SELECT string_agg(flag_key || ':' || enabled::text, ',' ORDER BY flag_key) FROM revenue_feature_flag WHERE flag_key IN ('checkout.bank_transfer','checkout.cash','checkout.pos') AND environment='production';")" \
+  "checkout.bank_transfer:true,checkout.cash:true,checkout.pos:true" "Manual settlement capability flags"
+
+# Customer evidence is never payment. It must bind an immutable manual attempt,
+# then pass an independent two-step staff review.
+psql_exec -c "
+  INSERT INTO commerce_checkout_session(
+    id, domain_type, domain_order_id, status, environment, currency,
+    subtotal_minor, total_minor, customer_email, lookup_token_hash,
+    idempotency_key, expires_at
+  ) VALUES (
+    '$manual_checkout_id', 'service_booking', '4', 'awaiting_payment', 'sandbox', 'USD',
+    2800, 2800, 'manual@example.com', repeat('7',64),
+    'service-booking-manual-0001', NOW() + INTERVAL '15 minutes'
+  );
+  INSERT INTO commerce_payment_attempt(
+    id, checkout_id, provider, environment, operation, status, amount_minor,
+    currency, merchant_account_ref, idempotency_key
+  ) VALUES (
+    '$manual_attempt_id', '$manual_checkout_id', 'bank_transfer', 'sandbox',
+    'manual_verify', 'requires_review', 2800, 'USD', 'tdf-manual-settlement',
+    'service-booking-manual-attempt-0001'
+  );
+  INSERT INTO commerce_manual_payment_evidence(id, checkout_id, payment_attempt_id, status)
+    VALUES ('$manual_evidence_id', '$manual_checkout_id', '$manual_attempt_id', 'awaiting_evidence');
+" >/dev/null
+
+if psql_exec -c "UPDATE commerce_manual_payment_evidence SET status='approved', submitted_amount_minor=2800, currency='USD', submitted_by=201, reviewed_by=202, reviewed_at=NOW(), review_notes='fabricated direct approval' WHERE id='$manual_evidence_id';" >/dev/null 2>&1; then
+  echo "Manual evidence skipped required submission and review transitions" >&2
+  exit 1
+fi
+
+psql_exec -c "
+  UPDATE commerce_manual_payment_evidence
+    SET status='submitted', customer_reference='BANK-TEST-001',
+        submitted_amount_minor=2800, currency='USD', submitted_by=201, submitted_at=NOW()
+    WHERE id='$manual_evidence_id';
+" >/dev/null
+assert_equal "$(psql_exec -Atc "SELECT status FROM commerce_checkout_session WHERE id='$manual_checkout_id';")" \
+  "awaiting_payment" "Evidence submission is not payment"
+
+if psql_exec -c "UPDATE commerce_manual_payment_evidence SET status='under_review', reviewed_by=201, review_notes='self review' WHERE id='$manual_evidence_id';" >/dev/null 2>&1; then
+  echo "Manual evidence allowed its submitter to review it" >&2
+  exit 1
+fi
+
+psql_exec -c "
+  UPDATE commerce_manual_payment_evidence
+    SET status='under_review', reviewed_by=202, review_notes='Reference matched bank statement.'
+    WHERE id='$manual_evidence_id';
+  UPDATE commerce_manual_payment_evidence
+    SET status='approved', reviewed_at=NOW(), review_notes='Reference matched bank statement.'
+    WHERE id='$manual_evidence_id';
+" >/dev/null
+assert_equal "$(psql_exec -Atc "SELECT status || ':' || classification FROM commerce_manual_payment_evidence_review_report WHERE evidence_id='$manual_evidence_id';")" \
+  "approved:canonical" "Independent manual evidence approval"
+assert_equal "$(psql_exec -Atc "SELECT status FROM commerce_checkout_session WHERE id='$manual_checkout_id';")" \
+  "awaiting_payment" "Database evidence approval alone is not payment verification"
 
 psql_exec -c "
   UPDATE service_booking_commerce_policy
@@ -297,6 +365,10 @@ if apply_file tdf-hq/sql/2026-08-16_service_booking_checkout_runtime_rollback.sq
   echo "Rollback removed service booking runtime containing canonical records" >&2
   exit 1
 fi
+if apply_file tdf-hq/sql/2026-08-17_service_booking_manual_payments_rollback.sql; then
+  echo "Rollback removed reviewed manual payment evidence" >&2
+  exit 1
+fi
 
 # Prove the rollback/reapply path on a fresh schema in the same disposable DB.
 psql_exec -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;' >/dev/null
@@ -304,11 +376,14 @@ create_base_schema
 apply_file tdf-hq/sql/2026-08-13_unified_checkout_core.sql
 apply_file tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql
 apply_file tdf-hq/sql/2026-08-17_service_booking_provider_actions.sql
+apply_file tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql
+apply_file tdf-hq/sql/2026-08-17_service_booking_manual_payments_rollback.sql
 apply_file tdf-hq/sql/2026-08-17_service_booking_provider_actions_rollback.sql
 apply_file tdf-hq/sql/2026-08-16_service_booking_checkout_runtime_rollback.sql
 assert_equal "$(psql_exec -Atc "SELECT to_regclass('public.service_booking_checkout_runtime') IS NULL;")" \
   "t" "Empty runtime rollback"
 apply_file tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql
 apply_file tdf-hq/sql/2026-08-17_service_booking_provider_actions.sql
+apply_file tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql
 
 echo "Service booking checkout runtime migration tests passed"

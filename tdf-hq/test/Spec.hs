@@ -802,6 +802,35 @@ main = hspec $ do
             CheckoutStore.resolveCheckoutEnvironment (Just "staging")
               `shouldSatisfy` isLeft
 
+        it "accepts only staff-verified manual evidence on manual settlement rails" $ do
+            let now = UTCTime (fromGregorian 2026 8 17) (secondsToDiffTime 0)
+                payment = CheckoutStore.VerifiedPayment
+                  { CheckoutStore.vpAttempt = CheckoutStore.PaymentAttemptReference "attempt-1"
+                  , CheckoutStore.vpCheckout = CheckoutStore.CheckoutReference "checkout-1"
+                  , CheckoutStore.vpProvider = CheckoutStore.ProviderBankTransfer
+                  , CheckoutStore.vpEnvironment = CheckoutStore.CheckoutSandbox
+                  , CheckoutStore.vpMerchantRef = "tdf-manual-settlement"
+                  , CheckoutStore.vpResourceType = "manual_evidence"
+                  , CheckoutStore.vpProviderResource = "evidence-1"
+                  , CheckoutStore.vpProviderResourcePath = Nothing
+                  , CheckoutStore.vpOrderReference = "booking-1"
+                  , CheckoutStore.vpAmountMinor = 5000
+                  , CheckoutStore.vpCurrency = "USD"
+                  , CheckoutStore.vpEvidence = "staff_verified_manual"
+                  , CheckoutStore.vpOccurredAt = now
+                  , CheckoutStore.vpCorrelationId = "manual-review-1"
+                  }
+            CheckoutStore.validateApprovedManualPayment payment `shouldBe` Right ()
+            CheckoutStore.validateApprovedManualPayment
+              payment { CheckoutStore.vpEvidence = "customer_submitted" }
+              `shouldSatisfy` isLeft
+            CheckoutStore.validateApprovedManualPayment
+              payment { CheckoutStore.vpProvider = CheckoutStore.ProviderPayPal }
+              `shouldSatisfy` isLeft
+            CheckoutStore.validateApprovedManualPayment
+              payment { CheckoutStore.vpResourceType = "bank_reference" }
+              `shouldSatisfy` isLeft
+
         it "binds Datafast environment declarations to the configured gateway host" $ do
             ServiceStorefront.validateDatafastEnvironmentBase
               CheckoutStore.CheckoutSandbox

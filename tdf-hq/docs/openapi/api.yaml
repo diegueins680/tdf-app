@@ -4581,6 +4581,92 @@ paths:
         '404': { description: Booking order not found }
         '409': { description: Expired booking or PayPal order/binding conflict }
         '502': { description: Provider failure or amount/currency/reference mismatch }
+  /bookings/public/orders/{bookingId}/manual-payment:
+    post:
+      tags: [Public bookings, Checkout]
+      summary: Select a manual bank-transfer attempt
+      description: Selection creates awaiting-evidence state only. It never confirms payment or fulfillment and is blocked while an online payment attempt is active.
+      operationId: selectPublicBookingManualPayment
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/PublicBookingId'
+        - $ref: '#/components/parameters/OrderLookupToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PublicBookingManualPaymentCreate' }
+      responses:
+        '200':
+          description: Awaiting-evidence checkout state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicBookingCheckout' }
+        '404': { description: Booking order not found }
+        '409': { description: Expired booking or another payment rail is active }
+        '503': { description: Manual bank transfer is disabled }
+  /bookings/public/orders/{bookingId}/manual-payment/evidence:
+    post:
+      tags: [Public bookings, Checkout]
+      summary: Submit a bank-transfer reference for independent review
+      description: The customer reference is immutable during review and cannot mark the checkout paid. Amount and currency come exclusively from the stored checkout.
+      operationId: submitPublicBookingManualEvidence
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/PublicBookingId'
+        - $ref: '#/components/parameters/OrderLookupToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PublicBookingManualEvidenceCreate' }
+      responses:
+        '200':
+          description: Evidence submitted; payment remains unconfirmed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicBookingCheckout' }
+        '400': { description: Invalid reference }
+        '404': { description: Booking order not found }
+        '409': { description: Manual payment was not selected or different evidence is already under review }
+  /bookings/{bookingId}/commerce:
+    get:
+      tags: [Bookings, Commerce operations]
+      summary: Read protected booking commerce and manual-evidence details
+      operationId: getServiceBookingCommerce
+      parameters:
+        - $ref: '#/components/parameters/PublicBookingId'
+      responses:
+        '200':
+          description: Booking payment and separate fulfillment projection
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceBookingCommerce' }
+        '403': { description: Invoicing access required }
+        '404': { description: Canonical booking commerce order not found }
+  /bookings/{bookingId}/manual-payment/review:
+    post:
+      tags: [Bookings, Commerce operations]
+      summary: Independently approve or reject manual-payment evidence
+      description: The reviewer must differ from the submitter. Approval atomically verifies immutable bindings, posts the ledger and receipt, and confirms the deposit only while the booking hold remains active.
+      operationId: reviewServiceBookingManualPayment
+      parameters:
+        - $ref: '#/components/parameters/PublicBookingId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceBookingManualReview' }
+      responses:
+        '200':
+          description: Current truthful booking commerce state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceBookingCommerce' }
+        '400': { description: Invalid action or review notes }
+        '403': { description: Invoicing access required or separation of duties failed }
+        '404': { description: Canonical booking commerce order not found }
+        '409': { description: Evidence, checkout, hold, ledger, receipt, or immutable binding conflict }
 security:
   - bearerAuth: [ ]
 
@@ -4783,7 +4869,7 @@ components:
         quote: { allOf: [{ $ref: '#/components/schemas/PublicBookingQuote' }], nullable: true }
     PublicBookingCheckout:
       type: object
-      required: [booking, checkoutId, lookupToken, paymentStatus, fulfillmentStatus, holdExpiresAt, quote, paymentMethods]
+      required: [booking, checkoutId, lookupToken, paymentStatus, fulfillmentStatus, holdExpiresAt, quote, paymentMethods, manualPayment]
       properties:
         booking: { $ref: '#/components/schemas/Booking' }
         checkoutId: { type: string, format: uuid }
@@ -4796,7 +4882,65 @@ components:
           type: array
           description: Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown.
           uniqueItems: true
-          items: { type: string, enum: [datafast, paypal] }
+          items: { type: string, enum: [datafast, paypal, bank_transfer] }
+        manualPayment:
+          allOf: [{ $ref: '#/components/schemas/PublicBookingManualPayment' }]
+          nullable: true
+    PublicBookingManualPaymentCreate:
+      type: object
+      additionalProperties: false
+      required: [paymentMethod]
+      properties:
+        paymentMethod: { type: string, enum: [bank_transfer] }
+    PublicBookingManualEvidenceCreate:
+      type: object
+      additionalProperties: false
+      required: [customerReference]
+      properties:
+        customerReference: { type: string, minLength: 3, maxLength: 120 }
+    PublicBookingManualPayment:
+      type: object
+      required: [paymentMethod, status, submittedAt]
+      properties:
+        paymentMethod: { type: string, enum: [bank_transfer, cash, pos] }
+        status: { type: string, enum: [awaiting_evidence, submitted, under_review, approved, rejected] }
+        submittedAt: { type: string, format: date-time, nullable: true }
+    ServiceBookingManualReview:
+      type: object
+      additionalProperties: false
+      required: [action, reviewNotes]
+      properties:
+        action: { type: string, enum: [approve, reject] }
+        reviewNotes: { type: string, minLength: 3, maxLength: 2000 }
+    ServiceBookingManualEvidence:
+      type: object
+      required: [evidenceId, paymentMethod, status, customerReference, submittedAmountMinor, currency, submittedBy, submittedAt, reviewedBy, reviewedAt, reviewNotes]
+      properties:
+        evidenceId: { type: string, format: uuid }
+        paymentMethod: { type: string, enum: [bank_transfer, cash, pos] }
+        status: { type: string, enum: [awaiting_evidence, submitted, under_review, approved, rejected] }
+        customerReference: { type: string, nullable: true }
+        submittedAmountMinor: { type: integer, format: int64, nullable: true }
+        currency: { type: string, nullable: true, minLength: 3, maxLength: 3 }
+        submittedBy: { type: integer, format: int64, nullable: true }
+        submittedAt: { type: string, format: date-time, nullable: true }
+        reviewedBy: { type: integer, format: int64, nullable: true }
+        reviewedAt: { type: string, format: date-time, nullable: true }
+        reviewNotes: { type: string, nullable: true }
+    ServiceBookingCommerce:
+      type: object
+      required: [bookingId, checkoutId, paymentStatus, fulfillmentStatus, depositMinor, currency, holdExpiresAt, manualEvidence]
+      properties:
+        bookingId: { type: integer, format: int64, minimum: 1 }
+        checkoutId: { type: string, format: uuid }
+        paymentStatus: { type: string }
+        fulfillmentStatus: { type: string }
+        depositMinor: { type: integer, format: int64, minimum: 1 }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        holdExpiresAt: { type: string, format: date-time }
+        manualEvidence:
+          allOf: [{ $ref: '#/components/schemas/ServiceBookingManualEvidence' }]
+          nullable: true
     PublicBookingPaypalCapture:
       type: object
       additionalProperties: false

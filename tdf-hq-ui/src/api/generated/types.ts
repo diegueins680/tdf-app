@@ -3466,6 +3466,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/bookings/public/orders/{bookingId}/manual-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Select a manual bank-transfer attempt
+         * @description Selection creates awaiting-evidence state only. It never confirms payment or fulfillment and is blocked while an online payment attempt is active.
+         */
+        post: operations["selectPublicBookingManualPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}/manual-payment/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit a bank-transfer reference for independent review
+         * @description The customer reference is immutable during review and cannot mark the checkout paid. Amount and currency come exclusively from the stored checkout.
+         */
+        post: operations["submitPublicBookingManualEvidence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/{bookingId}/commerce": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read protected booking commerce and manual-evidence details */
+        get: operations["getServiceBookingCommerce"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/{bookingId}/manual-payment/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Independently approve or reject manual-payment evidence
+         * @description The reviewer must differ from the submitter. Approval atomically verifies immutable bindings, posts the ledger and receipt, and confirms the deposit only while the booking hold remains active.
+         */
+        post: operations["reviewServiceBookingManualPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3578,7 +3655,63 @@ export interface components {
             holdExpiresAt: string;
             quote: components["schemas"]["PublicBookingQuote"];
             /** @description Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown. */
-            paymentMethods: ("datafast" | "paypal")[];
+            paymentMethods: ("datafast" | "paypal" | "bank_transfer")[];
+            manualPayment: components["schemas"]["PublicBookingManualPayment"] | null;
+        };
+        PublicBookingManualPaymentCreate: {
+            /** @enum {string} */
+            paymentMethod: "bank_transfer";
+        };
+        PublicBookingManualEvidenceCreate: {
+            customerReference: string;
+        };
+        PublicBookingManualPayment: {
+            /** @enum {string} */
+            paymentMethod: "bank_transfer" | "cash" | "pos";
+            /** @enum {string} */
+            status: "awaiting_evidence" | "submitted" | "under_review" | "approved" | "rejected";
+            /** Format: date-time */
+            submittedAt: string | null;
+        };
+        ServiceBookingManualReview: {
+            /** @enum {string} */
+            action: "approve" | "reject";
+            reviewNotes: string;
+        };
+        ServiceBookingManualEvidence: {
+            /** Format: uuid */
+            evidenceId: string;
+            /** @enum {string} */
+            paymentMethod: "bank_transfer" | "cash" | "pos";
+            /** @enum {string} */
+            status: "awaiting_evidence" | "submitted" | "under_review" | "approved" | "rejected";
+            customerReference: string | null;
+            /** Format: int64 */
+            submittedAmountMinor: number | null;
+            currency: string | null;
+            /** Format: int64 */
+            submittedBy: number | null;
+            /** Format: date-time */
+            submittedAt: string | null;
+            /** Format: int64 */
+            reviewedBy: number | null;
+            /** Format: date-time */
+            reviewedAt: string | null;
+            reviewNotes: string | null;
+        };
+        ServiceBookingCommerce: {
+            /** Format: int64 */
+            bookingId: number;
+            /** Format: uuid */
+            checkoutId: string;
+            paymentStatus: string;
+            fulfillmentStatus: string;
+            /** Format: int64 */
+            depositMinor: number;
+            currency: string;
+            /** Format: date-time */
+            holdExpiresAt: string;
+            manualEvidence: components["schemas"]["ServiceBookingManualEvidence"] | null;
         };
         PublicBookingPaypalCapture: {
             paypalOrderId: string;
@@ -13239,6 +13372,196 @@ export interface operations {
             };
             /** @description Provider failure or amount/currency/reference mismatch */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    selectPublicBookingManualPayment: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicBookingManualPaymentCreate"];
+            };
+        };
+        responses: {
+            /** @description Awaiting-evidence checkout state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingCheckout"];
+                };
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Expired booking or another payment rail is active */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Manual bank transfer is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitPublicBookingManualEvidence: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicBookingManualEvidenceCreate"];
+            };
+        };
+        responses: {
+            /** @description Evidence submitted; payment remains unconfirmed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingCheckout"];
+                };
+            };
+            /** @description Invalid reference */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Manual payment was not selected or different evidence is already under review */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getServiceBookingCommerce: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Booking payment and separate fulfillment projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceBookingCommerce"];
+                };
+            };
+            /** @description Invoicing access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Canonical booking commerce order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reviewServiceBookingManualPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceBookingManualReview"];
+            };
+        };
+        responses: {
+            /** @description Current truthful booking commerce state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceBookingCommerce"];
+                };
+            };
+            /** @description Invalid action or review notes */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invoicing access required or separation of duties failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Canonical booking commerce order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Evidence */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -71,7 +71,39 @@ export interface PublicBookingCheckoutDTO {
   fulfillmentStatus: string;
   holdExpiresAt: string;
   quote: PublicBookingQuoteDTO;
-  paymentMethods: Array<'datafast' | 'paypal'>;
+  paymentMethods: Array<'datafast' | 'paypal' | 'bank_transfer'>;
+  manualPayment?: PublicBookingManualPaymentDTO | null;
+}
+
+export interface PublicBookingManualPaymentDTO {
+  paymentMethod: 'bank_transfer' | 'cash' | 'pos';
+  status: 'awaiting_evidence' | 'submitted' | 'under_review' | 'approved' | 'rejected';
+  submittedAt?: string | null;
+}
+
+export interface ServiceBookingManualEvidenceDTO {
+  evidenceId: string;
+  paymentMethod: 'bank_transfer' | 'cash' | 'pos';
+  status: 'awaiting_evidence' | 'submitted' | 'under_review' | 'approved' | 'rejected';
+  customerReference?: string | null;
+  submittedAmountMinor?: number | null;
+  currency?: string | null;
+  submittedBy?: number | null;
+  submittedAt?: string | null;
+  reviewedBy?: number | null;
+  reviewedAt?: string | null;
+  reviewNotes?: string | null;
+}
+
+export interface ServiceBookingCommerceDTO {
+  bookingId: number;
+  checkoutId: string;
+  paymentStatus: string;
+  fulfillmentStatus: string;
+  depositMinor: number;
+  currency: string;
+  holdExpiresAt: string;
+  manualEvidence?: ServiceBookingManualEvidenceDTO | null;
 }
 
 export interface PublicBookingCheckoutPayload {
@@ -212,5 +244,32 @@ export const Bookings = {
     `/bookings/public/orders/${requirePositiveInteger(bookingId, 'bookingId')}/paypal/capture`,
     { paypalOrderId },
     publicBookingLookupHeaders(lookupToken),
+  ),
+  selectPublicManualPayment: (bookingId: number, lookupToken: string) =>
+    post<PublicBookingCheckoutDTO>(
+      `/bookings/public/orders/${requirePositiveInteger(bookingId, 'bookingId')}/manual-payment`,
+      { paymentMethod: 'bank_transfer' },
+      publicBookingLookupHeaders(lookupToken),
+    ),
+  submitPublicManualEvidence: (
+    bookingId: number,
+    customerReference: string,
+    lookupToken: string,
+  ) => post<PublicBookingCheckoutDTO>(
+    `/bookings/public/orders/${requirePositiveInteger(bookingId, 'bookingId')}/manual-payment/evidence`,
+    { customerReference },
+    publicBookingLookupHeaders(lookupToken),
+  ),
+  getCommerce: (bookingId: number) =>
+    get<ServiceBookingCommerceDTO>(
+      `/bookings/${requirePositiveInteger(bookingId, 'bookingId')}/commerce`,
+    ),
+  reviewManualPayment: (
+    bookingId: number,
+    action: 'approve' | 'reject',
+    reviewNotes: string,
+  ) => post<ServiceBookingCommerceDTO>(
+    `/bookings/${requirePositiveInteger(bookingId, 'bookingId')}/manual-payment/review`,
+    { action, reviewNotes },
   ),
 };
