@@ -41,6 +41,7 @@ executable tdf-hq-exe
     TDF.Contracts.Types
     TDF.Courses.Production
     TDF.API.SocialEventsAPI
+    TDF.API.EventResearchAPI
     TDF.API.Types
     TDF.API.WhatsApp
     TDF.API.DDEX
@@ -58,6 +59,7 @@ executable tdf-hq-exe
     TDF.DB
     TDF.DTO
     TDF.DTO.SocialEventsDTO
+    TDF.DTO.EventResearchDTO
     TDF.DTO.SocialDiscoveryDTO
     TDF.DTO.SocialSyncDTO
     TDF.Email
@@ -100,6 +102,7 @@ executable tdf-hq-exe
     TDF.ServerProposals
     TDF.ServerInternships
     TDF.Server.SocialEventsHandlers
+    TDF.Server.EventResearch
     TDF.Server.DDEX
     TDF.Server.Directory
     TDF.Server.Catalog
@@ -242,6 +245,7 @@ test-suite tdf-hq-test
     TDF.API.Rooms
     TDF.API.Sessions
     TDF.API.SocialEventsAPI
+    TDF.API.EventResearchAPI
     TDF.API.Types
     TDF.API.WhatsApp
     TDF.API.Directory
@@ -259,6 +263,7 @@ test-suite tdf-hq-test
     TDF.DB
     TDF.DTO
     TDF.DTO.SocialEventsDTO
+    TDF.DTO.EventResearchDTO
     TDF.DTO.SocialDiscoveryDTO
     TDF.DTO.SocialSyncDTO
     TDF.Email
@@ -305,6 +310,7 @@ test-suite tdf-hq-test
     TDF.Server.SocialDiscovery
     TDF.Server.SocialSync
     TDF.Server.SocialEventsHandlers
+    TDF.Server.EventResearch
     TDF.SocialEventLifecycle
     TDF.ServerFuture
     TDF.ServerLiveSessions
@@ -323,6 +329,7 @@ test-suite tdf-hq-test
     TDF.Services.EventDiscovery
     TDF.Services.EventLogisticsRoutes
     TDF.Services.EventDiscoverySpec
+    TDF.Server.EventResearchSpec
     TDF.Services.InstagramSync
     TDF.Services.Stripe
     TDF.Trials.API

@@ -460,6 +460,7 @@ data EventDTO = EventDTO
     , eventDescription :: Maybe Text
     , eventStart :: UTCTime
     , eventEnd :: UTCTime
+    , eventTimezone :: Maybe Text
     , eventVenueId :: Maybe Text
     , eventPriceCents :: Maybe Int
     , eventCapacity :: Maybe Int
@@ -528,6 +529,7 @@ eventUpdateAllowedKeys =
     , "eventDescription"
     , "eventStart"
     , "eventEnd"
+    , "eventTimezone"
     , "eventVenueId"
     , "eventPriceCents"
     , "eventCapacity"

@@ -108,6 +108,7 @@ import qualified TDF.Directory.PolicySpec as DirectoryPolicySpec
 import TDF.Email (resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
+import qualified TDF.Server.EventResearchSpec as EventResearchSpec
 import TDF.Services.EventLogisticsRoutes (RouteEstimateResult (..), parseGoogleDurationSeconds, parseGoogleRouteResponse)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
@@ -14713,6 +14714,7 @@ main = hspec $ do
     CatalogPipelineSpec.spec
     DirectoryPolicySpec.spec
     EventDiscoverySpec.spec
+    EventResearchSpec.spec
     ArtistSpec.spec
     ServerAuthSpec.spec
     ServerSpec.spec

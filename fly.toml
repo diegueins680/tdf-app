@@ -6,6 +6,8 @@ primary_region = "gru"
 
 [env]
   APP_PORT = "8080"
+  # The persisted deployment default is Spanish; keep runtime validation aligned.
+  DEFAULT_LOCALE = "es"
   # Production schema changes are applied once by the guarded release lane.
   RUN_MIGRATIONS = "false"
   # Enable only after the discovery schema and release have been verified.

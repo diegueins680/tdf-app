@@ -14,9 +14,9 @@ contienen personas, eventos, direcciones, credenciales ni verificaciones inventa
 | Migración PostgreSQL 16 | Pass: base histórica inmutable; migración incremental de reputación con doble aplicación, rollback/reaplicación, backfill seco/aplicado/rollback/reaplicado, privacidad, claim, reseña verificada API/agregado, pérdida/restauración de elegibilidad, visibilidad del autor y moderación, alertas, merge, 10.000 documentos, taxonomías e invitaciones con participantes exactos, bloqueo y expiración |
 | OpenAPI/clientes | Pass: seguridad pública, PII, reseñas/elegibilidad sin IDs comerciales, catálogos de servicio/moneda, separación patrocinada e idempotency keys; tipos web/móvil regenerados |
 | Feature registry | Pass: 131 features, 146 rutas web, 44 rutas móviles |
-| Autoridad de catálogos | Pass: 722 fingerprints revisados; 0 decisiones nuevas o caducas pendientes |
+| Autoridad de catálogos | Pass: 732 fingerprints revisados; 0 decisiones nuevas o caducas pendientes |
 | Auditoría formal del repositorio | 4 pruebas, 0 fallos; QuickCheck cubre invariantes del dominio |
-| Manifiesto de release | 37 pruebas, 0 fallos; SHA inmutable, ancestry, reanudación segura de catálogos y streaming SQL validados |
+| Manifiesto de release | 39 pruebas, 0 fallos; SHA inmutable, ancestry, reanudación segura de catálogos y streaming SQL validados |
 | TypeScript | Pass en web y móvil |
 | Lint | Pass: 0 errores; web conserva 94 warnings preexistentes, móvil 0 warnings |
 | Build web | Pass; presupuesto inicial 406.689 bytes gzip |

@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import {
   buildDatabaseSqlInvocation,
   buildDeployPlan,
+  buildMachineRollbackImage,
   buildMigrationBatchSql,
   buildReleaseSteps,
   buildSchemaPreflightSql,
@@ -31,6 +32,7 @@ primary_region = "gru"
 
 [env]
   APP_PORT = "8080"
+  DEFAULT_LOCALE = "es"
   RUN_MIGRATIONS = "false"
   EVENT_DISCOVERY_ENABLED = "false"
 
@@ -464,6 +466,31 @@ test('validateFlyConfig fails closed when event discovery would start during the
     ),
     /EVENT_DISCOVERY_ENABLED|discovery/i,
   );
+});
+
+test('validateFlyConfig requires the persisted production default locale', () => {
+  assert.throws(
+    () => validateFlyConfig(safeFlyConfig.replace('DEFAULT_LOCALE = "es"', 'DEFAULT_LOCALE = "en"')),
+    /DEFAULT_LOCALE|persisted production default/i,
+  );
+  assert.throws(
+    () => validateFlyConfig(safeFlyConfig.replace('  DEFAULT_LOCALE = "es"\n', '')),
+    /DEFAULT_LOCALE|persisted production default/i,
+  );
+});
+
+test('buildMachineRollbackImage removes Fly Docker Hub mirror and duplicate digests', () => {
+  const digest = `sha256:${'a'.repeat(64)}`;
+  assert.equal(buildMachineRollbackImage({
+    image_ref: {
+      registry: 'docker-hub-mirror.fly.io',
+      repository: `diegueins680/tdf-hq@${digest}`,
+      digest,
+    },
+  }), `diegueins680/tdf-hq@${digest}`);
+  assert.equal(buildMachineRollbackImage({
+    image_ref: `docker-hub-mirror.fly.io/diegueins680/tdf-hq@${digest}@${digest}`,
+  }), `diegueins680/tdf-hq@${digest}`);
 });
 
 test('validateFlyConfig requires an HTTP readiness check on /health', () => {

@@ -39,6 +39,113 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/social-events/event-research/pilot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read accumulated pilot state */
+        get: operations["getEventResearchPilot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/event-research/pilot/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record an explicit, immutable pilot approval */
+        post: operations["approveEventResearchPilot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/event-research/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List research runs and checkpoints */
+        get: operations["listEventResearchRuns"];
+        put?: never;
+        /** Idempotently start a research run by run key */
+        post: operations["createEventResearchRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/event-research/runs/{runId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Commit a run checkpoint or terminal status */
+        put: operations["updateEventResearchRun"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/event-research/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List accumulated research candidates */
+        get: operations["listEventResearchCandidates"];
+        /**
+         * Idempotently create, update, or reverify a candidate
+         * @description Uses provider plus external identifier as the canonical key. It never publishes a social event.
+         */
+        put: operations["upsertEventResearchCandidate"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/event-research/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List immutable candidate change records */
+        get: operations["listEventResearchChanges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/version": {
         parameters: {
             query?: never;
@@ -3521,6 +3628,118 @@ export interface components {
             emReactions: components["schemas"]["EventMomentReaction"][];
             emComments: components["schemas"]["EventMomentComment"][];
         };
+        EventResearchPilot: {
+            erPilotApproved: boolean;
+            /** Format: date-time */
+            erPilotApprovedAt?: string | null;
+            erPilotApprovedByPartyId?: string | null;
+            erPilotApprovalReference?: string | null;
+            /** @enum {integer} */
+            erPilotMaxActiveCandidates: 20;
+            erPilotActiveCandidates: number;
+            /** Format: date-time */
+            erPilotUpdatedAt: string;
+        };
+        EventResearchRunCreate: {
+            erRunKey: string;
+            erRunReconciliation: boolean;
+            erRunCheckpoint?: string | null;
+        };
+        EventResearchRunUpdate: {
+            /** @enum {string} */
+            erRunStatus: "running" | "completed" | "failed";
+            erRunCheckpoint?: string | null;
+            erRunCounters: {
+                [key: string]: unknown;
+            };
+            erRunErrorSummary?: string | null;
+        };
+        EventResearchRun: components["schemas"]["EventResearchRunCreate"] & components["schemas"]["EventResearchRunUpdate"] & {
+            erRunId: string;
+            /** Format: date-time */
+            erRunStartedAt: string;
+            /** Format: date-time */
+            erRunUpdatedAt: string;
+            /** Format: date-time */
+            erRunFinishedAt?: string | null;
+            erRunCreatedByPartyId: string;
+        };
+        EventResearchEvidence: {
+            /** Format: uri */
+            erEvidenceUrl: string;
+            erEvidenceKind: string;
+            /** Format: date-time */
+            erEvidenceConsultedAt: string;
+            erEvidenceNotes?: string | null;
+        };
+        EventResearchCandidateWrite: {
+            erCandidateProvider: string;
+            erCandidateExternalId: string;
+            erCandidateRunId: string;
+            erCandidateSourceId?: string | null;
+            /** @enum {string} */
+            erCandidateReviewState: "draft" | "review" | "discarded";
+            erCandidateTitle: string;
+            /** Format: date-time */
+            erCandidateStartTime?: string | null;
+            /** Format: date-time */
+            erCandidateEndTime?: string | null;
+            /** @example America/Guayaquil */
+            erCandidateTimezone: string;
+            erCandidateVenueName?: string | null;
+            erCandidateCity?: string | null;
+            erCandidateProvince?: string | null;
+            erCandidateCountryCode: string;
+            /** Format: uri */
+            erCandidateSourceUrl: string;
+            /** Format: uri */
+            erCandidateInfoUrl?: string | null;
+            /** Format: uri */
+            erCandidatePurchaseUrl?: string | null;
+            erCandidatePayload: {
+                [key: string]: unknown;
+            };
+            erCandidateEvidence: components["schemas"]["EventResearchEvidence"][];
+            /** @enum {string} */
+            erCandidateConfidence: "high" | "medium" | "low";
+            erCandidateManagedFields: string[];
+            /** Format: date-time */
+            erCandidateVerifiedAt: string;
+        };
+        EventResearchCandidate: components["schemas"]["EventResearchCandidateWrite"] & {
+            erCandidateId: string;
+            erCandidateEventId?: string | null;
+            erCandidateContentHash: string;
+            erCandidateIsPilot: boolean;
+            /** Format: date-time */
+            erCandidateCreatedAt: string;
+            /** Format: date-time */
+            erCandidateUpdatedAt: string;
+        };
+        EventResearchChange: {
+            erChangeId: string;
+            erChangeRunId: string;
+            erChangeCandidateId?: string | null;
+            erChangeEventId?: string | null;
+            /** @enum {string} */
+            erChangeAction: "created" | "updated" | "verified" | "discarded" | "materialized";
+            erChangeBeforeValue?: {
+                [key: string]: unknown;
+            } | null;
+            erChangeAfterValue?: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: uri */
+            erChangeSourceUrl: string;
+            /** @enum {string} */
+            erChangeConfidence: "high" | "medium" | "low";
+            /** Format: date-time */
+            erChangeConsultedAt: string;
+            erChangeExternalId: string;
+            erChangeResult: string;
+            /** Format: date-time */
+            erChangeCreatedAt: string;
+        };
         SocialEvent: {
             eventId?: string | null;
             eventOrganizerPartyId?: string | null;
@@ -3530,6 +3749,8 @@ export interface components {
             eventStart: string;
             /** Format: date-time */
             eventEnd: string;
+            /** @example America/Guayaquil */
+            eventTimezone?: string | null;
             eventVenueId?: string | null;
             eventPriceCents?: number | null;
             eventCapacity?: number | null;
@@ -6338,6 +6559,230 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    getEventResearchPilot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pilot approval and active-candidate count */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchPilot"];
+                };
+            };
+            /** @description Strict administrator access is required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    approveEventResearchPilot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    erPilotApprovalReference: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Approved pilot state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchPilot"];
+                };
+            };
+            /** @description Strict administrator access is required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The pilot has a different existing approval reference */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listEventResearchRuns: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Research runs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchRun"][];
+                };
+            };
+        };
+    };
+    createEventResearchRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventResearchRunCreate"];
+            };
+        };
+        responses: {
+            /** @description Existing or newly created run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchRun"];
+                };
+            };
+        };
+    };
+    updateEventResearchRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventResearchRunUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchRun"];
+                };
+            };
+            /** @description A completed run cannot be reopened */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listEventResearchCandidates: {
+        parameters: {
+            query?: {
+                provider?: string;
+                review_state?: "draft" | "review" | "discarded";
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Research candidates */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchCandidate"][];
+                };
+            };
+        };
+    };
+    upsertEventResearchCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventResearchCandidateWrite"];
+            };
+        };
+        responses: {
+            /** @description Upserted candidate */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchCandidate"];
+                };
+            };
+            /** @description Pilot cap reached or a closed run received a material change */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listEventResearchChanges: {
+        parameters: {
+            query?: {
+                run_id?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Auditable candidate changes */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchChange"][];
+                };
             };
         };
     };
