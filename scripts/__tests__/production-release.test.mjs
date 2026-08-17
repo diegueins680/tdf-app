@@ -630,6 +630,7 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     'idx_service_booking_runtime_status',
     'trg_service_booking_validate_runtime',
     'trg_service_booking_require_verified_payment',
+    'service_booking_expire_holds',
     'commerce.service_bookings',
     'fk_commerce_provider_event_checkout',
     'idx_commerce_provider_event_work',
@@ -654,6 +655,11 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
   ]) {
     assert.match(sql, new RegExp(requiredObject), `verification must inspect ${requiredObject}`);
   }
+  assert.match(
+    sql,
+    /service_booking_expire_holds[\s\S]*failed/,
+    'schema verification must prove failed booking payment attempts expire',
+  );
   assert.match(sql, /RAISE\s+EXCEPTION|\\quit/i, 'schema drift must terminate verification');
 });
 

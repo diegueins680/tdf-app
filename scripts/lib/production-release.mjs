@@ -1713,6 +1713,15 @@ BEGIN
   END IF;
 
   IF NOT EXISTS (
+    SELECT 1
+    FROM pg_proc
+    WHERE oid = to_regprocedure('public.service_booking_expire_holds(timestamp with time zone)')
+      AND strpos(pg_get_functiondef(oid), '''failed''') > 0
+  ) THEN
+    RAISE EXCEPTION 'Service booking hold expiry must release failed provider attempts';
+  END IF;
+
+  IF NOT EXISTS (
     SELECT 1 FROM revenue_feature_flag
     WHERE flag_key = 'commerce.service_bookings'
       AND environment = 'production'
