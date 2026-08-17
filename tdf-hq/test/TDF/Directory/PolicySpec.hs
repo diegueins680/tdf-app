@@ -81,3 +81,20 @@ spec = describe "music directory formal invariants" $ do
             ([Edit | editGranted] <> [Publish | publishGranted])
           requested = if requestPublish then Publish else Edit
       in not (capabilityAllows False capabilities requested)
+
+  it "I16: omitted profile fields preserve data and explicit replacements are exact" $
+    property $ \current next ->
+      applyProfileFieldUpdate (current :: String) PreserveProfileField == current
+        && applyProfileFieldUpdate current (ReplaceProfileField next) == next
+
+  it "I16: structured membership details accept one duplicate-free ID set" $
+    property $ \ids ->
+      detailIdsMatch (Set.toList (Set.fromList (ids :: [Int]))) (Set.toList (Set.fromList ids))
+
+  it "I16: structured membership details reject duplicates and unequal sets" $ do
+    detailIdsMatch [1 :: Int, 1] [1] `shouldBe` False
+    detailIdsMatch [1 :: Int, 2] [1] `shouldBe` False
+
+  it "I16: a nonempty explicit service-area set has exactly one primary" $
+    property $ \flags ->
+      serviceAreaPrimaryValid flags == (null flags || length (filter id flags) == 1)

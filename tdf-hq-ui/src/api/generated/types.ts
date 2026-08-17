@@ -5988,7 +5988,25 @@ export interface components {
             currencies: components["schemas"]["TaxonomyItem"][];
             instruments: components["schemas"]["TaxonomyItem"][];
             genres: components["schemas"]["TaxonomyItem"][];
+            languages: components["schemas"]["TaxonomyItem"][];
             cities: components["schemas"]["TaxonomyItem"][];
+        };
+        /** @enum {string} */
+        DirectoryProfileKind: "person" | "artist" | "band" | "project" | "organization" | "company" | "venue" | "studio" | "agency" | "label" | "distributor" | "school";
+        DirectoryPortfolioItem: {
+            /** @enum {string} */
+            itemType: "audio" | "video" | "image" | "release" | "credit" | "document" | "other";
+            title: string;
+            /** Format: uri-reference */
+            url: string;
+            description?: string | null;
+            /** Format: uri-reference */
+            thumbnailUrl?: string | null;
+        };
+        DirectoryProfileLink: {
+            label: string;
+            /** Format: uri-reference */
+            url: string;
         };
         PublicTaxonomyMembership: {
             /** Format: uuid */
@@ -5998,23 +6016,25 @@ export interface components {
             headline?: string | null;
             yearsExperience?: number | null;
             proficiency?: string | null;
+            /** Format: int64 */
+            rateMinMinor?: number | null;
+            /** Format: int64 */
+            rateMaxMinor?: number | null;
+            /** Format: uuid */
+            currencyId?: string | null;
         };
         /** @description Public projection excludes Party PII and directory_private_location. */
         PublicDirectoryProfile: {
             /** Format: uuid */
             id: string;
-            kind: string;
+            kind: components["schemas"]["DirectoryProfileKind"];
             name: string;
             slug: string;
             bio?: string | null;
             experience?: string | null;
             creditsSummary?: string | null;
-            portfolio?: {
-                [key: string]: unknown;
-            }[];
-            links?: {
-                [key: string]: unknown;
-            }[];
+            portfolio?: components["schemas"]["DirectoryPortfolioItem"][];
+            links?: components["schemas"]["DirectoryProfileLink"][];
             equipment?: string | null;
             rates?: {
                 /** Format: int64 */
@@ -6035,6 +6055,8 @@ export interface components {
             professions: components["schemas"]["PublicTaxonomyMembership"][];
             instruments: components["schemas"]["PublicTaxonomyMembership"][];
             genres: components["schemas"]["PublicTaxonomyMembership"][];
+            services: components["schemas"]["PublicTaxonomyMembership"][];
+            languages: components["schemas"]["PublicTaxonomyMembership"][];
             verification: {
                 type: string;
                 status: string;
@@ -6157,13 +6179,80 @@ export interface components {
             /** Format: int64 */
             guardianPartyId?: number;
         };
+        DirectoryProfessionInput: {
+            /** Format: uuid */
+            professionId: string;
+            headline?: string | null;
+            yearsExperience?: number | null;
+            /** Format: int64 */
+            rateMinMinor?: number | null;
+            /** Format: int64 */
+            rateMaxMinor?: number | null;
+            /** Format: uuid */
+            currencyId?: string | null;
+        };
+        DirectoryInstrumentInput: {
+            /** Format: uuid */
+            instrumentId: string;
+            /** @enum {string|null} */
+            proficiency?: "beginner" | "intermediate" | "advanced" | "professional" | "virtuoso" | null;
+        };
+        DirectoryLanguageInput: {
+            /** Format: uuid */
+            languageId: string;
+            /** @enum {string|null} */
+            proficiency?: "basic" | "conversational" | "professional" | "native" | null;
+        };
+        DirectoryServiceAreaInput: {
+            /** Format: uuid */
+            countryId: string;
+            /** Format: uuid */
+            subdivisionId?: string | null;
+            /** Format: uuid */
+            cityId?: string | null;
+            /** Format: uuid */
+            metropolitanAreaId?: string | null;
+            /** @description Public only when intentionally supplied; never an exact address. */
+            sectorLabel?: string | null;
+            serviceRadiusKm?: number | null;
+            primaryLocation: boolean;
+            onsite: boolean;
+        };
+        /** @description Private editor projection available only through an explicit active manager grant. */
         ManagedDirectoryProfile: {
             /** Format: uuid */
             id: string;
-            kind: string;
+            kind: components["schemas"]["DirectoryProfileKind"];
             name: string;
             slug: string;
-            bio?: string | null;
+            bio: string | null;
+            experienceSummary: string | null;
+            creditsSummary: string | null;
+            portfolio: components["schemas"]["DirectoryPortfolioItem"][];
+            links: components["schemas"]["DirectoryProfileLink"][];
+            equipmentSummary: string | null;
+            rates: {
+                /** Format: int64 */
+                minMinor: number | null;
+                /** Format: int64 */
+                maxMinor: number | null;
+                /** Format: uuid */
+                currencyId: string | null;
+            } | null;
+            /** @enum {string} */
+            availabilityStatus: "available" | "limited" | "unavailable" | "ask";
+            onsite: boolean;
+            remote: boolean;
+            availableToTravel: boolean;
+            travelRadiusKm: number | null;
+            professionIds: string[];
+            professionDetails: components["schemas"]["DirectoryProfessionInput"][];
+            instrumentIds: string[];
+            instrumentDetails: components["schemas"]["DirectoryInstrumentInput"][];
+            genreIds: string[];
+            serviceOfferingIds: string[];
+            languages: components["schemas"]["DirectoryLanguageInput"][];
+            serviceAreas: components["schemas"]["DirectoryServiceAreaInput"][];
             status: string;
             visibility: string;
             moderationStatus: string;
@@ -6174,19 +6263,62 @@ export interface components {
             };
         };
         DirectoryProfileUpsert: {
-            profileKind: string;
+            profileKind: components["schemas"]["DirectoryProfileKind"];
             publicName: string;
             slug: string;
             bio?: string;
+            /** @description Omit to preserve on update; send an empty string to clear. */
+            experienceSummary?: string;
+            /** @description Omit to preserve on update; send an empty string to clear. */
+            creditsSummary?: string;
+            /** @description Omit to preserve on update; send [] to clear. */
+            portfolio?: components["schemas"]["DirectoryPortfolioItem"][];
+            /** @description Omit to preserve on update; send [] to clear. */
+            links?: components["schemas"]["DirectoryProfileLink"][];
+            /** @description Omit to preserve on update; send an empty string to clear. */
+            equipmentSummary?: string;
+            /**
+             * Format: int64
+             * @description Omit both rate fields and currencyId to preserve on update.
+             */
+            rateMinMinor?: number;
+            /** Format: int64 */
+            rateMaxMinor?: number;
+            /**
+             * Format: uuid
+             * @description Required with rateMinMinor and invalid without it.
+             */
+            currencyId?: string;
+            /** @description Explicitly clears all profile-level rates on update. */
+            clearRates?: boolean;
+            /** @enum {string} */
+            availabilityStatus?: "available" | "limited" | "unavailable" | "ask";
             professionIds: string[];
+            /** @description Detail ids must be present in professionIds. */
+            professionDetails?: components["schemas"]["DirectoryProfessionInput"][];
             instrumentIds: string[];
+            /** @description Detail ids must be present in instrumentIds. */
+            instrumentDetails?: components["schemas"]["DirectoryInstrumentInput"][];
             genreIds: string[];
             serviceOfferingIds: string[];
-            /** Format: uuid */
+            /** @description Omit to preserve on update; send [] to clear. */
+            languages?: components["schemas"]["DirectoryLanguageInput"][];
+            /** @description Omit to use the backward-compatible single-location fields; send [] only for remote-only profiles. */
+            serviceAreas?: components["schemas"]["DirectoryServiceAreaInput"][];
+            /**
+             * Format: uuid
+             * @description Country of the primary service area; retained as a required compatibility field.
+             */
             countryId: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Backward-compatible primary city when serviceAreas is omitted.
+             */
             cityId?: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Backward-compatible primary metropolitan area when serviceAreas is omitted.
+             */
             metropolitanAreaId?: string;
             onsite: boolean;
             remote: boolean;
@@ -11572,7 +11704,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ManagedDirectoryProfile"];
+                };
             };
         };
     };
@@ -11596,7 +11730,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ManagedDirectoryProfile"];
+                };
             };
         };
     };
