@@ -1,6 +1,6 @@
 # Staging verification record
 
-Date: 2026-08-15
+Date: 2026-08-17
 
 Environment tested: local isolated worktree and disposable PostgreSQL 16 and 17 containers.
 
@@ -37,8 +37,8 @@ The final command transcript is summarized here after the branch-wide verificati
 | Web type safety | `npm run typecheck:ui` | Pass |
 | Web production build | `npm run build --workspace=tdf-hq-ui` | Pass: 12,383 modules; bundle/secret gate 5 preloads and 403,432 gzip bytes |
 | Release/CI contracts | `npm run test:production-release`; `npm run test:ci-pipeline` | Pass: 37 + 12 tests |
-| Registered production batch | Render; apply; repair the intentionally empty schema-only Records fixture with three minimal published collection rows and non-sensitive valid provider URLs; resume; apply again; schema verification against PostgreSQL 17 | Pass: the existing Records safety gate first failed closed as expected, then all 46/46 migrations were recorded, the exact second run skipped all 46 entries idempotently, all ten marketplace invariant triggers were enabled, and both marketplace domain flags were enabled while provider-event/refund production gates remained disabled |
-| OpenAPI/generated clients | `npm run generate:api` for web and mobile | Pass: canonical service-storefront and marketplace-sale contracts generated for both clients |
+| Registered production batch | Render; apply; repair the intentionally empty schema-only Records fixture with three minimal published collection rows and non-sensitive valid provider URLs; resume; apply again; schema verification against PostgreSQL 17 | Pass: the existing Records safety gate first failed closed as expected, then all 47/47 migrations were recorded, the exact second run skipped all 47 entries idempotently, marketplace sales/rentals remained enabled, and the service-booking and provider-event/refund production gates remained disabled |
+| OpenAPI/generated clients | `npm run generate:api` for web and mobile | Pass: canonical service-storefront, marketplace sale/rental, and service-booking checkout contracts generated for both clients |
 | Mobile type safety | `npm run typecheck:mobile` | Pass |
 | Formal-method audit | `npm run verify:formal` | Pass: 0 critical, 0 errors; repository warnings remain advisory |
 | Catalog authority audit | `npm run audit:catalog-lists` | Pass: configured refund reasons are database-managed; provider/environment discriminants have reviewed technical-constant decisions |
@@ -58,8 +58,8 @@ After registering the runtime migrations with their immutable feature commits, t
 batch applied in a fresh PostgreSQL 17 container. The schema-only snapshot intentionally contained
 no Records CMS rows, so the pre-existing default safety gate first rejected three missing collection
 containers. Three minimal, published collection fixtures repaired that test precondition; the exact
-batch then resumed, all 46 manifest entries were recorded, the release schema verifier passed, and
-an unchanged second run skipped all 46 entries idempotently. The final rehearsal included the two
+batch then resumed, all 47 manifest entries were recorded, the release schema verifier passed, and
+an unchanged second run skipped all 47 entries idempotently. The final rehearsal included the two
 catalog-resume migrations merged from current `main` before the marketplace sale and rental
 migrations. This fixture repair did not classify a
 payment, create a marketplace order, or alter any external environment.
@@ -94,8 +94,11 @@ deployment, or production migration was made.
 
 The 2026-08-17 service-booking follow-up compiled the backend, passed four focused formal examples
 including 100 property cases, passed the PostgreSQL 17 runtime rehearsal, and passed 24 focused web
-tests plus UI type checking. It created no approved rate, provider resource, payment, notification,
-staging deployment, or production migration. Datafast and PayPal booking actions remain an explicit
+tests plus UI type checking. Its registered migration then completed the full 47-entry production
+batch in a disposable PostgreSQL 17 database, passed the schema verifier, and skipped all 47 entries
+on an unchanged second run. The service-booking policy count remained zero and its production flag
+remained disabled. It created no approved rate, provider resource, payment, notification, staging
+deployment, or production migration. Datafast and PayPal booking actions remain an explicit
 follow-up gate rather than a simulated selector.
 
 ## Required staging exercise

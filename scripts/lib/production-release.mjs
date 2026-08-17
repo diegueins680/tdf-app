@@ -526,6 +526,17 @@ BEGIN
   ) NOT IN (0, 2) THEN
     RAISE EXCEPTION 'Marketplace sale checkout runtime tables are partially present';
   END IF;
+  IF (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name IN (
+        'service_booking_commerce_policy', 'service_booking_commerce_policy_history',
+        'service_booking_checkout_runtime', 'service_booking_resource_allocation',
+        'service_booking_event'
+      )
+  ) NOT IN (0, 5) THEN
+    RAISE EXCEPTION 'Service booking checkout runtime tables are partially present';
+  END IF;
 END
 $preflight$;
 ROLLBACK;
@@ -1619,6 +1630,95 @@ BEGIN
     WHERE flag.flag_key IS NULL OR NOT flag.enabled
   ) THEN
     RAISE EXCEPTION 'Production marketplace sales and rentals capability gates must exist enabled';
+  END IF;
+
+  IF to_regclass('public.service_booking_commerce_policy') IS NULL
+     OR to_regclass('public.service_booking_commerce_policy_history') IS NULL
+     OR to_regclass('public.service_booking_checkout_runtime') IS NULL
+     OR to_regclass('public.service_booking_resource_allocation') IS NULL
+     OR to_regclass('public.service_booking_event') IS NULL THEN
+    RAISE EXCEPTION 'Service booking checkout runtime relations are missing';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('service_booking_commerce_policy', 'service_offering_id', 'uuid', 'NO'),
+        ('service_booking_commerce_policy', 'policy_version', 'text', 'NO'),
+        ('service_booking_commerce_policy', 'rate_minor', 'bigint', 'NO'),
+        ('service_booking_commerce_policy', 'tax_bps', 'integer', 'NO'),
+        ('service_booking_commerce_policy', 'deposit_bps', 'integer', 'NO'),
+        ('service_booking_commerce_policy', 'approval_status', 'text', 'NO'),
+        ('service_booking_checkout_runtime', 'booking_id', 'bigint', 'NO'),
+        ('service_booking_checkout_runtime', 'checkout_id', 'uuid', 'NO'),
+        ('service_booking_checkout_runtime', 'lookup_token_hash', 'text', 'NO'),
+        ('service_booking_checkout_runtime', 'create_idempotency_key', 'text', 'NO'),
+        ('service_booking_checkout_runtime', 'fulfillment_status', 'text', 'NO'),
+        ('service_booking_checkout_runtime', 'deposit_status', 'text', 'NO'),
+        ('service_booking_checkout_runtime', 'total_minor', 'bigint', 'NO'),
+        ('service_booking_checkout_runtime', 'deposit_minor', 'bigint', 'NO'),
+        ('service_booking_checkout_runtime', 'balance_minor', 'bigint', 'NO'),
+        ('service_booking_resource_allocation', 'booking_id', 'bigint', 'NO'),
+        ('service_booking_resource_allocation', 'resource_id', 'bigint', 'NO'),
+        ('service_booking_resource_allocation', 'starts_at', 'timestamp with time zone', 'NO'),
+        ('service_booking_resource_allocation', 'ends_at', 'timestamp with time zone', 'NO'),
+        ('service_booking_event', 'booking_id', 'bigint', 'NO'),
+        ('service_booking_event', 'to_status', 'text', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Service booking checkout runtime columns are missing or invalid';
+  END IF;
+
+  IF to_regclass('public.uq_service_booking_active_policy') IS NULL
+     OR to_regclass('public.idx_service_booking_runtime_status') IS NULL
+     OR to_regclass('public.idx_service_booking_allocation_window') IS NULL
+     OR to_regclass('public.idx_service_booking_event_booking') IS NULL
+     OR NOT EXISTS (
+       SELECT 1 FROM pg_constraint
+       WHERE conrelid = 'public.service_booking_resource_allocation'::regclass
+         AND contype = 'x'
+         AND convalidated
+     ) THEN
+    RAISE EXCEPTION 'Service booking policy, runtime, or resource exclusion indexes are incomplete';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('service_booking_commerce_policy', 'trg_service_booking_validate_policy'),
+      ('service_booking_commerce_policy', 'trg_service_booking_policy_history'),
+      ('service_booking_checkout_runtime', 'trg_service_booking_validate_runtime'),
+      ('service_booking_checkout_runtime', 'trg_service_booking_validate_transition'),
+      ('service_booking_checkout_runtime', 'trg_service_booking_record_transition'),
+      ('booking_resource', 'trg_service_booking_allocate_resource'),
+      ('booking', 'trg_service_booking_sync_legacy_allocation'),
+      ('commerce_checkout_session', 'trg_service_booking_require_verified_payment'),
+      ('commerce_checkout_session', 'trg_service_booking_sync_checkout')
+    ) AS expected(table_name, trigger_name)
+    LEFT JOIN pg_trigger AS actual
+      ON actual.tgrelid = ('public.' || expected.table_name)::regclass
+     AND actual.tgname = expected.trigger_name
+     AND actual.tgenabled = 'O'
+    WHERE actual.oid IS NULL
+  ) THEN
+    RAISE EXCEPTION 'Service booking invariant triggers are missing or disabled';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM revenue_feature_flag
+    WHERE flag_key = 'commerce.service_bookings'
+      AND environment = 'production'
+      AND NOT enabled
+  ) THEN
+    RAISE EXCEPTION 'Production service booking capability gate must exist disabled';
   END IF;
 
   IF EXISTS (

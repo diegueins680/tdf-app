@@ -230,6 +230,11 @@
       "id": "2026-08-15_marketplace_rental_checkout_runtime",
       "path": "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql",
       "introducedBy": "66bce4ef0d97ca00b8167c2fc898bb15ad9f5917"
+    },
+    {
+      "id": "2026-08-16_service_booking_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql",
+      "introducedBy": "a69c29f28f5e026e90885d6c0bb1280e07011f79"
     }
   ]
 }
