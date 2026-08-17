@@ -1,0 +1,62 @@
+# Runbook de despliegue, validación y rollback
+
+## Preflight
+
+1. Confirmar SHA de rama/imagen, worktree limpio y submódulo móvil fijado.
+2. Ejecutar lint OpenAPI y regenerar ambos clientes; el diff posterior debe ser vacío.
+3. Ejecutar pruebas backend, web, móvil, SQL, E2E, accesibilidad, SEO y carga.
+4. Tomar backup nuevo y verificar restaurabilidad según el runbook de producción existente.
+5. Ejecutar backfill seco y revisar conteos/ambigüedades sin PII en artefactos.
+6. Confirmar que las rutas aún no reciben tráfico público y que no se requieren PostGIS, geocoder,
+   email o push para arrancar.
+
+## Orden de despliegue
+
+1. Migración expand base y luego `2026-08-16_music_directory_verified_reviews.sql`; no editar ni
+   volver a registrar la migración base histórica.
+2. Seeds idempotentes.
+3. Backend compatible con writers viejos.
+4. Backfill seco; aprobación humana; backfill aplicado.
+5. Web y móvil con contrato generado.
+6. Activar lectura pública para porcentaje interno, luego Quito y finalmente general.
+7. Activar mutaciones autenticadas después de revisar moderación, edad y rate limits.
+
+## Smoke tests
+
+- Anónimo busca Quito y recibe solo contenido permitido, sin PII/coordenadas privadas.
+- Pestañas combinada/categoría/mapa comparten cursor y filtros.
+- Cuenta crea dos perfiles y solo puede editar los que administra.
+- Perfil con dos profesiones aparece en ambos filtros sin duplicarse.
+- Publicar anuncio multi-ciudad; otra cuenta postula; autor acepta y abre un único DM contextual.
+- Invitar desde un perfil administrador explícitamente seleccionado; antes de aceptar no hay DM,
+  después de aceptar el contexto solo sirve para esa pareja y bloquear impide contacto en ambos
+  sentidos.
+- Guardar búsqueda y ejecutar dos veces el mismo match produce una alerta.
+- Evento/venue publicado se lee sin token; borrador/suspendido no.
+- Interacción completada/verificada creada por fixture interno aparece solo para el manager exacto;
+  crear/reintentar la reseña devuelve un único recurso, el público no recibe IDs internos y el
+  promedio/conteo coincide con las filas elegibles.
+- Reportar una reseña abre/reutiliza el caso; ocultarla o eliminarla la retira de lectura pública y
+  recalcula reputación. No crear interacciones artificiales fuera de pruebas aisladas.
+- Cerrar anuncio como cubierto lo retira de resultados activos.
+
+## Observabilidad
+
+Dashboards: p50/p95/p99, errores por código, cero resultados, tasa de click, contactos, primera
+respuesta, conversiones, backlog de moderación, rate-limit hits, alertas deduplicadas y lag del índice.
+Logs estructurados usan correlation ID y nunca incluyen consulta libre, PII, evidencia ni coordenadas.
+
+## Rollback
+
+- Retirar las rutas del tráfico público en edge/router y ocultar navegación mediante el artefacto
+  anterior; no asumir un runtime feature flag inexistente.
+- Revertir web/móvil al artefacto anterior.
+- Revertir backend manteniendo tablas nuevas (expand compatible).
+- No borrar writes. Archivar por `backfill_run_id` si el backfill fue incorrecto.
+- Al revertir la superficie de reseñas, conservar `directory_interaction` y `directory_review` como
+  historial; comprobar y, si fuera necesario, ejecutar `directory_refresh_profile_reputation` antes
+  de reactivar. Después de revertir backend y congelar writes, el rollback incremental
+  `2026-08-16_music_directory_verified_reviews_rollback.sql` retira triggers, funciones e índices,
+  pero conserva filas y discriminantes aditivos. No ejecutar el rollback de la migración base.
+- Usar rollback SQL destructivo solo en un entorno sin writes confirmados y después de backup.
+- Investigar y reconciliar antes de reactivar; no reintentar jobs idempotentes con payload distinto.

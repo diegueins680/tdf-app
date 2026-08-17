@@ -104,6 +104,7 @@ import qualified TDF.Catalog.CountryReferenceSeed as CountrySeed
 import qualified TDF.Catalog.RecordsSpec as CatalogRecordsSpec
 import qualified TDF.Catalog.SecuritySpec as CatalogSecuritySpec
 import qualified TDF.Catalog.PipelineSpec as CatalogPipelineSpec
+import qualified TDF.Directory.PolicySpec as DirectoryPolicySpec
 import TDF.Email (resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
@@ -14711,6 +14712,7 @@ main = hspec $ do
     CatalogRecordsSpec.spec
     CatalogSecuritySpec.spec
     CatalogPipelineSpec.spec
+    DirectoryPolicySpec.spec
     EventDiscoverySpec.spec
     EventResearchSpec.spec
     ArtistSpec.spec

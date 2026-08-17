@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /inicio
+Allow: /buscar
+Allow: /directorio/
+Allow: /clasificados/
+Allow: /eventos/
+Allow: /venues/
+Disallow: /admin/
+Disallow: /mis-clasificados
+Sitemap: https://tdf-app.pages.dev/sitemap.xml
