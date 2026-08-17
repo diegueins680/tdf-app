@@ -14,6 +14,9 @@
 1. **Expand:** extensiones opcionales seguras (`unaccent`, `pg_trgm`), catálogos nuevos, perfiles,
    managers, taxonomías, ubicaciones públicas/privadas, clasificados, matching, claims, moderación,
    reputación, búsqueda, idempotencia, auditoría y telemetría.
+   La migración histórica `2026-08-14_music_directory_core.sql` permanece byte a byte inmutable;
+   índices, restricciones y agregados de reseñas verificadas se despliegan mediante la migración
+   incremental `2026-08-16_music_directory_verified_reviews.sql`.
 2. **Seed:** definiciones append-only y valores ES/EN con aliases ES/EN/PT; Ecuador, Pichincha y Quito
    solo desde referencias/procedencia existentes o fuentes oficiales versionadas.
 3. **Backfill seco:** contar `artist_profile`, `social_artist_profile`, `party`, bandas y venues;
@@ -39,12 +42,13 @@
 
 ## Recuperación
 
-La migración de esquema tiene rollback que elimina únicamente objetos nuevos si no hay writes. Una
-vez que existen writes, el rollback de aplicación retira el tráfico y conserva tablas; no se hace
-`DROP`. El backfill es reversible mediante `backfill_run_id` solo mientras sus perfiles no tengan
-writes posteriores: elimina las proyecciones nuevas, conserva intactas las fuentes legacy y mantiene
-el ledger con disposición `reversed`, evidencia y conteos. Si detecta contenido o una versión nueva,
-aborta antes de borrar.
+La migración incremental de reputación tiene un rollback que retira triggers, funciones e índices,
+pero conserva las filas y los discriminantes aditivos `review` para no invalidar auditoría. Solo se
+usa después de revertir la aplicación y congelar writes. Una vez que existen writes, el rollback de
+aplicación retira el tráfico y conserva tablas; no se hace `DROP`. El backfill es reversible mediante
+`backfill_run_id` solo mientras sus perfiles no tengan writes posteriores: elimina las proyecciones
+nuevas, conserva intactas las fuentes legacy y mantiene el ledger con disposición `reversed`,
+evidencia y conteos. Si detecta contenido o una versión nueva, aborta antes de borrar.
 
 ## PostGIS
 

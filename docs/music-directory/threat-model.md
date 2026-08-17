@@ -30,7 +30,10 @@ datos de menores, tokens, reputación, orden de búsqueda y vínculos comerciale
 | Archivos maliciosos | allowlist MIME/extensión, tamaño, checksum, nombre seguro, cuarentena y escáner antes de publicar. |
 | URL peligrosa | solo HTTP(S), longitud, host normalizado, sin credenciales embebidas; rel seguro en UI. |
 | Manipulación de ranking | pesos documentados, señales verificables, patrocinado separado, auditoría de cambios. |
-| Reseñas falsas | interacción elegible, unicidad y separación del estado de pago/cumplimiento. |
+| Reseñas falsas o farming | solo interacción completada/verificada creada por adaptador confiable, participantes exactos, autor administrado, unicidad, bloqueo bidireccional, límite diario y separación del estado de pago/cumplimiento. |
+| Filtración por elegibilidad | consulta privada limitada al perfil autor administrado; DTO omite `Party`, `external_id`, montos, mensajes y evidencia comercial. |
+| Replay/duplicado de reseña | `Idempotency-Key` con fingerprint y unicidad `(interaction, author, subject)`; solo el insert ganador notifica. |
+| Manipulación de agregado | promedio/conteo derivados mediante trigger desde reseñas publicadas aún elegibles y perfiles públicos canónicos; ocultar, remover o cambiar la interacción fuerza recálculo. |
 | Replay | Idempotency-Key + fingerprint; mismo key/payload retorna original, payload distinto es 409. |
 | Reutilización de contexto | Una postulación/invitación aceptada autoriza únicamente su par exacto de perfiles; cambiar el destinatario produce 404 y no crea chat. |
 | Exfiltración analítica | no texto libre, PII ni coordenadas exactas en telemetría; retención y acceso acotados. |

@@ -18,7 +18,10 @@ esta evaluación.
 | Guardar/bloquear/reportar | no | sí | sí | sí | sí |
 | Aprobar claim/verificación | no | no | nunca por profesión | no | permiso explícito y segregación |
 | Fusionar perfiles/términos | no | no | no | no | permiso explícito + transacción auditada |
-| Crear reseña | no | sí | perfil autor autorizado | interacción elegible | moderar, no inventar elegibilidad |
+| Leer reseña publicada | sí | sí | sí | sí | sí |
+| Consultar elegibilidad de reseña | no | no | `edit` del perfil autor | interacción exacta completada/verificada | permiso explícito, sin fabricar interacción |
+| Crear reseña | no | no | `edit` del perfil autor + edad/bloqueo/rate limit | interacción exacta elegible | moderar, no inventar elegibilidad |
+| Ocultar/eliminar reseña | no | no | no | puede reportar | permiso explícito + decisión auditada |
 
 ## Capacidades de manager
 

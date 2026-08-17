@@ -74,6 +74,13 @@ state_machines:
       reversed: [closed]
       dismissed: [closed]
       closed: []
+  review:
+    initial: published
+    transitions:
+      pending: [published, hidden, removed]
+      published: [hidden, removed]
+      hidden: [published, removed]
+      removed: []
 
 invariants:
   I01_profession_never_authorizes:
@@ -101,8 +108,8 @@ invariants:
     statement: An application is readable only by applicant-profile managers, classified-profile managers or authorized moderators with audit purpose.
     enforcement: participant query scope and IDOR tests
   I09_verified_review_interaction:
-    statement: A review references an eligible completed interaction involving author and subject profile.
-    enforcement: deferred foreign key plus trigger/handler validation
+    statement: A review references exactly one completed, verified interaction whose two public participants are the managed author profile and the subject profile, in either order.
+    enforcement: foreign key, participant/status trigger, handler record-scope guard, unique interaction/author/subject relation and property/integration tests
   I10_sponsored_separation:
     statement: Sponsored results are never members of organicResults and always include sponsored=true and sponsorDisclosure.
     enforcement: disjoint response collections and contract property test
@@ -153,6 +160,14 @@ preconditions:
     - reviewer has claims.approve permission
     - reviewer differs from claimant where policy requires
     - evidence decision is recorded
+  create_review:
+    - caller is authenticated and has an active edit grant over author_profile_id
+    - caller passes adult or guardian-approved age assurance
+    - author and subject are distinct, current and published public profiles
+    - interaction is completed, has verified_at and contains exactly author and subject in either order
+    - neither profile blocks the other
+    - no review exists for interaction, author and subject
+    - idempotency scope is unused or payload-identical and the daily rate limit permits the request
 
 postconditions:
   publish_classified:
@@ -175,12 +190,19 @@ postconditions:
     - every active slug remains resolvable
     - historical child references are unchanged
     - before/after reference counts and audit are persisted
+  create_review:
+    - exactly one published review exists for interaction, author and subject
+    - the idempotency key replays the same review and a different payload conflicts
+    - the subject reputation aggregate is refreshed in the same transaction
+    - only a real insert may create an internal notification
+    - public DTOs omit Party identifiers, external interaction identifiers and administrative fields
 
 idempotency_scopes:
   - invitation(sender_profile_id, target_profile_id, context_kind, context_id, idempotency_key)
   - application(classified_id, applicant_profile_id, idempotency_key)
   - saved_search_alert(saved_search_id, result_kind, result_id, result_version)
   - contact_context(thread_id, context_kind, context_id)
+  - review_create(actor_party_id, idempotency_key, request_fingerprint)
   - analytics_event(actor_scope, event_name, idempotency_key)
 
 privacy_projection:

@@ -12,7 +12,8 @@
 
 ## Orden de despliegue
 
-1. Migración expand.
+1. Migración expand base y luego `2026-08-16_music_directory_verified_reviews.sql`; no editar ni
+   volver a registrar la migración base histórica.
 2. Seeds idempotentes.
 3. Backend compatible con writers viejos.
 4. Backfill seco; aprobación humana; backfill aplicado.
@@ -32,6 +33,11 @@
   sentidos.
 - Guardar búsqueda y ejecutar dos veces el mismo match produce una alerta.
 - Evento/venue publicado se lee sin token; borrador/suspendido no.
+- Interacción completada/verificada creada por fixture interno aparece solo para el manager exacto;
+  crear/reintentar la reseña devuelve un único recurso, el público no recibe IDs internos y el
+  promedio/conteo coincide con las filas elegibles.
+- Reportar una reseña abre/reutiliza el caso; ocultarla o eliminarla la retira de lectura pública y
+  recalcula reputación. No crear interacciones artificiales fuera de pruebas aisladas.
 - Cerrar anuncio como cubierto lo retira de resultados activos.
 
 ## Observabilidad
@@ -47,5 +53,10 @@ Logs estructurados usan correlation ID y nunca incluyen consulta libre, PII, evi
 - Revertir web/móvil al artefacto anterior.
 - Revertir backend manteniendo tablas nuevas (expand compatible).
 - No borrar writes. Archivar por `backfill_run_id` si el backfill fue incorrecto.
+- Al revertir la superficie de reseñas, conservar `directory_interaction` y `directory_review` como
+  historial; comprobar y, si fuera necesario, ejecutar `directory_refresh_profile_reputation` antes
+  de reactivar. Después de revertir backend y congelar writes, el rollback incremental
+  `2026-08-16_music_directory_verified_reviews_rollback.sql` retira triggers, funciones e índices,
+  pero conserva filas y discriminantes aditivos. No ejecutar el rollback de la migración base.
 - Usar rollback SQL destructivo solo en un entorno sin writes confirmados y después de backup.
 - Investigar y reconciliar antes de reactivar; no reintentar jobs idempotentes con payload distinto.

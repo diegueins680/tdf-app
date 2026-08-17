@@ -21,6 +21,9 @@ erDiagram
   SAVED_SEARCH ||--o{ ALERT_DELIVERY : deduplicates
   DIRECTORY_PROFILE ||--o{ CLAIM : claimed
   DIRECTORY_PROFILE ||--o{ VERIFICATION : verified
+  DIRECTORY_INTERACTION }o--|| DIRECTORY_PROFILE : participant_a
+  DIRECTORY_INTERACTION }o--|| DIRECTORY_PROFILE : participant_b
+  DIRECTORY_INTERACTION ||--o| REVIEW : authorizes
   DIRECTORY_PROFILE ||--o{ REVIEW : reviewed
   MODERATION_CASE }o--|| DIRECTORY_PROFILE : may_target
 ```
@@ -58,3 +61,21 @@ stateDiagram-v2
 ```
 
 El grant aparece únicamente en la transacción final de aprobación.
+
+## Interacción verificable a reseña
+
+```mermaid
+flowchart LR
+  A[Booking / orden / colaboración real] --> B[Adaptador interno confiable]
+  B --> C[Interacción completed + verified_at]
+  C --> D[Elegibilidad privada para perfil autor administrado]
+  D --> E[POST idempotente de reseña]
+  E --> F[Reseña pública sanitizada]
+  E --> G[Promedio y conteo derivados]
+  H[Reporte / moderación] --> I[hidden o removed]
+  I --> G
+```
+
+El navegador y la app nunca escriben interacciones ni sus identificadores externos. Una reseña solo
+es pública mientras la interacción siga completada/verificada, ambos perfiles resuelvan a superficies
+públicas actuales y la decisión de moderación permanezca en `published`.

@@ -138,6 +138,41 @@ const searchResponse = {
   nextCursor: null,
 };
 
+const publicProfile = {
+  id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  kind: 'person',
+  name: 'Perfil sintético · Bajista de sesión',
+  slug: 'perfil-sintetico-bajista',
+  bio: 'Fixture local para demostrar reputación verificable sin representar a una persona real.',
+  experience: 'Interacciones sintéticas solo para evidencia visual aislada.',
+  creditsSummary: null,
+  portfolio: [],
+  links: [],
+  equipment: null,
+  rates: null,
+  availability: { status: 'available', onsite: true, remote: true, travel: true, radiusKm: 40 },
+  locations: [location],
+  professions: [{ id: ids.bassist, code: 'bajista', name: 'Bajista', headline: null, yearsExperience: 8 }],
+  instruments: [{ id: ids.bass, code: 'bajo-electrico', name: 'Bajo eléctrico', proficiency: 'professional' }],
+  genres: [{ id: ids.rock, code: 'rock', name: 'Rock' }],
+  verification: [],
+  reputation: { completeness: 0.91, responseRate: null, medianResponseMinutes: null, completed: 1, reviewAverage: 5, reviewCount: 1 },
+  canonicalUrl: '/directorio/perfil-sintetico-bajista',
+};
+
+const publicReviews = {
+  summary: { profileId: publicProfile.id, average: 5, count: 1 },
+  items: [{
+    id: 'aaaaaaaa-0000-4000-8000-000000000001',
+    rating: 5,
+    body: 'Reseña sintética de una colaboración completada; no describe una contratación real.',
+    createdAt: '2026-08-16T15:00:00Z',
+    verifiedInteractionType: 'confirmed_collaboration',
+    authorProfile: { id: 'aaaaaaaa-0000-4000-8000-000000000002', name: 'Proyecto sintético verificado', slug: 'proyecto-sintetico-verificado' },
+  }],
+  nextCursor: null,
+};
+
 const json = (value, status = 200) => ({ status, contentType: 'application/json', body: JSON.stringify(value) });
 const fixtureRequests = [];
 
@@ -151,6 +186,8 @@ async function installFixtures(page) {
     if (pathname.endsWith('/directory/taxonomies')) return route.fulfill(json(taxonomies));
     if (pathname.endsWith('/directory/search')) return route.fulfill(json(searchResponse));
     if (pathname.endsWith('/directory/suggestions')) return route.fulfill(json([]));
+    if (pathname.endsWith('/directory/profiles/perfil-sintetico-bajista/reviews')) return route.fulfill(json(publicReviews));
+    if (pathname.endsWith('/directory/profiles/perfil-sintetico-bajista')) return route.fulfill(json(publicProfile));
     if (pathname.endsWith('/v1/latest')) return route.fulfill(json({ amount: 1, base: 'USD', date: '2026-08-15', rates: { USD: 1 } }));
     if (pathname.includes('/export/embed.html')) {
       return route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><html><body style="margin:0;background:#dbeafe;display:grid;place-items:center;font:18px sans-serif"><p>Mapa abierto · Quito (fixture local)</p></body></html>' });
@@ -215,6 +252,18 @@ try {
   accessibility.push(await axeAudit(desktop, 'web-desktop-search-map'));
   await desktop.close();
 
+  const profile = await browser.newPage({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' });
+  profile.on('pageerror', (error) => browserErrors.push({ surface: 'web-profile', message: error.message }));
+  await installFixtures(profile);
+  await profile.goto('http://127.0.0.1:4184/directorio/perfil-sintetico-bajista', { waitUntil: 'domcontentloaded' });
+  const reviewsHeading = profile.getByRole('heading', { name: 'Reseñas verificadas' });
+  await reviewsHeading.waitFor({ timeout: 30_000 });
+  await reviewsHeading.evaluate((element) => window.scrollTo(0, element.getBoundingClientRect().top + window.scrollY - 120));
+  await profile.waitForTimeout(500);
+  await profile.screenshot({ path: join(outputDir, 'web-desktop-profile-reviews.png'), animations: 'disabled' });
+  accessibility.push(await axeAudit(profile, 'web-desktop-profile-reviews'));
+  await profile.close();
+
   const narrow = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce', isMobile: true, hasTouch: true });
   narrow.on('pageerror', (error) => browserErrors.push({ surface: 'web-narrow', message: error.message }));
   await installFixtures(narrow);
@@ -245,7 +294,7 @@ try {
 
   writeFileSync(join(outputDir, 'accessibility-results.json'), `${JSON.stringify(accessibility, null, 2)}\n`);
   writeFileSync(join(outputDir, 'browser-errors.json'), `${JSON.stringify(browserErrors, null, 2)}\n`);
-  console.log(JSON.stringify({ screenshots: 5, accessibility, browserErrors }, null, 2));
+  console.log(JSON.stringify({ screenshots: 6, accessibility, browserErrors }, null, 2));
 } finally {
   await browser.close();
   await Promise.all([

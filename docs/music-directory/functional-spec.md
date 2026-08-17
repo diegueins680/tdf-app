@@ -138,7 +138,17 @@ del adaptador; la notificación interna puede marcarse creada transaccionalmente
 - `approved` crea el grant de administración; enviar evidencia nunca concede ownership.
 - Verificaciones independientes: identidad, organización, venue, administración y crédito.
 - Crédito: declarado, reclamado o verificado; puede enlazar contributor/release/recording existente.
-- Reseña requiere una interacción verificable y una sola reseña por interacción/autor/perfil.
+- La lectura pública de reseñas es paginada por cursor y solo proyecta autor público, puntuación,
+  texto, fecha y tipo de interacción; nunca expone `Party`, `external_id` comercial ni notas internas.
+- La elegibilidad privada enumera únicamente interacciones `completed` con `verified_at`, entre el
+  perfil autor administrado explícitamente y el otro perfil público. Crear una reseña exige seleccionar
+  esa interacción y usa `Idempotency-Key`; hay una sola por interacción/autor/perfil y límite diario.
+- Los clientes no crean `directory_interaction`: booking, órdenes o colaboraciones confirmadas deben
+  registrarlas adaptadores internos confiables cuando exista evidencia real de cumplimiento.
+- El promedio y conteo visibles se recalculan transaccionalmente desde reseñas publicadas todavía
+  respaldadas por la interacción y por perfiles públicos actuales. Ocultar/eliminar una reseña o
+  cancelar la elegibilidad actualiza el agregado; una fusión resuelve el perfil canónico sin borrar
+  referencias históricas.
 - Solo métricas resistentes a manipulación se publican; tiempos y tasas se agregan con umbrales.
 
 ## Moderación, menores y abuso

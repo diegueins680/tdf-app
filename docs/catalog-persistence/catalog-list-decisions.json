@@ -6554,7 +6554,7 @@
       "reviewed": true
     },
     {
-      "id": "79441b43b676d2840aa3",
+      "id": "86d102f7ab4e7888140b",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -7074,6 +7074,16 @@
       "reviewed": true
     },
     {
+      "id": "1d838bbd25fdc453a5f4",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Moderation target kinds are a closed API and database protocol discriminant; localized report reasons and categories remain database-authoritative.",
+      "reviewed": true
+    },
+    {
       "id": "ddfd98c3ccea75a4616c",
       "classification": "security-system-registry",
       "disposition": "historical-evidence-replaced-by-forward-migration",
@@ -7121,6 +7131,16 @@
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "These closed values select typed API, rendering, workflow, analytics, or protocol adapters; persisted catalogs remain authoritative for entities, localized labels, lifecycle data, and editorial terms.",
+      "reviewed": true
+    },
+    {
+      "id": "d1dd781d0cae53328f56",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Rate-limit scopes are closed security protocol discriminants; editorial categories and localized labels remain database-authoritative.",
       "reviewed": true
     },
     {
