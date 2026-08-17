@@ -6,6 +6,8 @@ perfiles profesionales y clasificados musicales de TDF.
 ## Documentos canónicos
 
 - [`initial-audit.md`](initial-audit.md): estado inicial comprobado contra código, SQL y pruebas.
+- [`rich-profile-audit-2026-08-17.md`](rich-profile-audit-2026-08-17.md): auditoría incremental
+  del contrato de escritura de perfiles y su cierre en backend, web y móvil.
 - [`functional-spec.md`](functional-spec.md): alcance funcional, contratos de experiencia y criterios.
 - [`formal-model.yaml`](formal-model.yaml): estados, transiciones, permisos e invariantes verificables.
 - [`permissions.md`](permissions.md): matriz de autorización y alcance de registros.
