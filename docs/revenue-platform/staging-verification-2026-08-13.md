@@ -20,7 +20,7 @@ The final command transcript is summarized here after the branch-wide verificati
 | Provider-event operations migration | `./scripts/test-provider-event-operations-migration.sh` | Pass: rerun, clean rollback, formal status transitions, control-safe audited dead-letter requeue, event-scoped transition authorization, duplicate prevention, sandbox-on/production-off worker gates, immutable action evidence; rollback correctly refused after replay evidence |
 | Marketplace sale checkout runtime | `./scripts/test-marketplace-sale-checkout-runtime-migration.sh` | Pass on PostgreSQL 17: rerun, clean rollback/reapply, one active hold per unique asset, direct paid transition rejected, verified payment separated from fulfillment, fully refunded outbound fulfillment rejected, pickup/delivery custody, return without relisting, immutable history; rollback correctly refused after a live link |
 | Marketplace rental checkout runtime | `./scripts/test-marketplace-rental-checkout-runtime-migration.sh` | Pass on PostgreSQL 17: rerun, approved legacy-rate migration with append-only history, both marketplace domain gates enabled, same-version commercial mutation rejected, inclusive date exclusion, direct paid transition rejected, verified payment separated from custody, handoff/return condition reports, truthful deposit-deduction/refund-due states, non-zero deposit closure gate; rollback correctly refused after a live link |
-| Service booking checkout runtime | `./scripts/test-service-booking-checkout-runtime-migration.sh` | Pass on PostgreSQL 17: rerun, inactive draft policy preservation, production-off domain gate, atomic resource hold, direct paid rejection, verified deposit confirmation separated from fulfillment, failed-provider-attempt expiry and resource release, legacy-writer overlap rejection, legal fulfillment sequence, follow-up rollback/reapply, and base rollback refusal after a canonical link |
+| Service booking checkout runtime | `./scripts/test-service-booking-checkout-runtime-migration.sh` | Pass on PostgreSQL 17: rerun, inactive draft policy preservation, production-off domain gate, atomic resource hold, direct paid rejection, verified deposit confirmation separated from fulfillment, failed-provider-attempt expiry and resource release, reviewed manual evidence, independent approver, exact amount/currency binding, rollback refusal after reviewed evidence, follow-up rollback/reapply, and base rollback refusal after a canonical link |
 | Distribution accounting migration | `./scripts/test-distribution-accounting-migration.sh` | Pass: rollback, lifecycle, splits, package/evidence, royalty, separation of duties, payout gates |
 | Versioned revenue products | `./scripts/test-versioned-revenue-products-migration.sh` | Pass: inactive legacy Domo rate, approval/immutability, production flag |
 | Distribution pricing seeds | `./scripts/test-distribution-product-seeds-migration.sh` | Pass: 14 inactive bilingual seeds, activation/mutation/rollback gates |
@@ -28,17 +28,17 @@ The final command transcript is summarized here after the branch-wide verificati
 | Provider-event backend invariants | Stack-built `tdf-hq-test --match 'service storefront commercial invariants'` | Pass: 19 examples, including 300 property cases, zero failures; immutable event metadata/provider/environment tampering, invalid replay reasons, and oversized PayPal request IDs are rejected |
 | Marketplace rental backend invariants | Stack-built `tdf-hq-test --match 'marketplace rental'` | Pass: 5 examples, including 100 property cases, zero failures; inclusive dates, weekly pricing, separate deposits, overflow rejection, terminal-state closure and no skipped payment/handoff/inspection states |
 | Service booking backend invariants | Stack-built `tdf-hq-test --match 'service booking pricing and fulfillment invariants'` | Pass: 4 examples, including 100 property cases, zero failures; server minor-unit totals, duration/policy limits, overflow rejection, and no skipped deposit/fulfillment states |
-| Backend build | `stack test --fast --no-run-tests` with the default optimized Stack profile | Pass: executable and all 162 test modules compiled and linked |
+| Backend test/build | `stack test --fast` with the default optimized Stack profile | Pass: 2,342 examples, zero failures; executable and all 162 test modules compiled and linked |
 | Web regression/accessibility | Jest: five changed suites | Pass: 16 tests, zero failures |
 | Provider-event operator UI/access | Jest: provider-event page and access-control suites | Pass: 14 tests, zero failures; raw payload and merchant binding are absent from the UI contract |
 | Marketplace web regressions | Jest: marketplace admin, API, Datafast return and storefront suites | Pass: 71 tests, zero failures; canonical payment is read-only in operations, fulfillment uses its dedicated transition API, one checkout key survives provider switching, lookup secrets stay in headers/session storage, and missing lookup/provider failure never clear the cart |
 | Marketplace rental web regressions | Jest: marketplace storefront and rental-operations suites | Pass: 67 tests, zero failures; unapproved rentals fail closed, approved rentals require inclusive dates, and custody transfer requires an outbound condition report without sending a deposit deduction |
-| Public booking web regressions | Jest: public booking, order-tracking and booking API contract suites | Pass: 26 tests, zero failures; lookup secrets stay in headers/session storage, Datafast browser return remains processing until server verification, PayPal approval calls server capture, and only a server-paid checkout is described as verified |
+| Public booking web regressions | Jest: public booking, order-tracking and booking API contract suites | Pass: 27 tests, zero failures; lookup secrets stay in headers/session storage, Datafast browser return remains processing until server verification, PayPal approval calls server capture, manual evidence remains pending review, and only a server-paid checkout is described as verified |
 | Web type safety | `npm run typecheck:ui` | Pass |
-| Web production build | `npm run build --workspace=tdf-hq-ui` | Pass: 12,384 modules; bundle/secret gate 5 preloads and 403,510 gzip bytes |
+| Web production build | `npm run build --workspace=tdf-hq-ui` | Pass: 12,384 modules; bundle/secret gate 5 preloads and 403,507 gzip bytes |
 | Release/CI contracts | `npm run test:production-release`; `npm run test:ci-pipeline` | Pass: 37 + 12 tests |
-| Registered production batch | Restore schema-only fixture plus three synthetic published Records rows; read-only preflight; render/apply twice; schema verification before and after the rerun on PostgreSQL 17.10 | Pass: all 48/48 migrations were recorded, the exact second run skipped all 48 entries idempotently, the failed-provider-attempt expiry definition was verified, marketplace sales/rentals remained enabled, service bookings remained disabled, active booking policies and provider bindings remained zero |
-| OpenAPI/generated clients | `npm run generate:api` for web and mobile | Pass: canonical service-storefront, marketplace sale/rental, booking checkout and booking Datafast/PayPal action contracts generated for both clients |
+| Registered production batch | Restore schema-only fixture plus three synthetic published Records rows; read-only preflight; render/apply twice; schema verification before and after the rerun on PostgreSQL 17 | Pass: all 49/49 migrations were recorded, the exact second run skipped all 49 entries idempotently, marketplace sales/rentals and reviewed manual methods remained enabled, Datafast/PayPal and service bookings remained disabled, active booking policies and provider bindings remained zero |
+| OpenAPI/generated clients | `npm run generate:api` for web and mobile | Pass: canonical service-storefront, marketplace sale/rental, booking checkout, Datafast/PayPal actions, manual-evidence submission, protected finance projection, and independent review contracts generated for both clients; mobile submodule commit `cecc281` |
 | Mobile type safety | `npm run typecheck:mobile` | Pass |
 | Formal-method audit | `npm run verify:formal` | Pass: 0 critical, 0 errors; repository warnings remain advisory |
 | Catalog authority audit | `npm run audit:catalog-lists` | Pass: configured refund reasons are database-managed; provider/environment discriminants have reviewed technical-constant decisions |
@@ -104,6 +104,20 @@ verifier before and after an exact idempotent rerun, and left the service-bookin
 disabled with zero active policy and provider rows. It created no approved rate, provider resource,
 payment, notification, staging deployment, or production transaction. Provider sandbox evidence
 and production enablement remain explicit external gates.
+
+The reviewed-manual-payment follow-up passed the complete 2,342-example backend suite, the dedicated
+PostgreSQL 17 migration rehearsal, 27 focused public-booking web tests, web/mobile type checking and
+the production web build. Bank transfer, cash and POS now create canonical manual-verification
+attempts; customer references are evidence only, and approval requires a separate authenticated
+reviewer plus exact checkout, attempt, amount, currency, environment and active-hold bindings.
+Approval posts the receipt and ledger in the same transaction as the verified payment transition;
+expired holds or an already-paid competing rail create an operator reconciliation exception instead
+of confirming the booking. The full 49-entry production manifest then passed the read-only preflight,
+initial apply, schema verifier, exact idempotent rerun and final verifier in a disposable PostgreSQL
+17 database. Aggregate evidence showed 49 distinct migration rows, marketplace sales/rentals and
+manual methods enabled, Datafast/PayPal and service bookings disabled, zero active booking policies
+and zero provider bindings. The disposable database was removed afterward. No manual evidence was
+approved, no payment was classified, and no staging or provider network request occurred.
 
 ## Required staging exercise
 

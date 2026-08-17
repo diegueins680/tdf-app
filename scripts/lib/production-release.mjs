@@ -1430,6 +1430,7 @@ BEGIN
     'commerce_refund_allocation',
     'commerce_refund_reason_code',
     'commerce_reconciliation_exception',
+    'commerce_manual_payment_evidence',
     'commerce_receipt',
     'commerce_ledger_transaction',
     'commerce_ledger_entry'
@@ -1438,6 +1439,40 @@ BEGIN
       RAISE EXCEPTION 'Commerce relation public.% is missing', commerce_table;
     END IF;
   END LOOP;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'commerce_manual_payment_evidence'
+      AND column_name = 'submitted_by'
+      AND data_type = 'bigint'
+      AND is_nullable = 'YES'
+  ) OR to_regclass('public.commerce_manual_payment_evidence_review_report') IS NULL THEN
+    RAISE EXCEPTION 'Manual payment evidence review schema is missing or invalid';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.commerce_manual_payment_evidence'::regclass
+      AND conname = 'fk_commerce_manual_evidence_submitted_by'
+      AND contype = 'f'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.commerce_manual_payment_evidence'::regclass
+      AND tgname = 'trg_commerce_validate_manual_payment_evidence'
+      AND tgenabled = 'O'
+  ) THEN
+    RAISE EXCEPTION 'Manual payment evidence identity or transition controls are missing';
+  END IF;
+
+  IF (
+    SELECT count(*) FROM revenue_feature_flag
+    WHERE flag_key IN ('checkout.bank_transfer','checkout.cash','checkout.pos')
+      AND environment = 'production'
+      AND enabled
+  ) <> 3 THEN
+    RAISE EXCEPTION 'Manual settlement capability flags are missing or disabled';
+  END IF;
 
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns

@@ -240,6 +240,11 @@
       "id": "2026-08-17_service_booking_provider_actions",
       "path": "tdf-hq/sql/2026-08-17_service_booking_provider_actions.sql",
       "introducedBy": "8553147dc3e41fc56aea2c12eb70c203e65a2c48"
+    },
+    {
+      "id": "2026-08-17_service_booking_manual_payments",
+      "path": "tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql",
+      "introducedBy": "973ab7495ac01ae0e52702719bd236e6e85f2656"
     }
   ]
 }
