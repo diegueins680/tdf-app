@@ -305,6 +305,46 @@ spec = do
       (UUID.toText <$> (Social.socialEventWorkflowStateId =<< importedEventAfterReconcile))
         `shouldBe` Just "00000000-0000-4000-8000-000000000237"
 
+    it "reconciles materialization synthetic entity refs with real provider IDs" $ do
+      event <- case eitherDecode ticketmasterFixture of
+        Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"
+        Right response ->
+          case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
+            [normalized] -> pure normalized
+            other -> expectationFailure ("Expected one normalized event, got " <> show other) >> fail "invalid normalized fixture"
+      pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+      runSqlPool initializeEventDiscoverySchema pool
+
+      let providerEvent =
+            event
+              { discoveredEventVenue =
+                  (discoveredEventVenue event)
+                    { discoveredVenueCountryCode = Just "EC"
+                    }
+              }
+          synthetic =
+            providerEvent
+              { discoveredEventVenue =
+                  (discoveredEventVenue providerEvent)
+                    { discoveredVenueExternalId = "event-research:venue:fixture"
+                    }
+              , discoveredEventArtists =
+                  [ artist
+                      { discoveredArtistExternalId = "event-research:artist:fixture"
+                      }
+                  | artist <- discoveredEventArtists event
+                  ]
+              }
+      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 4) synthetic
+      realStats <- syncDiscoveredEventDraft pool (fixtureTime 10 5) providerEvent
+
+      discoveryVenuesCreated realStats `shouldBe` 0
+      discoveryArtistsCreated realStats `shouldBe` 0
+      runSqlPool (count ([] :: [Filter Social.Venue])) pool `shouldReturn` 1
+      runSqlPool (count ([] :: [Filter Social.ArtistProfile])) pool `shouldReturn` 1
+      runSqlPool (count ([] :: [Filter Social.ExternalVenueRef])) pool `shouldReturn` 2
+      runSqlPool (count ([] :: [Filter Social.ExternalArtistRef])) pool `shouldReturn` 2
+
     it "keeps pilot imports private, idempotent, capped-countable, and timezone-explicit" $ do
       event <- case eitherDecode ticketmasterFixture of
         Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"
