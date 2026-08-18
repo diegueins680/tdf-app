@@ -4672,16 +4672,23 @@ socialEventsServer user =
         orderKey <- parseKeyOr400 "ticket order" orderIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
-        mOrder <- liftIO $ runSqlPool (get orderKey) envPool
-        order <- maybe (throwError err404{errBody = "Ticket order not found"}) pure mOrder
-        when (eventTicketOrderEventId order /= eventKey) $
-            throwError err400{errBody = "Ticket order does not belong to this event"}
-        when (eventTicketOrderStatus order /= "paid") $
-            throwError err400{errBody = "Only paid orders can be refunded"}
         let manager = isEventManager currentPartyId eventVal
+        mOrder <- liftIO $ runSqlPool (get orderKey) envPool
+        order <- case mOrder of
+            Just order -> pure order
+            Nothing -> do
+                unless manager $ requireEventVisibleToUser eventKey
+                throwError err404{errBody = "Ticket order not found"}
+        let belongsToEvent = eventTicketOrderEventId order == eventKey
             ownsOrder = eventTicketOrderBuyerPartyId order == Just currentPartyId
-        unless (manager || ownsOrder) $ do
+            refundableOrder = eventTicketOrderStatus order == "paid"
+        unless (manager || (belongsToEvent && ownsOrder && refundableOrder)) $
             requireEventVisibleToUser eventKey
+        unless belongsToEvent $
+            throwError err400{errBody = "Ticket order does not belong to this event"}
+        unless refundableOrder $
+            throwError err400{errBody = "Only paid orders can be refunded"}
+        unless (manager || ownsOrder) $
             throwError err403{errBody = "You can only request refunds for your own orders"}
         mExisting <-
             liftIO $
@@ -4727,7 +4734,7 @@ socialEventsServer user =
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         let manager = isEventManager currentPartyId eventVal
-        orders <-
+        candidateOrders <-
             if manager
                 then
                     liftIO $
@@ -4739,19 +4746,43 @@ socialEventsServer user =
                         runSqlPool
                             (selectList [EventTicketOrderEventId ==. eventKey, EventTicketOrderBuyerPartyId ==. Just currentPartyId] [])
                             envPool
+        let candidateOrderIds = map entityKey candidateOrders
+        candidateRefunds <-
+            liftIO $
+                runSqlPool
+                    (selectList [TicketRefundRequestOrderId <-. candidateOrderIds] [Desc TicketRefundRequestCreatedAt])
+                    envPool
+        let refundOrderIds =
+                Set.fromList
+                    [ ticketRefundRequestOrderId refundRow
+                    | Entity _ refundRow <- candidateRefunds
+                    ]
+            orders =
+                if manager
+                    then candidateOrders
+                    else
+                        filter
+                            ( \orderEntity ->
+                                let orderRow = entityVal orderEntity
+                                 in eventTicketOrderStatus orderRow `elem` ["paid", "refunded"]
+                                        || entityKey orderEntity `Set.member` refundOrderIds
+                            )
+                            candidateOrders
         when (not manager && null orders) $
             requireEventVisibleToUser eventKey
         let orderIds = map entityKey orders
+            visibleOrderIds = Set.fromList orderIds
             orderCurrencies =
                 Map.fromList
                     [ (entityKey orderEntity, eventTicketOrderCurrency (entityVal orderEntity))
                     | orderEntity <- orders
                     ]
-        refunds <-
-            liftIO $
-                runSqlPool
-                    (selectList [TicketRefundRequestOrderId <-. orderIds] [Desc TicketRefundRequestCreatedAt])
-                    envPool
+            refunds =
+                filter
+                    ( \(Entity _ refundRow) ->
+                        ticketRefundRequestOrderId refundRow `Set.member` visibleOrderIds
+                    )
+                    candidateRefunds
         forM refunds $ \refundEntity@(Entity _ refundRow) ->
             case Map.lookup (ticketRefundRequestOrderId refundRow) orderCurrencies of
                 Just currency -> pure (refundEntityToDTO currency refundEntity)

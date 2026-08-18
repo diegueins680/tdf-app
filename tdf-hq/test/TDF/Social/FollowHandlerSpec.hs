@@ -337,8 +337,14 @@ spec = describe "social event handler helpers" $ do
             unsupportedMetadataEventKey = toSqlKey 16
             hiddenTierKey :: EventTicketTierId
             hiddenTierKey = toSqlKey 21
+            publicTierKey :: EventTicketTierId
+            publicTierKey = toSqlKey 22
             hiddenOrderKey :: EventTicketOrderId
             hiddenOrderKey = toSqlKey 51
+            foreignOrderKey :: EventTicketOrderId
+            foreignOrderKey = toSqlKey 52
+            pendingHiddenOrderKey :: EventTicketOrderId
+            pendingHiddenOrderKey = toSqlKey 53
             hiddenTicketKey :: EventTicketId
             hiddenTicketKey = toSqlKey 31
             hiddenTransferKey :: TicketTransferId
@@ -356,6 +362,49 @@ spec = describe "social event handler helpers" $ do
                     , externalEventRefLastSeenAt = now
                     , externalEventRefMissingRuns = if sourceStatus == "missing" then 2 else 0
                     , externalEventRefSourceStatus = sourceStatus
+                    }
+            ticketTier eventKey code name =
+                EventTicketTier
+                    { eventTicketTierEventId = eventKey
+                    , eventTicketTierCode = code
+                    , eventTicketTierName = name
+                    , eventTicketTierDescription = Nothing
+                    , eventTicketTierPriceCents = 1000
+                    , eventTicketTierCurrency = "USD"
+                    , eventTicketTierCurrencyId = Nothing
+                    , eventTicketTierQuantityTotal = 10
+                    , eventTicketTierQuantitySold = 0
+                    , eventTicketTierSalesStart = Nothing
+                    , eventTicketTierSalesEnd = Nothing
+                    , eventTicketTierIsActive = True
+                    , eventTicketTierPosition = Nothing
+                    , eventTicketTierEnableWaitlist = False
+                    , eventTicketTierAllowTransfers = True
+                    , eventTicketTierRefundPolicy = "full"
+                    , eventTicketTierRefundDeadline = Nothing
+                    , eventTicketTierCreatedAt = now
+                    , eventTicketTierUpdatedAt = now
+                    }
+            ticketOrder eventKey tierKey buyerId buyerName buyerEmail status =
+                EventTicketOrder
+                    { eventTicketOrderEventId = eventKey
+                    , eventTicketOrderTierId = tierKey
+                    , eventTicketOrderBuyerPartyId = Just buyerId
+                    , eventTicketOrderBuyerName = Just buyerName
+                    , eventTicketOrderBuyerEmail = Just buyerEmail
+                    , eventTicketOrderQuantity = 1
+                    , eventTicketOrderAmountCents = 1000
+                    , eventTicketOrderCurrency = "USD"
+                    , eventTicketOrderStatus = status
+                    , eventTicketOrderMetadata = Nothing
+                    , eventTicketOrderCheckoutIdempotencyKey = Nothing
+                    , eventTicketOrderPurchasedAt = now
+                    , eventTicketOrderStripePaymentIntentId = Nothing
+                    , eventTicketOrderPromoCodeId = Nothing
+                    , eventTicketOrderOriginalAmountCents = Nothing
+                    , eventTicketOrderPaymentMethod = Just "stripe"
+                    , eventTicketOrderCreatedAt = now
+                    , eventTicketOrderUpdatedAt = now
                     }
         runSqlPool
             ( do
@@ -392,51 +441,17 @@ spec = describe "social event handler helpers" $ do
                 _ <- insert (sourceRef "buenplan" "draft-merge-14" publicEventKey "draft:on_sale" "https://tickets.example.com/draft-option")
                 _ <- insert (sourceRef "ticketmaster" "malformed-15" malformedEventKey "on_sale" "https://tickets.example.com/malformed")
                 _ <- insert (sourceRef "ticketmaster" "unsupported-16" unsupportedMetadataEventKey "on_sale" "https://tickets.example.com/unsupported")
-                insertKey
-                    hiddenTierKey
-                    EventTicketTier
-                        { eventTicketTierEventId = hiddenEventKey
-                        , eventTicketTierCode = "hidden-tier"
-                        , eventTicketTierName = "Hidden tier"
-                        , eventTicketTierDescription = Nothing
-                        , eventTicketTierPriceCents = 1000
-                        , eventTicketTierCurrency = "USD"
-                        , eventTicketTierCurrencyId = Nothing
-                        , eventTicketTierQuantityTotal = 10
-                        , eventTicketTierQuantitySold = 0
-                        , eventTicketTierSalesStart = Nothing
-                        , eventTicketTierSalesEnd = Nothing
-                        , eventTicketTierIsActive = True
-                        , eventTicketTierPosition = Nothing
-                        , eventTicketTierEnableWaitlist = False
-                        , eventTicketTierAllowTransfers = True
-                        , eventTicketTierRefundPolicy = "full"
-                        , eventTicketTierRefundDeadline = Nothing
-                        , eventTicketTierCreatedAt = now
-                        , eventTicketTierUpdatedAt = now
-                        }
+                insertKey hiddenTierKey (ticketTier hiddenEventKey "hidden-tier" "Hidden tier")
+                insertKey publicTierKey (ticketTier publicEventKey "public-tier" "Public tier")
                 insertKey
                     hiddenOrderKey
-                    EventTicketOrder
-                        { eventTicketOrderEventId = hiddenEventKey
-                        , eventTicketOrderTierId = hiddenTierKey
-                        , eventTicketOrderBuyerPartyId = Just "2"
-                        , eventTicketOrderBuyerName = Just "Refund buyer"
-                        , eventTicketOrderBuyerEmail = Just "refund-buyer@example.com"
-                        , eventTicketOrderQuantity = 1
-                        , eventTicketOrderAmountCents = 1000
-                        , eventTicketOrderCurrency = "USD"
-                        , eventTicketOrderStatus = "paid"
-                        , eventTicketOrderMetadata = Nothing
-                        , eventTicketOrderCheckoutIdempotencyKey = Nothing
-                        , eventTicketOrderPurchasedAt = now
-                        , eventTicketOrderStripePaymentIntentId = Nothing
-                        , eventTicketOrderPromoCodeId = Nothing
-                        , eventTicketOrderOriginalAmountCents = Nothing
-                        , eventTicketOrderPaymentMethod = Just "stripe"
-                        , eventTicketOrderCreatedAt = now
-                        , eventTicketOrderUpdatedAt = now
-                        }
+                    (ticketOrder hiddenEventKey hiddenTierKey "2" "Refund buyer" "refund-buyer@example.com" "paid")
+                insertKey
+                    foreignOrderKey
+                    (ticketOrder publicEventKey publicTierKey "3" "Other buyer" "other-buyer@example.com" "paid")
+                insertKey
+                    pendingHiddenOrderKey
+                    (ticketOrder hiddenEventKey hiddenTierKey "3" "Other buyer" "other-buyer@example.com" "pending")
                 insertKey
                     hiddenTicketKey
                     EventTicket
@@ -607,6 +622,18 @@ spec = describe "social event handler helpers" $ do
                     (otherBuyerCreateRefund "13" "51" (RefundRequestDTO Nothing Nothing))
                     env
         assertHiddenEventRoute "another buyer's refund" unauthorizedRefundResult
+        foreignOrderRefundResult <-
+            runHandler $
+                runReaderT
+                    (otherBuyerCreateRefund "13" "52" (RefundRequestDTO Nothing Nothing))
+                    env
+        assertHiddenEventRoute "another event's order" foreignOrderRefundResult
+        pendingOrderRefundResult <-
+            runHandler $
+                runReaderT
+                    (otherBuyerCreateRefund "13" "53" (RefundRequestDTO Nothing Nothing))
+                    env
+        assertHiddenEventRoute "pending hidden-event order" pendingOrderRefundResult
         unauthorizedRefundListResult <-
             runHandler $
                 runReaderT
