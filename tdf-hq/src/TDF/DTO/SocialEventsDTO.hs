@@ -459,7 +459,7 @@ data EventDTO = EventDTO
     , eventTitle :: Text
     , eventDescription :: Maybe Text
     , eventStart :: UTCTime
-    , eventEnd :: UTCTime
+    , eventEnd :: Maybe UTCTime
     , eventTimezone :: Maybe Text
     , eventVenueId :: Maybe Text
     , eventPriceCents :: Maybe Int

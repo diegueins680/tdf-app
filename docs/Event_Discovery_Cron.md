@@ -135,6 +135,8 @@ sources.
 
 ```env
 EVENT_DISCOVERY_ENABLED=false
+EVENT_DISCOVERY_AUTO_PUBLISH=false
+EVENT_DISCOVERY_PILOT_LIMIT=20
 TICKETMASTER_API_KEY=your-consumer-key
 TICKETMASTER_API_BASE=https://app.ticketmaster.com/discovery/v2
 EVENT_DISCOVERY_LOOKAHEAD_DAYS=90
@@ -150,6 +152,13 @@ the old single-city helper; explicit subscriptions always send their own country
 
 Buen Plan's endpoint is public but undocumented. Keep its source independently
 disableable and review its logs/terms before enabling it in production.
+
+`EVENT_DISCOVERY_AUTO_PUBLISH` defaults to `false`. In this mode provider
+records are idempotently created or refreshed as non-public `planning` events.
+The cumulative number of imported canonical events is capped by
+`EVENT_DISCOVERY_PILOT_LIMIT` (20 by default); known provider IDs continue to
+refresh after the cap is reached. Set auto-publish to `true` only after the
+pilot has been reviewed and explicitly approved. The pilot cap is then ignored.
 
 ## Deployment
 

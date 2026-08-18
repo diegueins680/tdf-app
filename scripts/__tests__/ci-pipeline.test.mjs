@@ -47,7 +47,33 @@ test('backend image packages the tested artifact instead of recompiling Haskell'
 
   const runtimeDockerfile = await source('tdf-hq/Dockerfile.runtime');
   assert.match(runtimeDockerfile, /COPY tdf-hq\/\.release\/tdf-hq-exe/);
+  assert.match(runtimeDockerfile, /production-migrations\.sql/);
+  assert.match(runtimeDockerfile, /production-entrypoint\.sh/);
+  assert.match(runtimeDockerfile, /ENV AUTO_APPLY_PRODUCTION_MIGRATIONS=true/);
+  assert.match(runtimeDockerfile, /postgresql-client/);
   assert.doesNotMatch(runtimeDockerfile, /stack (?:--[^\n]+ )?build/);
+});
+
+test('automatic migration integration matches the persisted production locale', async () => {
+  const integration = await source('scripts/test-automatic-migrations-production-schema.sh');
+  assert.equal(integration.match(/DEFAULT_LOCALE=es/g)?.length, 1);
+  assert.match(integration, /AUTO_APPLY_PRODUCTION_MIGRATIONS=true/);
+  assert.match(integration, /production-entrypoint\.sh/);
+});
+
+test('backend image receives deterministic, non-empty release metadata', async () => {
+  const workflow = await source('.github/workflows/build.yml');
+  assert.match(workflow, /id: image-metadata/);
+  assert.match(workflow, /git show -s --format=%ct "\$GITHUB_SHA"/);
+  assert.match(workflow, /new Date\(Number\(process\.argv\[1\]\) \* 1000\)\.toISOString\(\)/);
+  assert.match(workflow, /BUILD_TIME=\$\{\{ steps\.image-metadata\.outputs\.build_time \}\}/);
+  assert.doesNotMatch(workflow, /github\.event\.head_commit\.timestamp|github\.run_started_at/);
+
+  const runtimeDockerfile = await source('tdf-hq/Dockerfile.runtime');
+  assert.match(runtimeDockerfile, /ARG SOURCE_COMMIT\nARG BUILD_TIME\n/);
+  assert.match(runtimeDockerfile, /grep -Eq '\^\[0-9a-f\]\{40\}\$'/);
+  assert.match(runtimeDockerfile, /grep -Eq '\^\[0-9\]\{4\}.*T.*Z\$'/);
+  assert.doesNotMatch(runtimeDockerfile, /ARG SOURCE_COMMIT=(?:dev|unknown)|ARG BUILD_TIME=(?:dev|unknown)/);
 });
 
 test('source Dockerfile introduces changing release metadata after compilation', async () => {

@@ -152,7 +152,7 @@ export default function PublicEventTicketsPage() {
       name: storefront.data.title,
       description,
       startDate: storefront.data.startsAt,
-      endDate: storefront.data.endsAt,
+      ...(storefront.data.endsAt ? { endDate: storefront.data.endsAt } : {}),
       offers: storefront.data.tiers.map((tier) => ({
         '@type': 'Offer',
         price: (tier.unitPriceMinor / 100).toFixed(2),

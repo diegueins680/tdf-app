@@ -152,11 +152,11 @@ const toIsoInZone = (value: string, timezone: string, label: string) => {
 
 const emptyActivity = (
   eventStart?: string,
-  eventEnd?: string,
+  eventEnd?: string | null,
   timezone = 'UTC',
   travelMode: LogisticsTravelMode = 'drive',
 ): ActivityDraft => ({
-  type: 'task', title: '', notes: '', start: toLocalInput(eventStart, timezone), end: toLocalInput(eventEnd, timezone),
+  type: 'task', title: '', notes: '', start: toLocalInput(eventStart, timezone), end: eventEnd ? toLocalInput(eventEnd, timezone) : '',
   placeId: '', originPlaceId: '', destinationPlaceId: '', travelMode, bufferMinutes: '',
   priority: 'normal', status: 'planned', assigneePartyId: '', externalName: '', externalPhone: '',
   externalEmail: '', dependencyIds: '',

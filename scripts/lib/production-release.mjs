@@ -256,6 +256,9 @@ export function validateFlyConfig(toml) {
   const services = tables.get('services') ?? [];
   const healthChecks = tables.get('services.http_checks') ?? [];
   const runMigrations = String(env.get('RUN_MIGRATIONS') ?? '').trim().toLowerCase();
+  const autoApplyProductionMigrations = String(
+    env.get('AUTO_APPLY_PRODUCTION_MIGRATIONS') ?? '',
+  ).trim().toLowerCase();
   const eventDiscovery = String(env.get('EVENT_DISCOVERY_ENABLED') ?? '').trim().toLowerCase();
   const defaultLocale = String(env.get('DEFAULT_LOCALE') ?? '').trim().toLowerCase();
   const hasHealthCheck = services.length === 1 && healthChecks.some((check) => (
@@ -273,6 +276,11 @@ export function validateFlyConfig(toml) {
   if (runMigrations !== 'false') {
     throw new Error('fly.toml must set RUN_MIGRATIONS="false" for production.');
   }
+  if (autoApplyProductionMigrations !== 'true') {
+    throw new Error(
+      'fly.toml must set AUTO_APPLY_PRODUCTION_MIGRATIONS="true" for reviewed SQL migrations.',
+    );
+  }
   if (eventDiscovery !== 'false') {
     throw new Error('fly.toml must stage EVENT_DISCOVERY_ENABLED="false" during rollout.');
   }
@@ -288,6 +296,7 @@ export function validateFlyConfig(toml) {
 
   return {
     runMigrations: false,
+    autoApplyProductionMigrations: true,
     eventDiscoveryEnabled: false,
     defaultLocale: 'es',
     healthCheckPath: '/health',
@@ -685,6 +694,30 @@ BEGIN
     WHERE actual.column_name IS NULL OR actual.data_type <> 'uuid'
   ) THEN
     RAISE EXCEPTION 'A canonical catalog consumer UUID reference is missing or invalid';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'social_event'
+      AND column_name = 'end_time'
+      AND data_type = 'timestamp with time zone'
+      AND is_nullable = 'YES'
+  ) THEN
+    RAISE EXCEPTION 'social_event.end_time must allow an unconfirmed end';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'public.social_event'::regclass
+      AND conname = 'social_event_time_order'
+      AND contype = 'c'
+      AND convalidated
+      AND pg_get_constraintdef(oid) ILIKE '%end_time IS NULL%'
+      AND pg_get_constraintdef(oid) ILIKE '%start_time < end_time%'
+  ) THEN
+    RAISE EXCEPTION 'social_event_time_order is missing or invalid';
   END IF;
 
   IF EXISTS (
@@ -2029,6 +2062,7 @@ function deployCommand({ app, image, sha, onlyMachine, excludeMachine }) {
     '--env', `SOURCE_COMMIT=${sha}`,
     '--env', `GIT_SHA=${sha}`,
     '--env', 'RUN_MIGRATIONS=false',
+    '--env', 'AUTO_APPLY_PRODUCTION_MIGRATIONS=true',
     '--env', 'EVENT_DISCOVERY_ENABLED=false',
     '--strategy', 'rolling',
     '--max-unavailable', '1',

@@ -46,7 +46,7 @@ data PublicEventTicketStorefrontDTO = PublicEventTicketStorefrontDTO
   , title             :: Text
   , description       :: Maybe Text
   , startsAt          :: UTCTime
-  , endsAt            :: UTCTime
+  , endsAt            :: Maybe UTCTime
   , timezone          :: Maybe Text
   , venueName         :: Maybe Text
   , venueAddress      :: Maybe Text

@@ -104,8 +104,8 @@ psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-16_music_directory_verified_re
 psql_exec <<'SQL' >/dev/null
 INSERT INTO party(display_name,is_org,created_at)
 VALUES ('Synthetic directory migration fixture',FALSE,now());
-INSERT INTO artist_profile(artist_party_id,slug,bio,city,country_code,created_at)
-SELECT id,'synthetic-directory-fixture','Synthetic data used only by the isolated migration test.','Quito','EC',now()
+INSERT INTO artist_profile(artist_party_id,slug,bio,city,country_code,hero_image_url,website_url,created_at)
+SELECT id,'synthetic-directory-fixture','Synthetic data used only by the isolated migration test.','Quito','EC','/media/synthetic-directory-fixture.webp','https://example.test/synthetic-directory-fixture',now()
 FROM party WHERE display_name='Synthetic directory migration fixture';
 SQL
 
@@ -313,7 +313,7 @@ curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/taxonomies?locale=
     process.stdin.on("data", (chunk) => { raw += chunk; });
     process.stdin.on("end", () => {
       const value = JSON.parse(raw);
-      const collections = ["professions", "instruments", "genres", "serviceOfferings", "classifiedCategories", "compensationTypes", "currencies", "cities"];
+      const collections = ["professions", "instruments", "genres", "serviceOfferings", "classifiedCategories", "compensationTypes", "currencies", "languages", "cities"];
       for (const key of collections) {
         if (!Array.isArray(value[key])) throw new Error(`${key} is not a public taxonomy array`);
       }
@@ -321,6 +321,173 @@ curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/taxonomies?locale=
       if (!value.classifiedCategories.some((item) => Array.isArray(item.requirements?.required))) throw new Error("classified requirements are missing");
     });
   '
+
+# Legacy portfolio/link keys are projected through the closed modern DTO without
+# mutating the stored historical source/provenance fields.
+curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/profiles/synthetic-directory-fixture" |
+  node -e '
+    const value = JSON.parse(require("fs").readFileSync(0, "utf8"));
+    const media = value.portfolio?.[0];
+    const link = value.links?.[0];
+    if (media?.itemType !== "image" || media?.title !== "Image" || media?.url !== "/media/synthetic-directory-fixture.webp") throw new Error("legacy portfolio was not normalized into the closed DTO");
+    if (link?.label !== "Website" || link?.url !== "https://example.test/synthetic-directory-fixture") throw new Error("legacy link was not normalized into the closed DTO");
+    if ("kind" in media || "source" in media || "kind" in link) throw new Error("legacy internal keys escaped the public DTO");
+  '
+
+# Create a second profile through the authenticated API. It deliberately covers
+# structured roles, catalog languages, two service areas, safe media and rates.
+# All values are synthetic and resolved from the isolated database.
+rich_profession_one='21000000-0000-4000-8000-000000000005'
+rich_profession_two='21000000-0000-4000-8000-000000000006'
+rich_instrument_id=$(psql_exec -Atc "SELECT id FROM instrument WHERE active ORDER BY sort_order,id LIMIT 1;")
+rich_genre_id=$(psql_exec -Atc "SELECT id FROM genre WHERE active ORDER BY sort_order,id LIMIT 1;")
+rich_service_id=$(psql_exec -Atc "SELECT id FROM service_offering WHERE active ORDER BY sort_order,id LIMIT 1;")
+rich_country_id=$(psql_exec -Atc "SELECT id FROM country_reference WHERE alpha2='EC';")
+rich_other_country_id=$(psql_exec -Atc "SELECT id FROM country_reference WHERE alpha2<>'EC' AND active ORDER BY alpha2 LIMIT 1;")
+rich_city_id=$(psql_exec -Atc "SELECT id FROM city_reference WHERE code='quito-ec-p';")
+rich_currency_id=$(psql_exec -Atc "SELECT id FROM currency_reference WHERE code='USD';")
+rich_language_id=$(psql_exec -Atc "SELECT id FROM language_reference WHERE iso6391='es';")
+
+rich_profile_payload=$(node -e '
+  const [currencyId, professionOne, professionTwo, instrumentId, genreId, serviceId, languageId, countryId, cityId] = process.argv.slice(1);
+  process.stdout.write(JSON.stringify({
+    profileKind: "person",
+    publicName: "Synthetic rich producer",
+    slug: "synthetic-rich-producer",
+    bio: "Synthetic professional profile used only by the isolated directory API test.",
+    experienceSummary: "Ten synthetic years producing and recording test fixtures.",
+    creditsSummary: "Synthetic Album One; Synthetic Session Two.",
+    portfolio: [{ itemType: "credit", title: " Synthetic production credit ", url: " https://example.test/credits/synthetic " }],
+    links: [{ label: " Synthetic portfolio ", url: " https://example.test/synthetic-rich-producer " }],
+    equipmentSummary: "Synthetic microphones and monitoring equipment.",
+    rateMinMinor: 10000,
+    rateMaxMinor: 25000,
+    currencyId,
+    availabilityStatus: "available",
+    professionIds: [professionOne, professionTwo],
+    professionDetails: [
+      { professionId: professionOne, headline: "Synthetic music producer", yearsExperience: 10, rateMinMinor: 12000, rateMaxMinor: 24000, currencyId },
+      { professionId: professionTwo, headline: "Synthetic recording engineer", yearsExperience: 8 },
+    ],
+    instrumentIds: [instrumentId],
+    instrumentDetails: [{ instrumentId, proficiency: "professional" }],
+    genreIds: [genreId],
+    serviceOfferingIds: [serviceId],
+    languages: [{ languageId, proficiency: "native" }],
+    serviceAreas: [
+      { countryId, cityId, serviceRadiusKm: 35, primaryLocation: true, onsite: true },
+      { countryId, serviceRadiusKm: 500, primaryLocation: false, onsite: true },
+    ],
+    countryId,
+    cityId,
+    onsite: true,
+    remote: true,
+    availableToTravel: true,
+    travelRadiusKm: 500,
+  }));
+' "$rich_currency_id" "$rich_profession_one" "$rich_profession_two" "$rich_instrument_id" "$rich_genre_id" "$rich_service_id" "$rich_language_id" "$rich_country_id" "$rich_city_id")
+
+rich_profile_id=$(curl -fsS -X POST "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/profiles" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' \
+  -H 'Idempotency-Key: synthetic-rich-profile-create-1' \
+  -H 'Content-Type: application/json' \
+  --data "$rich_profile_payload" |
+  node -e '
+    let raw = "";
+    process.stdin.on("data", (chunk) => { raw += chunk; });
+    process.stdin.on("end", () => {
+      const value = JSON.parse(raw);
+      if (!/^[0-9a-f-]{36}$/.test(value.id ?? "")) throw new Error("rich profile id is missing");
+      if (value.experienceSummary !== "Ten synthetic years producing and recording test fixtures.") throw new Error("rich experience was not projected");
+      if (value.professionDetails?.length !== 2 || value.instrumentDetails?.[0]?.proficiency !== "professional") throw new Error("structured professional details were not projected");
+      if (value.languages?.[0]?.proficiency !== "native" || value.serviceAreas?.length !== 2) throw new Error("languages or multiple service areas were not projected");
+      if (value.portfolio?.[0]?.itemType !== "credit" || value.portfolio?.[0]?.title !== "Synthetic production credit" || value.portfolio?.[0]?.url !== "https://example.test/credits/synthetic" || value.links?.[0]?.label !== "Synthetic portfolio" || value.rates?.minMinor !== 10000) throw new Error("normalized portfolio, links or rates were not projected");
+      if (value.capabilities?.edit !== true || value.capabilities?.publish !== true) throw new Error("explicit manager capabilities are missing");
+      process.stdout.write(value.id);
+    });
+  ')
+
+rich_retry_id=$(curl -fsS -X POST "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/profiles" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' \
+  -H 'Idempotency-Key: synthetic-rich-profile-create-1' \
+  -H 'Content-Type: application/json' \
+  --data "$rich_profile_payload" |
+  node -e '
+    const value = JSON.parse(require("fs").readFileSync(0, "utf8"));
+    if (value.professionDetails?.length !== 2 || value.serviceAreas?.length !== 2 || value.capabilities?.edit !== true) throw new Error("idempotent profile retry returned a divergent partial DTO");
+    process.stdout.write(value.id);
+  ')
+test "$rich_retry_id" = "$rich_profile_id"
+
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_profile_profession WHERE profile_id='$rich_profile_id';")" = "2"
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_profile_location WHERE profile_id='$rich_profile_id';")" = "2"
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_profile_language WHERE profile_id='$rich_profile_id';")" = "1"
+
+# A legacy/basic PUT must preserve omitted rich fields, structured role details,
+# language proficiency and the additional service area.
+legacy_profile_payload=$(printf '{"profileKind":"person","publicName":"Synthetic rich producer","slug":"synthetic-rich-producer","bio":"Synthetic professional profile used only by the isolated directory API test.","professionIds":["%s","%s"],"instrumentIds":["%s"],"genreIds":["%s"],"serviceOfferingIds":["%s"],"countryId":"%s","cityId":"%s","onsite":true,"remote":true,"availableToTravel":true,"travelRadiusKm":500}' "$rich_profession_one" "$rich_profession_two" "$rich_instrument_id" "$rich_genre_id" "$rich_service_id" "$rich_country_id" "$rich_city_id")
+curl -fsS -X PUT "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/profiles/$rich_profile_id" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' \
+  -H 'Content-Type: application/json' \
+  --data "$legacy_profile_payload" |
+  node -e '
+    const value = JSON.parse(require("fs").readFileSync(0, "utf8"));
+    if (!value.experienceSummary || value.portfolio?.length !== 1 || value.links?.length !== 1 || value.rates?.minMinor !== 10000) throw new Error("legacy update erased omitted rich profile fields");
+    if (value.professionDetails?.[0]?.headline !== "Synthetic music producer" || value.instrumentDetails?.[0]?.proficiency !== "professional") throw new Error("legacy update erased structured membership details");
+    if (value.languages?.length !== 1 || value.serviceAreas?.length !== 2) throw new Error("legacy update erased languages or secondary service areas");
+  '
+
+curl -fsS -X PATCH "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/profiles/$rich_profile_id/status" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' \
+  -H 'Content-Type: application/json' \
+  --data '{"status":"published"}' >/dev/null
+
+curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/profiles/synthetic-rich-producer" |
+  node -e '
+    const value = JSON.parse(require("fs").readFileSync(0, "utf8"));
+    if (value.professions?.length !== 2 || value.services?.length !== 1 || value.languages?.[0]?.proficiency !== "native") throw new Error("public rich taxonomy projection is incomplete");
+    if (value.locations?.length !== 2 || value.portfolio?.[0]?.itemType !== "credit" || value.portfolio?.[0]?.url !== "https://example.test/credits/synthetic" || value.links?.[0]?.label !== "Synthetic portfolio" || value.availability?.status !== "available") throw new Error("public locations, normalized media or availability are incomplete");
+    for (const forbidden of ["exactAddress","privateLatitude","privateLongitude","primaryEmail","primaryPhone","partyId","capabilities","professionIds","serviceAreas"]) {
+      if (forbidden in value || JSON.stringify(value).includes(String.fromCharCode(34) + forbidden + String.fromCharCode(34))) throw new Error("public rich profile exposed " + forbidden);
+    }
+  '
+
+duplicate_profession_payload=$(printf '{"profileKind":"person","publicName":"Synthetic rich producer","slug":"synthetic-rich-producer","professionIds":["%s","%s"],"instrumentIds":[],"genreIds":[],"serviceOfferingIds":[],"countryId":"%s","cityId":"%s","onsite":true,"remote":false,"availableToTravel":false}' "$rich_profession_one" "$rich_profession_one" "$rich_country_id" "$rich_city_id")
+duplicate_profession_status=$(curl -sS -o /dev/null -w '%{http_code}' -X PUT "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/profiles/$rich_profile_id" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' -H 'Content-Type: application/json' \
+  --data "$duplicate_profession_payload")
+test "$duplicate_profession_status" = "400"
+
+unsafe_link_payload=$(printf '{"profileKind":"person","publicName":"Synthetic rich producer","slug":"synthetic-rich-producer","links":[{"label":"Unsafe","url":"https://user:secret@example.test"}],"professionIds":["%s","%s"],"instrumentIds":["%s"],"genreIds":["%s"],"serviceOfferingIds":["%s"],"countryId":"%s","cityId":"%s","onsite":true,"remote":true,"availableToTravel":true}' "$rich_profession_one" "$rich_profession_two" "$rich_instrument_id" "$rich_genre_id" "$rich_service_id" "$rich_country_id" "$rich_city_id")
+unsafe_link_status=$(curl -sS -o /dev/null -w '%{http_code}' -X PUT "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/profiles/$rich_profile_id" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' -H 'Content-Type: application/json' \
+  --data "$unsafe_link_payload")
+test "$unsafe_link_status" = "400"
+
+duplicate_primary_payload=$(printf '{"profileKind":"person","publicName":"Synthetic rich producer","slug":"synthetic-rich-producer","professionIds":["%s","%s"],"instrumentIds":["%s"],"genreIds":["%s"],"serviceOfferingIds":["%s"],"serviceAreas":[{"countryId":"%s","cityId":"%s","primaryLocation":true,"onsite":true},{"countryId":"%s","primaryLocation":true,"onsite":true}],"countryId":"%s","cityId":"%s","onsite":true,"remote":true,"availableToTravel":true}' "$rich_profession_one" "$rich_profession_two" "$rich_instrument_id" "$rich_genre_id" "$rich_service_id" "$rich_country_id" "$rich_city_id" "$rich_country_id" "$rich_country_id" "$rich_city_id")
+duplicate_primary_status=$(curl -sS -o /dev/null -w '%{http_code}' -X PUT "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/profiles/$rich_profile_id" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' -H 'Content-Type: application/json' \
+  --data "$duplicate_primary_payload")
+test "$duplicate_primary_status" = "400"
+
+mismatched_geography_payload=$(printf '{"profileKind":"person","publicName":"Synthetic rich producer","slug":"synthetic-rich-producer","professionIds":["%s","%s"],"instrumentIds":["%s"],"genreIds":["%s"],"serviceOfferingIds":["%s"],"serviceAreas":[{"countryId":"%s","cityId":"%s","primaryLocation":true,"onsite":true}],"countryId":"%s","cityId":"%s","onsite":true,"remote":true,"availableToTravel":true}' "$rich_profession_one" "$rich_profession_two" "$rich_instrument_id" "$rich_genre_id" "$rich_service_id" "$rich_other_country_id" "$rich_city_id" "$rich_other_country_id" "$rich_city_id")
+mismatched_geography_status=$(curl -sS -o /dev/null -w '%{http_code}' -X PUT "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/profiles/$rich_profile_id" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' -H 'Content-Type: application/json' \
+  --data "$mismatched_geography_payload")
+test "$mismatched_geography_status" = "400"
+
+# Explicit empty collections and clearRates are destructive only by intent.
+clear_profile_payload=$(printf '{"profileKind":"person","publicName":"Synthetic rich producer","slug":"synthetic-rich-producer","bio":"Synthetic professional profile used only by the isolated directory API test.","experienceSummary":"","creditsSummary":"","portfolio":[],"links":[],"equipmentSummary":"","clearRates":true,"professionIds":["%s","%s"],"instrumentIds":["%s"],"genreIds":["%s"],"serviceOfferingIds":["%s"],"languages":[],"serviceAreas":[{"countryId":"%s","cityId":"%s","serviceRadiusKm":35,"primaryLocation":true,"onsite":true},{"countryId":"%s","serviceRadiusKm":500,"primaryLocation":false,"onsite":true}],"countryId":"%s","cityId":"%s","onsite":true,"remote":true,"availableToTravel":true,"travelRadiusKm":500}' "$rich_profession_one" "$rich_profession_two" "$rich_instrument_id" "$rich_genre_id" "$rich_service_id" "$rich_country_id" "$rich_city_id" "$rich_country_id" "$rich_country_id" "$rich_city_id")
+curl -fsS -X PUT "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/profiles/$rich_profile_id" \
+  -H 'Authorization: Bearer synthetic-directory-sender-token' -H 'Content-Type: application/json' \
+  --data "$clear_profile_payload" |
+  node -e '
+    const value = JSON.parse(require("fs").readFileSync(0, "utf8"));
+    if (value.experienceSummary !== null || value.creditsSummary !== null || value.equipmentSummary !== null || value.rates !== null) throw new Error("explicit rich scalar clearing failed");
+    if (value.portfolio?.length !== 0 || value.links?.length !== 0 || value.languages?.length !== 0) throw new Error("explicit rich collection clearing failed");
+  '
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_audit_event WHERE entity_kind='profile' AND entity_id='$rich_profile_id' AND action='profile.updated';")" = "2"
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_audit_event WHERE entity_kind='profile' AND entity_id='$rich_profile_id' AND action='profile.updated' AND metadata ?| ARRAY['bio','experienceSummary','creditsSummary','portfolio','links','equipmentSummary'];")" = "0"
 
 invitation_id=$(curl -fsS -X POST "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/invitations" \
   -H 'Authorization: Bearer synthetic-directory-sender-token' \
@@ -524,4 +691,4 @@ expired_state=$(psql_exec -Atc "SELECT status FROM directory_invitation WHERE id
 test "$expired_state" = "expired"
 stop_api
 
-echo "Music directory migration passed restart, backfill, rollback/reapply, privacy, claim, verified-review API and aggregation, alert, merge, search-volume, taxonomy, invitation-participant, blocking, expiry, and invariant checks."
+echo "Music directory migration passed restart, backfill, rollback/reapply, rich profile compatibility, privacy, claim, verified-review API and aggregation, alert, merge, search-volume, taxonomy, invitation-participant, blocking, expiry, and invariant checks."

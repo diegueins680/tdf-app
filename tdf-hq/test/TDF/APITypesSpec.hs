@@ -5,6 +5,7 @@ module TDF.APITypesSpec (spec) where
 import Data.Aeson (eitherDecode, object, (.=))
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import Data.Maybe (isJust)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Data.Time (fromGregorian)
@@ -2459,8 +2460,29 @@ spec = do
                         ("Expected canonical event create payload to decode, got: " <> err)
                 Right payload -> do
                     SocialEvents.eventTitle payload `shouldBe` "Test"
+                    SocialEvents.eventEnd payload `shouldSatisfy` isJust
                     SocialEvents.eventWorkflowStateId payload `shouldBe` Just "00000000-0000-4000-8000-000000000231"
                     SocialEvents.eventArtists payload `shouldBe` []
+
+            case ( eitherDecode
+                    "{\"eventTitle\":\"Sin fin confirmado\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventArtists\":[]}" ::
+                    Either String SocialEvents.EventDTO
+                 ) of
+                Left err ->
+                    expectationFailure
+                        ("Expected an event without eventEnd to decode, got: " <> err)
+                Right payload ->
+                    SocialEvents.eventEnd payload `shouldBe` Nothing
+
+            case ( eitherDecode
+                    "{\"eventTitle\":\"Fin por confirmar\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":null,\"eventArtists\":[]}" ::
+                    Either String SocialEvents.EventDTO
+                 ) of
+                Left err ->
+                    expectationFailure
+                        ("Expected a null eventEnd to decode, got: " <> err)
+                Right payload ->
+                    SocialEvents.eventEnd payload `shouldBe` Nothing
 
             ( eitherDecode
                     "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"eventWorkflowStateId\":\"00000000-0000-4000-8000-000000000231\",\"unexpected\":true}" ::

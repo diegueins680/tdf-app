@@ -23,6 +23,20 @@
 
 ## Smoke tests
 
+Validación automatizada específica del writer enriquecido:
+
+```sh
+node scripts/test-music-directory-contract.mjs
+(cd tdf-hq && stack build --fast)
+./scripts/test-music-directory-migration.sh
+(cd tdf-hq-ui && npm test -- --runTestsByPath src/pages/DirectoryManagePage.test.ts)
+(cd tdf-mobile && npm test -- --runTestsByPath src/features/directory/profileForm.test.ts)
+```
+
+La prueba PostgreSQL crea únicamente fixtures sintéticos y comprueba creación/replay, dos perfiles
+por cuenta, detalle profesional, múltiples áreas, compatibilidad del `PUT` histórico, borrado
+explícito, validación negativa y privacidad pública. No usar tokens o datos de producción.
+
 - Anónimo busca Quito y recibe solo contenido permitido, sin PII/coordenadas privadas.
 - Pestañas combinada/categoría/mapa comparten cursor y filtros.
 - Cuenta crea dos perfiles y solo puede editar los que administra.

@@ -1,11 +1,20 @@
 #!/usr/bin/env node
 
 import { createServer } from 'node:http';
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, normalize, resolve } from 'node:path';
-import { chromium } from '/app/node_modules/playwright/index.mjs';
+
+import { writeMusicDirectoryVisualArtifacts } from './music-directory-visual-artifacts.mjs';
+
+const playwrightModule = process.env.TDF_PLAYWRIGHT_MODULE ?? '/app/node_modules/playwright/index.mjs';
+const { chromium } = await import(playwrightModule);
 
 const workspace = process.env.TDF_DIRECTORY_WORKSPACE ?? '/workspace';
+const captureScope = process.env.TDF_DIRECTORY_CAPTURE_SCOPE ?? 'all';
+const captureAll = captureScope === 'all';
+const captureWebManaged = captureAll || captureScope === 'web-managed';
+const captureMobileManaged = captureAll || captureScope === 'mobile-managed';
+if (!captureWebManaged && !captureMobileManaged) throw new Error(`Unsupported directory visual scope: ${captureScope}`);
 const outputDir = join(workspace, 'docs/music-directory/screenshots');
 const webRoot = join(workspace, 'tdf-hq-ui/dist');
 const mobileRoot = join(workspace, 'tdf-mobile/dist');
@@ -63,6 +72,10 @@ const ids = {
   rock: '77777777-7777-4777-8777-777777777777',
   recordingService: '77777777-7777-4777-8777-777777777778',
   usd: '77777777-7777-4777-8777-777777777779',
+  spanish: '77777777-7777-4777-8777-777777777780',
+  english: '77777777-7777-4777-8777-777777777781',
+  ecuador: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  spanishLocale: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaab',
 };
 
 const taxonomy = (id, code, name) => ({ id, code, slug: code, name, parentId: null, requirements: {} });
@@ -78,10 +91,75 @@ const taxonomies = {
   currencies: [{ ...taxonomy(ids.usd, 'USD', 'Dólar estadounidense'), symbol: '$', minorUnits: 2 }],
   instruments: [taxonomy(ids.bass, 'bajo-electrico', 'Bajo eléctrico'), taxonomy(ids.guitar, 'guitarra', 'Guitarra')],
   genres: [taxonomy(ids.rock, 'rock', 'Rock')],
+  languages: [taxonomy(ids.spanish, 'es', 'Español'), taxonomy(ids.english, 'en', 'Inglés')],
   cities: [
-    { ...taxonomy(ids.quito, 'quito-ec-p', 'Quito'), countryId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', latitude: -0.180653, longitude: -78.467834 },
-    { ...taxonomy(ids.guayaquil, 'guayaquil-ec-g', 'Guayaquil'), countryId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', latitude: -2.189412, longitude: -79.889066 },
+    { ...taxonomy(ids.quito, 'quito-ec-p', 'Quito'), countryId: ids.ecuador, latitude: -0.180653, longitude: -78.467834 },
+    { ...taxonomy(ids.guayaquil, 'guayaquil-ec-g', 'Guayaquil'), countryId: ids.ecuador, latitude: -2.189412, longitude: -79.889066 },
   ],
+};
+
+const sessionPreferences = {
+  localeId: ids.spanishLocale,
+  locale: 'es',
+  currencyId: ids.usd,
+  currency: 'USD',
+  timezone: 'America/Guayaquil',
+  countryId: ids.ecuador,
+  countryCode: 'EC',
+};
+
+const syntheticSession = {
+  username: 'visual-fixture',
+  displayName: 'Cuenta sintética de evidencia',
+  partyId: 900001,
+  roles: [],
+  modules: [],
+  featureFlags: [],
+  preferences: sessionPreferences,
+};
+
+const managedProfile = {
+  id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  kind: 'person',
+  name: 'Perfil sintético · Bajista y productor',
+  slug: 'perfil-sintetico-bajista',
+  bio: 'Perfil local de evidencia visual. No representa a una persona ni una oferta real.',
+  experienceSummary: 'Ocho años sintéticos en grabación, arreglos y presentaciones en vivo.',
+  creditsSummary: 'Créditos y discografía exclusivamente sintéticos para probar el editor.',
+  portfolio: [{ itemType: 'audio', title: 'Demo sintético', url: '/media/fixtures/demo-sintetico.mp3', description: 'Archivo inexistente usado solo como referencia visual.' }],
+  links: [{ label: 'Portafolio sintético', url: 'https://example.test/perfil-sintetico' }],
+  equipmentSummary: 'Bajo de cinco cuerdas e interfaz de audio sintéticos.',
+  rates: { minMinor: 12000, maxMinor: 24000, currencyId: ids.usd },
+  availabilityStatus: 'available',
+  onsite: true,
+  remote: true,
+  availableToTravel: true,
+  travelRadiusKm: 500,
+  professionIds: [ids.bassist, ids.producer],
+  professionDetails: [
+    { professionId: ids.bassist, headline: 'Bajista de sesión', yearsExperience: 8, rateMinMinor: 12000, rateMaxMinor: 18000, currencyId: ids.usd },
+    { professionId: ids.producer, headline: 'Producción y arreglos', yearsExperience: 5, rateMinMinor: 18000, rateMaxMinor: 24000, currencyId: ids.usd },
+  ],
+  instrumentIds: [ids.bass, ids.guitar],
+  instrumentDetails: [
+    { instrumentId: ids.bass, proficiency: 'professional' },
+    { instrumentId: ids.guitar, proficiency: 'advanced' },
+  ],
+  genreIds: [ids.rock],
+  serviceOfferingIds: [ids.recordingService],
+  languages: [
+    { languageId: ids.spanish, proficiency: 'native' },
+    { languageId: ids.english, proficiency: 'professional' },
+  ],
+  serviceAreas: [
+    { countryId: ids.ecuador, cityId: ids.quito, serviceRadiusKm: 40, primaryLocation: true, onsite: true },
+    { countryId: ids.ecuador, cityId: ids.guayaquil, serviceRadiusKm: 25, primaryLocation: false, onsite: true },
+  ],
+  status: 'published',
+  visibility: 'public',
+  moderationStatus: 'approved',
+  version: 3,
+  capabilities: { edit: true, publish: true },
 };
 
 const location = { cityId: ids.quito, city: 'Quito', countryCode: 'EC', sector: null, latitude: -0.180653, longitude: -78.467834, precision: 'city', distanceKm: 3.8 };
@@ -176,14 +254,20 @@ const publicReviews = {
 const json = (value, status = 200) => ({ status, contentType: 'application/json', body: JSON.stringify(value) });
 const fixtureRequests = [];
 
-async function installFixtures(page) {
+async function installFixtures(page, { authenticated = false } = {}) {
   await page.route('**/*', async (route) => {
     const request = route.request();
     const pathname = new URL(request.url()).pathname;
+    if (pathname.endsWith('/generate_204')) return route.fulfill({ status: 204, body: '' });
     if (request.resourceType() === 'fetch' || request.resourceType() === 'xhr') fixtureRequests.push(pathname);
-    if (pathname.endsWith('/session')) return route.fulfill(json({ error: 'authentication_required' }, 401));
+    if (pathname.endsWith('/session')) return route.fulfill(authenticated ? json(syntheticSession) : json({ error: 'authentication_required' }, 401));
+    if (pathname.endsWith('/session/preferences')) return route.fulfill(json(sessionPreferences));
+    if (pathname.endsWith('/navigation/preferences')) return route.fulfill(json([]));
     if (pathname.endsWith('/catalogs/batch')) return route.fulfill(json({ revision: 1, catalogs: [] }));
     if (pathname.endsWith('/directory/taxonomies')) return route.fulfill(json(taxonomies));
+    if (pathname.endsWith('/directory/profiles')) return route.fulfill(authenticated ? json([managedProfile]) : json({ error: 'authentication_required' }, 401));
+    if (pathname.endsWith('/directory/classifieds')) return route.fulfill(authenticated ? json([]) : json({ error: 'authentication_required' }, 401));
+    if (pathname.endsWith('/directory/invitations')) return route.fulfill(authenticated ? json([]) : json({ error: 'authentication_required' }, 401));
     if (pathname.endsWith('/directory/search')) return route.fulfill(json(searchResponse));
     if (pathname.endsWith('/directory/suggestions')) return route.fulfill(json([]));
     if (pathname.endsWith('/directory/profiles/perfil-sintetico-bajista/reviews')) return route.fulfill(json(publicReviews));
@@ -213,7 +297,13 @@ async function axeAudit(page, name) {
     const result = await window.axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] } });
     return {
       path: location.pathname,
-      violations: result.violations.map(({ id, impact, help, nodes }) => ({ id, impact, help, nodes: nodes.length, targets: nodes.slice(0, 5).map((node) => node.target) })),
+      violations: result.violations.map(({ id, impact, help, nodes }) => ({
+        id,
+        impact,
+        help,
+        nodes: nodes.length,
+        targets: nodes.slice(0, 5).map((node) => ({ target: node.target, html: node.html, failureSummary: node.failureSummary })),
+      })),
       passes: result.passes.length,
       incomplete: result.incomplete.length,
     };
@@ -232,6 +322,7 @@ const accessibility = [];
 const browserErrors = [];
 
 try {
+  if (captureAll) {
   const desktop = await browser.newPage({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' });
   desktop.on('pageerror', (error) => browserErrors.push({ surface: 'web-desktop', message: error.message }));
   desktop.on('console', (message) => {
@@ -263,7 +354,33 @@ try {
   await profile.screenshot({ path: join(outputDir, 'web-desktop-profile-reviews.png'), animations: 'disabled' });
   accessibility.push(await axeAudit(profile, 'web-desktop-profile-reviews'));
   await profile.close();
+  }
 
+  if (captureWebManaged) {
+  const editor = await browser.newPage({ viewport: { width: 1440, height: 1100 }, reducedMotion: 'reduce' });
+  editor.on('pageerror', (error) => browserErrors.push({ surface: 'web-profile-editor', message: error.message }));
+  editor.on('console', (message) => {
+    if (message.type() !== 'error') return;
+    browserErrors.push({ surface: 'web-profile-editor-console', message: message.text() });
+  });
+  await installFixtures(editor, { authenticated: true });
+  await editor.goto('http://127.0.0.1:4184/mis-clasificados', { waitUntil: 'domcontentloaded' });
+  await editor.getByRole('heading', { name: 'Mis perfiles y clasificados' }).waitFor({ timeout: 30_000 });
+  await editor.getByText(managedProfile.name, { exact: true }).waitFor();
+  await editor.getByRole('button', { name: 'Editar' }).click();
+  await editor.getByRole('heading', { name: 'Editar perfil público' }).waitFor();
+  const managedNameInput = editor.getByLabel('Nombre público');
+  await managedNameInput.waitFor();
+  const managedNameValue = await managedNameInput.inputValue();
+  if (managedNameValue !== managedProfile.name) throw new Error(`Managed profile round trip diverged: ${managedNameValue}`);
+  await editor.getByRole('heading', { name: 'Especialidades' }).scrollIntoViewIfNeeded();
+  await editor.waitForTimeout(500);
+  await editor.screenshot({ path: join(outputDir, 'web-desktop-profile-editor.png'), animations: 'disabled' });
+  accessibility.push(await axeAudit(editor, 'web-desktop-profile-editor'));
+  await editor.close();
+  }
+
+  if (captureAll) {
   const narrow = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce', isMobile: true, hasTouch: true });
   narrow.on('pageerror', (error) => browserErrors.push({ surface: 'web-narrow', message: error.message }));
   await installFixtures(narrow);
@@ -291,10 +408,63 @@ try {
   await mobile.waitForTimeout(500);
   await mobile.screenshot({ path: join(outputDir, 'mobile-expo-directory-results.png'), animations: 'disabled' });
   await mobile.close();
+  }
 
-  writeFileSync(join(outputDir, 'accessibility-results.json'), `${JSON.stringify(accessibility, null, 2)}\n`);
-  writeFileSync(join(outputDir, 'browser-errors.json'), `${JSON.stringify(browserErrors, null, 2)}\n`);
-  console.log(JSON.stringify({ screenshots: 6, accessibility, browserErrors }, null, 2));
+  if (captureMobileManaged) {
+  console.log('[visuals] mobile-managed:start');
+  const mobileEditorContext = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    reducedMotion: 'reduce',
+    isMobile: true,
+    hasTouch: true,
+    storageState: {
+      cookies: [],
+      origins: [{ origin: 'http://127.0.0.1:4185', localStorage: [{ name: 'tdf-auth-token', value: 'synthetic-visual-token' }] }],
+    },
+  });
+  const mobileEditor = await mobileEditorContext.newPage();
+  mobileEditor.setDefaultTimeout(30_000);
+  mobileEditor.setDefaultNavigationTimeout(30_000);
+  console.log('[visuals] mobile-managed:page-ready');
+  mobileEditor.on('pageerror', (error) => browserErrors.push({ surface: 'expo-profile-editor', message: error.message }));
+  mobileEditor.on('console', (message) => {
+    if (message.type() !== 'error') return;
+    browserErrors.push({ surface: 'expo-profile-editor-console', message: message.text() });
+  });
+  await installFixtures(mobileEditor, { authenticated: true });
+  console.log('[visuals] mobile-managed:fixtures-ready');
+  await mobileEditor.goto('http://127.0.0.1:4185/directory/manage', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+  console.log(`[visuals] mobile-managed:navigated:${mobileEditor.url()}`);
+  try {
+    await mobileEditor.getByText('Mis perfiles y anuncios', { exact: true }).waitFor({ timeout: 30_000 });
+  } catch (error) {
+    console.error(`[visuals] mobile-managed:heading-timeout:${mobileEditor.url()}`);
+    const body = (await mobileEditor.locator('body').innerText({ timeout: 5_000 }).catch(() => '')).slice(0, 4_000);
+    throw new Error(`Mobile managed editor did not render at ${mobileEditor.url()}. Body: ${body}. Requests: ${JSON.stringify(fixtureRequests.slice(-30))}. Browser errors: ${JSON.stringify(browserErrors)}`, { cause: error });
+  }
+  console.log('[visuals] mobile-managed:heading-ready');
+  await mobileEditor.getByText(managedProfile.name, { exact: true }).waitFor();
+  console.log('[visuals] mobile-managed:profile-loaded');
+  await mobileEditor.getByText('Editar', { exact: true }).click();
+  await mobileEditor.getByLabel('Nombre público').waitFor();
+  await mobileEditor.getByLabel('Nombre público').scrollIntoViewIfNeeded();
+  await mobileEditor.waitForTimeout(500);
+  await mobileEditor.screenshot({ path: join(outputDir, 'mobile-expo-profile-editor.png'), animations: 'disabled' });
+  accessibility.push(await axeAudit(mobileEditor, 'mobile-expo-profile-editor'));
+  await mobileEditor.close();
+  await mobileEditorContext.close();
+  }
+
+  const artifacts = writeMusicDirectoryVisualArtifacts({
+    outputDir,
+    captureScope,
+    accessibility,
+    browserErrors,
+  });
+  console.log(JSON.stringify({ screenshots: captureAll ? 8 : 1, artifacts, accessibility, browserErrors }, null, 2));
+} catch (error) {
+  console.error('[visuals] capture failed before browser cleanup', error);
+  throw error;
 } finally {
   await browser.close();
   await Promise.all([

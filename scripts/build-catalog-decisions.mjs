@@ -100,6 +100,13 @@ function technicalRule(candidate) {
     return 'Marketplace fulfillment, custody, and actor discriminants form a closed state-machine and audit protocol enforced across code, OpenAPI, and database constraints; making them editable would weaken transition correctness.';
   }
   if (
+    candidate.file.endsWith('/TDF/App/Boot.hs')
+    && candidate.kind === 'haskell-list'
+    && candidate.name === 'automaticMigrationPlans'
+  ) {
+    return 'These labels identify the exhaustive compiled Persistent migration groups checked before startup writes; they are execution boundaries, not selectable business data, roles, permissions, labels, or assignments.';
+  }
+  if (
     candidate.file.endsWith('/MixingMasteringPage.test.tsx')
     && candidate.kind === 'object-registry'
     && candidate.name === 'packageDto'

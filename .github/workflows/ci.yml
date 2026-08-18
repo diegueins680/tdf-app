@@ -131,6 +131,18 @@ jobs:
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     container: haskell:9.10.3-bookworm
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_DB: tdf_hq_automatic_migration_test
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres -d tdf_hq_automatic_migration_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
     env:
       REQUIRE_STACK: '1'
       STACK_ROOT: ${{ github.workspace }}/.stack-root
@@ -142,7 +154,7 @@ jobs:
       - name: Install native build dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends libpq-dev pkg-config git curl ca-certificates
+          apt-get install -y --no-install-recommends libpq-dev postgresql-client nodejs pkg-config git curl ca-certificates
 
       - name: Restore immutable Stack dependencies
         uses: actions/cache@v4
@@ -160,6 +172,12 @@ jobs:
 
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
+
+      - name: Verify automatic migrations against the production schema
+        env:
+          TDF_AUTOMIG_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+          TDF_AUTOMIG_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+        run: bash scripts/test-automatic-migrations-production-schema.sh
 
       - name: Upload tested backend executable
         if: inputs.publish_backend_artifact == true

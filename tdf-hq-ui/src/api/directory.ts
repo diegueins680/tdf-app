@@ -9,6 +9,9 @@ export type DirectorySearchQuery = NonNullable<operations['searchDirectory']['pa
 export type DirectoryTaxonomyItem = components['schemas']['TaxonomyItem'];
 export type DirectoryTaxonomies = components['schemas']['DirectoryTaxonomies'];
 export type ManagedDirectoryProfile = components['schemas']['ManagedDirectoryProfile'];
+export type DirectoryProfileUpsert = components['schemas']['DirectoryProfileUpsert'];
+export type DirectoryPortfolioItem = components['schemas']['DirectoryPortfolioItem'];
+export type DirectoryProfileLink = components['schemas']['DirectoryProfileLink'];
 export type ManagedClassified = components['schemas']['ManagedClassified'];
 export type DirectoryInvitation = components['schemas']['DirectoryInvitation'];
 export type DirectoryReviewPage = components['schemas']['DirectoryReviewPage'];
@@ -50,6 +53,8 @@ export const Directory = {
   managedProfiles: () => get<ManagedDirectoryProfile[]>('/directory/profiles'),
   createProfile: (body: components['schemas']['DirectoryProfileUpsert'], idempotencyKey?: string) =>
     post<ManagedDirectoryProfile>('/directory/profiles', body, idempotencyHeaders(idempotencyKey)),
+  updateProfile: (profileId: string, body: components['schemas']['DirectoryProfileUpsert']) =>
+    put<ManagedDirectoryProfile>(`/directory/profiles/${encodeURIComponent(profileId)}`, body),
   setProfileStatus: (profileId: string, status: string) =>
     patch<ManagedDirectoryProfile>(`/directory/profiles/${encodeURIComponent(profileId)}/status`, { status }),
   managedClassifieds: () => get<ManagedClassified[]>('/directory/classifieds'),

@@ -272,6 +272,16 @@
       "introducedBy": "ae4b2317c0d450453dc20758e03d9942b6683a28"
     },
     {
+      "id": "2026-08-17_social_event_optional_end",
+      "path": "tdf-hq/sql/2026-08-17_social_event_optional_end.sql",
+      "introducedBy": "c48f388938eecd92272f377f02c673ac784461be"
+    },
+    {
+      "id": "2026-08-18_ddex_partner_legacy_compatibility",
+      "path": "tdf-hq/sql/2026-08-18_ddex_partner_legacy_compatibility.sql",
+      "introducedBy": "d0f7b80957610014fd436009247be3fc9e0904a0"
+    },
+    {
       "id": "2026-08-18_public_ticket_checkout_runtime",
       "path": "tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql",
       "introducedBy": "313c8f96950dba0fd1706f08ce4d0e971002ca80"

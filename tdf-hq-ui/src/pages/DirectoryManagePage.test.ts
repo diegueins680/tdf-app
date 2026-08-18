@@ -1,4 +1,4 @@
-import { classifiedFormError, moneyToMinor, taxonomyRequirements } from './DirectoryManagePage';
+import { classifiedFormError, moneyToMinor, profileFormError, taxonomyRequirements } from './DirectoryManagePage';
 
 const completeInput = {
   required: new Set<string>(),
@@ -56,5 +56,48 @@ describe('directory classified form policy', () => {
     expect(moneyToMinor('100.50', 2)).toBe(10050);
     expect(moneyToMinor('123', 0)).toBe(123);
     expect(moneyToMinor('-1', 2)).toBeUndefined();
+  });
+});
+
+describe('directory professional profile form policy', () => {
+  const validProfile = {
+    name: 'Bajista Quito',
+    cityIds: ['quito', 'cuenca'],
+    primaryCityId: 'quito',
+    onsite: true,
+    remote: true,
+    availableToTravel: false,
+    rateMin: '100',
+    rateMax: '250',
+    portfolio: [{ itemType: 'audio' as const, title: 'Demo', url: 'https://example.test/demo' }],
+    links: [{ label: 'Sitio', url: 'https://example.test' }],
+  };
+
+  it('requires an explicit primary city inside the service areas', () => {
+    expect(profileFormError({ ...validProfile, primaryCityId: 'guayaquil' }))
+      .toBe('Selecciona al menos una ciudad y marca la principal.');
+  });
+
+  it('rejects invalid ranges and URLs with embedded credentials', () => {
+    expect(profileFormError({ ...validProfile, rateMin: '-1' }))
+      .toBe('Las tarifas deben ser números no negativos.');
+    expect(profileFormError({ ...validProfile, rateMax: '50' }))
+      .toBe('La tarifa máxima no puede ser menor que la mínima.');
+    expect(profileFormError({ ...validProfile, links: [{ label: 'Privado', url: 'https://user:secret@example.test' }] }))
+      .toBe('Cada enlace necesita etiqueta y una URL HTTP(S) o ruta interna válida sin credenciales.');
+  });
+
+  it('accepts multiple service cities and closed typed media', () => {
+    expect(profileFormError(validProfile)).toBeNull();
+  });
+
+  it('allows an existing non-city primary area to survive an editor round trip', () => {
+    expect(profileFormError({ ...validProfile, cityIds: [], primaryCityId: '', hasPreservedPrimaryArea: true })).toBeNull();
+  });
+
+  it('accepts same-origin legacy media paths but rejects protocol-relative URLs', () => {
+    expect(profileFormError({ ...validProfile, links: [{ label: 'Media TDF', url: '/media/profile/demo.mp3' }] })).toBeNull();
+    expect(profileFormError({ ...validProfile, links: [{ label: 'Externo', url: '//evil.example/demo' }] }))
+      .toBe('Cada enlace necesita etiqueta y una URL HTTP(S) o ruta interna válida sin credenciales.');
   });
 });

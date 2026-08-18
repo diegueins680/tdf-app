@@ -22,7 +22,7 @@ The final command transcript is summarized here after the branch-wide verificati
 | Marketplace rental checkout runtime | `./scripts/test-marketplace-rental-checkout-runtime-migration.sh` | Pass on PostgreSQL 17: rerun, approved legacy-rate migration with append-only history, both marketplace domain gates enabled, same-version commercial mutation rejected, inclusive date exclusion, direct paid transition rejected, verified payment separated from custody, handoff/return condition reports, truthful deposit-deduction/refund-due states, non-zero deposit closure gate; rollback correctly refused after a live link |
 | Marketplace customer operations migration | `./scripts/test-marketplace-operations-migration.sh` | Pass on isolated local PostgreSQL 16 and CI PostgreSQL 17: rerun/clean rollback, customer-request transition guards, quote-only extensions, dispute/payment separation, independent deposit review, balanced liability settlement, credit note, no fabricated provider refund, and evidence-preserving rollback. CI run: `32093892269`. |
 | Service booking checkout runtime | `./scripts/test-service-booking-checkout-runtime-migration.sh` | Pass on PostgreSQL 17: rerun, inactive draft policy preservation, production-off domain gate, atomic resource hold, direct paid rejection, verified deposit confirmation separated from fulfillment, failed-provider-attempt expiry and resource release, reviewed manual evidence, independent approver, exact amount/currency binding, rollback refusal after reviewed evidence, follow-up rollback/reapply, and base rollback refusal after a canonical link |
-| Public event ticket checkout runtime | `TDF_TICKET_PGURL=postgresql:///tdf_ticket_checkout_test_20260818_5 ./scripts/test-public-ticket-checkout-runtime-migration.sh` | Pass on disposable local PostgreSQL 16: rerun, clean rollback/reapply, inactive policy preservation, immutable checkout snapshot, later tier-price change without snapshot drift, paid-without-evidence and unpaid-issuance rejection, explicit issuance, unique issued audit under duplicate callback, atomic keyed-buyer rate counter, exact-once tier/promotion release, and evidence-aware rollback refusal. Docker was not used because its daemon stalled; only its disposable test process was stopped, and the local fixture database was dropped immediately after this run. |
+| Public event ticket checkout runtime | `TDF_TICKET_PGURL=postgresql:///tdf_ticket_checkout_test_20260818_6 ./scripts/test-public-ticket-checkout-runtime-migration.sh` | Pass after current-main synchronization on disposable local PostgreSQL 16: rerun, clean rollback/reapply, inactive policy preservation, immutable checkout snapshot, later tier-price change without snapshot drift, paid-without-evidence and unpaid-issuance rejection, explicit issuance, unique issued audit under duplicate callback, atomic keyed-buyer rate counter, exact-once tier/promotion release, and evidence-aware rollback refusal. The local fixture database was dropped immediately after this run. |
 | Distribution accounting migration | `./scripts/test-distribution-accounting-migration.sh` | Pass: rollback, lifecycle, splits, package/evidence, royalty, separation of duties, payout gates |
 | Versioned revenue products | `./scripts/test-versioned-revenue-products-migration.sh` | Pass: inactive legacy Domo rate, approval/immutability, production flag |
 | Distribution pricing seeds | `./scripts/test-distribution-product-seeds-migration.sh` | Pass: 14 inactive bilingual seeds, activation/mutation/rollback gates |
@@ -32,7 +32,7 @@ The final command transcript is summarized here after the branch-wide verificati
 | Marketplace customer-operation backend build | CI `bash scripts/quality-backend.sh` on GHC 9.10.3 | Pass: executable linked across 153 modules, test component linked across 171 modules, and 2,367 examples completed with zero failures. The earlier local clean retry was stopped before disk exhaustion from an unrelated worktree; CI run `32093892269` is the authoritative clean result. |
 | Service booking backend invariants | Stack-built `tdf-hq-test --match 'service booking pricing and fulfillment invariants'` | Pass: 4 examples, including 100 property cases, zero failures; server minor-unit totals, duration/policy limits, overflow rejection, and no skipped deposit/fulfillment states |
 | Backend test/build | `stack test --fast` with the default optimized Stack profile | Pass after current-main synchronization: 2,360 examples, zero failures; executable and all 169 test compilation units compiled and linked |
-| Current public-ticket backend suite | `stack test --fast`; focused `--match=pricing` | Pass: 2,381 examples / 0 failures full suite and 27 / 0 focused; includes HMAC capability derivation, server pricing, fee allocation, tamper/overflow rejection, no issuance from browser/provider return, and terminal fulfillment properties |
+| Current public-ticket backend suite | `stack test --fast`; focused `--match=pricing` | Pass after current-main synchronization: 2,396 examples / 0 failures full suite and 27 / 0 focused; includes HMAC capability derivation, server pricing, fee allocation, tamper/overflow rejection, no issuance from browser/provider return, and terminal fulfillment properties |
 | Web regression/accessibility | Jest: five changed suites | Pass: 16 tests, zero failures |
 | Provider-event operator UI/access | Jest: provider-event page and access-control suites | Pass: 14 tests, zero failures; raw payload and merchant binding are absent from the UI contract |
 | Marketplace web regressions | Jest: marketplace admin, API, Datafast return and storefront suites | Pass: 71 tests, zero failures; canonical payment is read-only in operations, fulfillment uses its dedicated transition API, one checkout key survives provider switching, lookup secrets stay in headers/session storage, and missing lookup/provider failure never clear the cart |
@@ -44,16 +44,16 @@ The final command transcript is summarized here after the branch-wide verificati
 | Full web regression | `npm test --workspace=tdf-hq-ui` | Pass after current-main synchronization: 155 suites, 1,622 tests, zero failures |
 | Web type safety | `npm run typecheck:ui` | Pass |
 | Web production build | `npm run build --workspace=tdf-hq-ui` | Pass after current-main synchronization: 12,390 modules; bundle/secret gate 5 preloads and 407,515 gzip bytes |
-| Current public-ticket web production build | `npm run build` in `tdf-hq-ui` | Pass: 12,392 modules; ticket page lazy chunk 15.73 kB / 5.98 kB gzip; initial bundle gate 5 preloads and 408,018 gzip bytes |
-| Release/CI contracts | `npm run test:production-release`; `npm run test:ci-pipeline` | Pass: 39 + 12 tests |
+| Current public-ticket web production build | `npm run build` in `tdf-hq-ui` | Pass after current-main synchronization: 12,392 modules; ticket page lazy chunk 15.75 kB / 5.99 kB gzip; initial bundle gate 5 preloads and 408,030 gzip bytes |
+| Release/CI contracts | `npm run test:production-release`; `npm run test:ci-pipeline` | Pass: 43 + 15 tests |
 | Prior registered production batch | Restore schema-only fixture plus three synthetic published Records rows; read-only preflight; render/apply twice; schema verification before and after the rerun on PostgreSQL 17 | Pass before current-main synchronization: all 49/49 then-registered migrations were recorded, the exact second run skipped all 49 entries idempotently, marketplace sales/rentals and reviewed manual methods remained enabled, Datafast/PayPal and service bookings remained disabled, active booking policies and provider bindings remained zero |
-| Current merged migration manifest | JSON uniqueness/immutability contracts, dedicated PostgreSQL 17 rehearsals for the three current-main additions, and the isolated PostgreSQL 16 marketplace-operations rehearsal | Pass: 53 unique manifest entries; event-research ingestion passed seed, pilot-cap, idempotency, replacement, rollback and reapply checks; music-directory migrations passed restart, backfill, rollback/reapply, privacy, claim, verified-review, alert, merge, search-volume, taxonomy, invitation, blocking and expiry checks; marketplace operations passed the evidence and accounting gates listed above. A new aggregate 53-entry snapshot apply remains a required staging exercise. |
-| OpenAPI/generated clients | `npm run generate:api` for web and mobile | Pass: canonical service-storefront, marketplace sale/rental, customer request/review, manual deposit settlement, booking/course/public-ticket checkout, Datafast/PayPal actions, manual-evidence submission, protected finance projection, independent review, and music-directory contracts generated for both clients; mobile contract committed at `9941152` |
+| Current merged migration manifest | JSON uniqueness/immutability contracts, dedicated migration rehearsals, and production release tests | Pass: 57 unique manifest entries including current-main's optional event-end, DDEX compatibility and automatic-migration work plus the public-ticket runtime. The earlier aggregate snapshot evidence is revision-specific; a new aggregate 57-entry anonymized-snapshot apply remains required in staging. |
+| OpenAPI/generated clients | `npm run generate:api` for web and mobile | Pass: canonical service-storefront, marketplace sale/rental, customer request/review, manual deposit settlement, booking/course/public-ticket checkout, Datafast/PayPal actions, manual-evidence submission, protected finance projection, independent review, and music-directory contracts generated for both clients; merged mobile contract committed at `5f67f61` |
 | Mobile type safety | `npm run typecheck:mobile` | Pass |
 | Mobile regression | `npm run test:mobile -- --runInBand` | Pass after current-main synchronization: 51 suites, 264 tests, zero failures |
 | Feature-registry audit | `npm run audit:features` | Pass: 136 features, 155 web routes and 44 mobile routes; public ticket checkout/tracking routes are classified and the native legacy-flow exception is explicit |
-| Formal-method audit | `npm run verify:formal` | Pass: 8,446 findings scanned, 0 critical, 0 errors; 286 repository warnings remain advisory |
-| Catalog authority audit | `npm run audit:catalog-lists` | Pass: 846 unique reviewed decisions, no stale or unreviewed entries; ticket payment/fulfillment protocols and typed client methods have reviewed technical-constant decisions, while payment-method display availability remains tracked as persisted capability configuration |
+| Formal-method audit | `npm run verify:formal` | Pass: 8,538 findings scanned, 0 critical, 0 errors; 299 repository warnings remain advisory |
+| Catalog authority audit | `npm run audit:catalog-lists` | Pass: 857 unique reviewed decisions, no stale or unreviewed entries; ticket payment/fulfillment protocols and typed client methods have reviewed technical-constant decisions, while payment-method display availability remains tracked as persisted capability configuration |
 
 The focused backend groups were: service storefront (5), checkout state machine (6), distribution
 state machine (5), DDEX intake truthfulness (3), ERN parser (20), and business rules (11). A first
@@ -137,13 +137,13 @@ lookup capability; the public tracker continues to say unpaid while evidence awa
 protected marketplace operations screen exposes the canonical finance projection and permits
 approve/reject only through the Invoicing boundary and an independent reviewer. Approval is refused
 after the asset hold expires or when another payment already won, and those conflicts remain
-reconciliation work rather than fabricated payment. After synchronizing current `main`, final local
+reconciliation work rather than fabricated payment. After that earlier synchronization, local
 verification passed 2,360 backend examples, 155 web suites/1,622 tests, 51 mobile suites/264 tests,
 the three marketplace/manual database rehearsals, the event-research and music-directory migration
 rehearsals, production UI build, feature-registry audit, release/CI contracts, formal audit and
-catalog-authority audit. The merged manifest contains 53 unique immutable entries; the earlier
-49-entry aggregate apply evidence remains valid for that exact revision, while an aggregate
-53-entry snapshot apply is explicitly still required in staging. No external provider call, manual
+catalog-authority audit. The current merged manifest contains 57 unique immutable entries; the
+earlier 49-entry aggregate apply evidence remains valid for that exact revision, while an aggregate
+57-entry snapshot apply is explicitly still required in staging. No external provider call, manual
 payment approval, inventory handoff, deposit refund, staging deployment or production mutation
 occurred.
 
@@ -164,9 +164,10 @@ The 2026-08-18 public-ticket follow-up adds a bilingual guest storefront and sec
 existing public event detail. The server requires a secret-manager-backed lookup capability,
 approved immutable event policy, atomic event/tier/promotion hold, shared Datafast/PayPal binding,
 and verified canonical payment before separately issuing tickets. Organizer proceeds remain a
-payable liability and settlement is disabled. The full backend suite passed 2,381 examples, the
-targeted web/API suites passed six tests, both OpenAPI clients regenerated, mobile type checking and
-the production web build passed, and the feature audit covered 136 features/155 web routes. The
+payable liability and settlement is disabled. The synchronized full backend suite passed 2,396
+examples, the targeted web/API suites passed six tests, both OpenAPI clients regenerated, all 53
+mobile suites/275 tests and mobile type checking passed, the production web build passed, and the
+feature audit covered 136 features/155 web routes. The
 dedicated PostgreSQL 16 rehearsal used only synthetic data and its disposable database was removed.
 No policy was activated, provider was contacted, payment captured, ticket issued, organizer settled,
 staging deployment performed, or production state changed.

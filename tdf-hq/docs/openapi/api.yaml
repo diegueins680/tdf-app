@@ -5444,7 +5444,7 @@ components:
         title: { type: string }
         description: { type: string, nullable: true }
         startsAt: { type: string, format: date-time }
-        endsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time, nullable: true }
         timezone: { type: string, nullable: true }
         venueName: { type: string, nullable: true }
         venueAddress: { type: string, nullable: true }
@@ -6950,7 +6950,7 @@ components:
     SocialEvent:
       type: object
       additionalProperties: false
-      required: [eventTitle, eventStart, eventEnd, eventTypeId, eventArtists]
+      required: [eventTitle, eventStart, eventTypeId, eventArtists]
       properties:
         eventId:
           type: string
@@ -6969,6 +6969,8 @@ components:
         eventEnd:
           type: string
           format: date-time
+          nullable: true
+          description: Optional confirmed end. Omit it or send null when no official end or duration is known; clients must not infer one.
         eventTimezone:
           type: string
           nullable: true

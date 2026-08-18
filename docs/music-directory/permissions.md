@@ -26,7 +26,8 @@ esta evaluación.
 ## Capacidades de manager
 
 - `view_private`: leer configuración privada mínima del perfil.
-- `edit`: editar presentación y taxonomías.
+- `edit`: editar presentación, experiencia, portafolio, tarifas, disponibilidad, taxonomías e
+  información geográfica pública aproximada; nunca PII de `Party` ni roles internos.
 - `publish`: publicar/pausar y publicar anuncios.
 - `contact`: postular, invitar o aceptar contacto en nombre del perfil.
 - `manage`: conceder/revocar managers; no permite concederse roles internos.

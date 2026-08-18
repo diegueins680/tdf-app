@@ -1,5 +1,18 @@
 # syntax=docker/dockerfile:1
 
+# Render the reviewed, checksum-pinned SQL manifest once at image build time.
+# The runtime image needs only psql, not Node or the repository source tree.
+FROM node:22-bookworm-slim AS migration-bundle
+ARG SOURCE_COMMIT
+WORKDIR /repo
+COPY scripts/production-migrations.json scripts/production-migrations.json
+COPY scripts/render-production-migration-batch.mjs scripts/render-production-migration-batch.mjs
+COPY scripts/lib/production-release.mjs scripts/lib/production-release.mjs
+COPY tdf-hq/sql tdf-hq/sql
+RUN set -eu; \
+    printf '%s' "$SOURCE_COMMIT" | grep -Eq '^[0-9a-f]{40}$'; \
+    SOURCE_COMMIT="$SOURCE_COMMIT" node scripts/render-production-migration-batch.mjs > /production-migrations.sql
+
 # Package the executable already compiled and tested by the backend CI job.
 # This stage deliberately contains no Haskell toolchain.
 FROM debian:bookworm-slim
@@ -10,21 +23,26 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get -o Acquire::AllowInsecureRepositories=true -o Acquire::Check-Valid-Until=false update && \
     apt-get -o Acquire::AllowInsecureRepositories=true --allow-unauthenticated install -y --no-install-recommends \
-    libpq5 ca-certificates tzdata libxml2-utils && \
+    libpq5 postgresql-client ca-certificates tzdata libxml2-utils && \
     rm -rf /var/lib/apt/lists/*
 
 COPY tdf-hq/.release/tdf-hq-exe /app/tdf-hq-exe
 COPY tdf-hq/docs /app/docs
 COPY tdf-hq/assets /app/assets
+COPY tdf-hq/production-entrypoint.sh /app/production-entrypoint.sh
+COPY --from=migration-bundle /production-migrations.sql /app/production-migrations.sql
 
-RUN chmod 0755 /app/tdf-hq-exe && \
+RUN chmod 0755 /app/tdf-hq-exe /app/production-entrypoint.sh && \
     ldd /app/tdf-hq-exe | tee /tmp/tdf-hq-ldd.txt && \
     ! grep -q 'not found' /tmp/tdf-hq-ldd.txt
 
 # Keep volatile release metadata after the reusable runtime and binary layers.
-ARG SOURCE_COMMIT=dev
-ARG BUILD_TIME=unknown
-RUN printf '%s\n' "$SOURCE_COMMIT" > /app/COMMIT && \
+ARG SOURCE_COMMIT
+ARG BUILD_TIME
+RUN set -eu; \
+    printf '%s' "$SOURCE_COMMIT" | grep -Eq '^[0-9a-f]{40}$'; \
+    printf '%s' "$BUILD_TIME" | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'; \
+    printf '%s\n' "$SOURCE_COMMIT" > /app/COMMIT; \
     printf '%s\n' "$BUILD_TIME" > /app/BUILD_TIME
 
 ENV SOURCE_COMMIT=${SOURCE_COMMIT}
@@ -32,8 +50,9 @@ ENV GIT_SHA=${SOURCE_COMMIT}
 ENV BUILD_TIME=${BUILD_TIME}
 ENV APP_PORT=8080
 ENV RUN_MIGRATIONS=false
+ENV AUTO_APPLY_PRODUCTION_MIGRATIONS=true
 
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
-CMD ["/bin/sh","-c","APP_PORT=${PORT:-8080} /app/tdf-hq-exe"]
+CMD ["/app/production-entrypoint.sh"]
