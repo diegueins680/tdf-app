@@ -50,6 +50,7 @@
     "test:formal": "node --test scripts/__tests__/formal-methods-audit.test.mjs",
     "test:production-release": "node --test scripts/__tests__/production-entrypoint.test.mjs scripts/__tests__/production-release.test.mjs",
     "test:ci-pipeline": "node --test scripts/__tests__/ci-change-scope.test.mjs scripts/__tests__/ci-pipeline.test.mjs",
+    "test:music-directory-visual-artifacts": "node --test scripts/__tests__/music-directory-visual-artifacts.test.mjs",
     "artists:enrich": "node scripts/artist-enrichment.mjs",
     "test:artist-enrichment": "node --test scripts/__tests__/artist-enrichment.test.mjs",
     "meta:review:packet": "node scripts/meta-app-review-packet.mjs",
