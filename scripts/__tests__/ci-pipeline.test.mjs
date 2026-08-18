@@ -54,6 +54,13 @@ test('backend image packages the tested artifact instead of recompiling Haskell'
   assert.doesNotMatch(runtimeDockerfile, /stack (?:--[^\n]+ )?build/);
 });
 
+test('automatic migration integration matches the persisted production locale', async () => {
+  const integration = await source('scripts/test-automatic-migrations-production-schema.sh');
+  assert.equal(integration.match(/DEFAULT_LOCALE=es/g)?.length, 1);
+  assert.match(integration, /AUTO_APPLY_PRODUCTION_MIGRATIONS=true/);
+  assert.match(integration, /production-entrypoint\.sh/);
+});
+
 test('backend image receives deterministic, non-empty release metadata', async () => {
   const workflow = await source('.github/workflows/build.yml');
   assert.match(workflow, /id: image-metadata/);

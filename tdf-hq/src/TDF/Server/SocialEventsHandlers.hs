@@ -4674,24 +4674,23 @@ socialEventsServer user =
         orderKey <- parseKeyOr400 "ticket order" orderIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
-        mOrder <- liftIO $ runSqlPool (get orderKey) envPool
         let manager = isEventManager currentPartyId eventVal
-            ownsEventOrder =
-                maybe
-                    False
-                    ( \order ->
-                        eventTicketOrderEventId order == eventKey
-                            && eventTicketOrderBuyerPartyId order == Just currentPartyId
-                    )
-                    mOrder
-        unless (manager || ownsEventOrder) $
+        mOrder <- liftIO $ runSqlPool (get orderKey) envPool
+        order <- case mOrder of
+            Just order -> pure order
+            Nothing -> do
+                unless manager $ requireEventVisibleToUser eventKey
+                throwError err404{errBody = "Ticket order not found"}
+        let belongsToEvent = eventTicketOrderEventId order == eventKey
+            ownsOrder = eventTicketOrderBuyerPartyId order == Just currentPartyId
+            refundableOrder = eventTicketOrderStatus order == "paid"
+        unless (manager || (belongsToEvent && ownsOrder && refundableOrder)) $
             requireEventVisibleToUser eventKey
-        order <- maybe (throwError err404{errBody = "Ticket order not found"}) pure mOrder
-        when (eventTicketOrderEventId order /= eventKey) $
+        unless belongsToEvent $
             throwError err400{errBody = "Ticket order does not belong to this event"}
-        when (eventTicketOrderStatus order /= "paid") $
+        unless refundableOrder $
             throwError err400{errBody = "Only paid orders can be refunded"}
-        unless (manager || eventTicketOrderBuyerPartyId order == Just currentPartyId) $
+        unless (manager || ownsOrder) $
             throwError err403{errBody = "You can only request refunds for your own orders"}
         mExisting <-
             liftIO $
@@ -4737,7 +4736,7 @@ socialEventsServer user =
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         let manager = isEventManager currentPartyId eventVal
-        orders <-
+        candidateOrders <-
             if manager
                 then
                     liftIO $
@@ -4749,19 +4748,43 @@ socialEventsServer user =
                         runSqlPool
                             (selectList [EventTicketOrderEventId ==. eventKey, EventTicketOrderBuyerPartyId ==. Just currentPartyId] [])
                             envPool
+        let candidateOrderIds = map entityKey candidateOrders
+        candidateRefunds <-
+            liftIO $
+                runSqlPool
+                    (selectList [TicketRefundRequestOrderId <-. candidateOrderIds] [Desc TicketRefundRequestCreatedAt])
+                    envPool
+        let refundOrderIds =
+                Set.fromList
+                    [ ticketRefundRequestOrderId refundRow
+                    | Entity _ refundRow <- candidateRefunds
+                    ]
+            orders =
+                if manager
+                    then candidateOrders
+                    else
+                        filter
+                            ( \orderEntity ->
+                                let orderRow = entityVal orderEntity
+                                 in eventTicketOrderStatus orderRow `elem` ["paid", "refunded"]
+                                        || entityKey orderEntity `Set.member` refundOrderIds
+                            )
+                            candidateOrders
         when (not manager && null orders) $
             requireEventVisibleToUser eventKey
         let orderIds = map entityKey orders
+            visibleOrderIds = Set.fromList orderIds
             orderCurrencies =
                 Map.fromList
                     [ (entityKey orderEntity, eventTicketOrderCurrency (entityVal orderEntity))
                     | orderEntity <- orders
                     ]
-        refunds <-
-            liftIO $
-                runSqlPool
-                    (selectList [TicketRefundRequestOrderId <-. orderIds] [Desc TicketRefundRequestCreatedAt])
-                    envPool
+            refunds =
+                filter
+                    ( \(Entity _ refundRow) ->
+                        ticketRefundRequestOrderId refundRow `Set.member` visibleOrderIds
+                    )
+                    candidateRefunds
         forM refunds $ \refundEntity@(Entity _ refundRow) ->
             case Map.lookup (ticketRefundRequestOrderId refundRow) orderCurrencies of
                 Just currency -> pure (refundEntityToDTO currency refundEntity)
@@ -7690,8 +7713,62 @@ decodeStoredEventMetadata (Just raw)
     | T.null (T.strip raw) = Right emptyEventMetadata
     | otherwise =
         case Aeson.eitherDecodeStrict' (TE.encodeUtf8 raw) of
-            Right metadata -> Right metadata
+            Right metadata ->
+                case duplicateTopLevelJsonKeys raw of
+                    [] -> Right metadata
+                    duplicates ->
+                        Left
+                            ( "Stored event metadata contains duplicate fields: "
+                                <> T.intercalate ", " duplicates
+                            )
             Left err -> Left (storedEventMetadataDecodeError err)
+
+duplicateTopLevelJsonKeys :: T.Text -> [T.Text]
+duplicateTopLevelJsonKeys raw =
+    nub
+        [ key
+        | key <- keys
+        , length (filter (== key) keys) > 1
+        ]
+  where
+    keys = topLevelJsonObjectKeys (T.unpack raw)
+
+-- Aeson intentionally materializes objects as a key map, so duplicate key
+-- spelling is no longer observable after decoding. Scan only the already
+-- validated top-level object syntax and decode each key literal with Aeson so
+-- escaped spellings compare exactly as the object decoder sees them.
+topLevelJsonObjectKeys :: String -> [T.Text]
+topLevelJsonObjectKeys = reverse . go (0 :: Int) False []
+  where
+    go _ _ keys [] = keys
+    go depth expectsKey keys ('"' : rest) =
+        let (literal, remaining) = takeJsonStringLiteral rest
+            decodedKey =
+                Aeson.eitherDecodeStrict' (TE.encodeUtf8 (T.pack literal))
+                    :: Either String T.Text
+            nextKeys =
+                case (depth == 1 && expectsKey, decodedKey) of
+                    (True, Right key) -> key : keys
+                    _ -> keys
+         in go depth False nextKeys remaining
+    go depth _ keys ('{' : rest) =
+        go (depth + 1) (depth == 0) keys rest
+    go depth expectsKey keys ('[' : rest) =
+        go (depth + 1) expectsKey keys rest
+    go depth expectsKey keys ('}' : rest) =
+        go (max 0 (depth - 1)) expectsKey keys rest
+    go depth expectsKey keys (']' : rest) =
+        go (max 0 (depth - 1)) expectsKey keys rest
+    go 1 _ keys (',' : rest) = go 1 True keys rest
+    go depth expectsKey keys (_ : rest) = go depth expectsKey keys rest
+
+    takeJsonStringLiteral = consume ['"'] False
+      where
+        consume acc _ [] = (reverse acc, [])
+        consume acc True (char : rest) = consume (char : acc) False rest
+        consume acc False ('\\' : rest) = consume ('\\' : acc) True rest
+        consume acc False ('"' : rest) = (reverse ('"' : acc), rest)
+        consume acc False (char : rest) = consume (char : acc) False rest
 
 storedEventMetadataDecodeError :: String -> T.Text
 storedEventMetadataDecodeError rawError =
@@ -8281,37 +8358,182 @@ selectVisibleSocialEvents filters dateOrder limit offset = do
     query <- getConnLimitOffset (limit, offset) orderedQuery
     rawSql query filterValues
 
+-- Keep the imported-event visibility predicate correlated with each candidate
+-- row. This avoids expanding the complete retained import history into a NOT IN
+-- parameter list on every page request. Both supported databases validate the
+-- complete canonical metadata shape before reading isPublic, so malformed or
+-- unsupported metadata fails closed.
 visibleImportedMetadataClause :: T.Text -> T.Text -> T.Text
 visibleImportedMetadataClause backendName metadataColumn
-    | "postgres" `T.isInfixOf` backendName =
-        "CASE WHEN "
-            <> metadataColumn
-            <> " IS NULL THEN TRUE WHEN pg_input_is_valid("
-            <> metadataColumn
-            <> ", 'jsonb') THEN CASE WHEN jsonb_typeof(("
-            <> metadataColumn
-            <> ")::jsonb) <> 'object' THEN FALSE WHEN NOT (("
-            <> metadataColumn
-            <> ")::jsonb ? 'isPublic') THEN TRUE WHEN jsonb_typeof(("
-            <> metadataColumn
-            <> ")::jsonb -> 'isPublic') = 'null' THEN TRUE WHEN jsonb_typeof(("
-            <> metadataColumn
-            <> ")::jsonb -> 'isPublic') = 'boolean' THEN (("
-            <> metadataColumn
-            <> ")::jsonb ->> 'isPublic')::boolean ELSE FALSE END ELSE FALSE END"
-    | "sqlite" `T.isInfixOf` backendName =
-        "CASE WHEN "
-            <> metadataColumn
-            <> " IS NULL THEN 1 WHEN json_valid("
-            <> metadataColumn
-            <> ") AND json_type("
-            <> metadataColumn
-            <> ", '$') = 'object' THEN CASE WHEN json_type("
-            <> metadataColumn
-            <> ", '$.isPublic') IS NULL OR json_type("
-            <> metadataColumn
-            <> ", '$.isPublic') IN ('null', 'true') THEN 1 ELSE 0 END ELSE 0 END"
+    | "postgres" `T.isInfixOf` backendName = postgresVisibleImportedMetadataClause metadataColumn
+    | "sqlite" `T.isInfixOf` backendName = sqliteVisibleImportedMetadataClause metadataColumn
     | otherwise = "1=0"
+
+sqliteVisibleImportedMetadataClause :: T.Text -> T.Text
+sqliteVisibleImportedMetadataClause metadataColumn =
+    "CASE"
+        <> " WHEN "
+        <> metadataColumn
+        <> " IS NULL OR trim("
+        <> metadataColumn
+        <> ")='' THEN 1"
+        <> " WHEN NOT json_valid("
+        <> metadataColumn
+        <> ") THEN 0"
+        <> " ELSE json_type("
+        <> metadataColumn
+        <> ")='object'"
+        <> " AND NOT EXISTS (SELECT 1 FROM json_each("
+        <> metadataColumn
+        <> ") AS metadata_field WHERE metadata_field.key"
+        <> " NOT IN ('ticketUrl','imageUrl','isPublic','currency','budgetCents'))"
+        <> " AND (SELECT count(*) FROM json_each("
+        <> metadataColumn
+        <> "))=(SELECT count(DISTINCT metadata_field.key) FROM json_each("
+        <> metadataColumn
+        <> ") AS metadata_field)"
+        <> sqliteOptionalMetadataType metadataColumn "ticketUrl" "text"
+        <> sqliteOptionalMetadataType metadataColumn "imageUrl" "text"
+        <> sqliteOptionalMetadataType metadataColumn "currency" "text"
+        <> sqliteOptionalIntegralMetadataType metadataColumn "budgetCents"
+        <> " AND (json_type("
+        <> metadataColumn
+        <> ",'$.isPublic') IS NULL OR json_type("
+        <> metadataColumn
+        <> ",'$.isPublic') IN ('null','true'))"
+        <> " END"
+
+sqliteOptionalMetadataType :: T.Text -> T.Text -> T.Text -> T.Text
+sqliteOptionalMetadataType metadataColumn fieldName expectedType =
+    " AND (json_type("
+        <> metadataColumn
+        <> ",'$."
+        <> fieldName
+        <> "') IS NULL OR json_type("
+        <> metadataColumn
+        <> ",'$."
+        <> fieldName
+        <> "') IN ('null','"
+        <> expectedType
+        <> "'))"
+
+sqliteOptionalIntegralMetadataType :: T.Text -> T.Text -> T.Text
+sqliteOptionalIntegralMetadataType metadataColumn fieldName =
+    " AND ("
+        <> fieldType
+        <> " IS NULL OR "
+        <> fieldType
+        <> "='null' OR ("
+        <> fieldType
+        <> " IN ('integer','real') AND "
+        <> sqliteJsonNumberFitsInt64 metadataColumn fieldName
+        <> "))"
+  where
+    fieldPath = "'$." <> fieldName <> "'"
+    fieldType = "json_type(" <> metadataColumn <> "," <> fieldPath <> ")"
+
+-- SQLite exposes JSON real numbers as binary doubles, which cannot distinguish
+-- every Int64 or preserve large fractional tokens. Parse the original JSON
+-- number text into a decimal coefficient and scale so visibility follows
+-- Aeson's exact Int decoder at both fractional and 64-bit boundaries.
+sqliteJsonNumberFitsInt64 :: T.Text -> T.Text -> T.Text
+sqliteJsonNumberFitsInt64 metadataColumn fieldName =
+    "EXISTS (WITH number_token(value) AS (SELECT lower("
+        <> metadataColumn
+        <> "->"
+        <> fieldPath
+        <> ")), number_parts(value,mantissa,exponent_value) AS (SELECT value,"
+        <> "CASE WHEN instr(value,'e')=0 THEN value ELSE substr(value,1,instr(value,'e')-1) END,"
+        <> "CASE WHEN instr(value,'e')=0 THEN 0 ELSE CAST(substr(value,instr(value,'e')+1) AS INTEGER) END"
+        <> " FROM number_token), scaled_number(value,coefficient,decimal_scale) AS (SELECT value,"
+        <> "replace(ltrim(mantissa,'-'),'.',''),"
+        <> "(CASE WHEN instr(ltrim(mantissa,'-'),'.')=0 THEN 0 ELSE length(ltrim(mantissa,'-'))"
+        <> "-instr(ltrim(mantissa,'-'),'.') END)-exponent_value FROM number_parts),"
+        <> " integral_number(value,coefficient,decimal_scale,significant_coefficient) AS (SELECT value,"
+        <> "coefficient,decimal_scale,ltrim(coefficient,'0') FROM scaled_number),"
+        <> " bounded_number(value,significant_coefficient,integer_digit_count,integer_digits,max_abs) AS (SELECT value,"
+        <> "significant_coefficient,length(significant_coefficient)-decimal_scale,"
+        <> "CASE WHEN decimal_scale>=0 THEN substr(significant_coefficient,1,length(significant_coefficient)-decimal_scale)"
+        <> " ELSE significant_coefficient||substr('0000000000000000000',1,-decimal_scale) END,"
+        <> "CASE WHEN substr(value,1,1)='-' THEN '9223372036854775808' ELSE '9223372036854775807' END"
+        <> " FROM integral_number WHERE significant_coefficient='' OR decimal_scale<=0 OR decimal_scale"
+        <> "<=length(coefficient)-length(rtrim(coefficient,'0'))) SELECT 1 FROM bounded_number"
+        <> " WHERE significant_coefficient='' OR integer_digit_count<19 OR (integer_digit_count=19"
+        <> " AND integer_digits<=max_abs COLLATE BINARY))"
+  where
+    fieldPath = "'$." <> fieldName <> "'"
+
+postgresVisibleImportedMetadataClause :: T.Text -> T.Text
+postgresVisibleImportedMetadataClause metadataColumn =
+    "CASE"
+        <> " WHEN "
+        <> metadataColumn
+        <> " IS NULL OR btrim("
+        <> metadataColumn
+        <> ")='' THEN TRUE"
+        <> " WHEN NOT pg_input_is_valid("
+        <> metadataColumn
+        <> ",'jsonb') THEN FALSE"
+        <> " ELSE jsonb_typeof("
+        <> jsonMetadata
+        <> ")='object'"
+        <> " AND (SELECT count(*) FROM json_each(("
+        <> metadataColumn
+        <> ")::json))=(SELECT count(DISTINCT metadata_field.key) FROM json_each(("
+        <> metadataColumn
+        <> ")::json) AS metadata_field)"
+        <> " AND NOT EXISTS (SELECT 1 FROM jsonb_object_keys("
+        <> jsonMetadata
+        <> ") AS metadata_key WHERE metadata_key"
+        <> " NOT IN ('ticketUrl','imageUrl','isPublic','currency','budgetCents'))"
+        <> postgresOptionalMetadataType jsonMetadata "ticketUrl" "string"
+        <> postgresOptionalMetadataType jsonMetadata "imageUrl" "string"
+        <> postgresOptionalMetadataType jsonMetadata "currency" "string"
+        <> postgresOptionalIntegralMetadataType jsonMetadata "budgetCents"
+        <> " AND (jsonb_typeof("
+        <> jsonMetadata
+        <> "->'isPublic') IS NULL OR jsonb_typeof("
+        <> jsonMetadata
+        <> "->'isPublic')='null' OR "
+        <> jsonMetadata
+        <> "->'isPublic'='true'::jsonb)"
+        <> " END"
+  where
+    jsonMetadata = "(" <> metadataColumn <> ")::jsonb"
+
+postgresOptionalMetadataType :: T.Text -> T.Text -> T.Text -> T.Text
+postgresOptionalMetadataType jsonMetadata fieldName expectedType =
+    " AND (jsonb_typeof("
+        <> jsonMetadata
+        <> "->'"
+        <> fieldName
+        <> "') IS NULL OR jsonb_typeof("
+        <> jsonMetadata
+        <> "->'"
+        <> fieldName
+        <> "') IN ('null','"
+        <> expectedType
+        <> "'))"
+
+postgresOptionalIntegralMetadataType :: T.Text -> T.Text -> T.Text
+postgresOptionalIntegralMetadataType jsonMetadata fieldName =
+    " AND ("
+        <> fieldType
+        <> " IS NULL OR "
+        <> fieldType
+        <> "='null' OR CASE WHEN "
+        <> fieldType
+        <> "='number' THEN "
+        <> numericValue
+        <> "=trunc("
+        <> numericValue
+        <> ") AND "
+        <> numericValue
+        <> " BETWEEN -9223372036854775808 AND 9223372036854775807 ELSE FALSE END)"
+  where
+    fieldValue = jsonMetadata <> "->'" <> fieldName <> "'"
+    fieldType = "jsonb_typeof(" <> fieldValue <> ")"
+    numericValue = "(" <> jsonMetadata <> "->>'" <> fieldName <> "')::numeric"
 
 isImportedEventHidden :: SocialEventId -> SqlPersistT IO Bool
 isImportedEventHidden eventKey = do

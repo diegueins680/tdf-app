@@ -236,7 +236,7 @@ DdexPartner
   -- Rollback evidence retained by the governed DDEX cutover. Current writers
   -- must keep this empty; canonical version policy lives in
   -- DdexPartnerStandardVersion.
-  allowedVersionsLegacy [Text] sql=allowed_versions sqltype=text[] default='{}'
+  allowedVersionsLegacy [Text] sql=allowed_versions sqltype=text[] default='{}' MigrationOnly
   rulesJson Text Maybe  -- JSONB
   namingConvention Text Maybe
   isActive Bool

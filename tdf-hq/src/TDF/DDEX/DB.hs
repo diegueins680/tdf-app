@@ -174,7 +174,6 @@ insertPartner name dpid allowedVersionIds = do
   partnerId <- insert $ DdexPartner
     { ddexPartnerName = name
     , ddexPartnerDpid = dpid
-    , ddexPartnerAllowedVersionsLegacy = []
     , ddexPartnerRulesJson = Nothing
     , ddexPartnerNamingConvention = Nothing
     , ddexPartnerIsActive = True
