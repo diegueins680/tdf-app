@@ -103,6 +103,7 @@ import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
 import qualified TDF.Commerce.CheckoutStore as CheckoutStore
 import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
 import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
+import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
 import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Commerce.ProviderEventStore as ProviderEventStore
 import qualified TDF.Commerce.ProviderEventWorker as ProviderEventWorker
@@ -1258,6 +1259,70 @@ main = hspec $ do
               MarketplaceRentals.RentalReadyForHandoff
               MarketplaceRentals.RentalCheckedOut
               `shouldBe` Right ()
+
+        it "allows operational disputes after return without implying a payment chargeback" $ do
+            MarketplaceRentals.validateMarketplaceRentalTransition
+              MarketplaceRentals.RentalReturnedPendingInspection
+              MarketplaceRentals.RentalDisputed
+              `shouldBe` Right ()
+            MarketplaceRentals.validateMarketplaceRentalTransition
+              MarketplaceRentals.RentalDepositRefundDue
+              MarketplaceRentals.RentalDisputed
+              `shouldBe` Right ()
+
+    describe "marketplace customer request and deposit settlement invariants" $ do
+        it "permits only domain-appropriate customer requests" $ do
+            let currentEnd = fromGregorian 2030 1 10
+            MarketplaceOperations.validateMarketplaceCustomerRequest
+              MarketplaceOperations.SaleReturnRequest "sale" "delivered" Nothing Nothing
+              `shouldBe` Right ()
+            MarketplaceOperations.validateMarketplaceCustomerRequest
+              MarketplaceOperations.SaleReturnRequest "rental" "delivered" Nothing Nothing
+              `shouldSatisfy` isLeft
+            MarketplaceOperations.validateMarketplaceCustomerRequest
+              MarketplaceOperations.RentalExtensionRequest "rental" "checked_out"
+              (Just currentEnd) (Just (addDays 2 currentEnd))
+              `shouldBe` Right ()
+            MarketplaceOperations.validateMarketplaceCustomerRequest
+              MarketplaceOperations.RentalExtensionRequest "rental" "checked_out"
+              (Just currentEnd) (Just currentEnd)
+              `shouldSatisfy` isLeft
+
+        it "keeps rental extensions in quote review instead of silently changing custody dates" $ do
+            MarketplaceOperations.validateMarketplaceCustomerReview
+              MarketplaceOperations.RentalExtensionRequest
+              MarketplaceOperations.CustomerRequestSubmitted
+              MarketplaceOperations.CustomerRequestNeedsQuoteAction
+              `shouldBe` Right MarketplaceOperations.CustomerRequestNeedsQuote
+            MarketplaceOperations.validateMarketplaceCustomerReview
+              MarketplaceOperations.RentalExtensionRequest
+              MarketplaceOperations.CustomerRequestSubmitted
+              MarketplaceOperations.CustomerRequestApprove
+              `shouldSatisfy` isLeft
+
+        it "requires exact deposit arithmetic and an independent reviewer" $ do
+            MarketplaceOperations.validateMarketplaceDepositSettlement
+              MarketplaceOperations.DepositBankTransfer 500 100 400
+              `shouldBe` Right ()
+            MarketplaceOperations.validateMarketplaceDepositSettlement
+              MarketplaceOperations.DepositForfeiture 500 500 0
+              `shouldBe` Right ()
+            MarketplaceOperations.validateMarketplaceDepositSettlement
+              MarketplaceOperations.DepositBankTransfer 500 100 399
+              `shouldSatisfy` isLeft
+            MarketplaceOperations.validateIndependentDepositReviewer 42 43
+              `shouldBe` Right ()
+            MarketplaceOperations.validateIndependentDepositReviewer 42 42
+              `shouldSatisfy` isLeft
+
+        it "never permits a final customer-request review to transition again" $
+            QC.forAll (QC.arbitrary :: QC.Gen (QC.NonNegative Int)) $ \(QC.NonNegative rawStatus) ->
+              let terminal = if even rawStatus
+                    then MarketplaceOperations.CustomerRequestApproved
+                    else MarketplaceOperations.CustomerRequestRejected
+              in isLeft (MarketplaceOperations.validateMarketplaceCustomerReview
+                  MarketplaceOperations.SaleReturnRequest terminal
+                  MarketplaceOperations.CustomerRequestReject)
 
     describe "service booking pricing and fulfillment invariants" $ do
         it "calculates tax, deposit, and balance from approved integer policy values" $ do

@@ -87,7 +87,7 @@ import           Database.Persist.Postgresql ()
 import           Database.PostgreSQL.Simple (SqlError (..))
 
 import           TDF.API
-import           TDF.API.Types (UserRoleSummaryDTO(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceFulfillmentUpdate(..), MarketplaceRentalUpdate(..), MarketplaceRentalTermsUpdate(..), MarketplaceManualEvidenceSubmit(..), MarketplaceManualPaymentReview(..), MarketplaceManualEvidenceDTO(..), MarketplaceCommerceDTO(..), MarketplaceCheckoutReq(..), MarketplaceShippingAddress(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), LabelProjectNoteDTO(..), LabelProjectNoteCreate(..), LabelProjectNoteUpdate(..), DriveUploadDTO(..), DriveTokenExchangeRequest(..), DriveTokenRefreshRequest(..), DriveTokenResponse(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..), verifyMetaWebhookSignature)
+import           TDF.API.Types (UserRoleSummaryDTO(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceFulfillmentUpdate(..), MarketplaceRentalUpdate(..), MarketplaceRentalTermsUpdate(..), MarketplaceManualEvidenceSubmit(..), MarketplaceManualPaymentReview(..), MarketplaceManualEvidenceDTO(..), MarketplaceCommerceDTO(..), MarketplaceCustomerRequestSubmit(..), MarketplaceCustomerRequestReview(..), MarketplaceCustomerRequestDTO(..), MarketplaceDepositSettlementSubmit(..), MarketplaceDepositSettlementReview(..), MarketplaceDepositSettlementDTO(..), MarketplaceCheckoutReq(..), MarketplaceShippingAddress(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), LabelProjectNoteDTO(..), LabelProjectNoteCreate(..), LabelProjectNoteUpdate(..), DriveUploadDTO(..), DriveTokenExchangeRequest(..), DriveTokenRefreshRequest(..), DriveTokenResponse(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..), verifyMetaWebhookSignature)
 import           TDF.API.Types (maxMarketplaceCartItemQuantity)
 import qualified TDF.API.Types as APITypes
 import           TDF.API.WhatsApp (validateHookVerifyRequest)
@@ -181,6 +181,7 @@ import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
 import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
+import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
 import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Server.Directory as DirectoryServer
 import           TDF.ServerFeedback (feedbackServer)
@@ -15351,6 +15352,8 @@ marketplacePublicServer =
   :<|> capturePaypalOrder
   :<|> getOrder
   :<|> submitMarketplaceManualEvidence
+  :<|> listMarketplaceCustomerRequestsPublic
+  :<|> submitMarketplaceCustomerRequest
 
 marketplaceAdminServer :: AuthedUser -> ServerT MarketplaceAdminAPI AppM
 marketplaceAdminServer user =
@@ -15361,6 +15364,11 @@ marketplaceAdminServer user =
   :<|> updateMarketplaceOrder user
   :<|> updateMarketplaceFulfillment user
   :<|> updateMarketplaceRental user
+  :<|> listMarketplaceCustomerRequestsAdmin user
+  :<|> reviewMarketplaceCustomerRequest user
+  :<|> listMarketplaceDepositSettlements user
+  :<|> submitMarketplaceDepositSettlement user
+  :<|> reviewMarketplaceDepositSettlement user
 
 labelServer :: AuthedUser -> ServerT LabelAPI AppM
 labelServer user =
@@ -18073,6 +18081,560 @@ reviewMarketplaceManualPayment user rawOrderId request = do
   runDB (loadMarketplaceCommerceDTO orderKey)
     >>= either (throwError . marketplaceCheckoutConflict) pure
 
+data MarketplaceCustomerRequestContext = MarketplaceCustomerRequestContext
+  { mcrcOrderKind    :: Text
+  , mcrcDomainStatus :: Text
+  , mcrcCurrentEnd   :: Maybe Day
+  }
+
+type MarketplaceCustomerRequestRow =
+  ( Single Text, Single Text, Single Text, Single Text, Single Text, Single Text
+  , Single (Maybe Day), Single (Maybe Text), Single UTCTime
+  , Single (Maybe UTCTime), Single (Maybe Text)
+  )
+
+marketplaceCustomerRequestDTO
+  :: MarketplaceCustomerRequestRow
+  -> MarketplaceCustomerRequestDTO
+marketplaceCustomerRequestDTO
+    ( Single requestId, Single orderId, Single orderKind, Single requestType
+    , Single status, Single reason, Single requestedEndDate, Single evidenceUrl
+    , Single requestedAt, Single reviewedAt, Single reviewNotes
+    ) = MarketplaceCustomerRequestDTO
+      { mcrRequestId = requestId
+      , mcrOrderId = orderId
+      , mcrOrderKind = orderKind
+      , mcrRequestType = requestType
+      , mcrStatus = status
+      , mcrReason = reason
+      , mcrRequestedEndDate = requestedEndDate
+      , mcrEvidenceUrl = evidenceUrl
+      , mcrRequestedAt = requestedAt
+      , mcrReviewedAt = reviewedAt
+      , mcrReviewNotes = reviewNotes
+      }
+
+loadMarketplaceCustomerRequestContext
+  :: Key ME.MarketplaceOrder
+  -> SqlPersistT IO (Maybe MarketplaceCustomerRequestContext)
+loadMarketplaceCustomerRequestContext orderKey = do
+  rows <- (rawSql
+    "SELECT runtime.order_kind, runtime.domain_status, rental.end_date\
+    \ FROM marketplace_order_checkout_runtime runtime\
+    \ LEFT JOIN marketplace_rental_order_runtime rental\
+    \   ON rental.order_id = runtime.order_id AND runtime.order_kind = 'rental'\
+    \ WHERE runtime.order_id = ?::uuid"
+    [PersistText (toPathPiece orderKey)]
+    :: SqlPersistT IO
+      [(Single Text, Single Text, Single (Maybe Day))])
+  pure $ case rows of
+    [(Single orderKind, Single domainStatus, Single currentEnd)] ->
+      Just MarketplaceCustomerRequestContext
+        { mcrcOrderKind = orderKind
+        , mcrcDomainStatus = domainStatus
+        , mcrcCurrentEnd = currentEnd
+        }
+    _ -> Nothing
+
+loadMarketplaceCustomerRequestDTO
+  :: Key ME.MarketplaceOrder
+  -> Text
+  -> SqlPersistT IO (Maybe MarketplaceCustomerRequestDTO)
+loadMarketplaceCustomerRequestDTO orderKey requestId = do
+  rows <- (rawSql
+    "SELECT id::text, order_id::text, order_kind, request_type, status, reason,\
+    \ requested_end_date, evidence_url, requested_at, reviewed_at, review_notes\
+    \ FROM marketplace_customer_request\
+    \ WHERE order_id = ?::uuid AND id = ?::uuid"
+    [PersistText (toPathPiece orderKey), PersistText requestId]
+    :: SqlPersistT IO [MarketplaceCustomerRequestRow])
+  pure (marketplaceCustomerRequestDTO <$> listToMaybe rows)
+
+listMarketplaceCustomerRequestDTOs
+  :: Key ME.MarketplaceOrder
+  -> SqlPersistT IO [MarketplaceCustomerRequestDTO]
+listMarketplaceCustomerRequestDTOs orderKey = do
+  rows <- (rawSql
+    "SELECT id::text, order_id::text, order_kind, request_type, status, reason,\
+    \ requested_end_date, evidence_url, requested_at, reviewed_at, review_notes\
+    \ FROM marketplace_customer_request WHERE order_id = ?::uuid\
+    \ ORDER BY requested_at DESC, id DESC"
+    [PersistText (toPathPiece orderKey)]
+    :: SqlPersistT IO [MarketplaceCustomerRequestRow])
+  pure (map marketplaceCustomerRequestDTO rows)
+
+validateMarketplaceRequiredOperationText
+  :: Text
+  -> Int
+  -> Text
+  -> Either ServerError Text
+validateMarketplaceRequiredOperationText fieldName maxLength rawValue
+  | T.length value < 3 || T.length value > maxLength = Left invalid
+  | T.any isUnsafeAccessRequestTextChar value = Left invalid
+  | otherwise = Right value
+  where
+    value = T.strip rawValue
+    invalid = err400
+      { errBody = BL.fromStrict . TE.encodeUtf8 $
+          fieldName <> " must contain 3 to " <> T.pack (show maxLength)
+            <> " safe characters"
+      }
+
+tryMarketplaceOperationIO :: IO a -> IO (Either SomeException a)
+tryMarketplaceOperationIO = try
+
+runMarketplaceOperationWrite
+  :: Text
+  -> SqlPersistT IO a
+  -> AppM a
+runMarketplaceOperationWrite conflictMessage action = do
+  Env{ envPool } <- ask
+  result <- liftIO (tryMarketplaceOperationIO (flip runSqlPool envPool action))
+  case result of
+    Right value -> pure value
+    Left exception -> case fromException exception :: Maybe SomeAsyncException of
+      Just _ -> liftIO (throwIO exception)
+      Nothing -> case fromException exception :: Maybe SqlError of
+        Just sqlError
+          | sqlState sqlError == "P0001"
+              || "23" `BS8.isPrefixOf` sqlState sqlError ->
+                  throwError (marketplaceCheckoutConflict conflictMessage)
+        _ -> liftIO (throwIO exception)
+
+listMarketplaceCustomerRequestsPublic
+  :: Text
+  -> Maybe Text
+  -> AppM [MarketplaceCustomerRequestDTO]
+listMarketplaceCustomerRequestsPublic rawOrderId mLookupToken = do
+  orderKey <- parseOrderId rawOrderId
+  requireMarketplaceOrderLookupToken orderKey mLookupToken
+  runDB (listMarketplaceCustomerRequestDTOs orderKey)
+
+submitMarketplaceCustomerRequest
+  :: Text
+  -> Maybe Text
+  -> Maybe Text
+  -> MarketplaceCustomerRequestSubmit
+  -> AppM MarketplaceCustomerRequestDTO
+submitMarketplaceCustomerRequest
+    rawOrderId mLookupToken mIdempotency MarketplaceCustomerRequestSubmit{..} = do
+  orderKey <- parseOrderId rawOrderId
+  requireMarketplaceOrderLookupToken orderKey mLookupToken
+  lookupToken <- case T.strip <$> mLookupToken of
+    Just token | not (T.null token) -> pure token
+    _ -> throwError marketplaceOrderNotFound
+  idempotencyKey <- either (throwError . marketplaceCheckoutBadRequest) pure
+    (ServiceStorefront.validateIdempotencyKey mIdempotency)
+  requestKind <- either (throwError . marketplaceCheckoutBadRequest) pure
+    (MarketplaceOperations.parseMarketplaceCustomerRequestKind mcrsRequestType)
+  reason <- either throwError pure
+    (validateMarketplaceRequiredOperationText "reason" 1000 mcrsReason)
+  evidenceUrl <- either throwError pure
+    (validateMarketplaceRentalEvidenceUrl mcrsEvidenceUrl)
+  context <- runDB (loadMarketplaceCustomerRequestContext orderKey)
+    >>= maybe (throwError err409
+          { errBody = "This historical order does not support customer operations" }) pure
+  either (throwError . marketplaceCheckoutConflict) pure $
+    MarketplaceOperations.validateMarketplaceCustomerRequest
+      requestKind (mcrcOrderKind context) (mcrcDomainStatus context)
+      (mcrcCurrentEnd context) mcrsRequestedEndDate
+  let orderId = toPathPiece orderKey
+      requestType = MarketplaceOperations.marketplaceCustomerRequestKindText requestKind
+      requestHash = marketplaceSha256Text . TE.decodeUtf8 . BL.toStrict . encode $ object
+        [ "order_id" .= orderId
+        , "request_type" .= requestType
+        , "reason" .= reason
+        , "requested_end_date" .= mcrsRequestedEndDate
+        , "evidence_url" .= evidenceUrl
+        ]
+      customerActor = "lookup:" <> T.take 24 (marketplaceSha256Text lookupToken)
+  created <- runMarketplaceOperationWrite
+    "A request for this order is already pending or the order state changed" $ do
+      _ <- (rawSql
+        "SELECT 1::bigint FROM (\
+        \ SELECT pg_advisory_xact_lock(hashtextextended(?, 0))\
+        \) lock_acquired"
+        [PersistText ("marketplace-customer-request:" <> orderId <> ":" <> idempotencyKey)]
+        :: SqlPersistT IO [Single Int64])
+      existing <- (rawSql
+        "SELECT id::text, request_sha256 FROM marketplace_customer_request\
+        \ WHERE order_id = ?::uuid AND idempotency_key = ?"
+        [PersistText orderId, PersistText idempotencyKey]
+        :: SqlPersistT IO [(Single Text, Single Text)])
+      case existing of
+        [(Single requestId, Single storedHash)]
+          | storedHash == requestHash -> pure (Right requestId)
+          | otherwise -> pure (Left
+              "Idempotency key was already used for a different marketplace request")
+        [] -> do
+          _ <- (rawSql
+            "SELECT set_config('tdf.actor_type', 'customer', true),\
+            \ set_config('tdf.actor_id', ?, true)"
+            [PersistText customerActor]
+            :: SqlPersistT IO [(Single Text, Single Text)])
+          inserted <- (rawSql
+            "INSERT INTO marketplace_customer_request(\
+            \ order_id, order_kind, request_type, reason, requested_end_date,\
+            \ evidence_url, idempotency_key, request_sha256\
+            \) VALUES (?::uuid, ?, ?, ?, ?, ?, ?, ?) RETURNING id::text"
+            [ PersistText orderId
+            , PersistText (mcrcOrderKind context)
+            , PersistText requestType
+            , PersistText reason
+            , maybe PersistNull PersistDay mcrsRequestedEndDate
+            , maybe PersistNull PersistText evidenceUrl
+            , PersistText idempotencyKey
+            , PersistText requestHash
+            ] :: SqlPersistT IO [Single Text])
+          pure $ case inserted of
+            [Single requestId] -> Right requestId
+            _ -> Left "Marketplace request could not be created"
+        _ -> pure (Left "Marketplace request idempotency state is ambiguous")
+  requestId <- either (throwError . marketplaceCheckoutConflict) pure created
+  runDB (loadMarketplaceCustomerRequestDTO orderKey requestId)
+    >>= either throwError pure
+      . requireLoadedMarketplaceWriteResult "Marketplace customer request"
+
+listMarketplaceCustomerRequestsAdmin
+  :: AuthedUser
+  -> Text
+  -> AppM [MarketplaceCustomerRequestDTO]
+listMarketplaceCustomerRequestsAdmin user rawOrderId = do
+  requireMarketplaceAccess user
+  orderKey <- parseOrderId rawOrderId
+  runDB (listMarketplaceCustomerRequestDTOs orderKey)
+
+reviewMarketplaceCustomerRequest
+  :: AuthedUser
+  -> Text
+  -> Text
+  -> MarketplaceCustomerRequestReview
+  -> AppM MarketplaceCustomerRequestDTO
+reviewMarketplaceCustomerRequest
+    user rawOrderId rawRequestId MarketplaceCustomerRequestReview{..} = do
+  requireMarketplaceAccess user
+  orderKey <- parseOrderId rawOrderId
+  requestId <- either throwError pure
+    (validateMarketplacePathId "request" rawRequestId)
+  reviewAction <- either (throwError . marketplaceCheckoutBadRequest) pure
+    (MarketplaceOperations.parseMarketplaceCustomerReviewAction mcrrAction)
+  reviewNotes <- either throwError pure
+    (validateMarketplaceRequiredOperationText "reviewNotes" 1000 mcrrReviewNotes)
+  requestRows <- runDB (rawSql
+    "SELECT request_type, status FROM marketplace_customer_request\
+    \ WHERE id = ?::uuid AND order_id = ?::uuid"
+    [PersistText requestId, PersistText (toPathPiece orderKey)]
+    :: SqlPersistT IO [(Single Text, Single Text)])
+  (requestKind, currentStatus) <- case requestRows of
+    [(Single requestType, Single status)] -> do
+      kind <- either (throwError . marketplaceCheckoutInternal) pure
+        (MarketplaceOperations.parseMarketplaceCustomerRequestKind requestType)
+      parsedStatus <- either (throwError . marketplaceCheckoutInternal) pure
+        (MarketplaceOperations.parseMarketplaceCustomerRequestStatus status)
+      pure (kind, parsedStatus)
+    [] -> throwError marketplaceOrderNotFound
+    _ -> throwError (marketplaceCheckoutInternal
+      "Marketplace customer request lookup was ambiguous")
+  nextStatus <- either (throwError . marketplaceCheckoutConflict) pure
+    (MarketplaceOperations.validateMarketplaceCustomerReview
+      requestKind currentStatus reviewAction)
+  now <- liftIO getCurrentTime
+  let reviewerId = fromSqlKey (auPartyId user)
+      currentStatusText = MarketplaceOperations.marketplaceCustomerRequestStatusText currentStatus
+      nextStatusText = MarketplaceOperations.marketplaceCustomerRequestStatusText nextStatus
+  updated <- runMarketplaceOperationWrite
+    "Marketplace request or order state changed before review" $
+      (rawSql
+        "WITH actor_context AS MATERIALIZED (\
+        \ SELECT set_config('tdf.actor_type', 'operator', true),\
+        \ set_config('tdf.actor_id', ?, true)\
+        \) UPDATE marketplace_customer_request SET status = ?, reviewed_by = ?,\
+        \ reviewed_at = ?, review_notes = ? FROM actor_context\
+        \ WHERE id = ?::uuid AND order_id = ?::uuid AND status = ?\
+        \ RETURNING marketplace_customer_request.id::text"
+        [ PersistText (T.pack (show reviewerId))
+        , PersistText nextStatusText
+        , PersistInt64 reviewerId
+        , PersistUTCTime now
+        , PersistText reviewNotes
+        , PersistText requestId
+        , PersistText (toPathPiece orderKey)
+        , PersistText currentStatusText
+        ] :: SqlPersistT IO [Single Text])
+  when (null updated) $
+    throwError (marketplaceCheckoutConflict
+      "Marketplace request changed concurrently; reload before retrying")
+  runDB (loadMarketplaceCustomerRequestDTO orderKey requestId)
+    >>= either throwError pure
+      . requireLoadedMarketplaceWriteResult "Marketplace customer request"
+
+type MarketplaceDepositSettlementRow =
+  ( Single Text, Single Text, Single Text, Single Text, Single Int64, Single Int64
+  , Single Int64, Single Text, Single Text, Single Text, Single Text, Single Int64
+  , Single UTCTime, Single (Maybe Int64), Single (Maybe UTCTime), Single (Maybe Text)
+  )
+
+marketplaceDepositSettlementDTO
+  :: MarketplaceDepositSettlementRow
+  -> MarketplaceDepositSettlementDTO
+marketplaceDepositSettlementDTO
+    ( Single settlementId, Single orderId, Single checkoutId, Single currency
+    , Single depositAmount, Single deductionAmount, Single refundAmount
+    , Single settlementMethod, Single externalReference, Single evidenceUrl
+    , Single status, Single submittedBy, Single submittedAt, Single reviewedBy
+    , Single reviewedAt, Single reviewNotes
+    ) = MarketplaceDepositSettlementDTO
+      { mdsSettlementId = settlementId
+      , mdsOrderId = orderId
+      , mdsCheckoutId = checkoutId
+      , mdsCurrency = currency
+      , mdsDepositAmountMinor = depositAmount
+      , mdsDeductionAmountMinor = deductionAmount
+      , mdsRefundAmountMinor = refundAmount
+      , mdsSettlementMethod = settlementMethod
+      , mdsExternalReference = externalReference
+      , mdsEvidenceUrl = evidenceUrl
+      , mdsStatus = status
+      , mdsSubmittedBy = submittedBy
+      , mdsSubmittedAt = submittedAt
+      , mdsReviewedBy = reviewedBy
+      , mdsReviewedAt = reviewedAt
+      , mdsReviewNotes = reviewNotes
+      }
+
+marketplaceDepositSettlementSelect :: Text
+marketplaceDepositSettlementSelect =
+  "SELECT id::text, order_id::text, checkout_id::text, currency,\
+  \ deposit_amount_minor, deduction_amount_minor, refund_amount_minor,\
+  \ settlement_method, external_reference, evidence_url, status, submitted_by,\
+  \ submitted_at, reviewed_by, reviewed_at, review_notes\
+  \ FROM marketplace_rental_deposit_settlement"
+
+loadMarketplaceDepositSettlementDTO
+  :: Key ME.MarketplaceOrder
+  -> Text
+  -> SqlPersistT IO (Maybe MarketplaceDepositSettlementDTO)
+loadMarketplaceDepositSettlementDTO orderKey settlementId = do
+  rows <- (rawSql
+    (marketplaceDepositSettlementSelect
+      <> " WHERE order_id = ?::uuid AND id = ?::uuid")
+    [PersistText (toPathPiece orderKey), PersistText settlementId]
+    :: SqlPersistT IO [MarketplaceDepositSettlementRow])
+  pure (marketplaceDepositSettlementDTO <$> listToMaybe rows)
+
+listMarketplaceDepositSettlementDTOs
+  :: Key ME.MarketplaceOrder
+  -> SqlPersistT IO [MarketplaceDepositSettlementDTO]
+listMarketplaceDepositSettlementDTOs orderKey = do
+  rows <- (rawSql
+    (marketplaceDepositSettlementSelect
+      <> " WHERE order_id = ?::uuid ORDER BY submitted_at DESC, id DESC")
+    [PersistText (toPathPiece orderKey)]
+    :: SqlPersistT IO [MarketplaceDepositSettlementRow])
+  pure (map marketplaceDepositSettlementDTO rows)
+
+listMarketplaceDepositSettlements
+  :: AuthedUser
+  -> Text
+  -> AppM [MarketplaceDepositSettlementDTO]
+listMarketplaceDepositSettlements user rawOrderId = do
+  requireMarketplaceAccess user
+  requireModule user ModuleInvoicing
+  orderKey <- parseOrderId rawOrderId
+  runDB (listMarketplaceDepositSettlementDTOs orderKey)
+
+submitMarketplaceDepositSettlement
+  :: AuthedUser
+  -> Text
+  -> Maybe Text
+  -> MarketplaceDepositSettlementSubmit
+  -> AppM MarketplaceDepositSettlementDTO
+submitMarketplaceDepositSettlement
+    user rawOrderId mIdempotency MarketplaceDepositSettlementSubmit{..} = do
+  requireMarketplaceAccess user
+  requireModule user ModuleInvoicing
+  orderKey <- parseOrderId rawOrderId
+  idempotencyKey <- either (throwError . marketplaceCheckoutBadRequest) pure
+    (ServiceStorefront.validateIdempotencyKey mIdempotency)
+  method <- either (throwError . marketplaceCheckoutBadRequest) pure
+    (MarketplaceOperations.parseMarketplaceDepositSettlementMethod mdssSettlementMethod)
+  externalReference <- either throwError pure
+    (validateMarketplaceRequiredOperationText
+      "externalReference" 160 mdssExternalReference)
+  evidenceUrl <- either throwError pure
+    (validateMarketplaceRentalEvidenceUrl (Just mdssEvidenceUrl))
+      >>= maybe (throwError err400 { errBody = "evidenceUrl is required" }) pure
+  runtimeRows <- runDB (rawSql
+    "SELECT runtime.checkout_id::text, checkout.currency,\
+    \ runtime.security_deposit_usd_cents, runtime.deposit_deduction_usd_cents,\
+    \ runtime.security_deposit_usd_cents - runtime.deposit_deduction_usd_cents,\
+    \ runtime.rental_status, runtime.deposit_status\
+    \ FROM marketplace_rental_order_runtime runtime\
+    \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+    \ WHERE runtime.order_id = ?::uuid"
+    [PersistText (toPathPiece orderKey)]
+    :: SqlPersistT IO
+      [( Single Text, Single Text, Single Int64, Single Int64, Single Int64
+       , Single Text, Single Text
+       )])
+  (checkoutId, currency, depositAmount, deductionAmount, refundAmount) <-
+    case runtimeRows of
+      [( Single storedCheckoutId, Single storedCurrency, Single deposit
+       , Single deduction, Single refund, Single rentalStatus, Single depositStatus
+       )]
+        | rentalStatus /= "deposit_refund_due"
+            || depositStatus `notElem` ["refund_due", "partial_refund_due"] ->
+                throwError (marketplaceCheckoutConflict
+                  "Rental deposit is not due for settlement")
+        | otherwise -> pure
+            (storedCheckoutId, storedCurrency, deposit, deduction, refund)
+      [] -> throwError err409
+        { errBody = "This order is not a canonical marketplace rental" }
+      _ -> throwError (marketplaceCheckoutInternal
+        "Marketplace rental deposit context is ambiguous")
+  either (throwError . marketplaceCheckoutBadRequest) pure
+    (MarketplaceOperations.validateMarketplaceDepositSettlement
+      method depositAmount deductionAmount refundAmount)
+  environment <- runDB
+    (Checkout.loadCheckoutEnvironment (Checkout.CheckoutReference checkoutId))
+    >>= either (throwError . marketplaceCheckoutInternal) pure
+  capabilityEnabled <- runDB $
+    Checkout.capabilityEnabledForEnvironment environment
+      "commerce.marketplace_manual_deposit_settlement"
+  unless capabilityEnabled $
+    throwError err503
+      { errBody = "Manual marketplace deposit settlement is disabled in this environment" }
+  let orderId = toPathPiece orderKey
+      methodText = MarketplaceOperations.marketplaceDepositSettlementMethodText method
+      submittedBy = fromSqlKey (auPartyId user)
+      requestHash = marketplaceSha256Text . TE.decodeUtf8 . BL.toStrict . encode $ object
+        [ "order_id" .= orderId
+        , "checkout_id" .= checkoutId
+        , "currency" .= currency
+        , "deposit_amount_minor" .= depositAmount
+        , "deduction_amount_minor" .= deductionAmount
+        , "refund_amount_minor" .= refundAmount
+        , "settlement_method" .= methodText
+        , "external_reference" .= externalReference
+        , "evidence_url" .= evidenceUrl
+        ]
+  created <- runMarketplaceOperationWrite
+    "Deposit settlement evidence conflicts with existing or changed rental state" $ do
+      _ <- (rawSql
+        "SELECT 1::bigint FROM (\
+        \ SELECT pg_advisory_xact_lock(hashtextextended(?, 0))\
+        \) lock_acquired"
+        [PersistText ("marketplace-deposit-settlement:" <> orderId <> ":" <> idempotencyKey)]
+        :: SqlPersistT IO [Single Int64])
+      existing <- (rawSql
+        "SELECT id::text, request_sha256\
+        \ FROM marketplace_rental_deposit_settlement\
+        \ WHERE order_id = ?::uuid AND idempotency_key = ?"
+        [PersistText orderId, PersistText idempotencyKey]
+        :: SqlPersistT IO [(Single Text, Single Text)])
+      case existing of
+        [(Single settlementId, Single storedHash)]
+          | storedHash == requestHash -> pure (Right settlementId)
+          | otherwise -> pure (Left
+              "Idempotency key was already used for different deposit evidence")
+        [] -> do
+          inserted <- (rawSql
+            "INSERT INTO marketplace_rental_deposit_settlement(\
+            \ order_id, checkout_id, currency, deposit_amount_minor,\
+            \ deduction_amount_minor, refund_amount_minor, settlement_method,\
+            \ external_reference, evidence_url, idempotency_key, request_sha256, submitted_by\
+            \) VALUES (?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\
+            \ RETURNING id::text"
+            [ PersistText orderId
+            , PersistText checkoutId
+            , PersistText currency
+            , PersistInt64 depositAmount
+            , PersistInt64 deductionAmount
+            , PersistInt64 refundAmount
+            , PersistText methodText
+            , PersistText externalReference
+            , PersistText evidenceUrl
+            , PersistText idempotencyKey
+            , PersistText requestHash
+            , PersistInt64 submittedBy
+            ] :: SqlPersistT IO [Single Text])
+          pure $ case inserted of
+            [Single settlementId] -> Right settlementId
+            _ -> Left "Deposit settlement evidence could not be created"
+        _ -> pure (Left "Deposit settlement idempotency state is ambiguous")
+  settlementId <- either (throwError . marketplaceCheckoutConflict) pure created
+  runDB (loadMarketplaceDepositSettlementDTO orderKey settlementId)
+    >>= either throwError pure
+      . requireLoadedMarketplaceWriteResult "Marketplace deposit settlement"
+
+reviewMarketplaceDepositSettlement
+  :: AuthedUser
+  -> Text
+  -> Text
+  -> MarketplaceDepositSettlementReview
+  -> AppM MarketplaceDepositSettlementDTO
+reviewMarketplaceDepositSettlement
+    user rawOrderId rawSettlementId MarketplaceDepositSettlementReview{..} = do
+  requireMarketplaceAccess user
+  requireModule user ModuleInvoicing
+  orderKey <- parseOrderId rawOrderId
+  settlementId <- either throwError pure
+    (validateMarketplacePathId "settlement" rawSettlementId)
+  action <- either (throwError . marketplaceCheckoutBadRequest) pure
+    (MarketplaceOperations.parseMarketplaceCustomerReviewAction mdsrAction)
+  nextStatus <- case action of
+    MarketplaceOperations.CustomerRequestApprove -> pure "verified"
+    MarketplaceOperations.CustomerRequestReject -> pure "rejected"
+    MarketplaceOperations.CustomerRequestRequireReconciliation ->
+      pure "requires_reconciliation"
+    MarketplaceOperations.CustomerRequestNeedsQuoteAction ->
+      throwError err400
+        { errBody = "Deposit settlement review action must be approve, reject, or requires_reconciliation" }
+  reviewNotes <- either throwError pure
+    (validateMarketplaceRequiredOperationText "reviewNotes" 1000 mdsrReviewNotes)
+  settlementRows <- runDB (rawSql
+    "SELECT status, submitted_by FROM marketplace_rental_deposit_settlement\
+    \ WHERE id = ?::uuid AND order_id = ?::uuid"
+    [PersistText settlementId, PersistText (toPathPiece orderKey)]
+    :: SqlPersistT IO [(Single Text, Single Int64)])
+  (currentStatus, submittedBy) <- case settlementRows of
+    [(Single status, Single submitter)] -> pure (status, submitter)
+    [] -> throwError marketplaceOrderNotFound
+    _ -> throwError (marketplaceCheckoutInternal
+      "Marketplace deposit settlement lookup was ambiguous")
+  let reviewerId = fromSqlKey (auPartyId user)
+  either (throwError . marketplaceCheckoutConflict) pure
+    (MarketplaceOperations.validateIndependentDepositReviewer submittedBy reviewerId)
+  if currentStatus == nextStatus
+    then runDB (loadMarketplaceDepositSettlementDTO orderKey settlementId)
+      >>= either throwError pure
+        . requireLoadedMarketplaceWriteResult "Marketplace deposit settlement"
+    else do
+      when (currentStatus /= "submitted") $
+        throwError (marketplaceCheckoutConflict
+          "Reviewed deposit settlement evidence cannot be changed")
+      now <- liftIO getCurrentTime
+      updated <- runMarketplaceOperationWrite
+        "Rental or checkout state changed before deposit settlement review" $
+          (rawSql
+            "UPDATE marketplace_rental_deposit_settlement SET status = ?, reviewed_by = ?,\
+            \ reviewed_at = ?, review_notes = ?\
+            \ WHERE id = ?::uuid AND order_id = ?::uuid AND status = 'submitted'\
+            \ RETURNING id::text"
+            [ PersistText nextStatus
+            , PersistInt64 reviewerId
+            , PersistUTCTime now
+            , PersistText reviewNotes
+            , PersistText settlementId
+            , PersistText (toPathPiece orderKey)
+            ] :: SqlPersistT IO [Single Text])
+      when (null updated) $
+        throwError (marketplaceCheckoutConflict
+          "Deposit settlement changed concurrently; reload before retrying")
+      runDB (loadMarketplaceDepositSettlementDTO orderKey settlementId)
+        >>= either throwError pure
+          . requireLoadedMarketplaceWriteResult "Marketplace deposit settlement"
+
 listMarketplaceOrders :: AuthedUser -> Maybe Text -> Maybe Int -> Maybe Int -> AppM [MarketplaceOrderDTO]
 listMarketplaceOrders user mStatus mLimit mOffset = do
   requireMarketplaceAccess user
@@ -18397,7 +18959,7 @@ requireMarketplaceOrderLookupToken orderKey mRawToken = do
       "SELECT lookup_token_hash FROM marketplace_order_checkout_runtime WHERE order_id = ?::uuid"
       [PersistText (toPathPiece orderKey)] :: SqlPersistT IO [Single Text])
   case storedHashes of
-    [] -> pure ()
+    [] -> throwError marketplaceOrderNotFound
     [Single expectedHash]
       | Just rawToken <- T.strip <$> mRawToken
       , not (T.null rawToken)

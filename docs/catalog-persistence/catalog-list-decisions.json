@@ -2834,16 +2834,6 @@
       "reviewed": true
     },
     {
-      "id": "ec54f19998572f1e09ab",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
       "id": "4fa2620ba78013b14381",
       "classification": "governed-reference-data",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -8201,6 +8191,116 @@
       "priority": "P0-security",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
       "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "b6543b76090287ae642d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Web request discriminants could diverge from the backend and permit the wrong sale or rental operation.",
+      "justification": "Marketplace customer-request kinds are the exhaustive command protocol enforced across typed clients, OpenAPI, Haskell validation, and PostgreSQL constraints; commercial policies remain persisted separately.",
+      "reviewed": true
+    },
+    {
+      "id": "ff6890ff4b803522a455",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "payment_method_capability, rental_deposit_settlement_method",
+      "priority": "P1-cross-platform",
+      "risk": "An operations screen could offer a provider or manual settlement method that is disabled, unsupported, or unavailable for the active merchant environment.",
+      "justification": "Provider and manual-method display availability must ultimately come from persisted environment capabilities; server-side protocol validation and feature flags remain authoritative during the staged rollout.",
+      "reviewed": true
+    },
+    {
+      "id": "31fdec804cc113595b2f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Customer-facing review labels could diverge from the enforced request state machine and misstate an operation as completed.",
+      "justification": "Marketplace customer-request statuses form a closed audited protocol; this UI map only renders states enforced by Haskell and PostgreSQL.",
+      "reviewed": true
+    },
+    {
+      "id": "25c7cc5326604d716792",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "The API request-kind contract could accept commands that have no corresponding safe domain transition.",
+      "justification": "The OpenAPI enum is the public mirror of the exhaustive marketplace customer-operation command protocol, not editable commercial configuration.",
+      "reviewed": true
+    },
+    {
+      "id": "a9355175a814c9629c7d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "The API response-kind contract could drift from persisted audit evidence and client rendering.",
+      "justification": "The response enum mirrors the same closed customer-operation command protocol enforced by database constraints and typed backend validation.",
+      "reviewed": true
+    },
+    {
+      "id": "737ac44844795e769499",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "A request could be bound to the wrong marketplace runtime and mutate an unrelated domain.",
+      "justification": "Sale and rental are closed domain discriminants used to select different fulfillment state machines; products, rates, and policies remain database-managed.",
+      "reviewed": true
+    },
+    {
+      "id": "9d0f627a6ca896268550",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Unknown customer commands could bypass the dedicated sale and rental transition guards.",
+      "justification": "The database check is the authoritative exhaustive marketplace customer-operation command protocol mirrored by Haskell and OpenAPI.",
+      "reviewed": true
+    },
+    {
+      "id": "6579efd6808d343c3474",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Editable request states could bypass quote gating, evidence preservation, or terminal-state immutability.",
+      "justification": "Customer-request statuses are the closed state-machine protocol enforced by transition triggers and typed backend review validation.",
+      "reviewed": true
+    },
+    {
+      "id": "6909aac76b066d329577",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Unknown audit actors could weaken provenance and separation-of-duties evidence.",
+      "justification": "Customer, operator, and system are closed audit-event actor discriminants; identities and authorization remain persisted and role-checked.",
+      "reviewed": true
+    },
+    {
+      "id": "94c516f5a3e017efd362",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unknown settlement method could post to an unimplemented cash or liability account.",
+      "justification": "These values name the manual settlement algorithms and ledger accounts implemented by the runtime; environment availability remains governed by persisted feature capabilities.",
+      "reviewed": true
+    },
+    {
+      "id": "189a592a794e28d0b5a8",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Editable settlement states could bypass independent review, reconciliation, or immutable evidence rules.",
+      "justification": "Rental deposit settlement statuses are the exhaustive dual-control state machine enforced by database triggers and typed server validation.",
       "reviewed": true
     }
   ]

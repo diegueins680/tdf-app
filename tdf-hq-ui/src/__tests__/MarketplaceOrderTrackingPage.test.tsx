@@ -3,17 +3,23 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { jest } from '@jest/globals';
-import type { MarketplaceOrderDTO } from '../api/types';
+import type { MarketplaceCustomerRequestDTO, MarketplaceOrderDTO } from '../api/types';
 
 const getOrderMock = jest.fn<() => Promise<MarketplaceOrderDTO>>();
 const submitManualEvidenceMock = jest.fn<() => Promise<MarketplaceOrderDTO>>();
+const listCustomerRequestsMock = jest.fn<() => Promise<MarketplaceCustomerRequestDTO[]>>();
+const submitCustomerRequestMock = jest.fn<() => Promise<MarketplaceCustomerRequestDTO>>();
 
 jest.unstable_mockModule('../api/marketplace', () => ({
   loadMarketplaceLookupToken: (orderId: string) =>
     window.sessionStorage.getItem(`tdf-marketplace-order-lookup:${orderId}`),
+  getMarketplaceRequestIdempotencyKey: () => 'marketplace-request-idempotency-0001',
+  clearMarketplaceRequestIdempotencyKey: jest.fn(),
   Marketplace: {
     getOrder: getOrderMock,
     submitManualEvidence: submitManualEvidenceMock,
+    listCustomerRequests: listCustomerRequestsMock,
+    submitCustomerRequest: submitCustomerRequestMock,
   },
 }));
 
@@ -98,6 +104,9 @@ describe('MarketplaceOrderTrackingPage manual payments', () => {
     window.sessionStorage.setItem('tdf-marketplace-order-lookup:order-1', 'lookup-secret');
     getOrderMock.mockReset();
     submitManualEvidenceMock.mockReset();
+    listCustomerRequestsMock.mockReset();
+    listCustomerRequestsMock.mockResolvedValue([]);
+    submitCustomerRequestMock.mockReset();
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -157,5 +166,31 @@ describe('MarketplaceOrderTrackingPage manual payments', () => {
     expect(container.textContent).toContain('Sigue pendiente de revisión');
     expect(container.textContent).toContain('aún no está pagado');
     expect(container.textContent).not.toContain('Pago verificado');
+  });
+
+  it('shows persisted customer requests without implying automatic cancellation or refund', async () => {
+    getOrderMock.mockResolvedValue({
+      ...orderFixture('submitted'),
+      moFulfillmentStatus: 'ready_to_fulfill',
+    });
+    listCustomerRequestsMock.mockResolvedValue([{
+      mcrRequestId: 'request-1',
+      mcrOrderId: 'order-1',
+      mcrOrderKind: 'sale',
+      mcrRequestType: 'sale_cancellation',
+      mcrStatus: 'submitted',
+      mcrReason: 'Ya no necesito el equipo.',
+      mcrRequestedEndDate: null,
+      mcrEvidenceUrl: null,
+      mcrRequestedAt: '2030-01-01T15:10:00Z',
+      mcrReviewedAt: null,
+      mcrReviewNotes: null,
+    }]);
+    await renderPage();
+
+    expect(listCustomerRequestsMock).toHaveBeenCalledWith('order-1', 'lookup-secret');
+    expect(container.textContent).toContain('Cancelar antes de la entrega · En revisión');
+    expect(container.textContent).toContain('no cancela, devuelve ni extiende automáticamente');
+    expect(container.textContent).not.toContain('Reembolso confirmado');
   });
 });

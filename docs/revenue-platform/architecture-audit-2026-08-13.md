@@ -215,6 +215,7 @@ The accepted ADRs are:
 - [ADR-0107](../adr/0107-marketplace-sale-holds-and-custody.md): unique-asset sale holds and separate physical custody.
 - [ADR-0108](../adr/0108-marketplace-rental-dates-deposits-and-custody.md): dated rental holds, condition evidence, and truthful deposit due states.
 - [ADR-0109](../adr/0109-service-booking-deposits-and-shared-calendar.md): approved service quotes, one exclusion-backed booking calendar, and separate deposit/fulfillment states.
+- [ADR-0110](../adr/0110-marketplace-customer-requests-and-deposit-settlement.md): scoped customer-operation requests, quote-only rental extensions, and independently verified manual deposit-liability settlement.
 
 ## Feature flags and phased rollout
 
@@ -226,8 +227,9 @@ production capability:
 - implemented keys: `checkout.datafast`, `checkout.paypal`, `checkout.paypal.webhooks`,
   `checkout.paypal.refunds`, `checkout.datafast.webhooks`, `checkout.datafast.refunds`,
   `checkout.provider_event_worker`, `commerce.mixing_mastering`, `commerce.marketplace_sales`,
-  `commerce.marketplace_rentals`, and `commerce.service_bookings`; the marketplace domain rows are
-  enabled by the rental rollout, while service bookings default disabled pending policy approval
+  `commerce.marketplace_rentals`, `commerce.marketplace_manual_deposit_settlement`, and
+  `commerce.service_bookings`; the marketplace domain rows and dual-control manual deposit
+  settlement are enabled, while service bookings default disabled pending policy approval
   and credentialed sandbox verification; booking Datafast/PayPal actions are implemented but
   production provider execution remains independently disabled; planned keys must use
   the same registry rather than introducing an untracked environment-only bypass;

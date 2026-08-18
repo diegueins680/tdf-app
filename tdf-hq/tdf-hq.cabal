@@ -57,6 +57,7 @@ executable tdf-hq-exe
     TDF.Commerce.CheckoutStore
     TDF.Commerce.MarketplaceSales
     TDF.Commerce.MarketplaceRentals
+    TDF.Commerce.MarketplaceOperations
     TDF.Commerce.ServiceBookings
     TDF.Commerce.ProviderEventStore
     TDF.Commerce.ProviderEventWorker
@@ -271,6 +272,7 @@ test-suite tdf-hq-test
     TDF.Commerce.CheckoutStore
     TDF.Commerce.MarketplaceSales
     TDF.Commerce.MarketplaceRentals
+    TDF.Commerce.MarketplaceOperations
     TDF.Commerce.ServiceBookings
     TDF.Commerce.ProviderEventStore
     TDF.Commerce.ProviderEventWorker

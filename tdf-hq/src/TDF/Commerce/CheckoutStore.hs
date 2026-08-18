@@ -802,8 +802,24 @@ postPaymentLedger VerifiedPayment{..} = do
     "INSERT INTO commerce_ledger_entry (\
     \ transaction_id, account_code, domain_type, domain_id, currency, amount_minor, memo\
     \) SELECT ?::uuid, 'revenue.' || domain_type, domain_type, domain_order_id,\
-    \ currency, -total_minor, 'Revenue recognized on verified payment'\
+    \ currency,\
+    \ -CASE WHEN domain_type = 'marketplace_rental' THEN COALESCE((\
+    \   SELECT rental_charge_usd_cents FROM marketplace_rental_order_runtime\
+    \   WHERE order_id::text = domain_order_id\
+    \ ), total_minor) ELSE total_minor END,\
+    \ 'Revenue recognized on verified payment'\
     \ FROM commerce_checkout_session WHERE id = ?::uuid"
+    [PersistText ledgerId, PersistText (checkoutReferenceId vpCheckout)]
+  rawExecute
+    "INSERT INTO commerce_ledger_entry (\
+    \ transaction_id, account_code, domain_type, domain_id, currency, amount_minor, memo\
+    \) SELECT ?::uuid, 'liability.marketplace_rental_deposit', checkout.domain_type,\
+    \ checkout.domain_order_id, checkout.currency, -runtime.security_deposit_usd_cents,\
+    \ 'Refundable rental deposit collected'\
+    \ FROM commerce_checkout_session checkout\
+    \ JOIN marketplace_rental_order_runtime runtime\
+    \   ON runtime.checkout_id = checkout.id\
+    \ WHERE checkout.id = ?::uuid AND runtime.security_deposit_usd_cents > 0"
     [PersistText ledgerId, PersistText (checkoutReferenceId vpCheckout)]
   rawExecute
     "UPDATE commerce_ledger_transaction SET status = 'posted' WHERE id = ?::uuid"

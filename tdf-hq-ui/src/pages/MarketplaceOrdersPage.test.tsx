@@ -22,6 +22,8 @@ const updateRentalMock = jest.fn<
 >();
 
 jest.unstable_mockModule('../api/marketplace', () => ({
+  getMarketplaceDepositIdempotencyKey: () => 'marketplace-deposit-idempotency-0001',
+  clearMarketplaceDepositIdempotencyKey: jest.fn(),
   Marketplace: {
     listOrders: (params?: { status?: string; limit?: number; offset?: number }) => listOrdersMock(params),
     updateOrder: (orderId: string, payload: MarketplaceOrderUpdatePayload) => updateOrderMock(orderId, payload),

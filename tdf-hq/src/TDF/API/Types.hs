@@ -819,6 +819,87 @@ instance ToJSON MarketplaceManualPaymentReview
 instance FromJSON MarketplaceManualPaymentReview where
   parseJSON = genericParseJSON strictObjectOptions
 
+data MarketplaceCustomerRequestSubmit = MarketplaceCustomerRequestSubmit
+  { mcrsRequestType      :: Text
+  , mcrsReason           :: Text
+  , mcrsRequestedEndDate :: Maybe Day
+  , mcrsEvidenceUrl      :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceCustomerRequestSubmit
+instance FromJSON MarketplaceCustomerRequestSubmit where
+  parseJSON value = do
+    rejectNullOptionalFields "MarketplaceCustomerRequestSubmit"
+      ["mcrsRequestedEndDate", "mcrsEvidenceUrl"] value
+    genericParseJSON strictObjectOptions value
+
+data MarketplaceCustomerRequestReview = MarketplaceCustomerRequestReview
+  { mcrrAction      :: Text
+  , mcrrReviewNotes :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceCustomerRequestReview
+instance FromJSON MarketplaceCustomerRequestReview where
+  parseJSON = genericParseJSON strictObjectOptions
+
+data MarketplaceCustomerRequestDTO = MarketplaceCustomerRequestDTO
+  { mcrRequestId        :: Text
+  , mcrOrderId          :: Text
+  , mcrOrderKind        :: Text
+  , mcrRequestType      :: Text
+  , mcrStatus           :: Text
+  , mcrReason           :: Text
+  , mcrRequestedEndDate :: Maybe Day
+  , mcrEvidenceUrl      :: Maybe Text
+  , mcrRequestedAt      :: UTCTime
+  , mcrReviewedAt       :: Maybe UTCTime
+  , mcrReviewNotes      :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceCustomerRequestDTO
+instance FromJSON MarketplaceCustomerRequestDTO
+
+data MarketplaceDepositSettlementSubmit = MarketplaceDepositSettlementSubmit
+  { mdssSettlementMethod :: Text
+  , mdssExternalReference :: Text
+  , mdssEvidenceUrl       :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceDepositSettlementSubmit
+instance FromJSON MarketplaceDepositSettlementSubmit where
+  parseJSON = genericParseJSON strictObjectOptions
+
+data MarketplaceDepositSettlementReview = MarketplaceDepositSettlementReview
+  { mdsrAction      :: Text
+  , mdsrReviewNotes :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceDepositSettlementReview
+instance FromJSON MarketplaceDepositSettlementReview where
+  parseJSON = genericParseJSON strictObjectOptions
+
+data MarketplaceDepositSettlementDTO = MarketplaceDepositSettlementDTO
+  { mdsSettlementId         :: Text
+  , mdsOrderId              :: Text
+  , mdsCheckoutId           :: Text
+  , mdsCurrency             :: Text
+  , mdsDepositAmountMinor   :: Int64
+  , mdsDeductionAmountMinor :: Int64
+  , mdsRefundAmountMinor    :: Int64
+  , mdsSettlementMethod     :: Text
+  , mdsExternalReference    :: Text
+  , mdsEvidenceUrl          :: Text
+  , mdsStatus               :: Text
+  , mdsSubmittedBy          :: Int64
+  , mdsSubmittedAt          :: UTCTime
+  , mdsReviewedBy           :: Maybe Int64
+  , mdsReviewedAt           :: Maybe UTCTime
+  , mdsReviewNotes          :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceDepositSettlementDTO
+instance FromJSON MarketplaceDepositSettlementDTO
+
 data MarketplaceManualEvidenceDTO = MarketplaceManualEvidenceDTO
   { mmeEvidenceId           :: Text
   , mmePaymentMethod        :: Text

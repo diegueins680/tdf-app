@@ -304,6 +304,59 @@ export interface MarketplaceCommerceDTO {
   mpcManualEvidence?: MarketplaceManualEvidenceDTO | null;
 }
 
+export type MarketplaceCustomerRequestType =
+  | 'sale_cancellation'
+  | 'sale_return'
+  | 'rental_cancellation'
+  | 'rental_extension'
+  | 'rental_dispute';
+
+export interface MarketplaceCustomerRequestSubmitPayload {
+  mcrsRequestType: MarketplaceCustomerRequestType;
+  mcrsReason: string;
+  mcrsRequestedEndDate?: string;
+  mcrsEvidenceUrl?: string;
+}
+
+export interface MarketplaceCustomerRequestDTO {
+  mcrRequestId: string;
+  mcrOrderId: string;
+  mcrOrderKind: 'sale' | 'rental';
+  mcrRequestType: MarketplaceCustomerRequestType;
+  mcrStatus: 'submitted' | 'needs_quote' | 'approved' | 'rejected';
+  mcrReason: string;
+  mcrRequestedEndDate?: string | null;
+  mcrEvidenceUrl?: string | null;
+  mcrRequestedAt: string;
+  mcrReviewedAt?: string | null;
+  mcrReviewNotes?: string | null;
+}
+
+export interface MarketplaceDepositSettlementSubmitPayload {
+  mdssSettlementMethod: 'bank_transfer' | 'cash' | 'pos' | 'forfeiture';
+  mdssExternalReference: string;
+  mdssEvidenceUrl: string;
+}
+
+export interface MarketplaceDepositSettlementDTO {
+  mdsSettlementId: string;
+  mdsOrderId: string;
+  mdsCheckoutId: string;
+  mdsCurrency: string;
+  mdsDepositAmountMinor: number;
+  mdsDeductionAmountMinor: number;
+  mdsRefundAmountMinor: number;
+  mdsSettlementMethod: 'bank_transfer' | 'cash' | 'pos' | 'forfeiture';
+  mdsExternalReference: string;
+  mdsEvidenceUrl: string;
+  mdsStatus: 'submitted' | 'verified' | 'rejected' | 'requires_reconciliation';
+  mdsSubmittedBy: number;
+  mdsSubmittedAt: string;
+  mdsReviewedBy?: number | null;
+  mdsReviewedAt?: string | null;
+  mdsReviewNotes?: string | null;
+}
+
 export interface MarketplaceOrderUpdatePayload {
   mouStatus?: string;
   mouPaymentProvider?: string | null;

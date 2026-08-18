@@ -139,6 +139,14 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   truthful domain workflows while Datafast/PayPal production execution remains independently off.
   A production deployment, provider charging, and a low-value verification window still require
   separate authorization, sandbox evidence, operational ownership, alerts, and rollback rehearsal.
+- Public sale/rental tracking now supports idempotent cancellation, return, extension, and dispute
+  requests through the scoped lookup capability. A request is evidence, not an automatic state
+  change. Staff review can atomically open supported cancellation/return/dispute domain states;
+  rental extensions remain quote-only and direct approval is rejected until atomic availability,
+  price, terms, and change-order checkout exist. Manual non-provider deposit settlement is enabled
+  behind `commerce.marketplace_manual_deposit_settlement`, requires exact server-derived amounts and
+  an independent reviewer, and posts a balanced liability settlement without fabricating a
+  Datafast/PayPal refund.
 - Production asynchronous provider-event processing through
   `checkout.provider_event_worker`; sandbox is enabled for local/staging rehearsal while production
   remains off pending credentialed retry evidence and named alert ownership.
@@ -160,8 +168,9 @@ The following requested domains remain future phases and must not be represented
 
 - Wiring the canonical checkout aggregate into courses, Domo accepted quotes, public tickets, tips,
   memberships, provider services, and verified donations.
-- Marketplace carrier integrations and customer-initiated sale returns/refunds; automated rental
-  late-fee charging and non-zero-deposit provider refund execution; booking balance collection,
+- Marketplace carrier integrations, approved-return shipping, and sale/provider refund execution;
+  payable rental extensions, automated late-fee charging, and non-zero-deposit provider refund
+  execution; booking balance collection,
   refunds, rescheduling/no-show/overtime operator APIs and notifications;
   atomic course seats; and guest ticket issuance through Datafast/PayPal.
 - Mixing/mastering private object-store multipart upload, malware scanning, engineer workflow,
@@ -193,6 +202,11 @@ listings are linked to an approved `marketplace-rental-v1` terms record without 
 published daily rate: weekly is six daily rates, deposit is explicitly zero, minimum/maximum are
 one/30 days, and the cancellation window is 24 hours. The migration records the system approval in
 append-only terms history; it does not classify any historical rental as paid or handed off.
+Customer-request and deposit-settlement migrations preserve those links, add no historical payment
+classification, and expose `marketplace_rental_deposit_ledger_backfill_report`. A historical paid
+rental without an explicit deposit-liability payment entry is `requires_reclassification`; the
+migration never edits its posted ledger. Rollback succeeds only before customer or settlement
+evidence exists and otherwise refuses data loss.
 
 The service-booking migration backfills only resource-time allocations for existing bookings and
 copies current offering commerce values into inactive draft policies. It does not create checkout,

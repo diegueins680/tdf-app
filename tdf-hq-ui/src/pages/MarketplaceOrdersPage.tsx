@@ -47,11 +47,18 @@ import ClearIcon from '@mui/icons-material/Clear';
 import type {
   MarketplaceFulfillmentUpdatePayload,
   MarketplaceCommerceDTO,
+  MarketplaceCustomerRequestDTO,
+  MarketplaceDepositSettlementDTO,
+  MarketplaceDepositSettlementSubmitPayload,
   MarketplaceOrderDTO,
   MarketplaceOrderUpdatePayload,
   MarketplaceRentalUpdatePayload,
 } from '../api/types';
-import { Marketplace } from '../api/marketplace';
+import {
+  Marketplace,
+  clearMarketplaceDepositIdempotencyKey,
+  getMarketplaceDepositIdempotencyKey,
+} from '../api/marketplace';
 import { DateTime } from 'luxon';
 import { Link as RouterLink } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
@@ -301,6 +308,11 @@ export default function MarketplaceOrdersPage() {
   const [rentalReasonInput, setRentalReasonInput] = useState('');
   const [rentalNotesInput, setRentalNotesInput] = useState('');
   const [manualReviewNotes, setManualReviewNotes] = useState('');
+  const [customerRequestReviewNotes, setCustomerRequestReviewNotes] = useState('');
+  const [depositSettlementMethod, setDepositSettlementMethod] = useState<MarketplaceDepositSettlementSubmitPayload['mdssSettlementMethod']>('bank_transfer');
+  const [depositExternalReference, setDepositExternalReference] = useState('');
+  const [depositEvidenceUrl, setDepositEvidenceUrl] = useState('');
+  const [depositReviewNotes, setDepositReviewNotes] = useState('');
 
   const ordersQuery = useQuery<MarketplaceOrderDTO[], Error>({
     queryKey: ['marketplace-orders', statusFilter],
@@ -330,6 +342,18 @@ export default function MarketplaceOrdersPage() {
       && ['bank_transfer', 'cash', 'pos'].includes(selectedOrder?.moPaymentProvider ?? ''),
     retry: false,
   });
+  const customerRequestsQuery = useQuery<MarketplaceCustomerRequestDTO[], Error>({
+    queryKey: ['marketplace-customer-requests', selectedId],
+    queryFn: () => Marketplace.listCustomerRequestsAdmin?.(selectedId!) ?? Promise.resolve([]),
+    enabled: isAuthed && Boolean(selectedId),
+    retry: false,
+  });
+  const depositSettlementsQuery = useQuery<MarketplaceDepositSettlementDTO[], Error>({
+    queryKey: ['marketplace-deposit-settlements', selectedId],
+    queryFn: () => Marketplace.listDepositSettlements?.(selectedId!) ?? Promise.resolve([]),
+    enabled: isAuthed && Boolean(selectedId) && selectedOrder?.moOrderKind === 'rental',
+    retry: false,
+  });
 
   useEffect(() => {
     if (!selectedOrder) return;
@@ -349,6 +373,11 @@ export default function MarketplaceOrdersPage() {
     setRentalReasonInput('');
     setRentalNotesInput('');
     setManualReviewNotes('');
+    setCustomerRequestReviewNotes('');
+    setDepositSettlementMethod('bank_transfer');
+    setDepositExternalReference('');
+    setDepositEvidenceUrl('');
+    setDepositReviewNotes('');
   }, [selectedOrder]);
 
   const statusFilterImpliesPaid = statusFilter !== 'all' && isPaidOrderStatus(statusFilter);
@@ -753,6 +782,69 @@ export default function MarketplaceOrdersPage() {
       setToast(action === 'approve'
         ? 'Pago manual verificado; la entrega o custodia sigue separada'
         : 'Evidencia rechazada; la orden continúa impaga');
+    },
+  });
+
+  const customerRequestReviewMutation = useMutation<
+    MarketplaceCustomerRequestDTO,
+    Error,
+    { requestId: string; action: 'approve' | 'reject' | 'needs_quote' }
+  >({
+    mutationFn: ({ requestId, action }) => Marketplace.reviewCustomerRequest(
+      selectedId!, requestId, action, customerRequestReviewNotes.trim(),
+    ),
+    onSuccess: (updated) => {
+      qc.setQueryData<MarketplaceCustomerRequestDTO[]>(
+        ['marketplace-customer-requests', updated.mcrOrderId],
+        (current) => current?.map((request) =>
+          request.mcrRequestId === updated.mcrRequestId ? updated : request) ?? [updated],
+      );
+      void qc.invalidateQueries({ queryKey: ['marketplace-orders'] });
+      setCustomerRequestReviewNotes('');
+      setToast('Solicitud revisada; pago y cumplimiento permanecen separados');
+    },
+  });
+
+  const depositSettlementMutation = useMutation<
+    MarketplaceDepositSettlementDTO,
+    Error,
+    MarketplaceDepositSettlementSubmitPayload
+  >({
+    mutationFn: (payload) => Marketplace.submitDepositSettlement(
+      selectedId!, payload, getMarketplaceDepositIdempotencyKey(selectedId!),
+    ),
+    onSuccess: (created) => {
+      clearMarketplaceDepositIdempotencyKey(created.mdsOrderId);
+      qc.setQueryData<MarketplaceDepositSettlementDTO[]>(
+        ['marketplace-deposit-settlements', created.mdsOrderId],
+        (current) => [created, ...(current ?? []).filter((entry) =>
+          entry.mdsSettlementId !== created.mdsSettlementId)],
+      );
+      setDepositExternalReference('');
+      setDepositEvidenceUrl('');
+      setToast('Evidencia de devolución enviada; aún requiere revisión independiente');
+    },
+  });
+
+  const depositReviewMutation = useMutation<
+    MarketplaceDepositSettlementDTO,
+    Error,
+    { settlementId: string; action: 'approve' | 'reject' | 'requires_reconciliation' }
+  >({
+    mutationFn: ({ settlementId, action }) => Marketplace.reviewDepositSettlement(
+      selectedId!, settlementId, action, depositReviewNotes.trim(),
+    ),
+    onSuccess: (updated, variables) => {
+      qc.setQueryData<MarketplaceDepositSettlementDTO[]>(
+        ['marketplace-deposit-settlements', updated.mdsOrderId],
+        (current) => current?.map((entry) =>
+          entry.mdsSettlementId === updated.mdsSettlementId ? updated : entry) ?? [updated],
+      );
+      void qc.invalidateQueries({ queryKey: ['marketplace-orders'] });
+      setDepositReviewNotes('');
+      setToast(variables.action === 'approve'
+        ? 'Devolución manual verificada y contabilizada; no se registró un reembolso de proveedor'
+        : 'Evidencia de depósito revisada sin afirmar movimiento de proveedor');
     },
   });
 
@@ -2129,6 +2221,256 @@ export default function MarketplaceOrdersPage() {
                         {manualReviewMutation.isError && (
                           <Alert severity="error">
                             {manualReviewMutation.error?.message ?? 'No se pudo completar la revisión'}
+                          </Alert>
+                        )}
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {(customerRequestsQuery.data?.length ?? 0) > 0 && (
+                  <Card variant="outlined">
+                    <CardHeader
+                      title="Solicitudes del cliente"
+                      subheader="La solicitud no cambia pago, entrega, custodia ni fechas hasta una transición autorizada."
+                    />
+                    <CardContent>
+                      <Stack spacing={1.5}>
+                        {customerRequestsQuery.data?.map((request) => {
+                          const reviewable = request.mcrStatus === 'submitted'
+                            || request.mcrStatus === 'needs_quote';
+                          const extension = request.mcrRequestType === 'rental_extension';
+                          return (
+                            <Paper key={request.mcrRequestId} variant="outlined" sx={{ p: 1.5 }}>
+                              <Stack spacing={1}>
+                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
+                                  <Chip size="small" label={request.mcrRequestType.replace(/_/g, ' ')} />
+                                  <Chip size="small" variant="outlined" label={request.mcrStatus.replace(/_/g, ' ')} />
+                                  <Typography variant="caption" color="text.secondary">
+                                    {formatDate(request.mcrRequestedAt)}
+                                  </Typography>
+                                </Stack>
+                                <Typography variant="body2">{request.mcrReason}</Typography>
+                                {request.mcrRequestedEndDate && (
+                                  <Typography variant="body2">
+                                    Fecha solicitada: {request.mcrRequestedEndDate}
+                                  </Typography>
+                                )}
+                                {request.mcrReviewNotes && (
+                                  <Typography variant="body2" color="text.secondary">
+                                    Revisión: {request.mcrReviewNotes}
+                                  </Typography>
+                                )}
+                                {reviewable && (
+                                  <>
+                                    <TextField
+                                      label="Notas para el cliente"
+                                      value={customerRequestReviewNotes}
+                                      onChange={(event) => setCustomerRequestReviewNotes(event.target.value)}
+                                      multiline
+                                      minRows={2}
+                                      inputProps={{ minLength: 3, maxLength: 1000 }}
+                                      helperText={extension
+                                        ? 'Una extensión solo puede requerir cotización o rechazarse; no edites la fecha directamente.'
+                                        : 'Confirma el estado actual antes de aplicar la transición de dominio.'}
+                                    />
+                                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                                      {request.mcrStatus === 'submitted' && !extension && (
+                                        <Button
+                                          variant="contained"
+                                          color="success"
+                                          disabled={customerRequestReviewNotes.trim().length < 3
+                                            || customerRequestReviewMutation.isPending}
+                                          onClick={() => customerRequestReviewMutation.mutate({
+                                            requestId: request.mcrRequestId,
+                                            action: 'approve',
+                                          })}
+                                        >
+                                          Aprobar transición
+                                        </Button>
+                                      )}
+                                      {request.mcrStatus === 'submitted' && extension && (
+                                        <Button
+                                          variant="contained"
+                                          disabled={customerRequestReviewNotes.trim().length < 3
+                                            || customerRequestReviewMutation.isPending}
+                                          onClick={() => customerRequestReviewMutation.mutate({
+                                            requestId: request.mcrRequestId,
+                                            action: 'needs_quote',
+                                          })}
+                                        >
+                                          Requiere cotización
+                                        </Button>
+                                      )}
+                                      <Button
+                                        variant="outlined"
+                                        color="error"
+                                        disabled={customerRequestReviewNotes.trim().length < 3
+                                          || customerRequestReviewMutation.isPending}
+                                        onClick={() => customerRequestReviewMutation.mutate({
+                                          requestId: request.mcrRequestId,
+                                          action: 'reject',
+                                        })}
+                                      >
+                                        Rechazar
+                                      </Button>
+                                    </Stack>
+                                  </>
+                                )}
+                              </Stack>
+                            </Paper>
+                          );
+                        })}
+                        {customerRequestReviewMutation.isError && (
+                          <Alert severity="error">
+                            {customerRequestReviewMutation.error?.message ?? 'No se pudo revisar la solicitud'}
+                          </Alert>
+                        )}
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {isCanonicalRental && (
+                  ['refund_due', 'partial_refund_due'].includes(selectedOrder.moDepositStatus ?? '')
+                    || (depositSettlementsQuery.data?.length ?? 0) > 0
+                ) && (
+                  <Card variant="outlined">
+                    <CardHeader
+                      title="Liquidación manual del depósito"
+                      subheader="Registra evidencia real. Esto no ejecuta ni afirma un reembolso de Datafast o PayPal."
+                    />
+                    <CardContent>
+                      <Stack spacing={1.5}>
+                        {depositSettlementsQuery.isError && (
+                          <Alert severity="error">No se pudo cargar la evidencia protegida de liquidación.</Alert>
+                        )}
+                        {(depositSettlementsQuery.data?.length ?? 0) === 0 && (
+                          <>
+                            <Alert severity="warning" variant="outlined">
+                              Depósito: {selectedOrder.moSecurityDepositUsdCents ?? 0} {selectedOrder.moCurrency} centavos · deducción aprobada: {selectedOrder.moDepositDeductionUsdCents ?? 0} · devolución esperada: {(selectedOrder.moSecurityDepositUsdCents ?? 0) - (selectedOrder.moDepositDeductionUsdCents ?? 0)}.
+                            </Alert>
+                            <FormControl fullWidth size="small">
+                              <InputLabel id="deposit-settlement-method-label">Método real de liquidación</InputLabel>
+                              <Select
+                                labelId="deposit-settlement-method-label"
+                                label="Método real de liquidación"
+                                value={depositSettlementMethod}
+                                onChange={(event) => setDepositSettlementMethod(
+                                  event.target.value as MarketplaceDepositSettlementSubmitPayload['mdssSettlementMethod'],
+                                )}
+                              >
+                                <MenuItem value="bank_transfer">Transferencia bancaria</MenuItem>
+                                <MenuItem value="cash">Efectivo</MenuItem>
+                                <MenuItem value="pos">POS</MenuItem>
+                                {(selectedOrder.moDepositDeductionUsdCents ?? 0)
+                                  === (selectedOrder.moSecurityDepositUsdCents ?? 0) && (
+                                  <MenuItem value="forfeiture">Retención total documentada</MenuItem>
+                                )}
+                              </Select>
+                            </FormControl>
+                            <TextField
+                              label="Referencia externa"
+                              value={depositExternalReference}
+                              onChange={(event) => setDepositExternalReference(event.target.value)}
+                              inputProps={{ minLength: 3, maxLength: 160 }}
+                            />
+                            <TextField
+                              label="Evidencia privada (HTTPS o /assets/)"
+                              value={depositEvidenceUrl}
+                              onChange={(event) => setDepositEvidenceUrl(event.target.value)}
+                              inputProps={{ maxLength: 2048 }}
+                            />
+                            <Button
+                              variant="contained"
+                              disabled={depositSettlementMutation.isPending
+                                || depositExternalReference.trim().length < 3
+                                || !(depositEvidenceUrl.trim().startsWith('https://')
+                                  || depositEvidenceUrl.trim().startsWith('/assets/'))}
+                              onClick={() => depositSettlementMutation.mutate({
+                                mdssSettlementMethod: depositSettlementMethod,
+                                mdssExternalReference: depositExternalReference.trim(),
+                                mdssEvidenceUrl: depositEvidenceUrl.trim(),
+                              })}
+                            >
+                              Enviar evidencia para revisión independiente
+                            </Button>
+                          </>
+                        )}
+                        {depositSettlementsQuery.data?.map((settlement) => (
+                          <Paper key={settlement.mdsSettlementId} variant="outlined" sx={{ p: 1.5 }}>
+                            <Stack spacing={1}>
+                              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
+                                <Chip size="small" label={settlement.mdsStatus.replace(/_/g, ' ')} />
+                                <Typography variant="body2">
+                                  {settlement.mdsSettlementMethod.replace(/_/g, ' ')} · devolución {settlement.mdsRefundAmountMinor} {settlement.mdsCurrency} centavos · deducción {settlement.mdsDeductionAmountMinor}
+                                </Typography>
+                              </Stack>
+                              <Typography variant="body2">
+                                Referencia: {settlement.mdsExternalReference}
+                              </Typography>
+                              <Link href={settlement.mdsEvidenceUrl} target="_blank" rel="noreferrer">
+                                Abrir evidencia protegida
+                              </Link>
+                              {settlement.mdsReviewNotes && (
+                                <Typography variant="body2" color="text.secondary">
+                                  Revisión: {settlement.mdsReviewNotes}
+                                </Typography>
+                              )}
+                              {settlement.mdsStatus === 'submitted' && (
+                                <>
+                                  <TextField
+                                    label="Notas de revisión independiente"
+                                    value={depositReviewNotes}
+                                    onChange={(event) => setDepositReviewNotes(event.target.value)}
+                                    multiline
+                                    minRows={2}
+                                    inputProps={{ minLength: 3, maxLength: 1000 }}
+                                  />
+                                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                                    <Button
+                                      variant="contained"
+                                      color="success"
+                                      disabled={depositReviewNotes.trim().length < 3 || depositReviewMutation.isPending}
+                                      onClick={() => depositReviewMutation.mutate({
+                                        settlementId: settlement.mdsSettlementId,
+                                        action: 'approve',
+                                      })}
+                                    >
+                                      Verificar evidencia real
+                                    </Button>
+                                    <Button
+                                      variant="outlined"
+                                      disabled={depositReviewNotes.trim().length < 3 || depositReviewMutation.isPending}
+                                      onClick={() => depositReviewMutation.mutate({
+                                        settlementId: settlement.mdsSettlementId,
+                                        action: 'requires_reconciliation',
+                                      })}
+                                    >
+                                      Requiere conciliación
+                                    </Button>
+                                    <Button
+                                      variant="outlined"
+                                      color="error"
+                                      disabled={depositReviewNotes.trim().length < 3 || depositReviewMutation.isPending}
+                                      onClick={() => depositReviewMutation.mutate({
+                                        settlementId: settlement.mdsSettlementId,
+                                        action: 'reject',
+                                      })}
+                                    >
+                                      Rechazar
+                                    </Button>
+                                  </Stack>
+                                </>
+                              )}
+                            </Stack>
+                          </Paper>
+                        ))}
+                        {(depositSettlementMutation.isError || depositReviewMutation.isError) && (
+                          <Alert severity="error">
+                            {depositSettlementMutation.error?.message
+                              ?? depositReviewMutation.error?.message
+                              ?? 'No se pudo completar la revisión del depósito'}
                           </Alert>
                         )}
                       </Stack>

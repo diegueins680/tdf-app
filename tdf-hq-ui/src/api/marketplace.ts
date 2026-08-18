@@ -13,6 +13,11 @@ import type {
   MarketplaceRentalUpdatePayload,
   MarketplaceRentalTermsUpdatePayload,
   MarketplaceCommerceDTO,
+  MarketplaceCustomerRequestDTO,
+  MarketplaceCustomerRequestSubmitPayload,
+  MarketplaceCustomerRequestType,
+  MarketplaceDepositSettlementDTO,
+  MarketplaceDepositSettlementSubmitPayload,
 } from './types';
 
 export interface CartItemUpdate {
@@ -36,6 +41,10 @@ export interface CheckoutRequest {
 const lookupStorageKey = (orderId: string) => `tdf-marketplace-order-lookup:${orderId}`;
 const idempotencyStorageKey = (cartId: string) =>
   `tdf-marketplace-checkout-idempotency:${cartId}`;
+const requestIdempotencyStorageKey = (orderId: string, requestType: MarketplaceCustomerRequestType) =>
+  `tdf-marketplace-request-idempotency:${orderId}:${requestType}`;
+const depositIdempotencyStorageKey = (orderId: string) =>
+  `tdf-marketplace-deposit-idempotency:${orderId}`;
 
 const randomUuid = (): string => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -58,6 +67,40 @@ export const getMarketplaceCheckoutIdempotencyKey = (cartId: string, _provider: 
   const created = randomUuid();
   if (typeof window !== 'undefined') window.localStorage.setItem(storageKey, created);
   return created;
+};
+
+export const getMarketplaceRequestIdempotencyKey = (
+  orderId: string,
+  requestType: MarketplaceCustomerRequestType,
+): string => {
+  const storageKey = requestIdempotencyStorageKey(orderId, requestType);
+  const stored = typeof window !== 'undefined' ? window.sessionStorage.getItem(storageKey) : null;
+  if (stored) return stored;
+  const created = randomUuid();
+  if (typeof window !== 'undefined') window.sessionStorage.setItem(storageKey, created);
+  return created;
+};
+
+export const clearMarketplaceRequestIdempotencyKey = (
+  orderId: string,
+  requestType: MarketplaceCustomerRequestType,
+): void => {
+  if (typeof window === 'undefined') return;
+  window.sessionStorage.removeItem(requestIdempotencyStorageKey(orderId, requestType));
+};
+
+export const getMarketplaceDepositIdempotencyKey = (orderId: string): string => {
+  const storageKey = depositIdempotencyStorageKey(orderId);
+  const stored = typeof window !== 'undefined' ? window.sessionStorage.getItem(storageKey) : null;
+  if (stored) return stored;
+  const created = randomUuid();
+  if (typeof window !== 'undefined') window.sessionStorage.setItem(storageKey, created);
+  return created;
+};
+
+export const clearMarketplaceDepositIdempotencyKey = (orderId: string): void => {
+  if (typeof window === 'undefined') return;
+  window.sessionStorage.removeItem(depositIdempotencyStorageKey(orderId));
 };
 
 export const storeMarketplaceLookupToken = (orderId: string, token?: string | null): void => {
@@ -111,6 +154,24 @@ export const Marketplace = {
       { mmesCustomerReference: customerReference },
       lookupHeaders(lookupToken),
     ),
+  listCustomerRequests: (orderId: string, lookupToken: string) =>
+    get<MarketplaceCustomerRequestDTO[]>(
+      `/marketplace/orders/${orderId}/requests`,
+      lookupHeaders(lookupToken),
+    ),
+  submitCustomerRequest: (
+    orderId: string,
+    payload: MarketplaceCustomerRequestSubmitPayload,
+    lookupToken: string,
+    idempotencyKey: string,
+  ) => post<MarketplaceCustomerRequestDTO>(
+    `/marketplace/orders/${orderId}/requests`,
+    payload,
+    { headers: {
+      'X-Order-Lookup-Token': lookupToken,
+      'Idempotency-Key': idempotencyKey,
+    } },
+  ),
   listOrders: (params?: { status?: string; limit?: number; offset?: number }) => {
     const qs = new URLSearchParams();
     const status = params?.status?.trim();
@@ -144,4 +205,35 @@ export const Marketplace = {
     put<MarketplaceOrderDTO>(`/marketplace/orders/${orderId}/fulfillment`, payload),
   updateRental: (orderId: string, payload: MarketplaceRentalUpdatePayload) =>
     put<MarketplaceOrderDTO>(`/marketplace/orders/${orderId}/rental`, payload),
+  listCustomerRequestsAdmin: (orderId: string) =>
+    get<MarketplaceCustomerRequestDTO[]>(`/marketplace/orders/${orderId}/customer-requests`),
+  reviewCustomerRequest: (
+    orderId: string,
+    requestId: string,
+    action: 'approve' | 'reject' | 'needs_quote',
+    reviewNotes: string,
+  ) => post<MarketplaceCustomerRequestDTO>(
+    `/marketplace/orders/${orderId}/customer-requests/${requestId}/review`,
+    { mcrrAction: action, mcrrReviewNotes: reviewNotes },
+  ),
+  listDepositSettlements: (orderId: string) =>
+    get<MarketplaceDepositSettlementDTO[]>(`/marketplace/orders/${orderId}/deposit-settlements`),
+  submitDepositSettlement: (
+    orderId: string,
+    payload: MarketplaceDepositSettlementSubmitPayload,
+    idempotencyKey: string,
+  ) => post<MarketplaceDepositSettlementDTO>(
+    `/marketplace/orders/${orderId}/deposit-settlements`,
+    payload,
+    idempotencyHeaders(idempotencyKey),
+  ),
+  reviewDepositSettlement: (
+    orderId: string,
+    settlementId: string,
+    action: 'approve' | 'reject' | 'requires_reconciliation',
+    reviewNotes: string,
+  ) => post<MarketplaceDepositSettlementDTO>(
+    `/marketplace/orders/${orderId}/deposit-settlements/${settlementId}/review`,
+    { mdsrAction: action, mdsrReviewNotes: reviewNotes },
+  ),
 };

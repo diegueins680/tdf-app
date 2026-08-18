@@ -75,6 +75,29 @@ release only an expired or validly cancelled hold, and contact the affected cust
 damage, preserve photos/documents in approved private evidence storage, follow the dispute window,
 and require the configured operator approvals before any financial settlement.
 
+### Marketplace customer request review
+
+Open the request through the authenticated `customer-requests` route and compare its immutable
+order/type/reason/date/evidence snapshot with the current sale or rental state. Do not edit the
+order because a customer submitted a request. Approval may only open the supported cancellation,
+return, or operational-dispute state; payment remains unchanged. Reject stale or inapplicable
+requests with customer-safe notes. Mark a rental extension `needs_quote`; never approve it or edit
+the return date until a versioned extension quote, atomic date check, accepted terms, and any
+payable balance are implemented.
+
+### Rental deposit manual settlement
+
+Use this path only after inspection has reached `deposit_refund_due` and the canonical checkout is
+fully paid with no prior returned-funds total. The submitter records the actual bank/cash/POS
+reference or full-forfeiture evidence in approved private storage. A different invoicing-authorized
+operator compares the evidence, deposit, approved deduction, refund, currency, checkout, and rental
+state. Choose `requires_reconciliation` instead of verification for ambiguity. Verification is an
+accounting liability settlement, not a Datafast/PayPal refund; never add a provider ID or tell the
+customer a provider refund occurred. Confirm the ledger balances to zero, the credit-note reference
+matches the evidence, and the terminal deposit state is correct before closing the rental. Disable
+`commerce.marketplace_manual_deposit_settlement` if evidence storage, separation of duties, or
+ledger reconciliation is unavailable.
+
 ## Distribution dead letter or release-date risk
 
 Stop retries if the package/profile/checksum may be wrong. Verify immutable release version,

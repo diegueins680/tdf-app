@@ -13,6 +13,8 @@ jest.unstable_mockModule('./client', () => ({
 const {
   Marketplace,
   getMarketplaceCheckoutIdempotencyKey,
+  getMarketplaceDepositIdempotencyKey,
+  getMarketplaceRequestIdempotencyKey,
   loadMarketplaceLookupToken,
   storeMarketplaceLookupToken,
 } = await import('./marketplace');
@@ -90,6 +92,84 @@ describe('marketplace checkout API security contract', () => {
       2,
       '/marketplace/orders/order-1/manual-payment/review',
       { mmprAction: 'approve', mmprReviewNotes: 'Matched bank statement.' },
+      undefined,
+    );
+  });
+
+  it('keeps customer-operation lookup credentials in headers and request creation idempotent', async () => {
+    postMock.mockResolvedValue({});
+    getMock.mockResolvedValue([]);
+    const requestKey = getMarketplaceRequestIdempotencyKey('order-1', 'rental_extension');
+    expect(getMarketplaceRequestIdempotencyKey('order-1', 'rental_extension')).toBe(requestKey);
+
+    await Marketplace.listCustomerRequests('order-1', 'lookup-secret');
+    expect(getMock).toHaveBeenCalledWith(
+      '/marketplace/orders/order-1/requests',
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+    await Marketplace.submitCustomerRequest(
+      'order-1',
+      {
+        mcrsRequestType: 'rental_extension',
+        mcrsReason: 'Necesito dos días adicionales.',
+        mcrsRequestedEndDate: '2030-01-12',
+      },
+      'lookup-secret',
+      requestKey,
+    );
+    expect(postMock).toHaveBeenCalledWith(
+      '/marketplace/orders/order-1/requests',
+      {
+        mcrsRequestType: 'rental_extension',
+        mcrsReason: 'Necesito dos días adicionales.',
+        mcrsRequestedEndDate: '2030-01-12',
+      },
+      { headers: {
+        'X-Order-Lookup-Token': 'lookup-secret',
+        'Idempotency-Key': requestKey,
+      } },
+    );
+  });
+
+  it('uses protected dual-control deposit settlement routes without provider claims', async () => {
+    postMock.mockResolvedValue({});
+    getMock.mockResolvedValue([]);
+    const settlementKey = getMarketplaceDepositIdempotencyKey('order-1');
+
+    await Marketplace.listDepositSettlements('order-1');
+    expect(getMock).toHaveBeenCalledWith(
+      '/marketplace/orders/order-1/deposit-settlements',
+      undefined,
+    );
+    await Marketplace.submitDepositSettlement(
+      'order-1',
+      {
+        mdssSettlementMethod: 'bank_transfer',
+        mdssExternalReference: 'BANK-REFUND-1',
+        mdssEvidenceUrl: '/assets/deposit-refunds/1',
+      },
+      settlementKey,
+    );
+    expect(postMock).toHaveBeenNthCalledWith(
+      1,
+      '/marketplace/orders/order-1/deposit-settlements',
+      {
+        mdssSettlementMethod: 'bank_transfer',
+        mdssExternalReference: 'BANK-REFUND-1',
+        mdssEvidenceUrl: '/assets/deposit-refunds/1',
+      },
+      { headers: { 'Idempotency-Key': settlementKey } },
+    );
+    await Marketplace.reviewDepositSettlement(
+      'order-1',
+      'settlement-1',
+      'approve',
+      'Matched outgoing bank transfer.',
+    );
+    expect(postMock).toHaveBeenNthCalledWith(
+      2,
+      '/marketplace/orders/order-1/deposit-settlements/settlement-1/review',
+      { mdsrAction: 'approve', mdsrReviewNotes: 'Matched outgoing bank transfer.' },
       undefined,
     );
   });

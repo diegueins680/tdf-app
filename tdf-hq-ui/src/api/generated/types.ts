@@ -2969,6 +2969,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/marketplace/orders/{orderId}/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        /** List customer requests for a securely tracked marketplace order */
+        get: operations["listMarketplaceCustomerRequests"];
+        put?: never;
+        /**
+         * Submit an idempotent marketplace customer request
+         * @description Submitting a request never changes payment state. Staff review is required before supported cancellation, return, or dispute transitions. Rental extensions require a separate availability check, versioned quote, and payable change order and cannot be directly approved.
+         */
+        post: operations["submitMarketplaceCustomerRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/marketplace/orders/{orderId}/commerce": {
         parameters: {
             query?: never;
@@ -3052,6 +3076,98 @@ export interface paths {
          */
         put: operations["updateMarketplaceRental"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/customer-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        /** List protected customer-operation requests for staff review */
+        get: operations["listMarketplaceCustomerRequestsAdmin"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/customer-requests/{requestId}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Review a marketplace customer request
+         * @description Approval atomically applies only the supported domain transition. Payment is never changed. Rental extensions cannot be directly approved.
+         */
+        post: operations["reviewMarketplaceCustomerRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/deposit-settlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        /** List rental-deposit settlement evidence */
+        get: operations["listMarketplaceDepositSettlements"];
+        put?: never;
+        /**
+         * Submit evidence for a manual rental-deposit settlement
+         * @description Amount, currency, deposit, and approved deduction are loaded from the canonical checkout and rental snapshot. Submission does not claim a provider refund and requires independent staff verification.
+         */
+        post: operations["submitMarketplaceDepositSettlement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/deposit-settlements/{settlementId}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+                settlementId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Independently verify or reject rental-deposit settlement evidence
+         * @description Verification posts a balanced liability settlement, updates the returned-funds total, and issues a manual credit-note reference. It does not call or claim a provider refund.
+         */
+        post: operations["reviewMarketplaceDepositSettlement"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4627,6 +4743,81 @@ export interface components {
             /** @enum {string} */
             mmprAction: "approve" | "reject";
             mmprReviewNotes: string;
+        };
+        MarketplaceCustomerRequestSubmit: {
+            /** @enum {string} */
+            mcrsRequestType: "sale_cancellation" | "sale_return" | "rental_cancellation" | "rental_extension" | "rental_dispute";
+            mcrsReason: string;
+            /** Format: date */
+            mcrsRequestedEndDate?: string;
+            mcrsEvidenceUrl?: string;
+        };
+        MarketplaceCustomerRequestReview: {
+            /** @enum {string} */
+            mcrrAction: "approve" | "reject" | "needs_quote";
+            mcrrReviewNotes: string;
+        };
+        MarketplaceCustomerRequest: {
+            /** Format: uuid */
+            mcrRequestId: string;
+            /** Format: uuid */
+            mcrOrderId: string;
+            /** @enum {string} */
+            mcrOrderKind: "sale" | "rental";
+            /** @enum {string} */
+            mcrRequestType: "sale_cancellation" | "sale_return" | "rental_cancellation" | "rental_extension" | "rental_dispute";
+            /** @enum {string} */
+            mcrStatus: "submitted" | "needs_quote" | "approved" | "rejected";
+            mcrReason: string;
+            /** Format: date */
+            mcrRequestedEndDate: string | null;
+            mcrEvidenceUrl: string | null;
+            /** Format: date-time */
+            mcrRequestedAt: string;
+            /** Format: date-time */
+            mcrReviewedAt: string | null;
+            mcrReviewNotes: string | null;
+        };
+        MarketplaceDepositSettlementSubmit: {
+            /** @enum {string} */
+            mdssSettlementMethod: "bank_transfer" | "cash" | "pos" | "forfeiture";
+            mdssExternalReference: string;
+            mdssEvidenceUrl: string;
+        };
+        MarketplaceDepositSettlementReview: {
+            /** @enum {string} */
+            mdsrAction: "approve" | "reject" | "requires_reconciliation";
+            mdsrReviewNotes: string;
+        };
+        MarketplaceDepositSettlement: {
+            /** Format: uuid */
+            mdsSettlementId: string;
+            /** Format: uuid */
+            mdsOrderId: string;
+            /** Format: uuid */
+            mdsCheckoutId: string;
+            mdsCurrency: string;
+            /** Format: int64 */
+            mdsDepositAmountMinor: number;
+            /** Format: int64 */
+            mdsDeductionAmountMinor: number;
+            /** Format: int64 */
+            mdsRefundAmountMinor: number;
+            /** @enum {string} */
+            mdsSettlementMethod: "bank_transfer" | "cash" | "pos" | "forfeiture";
+            mdsExternalReference: string;
+            mdsEvidenceUrl: string;
+            /** @enum {string} */
+            mdsStatus: "submitted" | "verified" | "rejected" | "requires_reconciliation";
+            /** Format: int64 */
+            mdsSubmittedBy: number;
+            /** Format: date-time */
+            mdsSubmittedAt: string;
+            /** Format: int64 */
+            mdsReviewedBy: number | null;
+            /** Format: date-time */
+            mdsReviewedAt: string | null;
+            mdsReviewNotes: string | null;
         };
         MarketplaceManualEvidence: {
             /** Format: uuid */
@@ -13664,6 +13855,92 @@ export interface operations {
             };
         };
     };
+    listMarketplaceCustomerRequests: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Customer-safe cancellation, return, extension, and dispute requests */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCustomerRequest"][];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitMarketplaceCustomerRequest: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceCustomerRequestSubmit"];
+            };
+        };
+        responses: {
+            /** @description Persisted request with truthful review state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCustomerRequest"];
+                };
+            };
+            /** @description Invalid request type */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order state changed or a matching request is already pending */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getMarketplaceCommerce: {
         parameters: {
             query?: never;
@@ -13851,6 +14128,222 @@ export interface operations {
                 content?: never;
             };
             /** @description Transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMarketplaceCustomerRequestsAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Requests and review evidence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCustomerRequest"][];
+                };
+            };
+            /** @description Operations access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reviewMarketplaceCustomerRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceCustomerRequestReview"];
+            };
+        };
+        responses: {
+            /** @description Reviewed request */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCustomerRequest"];
+                };
+            };
+            /** @description Invalid action or review notes */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request or domain state changed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMarketplaceDepositSettlements: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Immutable manual settlement evidence and review state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceDepositSettlement"][];
+                };
+            };
+            /** @description Operations and invoicing access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitMarketplaceDepositSettlement: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceDepositSettlementSubmit"];
+            };
+        };
+        responses: {
+            /** @description Submitted settlement evidence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceDepositSettlement"];
+                };
+            };
+            /** @description Invalid manual method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations and invoicing access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Deposit snapshot */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Manual deposit settlement is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reviewMarketplaceDepositSettlement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+                settlementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceDepositSettlementReview"];
+            };
+        };
+        responses: {
+            /** @description Reviewed settlement evidence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceDepositSettlement"];
+                };
+            };
+            /** @description Invalid action or review notes */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations and invoicing access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Separation-of-duties */
             409: {
                 headers: {
                     [name: string]: unknown;
