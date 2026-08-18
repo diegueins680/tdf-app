@@ -11,6 +11,7 @@ module TDF.Server.EventResearch
     , eventResearchCandidateContentHash
     , eventResearchMaterializationDedupeKey
     , materializationEventRefSourceStatus
+    , materializationWorkflowStateCode
     ) where
 
 import Control.Exception (SomeException, displayException, try)
@@ -487,7 +488,7 @@ createOrLinkMaterializedEvent organizerPartyId candidateEntity@(Entity _ candida
         Right eventTypeId -> do
             workflowStateId <-
                 EventLifecycle.resolveActiveSocialEventStateId
-                    (if request.erMaterializationPublish then "on_sale" else "planning")
+                    (materializationWorkflowStateCode request.erMaterializationPublish validated.vmSourceStatus)
             venueResult <- resolveMaterializationVenue candidate validated now
             case venueResult of
                 Left serverError -> pure (Left serverError)
@@ -715,6 +716,11 @@ materializationEventRefSourceStatus :: Bool -> T.Text -> T.Text
 materializationEventRefSourceStatus publish sourceStatus
     | publish = sourceStatus
     | otherwise = "draft:" <> sourceStatus
+
+materializationWorkflowStateCode :: Bool -> T.Text -> T.Text
+materializationWorkflowStateCode publish sourceStatus
+    | publish = sourceStatus
+    | otherwise = "planning"
 
 materializationEventMetadata
     :: EventResearchCandidate
