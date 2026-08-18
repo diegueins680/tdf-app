@@ -7382,6 +7382,56 @@
       "risk": "A mobile form test could be mistaken for a client-side city authority.",
       "justification": "Quito and Cuenca are synthetic opaque IDs in a unit-test fixture only; the production mobile selector and payload always consume the database-backed city taxonomy.",
       "reviewed": true
+    },
+    {
+      "id": "7ce7e818e76567a66ad5",
+      "classification": "governed-reference-data",
+      "disposition": "consumer-update",
+      "specializedModel": "locale_reference, currency_reference, country_reference, session_preferences",
+      "priority": "P3-consumer",
+      "risk": "A visual fixture could be mistaken for client-side authority over locale, currency, timezone or country values.",
+      "justification": "The synthetic session preference object is an API consumer fixture that uses stable IDs supplied by the database-backed reference catalogs; it does not define selectable production values.",
+      "reviewed": true
+    },
+    {
+      "id": "cbb4b83dfc2c8da596a4",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "authenticated_session, security_role, security_module, feature_definition",
+      "priority": "P3-consumer",
+      "risk": "A visual fixture must never become an authority for roles, modules, flags or authenticated identities.",
+      "justification": "This non-production session exists only behind intercepted local browser requests, carries no grants, and consumes the canonical session shape without defining security registry values.",
+      "reviewed": true
+    },
+    {
+      "id": "770fc9c86bf4e2895825",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "directory_instrument, directory_profile_instrument",
+      "priority": "P3-consumer",
+      "risk": "Instrument labels or proficiency relationships could diverge if a visual fixture were treated as production authority.",
+      "justification": "The editor fixture references opaque instrument taxonomy IDs returned by the mocked canonical endpoint; production options remain database-managed and the array only verifies multi-value round trips.",
+      "reviewed": true
+    },
+    {
+      "id": "4067b810ede8798454d7",
+      "classification": "governed-reference-data",
+      "disposition": "consumer-update",
+      "specializedModel": "language_reference, directory_profile_language",
+      "priority": "P3-consumer",
+      "risk": "Language identities and localized labels could drift if the visual fixture became a client-owned catalog.",
+      "justification": "The fixture consumes stable language IDs from the mocked database-backed taxonomy and only demonstrates multiple proficiency relationships; it is not an editorial source.",
+      "reviewed": true
+    },
+    {
+      "id": "785d27b94969c66b7064",
+      "classification": "governed-reference-data",
+      "disposition": "consumer-update",
+      "specializedModel": "country_reference, city_reference, directory_profile_service_area",
+      "priority": "P3-consumer",
+      "risk": "Geographic labels, identities and service-area semantics could diverge if synthetic capture data were reused as production authority.",
+      "justification": "The two service areas reference opaque country and city IDs exposed by the mocked canonical taxonomy solely to verify multi-city round trips and primary-location semantics.",
+      "reviewed": true
     }
   ]
 }
