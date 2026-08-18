@@ -56,7 +56,7 @@ test('backend image packages the tested artifact instead of recompiling Haskell'
 
 test('automatic migration integration matches the persisted production locale', async () => {
   const integration = await source('scripts/test-automatic-migrations-production-schema.sh');
-  assert.match(integration, /DEFAULT_LOCALE=es/);
+  assert.equal(integration.match(/DEFAULT_LOCALE=es/g)?.length, 1);
   assert.match(integration, /AUTO_APPLY_PRODUCTION_MIGRATIONS=true/);
   assert.match(integration, /production-entrypoint\.sh/);
 });
