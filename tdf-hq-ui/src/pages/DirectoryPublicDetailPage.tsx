@@ -57,6 +57,11 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
   const value = detail.data ?? {};
   const title = text(value['name']) ?? text(value['title']) ?? 'Directorio musical';
   const description = text(value['bio']) ?? text(value['description']) ?? text(value['creditsSummary']) ?? 'Perfil público en TDF.';
+  const profileImageEntry = kind === 'profile'
+    ? rows(value['portfolio']).find((item) => text(item['itemType']) === 'image')
+    : undefined;
+  const profileImage = text(profileImageEntry?.['thumbnailUrl']) ?? text(profileImageEntry?.['url']);
+  const absoluteProfileImage = profileImage ? new URL(profileImage, window.location.origin).toString() : undefined;
   const canonicalPath = text(value['canonicalUrl']) ?? location.pathname;
   const canonical = `${window.location.origin}${canonicalPath}`;
   const categoryCode = text(record(value['category'])?.['code']);
@@ -76,6 +81,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
     title,
     description,
     canonical,
+    ogImage: absoluteProfileImage,
     ogType: kind === 'profile' ? 'profile' : 'website',
     structuredData: {
       '@context': 'https://schema.org',
@@ -83,6 +89,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
       name: title,
       description,
       url: canonical,
+      ...(absoluteProfileImage ? { image: absoluteProfileImage } : {}),
       ...(reviewAverage && reviewCount > 0 ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: reviewAverage, reviewCount } } : {}),
     },
   });
@@ -117,15 +124,32 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
           <Paper variant="outlined" sx={{ p: { xs: 3, md: 5 }, borderRadius: 4 }}>
             <Stack spacing={3}>
               <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={3}>
-                <Box>
-                  <Stack direction="row" gap={1} flexWrap="wrap" mb={1}>
-                    <Chip color="primary" label={kind === 'profile' ? 'Perfil profesional' : kind === 'classified' ? 'Clasificado musical' : kind === 'event' ? 'Evento' : 'Venue'} />
-                    {category && <Chip label={text(category['name']) ?? 'Oportunidad'} />}
-                  </Stack>
-                  <Typography component="h1" variant="h2" fontWeight={900} sx={{ fontSize: { xs: '2.2rem', md: '3.7rem' } }}>{title}</Typography>
-                  {author && <Typography variant="h6" color="text.secondary" mt={1}>Publicado por {text(author['name'])}</Typography>}
-                  {venue && <Typography variant="h6" color="text.secondary" mt={1}>{text(venue['name'])}</Typography>}
-                </Box>
+                <Stack direction={{ xs: 'column', sm: 'row' }} gap={3} sx={{ minWidth: 0 }}>
+                  {profileImage && (
+                    <Box
+                      component="img"
+                      src={profileImage}
+                      alt={`Foto de ${title}`}
+                      sx={{
+                        width: { xs: '100%', sm: 220 },
+                        height: { xs: 300, sm: 220 },
+                        borderRadius: 3,
+                        objectFit: 'cover',
+                        objectPosition: 'center',
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                  <Box>
+                    <Stack direction="row" gap={1} flexWrap="wrap" mb={1}>
+                      <Chip color="primary" label={kind === 'profile' ? 'Perfil profesional' : kind === 'classified' ? 'Clasificado musical' : kind === 'event' ? 'Evento' : 'Venue'} />
+                      {category && <Chip label={text(category['name']) ?? 'Oportunidad'} />}
+                    </Stack>
+                    <Typography component="h1" variant="h2" fontWeight={900} sx={{ fontSize: { xs: '2.2rem', md: '3.7rem' } }}>{title}</Typography>
+                    {author && <Typography variant="h6" color="text.secondary" mt={1}>Publicado por {text(author['name'])}</Typography>}
+                    {venue && <Typography variant="h6" color="text.secondary" mt={1}>{text(venue['name'])}</Typography>}
+                  </Box>
+                </Stack>
                 <Stack direction="row" gap={1} flexWrap="wrap" alignSelf={{ md: 'flex-start' }}>
                   <Button onClick={() => { void share(); }} startIcon={<ShareIcon />}>Compartir</Button>
                   <Button component="a" href={whatsapp} target="_blank" rel="noreferrer" startIcon={<WhatsAppIcon />}>WhatsApp</Button>
