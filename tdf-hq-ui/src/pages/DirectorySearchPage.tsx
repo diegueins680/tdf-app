@@ -6,6 +6,7 @@ import {
   Card,
   CardActions,
   CardContent,
+  CardMedia,
   Chip,
   CircularProgress,
   Container,
@@ -47,6 +48,12 @@ import { getAnalyticsClient } from '../analytics/posthog';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
+import { API_BASE_URL } from '../api/client';
+
+const resolveImageUrl = (value: string | null | undefined): string | undefined => {
+  if (!value) return undefined;
+  try { return new URL(value, API_BASE_URL || window.location.origin).toString(); } catch { return undefined; }
+};
 
 const CITY_STORAGE_KEY = 'tdf.directory.cityId';
 const ENTITY_LABELS: Record<DirectoryEntityType | 'all', string> = {
@@ -289,7 +296,7 @@ export default function DirectorySearchPage() {
           {sponsored.length > 0 && (
             <Box component="section" aria-labelledby="sponsored-heading">
               <Typography id="sponsored-heading" variant="overline">Patrocinados</Typography>
-              <Stack spacing={1}>{sponsored.map((item) => <ResultCard key={`sponsored-${item.type}-${item.id}`} item={item} sessionActive={Boolean(session)} />)}</Stack>
+              <Stack spacing={1}>{sponsored.map((item) => <ResultCard key={`sponsored-${item.type}-${item.id}`} item={item} sessionActive={Boolean(session)} layout="list" />)}</Stack>
             </Box>
           )}
 
@@ -310,7 +317,7 @@ export default function DirectorySearchPage() {
           {view === 'map' && items.length > 0 ? <OpenStreetMapResults items={items} /> : null}
           {view !== 'map' && items.length > 0 ? (
             <Box sx={{ display: 'grid', gridTemplateColumns: view === 'grid' ? { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(3, minmax(0, 1fr))' } : '1fr', gap: 2 }}>
-              {items.map((item) => <ResultCard key={`${item.type}-${item.id}`} item={item} sessionActive={Boolean(session)} />)}
+              {items.map((item) => <ResultCard key={`${item.type}-${item.id}`} item={item} sessionActive={Boolean(session)} layout={view === 'grid' ? 'grid' : 'list'} />)}
             </Box>
           ) : null}
           {results.hasNextPage && <Button variant="outlined" size="large" onClick={() => { void results.fetchNextPage(); }} disabled={results.isFetchingNextPage} sx={{ alignSelf: 'center' }}>{results.isFetchingNextPage ? 'Cargando…' : 'Ver más resultados'}</Button>}
@@ -320,7 +327,7 @@ export default function DirectorySearchPage() {
   );
 }
 
-function ResultCard({ item, sessionActive }: { item: DirectorySearchItem; sessionActive: boolean }) {
+function ResultCard({ item, sessionActive, layout }: { item: DirectorySearchItem; sessionActive: boolean; layout: 'list' | 'grid' }) {
   const path = resultPath(item);
   const favorite = useMutation({
     mutationFn: () => Directory.addFavorite(item.type, item.id),
@@ -331,42 +338,68 @@ function ResultCard({ item, sessionActive }: { item: DirectorySearchItem; sessio
     else await navigator.clipboard.writeText(url);
   };
   return (
-    <Card variant="outlined" sx={{ borderRadius: 3, display: 'flex', flexDirection: 'column' }}>
-      <CardContent sx={{ flex: 1 }}>
-        <Stack direction="row" justifyContent="space-between" gap={2}>
-          <Box>
-            <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
-              <Chip size="small" label={ENTITY_LABELS[item.type]} />
-              {item.sponsored && (
-                <Chip
-                  size="small"
-                  label={item.sponsorDisclosure ?? 'Patrocinado'}
-                  sx={{ bgcolor: '#7a3e00', color: '#fff' }}
-                />
-              )}
-            </Stack>
-            <Typography component="h2" variant="h5" fontWeight={850} mt={1}>{item.title}</Typography>
-            {item.subtitle && <Typography color="text.secondary">{item.subtitle}</Typography>}
-          </Box>
-          {item.location.distanceKm != null && <Chip label={`≈ ${item.location.distanceKm} km`} color="primary" variant="outlined" />}
-        </Stack>
-        <Typography mt={2} sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.summary ?? 'Abre el resultado para conocer más.'}</Typography>
-        <Stack direction="row" gap={1} flexWrap="wrap" mt={2}>
-          {item.location.city && <Chip size="small" label={`${item.location.city}${item.location.countryCode ? `, ${item.location.countryCode}` : ''}`} />}
-          {item.location.precision && <Chip size="small" variant="outlined" label={`Ubicación ${item.location.precision === 'city' ? 'aproximada' : item.location.precision}`} />}
-        </Stack>
-      </CardContent>
-      <CardActions sx={{ px: 2, pb: 2, flexWrap: 'wrap' }}>
-        <Button component={RouterLink} to={path} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: item.type, entity_id: item.id, sponsored: item.sponsored })}>Ver detalle</Button>
-        <Button onClick={() => { void share(); }} startIcon={<ShareIcon />}>Compartir</Button>
-        {sessionActive ? (
-          <Button onClick={() => favorite.mutate()} disabled={favorite.isPending || favorite.isSuccess} startIcon={<BookmarkBorderIcon />}>
-            {favorite.isSuccess ? 'Guardado' : 'Guardar'}
-          </Button>
-        ) : (
-          <Button component={RouterLink} to={buildLoginRedirectPath(path)} startIcon={<LoginIcon />}>Ingresar para contactar</Button>
-        )}
-      </CardActions>
+    <Card
+      variant="outlined"
+      sx={{
+        borderRadius: 3,
+        display: 'flex',
+        flexDirection: layout === 'grid' ? 'column' : { xs: 'column', sm: 'row' },
+        overflow: 'hidden',
+      }}
+    >
+      {resolveImageUrl(item.imageUrl) && (
+        <CardMedia
+          component="img"
+          image={resolveImageUrl(item.imageUrl)}
+          alt={`Foto de ${item.title}`}
+          loading="lazy"
+          sx={{
+            width: layout === 'grid' ? '100%' : { xs: '100%', sm: 220 },
+            height: layout === 'grid' ? 220 : { xs: 240, sm: 'auto' },
+            minHeight: layout === 'list' ? { sm: 220 } : undefined,
+            objectFit: 'cover',
+            objectPosition: 'center',
+            flexShrink: 0,
+          }}
+        />
+      )}
+      <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', minWidth: 0 }}>
+        <CardContent sx={{ flex: 1 }}>
+          <Stack direction="row" justifyContent="space-between" gap={2}>
+            <Box>
+              <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
+                <Chip size="small" label={ENTITY_LABELS[item.type]} />
+                {item.sponsored && (
+                  <Chip
+                    size="small"
+                    label={item.sponsorDisclosure ?? 'Patrocinado'}
+                    sx={{ bgcolor: '#7a3e00', color: '#fff' }}
+                  />
+                )}
+              </Stack>
+              <Typography component="h2" variant="h5" fontWeight={850} mt={1}>{item.title}</Typography>
+              {item.subtitle && <Typography color="text.secondary">{item.subtitle}</Typography>}
+            </Box>
+            {item.location.distanceKm != null && <Chip label={`≈ ${item.location.distanceKm} km`} color="primary" variant="outlined" />}
+          </Stack>
+          <Typography mt={2} sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.summary ?? 'Abre el resultado para conocer más.'}</Typography>
+          <Stack direction="row" gap={1} flexWrap="wrap" mt={2}>
+            {item.location.city && <Chip size="small" label={`${item.location.city}${item.location.countryCode ? `, ${item.location.countryCode}` : ''}`} />}
+            {item.location.precision && <Chip size="small" variant="outlined" label={`Ubicación ${item.location.precision === 'city' ? 'aproximada' : item.location.precision}`} />}
+          </Stack>
+        </CardContent>
+        <CardActions sx={{ px: 2, pb: 2, flexWrap: 'wrap' }}>
+          <Button component={RouterLink} to={path} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: item.type, entity_id: item.id, sponsored: item.sponsored })}>Ver detalle</Button>
+          <Button onClick={() => { void share(); }} startIcon={<ShareIcon />}>Compartir</Button>
+          {sessionActive ? (
+            <Button onClick={() => favorite.mutate()} disabled={favorite.isPending || favorite.isSuccess} startIcon={<BookmarkBorderIcon />}>
+              {favorite.isSuccess ? 'Guardado' : 'Guardar'}
+            </Button>
+          ) : (
+            <Button component={RouterLink} to={buildLoginRedirectPath(path)} startIcon={<LoginIcon />}>Ingresar para contactar</Button>
+          )}
+        </CardActions>
+      </Box>
     </Card>
   );
 }

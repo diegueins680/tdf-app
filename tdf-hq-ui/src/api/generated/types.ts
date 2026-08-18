@@ -129,6 +129,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/social-events/event-research/candidates/{candidateId}/materialize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Idempotently materialize an approved high-confidence candidate
+         * @description Resolves or creates related venue and artist entities, links the provider reference, links the candidate, and appends one immutable audit change in a single transaction. Replays return the existing link without changing manually edited event fields. A missing official event end is allowed; all other publication blockers are rejected.
+         */
+        post: operations["materializeEventResearchCandidate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/social-events/event-research/changes": {
         parameters: {
             query?: never;
@@ -5985,6 +6005,22 @@ export interface components {
             /** Format: date-time */
             erCandidateUpdatedAt: string;
         };
+        EventResearchMaterializationRequest: {
+            /** @description Open research run that identifies and checkpoints this materialization execution. */
+            erMaterializationRunId: string;
+            /** @description Publish only when the candidate satisfies the approved high-confidence gate. */
+            erMaterializationPublish: boolean;
+        };
+        EventResearchMaterialization: {
+            erMaterializationRunId: string;
+            erMaterializationCandidateId: string;
+            erMaterializationEventId: string;
+            erMaterializationVenueId: string;
+            erMaterializationArtistIds: string[];
+            erMaterializationChangeId: string;
+            erMaterializationCreated: boolean;
+            erMaterializationPublished: boolean;
+        };
         EventResearchChange: {
             erChangeId: string;
             erChangeRunId: string;
@@ -9214,6 +9250,60 @@ export interface operations {
                 };
             };
             /** @description Pilot cap reached or a closed run received a material change */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    materializeEventResearchCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventResearchMaterializationRequest"];
+            };
+        };
+        responses: {
+            /** @description Existing or newly materialized event link */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchMaterialization"];
+                };
+            };
+            /** @description Malformed candidate identifier or request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict administrator access is required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Candidate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Pilot not approved, candidate ineligible, or entity identity ambiguous */
             409: {
                 headers: {
                     [name: string]: unknown;

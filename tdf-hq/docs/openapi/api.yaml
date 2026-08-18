@@ -215,6 +215,34 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/EventResearchCandidate' }
         '409': { description: Pilot cap reached or a closed run received a material change }
+  /social-events/event-research/candidates/{candidateId}/materialize:
+    post:
+      tags: [Event research]
+      summary: Idempotently materialize an approved high-confidence candidate
+      description: >-
+        Resolves or creates related venue and artist entities, links the provider reference,
+        links the candidate, and appends one immutable audit change in a single transaction.
+        Replays return the existing link without changing manually edited event fields. A
+        missing official event end is allowed; all other publication blockers are rejected.
+      operationId: materializeEventResearchCandidate
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: candidateId, in: path, required: true, schema: { type: string, pattern: '^[1-9][0-9]*$' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventResearchMaterializationRequest' }
+      responses:
+        '200':
+          description: Existing or newly materialized event link
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventResearchMaterialization' }
+        '400': { description: Malformed candidate identifier or request }
+        '403': { description: Strict administrator access is required }
+        '404': { description: Candidate not found }
+        '409': { description: 'Pilot not approved, candidate ineligible, or entity identity ambiguous' }
   /social-events/event-research/changes:
     get:
       tags: [Event research]
@@ -6930,6 +6958,39 @@ components:
             erCandidateIsPilot: { type: boolean }
             erCandidateCreatedAt: { type: string, format: date-time }
             erCandidateUpdatedAt: { type: string, format: date-time }
+    EventResearchMaterializationRequest:
+      type: object
+      additionalProperties: false
+      required: [erMaterializationRunId, erMaterializationPublish]
+      properties:
+        erMaterializationRunId:
+          type: string
+          pattern: '^[1-9][0-9]*$'
+          description: Open research run that identifies and checkpoints this materialization execution.
+        erMaterializationPublish:
+          type: boolean
+          description: Publish only when the candidate satisfies the approved high-confidence gate.
+    EventResearchMaterialization:
+      type: object
+      additionalProperties: false
+      required:
+        - erMaterializationCandidateId
+        - erMaterializationRunId
+        - erMaterializationEventId
+        - erMaterializationVenueId
+        - erMaterializationArtistIds
+        - erMaterializationChangeId
+        - erMaterializationCreated
+        - erMaterializationPublished
+      properties:
+        erMaterializationRunId: { type: string }
+        erMaterializationCandidateId: { type: string }
+        erMaterializationEventId: { type: string }
+        erMaterializationVenueId: { type: string }
+        erMaterializationArtistIds: { type: array, items: { type: string } }
+        erMaterializationChangeId: { type: string }
+        erMaterializationCreated: { type: boolean }
+        erMaterializationPublished: { type: boolean }
     EventResearchChange:
       type: object
       required: [erChangeId, erChangeRunId, erChangeAction, erChangeSourceUrl, erChangeConfidence, erChangeConsultedAt, erChangeExternalId, erChangeResult, erChangeCreatedAt]

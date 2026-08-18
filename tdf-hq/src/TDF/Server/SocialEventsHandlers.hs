@@ -4836,9 +4836,14 @@ socialEventsServer user =
         eventKey <- parseKeyOr400 "event" eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
+        hiddenImportedAdmin <-
+            if hasStrictAdminAccess user
+                then liftIO $ runSqlPool (isImportedEventHidden eventKey) envPool
+                else pure False
         let manager = isEventManager currentPartyId eventVal
+            canViewAllRefunds = manager || hiddenImportedAdmin
         candidateOrders <-
-            if manager
+            if canViewAllRefunds
                 then
                     liftIO $
                         runSqlPool
@@ -4861,7 +4866,7 @@ socialEventsServer user =
                     | Entity _ refundRow <- candidateRefunds
                     ]
             orders =
-                if manager
+                if canViewAllRefunds
                     then candidateOrders
                     else
                         filter
@@ -4871,7 +4876,7 @@ socialEventsServer user =
                                         || entityKey orderEntity `Set.member` refundOrderIds
                             )
                             candidateOrders
-        when (not manager && null orders) $
+        when (not canViewAllRefunds && null orders) $
             requireEventVisibleToUser eventKey
         let orderIds = map entityKey orders
             visibleOrderIds = Set.fromList orderIds
@@ -4895,7 +4900,7 @@ socialEventsServer user =
     approveRefund eventIdStr refundIdStr = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        (eventKey, _) <- requireManagedEvent eventIdStr
+        (eventKey, _) <- requireRefundManagedEvent eventIdStr
         refundKey <- parseKeyOr400 "refund" refundIdStr
         mRefund <- liftIO $ runSqlPool (get refundKey) envPool
         refund <- maybe (throwError err404{errBody = "Refund request not found"}) pure mRefund
@@ -4953,7 +4958,7 @@ socialEventsServer user =
     rejectRefund eventIdStr refundIdStr RejectionReasonDTO{..} = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        (eventKey, _) <- requireManagedEvent eventIdStr
+        (eventKey, _) <- requireRefundManagedEvent eventIdStr
         refundKey <- parseKeyOr400 "refund" refundIdStr
         mRefund <- liftIO $ runSqlPool (get refundKey) envPool
         refund <- maybe (throwError err404{errBody = "Refund request not found"}) pure mRefund
@@ -6243,6 +6248,20 @@ socialEventsServer user =
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         claimed <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
         pure (eventKey, claimed)
+
+    requireRefundManagedEvent :: T.Text -> AppM (SocialEventId, SocialEvent)
+    requireRefundManagedEvent rawEventId = do
+        Env{..} <- ask
+        eventKey <- parseKeyOr400 "event" rawEventId
+        mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+        eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
+        hiddenImportedEvent <- liftIO $ runSqlPool (isImportedEventHidden eventKey) envPool
+        if hiddenImportedEvent && hasStrictAdminAccess user
+            then pure (eventKey, eventVal)
+            else do
+                requireEventVisibleToUser eventKey
+                claimed <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
+                pure (eventKey, claimed)
 
     requireExistingEvent :: ConnectionPool -> SocialEventId -> AppM SocialEvent
     requireExistingEvent pool eventKey = do

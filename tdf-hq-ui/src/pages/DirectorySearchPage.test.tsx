@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
@@ -10,6 +11,7 @@ const searchResponse = {
   items: [{
     id: '11111111-1111-4111-8111-111111111111', type: 'profile', slug: 'synthetic-bassist',
     title: 'Synthetic Bassist', summary: 'Fixture público de prueba.',
+    imageUrl: 'https://images.example.test/synthetic-bassist.webp',
     location: { city: 'Quito', countryCode: 'EC', precision: 'city' },
     sponsored: false, score: 0.8,
   }],
@@ -27,7 +29,10 @@ jest.unstable_mockModule('../api/directory', () => ({
     addFavorite: jest.fn(async () => undefined),
   },
 }));
-jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () => ({ session: null }) }));
+jest.unstable_mockModule('../session/SessionContext', () => ({
+  getStoredSessionToken: () => null,
+  useSession: () => ({ session: null }),
+}));
 jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: jest.fn() }));
 jest.unstable_mockModule('../components/directory/OpenStreetMapResults', () => ({ default: () => <div>Mapa OSM aproximado</div> }));
 jest.unstable_mockModule('../analytics/posthog', () => ({ getAnalyticsClient: () => ({ capture: jest.fn() }) }));
@@ -57,6 +62,10 @@ describe('DirectorySearchPage', () => {
       expect(container.textContent).toContain('Quito');
       expect(container.textContent).toContain('Servicio');
       expect(container.textContent).toContain('Resultados orgánicos');
+      await waitFor(() => {
+        const profileImage = container.querySelector<HTMLImageElement>('img[alt="Foto de Synthetic Bassist"]');
+        expect(profileImage?.src).toBe('https://images.example.test/synthetic-bassist.webp');
+      });
       await expectNoSeriousAccessibilityViolations(container);
     } finally {
       await act(async () => root.unmount());

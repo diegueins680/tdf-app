@@ -26,6 +26,7 @@ import { useState } from 'react';
 import { Link as RouterLink, useLocation, useParams } from 'react-router-dom';
 
 import { Directory, type DirectoryEntityType, type DirectoryReviewEligibility, type DirectoryReviewPage } from '../api/directory';
+import { API_BASE_URL } from '../api/client';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
@@ -38,6 +39,14 @@ const record = (value: unknown): Record<string, unknown> | undefined =>
   typeof value === 'object' && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : undefined;
 const rows = (value: unknown): Record<string, unknown>[] =>
   Array.isArray(value) ? value.filter((item): item is Record<string, unknown> => Boolean(record(item))) : [];
+const absoluteUrl = (value: string | undefined, origin: string): string | undefined => {
+  if (!value) return undefined;
+  try {
+    return new URL(value, origin).toString();
+  } catch {
+    return undefined;
+  }
+};
 
 export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }) {
   const params = useParams();
@@ -57,6 +66,13 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
   const value = detail.data ?? {};
   const title = text(value['name']) ?? text(value['title']) ?? 'Directorio musical';
   const description = text(value['bio']) ?? text(value['description']) ?? text(value['creditsSummary']) ?? 'Perfil público en TDF.';
+  const absoluteProfileImage = kind === 'profile'
+    ? rows(value['portfolio'])
+        .filter((item) => text(item['itemType']) === 'image')
+        .flatMap((item) => [text(item['thumbnailUrl']), text(item['url'])])
+        .map((url) => absoluteUrl(url, API_BASE_URL || window.location.origin))
+        .find((url): url is string => Boolean(url))
+    : undefined;
   const canonicalPath = text(value['canonicalUrl']) ?? location.pathname;
   const canonical = `${window.location.origin}${canonicalPath}`;
   const categoryCode = text(record(value['category'])?.['code']);
@@ -76,6 +92,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
     title,
     description,
     canonical,
+    ogImage: absoluteProfileImage,
     ogType: kind === 'profile' ? 'profile' : 'website',
     structuredData: {
       '@context': 'https://schema.org',
@@ -83,6 +100,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
       name: title,
       description,
       url: canonical,
+      ...(absoluteProfileImage ? { image: absoluteProfileImage } : {}),
       ...(reviewAverage && reviewCount > 0 ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: reviewAverage, reviewCount } } : {}),
     },
   });
@@ -117,15 +135,32 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
           <Paper variant="outlined" sx={{ p: { xs: 3, md: 5 }, borderRadius: 4 }}>
             <Stack spacing={3}>
               <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={3}>
-                <Box>
-                  <Stack direction="row" gap={1} flexWrap="wrap" mb={1}>
-                    <Chip color="primary" label={kind === 'profile' ? 'Perfil profesional' : kind === 'classified' ? 'Clasificado musical' : kind === 'event' ? 'Evento' : 'Venue'} />
-                    {category && <Chip label={text(category['name']) ?? 'Oportunidad'} />}
-                  </Stack>
-                  <Typography component="h1" variant="h2" fontWeight={900} sx={{ fontSize: { xs: '2.2rem', md: '3.7rem' } }}>{title}</Typography>
-                  {author && <Typography variant="h6" color="text.secondary" mt={1}>Publicado por {text(author['name'])}</Typography>}
-                  {venue && <Typography variant="h6" color="text.secondary" mt={1}>{text(venue['name'])}</Typography>}
-                </Box>
+                <Stack direction={{ xs: 'column', sm: 'row' }} gap={3} sx={{ minWidth: 0 }}>
+                  {absoluteProfileImage && (
+                    <Box
+                      component="img"
+                      src={absoluteProfileImage}
+                      alt={`Foto de ${title}`}
+                      sx={{
+                        width: { xs: '100%', sm: 220 },
+                        height: { xs: 300, sm: 220 },
+                        borderRadius: 3,
+                        objectFit: 'cover',
+                        objectPosition: 'center',
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                  <Box>
+                    <Stack direction="row" gap={1} flexWrap="wrap" mb={1}>
+                      <Chip color="primary" label={kind === 'profile' ? 'Perfil profesional' : kind === 'classified' ? 'Clasificado musical' : kind === 'event' ? 'Evento' : 'Venue'} />
+                      {category && <Chip label={text(category['name']) ?? 'Oportunidad'} />}
+                    </Stack>
+                    <Typography component="h1" variant="h2" fontWeight={900} sx={{ fontSize: { xs: '2.2rem', md: '3.7rem' } }}>{title}</Typography>
+                    {author && <Typography variant="h6" color="text.secondary" mt={1}>Publicado por {text(author['name'])}</Typography>}
+                    {venue && <Typography variant="h6" color="text.secondary" mt={1}>{text(venue['name'])}</Typography>}
+                  </Box>
+                </Stack>
                 <Stack direction="row" gap={1} flexWrap="wrap" alignSelf={{ md: 'flex-start' }}>
                   <Button onClick={() => { void share(); }} startIcon={<ShareIcon />}>Compartir</Button>
                   <Button component="a" href={whatsapp} target="_blank" rel="noreferrer" startIcon={<WhatsAppIcon />}>WhatsApp</Button>

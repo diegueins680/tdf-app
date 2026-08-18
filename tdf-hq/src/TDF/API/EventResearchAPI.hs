@@ -38,6 +38,12 @@ type EventResearchRoutes =
             :> ReqBody '[JSON] EventResearchCandidateWriteDTO
             :> Put '[JSON] EventResearchCandidateDTO
         :<|> "event-research"
+            :> "candidates"
+            :> Capture "candidateId" Text
+            :> "materialize"
+            :> ReqBody '[JSON] EventResearchMaterializationRequestDTO
+            :> Post '[JSON] EventResearchMaterializationDTO
+        :<|> "event-research"
             :> "changes"
             :> QueryParam "run_id" Text
             :> QueryParam "limit" Int

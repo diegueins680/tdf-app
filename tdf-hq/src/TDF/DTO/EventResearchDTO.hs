@@ -10,6 +10,8 @@ module TDF.DTO.EventResearchDTO
     , EventResearchEvidenceDTO (..)
     , EventResearchCandidateWriteDTO (..)
     , EventResearchCandidateDTO (..)
+    , EventResearchMaterializationRequestDTO (..)
+    , EventResearchMaterializationDTO (..)
     , EventResearchChangeDTO (..)
     ) where
 
@@ -156,6 +158,31 @@ data EventResearchCandidateDTO = EventResearchCandidateDTO
 
 instance ToJSON EventResearchCandidateDTO
 instance FromJSON EventResearchCandidateDTO
+
+data EventResearchMaterializationRequestDTO = EventResearchMaterializationRequestDTO
+    { erMaterializationRunId :: Text
+    , erMaterializationPublish :: Bool
+    }
+    deriving (Show, Eq, Generic)
+
+instance ToJSON EventResearchMaterializationRequestDTO
+instance FromJSON EventResearchMaterializationRequestDTO where
+    parseJSON = genericParseJSON defaultOptions{rejectUnknownFields = True}
+
+data EventResearchMaterializationDTO = EventResearchMaterializationDTO
+    { erMaterializationRunId :: Text
+    , erMaterializationCandidateId :: Text
+    , erMaterializationEventId :: Text
+    , erMaterializationVenueId :: Text
+    , erMaterializationArtistIds :: [Text]
+    , erMaterializationChangeId :: Text
+    , erMaterializationCreated :: Bool
+    , erMaterializationPublished :: Bool
+    }
+    deriving (Show, Eq, Generic)
+
+instance ToJSON EventResearchMaterializationDTO
+instance FromJSON EventResearchMaterializationDTO
 
 data EventResearchChangeDTO = EventResearchChangeDTO
     { erChangeId :: Text
