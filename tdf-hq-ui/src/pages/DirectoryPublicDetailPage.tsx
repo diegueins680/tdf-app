@@ -135,10 +135,10 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
             <Stack spacing={3}>
               <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={3}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} gap={3} sx={{ minWidth: 0 }}>
-                  {profileImage && (
+                  {absoluteProfileImage && (
                     <Box
                       component="img"
-                      src={profileImage}
+                      src={absoluteProfileImage}
                       alt={`Foto de ${title}`}
                       sx={{
                         width: { xs: '100%', sm: 220 },
