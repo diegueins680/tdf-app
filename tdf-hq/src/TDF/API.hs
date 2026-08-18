@@ -52,6 +52,7 @@ import qualified TDF.ModelsExtra  as ME
 import           TDF.Routes.Academy (AcademyAPI)
 import           TDF.Routes.Courses (CoursesPublicAPI, CoursesAdminAPI, WhatsAppHooksAPI, WhatsAppWebhookAPI)
 import           TDF.Routes.EventTickets (PublicEventTicketsAPI)
+import           TDF.Routes.DomoQuotes (PublicDomoQuotesAPI)
 import           TDF.API.LiveSessions (LiveSessionsAPI)
 import           TDF.API.Feedback    (FeedbackAPI)
 import           TDF.API.Calendar    (CalendarAPI)
@@ -614,6 +615,7 @@ type API =
   :<|> "fans" :> FanPublicAPI
   :<|> "artists" :> ArtistPublicAPI
   :<|> CoursesPublicAPI
+  :<|> PublicDomoQuotesAPI
   :<|> PublicEventTicketsAPI
   :<|> InstagramWebhookAPI
   :<|> FacebookWebhookAPI

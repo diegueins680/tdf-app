@@ -1,5 +1,6 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Box,
@@ -34,19 +35,19 @@ import NaturePeopleIcon from '@mui/icons-material/NaturePeople';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import { DateTime } from 'luxon';
 import { Bookings } from '../api/bookings';
+import { DomoQuotes, type PublicDomoQuoteCreateRequest } from '../api/domoQuotes';
 import { Services } from '../api/services';
 import { PUBLIC_BASE } from '../config/appConfig';
 import { useMetaTags } from '../hooks/useMetaTags';
+import { makeDomoQuoteIdempotencyKey, saveDomoQuoteLookupToken } from '../utils/domoQuoteAccess';
 
 const DOMO_TIMEZONE = (import.meta.env as Record<string, string | undefined> | undefined)?.['VITE_DOMO_TIMEZONE'] ?? 'UTC';
 
-type EventType = 'wedding' | 'corporate' | 'retreat' | 'concert' | 'workshop' | 'photo';
+type EventType = string;
 type DomoExperienceKey = 'naturaleza' | 'eventos' | 'musica' | 'ceremonias';
 
 interface EventTypeConfig {
   label: string;
-  serviceType: string;
-  minimumHours: number;
 }
 
 interface BookingFormState {
@@ -257,36 +258,24 @@ const DOMO_EXPERIENCES: Record<DomoExperienceKey, DomoExperience> = {
   },
 };
 
-const EVENT_TYPES: Record<EventType, EventTypeConfig> = {
+const EVENT_TYPES: Record<string, EventTypeConfig> = {
   wedding: {
     label: 'Boda',
-    serviceType: 'Domo del Pululahua - boda',
-    minimumHours: 8,
   },
   corporate: {
     label: 'Evento corporativo',
-    serviceType: 'Domo del Pululahua - evento corporativo',
-    minimumHours: 6,
   },
   retreat: {
     label: 'Retiro o taller',
-    serviceType: 'Domo del Pululahua - retiro',
-    minimumHours: 6,
   },
   concert: {
     label: 'Concierto',
-    serviceType: 'Domo del Pululahua - concierto',
-    minimumHours: 7,
   },
   workshop: {
     label: 'Taller',
-    serviceType: 'Domo del Pululahua - taller',
-    minimumHours: 4,
   },
   photo: {
     label: 'Sesión fotográfica',
-    serviceType: 'Domo del Pululahua - sesion fotografica',
-    minimumHours: 3,
   },
 };
 
@@ -317,22 +306,26 @@ const clampNumber = (value: number, min: number, max: number) => {
   return Math.min(max, Math.max(min, Math.round(value)));
 };
 
-const summarizeRequest = (form: BookingFormState) => {
-  const config = EVENT_TYPES[form.eventType];
-  const guests = clampNumber(form.guests, 1, MAX_QUOTE_GUESTS);
-  const billableHours = Math.max(config.minimumHours, clampNumber(form.durationHours, 1, 24));
-  const setupHours = clampNumber(form.setupHours, 0, 12);
+const eventTypeLabel = (eventType: string) => EVENT_TYPES[eventType]?.label ?? eventType;
+
+const summarizeRequest = (
+  form: BookingFormState,
+  limits: { maximumGuests: number; maximumDurationHours: number; maximumSetupHours: number },
+) => {
+  const guests = clampNumber(form.guests, 1, limits.maximumGuests);
+  const durationHours = clampNumber(form.durationHours, 1, limits.maximumDurationHours);
+  const setupHours = clampNumber(form.setupHours, 0, limits.maximumSetupHours);
   const selectedAddons = [
     form.catering ? 'Catering y barra' : null,
     form.production ? 'Sonido e iluminación' : null,
     form.transport ? 'Transporte desde Quito' : null,
   ].filter((value): value is string => Boolean(value));
 
-  return { billableHours, guests, setupHours, selectedAddons };
+  return { durationHours, guests, setupHours, selectedAddons };
 };
 
-const toBookingIso = (value: string) => {
-  const parsed = DateTime.fromFormat(value, "yyyy-LL-dd'T'HH:mm", { zone: DOMO_TIMEZONE });
+const toBookingIso = (value: string, timezone: string) => {
+  const parsed = DateTime.fromFormat(value, "yyyy-LL-dd'T'HH:mm", { zone: timezone });
   if (!parsed.isValid) return null;
   return parsed.toUTC().toISO({ suppressMilliseconds: true });
 };
@@ -340,9 +333,9 @@ const toBookingIso = (value: string) => {
 const buildBookingNotes = (form: BookingFormState, summary: ReturnType<typeof summarizeRequest>) => {
   return [
     'Solicitud pública Domo del Pululahua',
-    `Tipo: ${EVENT_TYPES[form.eventType].label}`,
+    `Tipo: ${eventTypeLabel(form.eventType)}`,
     `Invitados: ${summary.guests}`,
-    `Duración solicitada: ${summary.billableHours} horas + ${summary.setupHours} horas de montaje`,
+    `Duración solicitada: ${summary.durationHours} horas + ${summary.setupHours} horas de montaje`,
     'Precio: pendiente de cotización autoritativa y versionada',
     'Disponibilidad: no verificada; esta solicitud no retiene la fecha',
     summary.selectedAddons.length ? `Adicionales: ${summary.selectedAddons.join(', ')}` : 'Adicionales: ninguno',
@@ -358,9 +351,17 @@ export default function DomoVenuePage() {
     description: 'Solicita una cotización para eventos, música y experiencias en el Domo del Pululahua.',
   });
   const [activeExperienceKey, setActiveExperienceKey] = useState<DomoExperienceKey>('naturaleza');
+  const navigate = useNavigate();
   const [form, setForm] = useState<BookingFormState>(initialForm);
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<{ severity: 'success' | 'error'; message: string } | null>(null);
+  const quoteIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
+  const domoStorefrontQuery = useQuery({
+    queryKey: ['public-domo-storefront'],
+    queryFn: DomoQuotes.getStorefront,
+    retry: false,
+    staleTime: 60 * 1000,
+  });
   const serviceCatalogQuery = useQuery({
     queryKey: ['service-catalog', 'public'],
     queryFn: () => Services.listPublic(),
@@ -370,8 +371,29 @@ export default function DomoVenuePage() {
     (service) => service.scCode === 'event-production' && service.scActive,
   );
   const activeExperience = DOMO_EXPERIENCES[activeExperienceKey];
-  const requestSummary = useMemo(() => summarizeRequest(form), [form]);
-  const bookingIso = toBookingIso(form.startsAt);
+  const authoritativeQuotesAvailable = domoStorefrontQuery.data?.checkoutAvailable === true;
+  const availableEventTypes = useMemo(
+    () => authoritativeQuotesAvailable
+      ? (domoStorefrontQuery.data?.eventTypes ?? [])
+      : Object.keys(EVENT_TYPES),
+    [authoritativeQuotesAvailable, domoStorefrontQuery.data?.eventTypes],
+  );
+  const limits = useMemo(() => ({
+    maximumGuests: domoStorefrontQuery.data?.maximumGuests ?? MAX_QUOTE_GUESTS,
+    maximumDurationHours: domoStorefrontQuery.data?.maximumDurationHours ?? 24,
+    maximumSetupHours: domoStorefrontQuery.data?.maximumSetupHours ?? 12,
+  }), [domoStorefrontQuery.data]);
+  const requestSummary = useMemo(() => summarizeRequest(form, limits), [form, limits]);
+  const bookingTimezone = authoritativeQuotesAvailable
+    ? (domoStorefrontQuery.data?.timezone ?? 'America/Guayaquil')
+    : DOMO_TIMEZONE;
+  const bookingIso = toBookingIso(form.startsAt, bookingTimezone);
+
+  useEffect(() => {
+    if (!authoritativeQuotesAvailable || availableEventTypes.length === 0
+        || availableEventTypes.includes(form.eventType)) return;
+    setForm((previous) => ({ ...previous, eventType: availableEventTypes[0] ?? previous.eventType }));
+  }, [authoritativeQuotesAvailable, availableEventTypes, form.eventType]);
 
   const updateForm = <Key extends keyof BookingFormState>(key: Key, value: BookingFormState[Key]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -391,30 +413,60 @@ export default function DomoVenuePage() {
       setStatus({ severity: 'error', message: 'Elige una fecha y hora válida para la reserva.' });
       return;
     }
-    if (!eventProductionOffering) {
+    if (!authoritativeQuotesAvailable && !eventProductionOffering) {
       setStatus({ severity: 'error', message: 'El servicio de producción de eventos no está publicado. Intenta nuevamente más tarde.' });
       return;
     }
 
     setSubmitting(true);
     try {
+      if (authoritativeQuotesAvailable) {
+        const payload: PublicDomoQuoteCreateRequest = {
+          customerName: form.fullName.trim(),
+          customerEmail: form.email.trim(),
+          ...(form.phone.trim() ? { customerPhone: form.phone.trim() } : {}),
+          eventType: form.eventType,
+          guests: requestSummary.guests,
+          startsAt: bookingIso,
+          durationHours: requestSummary.durationHours,
+          setupHours: requestSummary.setupHours,
+          catering: form.catering,
+          production: form.production,
+          transport: form.transport,
+          ...(form.notes.trim() ? { notes: form.notes.trim() } : {}),
+        };
+        const fingerprint = JSON.stringify(payload);
+        if (quoteIdempotency.current?.fingerprint !== fingerprint) {
+          quoteIdempotency.current = { fingerprint, key: makeDomoQuoteIdempotencyKey() };
+        }
+        const quote = await DomoQuotes.createQuote(payload, quoteIdempotency.current.key);
+        if (!quote.lookupToken) throw new Error('Secure quote lookup token missing');
+        saveDomoQuoteLookupToken(quote.quoteId, quote.lookupToken);
+        navigate(`/domo-del-pululahua/cotizaciones/${quote.quoteId}`);
+        return;
+      }
+      if (!eventProductionOffering) {
+        throw new Error('El servicio de producción de eventos no está publicado.');
+      }
       await Bookings.createPublic({
         pbFullName: form.fullName.trim(),
         pbEmail: form.email.trim(),
         pbPhone: form.phone.trim() || null,
         pbServiceOfferingId: eventProductionOffering.scId,
         pbStartsAt: bookingIso,
-        pbDurationMinutes: requestSummary.billableHours * 60,
+        pbDurationMinutes: requestSummary.durationHours * 60,
         pbNotes: buildBookingNotes(form, requestSummary),
       });
       setStatus({
         severity: 'success',
-        message: 'Solicitud enviada. El equipo revisará disponibilidad, confirmará la cotización y te contactará para separar la fecha.',
+        message: 'Solicitud enviada. Este flujo manual no retiene la fecha ni confirma un pago; el equipo revisará disponibilidad y te contactará.',
       });
     } catch (err) {
       setStatus({
         severity: 'error',
-        message: err instanceof Error ? err.message : 'No pudimos enviar la solicitud. Intenta nuevamente.',
+        message: authoritativeQuotesAvailable
+          ? 'No pudimos crear ni retener la cotización. No asumimos disponibilidad ni pago.'
+          : (err instanceof Error ? err.message : 'No pudimos enviar la solicitud. Intenta nuevamente.'),
       });
     } finally {
       setSubmitting(false);
@@ -783,10 +835,12 @@ export default function DomoVenuePage() {
                 <Stack spacing={2.5}>
                   <Stack spacing={0.75}>
                     <Typography variant="h4" fontWeight={900} sx={{ fontSize: { xs: '1.5rem', md: '2rem' } }}>
-                      Solicitud de cotización
+                      {authoritativeQuotesAvailable ? 'Cotización y retención de fecha' : 'Solicitud de cotización'}
                     </Typography>
                     <Typography color="text.secondary">
-                      Cuéntanos el plan. Enviar esta solicitud no confirma disponibilidad, no retiene la fecha y no crea un pago.
+                      {authoritativeQuotesAvailable
+                        ? `El servidor calculará la tarifa aprobada y retendrá la fecha por ${domoStorefrontQuery.data?.quoteHoldMinutes ?? 15} minutos. Crear la cotización no significa aceptar ni pagar.`
+                        : 'El checkout autoritativo no está habilitado. Puedes enviar una solicitud manual; no confirma disponibilidad, no retiene la fecha y no crea un pago.'}
                     </Typography>
                   </Stack>
 
@@ -825,12 +879,12 @@ export default function DomoVenuePage() {
                       <TextField
                         label="Tipo de evento"
                         value={form.eventType}
-                        onChange={(event) => updateForm('eventType', event.target.value as EventType)}
+                        onChange={(event) => updateForm('eventType', event.target.value)}
                         select
                         fullWidth
                       >
-                        {Object.entries(EVENT_TYPES).map(([key, config]) => (
-                          <MenuItem key={key} value={key}>{config.label}</MenuItem>
+                        {availableEventTypes.map((eventType) => (
+                          <MenuItem key={eventType} value={eventType}>{eventTypeLabel(eventType)}</MenuItem>
                         ))}
                       </TextField>
                     </Grid>
@@ -838,11 +892,11 @@ export default function DomoVenuePage() {
                       <TextField
                         label="Invitados"
                         value={form.guests}
-                        onChange={(event) => updateForm('guests', clampNumber(Number(event.target.value), 1, MAX_QUOTE_GUESTS))}
+                        onChange={(event) => updateForm('guests', clampNumber(Number(event.target.value), 1, limits.maximumGuests))}
                         type="number"
                         fullWidth
                         helperText="Capacidad final sujeta a permisos, montaje y plan de seguridad."
-                        inputProps={{ min: 1, max: MAX_QUOTE_GUESTS }}
+                        inputProps={{ min: 1, max: limits.maximumGuests }}
                         InputProps={{ startAdornment: <InputAdornment position="start"><GroupsIcon fontSize="small" /></InputAdornment> }}
                       />
                     </Grid>
@@ -850,7 +904,7 @@ export default function DomoVenuePage() {
                       <TextField
                         label="Horas de evento"
                         value={form.durationHours}
-                        onChange={(event) => updateForm('durationHours', clampNumber(Number(event.target.value), 1, 24))}
+                        onChange={(event) => updateForm('durationHours', clampNumber(Number(event.target.value), 1, limits.maximumDurationHours))}
                         type="number"
                         fullWidth
                         InputProps={{ startAdornment: <InputAdornment position="start"><AccessTimeIcon fontSize="small" /></InputAdornment> }}
@@ -860,7 +914,7 @@ export default function DomoVenuePage() {
                       <TextField
                         label="Horas de montaje"
                         value={form.setupHours}
-                        onChange={(event) => updateForm('setupHours', clampNumber(Number(event.target.value), 0, 12))}
+                        onChange={(event) => updateForm('setupHours', clampNumber(Number(event.target.value), 0, limits.maximumSetupHours))}
                         type="number"
                         fullWidth
                       />
@@ -914,7 +968,9 @@ export default function DomoVenuePage() {
                     disabled={submitting}
                     sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' }, textTransform: 'none', px: 4, py: 1.5, fontSize: '1rem' }}
                   >
-                    {submitting ? 'Enviando...' : 'Solicitar reserva'}
+                    {submitting
+                      ? (authoritativeQuotesAvailable ? 'Calculando y reteniendo...' : 'Enviando...')
+                      : (authoritativeQuotesAvailable ? 'Cotizar y retener fecha' : 'Enviar solicitud manual')}
                   </Button>
                 </Stack>
               </CardContent>
@@ -928,13 +984,13 @@ export default function DomoVenuePage() {
                   <Stack direction="row" spacing={1} alignItems="center">
                     <CalculateIcon color="primary" />
                     <Typography variant="h5" fontWeight={900}>
-                      Resumen de solicitud
+                      {authoritativeQuotesAvailable ? 'Datos para cotizar' : 'Resumen de solicitud'}
                     </Typography>
                   </Stack>
                   <Stack spacing={1.25}>
                     <Stack direction="row" justifyContent="space-between" spacing={2}>
                       <Typography variant="body2" color="text.secondary">Experiencia</Typography>
-                      <Typography variant="body2" fontWeight={700}>{EVENT_TYPES[form.eventType].label}</Typography>
+                      <Typography variant="body2" fontWeight={700}>{eventTypeLabel(form.eventType)}</Typography>
                     </Stack>
                     <Stack direction="row" justifyContent="space-between" spacing={2}>
                       <Typography variant="body2" color="text.secondary">Invitados</Typography>
@@ -942,7 +998,7 @@ export default function DomoVenuePage() {
                     </Stack>
                     <Stack direction="row" justifyContent="space-between" spacing={2}>
                       <Typography variant="body2" color="text.secondary">Evento y montaje</Typography>
-                      <Typography variant="body2" fontWeight={700}>{requestSummary.billableHours} h + {requestSummary.setupHours} h</Typography>
+                      <Typography variant="body2" fontWeight={700}>{requestSummary.durationHours} h + {requestSummary.setupHours} h</Typography>
                     </Stack>
                     <Stack direction="row" justifyContent="space-between" spacing={2}>
                       <Typography variant="body2" color="text.secondary">Adicionales</Typography>
@@ -952,8 +1008,10 @@ export default function DomoVenuePage() {
                     </Stack>
                   </Stack>
                   <Divider />
-                  <Alert severity="warning">
-                    El precio, impuestos, depósito y políticas vendrán en una cotización versionada emitida por TDF. Solo una cotización aprobada y un pago verificado podrán separar la fecha.
+                  <Alert severity={authoritativeQuotesAvailable ? 'info' : 'warning'}>
+                    {authoritativeQuotesAvailable
+                      ? 'El cliente no calcula precios. La siguiente pantalla mostrará la cotización inmutable, impuesto, depósito, saldo, versión de términos y vencimiento emitidos por el servidor.'
+                      : 'El precio, impuestos, depósito y políticas vendrán en una cotización versionada emitida por TDF. Esta solicitud manual no separa la fecha.'}
                   </Alert>
                 </Stack>
               </CardContent>

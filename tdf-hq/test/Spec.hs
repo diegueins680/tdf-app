@@ -102,6 +102,7 @@ import TDF.CampaignAutomation
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
 import qualified TDF.Commerce.CheckoutStore as CheckoutStore
 import qualified TDF.Commerce.CourseCheckout as CourseCheckout
+import qualified TDF.Commerce.DomoQuotes as DomoQuotes
 import qualified TDF.Commerce.EventTickets as EventTickets
 import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
 import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
@@ -1331,6 +1332,116 @@ main = hspec $ do
               in isLeft (MarketplaceOperations.validateMarketplaceCustomerReview
                   MarketplaceOperations.SaleReturnRequest terminal
                   MarketplaceOperations.CustomerRequestReject)
+
+    describe "Domo authoritative quote invariants" $ do
+        let weddingRate = DomoQuotes.DomoEventRate
+              { DomoQuotes.derBaseMinor = 180000
+              , DomoQuotes.derPerGuestMinor = 800
+              , DomoQuotes.derMinimumHours = 8
+              , DomoQuotes.derIncludedGuests = 60
+              }
+            rateCard = DomoQuotes.DomoRateCard
+              { DomoQuotes.drcEventRates = Map.fromList [("wedding", weddingRate)]
+              , DomoQuotes.drcHourMinor = 18000
+              , DomoQuotes.drcSetupHourMinor = 7000
+              , DomoQuotes.drcCateringMinimumMinor = 35000
+              , DomoQuotes.drcCateringPerGuestMinor = 650
+              , DomoQuotes.drcProductionMinor = 42000
+              , DomoQuotes.drcTransportMinor = 30000
+              , DomoQuotes.drcTaxBasisPoints = 1200
+              , DomoQuotes.drcDepositBasisPoints = 4000
+              , DomoQuotes.drcMaximumGuests = 220
+              , DomoQuotes.drcMaximumDurationHours = 24
+              , DomoQuotes.drcMaximumSetupHours = 12
+              }
+            weddingInput guests duration setup catering production transport =
+              DomoQuotes.DomoQuoteInput
+                { DomoQuotes.dqiEventType = "wedding"
+                , DomoQuotes.dqiGuests = guests
+                , DomoQuotes.dqiDurationHours = duration
+                , DomoQuotes.dqiSetupHours = setup
+                , DomoQuotes.dqiCatering = catering
+                , DomoQuotes.dqiProduction = production
+                , DomoQuotes.dqiTransport = transport
+                }
+
+        it "reproduces the preserved public formula only from an approved server rate snapshot" $ do
+            DomoQuotes.calculateDomoQuote rateCard
+              (weddingInput 80 8 2 True True False)
+              `shouldBe` Right DomoQuotes.DomoQuoteBreakdown
+                { DomoQuotes.dqbLines =
+                    [ DomoQuotes.DomoQuoteLine "venue_base" "Domo event base" 1 180000 180000
+                    , DomoQuotes.DomoQuoteLine "venue_hours" "Domo venue hours" 8 18000 144000
+                    , DomoQuotes.DomoQuoteLine "setup_hours" "Setup and teardown hours" 2 7000 14000
+                    , DomoQuotes.DomoQuoteLine "additional_guests" "Additional guests" 20 800 16000
+                    , DomoQuotes.DomoQuoteLine "catering" "Catering and bar" 1 52000 52000
+                    , DomoQuotes.DomoQuoteLine "production" "Sound and lighting" 1 42000 42000
+                    ]
+                , DomoQuotes.dqbBillableHours = 8
+                , DomoQuotes.dqbSubtotalMinor = 448000
+                , DomoQuotes.dqbTaxMinor = 53760
+                , DomoQuotes.dqbTotalMinor = 501760
+                , DomoQuotes.dqbDepositMinor = 200704
+                , DomoQuotes.dqbBalanceMinor = 301056
+                }
+
+        it "rejects unsupported event types and every client value outside versioned limits" $ do
+            DomoQuotes.calculateDomoQuote rateCard
+              (weddingInput 0 8 0 False False False) `shouldSatisfy` isLeft
+            DomoQuotes.calculateDomoQuote rateCard
+              (weddingInput 221 8 0 False False False) `shouldSatisfy` isLeft
+            DomoQuotes.calculateDomoQuote rateCard
+              (weddingInput 10 25 0 False False False) `shouldSatisfy` isLeft
+            DomoQuotes.calculateDomoQuote rateCard
+              (weddingInput 10 8 13 False False False) `shouldSatisfy` isLeft
+            DomoQuotes.calculateDomoQuote rateCard
+              ((weddingInput 10 8 0 False False False)
+                { DomoQuotes.dqiEventType = "not-on-the-rate-card" })
+              `shouldSatisfy` isLeft
+
+        it "preserves line, tax, deposit, and balance arithmetic for all valid customer inputs" $
+            QC.property $ \(QC.Positive rawGuests) (QC.Positive rawDuration)
+                (QC.NonNegative rawSetup) catering production transport ->
+              let guests = rawGuests `mod` 220 + 1
+                  duration = rawDuration `mod` 24 + 1
+                  setup = rawSetup `mod` 13
+              in case DomoQuotes.calculateDomoQuote rateCard
+                    (weddingInput guests duration setup catering production transport) of
+                  Left _ -> False
+                  Right quote ->
+                    sum (map DomoQuotes.dqlSubtotalMinor (DomoQuotes.dqbLines quote))
+                        == DomoQuotes.dqbSubtotalMinor quote
+                    && DomoQuotes.dqbSubtotalMinor quote + DomoQuotes.dqbTaxMinor quote
+                        == DomoQuotes.dqbTotalMinor quote
+                    && DomoQuotes.dqbDepositMinor quote + DomoQuotes.dqbBalanceMinor quote
+                        == DomoQuotes.dqbTotalMinor quote
+                    && DomoQuotes.dqbDepositMinor quote > 0
+
+        it "never equates a verified deposit with event completion" $ do
+            DomoQuotes.validateDomoQuoteTransition
+              DomoQuotes.DomoDepositDue DomoQuotes.DomoDepositPaid `shouldBe` Right ()
+            DomoQuotes.validateDomoQuoteTransition
+              DomoQuotes.DomoDepositDue DomoQuotes.DomoCompleted `shouldSatisfy` isLeft
+            DomoQuotes.validateDomoQuoteTransition
+              DomoQuotes.DomoDepositPaid DomoQuotes.DomoInProgress `shouldBe` Right ()
+
+        it "keeps completed, cancelled, and expired quotes terminal" $
+            QC.property $ \(QC.NonNegative rawState) ->
+              let states =
+                    [ DomoQuotes.DomoDraft, DomoQuotes.DomoSent, DomoQuotes.DomoViewed
+                    , DomoQuotes.DomoAccepted, DomoQuotes.DomoDepositDue
+                    , DomoQuotes.DomoDepositPaid, DomoQuotes.DomoInProgress
+                    , DomoQuotes.DomoBalanceDue, DomoQuotes.DomoCompleted
+                    , DomoQuotes.DomoCancelled, DomoQuotes.DomoExpired
+                    ]
+                  candidate = states !! (rawState `mod` length states)
+                  closed terminal = candidate == terminal
+                    || isLeft (DomoQuotes.validateDomoQuoteTransition terminal candidate)
+              in all closed
+                  [ DomoQuotes.DomoCompleted
+                  , DomoQuotes.DomoCancelled
+                  , DomoQuotes.DomoExpired
+                  ]
 
     describe "service booking pricing and fulfillment invariants" $ do
         it "calculates tax, deposit, and balance from approved integer policy values" $ do

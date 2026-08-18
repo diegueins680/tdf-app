@@ -577,6 +577,32 @@
       "aliases": ["/venues/domo-del-pululahua"]
     },
     {
+      "id": "public.domo-quote",
+      "parentId": "public.domo",
+      "webRoute": "/domo-del-pululahua/cotizaciones/:quoteId",
+      "routeType": "contextual",
+      "classification": "record-detail-contextual-action",
+      "label": { "es": "Cotización del Domo", "en": "Domo quote" },
+      "synonyms": { "es": ["reserva Domo", "depósito Domo"], "en": ["Domo booking", "Domo deposit"] },
+      "keywords": ["domo", "quote", "deposit", "payment", "tracking"],
+      "description": { "es": "Cotización, aceptación y depósito protegidos por una capacidad pseudoaleatoria guardada en el dispositivo.", "en": "Quote, acceptance, and deposit protected by a server-keyed pseudorandom capability retained on the device." },
+      "navigationGroup": "people",
+      "icon": "receipt",
+      "breadcrumb": ["public.domo"],
+      "requiredAuth": "public",
+      "permissions": { "discover": {}, "view": { "recordScope": "guest-capability" }, "create": { "recordScope": "guest-capability" } },
+      "featureFlag": "commerce.domo_quotes",
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "record",
+      "maturity": "beta",
+      "accessRequestEligible": false,
+      "mobilePresentation": { "kind": "web-only", "destination": null, "documentedException": "The Domo guest lookup token is intentionally device-scoped; mobile has generated API types but no equivalent secure quote/deposit screen yet." },
+      "apiScopes": [
+        { "pathPrefix": "/public/domo", "pathContains": "/quotes", "methods": { "GET": "view", "POST": "create" } }
+      ]
+    },
+    {
       "id": "profile.detail",
       "parentId": "community",
       "webRoute": "/perfil/:partyId",
