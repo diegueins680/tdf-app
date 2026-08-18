@@ -21,6 +21,7 @@ module TDF.Services.EventDiscovery
   , decodeBuenPlanResponse
   , normalizeTicketmasterResponse
   , normalizeUserCities
+  , publishedEventTypeLookupParams
   , reconcileImportedEvents
   , reconcileProviderEvents
   , discoveredEventFitsPilotLimit
@@ -59,7 +60,7 @@ import Data.Char
   , isControl
   )
 import Data.Function (on)
-import Data.List (maximumBy, nubBy, sortOn)
+import Data.List (maximumBy, nub, nubBy, sortOn)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (catMaybes, fromMaybe, isJust, listToMaybe, mapMaybe)
 import Data.Ord (comparing)
@@ -72,6 +73,7 @@ import Data.Time.Format.ISO8601 (iso8601ParseM)
 import Data.UUID (UUID)
 import Database.Persist
   ( Entity(..)
+  , PersistValue
   , SelectOpt(LimitTo)
   , deleteWhere
   , get
@@ -2271,57 +2273,134 @@ upsertDiscoveredVenue provider now DiscoveredVenue{..} = do
   case existingRef of
     Just (Entity refKey ref) -> do
       let venueKey = Social.externalVenueRefVenueId ref
-      update
-        venueKey
-        [ Social.VenueName =. discoveredVenueName
-        , Social.VenueAddress =. discoveredVenueAddress
-        , Social.VenueCity =. Just discoveredVenueCity
-        , Social.VenueCountry =. discoveredVenueCountry
-        , Social.VenueCountryCode =. discoveredVenueCountryCode
-        , Social.VenueTimezone =.
-            importedVenueTimeZone
-              discoveredVenueTimeZone
-              discoveredVenueCountryCode
-              discoveredVenueCountry
-        , Social.VenueLatitude =. discoveredVenueLatitude
-        , Social.VenueLongitude =. discoveredVenueLongitude
-        , Social.VenueContact =. contact
-        , Social.VenueUpdatedAt =. now
-        ]
+      refreshDiscoveredVenue venueKey now contact DiscoveredVenue{..}
       update refKey [Social.ExternalVenueRefLastSeenAt =. now]
       pure (venueKey, False)
     Nothing -> do
-      venueKey <-
-        insert
-          Social.Venue
-            { Social.venueName = discoveredVenueName
-            , Social.venueAddress = discoveredVenueAddress
-            , Social.venueCity = Just discoveredVenueCity
-            , Social.venueCountry = discoveredVenueCountry
-            , Social.venueCountryCode = discoveredVenueCountryCode
-            , Social.venueCountryId = Nothing
-            , Social.venueCityId = Nothing
-            , Social.venueTimezone =
-                importedVenueTimeZone
-                  discoveredVenueTimeZone
-                  discoveredVenueCountryCode
-                  discoveredVenueCountry
-            , Social.venueLatitude = discoveredVenueLatitude
-            , Social.venueLongitude = discoveredVenueLongitude
-            , Social.venueCapacity = Nothing
-            , Social.venueContact = contact
-            , Social.venueCreatedAt = now
-            , Social.venueUpdatedAt = now
-            }
-      _ <-
-        insert
-            Social.ExternalVenueRef
-              { Social.externalVenueRefProvider = provider
-            , Social.externalVenueRefExternalId = discoveredVenueExternalId
-            , Social.externalVenueRefVenueId = venueKey
-            , Social.externalVenueRefLastSeenAt = now
-            }
-      pure (venueKey, True)
+      syntheticVenueKey <-
+        findSyntheticVenueCandidate provider DiscoveredVenue{..}
+      case syntheticVenueKey of
+        Just venueKey -> do
+          refreshDiscoveredVenue venueKey now contact DiscoveredVenue{..}
+          _ <-
+            insert
+              Social.ExternalVenueRef
+                { Social.externalVenueRefProvider = provider
+                , Social.externalVenueRefExternalId = discoveredVenueExternalId
+                , Social.externalVenueRefVenueId = venueKey
+                , Social.externalVenueRefLastSeenAt = now
+                }
+          pure (venueKey, False)
+        Nothing -> do
+          venueKey <-
+            insert
+              Social.Venue
+                { Social.venueName = discoveredVenueName
+                , Social.venueAddress = discoveredVenueAddress
+                , Social.venueCity = Just discoveredVenueCity
+                , Social.venueCountry = discoveredVenueCountry
+                , Social.venueCountryCode = discoveredVenueCountryCode
+                , Social.venueCountryId = Nothing
+                , Social.venueCityId = Nothing
+                , Social.venueTimezone =
+                    importedVenueTimeZone
+                      discoveredVenueTimeZone
+                      discoveredVenueCountryCode
+                      discoveredVenueCountry
+                , Social.venueLatitude = discoveredVenueLatitude
+                , Social.venueLongitude = discoveredVenueLongitude
+                , Social.venueCapacity = Nothing
+                , Social.venueContact = contact
+                , Social.venueCreatedAt = now
+                , Social.venueUpdatedAt = now
+                }
+          _ <-
+            insert
+              Social.ExternalVenueRef
+                { Social.externalVenueRefProvider = provider
+                , Social.externalVenueRefExternalId = discoveredVenueExternalId
+                , Social.externalVenueRefVenueId = venueKey
+                , Social.externalVenueRefLastSeenAt = now
+                }
+          pure (venueKey, True)
+
+refreshDiscoveredVenue ::
+  Social.VenueId ->
+  UTCTime ->
+  Maybe Text ->
+  DiscoveredVenue ->
+  SqlPersistT IO ()
+refreshDiscoveredVenue venueKey now contact DiscoveredVenue{..} =
+  update
+    venueKey
+    [ Social.VenueName =. discoveredVenueName
+    , Social.VenueAddress =. discoveredVenueAddress
+    , Social.VenueCity =. Just discoveredVenueCity
+    , Social.VenueCountry =. discoveredVenueCountry
+    , Social.VenueCountryCode =. discoveredVenueCountryCode
+    , Social.VenueTimezone =.
+        importedVenueTimeZone
+          discoveredVenueTimeZone
+          discoveredVenueCountryCode
+          discoveredVenueCountry
+    , Social.VenueLatitude =. discoveredVenueLatitude
+    , Social.VenueLongitude =. discoveredVenueLongitude
+    , Social.VenueContact =. contact
+    , Social.VenueUpdatedAt =. now
+    ]
+
+findSyntheticVenueCandidate ::
+  Text ->
+  DiscoveredVenue ->
+  SqlPersistT IO (Maybe Social.VenueId)
+findSyntheticVenueCandidate provider discovered = do
+  refs <- selectList [Social.ExternalVenueRefProvider ==. provider] []
+  matches <- fmap catMaybes . forM refs $ \(Entity _ ref) ->
+    if isSyntheticEntityRef "venue" (Social.externalVenueRefExternalId ref)
+      then do
+        venue <- get (Social.externalVenueRefVenueId ref)
+        pure $
+          if maybe False (syntheticVenueMatches discovered) venue
+            then Just (Social.externalVenueRefVenueId ref)
+            else Nothing
+      else pure Nothing
+  case nub matches of
+    [] -> pure Nothing
+    [venueKey] -> pure (Just venueKey)
+    _ ->
+      liftIO . ioError . userError $
+        "Event discovery found ambiguous materialized venue identity for provider "
+          <> T.unpack provider
+
+syntheticVenueMatches :: DiscoveredVenue -> Social.Venue -> Bool
+syntheticVenueMatches discovered venue =
+  normalizeTokenText (discoveredVenueName discovered)
+    == normalizeTokenText (Social.venueName venue)
+    && maybe
+      False
+      ( (== normalizeCityKey (discoveredVenueCity discovered))
+          . normalizeCityKey
+      )
+      (Social.venueCity venue)
+    && confirmedCountryCodeMatches
+      (discoveredVenueCountryCode discovered)
+      (Social.venueCountryCode venue)
+
+confirmedCountryCodeMatches :: Maybe Text -> Maybe Text -> Bool
+confirmedCountryCodeMatches left right =
+  case (normalizeCountryCode left, normalizeCountryCode right) of
+    (Just leftCode, Just rightCode) -> leftCode == rightCode
+    _ -> False
+  where
+    normalizeCountryCode raw = do
+      code <- T.toUpper . T.strip <$> raw
+      if T.null code then Nothing else Just code
+
+isSyntheticEntityRef :: Text -> Text -> Bool
+isSyntheticEntityRef entityType =
+  T.isPrefixOf ("event-research:" <> entityType <> ":")
+    . T.toCaseFold
+    . T.strip
 
 upsertDiscoveredArtist ::
   Text ->
@@ -2336,42 +2415,48 @@ upsertDiscoveredArtist provider now DiscoveredArtist{..} = do
     case existingRef of
       Just (Entity refKey ref) -> do
         let existingArtistKey = Social.externalArtistRefArtistId ref
-            imageUpdate =
-              maybe [] (\imageUrl -> [Social.ArtistProfileAvatarUrl =. Just imageUrl])
-                discoveredArtistImageUrl
-        update
-          existingArtistKey
-          ( [ Social.ArtistProfileName =. discoveredArtistName
-            , Social.ArtistProfileUpdatedAt =. now
-            ]
-              ++ imageUpdate
-          )
+        refreshDiscoveredArtist existingArtistKey now DiscoveredArtist{..}
         update refKey [Social.ExternalArtistRefLastSeenAt =. now]
         pure (existingArtistKey, False)
       Nothing -> do
-        newArtistKey <-
-          insert
-            Social.ArtistProfile
-              { Social.artistProfilePartyId = Nothing
-              , Social.artistProfileName = discoveredArtistName
-              , Social.artistProfileBio = Nothing
-              , Social.artistProfileAvatarUrl = discoveredArtistImageUrl
-              , Social.artistProfileGenres = Nothing
-              , Social.artistProfileSocialLinks = Nothing
-              , Social.artistProfileCountryCode = Nothing
-              , Social.artistProfileCountryId = Nothing
-              , Social.artistProfileCreatedAt = now
-              , Social.artistProfileUpdatedAt = now
-              }
-        _ <-
-          insert
-            Social.ExternalArtistRef
-              { Social.externalArtistRefProvider = provider
-              , Social.externalArtistRefExternalId = discoveredArtistExternalId
-              , Social.externalArtistRefArtistId = newArtistKey
-              , Social.externalArtistRefLastSeenAt = now
-              }
-        pure (newArtistKey, True)
+        syntheticArtistKey <-
+          findSyntheticArtistCandidate provider discoveredArtistName
+        case syntheticArtistKey of
+          Just artistKey -> do
+            refreshDiscoveredArtist artistKey now DiscoveredArtist{..}
+            _ <-
+              insert
+                Social.ExternalArtistRef
+                  { Social.externalArtistRefProvider = provider
+                  , Social.externalArtistRefExternalId = discoveredArtistExternalId
+                  , Social.externalArtistRefArtistId = artistKey
+                  , Social.externalArtistRefLastSeenAt = now
+                  }
+            pure (artistKey, False)
+          Nothing -> do
+            newArtistKey <-
+              insert
+                Social.ArtistProfile
+                  { Social.artistProfilePartyId = Nothing
+                  , Social.artistProfileName = discoveredArtistName
+                  , Social.artistProfileBio = Nothing
+                  , Social.artistProfileAvatarUrl = discoveredArtistImageUrl
+                  , Social.artistProfileGenres = Nothing
+                  , Social.artistProfileSocialLinks = Nothing
+                  , Social.artistProfileCountryCode = Nothing
+                  , Social.artistProfileCountryId = Nothing
+                  , Social.artistProfileCreatedAt = now
+                  , Social.artistProfileUpdatedAt = now
+                  }
+            _ <-
+              insert
+                Social.ExternalArtistRef
+                  { Social.externalArtistRefProvider = provider
+                  , Social.externalArtistRefExternalId = discoveredArtistExternalId
+                  , Social.externalArtistRefArtistId = newArtistKey
+                  , Social.externalArtistRefLastSeenAt = now
+                  }
+            pure (newArtistKey, True)
   resolvedGenres <- fmap catMaybes $ forM discoveredArtistGenres $ \genre -> do
     matches <-
       ( rawSql
@@ -2387,6 +2472,46 @@ upsertDiscoveredArtist provider now DiscoveredArtist{..} = do
     _ <- insertUnique (Social.ArtistGenreMembership artistKey genreId position now)
     pure ()
   pure (artistKey, created)
+
+refreshDiscoveredArtist ::
+  Social.ArtistProfileId ->
+  UTCTime ->
+  DiscoveredArtist ->
+  SqlPersistT IO ()
+refreshDiscoveredArtist artistKey now DiscoveredArtist{..} = do
+  let imageUpdate =
+        maybe [] (\imageUrl -> [Social.ArtistProfileAvatarUrl =. Just imageUrl])
+          discoveredArtistImageUrl
+  update
+    artistKey
+    ( [ Social.ArtistProfileName =. discoveredArtistName
+      , Social.ArtistProfileUpdatedAt =. now
+      ]
+        ++ imageUpdate
+    )
+
+findSyntheticArtistCandidate ::
+  Text ->
+  Text ->
+  SqlPersistT IO (Maybe Social.ArtistProfileId)
+findSyntheticArtistCandidate provider artistName = do
+  refs <- selectList [Social.ExternalArtistRefProvider ==. provider] []
+  matches <- fmap catMaybes . forM refs $ \(Entity _ ref) ->
+    if isSyntheticEntityRef "artist" (Social.externalArtistRefExternalId ref)
+      then do
+        artist <- get (Social.externalArtistRefArtistId ref)
+        pure $
+          if maybe False ((== normalizeTokenText artistName) . normalizeTokenText . Social.artistProfileName) artist
+            then Just (Social.externalArtistRefArtistId ref)
+            else Nothing
+      else pure Nothing
+  case nub matches of
+    [] -> pure Nothing
+    [artistKey] -> pure (Just artistKey)
+    _ ->
+      liftIO . ioError . userError $
+        "Event discovery found ambiguous materialized artist identity for provider "
+          <> T.unpack provider
 
 encodeVenueContact :: Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text
 encodeVenueContact phone website state postalCode imageUrl
@@ -2441,10 +2566,19 @@ resolvePublishedEventTypeId :: UTCTime -> Text -> SqlPersistT IO UUID
 resolvePublishedEventTypeId now eventTypeCode = do
   rows <- rawSql
     "SELECT item.id FROM event_type item JOIN catalog_definition catalog ON catalog.id=item.catalog_id AND catalog.code='event-types' AND catalog.active=TRUE JOIN workflow_state state ON state.id=item.workflow_state_id AND state.workflow_id=catalog.workflow_id AND state.code='published' AND state.active=TRUE WHERE lower(trim(?)) IN (lower(item.code), lower(item.name_es), lower(item.name_en), lower(COALESCE(item.current_slug,''))) AND item.active=TRUE AND item.deprecated_at IS NULL AND (item.effective_from IS NULL OR item.effective_from<=?) AND (item.effective_until IS NULL OR item.effective_until>=?) ORDER BY item.id LIMIT 2"
-    [toPersistValue eventTypeCode, toPersistValue (utctDay now)]
+    (publishedEventTypeLookupParams now eventTypeCode)
   case rows of
     [Single eventTypeUuid] -> pure eventTypeUuid
     [] -> liftIO . ioError . userError $
       "Event discovery type is not an active published catalog item: " <> T.unpack eventTypeCode
     _ -> liftIO . ioError . userError $
       "Event discovery type resolves to multiple catalog items: " <> T.unpack eventTypeCode
+
+-- Keep the PostgreSQL bindings aligned with the three placeholders in the
+-- lookup query: code, effective-from date, and effective-until date.
+publishedEventTypeLookupParams :: UTCTime -> Text -> [PersistValue]
+publishedEventTypeLookupParams now eventTypeCode =
+  [ toPersistValue eventTypeCode
+  , toPersistValue (utctDay now)
+  , toPersistValue (utctDay now)
+  ]
