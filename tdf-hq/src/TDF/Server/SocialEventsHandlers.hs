@@ -8366,7 +8366,9 @@ sqliteOptionalIntegralMetadataType metadataColumn fieldName =
         <> fieldType
         <> "='null' OR ("
         <> fieldType
-        <> " IN ('integer','real') AND (typeof("
+        <> " IN ('integer','real') AND "
+        <> sqliteJsonNumberIsIntegral metadataColumn fieldName
+        <> " AND (typeof("
         <> fieldValue
         <> ")='integer' OR (typeof("
         <> fieldValue
@@ -8383,6 +8385,58 @@ sqliteOptionalIntegralMetadataType metadataColumn fieldName =
     fieldPath = "'$." <> fieldName <> "'"
     fieldType = "json_type(" <> metadataColumn <> "," <> fieldPath <> ")"
     fieldValue = "json_extract(" <> metadataColumn <> "," <> fieldPath <> ")"
+
+-- json_extract represents JSON real numbers as binary doubles, so comparing
+-- the extracted value with an integer cast can turn a large fraction into an
+-- apparent integer. Inspect the original JSON number token to enforce exact
+-- decimal integrality before applying the Int64 range check above.
+sqliteJsonNumberIsIntegral :: T.Text -> T.Text -> T.Text
+sqliteJsonNumberIsIntegral metadataColumn fieldName =
+    "("
+        <> coefficient
+        <> " NOT GLOB '*[1-9]*' OR ("
+        <> decimalScale
+        <> "<=0 OR "
+        <> decimalScale
+        <> "<=length("
+        <> coefficient
+        <> ")-length(rtrim("
+        <> coefficient
+        <> ",'0'))))"
+  where
+    fieldPath = "'$." <> fieldName <> "'"
+    numberToken = "lower(" <> metadataColumn <> "->" <> fieldPath <> ")"
+    exponentMarker = "instr(" <> numberToken <> ",'e')"
+    mantissa =
+        "(CASE WHEN "
+            <> exponentMarker
+            <> "=0 THEN "
+            <> numberToken
+            <> " ELSE substr("
+            <> numberToken
+            <> ",1,"
+            <> exponentMarker
+            <> "-1) END)"
+    unsignedMantissa = "ltrim(" <> mantissa <> ",'-')"
+    decimalMarker = "instr(" <> unsignedMantissa <> ",'.')"
+    fractionLength =
+        "(CASE WHEN "
+            <> decimalMarker
+            <> "=0 THEN 0 ELSE length("
+            <> unsignedMantissa
+            <> ")-"
+            <> decimalMarker
+            <> " END)"
+    exponentValue =
+        "(CASE WHEN "
+            <> exponentMarker
+            <> "=0 THEN 0 ELSE CAST(substr("
+            <> numberToken
+            <> ","
+            <> exponentMarker
+            <> "+1) AS INTEGER) END)"
+    decimalScale = "(" <> fractionLength <> "-" <> exponentValue <> ")"
+    coefficient = "replace(" <> unsignedMantissa <> ",'.','')"
 
 postgresVisibleImportedMetadataClause :: T.Text -> T.Text
 postgresVisibleImportedMetadataClause metadataColumn =

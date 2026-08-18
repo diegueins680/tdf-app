@@ -341,6 +341,8 @@ spec = describe "social event handler helpers" $ do
             exponentBudgetEventKey = toSqlKey 18
             fractionalBudgetEventKey :: SocialEventId
             fractionalBudgetEventKey = toSqlKey 19
+            roundedFractionalBudgetEventKey :: SocialEventId
+            roundedFractionalBudgetEventKey = toSqlKey 20
             hiddenTierKey :: EventTicketTierId
             hiddenTierKey = toSqlKey 21
             publicTierKey :: EventTicketTierId
@@ -463,6 +465,13 @@ spec = describe "social event handler helpers" $ do
                         , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
                         }
                     )
+                insertKey
+                    roundedFractionalBudgetEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Rounded fractional budget" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true,\"budgetCents\":9007199254740992.5}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
                 _ <- insert (sourceRef "ticketmaster" "pilot-private-13" hiddenEventKey "missing" "https://tickets.example.com/private-pilot")
                 _ <- insert (sourceRef "ticketmaster" "public-14" publicEventKey "on_sale" "https://tickets.example.com/public")
                 _ <- insert (sourceRef "buenplan" "draft-merge-14" publicEventKey "draft:on_sale" "https://tickets.example.com/draft-option")
@@ -471,6 +480,7 @@ spec = describe "social event handler helpers" $ do
                 _ <- insert (sourceRef "ticketmaster" "decimal-budget-17" decimalBudgetEventKey "on_sale" "https://tickets.example.com/decimal-budget")
                 _ <- insert (sourceRef "ticketmaster" "exponent-budget-18" exponentBudgetEventKey "on_sale" "https://tickets.example.com/exponent-budget")
                 _ <- insert (sourceRef "ticketmaster" "fractional-budget-19" fractionalBudgetEventKey "on_sale" "https://tickets.example.com/fractional-budget")
+                _ <- insert (sourceRef "ticketmaster" "rounded-fractional-budget-20" roundedFractionalBudgetEventKey "on_sale" "https://tickets.example.com/rounded-fractional-budget")
                 insertKey hiddenTierKey (ticketTier hiddenEventKey "hidden-tier" "Hidden tier")
                 insertKey publicTierKey (ticketTier publicEventKey "public-tier" "Public tier")
                 insertKey
@@ -640,6 +650,13 @@ spec = describe "social event handler helpers" $ do
                     (socialEventGetHandlerFor ordinaryUser "19")
                     env
         assertHiddenEventRoute "fractional imported budget metadata" fractionalBudgetGetResult
+
+        roundedFractionalBudgetGetResult <-
+            runHandler $
+                runReaderT
+                    (socialEventGetHandlerFor ordinaryUser "20")
+                    env
+        assertHiddenEventRoute "large fractional imported budget metadata" roundedFractionalBudgetGetResult
 
         let ( stripeHandler
                 , createRefundHandler
