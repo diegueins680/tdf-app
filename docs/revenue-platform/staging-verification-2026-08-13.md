@@ -53,7 +53,7 @@ The final command transcript is summarized here after the branch-wide verificati
 | Current Domo bundle/token review | Production build secret gate plus targeted source/dist search for private-key, OpenAI-style, AWS-style, demo/admin bearer, and embedded-token patterns | Pass: no embedded credential value found. Remaining bearer construction is runtime OAuth/session behavior or admin documentation, and the Domo lookup capability is stored device-side and sent only in its scoped header. |
 | Release/CI contracts | `npm run test:production-release`; `npm run test:ci-pipeline` | Pass: 43 + 15 tests |
 | Prior registered production batch | Restore schema-only fixture plus three synthetic published Records rows; read-only preflight; render/apply twice; schema verification before and after the rerun on PostgreSQL 17 | Pass before current-main synchronization: all 49/49 then-registered migrations were recorded, the exact second run skipped all 49 entries idempotently, marketplace sales/rentals and reviewed manual methods remained enabled, Datafast/PayPal and service bookings remained disabled, active booking policies and provider bindings remained zero |
-| Current merged migration manifest | JSON uniqueness/immutability contracts, dedicated migration rehearsals, and production release tests | Pass: 57 unique manifest entries including current-main's optional event-end, DDEX compatibility and automatic-migration work plus the public-ticket runtime. The earlier aggregate snapshot evidence is revision-specific; a new aggregate 57-entry anonymized-snapshot apply remains required in staging. |
+| Current merged migration manifest | JSON uniqueness/immutability contracts, dedicated migration rehearsals, and production release tests | Pass: 59 unique manifest entries including current-main's optional event-end, DDEX compatibility and automatic-migration work plus the public-ticket and Domo quote runtimes. The earlier aggregate snapshot evidence is revision-specific; a new aggregate 59-entry anonymized-snapshot apply remains required in staging. |
 | OpenAPI/generated clients | `npm run generate:api` for web and mobile | Pass: canonical service-storefront, marketplace sale/rental, customer request/review, manual deposit settlement, booking/course/public-ticket checkout, Datafast/PayPal actions, manual-evidence submission, protected finance projection, independent review, and music-directory contracts generated for both clients; merged mobile contract committed at `5f67f61` |
 | Current Domo OpenAPI/generated clients | `npm run generate:api`; web build/typecheck; mobile typecheck | Pass: public capability, quote creation/tracking/acceptance, Datafast create/status, and PayPal create/capture contracts generated identically for web and mobile; mobile native screens are not implemented in this slice |
 | Mobile type safety | `npm run typecheck:mobile` | Pass |
@@ -148,9 +148,9 @@ reconciliation work rather than fabricated payment. After that earlier synchroni
 verification passed 2,360 backend examples, 155 web suites/1,622 tests, 51 mobile suites/264 tests,
 the three marketplace/manual database rehearsals, the event-research and music-directory migration
 rehearsals, production UI build, feature-registry audit, release/CI contracts, formal audit and
-catalog-authority audit. The current merged manifest contains 57 unique immutable entries; the
+catalog-authority audit. The current merged manifest contains 59 unique immutable entries; the
 earlier 49-entry aggregate apply evidence remains valid for that exact revision, while an aggregate
-57-entry snapshot apply is explicitly still required in staging. No external provider call, manual
+59-entry snapshot apply is explicitly still required in staging. No external provider call, manual
 payment approval, inventory handoff, deposit refund, staging deployment or production mutation
 occurred.
 
