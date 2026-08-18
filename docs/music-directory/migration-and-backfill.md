@@ -25,6 +25,11 @@ búsqueda. Solo acepta URLs HTTP(S) o rutas relativas seguras ya admitidas por e
 perfiles existentes de forma idempotente y actualiza la imagen en futuros refrescos. Su rollback
 restaura la función anterior sin borrar URLs ya publicadas.
 
+La compatibilidad posterior con hosts internacionalizados e IPv6 se entrega mediante la migración
+forward `2026-08-18_music_directory_profile_image_host_compatibility.sql`; la migración registrada
+original permanece byte a byte inmutable para conservar su checksum. La nueva migración sustituye
+la función de proyección, reindexa únicamente valores distintos y dispone de rollback propio.
+
 ## Etapas
 
 1. **Expand:** extensiones opcionales seguras (`unaccent`, `pg_trgm`), catálogos nuevos, perfiles,

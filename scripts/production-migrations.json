@@ -295,6 +295,11 @@
       "id": "2026-08-18_music_directory_profile_images",
       "path": "tdf-hq/sql/2026-08-18_music_directory_profile_images.sql",
       "introducedBy": "f1665e92c8db9d86a890c7d3e61173de0ca8226d"
+    },
+    {
+      "id": "2026-08-18_music_directory_profile_image_host_compatibility",
+      "path": "tdf-hq/sql/2026-08-18_music_directory_profile_image_host_compatibility.sql",
+      "introducedBy": "bc594785274f9f1b692c6da3b69ce439e060b27a"
     }
   ]
 }

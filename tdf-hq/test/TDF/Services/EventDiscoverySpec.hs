@@ -6,8 +6,8 @@ import Data.Aeson (eitherDecode)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Control.Monad.Logger (runNoLoggingT)
 import Data.Pool (destroyAllResources)
-import Data.Time (UTCTime(..), addUTCTime, fromGregorian, secondsToDiffTime)
-import Database.Persist (Entity(..), Filter, count, get, getBy, update, (=.))
+import Data.Time (UTCTime(..), addUTCTime, fromGregorian, secondsToDiffTime, utctDay)
+import Database.Persist (Entity(..), Filter, count, get, getBy, toPersistValue, update, (=.))
 import Database.Persist.Sql (SqlPersistT, rawExecute, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePool)
 import Test.Hspec
@@ -30,6 +30,7 @@ import TDF.Services.EventDiscovery
   , discoveredEventFitsPilotLimit
   , normalizeTicketmasterResponse
   , normalizeUserCities
+  , publishedEventTypeLookupParams
   , failEventDiscoveryRun
   , finishEventDiscoveryRun
   , isDiscoveredEventKnown
@@ -42,6 +43,16 @@ import qualified TDF.Models.SocialEventsModels as Social
 
 spec :: Spec
 spec = do
+  describe "event discovery event-type lookup" $ do
+    it "binds both effective-date placeholders for PostgreSQL" $ do
+      let now = fixtureTime 10 0
+      publishedEventTypeLookupParams now "other"
+        `shouldBe`
+          [ toPersistValue ("other" :: T.Text)
+          , toPersistValue (utctDay now)
+          , toPersistValue (utctDay now)
+          ]
+
   describe "event discovery user-city targeting" $ do
     it "normalizes, deduplicates, and rejects unsafe profile cities" $ do
       normalizeUserCities
@@ -293,6 +304,46 @@ spec = do
           metadata `shouldSatisfy` T.isInfixOf "\"isPublic\":false"
       (UUID.toText <$> (Social.socialEventWorkflowStateId =<< importedEventAfterReconcile))
         `shouldBe` Just "00000000-0000-4000-8000-000000000237"
+
+    it "reconciles materialization synthetic entity refs with real provider IDs" $ do
+      event <- case eitherDecode ticketmasterFixture of
+        Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"
+        Right response ->
+          case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
+            [normalized] -> pure normalized
+            other -> expectationFailure ("Expected one normalized event, got " <> show other) >> fail "invalid normalized fixture"
+      pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+      runSqlPool initializeEventDiscoverySchema pool
+
+      let providerEvent =
+            event
+              { discoveredEventVenue =
+                  (discoveredEventVenue event)
+                    { discoveredVenueCountryCode = Just "EC"
+                    }
+              }
+          synthetic =
+            providerEvent
+              { discoveredEventVenue =
+                  (discoveredEventVenue providerEvent)
+                    { discoveredVenueExternalId = "event-research:venue:fixture"
+                    }
+              , discoveredEventArtists =
+                  [ artist
+                      { discoveredArtistExternalId = "event-research:artist:fixture"
+                      }
+                  | artist <- discoveredEventArtists event
+                  ]
+              }
+      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 4) synthetic
+      realStats <- syncDiscoveredEventDraft pool (fixtureTime 10 5) providerEvent
+
+      discoveryVenuesCreated realStats `shouldBe` 0
+      discoveryArtistsCreated realStats `shouldBe` 0
+      runSqlPool (count ([] :: [Filter Social.Venue])) pool `shouldReturn` 1
+      runSqlPool (count ([] :: [Filter Social.ArtistProfile])) pool `shouldReturn` 1
+      runSqlPool (count ([] :: [Filter Social.ExternalVenueRef])) pool `shouldReturn` 2
+      runSqlPool (count ([] :: [Filter Social.ExternalArtistRef])) pool `shouldReturn` 2
 
     it "keeps pilot imports private, idempotent, capped-countable, and timezone-explicit" $ do
       event <- case eitherDecode ticketmasterFixture of
