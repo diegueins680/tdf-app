@@ -2,7 +2,6 @@
 
 interface ImportMetaEnv {
   readonly VITE_API_BASE?: string;
-  readonly VITE_API_DEMO_TOKEN?: string;
   readonly VITE_LIVE_SESSIONS_PUBLIC_TOKEN?: string;
   readonly VITE_CHATKIT_WORKFLOW_ID?: string;
   readonly VITE_META_APP_ID?: string;
@@ -26,8 +25,6 @@ interface ImportMetaEnv {
   readonly VITE_COURSE_MAP_URL?: string;
   readonly VITE_COURSE_SLUG?: string;
   readonly VITE_COURSE_WHATSAPP_URL?: string;
-  readonly VITE_DEFAULT_DEMO_TOKEN?: string;
-  readonly VITE_DEMO_TOKEN_HOSTS?: string;
   readonly VITE_GOOGLE_CLIENT_ID?: string;
   readonly VITE_GOOGLE_DRIVE_CLIENT_ID?: string;
   readonly VITE_GOOGLE_DRIVE_FOLDER_ID?: string;
@@ -37,7 +34,6 @@ interface ImportMetaEnv {
   readonly VITE_POSTHOG_HOST?: string;
   readonly VITE_POSTHOG_KEY?: string;
   readonly VITE_PUBLIC_BASE?: string;
-  readonly VITE_PUBLIC_BOOKING_TOKEN?: string;
   readonly VITE_PUBLIC_COURSE_BASE?: string;
   readonly VITE_SED_USD_RATE?: string;
   readonly VITE_STRIPE_PUBLISHABLE_KEY?: string;

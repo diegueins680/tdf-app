@@ -187,6 +187,18 @@ export interface MarketplaceItemDTO {
   miPriceDisplay: string;
   miMarkupPct: number;
   miCurrency: string;
+  miRentalWeeklyPriceUsdCents?: number | null;
+  miRentalWeeklyPriceDisplay?: string | null;
+  miRentalSecurityDepositUsdCents?: number | null;
+  miRentalSecurityDepositDisplay?: string | null;
+  miRentalMinDays?: number | null;
+  miRentalMaxDays?: number | null;
+  miRentalLateFeeUsdCents?: number | null;
+  miRentalLateFeeDisplay?: string | null;
+  miRentalCancellationWindowHours?: number | null;
+  miRentalTermsVersion?: string | null;
+  miRentalTermsSummary?: string | null;
+  miRentalTimezone?: string | null;
 }
 
 export interface MarketplaceCartItemDTO {
@@ -200,6 +212,14 @@ export interface MarketplaceCartItemDTO {
   mciSubtotalCents: number;
   mciUnitPriceDisplay: string;
   mciSubtotalDisplay: string;
+  mciPurpose: 'sale' | 'rent';
+  mciRentalStartDate?: string | null;
+  mciRentalEndDate?: string | null;
+  mciRentalDurationDays?: number | null;
+  mciRentalChargeCents?: number | null;
+  mciRentalChargeDisplay?: string | null;
+  mciSecurityDepositCents?: number | null;
+  mciSecurityDepositDisplay?: string | null;
 }
 
 export interface MarketplaceCartDTO {
@@ -235,9 +255,106 @@ export interface MarketplaceOrderDTO {
   moPaypalOrderId?: string | null;
   moPaypalPayerEmail?: string | null;
   moPaidAt?: string | null;
+  moLookupToken?: string | null;
+  moCheckoutStatus?: string | null;
+  moManualPaymentStatus?: 'awaiting_evidence' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'requires_reconciliation' | null;
+  moManualPaymentSubmittedAt?: string | null;
+  moFulfillmentMethod?: string | null;
+  moFulfillmentStatus?: string | null;
+  moHoldExpiresAt?: string | null;
+  moTrackingReference?: string | null;
+  moFulfillmentHistory?: [string, string][];
+  moOrderKind?: 'sale' | 'rental' | null;
+  moRentalStartDate?: string | null;
+  moRentalEndDate?: string | null;
+  moRentalDurationDays?: number | null;
+  moRentalChargeUsdCents?: number | null;
+  moSecurityDepositUsdCents?: number | null;
+  moDepositStatus?: string | null;
+  moDepositDeductionUsdCents?: number | null;
+  moRentalTermsVersion?: string | null;
+  moRentalTimezone?: string | null;
+  moConditionOut?: string | null;
+  moConditionIn?: string | null;
   moCreatedAt: string;
   moUpdatedAt: string;
   moItems: MarketplaceOrderItemDTO[];
+}
+
+export interface MarketplaceManualEvidenceDTO {
+  mmeEvidenceId: string;
+  mmePaymentMethod: 'bank_transfer' | 'cash' | 'pos';
+  mmeStatus: 'awaiting_evidence' | 'submitted' | 'under_review' | 'approved' | 'rejected';
+  mmeCustomerReference?: string | null;
+  mmeSubmittedAmountMinor?: number | null;
+  mmeCurrency?: string | null;
+  mmeSubmittedBy?: number | null;
+  mmeSubmittedAt?: string | null;
+  mmeReviewedBy?: number | null;
+  mmeReviewedAt?: string | null;
+  mmeReviewNotes?: string | null;
+}
+
+export interface MarketplaceCommerceDTO {
+  mpcOrderId: string;
+  mpcCheckoutId: string;
+  mpcPaymentStatus: string;
+  mpcHoldExpiresAt: string;
+  mpcOrderKind: 'sale' | 'rental';
+  mpcManualEvidence?: MarketplaceManualEvidenceDTO | null;
+}
+
+export type MarketplaceCustomerRequestType =
+  | 'sale_cancellation'
+  | 'sale_return'
+  | 'rental_cancellation'
+  | 'rental_extension'
+  | 'rental_dispute';
+
+export interface MarketplaceCustomerRequestSubmitPayload {
+  mcrsRequestType: MarketplaceCustomerRequestType;
+  mcrsReason: string;
+  mcrsRequestedEndDate?: string;
+  mcrsEvidenceUrl?: string;
+}
+
+export interface MarketplaceCustomerRequestDTO {
+  mcrRequestId: string;
+  mcrOrderId: string;
+  mcrOrderKind: 'sale' | 'rental';
+  mcrRequestType: MarketplaceCustomerRequestType;
+  mcrStatus: 'submitted' | 'needs_quote' | 'approved' | 'rejected';
+  mcrReason: string;
+  mcrRequestedEndDate?: string | null;
+  mcrEvidenceUrl?: string | null;
+  mcrRequestedAt: string;
+  mcrReviewedAt?: string | null;
+  mcrReviewNotes?: string | null;
+}
+
+export interface MarketplaceDepositSettlementSubmitPayload {
+  mdssSettlementMethod: 'bank_transfer' | 'cash' | 'pos' | 'forfeiture';
+  mdssExternalReference: string;
+  mdssEvidenceUrl: string;
+}
+
+export interface MarketplaceDepositSettlementDTO {
+  mdsSettlementId: string;
+  mdsOrderId: string;
+  mdsCheckoutId: string;
+  mdsCurrency: string;
+  mdsDepositAmountMinor: number;
+  mdsDeductionAmountMinor: number;
+  mdsRefundAmountMinor: number;
+  mdsSettlementMethod: 'bank_transfer' | 'cash' | 'pos' | 'forfeiture';
+  mdsExternalReference: string;
+  mdsEvidenceUrl: string;
+  mdsStatus: 'submitted' | 'verified' | 'rejected' | 'requires_reconciliation';
+  mdsSubmittedBy: number;
+  mdsSubmittedAt: string;
+  mdsReviewedBy?: number | null;
+  mdsReviewedAt?: string | null;
+  mdsReviewNotes?: string | null;
 }
 
 export interface MarketplaceOrderUpdatePayload {
@@ -252,6 +369,7 @@ export interface DatafastCheckoutDTO {
   dcWidgetUrl: string;
   dcAmount: string;
   dcCurrency: string;
+  dcLookupToken?: string | null;
 }
 
 export interface StripePaymentIntentDTO {
@@ -261,12 +379,55 @@ export interface StripePaymentIntentDTO {
   spiAmountCents: number;
   spiCurrency: string;
   spiPaymentSheet?: Record<string, unknown> | null;
+  spiLookupToken?: string | null;
 }
 
 export interface PaypalCreateDTO {
   pcOrderId: string;
   pcPaypalOrderId: string;
   pcApprovalUrl?: string | null;
+  pcLookupToken?: string | null;
+}
+
+export interface MarketplaceShippingAddress {
+  msaAddressLine1: string;
+  msaAddressLine2?: string;
+  msaCity: string;
+  msaProvince: string;
+  msaPostalCode?: string;
+  msaCountryCode: string;
+}
+
+export interface MarketplaceFulfillmentUpdatePayload {
+  mfuStatus: string;
+  mfuCarrier?: string;
+  mfuTrackingReference?: string;
+  mfuReasonCode?: string;
+  mfuNotes?: string;
+}
+
+export interface MarketplaceRentalUpdatePayload {
+  mruStatus: string;
+  mruConditionOut?: string;
+  mruConditionIn?: string;
+  mruEvidenceUrl?: string;
+  mruDepositDeductionUsdCents?: number;
+  mruReasonCode?: string;
+  mruNotes?: string;
+}
+
+export interface MarketplaceRentalTermsUpdatePayload {
+  mrtuDailyRateUsdCents: number;
+  mrtuWeeklyRateUsdCents: number | null;
+  mrtuSecurityDepositUsdCents: number;
+  mrtuLateFeeUsdCents: number;
+  mrtuMinDays: number;
+  mrtuMaxDays: number;
+  mrtuCancellationWindowHours: number;
+  mrtuTimezone: 'America/Guayaquil';
+  mrtuTermsVersion: string;
+  mrtuTermsSummary: string;
+  mrtuActive: boolean;
 }
 
 export interface PaypalCaptureRequest {

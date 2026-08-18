@@ -49,10 +49,22 @@ executable tdf-hq-exe
     TDF.API.Catalog
     TDF.API.ServiceStorefront
     TDF.API.ServiceStorefrontTypes
+    TDF.API.CommerceOperations
     TDF.Artists.Promotion
     TDF.Artists.Enrichment
     TDF.Auth
     TDF.CampaignAutomation
+    TDF.Commerce.CheckoutStore
+    TDF.Commerce.CourseCheckout
+    TDF.Commerce.EventTickets
+    TDF.Commerce.MarketplaceSales
+    TDF.Commerce.MarketplaceRentals
+    TDF.Commerce.MarketplaceOperations
+    TDF.Commerce.ServiceBookings
+    TDF.Commerce.ProviderEventStore
+    TDF.Commerce.ProviderEventWorker
+    TDF.Commerce.RefundStore
+    TDF.Commerce.StateMachine
     TDF.Config
     TDF.Cron
     TDF.Cors
@@ -62,6 +74,7 @@ executable tdf-hq-exe
     TDF.DTO.EventResearchDTO
     TDF.DTO.SocialDiscoveryDTO
     TDF.DTO.SocialSyncDTO
+    TDF.Distribution.StateMachine
     TDF.Email
     TDF.Handlers.InputList
     TDF.Invoice.SRI
@@ -93,6 +106,9 @@ executable tdf-hq-exe
     TDF.Routes.Academy
     TDF.Seed
     TDF.Server
+    TDF.Server.CommerceOperations
+    TDF.Server.CourseCheckout
+    TDF.Server.EventTicketCheckout
     TDF.ServerAuth
     TDF.ServerAdmin
     TDF.Server.SocialDiscovery
@@ -113,6 +129,7 @@ executable tdf-hq-exe
     TDF.ServerFanClub
     TDF.ServerFuture
     TDF.Routes.Courses
+    TDF.Routes.EventTickets
     TDF.Trials.API
     TDF.Trials.DTO
     TDF.Trials.Models
@@ -230,6 +247,7 @@ test-suite tdf-hq-test
     TDF.API.SocialDiscoveryAPI
     TDF.API.SocialSyncAPI
     TDF.API.Calendar
+    TDF.API.CommerceOperations
     TDF.API.Label
     TDF.API.Services
     TDF.Contracts.API
@@ -256,6 +274,17 @@ test-suite tdf-hq-test
     TDF.Artists.EnrichmentSpec
     TDF.Auth
     TDF.CampaignAutomation
+    TDF.Commerce.CheckoutStore
+    TDF.Commerce.CourseCheckout
+    TDF.Commerce.EventTickets
+    TDF.Commerce.MarketplaceSales
+    TDF.Commerce.MarketplaceRentals
+    TDF.Commerce.MarketplaceOperations
+    TDF.Commerce.ServiceBookings
+    TDF.Commerce.ProviderEventStore
+    TDF.Commerce.ProviderEventWorker
+    TDF.Commerce.RefundStore
+    TDF.Commerce.StateMachine
     TDF.Config
     TDF.Cors
     TDF.Cron
@@ -266,6 +295,7 @@ test-suite tdf-hq-test
     TDF.DTO.EventResearchDTO
     TDF.DTO.SocialDiscoveryDTO
     TDF.DTO.SocialSyncDTO
+    TDF.Distribution.StateMachine
     TDF.Email
     TDF.Email.Service
     TDF.Handlers.InputList
@@ -293,9 +323,13 @@ test-suite tdf-hq-test
     TDF.RagStore
     TDF.Routes.Academy
     TDF.Routes.Courses
+    TDF.Routes.EventTickets
     TDF.Seed
     TDF.Server
     TDF.Server.Catalog
+    TDF.Server.CommerceOperations
+    TDF.Server.CourseCheckout
+    TDF.Server.EventTicketCheckout
     TDF.Server.DDEX
     TDF.Server.Directory
     TDF.Server.ServiceStorefront

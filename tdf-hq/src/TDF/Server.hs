@@ -20,6 +20,9 @@ import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask, asks, runReaderT)
 import           Control.Monad.Trans.Class (lift)
 import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
+import           Crypto.Hash (Digest, SHA256, hash)
+import           Data.ByteArray (constEq)
+import qualified Data.ByteArray.Encoding as BAE
 import           Data.Bits (xor)
 import           Data.Int (Int64)
 import           Data.List (find, nub, isInfixOf, sort, sortOn)
@@ -79,12 +82,12 @@ import           Text.Read (readMaybe)
 import           Web.PathPieces (fromPathPiece, toPathPiece)
 
 import           Database.Persist
-import           Database.Persist.Sql (SqlBackend, SqlPersistT, Single(..), fromSqlKey, rawExecute, rawSql, runSqlPool, toSqlKey, updateWhereCount)
+import           Database.Persist.Sql (SqlBackend, SqlPersistT, Single(..), fromSqlKey, rawExecute, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, updateWhereCount)
 import           Database.Persist.Postgresql ()
 import           Database.PostgreSQL.Simple (SqlError (..))
 
 import           TDF.API
-import           TDF.API.Types (UserRoleSummaryDTO(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceCheckoutReq(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), LabelProjectNoteDTO(..), LabelProjectNoteCreate(..), LabelProjectNoteUpdate(..), DriveUploadDTO(..), DriveTokenExchangeRequest(..), DriveTokenRefreshRequest(..), DriveTokenResponse(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..), verifyMetaWebhookSignature)
+import           TDF.API.Types (UserRoleSummaryDTO(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceFulfillmentUpdate(..), MarketplaceRentalUpdate(..), MarketplaceRentalTermsUpdate(..), MarketplaceManualEvidenceSubmit(..), MarketplaceManualPaymentReview(..), MarketplaceManualEvidenceDTO(..), MarketplaceCommerceDTO(..), MarketplaceCustomerRequestSubmit(..), MarketplaceCustomerRequestReview(..), MarketplaceCustomerRequestDTO(..), MarketplaceDepositSettlementSubmit(..), MarketplaceDepositSettlementReview(..), MarketplaceDepositSettlementDTO(..), MarketplaceCheckoutReq(..), MarketplaceShippingAddress(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), LabelProjectNoteDTO(..), LabelProjectNoteCreate(..), LabelProjectNoteUpdate(..), DriveUploadDTO(..), DriveTokenExchangeRequest(..), DriveTokenRefreshRequest(..), DriveTokenResponse(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..), verifyMetaWebhookSignature)
 import           TDF.API.Types (maxMarketplaceCartItemQuantity)
 import qualified TDF.API.Types as APITypes
 import           TDF.API.WhatsApp (validateHookVerifyRequest)
@@ -95,6 +98,7 @@ import           TDF.API.Drive (DriveAPI, DriveUploadForm(..))
 import           TDF.Contracts.API (ContractsAPI)
 import qualified TDF.Server.DDEX as DDEXServer
 import qualified TDF.Server.Catalog as CatalogServer
+import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Catalog.Models as Catalog
 import           TDF.Catalog.Security
   ( applySecurityRoleAssignmentPolicy
@@ -173,6 +177,14 @@ import           TDF.ServerFuture (futureServer)
 import           TDF.ServerRadio (radioServer)
 import           TDF.ServerLiveSessions (liveSessionsServer)
 import           TDF.Server.ServiceStorefront (serviceStorefrontPublicServer, serviceStorefrontAdminServer)
+import qualified TDF.Server.ServiceStorefront as ServiceStorefront
+import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Server.CourseCheckout as CourseCheckoutServer
+import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
+import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
+import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
+import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
+import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Server.Directory as DirectoryServer
 import           TDF.ServerFeedback (feedbackServer)
 import qualified TDF.Contracts.Server as Contracts
@@ -704,6 +716,7 @@ server env =
   :<|> fanPublicServer
   :<|> artistPublicServer
   :<|> coursesPublicServer
+  :<|> EventTicketCheckoutServer.publicEventTicketsServer
   :<|> instagramWebhookServer
   :<|> facebookWebhookServer
   :<|> whatsappHooksServer
@@ -1338,6 +1351,12 @@ createCoursePaymentIntent
 createCoursePaymentIntent rawSlug regIdRaw req = do
   Env{..} <- ask
   Entity regKey reg <- fetchCourseRegistrationEntity rawSlug regIdRaw
+  canonicalRuntime <- runDB (rawSql
+    "SELECT EXISTS (SELECT 1 FROM course_registration_checkout_runtime WHERE registration_id = ?)"
+    [toPersistValue regKey] :: SqlPersistT IO [Single Bool])
+  when (canonicalRuntime == [Single True]) $
+    throwError err503
+      { errBody = "Stripe course checkout is disabled until it uses the canonical verified-payment adapter; use an offered Datafast or PayPal method" }
   when (ME.courseRegistrationStatus reg /= "pending_payment") $
     throwError err400 { errBody = "Registration is not awaiting payment" }
   when (isJust (ME.courseRegistrationStripePaymentIntentId reg)) $
@@ -1390,6 +1409,7 @@ createCoursePaymentIntent rawSlug regIdRaw req = do
                 , spiAmountCents = amountCents
                 , spiCurrency = currency
                 , spiPaymentSheet = Nothing
+                , spiLookupToken = Nothing
                 }
         Just mobileSdkVer ->
           case (ME.courseRegistrationPartyId reg, stripePublishableKey envConfig) of
@@ -1431,6 +1451,7 @@ createCoursePaymentIntent rawSlug regIdRaw req = do
                         , psPaymentIntentClientSecret = clientSecret
                         , psPublishableKey = publishableKey
                         }
+                    , spiLookupToken = Nothing
                     }
     _ -> throwError err500 { errBody = "Stripe is not configured" }
 
@@ -1455,6 +1476,12 @@ createCourseCheckoutSession
 createCourseCheckoutSession rawSlug regIdRaw req = do
   Env{..} <- ask
   Entity regKey reg <- fetchCourseRegistrationEntity rawSlug regIdRaw
+  canonicalRuntime <- runDB (rawSql
+    "SELECT EXISTS (SELECT 1 FROM course_registration_checkout_runtime WHERE registration_id = ?)"
+    [toPersistValue regKey] :: SqlPersistT IO [Single Bool])
+  when (canonicalRuntime == [Single True]) $
+    throwError err503
+      { errBody = "Automatic course renewal is disabled until a canonical provider capability is verified" }
   when (ME.courseRegistrationStatus reg /= "pending_payment") $
     throwError err400 { errBody = "Registration is not awaiting payment" }
   when (isJust (ME.courseRegistrationStripeSubscriptionId reg)) $
@@ -1527,11 +1554,23 @@ coursesPublicServer :: ServerT CoursesPublicAPI AppM
 coursesPublicServer =
        courseMetadataH
   :<|> registrationH
+  :<|> registrationStatusH
+  :<|> datafastCheckoutH
+  :<|> datafastStatusH
+  :<|> paypalCreateH
+  :<|> paypalCaptureH
   :<|> paymentIntentH
   :<|> checkoutSessionH
   where
     courseMetadataH slug = loadCourseMetadata slug
-    registrationH slug payload = createOrUpdateRegistration slug payload
+    registrationH slug idempotencyKey payload =
+      CourseCheckoutServer.createCourseCheckoutRegistration
+        createOrUpdateRegistration slug idempotencyKey payload
+    registrationStatusH = CourseCheckoutServer.getPublicCourseCheckout
+    datafastCheckoutH = CourseCheckoutServer.createPublicCourseDatafastCheckout
+    datafastStatusH = CourseCheckoutServer.confirmPublicCourseDatafastStatus
+    paypalCreateH = CourseCheckoutServer.createPublicCoursePaypalOrder
+    paypalCaptureH = CourseCheckoutServer.capturePublicCoursePaypalOrder
     paymentIntentH slug regId payload = createCoursePaymentIntent slug regId payload
     checkoutSessionH slug regId payload = createCourseCheckoutSession slug regId payload
 
@@ -1712,6 +1751,7 @@ whatsappWebhookServer =
                   , source = "whatsapp"
                   , howHeard = Just "whatsapp"
                   , utm = Nothing
+                  , termsAccepted = Nothing
                   }
                 let incomingMsg = entityVal incomingEntity
                 (replyTxt, replyRes) <- sendWhatsappReply cfg phone
@@ -3743,11 +3783,12 @@ protectedServer user =
   :<|> futureServer user
   :<|> DDEXServer.ddexServer user
   :<|> CatalogServer.catalogServer user
-  :<|> serviceStorefrontAdminServer
+  :<|> serviceStorefrontAdminServer user
   :<|> accessRequestsServer user
   :<|> navigationPreferencesServer user
   :<|> DirectoryServer.directoryProtectedServer user
   :<|> OperationsServer.operationsServer user
+  :<|> CommerceOperationsServer.commerceOperationsServer user
 
 navigationPreferencesServer :: AuthedUser -> ServerT NavigationPreferencesAPI AppM
 navigationPreferencesServer user =
@@ -5366,7 +5407,8 @@ loadCourseMetadata rawSlug = do
   normalized <- either throwError pure (validateCourseSlug rawSlug)
   Env{..} <- ask
   waEnv <- liftIO loadWhatsAppEnv
-  today <- utctDay <$> liftIO getCurrentTime
+  now <- liftIO getCurrentTime
+  let today = utctDay now
   mProductionMeta <- ensureCurrentProductionCourseMetadata envConfig waEnv today normalized
   mDbMeta <- case mProductionMeta of
     Just _ -> pure Nothing
@@ -5375,12 +5417,26 @@ loadCourseMetadata rawSlug = do
   baseMeta <- maybe (maybe (throwNotFound "Curso no encontrado") pure fallbackMeta) pure (mProductionMeta <|> mDbMeta)
   let Courses.CourseMetadata{ Courses.capacity = baseCapacity } = baseMeta
       countSlug = normalizeSlug (courseMetaSlug baseMeta)
-  countRegs <- runDB $
-    count
-      [ ME.CourseRegistrationCourseSlug ==. countSlug
-      , ME.CourseRegistrationStatus !=. "cancelled"
-      ]
-  let remainingSeats = max 0 (baseCapacity - fromIntegral countRegs)
+  _ <- runDB (rawSql "SELECT course_checkout_expire_holds(?)"
+    [PersistUTCTime now] :: SqlPersistT IO [Single Int])
+  occupiedRows <- runDB (rawSql
+    "SELECT (\
+    \ SELECT count(*) FROM course_registration_checkout_runtime runtime\
+    \ JOIN course course ON course.id = runtime.course_id\
+    \ WHERE course.slug = ? AND (\
+    \   runtime.enrollment_status IN ('enrolled','transfer_requested','completed')\
+    \   OR (runtime.enrollment_status = 'seat_held' AND runtime.hold_expires_at > ?)\
+    \ )) + (\
+    \ SELECT count(*) FROM course_registration registration\
+    \ WHERE registration.course_slug = ? AND registration.status = 'paid'\
+    \ AND NOT EXISTS (SELECT 1 FROM course_registration_checkout_runtime runtime\
+    \   WHERE runtime.registration_id = registration.id))"
+    [PersistText countSlug, PersistUTCTime now, PersistText countSlug]
+    :: SqlPersistT IO [Single Int64])
+  let occupied = case occupiedRows of
+        [Single value] -> value
+        _ -> fromIntegral baseCapacity
+      remainingSeats = max 0 (baseCapacity - fromIntegral occupied)
   pure baseMeta { Courses.remaining = remainingSeats }
 
 loadCourseMetadataFromDB :: AppConfig -> WhatsAppEnv -> Text -> AppM (Maybe CourseMetadata)
@@ -5985,9 +6041,21 @@ updateCourseRegistrationStatus user rawSlug regId CourseRegistrationStatusUpdate
   let regKey = entityKey ent
       reg = entityVal ent
   when (newStatus == "paid") $ do
-    hasReceipt <- registrationHasReceipts regKey
-    unless hasReceipt $
-      throwBadRequest "Debes subir un comprobante de pago antes de marcar esta inscripción como pagada."
+    canonicalStatuses <- runDB (rawSql
+      "SELECT checkout.status FROM course_registration_checkout_runtime runtime\
+      \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+      \ WHERE runtime.registration_id = ?"
+      [toPersistValue regKey] :: SqlPersistT IO [Single Text])
+    case canonicalStatuses of
+      [Single "paid"] -> pure ()
+      [] -> do
+        hasReceipt <- registrationHasReceipts regKey
+        unless hasReceipt $
+          throwBadRequest "Debes subir un comprobante de pago antes de marcar esta inscripción como pagada."
+      [Single _] -> throwError err409
+        { errBody = "La inscripción usa checkout canónico y solo un pago verificado por el servidor puede marcarla como pagada." }
+      _ -> throwError err500
+        { errBody = "El estado de pago canónico de la inscripción es ambiguo." }
   now <- liftIO getCurrentTime
   runDB $ update regKey
     [ ME.CourseRegistrationStatus =. newStatus
@@ -7734,6 +7802,51 @@ ensurePartyWithAccount mName emailAddr mPhone = do
           now
       pure (Just (username, tempPassword))
   pure (partyId, newCred)
+
+-- Guest commerce creates only the customer Party. Account creation remains an
+-- explicit post-purchase choice; creating a credential without delivering its
+-- random password would leave the customer with an inaccessible account.
+ensurePartyRecord :: Maybe Text -> Text -> Maybe Text -> AppM (Key Party)
+ensurePartyRecord mName emailAddr mPhone = do
+  now <- liftIO getCurrentTime
+  let display = case fmap T.strip mName of
+        Just nameTxt | not (T.null nameTxt) -> nameTxt
+        _                                   -> emailAddr
+      phoneClean = mPhone >>= normalizePhone
+  partyResult <- runDB $ do
+    mPartyOrErr <- selectUniquePartyByPrimaryEmail emailAddr
+    case mPartyOrErr of
+      Left serverErr -> pure (Left serverErr)
+      Right mParty -> fmap Right $ case mParty of
+        Just (Entity pid party) -> do
+          let updates = catMaybes
+                [ if not (T.null (M.partyDisplayName party)) || T.null display
+                    then Nothing
+                    else Just (PartyDisplayName =. display)
+                , case phoneClean of
+                    Just phone | isNothing (partyPrimaryPhone party) ->
+                      Just (PartyPrimaryPhone =. Just phone)
+                    _ -> Nothing
+                ]
+          unless (null updates) (update pid updates)
+          pure pid
+        Nothing -> insert Party
+          { partyLegalName = Nothing
+          , partyDisplayName = display
+          , partyIsOrg = False
+          , partyTaxId = Nothing
+          , partyPrimaryEmail = Just emailAddr
+          , partyPrimaryPhone = phoneClean
+          , partyWhatsapp = Nothing
+          , partyInstagram = Nothing
+          , partyEmergencyContact = Nothing
+          , partyNotes = Nothing
+          , partyStripeCustomerId = Nothing
+          , partyCountryCode = Nothing
+          , partyCountryId = Nothing
+          , partyCreatedAt = now
+          }
+  either throwError pure partyResult
 
 selectUniquePartyByPrimaryEmail
   :: Text
@@ -9559,7 +9672,17 @@ parsePaymentMethodText (Just rawPaymentMethod)
 
 -- Bookings
 bookingPublicServer :: ServerT Api.BookingPublicAPI AppM
-bookingPublicServer = createPublicBooking
+bookingPublicServer =
+       getPublicBookingAvailability
+  :<|> createPublicBooking
+  :<|> createPublicBookingCheckout
+  :<|> getPublicBookingCheckout
+  :<|> createPublicBookingDatafastCheckout
+  :<|> confirmPublicBookingDatafastStatus
+  :<|> createPublicBookingPaypalOrder
+  :<|> capturePublicBookingPaypalOrder
+  :<|> selectPublicBookingManualPayment
+  :<|> submitPublicBookingManualEvidence
 
 inventoryStaticServer :: FilePath -> ServerT Api.AssetsAPI AppM
 inventoryStaticServer assetsRoot =
@@ -9574,6 +9697,301 @@ bookingServer user =
        listBookings user
   :<|> createBooking user
   :<|> updateBooking user
+  :<|> getServiceBookingCommerce user
+  :<|> reviewServiceBookingManualPayment user
+
+loadServiceBookingManualEvidenceDTO
+  :: Checkout.CheckoutReference
+  -> SqlPersistT IO (Maybe Api.ServiceBookingManualEvidenceDTO)
+loadServiceBookingManualEvidenceDTO checkout = do
+  rows <- (rawSql
+    "SELECT evidence.id::text, attempt.provider, evidence.status,\
+    \ evidence.customer_reference, evidence.submitted_amount_minor, evidence.currency,\
+    \ evidence.submitted_by, evidence.submitted_at, evidence.reviewed_by,\
+    \ evidence.reviewed_at, evidence.review_notes\
+    \ FROM commerce_manual_payment_evidence evidence\
+    \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+    \ WHERE evidence.checkout_id = ?::uuid\
+    \ AND attempt.checkout_id = evidence.checkout_id\
+    \ AND attempt.provider IN ('bank_transfer','cash','pos')\
+    \ ORDER BY (attempt.status = 'succeeded') DESC, attempt.updated_at DESC, evidence.id DESC\
+    \ LIMIT 1"
+    [PersistText (Checkout.checkoutReferenceId checkout)]
+    :: SqlPersistT IO
+      [( Single Text, Single Text, Single Text, Single (Maybe Text), Single (Maybe Int64)
+       , Single (Maybe Text), Single (Maybe Int64), Single (Maybe UTCTime)
+       , Single (Maybe Int64), Single (Maybe UTCTime), Single (Maybe Text)
+       )])
+  pure $ case rows of
+    [( Single evidenceId, Single paymentMethod, Single status, Single customerReference
+     , Single submittedAmountMinor, Single currency, Single submittedBy, Single submittedAt
+     , Single reviewedBy, Single reviewedAt, Single reviewNotes
+     )] -> Just Api.ServiceBookingManualEvidenceDTO
+        { Api.sbmeEvidenceId = evidenceId
+        , Api.sbmePaymentMethod = paymentMethod
+        , Api.sbmeStatus = status
+        , Api.sbmeCustomerReference = customerReference
+        , Api.sbmeSubmittedAmountMinor = submittedAmountMinor
+        , Api.sbmeCurrency = currency
+        , Api.sbmeSubmittedBy = submittedBy
+        , Api.sbmeSubmittedAt = submittedAt
+        , Api.sbmeReviewedBy = reviewedBy
+        , Api.sbmeReviewedAt = reviewedAt
+        , Api.sbmeReviewNotes = reviewNotes
+        }
+    _ -> Nothing
+
+loadServiceBookingCommerceDTO
+  :: Key Booking
+  -> SqlPersistT IO (Maybe Api.ServiceBookingCommerceDTO)
+loadServiceBookingCommerceDTO bookingKey = do
+  mRuntime <- loadServiceBookingRuntimeView bookingKey
+  case mRuntime of
+    Nothing -> pure Nothing
+    Just ServiceBookingRuntimeView{..} -> do
+      manualEvidence <- loadServiceBookingManualEvidenceDTO
+        (Checkout.CheckoutReference sbrvCheckoutId)
+      pure $ Just Api.ServiceBookingCommerceDTO
+        { Api.sbmcBookingId = fromSqlKey bookingKey
+        , Api.sbmcCheckoutId = sbrvCheckoutId
+        , Api.sbmcPaymentStatus = sbrvPaymentStatus
+        , Api.sbmcFulfillmentStatus = sbrvFulfillmentStatus
+        , Api.sbmcDepositMinor = sbrvDepositMinor
+        , Api.sbmcCurrency = sbrvCurrency
+        , Api.sbmcHoldExpiresAt = sbrvHoldExpiresAt
+        , Api.sbmcManualEvidence = manualEvidence
+        }
+
+getServiceBookingCommerce
+  :: AuthedUser
+  -> Int64
+  -> AppM Api.ServiceBookingCommerceDTO
+getServiceBookingCommerce user rawBookingId = do
+  requireModule user ModuleInvoicing
+  bookingId <- either throwError pure $
+    validatePositiveIdField "bookingId" rawBookingId
+  let bookingKey = toSqlKey bookingId :: Key Booking
+  runDB (loadServiceBookingCommerceDTO bookingKey)
+    >>= maybe (throwError err404 { errBody = "Booking commerce order not found" }) pure
+
+validateServiceBookingManualReview
+  :: Api.ServiceBookingManualReviewReq
+  -> Either ServerError (Text, Text)
+validateServiceBookingManualReview Api.ServiceBookingManualReviewReq{..}
+  | action `notElem` ["approve", "reject"] =
+      Left err400 { errBody = "Manual payment review action must be approve or reject" }
+  | T.length notes < 3 || T.length notes > 2000 =
+      Left err400 { errBody = "Manual payment review notes must contain 3 to 2000 characters" }
+  | T.any isUnsafeAccessRequestTextChar notes =
+      Left err400 { errBody = "Manual payment review notes contain unsupported characters" }
+  | otherwise = Right (action, notes)
+  where
+    action = T.toLower (T.strip sbmrAction)
+    notes = T.strip sbmrReviewNotes
+
+manualPaymentProviderFromText :: Text -> Maybe Checkout.PaymentProvider
+manualPaymentProviderFromText provider = case provider of
+  "bank_transfer" -> Just Checkout.ProviderBankTransfer
+  "cash" -> Just Checkout.ProviderCash
+  "pos" -> Just Checkout.ProviderPos
+  _ -> Nothing
+
+reviewServiceBookingManualPayment
+  :: AuthedUser
+  -> Int64
+  -> Api.ServiceBookingManualReviewReq
+  -> AppM Api.ServiceBookingCommerceDTO
+reviewServiceBookingManualPayment user rawBookingId request = do
+  requireModule user ModuleInvoicing
+  bookingId <- either throwError pure $
+    validatePositiveIdField "bookingId" rawBookingId
+  (reviewAction, reviewNotes) <- either throwError pure $
+    validateServiceBookingManualReview request
+  let bookingKey = toSqlKey bookingId :: Key Booking
+      reviewerId = fromSqlKey (auPartyId user)
+  context <- loadServiceBookingPaymentContext bookingKey
+  now <- liftIO getCurrentTime
+  outcome <- runDB $ do
+    rows <- (rawSql
+      "SELECT checkout.status, runtime.hold_expires_at, attempt.id::text,\
+      \ attempt.provider, attempt.merchant_account_ref, attempt.status,\
+      \ evidence.id::text, evidence.status, evidence.submitted_by, evidence.reviewed_by\
+      \ FROM service_booking_checkout_runtime runtime\
+      \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+      \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id = checkout.id\
+      \ JOIN commerce_manual_payment_evidence evidence\
+      \   ON evidence.checkout_id = checkout.id\
+      \  AND evidence.payment_attempt_id = attempt.id\
+      \ WHERE runtime.booking_id = ?\
+      \ AND checkout.id = ?::uuid\
+      \ AND checkout.domain_type = 'service_booking'\
+      \ AND checkout.domain_order_id = ?\
+      \ AND checkout.environment = ?\
+      \ AND checkout.total_minor = ?\
+      \ AND checkout.currency = ?\
+      \ AND attempt.environment = checkout.environment\
+      \ AND attempt.amount_minor = checkout.total_minor\
+      \ AND attempt.currency = checkout.currency\
+      \ AND attempt.provider IN ('bank_transfer','cash','pos')\
+      \ AND attempt.operation = 'manual_verify'\
+      \ ORDER BY (attempt.status = 'succeeded') DESC, attempt.updated_at DESC, evidence.id DESC\
+      \ FOR UPDATE OF runtime, checkout, attempt, evidence"
+      [ toPersistValue bookingKey
+      , PersistText (Checkout.checkoutReferenceId (sbpcCheckout context))
+      , PersistText (toPathPiece bookingKey)
+      , PersistText (Checkout.checkoutEnvironmentText (sbpcEnvironment context))
+      , PersistInt64 (sbpcDepositMinor context)
+      , PersistText (sbpcCurrency context)
+      ] :: SqlPersistT IO
+        [( Single Text, Single UTCTime, Single Text, Single Text, Single Text
+         , Single Text, Single Text, Single Text, Single (Maybe Int64), Single (Maybe Int64)
+         )])
+    case rows of
+      [] -> pure (Left "No submitted manual payment evidence exists for this booking")
+      [_first, _second] -> pure (Left "Manual payment evidence is ambiguous and requires reconciliation")
+      (_:_:_) -> pure (Left "Manual payment evidence is ambiguous and requires reconciliation")
+      [( Single checkoutStatus, Single holdExpiresAt, Single attemptId, Single providerText
+       , Single merchantRef, Single attemptStatus, Single evidenceId, Single evidenceStatus
+       , Single mSubmittedBy, Single mReviewedBy
+       )] -> case (mSubmittedBy, manualPaymentProviderFromText providerText) of
+        (Nothing, _) -> pure (Left "Manual payment evidence has no verified submitter")
+        (_, Nothing) -> pure (Left "Manual payment evidence uses an unsupported provider")
+        (Just submittedBy, Just provider)
+          | submittedBy == reviewerId ->
+              pure (Left "Manual payment evidence requires an independent reviewer")
+          | evidenceStatus == "approved"
+              && reviewAction == "approve"
+              && checkoutStatus == "paid"
+              && attemptStatus == "succeeded" -> pure (Right ())
+          | evidenceStatus == "approved" ->
+              pure (Left "Approved manual payment evidence cannot be changed")
+          | evidenceStatus == "rejected" && reviewAction == "reject" -> pure (Right ())
+          | evidenceStatus == "rejected" ->
+              pure (Left "Rejected evidence must be resubmitted before approval")
+          | evidenceStatus `notElem` ["submitted", "under_review"] ->
+              pure (Left "Manual payment evidence is not ready for review")
+          | evidenceStatus == "under_review" && mReviewedBy /= Just reviewerId ->
+              pure (Left "Manual payment evidence is already under review by another staff member")
+          | checkoutStatus == "paid" -> do
+              Checkout.recordReconciliationException
+                provider (sbpcEnvironment context) merchantRef
+                "manual_evidence_after_other_payment"
+                (toPathPiece bookingKey) evidenceId
+                (sbpcDepositMinor context) (Just (sbpcDepositMinor context))
+                (sbpcCurrency context) now
+              pure (Left "This checkout is already paid by another payment attempt")
+          | reviewAction == "approve" && holdExpiresAt <= now -> do
+              Checkout.recordReconciliationException
+                provider (sbpcEnvironment context) merchantRef
+                "manual_payment_after_booking_hold_expiry"
+                (toPathPiece bookingKey) evidenceId
+                (sbpcDepositMinor context) (Just (sbpcDepositMinor context))
+                (sbpcCurrency context) now
+              pure (Left "The booking hold expired; payment requires reconciliation and cannot confirm this booking")
+          | reviewAction == "approve"
+              && checkoutStatus `notElem` ["awaiting_payment","failed","processing"] ->
+              pure (Left "This checkout no longer accepts manual payment approval")
+          | otherwise -> do
+              transactionSave
+              when (evidenceStatus == "submitted") $
+                rawExecute
+                  "UPDATE commerce_manual_payment_evidence\
+                  \ SET status = 'under_review', reviewed_by = ?, review_notes = ?\
+                  \ WHERE id = ?::uuid"
+                  [PersistInt64 reviewerId, PersistText reviewNotes, PersistText evidenceId]
+              if reviewAction == "reject"
+                then do
+                  rawExecute
+                    "UPDATE commerce_manual_payment_evidence\
+                    \ SET status = 'rejected', reviewed_at = ?, review_notes = ?\
+                    \ WHERE id = ?::uuid"
+                    [PersistUTCTime now, PersistText reviewNotes, PersistText evidenceId]
+                  Checkout.recordPaymentFailure
+                    (sbpcCheckout context)
+                    (Checkout.PaymentAttemptReference attemptId)
+                    provider
+                    "manual_evidence_rejected"
+                    (serviceBookingPaymentCorrelationId context provider "manual-review")
+                    now
+                  insertServiceBookingManualReviewAudit
+                    context provider reviewerId attemptId evidenceId "manual_payment_rejected"
+                  pure (Right ())
+                else do
+                  rawExecute
+                    "UPDATE commerce_manual_payment_evidence\
+                    \ SET status = 'approved', reviewed_at = ?, review_notes = ?\
+                    \ WHERE id = ?::uuid"
+                    [PersistUTCTime now, PersistText reviewNotes, PersistText evidenceId]
+                  binding <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
+                    { Checkout.pbcAttempt = Checkout.PaymentAttemptReference attemptId
+                    , Checkout.pbcCheckout = sbpcCheckout context
+                    , Checkout.pbcProvider = provider
+                    , Checkout.pbcEnvironment = sbpcEnvironment context
+                    , Checkout.pbcMerchantRef = merchantRef
+                    , Checkout.pbcResourceType = "manual_evidence"
+                    , Checkout.pbcProviderResource = evidenceId
+                    , Checkout.pbcResourcePath = Nothing
+                    , Checkout.pbcOrderReference = toPathPiece bookingKey
+                    , Checkout.pbcAmountMinor = sbpcDepositMinor context
+                    , Checkout.pbcCurrency = sbpcCurrency context
+                    , Checkout.pbcStage = Checkout.AttemptProcessing
+                    , Checkout.pbcOccurredAt = now
+                    , Checkout.pbcCorrelationId = serviceBookingPaymentCorrelationId
+                        context provider "manual-review"
+                    }
+                  case binding of
+                    Left bindingError -> transactionUndo >> pure (Left bindingError)
+                    Right () -> do
+                      verified <- Checkout.recordApprovedManualPayment Checkout.VerifiedPayment
+                        { Checkout.vpAttempt = Checkout.PaymentAttemptReference attemptId
+                        , Checkout.vpCheckout = sbpcCheckout context
+                        , Checkout.vpProvider = provider
+                        , Checkout.vpEnvironment = sbpcEnvironment context
+                        , Checkout.vpMerchantRef = merchantRef
+                        , Checkout.vpResourceType = "manual_evidence"
+                        , Checkout.vpProviderResource = evidenceId
+                        , Checkout.vpProviderResourcePath = Nothing
+                        , Checkout.vpOrderReference = toPathPiece bookingKey
+                        , Checkout.vpAmountMinor = sbpcDepositMinor context
+                        , Checkout.vpCurrency = sbpcCurrency context
+                        , Checkout.vpEvidence = "staff_verified_manual"
+                        , Checkout.vpOccurredAt = now
+                        , Checkout.vpCorrelationId = serviceBookingPaymentCorrelationId
+                            context provider "manual-review"
+                        }
+                      case verified of
+                        Left verificationError -> transactionUndo >> pure (Left verificationError)
+                        Right _ -> do
+                          insertServiceBookingManualReviewAudit
+                            context provider reviewerId attemptId evidenceId "manual_payment_approved"
+                          pure (Right ())
+  either (throwError . marketplaceCheckoutConflict) pure outcome
+  runDB (loadServiceBookingCommerceDTO bookingKey)
+    >>= maybe (throwError (marketplaceCheckoutInternal
+          "Reviewed booking commerce order could not be reloaded")) pure
+
+insertServiceBookingManualReviewAudit
+  :: ServiceBookingPaymentContext
+  -> Checkout.PaymentProvider
+  -> Int64
+  -> Text
+  -> Text
+  -> Text
+  -> SqlPersistT IO ()
+insertServiceBookingManualReviewAudit context provider reviewerId attemptId evidenceId eventType =
+  rawExecute
+    "INSERT INTO commerce_checkout_audit_event(\
+    \ checkout_id, event_type, actor_type, actor_id, correlation_id, metadata\
+    \) VALUES (?::uuid, ?, 'staff', ?, ?,\
+    \ jsonb_build_object('attempt_id', ?, 'evidence_id', ?))"
+    [ PersistText (Checkout.checkoutReferenceId (sbpcCheckout context))
+    , PersistText eventType
+    , PersistText (T.pack (show reviewerId))
+    , PersistText (serviceBookingPaymentCorrelationId
+        context provider "manual-review")
+    , PersistText attemptId
+    , PersistText evidenceId
+    ]
 
 listBookings :: AuthedUser -> Maybe Int64 -> Maybe Int64 -> Maybe Int64 -> AppM [BookingDTO]
 listBookings user mBookingId mPartyId mEngineerPartyId = do
@@ -9625,12 +10043,27 @@ listBookings user mBookingId mPartyId mEngineerPartyId = do
 
 courseCalendarBookings :: SqlPersistT IO [BookingDTO]
 courseCalendarBookings = do
+  now <- liftIO getCurrentTime
+  _ <- (rawSql "SELECT course_checkout_expire_holds(?)"
+    [PersistUTCTime now] :: SqlPersistT IO [Single Int])
   courses <- selectList [] []
   fmap concat $ forM courses $ \(Entity courseId course) -> do
-    regCount <- count
-      [ ME.CourseRegistrationCourseSlug ==. Trials.courseSlug course
-      , ME.CourseRegistrationStatus !=. "cancelled"
-      ]
+    occupiedRows <- (rawSql
+      "SELECT (\
+      \ SELECT count(*) FROM course_registration_checkout_runtime runtime\
+      \ WHERE runtime.course_id = ? AND (\
+      \   runtime.enrollment_status IN ('enrolled','transfer_requested','completed')\
+      \   OR (runtime.enrollment_status = 'seat_held' AND runtime.hold_expires_at > ?)\
+      \ )) + (\
+      \ SELECT count(*) FROM course_registration registration\
+      \ WHERE registration.course_slug = ? AND registration.status = 'paid'\
+      \ AND NOT EXISTS (SELECT 1 FROM course_registration_checkout_runtime runtime\
+      \   WHERE runtime.registration_id = registration.id))"
+      [toPersistValue courseId, PersistUTCTime now, PersistText (Trials.courseSlug course)]
+      :: SqlPersistT IO [Single Int64])
+    let regCount = case occupiedRows of
+          [Single value] -> value
+          _ -> fromIntegral (Trials.courseCapacity course)
     sessions <- selectList [Trials.CourseSessionModelCourseId ==. courseId] [Asc Trials.CourseSessionModelOrder, Asc Trials.CourseSessionModelDate]
     let metaTitle = Trials.courseTitle course
         slugVal = Trials.courseSlug course
@@ -9669,6 +10102,1395 @@ courseCalendarBookings = do
                , courseLocation     = Trials.courseLocationLabel course
                }
     pure (zipWith mkBooking [1 :: Int ..] sessions)
+
+data ApprovedServiceBookingPolicy = ApprovedServiceBookingPolicy
+  { asbpId :: Text
+  , asbpVersion :: Text
+  , asbpCurrency :: Text
+  , asbpRateMinor :: Int64
+  , asbpRateUnitMinutes :: Int
+  , asbpTaxBps :: Int
+  , asbpDepositBps :: Int
+  , asbpHoldMinutes :: Int
+  , asbpMinDurationMinutes :: Int
+  , asbpMaxDurationMinutes :: Int
+  , asbpDurationStepMinutes :: Int
+  , asbpTimezone :: Text
+  , asbpTermsVersion :: Text
+  } deriving (Eq, Show)
+
+loadApprovedServiceBookingPolicy
+  :: UTCTime
+  -> Key Catalog.ServiceOffering
+  -> SqlPersistT IO (Maybe ApprovedServiceBookingPolicy)
+loadApprovedServiceBookingPolicy now offeringKey = do
+  coreRows <- (rawSql
+    "SELECT id::text, policy_version, currency, rate_minor, rate_unit_minutes,\
+    \ tax_bps, deposit_bps, hold_minutes, min_duration_minutes, max_duration_minutes\
+    \ FROM service_booking_commerce_policy\
+    \ WHERE service_offering_id = ?::uuid AND active\
+    \ AND approval_status = 'approved' AND approved_at IS NOT NULL\
+    \ AND (effective_from IS NULL OR effective_from <= ?)\
+    \ AND (effective_until IS NULL OR effective_until > ?)"
+    [ PersistText (toPathPiece offeringKey)
+    , PersistUTCTime now
+    , PersistUTCTime now
+    ] :: SqlPersistT IO
+      [( Single Text, Single Text, Single Text, Single Int64, Single Int
+       , Single Int, Single Int, Single Int, Single Int, Single Int
+       )])
+  case coreRows of
+    [( Single policyId, Single version, Single currency, Single rateMinor
+     , Single rateUnitMinutes, Single taxBps, Single depositBps, Single holdMinutes
+     , Single minDurationMinutes, Single maxDurationMinutes
+     )] -> do
+      detailRows <- (rawSql
+        "SELECT duration_step_minutes, timezone, terms_version\
+        \ FROM service_booking_commerce_policy WHERE id = ?::uuid"
+        [PersistText policyId]
+        :: SqlPersistT IO [(Single Int, Single Text, Single Text)])
+      pure $ case detailRows of
+        [(Single durationStepMinutes, Single timezone, Single termsVersion)] ->
+          Just ApprovedServiceBookingPolicy
+            { asbpId = policyId
+            , asbpVersion = version
+            , asbpCurrency = currency
+            , asbpRateMinor = rateMinor
+            , asbpRateUnitMinutes = rateUnitMinutes
+            , asbpTaxBps = taxBps
+            , asbpDepositBps = depositBps
+            , asbpHoldMinutes = holdMinutes
+            , asbpMinDurationMinutes = minDurationMinutes
+            , asbpMaxDurationMinutes = maxDurationMinutes
+            , asbpDurationStepMinutes = durationStepMinutes
+            , asbpTimezone = timezone
+            , asbpTermsVersion = termsVersion
+            }
+        _ -> Nothing
+    _ -> pure Nothing
+
+calculateApprovedServiceBookingPrice
+  :: ApprovedServiceBookingPolicy
+  -> Int
+  -> Either ServerError ServiceBookings.BookingPriceBreakdown
+calculateApprovedServiceBookingPrice ApprovedServiceBookingPolicy{..} durationMinutes =
+  either
+    (Left . (\message -> err422 { errBody = BL.fromStrict (TE.encodeUtf8 message) }))
+    Right
+    (ServiceBookings.calculateBookingPrice
+      asbpRateMinor
+      asbpRateUnitMinutes
+      asbpTaxBps
+      asbpDepositBps
+      asbpMinDurationMinutes
+      asbpMaxDurationMinutes
+      asbpDurationStepMinutes
+      durationMinutes)
+
+serviceBookingQuoteDTO
+  :: ApprovedServiceBookingPolicy
+  -> ServiceBookings.BookingPriceBreakdown
+  -> Api.PublicBookingQuoteDTO
+serviceBookingQuoteDTO ApprovedServiceBookingPolicy{..} price =
+  Api.PublicBookingQuoteDTO
+    { Api.pbqPolicyVersion = asbpVersion
+    , Api.pbqCurrency = asbpCurrency
+    , Api.pbqDurationMinutes = ServiceBookings.bpbDurationMinutes price
+    , Api.pbqSubtotalMinor = ServiceBookings.bpbSubtotalMinor price
+    , Api.pbqTaxMinor = ServiceBookings.bpbTaxMinor price
+    , Api.pbqTotalMinor = ServiceBookings.bpbTotalMinor price
+    , Api.pbqDepositMinor = ServiceBookings.bpbDepositMinor price
+    , Api.pbqBalanceMinor = ServiceBookings.bpbBalanceMinor price
+    , Api.pbqDepositBps = asbpDepositBps
+    , Api.pbqTermsVersion = asbpTermsVersion
+    }
+
+getPublicBookingAvailability
+  :: UUID.UUID
+  -> UTCTime
+  -> Int
+  -> AppM Api.PublicBookingAvailabilityDTO
+getPublicBookingAvailability offeringId requestedStart requestedDuration = do
+  now <- liftIO getCurrentTime
+  durationMinutes <- either throwError pure $
+    validatePublicBookingDurationMinutes (Just requestedDuration)
+  startsAtClean <- either throwError pure $
+    validatePublicBookingStartAt now requestedStart
+  offering@(Entity offeringKey _) <- runDB $
+    loadSelectableServiceOffering now offeringId
+  let endsAtClean = addUTCTime (fromIntegral durationMinutes * 60) startsAtClean
+  mPolicy <- runDB (loadApprovedServiceBookingPolicy now offeringKey)
+  case mPolicy of
+    Just policy -> case calculateApprovedServiceBookingPrice policy durationMinutes of
+      Left serverErr -> pure Api.PublicBookingAvailabilityDTO
+        { Api.pbaAvailable = False
+        , Api.pbaReason = Just (bookingServerErrorText serverErr)
+        , Api.pbaServiceOfferingId = offeringId
+        , Api.pbaStartsAt = startsAtClean
+        , Api.pbaEndsAt = endsAtClean
+        , Api.pbaResourceIds = []
+        , Api.pbaResourceNames = []
+        , Api.pbaQuote = Nothing
+        }
+      Right price -> resolveAvailability offering (Just (serviceBookingQuoteDTO policy price)) startsAtClean endsAtClean
+    Nothing -> resolveAvailability offering Nothing startsAtClean endsAtClean
+  where
+    resolveAvailability offering quote startsAtClean endsAtClean = do
+      resolved <- (Right <$> runDB
+          (resolveResourcesForBooking (Just offering) [] startsAtClean endsAtClean))
+        `catchError` \serverErr ->
+          if errHTTPCode serverErr == 409
+            then pure (Left serverErr)
+            else throwError serverErr
+      case resolved of
+        Left serverErr -> pure Api.PublicBookingAvailabilityDTO
+          { Api.pbaAvailable = False
+          , Api.pbaReason = Just (bookingServerErrorText serverErr)
+          , Api.pbaServiceOfferingId = offeringId
+          , Api.pbaStartsAt = startsAtClean
+          , Api.pbaEndsAt = endsAtClean
+          , Api.pbaResourceIds = []
+          , Api.pbaResourceNames = []
+          , Api.pbaQuote = quote
+          }
+        Right resourceKeys -> do
+          resourcesFound <- runDB (mapM getJust resourceKeys)
+          pure Api.PublicBookingAvailabilityDTO
+            { Api.pbaAvailable = True
+            , Api.pbaReason = Nothing
+            , Api.pbaServiceOfferingId = offeringId
+            , Api.pbaStartsAt = startsAtClean
+            , Api.pbaEndsAt = endsAtClean
+            , Api.pbaResourceIds = map toPathPiece resourceKeys
+            , Api.pbaResourceNames = map resourceName resourcesFound
+            , Api.pbaQuote = quote
+            }
+
+bookingServerErrorText :: ServerError -> Text
+bookingServerErrorText =
+  T.strip . TE.decodeUtf8With TEE.lenientDecode . BL.toStrict . errBody
+
+data ServiceBookingRuntimeView = ServiceBookingRuntimeView
+  { sbrvCheckoutId :: Text
+  , sbrvPaymentStatus :: Text
+  , sbrvFulfillmentStatus :: Text
+  , sbrvHoldExpiresAt :: UTCTime
+  , sbrvPolicyVersion :: Text
+  , sbrvCurrency :: Text
+  , sbrvDurationMinutes :: Int
+  , sbrvSubtotalMinor :: Int64
+  , sbrvTaxMinor :: Int64
+  , sbrvTotalMinor :: Int64
+  , sbrvDepositMinor :: Int64
+  , sbrvBalanceMinor :: Int64
+  , sbrvDepositBps :: Int
+  , sbrvTermsVersion :: Text
+  }
+
+loadServiceBookingRuntimeView
+  :: Key Booking
+  -> SqlPersistT IO (Maybe ServiceBookingRuntimeView)
+loadServiceBookingRuntimeView bookingKey = do
+  coreRows <- (rawSql
+    "SELECT runtime.checkout_id::text, checkout.status, runtime.fulfillment_status,\
+    \ runtime.hold_expires_at, runtime.policy_version, runtime.currency,\
+    \ runtime.duration_minutes, runtime.subtotal_minor, runtime.tax_minor, runtime.total_minor\
+    \ FROM service_booking_checkout_runtime runtime\
+    \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+    \ WHERE runtime.booking_id = ?"
+    [toPersistValue bookingKey]
+    :: SqlPersistT IO
+      [( Single Text, Single Text, Single Text, Single UTCTime, Single Text
+       , Single Text, Single Int, Single Int64, Single Int64, Single Int64
+       )])
+  case coreRows of
+    [( Single checkoutId, Single paymentStatus, Single fulfillmentStatus
+     , Single holdExpiresAt, Single policyVersion, Single currency
+     , Single durationMinutes, Single subtotalMinor, Single taxMinor, Single totalMinor
+     )] -> do
+      detailRows <- (rawSql
+        "SELECT deposit_minor, balance_minor, deposit_bps, terms_version\
+        \ FROM service_booking_checkout_runtime WHERE booking_id = ?"
+        [toPersistValue bookingKey]
+        :: SqlPersistT IO [(Single Int64, Single Int64, Single Int, Single Text)])
+      pure $ case detailRows of
+        [(Single depositMinor, Single balanceMinor, Single depositBps, Single termsVersion)] ->
+          Just ServiceBookingRuntimeView
+            { sbrvCheckoutId = checkoutId
+            , sbrvPaymentStatus = paymentStatus
+            , sbrvFulfillmentStatus = fulfillmentStatus
+            , sbrvHoldExpiresAt = holdExpiresAt
+            , sbrvPolicyVersion = policyVersion
+            , sbrvCurrency = currency
+            , sbrvDurationMinutes = durationMinutes
+            , sbrvSubtotalMinor = subtotalMinor
+            , sbrvTaxMinor = taxMinor
+            , sbrvTotalMinor = totalMinor
+            , sbrvDepositMinor = depositMinor
+            , sbrvBalanceMinor = balanceMinor
+            , sbrvDepositBps = depositBps
+            , sbrvTermsVersion = termsVersion
+            }
+        _ -> Nothing
+    _ -> pure Nothing
+
+loadPublicBookingManualPayment
+  :: Checkout.CheckoutReference
+  -> SqlPersistT IO (Maybe Api.PublicBookingManualPaymentDTO)
+loadPublicBookingManualPayment checkout = do
+  rows <- (rawSql
+    "SELECT attempt.provider, evidence.status, evidence.submitted_at\
+    \ FROM commerce_manual_payment_evidence evidence\
+    \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+    \ WHERE evidence.checkout_id = ?::uuid\
+    \ AND attempt.checkout_id = evidence.checkout_id\
+    \ AND attempt.provider IN ('bank_transfer','cash','pos')\
+    \ ORDER BY (attempt.status = 'succeeded') DESC, attempt.updated_at DESC, evidence.id DESC\
+    \ LIMIT 1"
+    [PersistText (Checkout.checkoutReferenceId checkout)]
+    :: SqlPersistT IO [(Single Text, Single Text, Single (Maybe UTCTime))])
+  pure $ case rows of
+    [(Single paymentMethod, Single status, Single submittedAt)] ->
+      Just Api.PublicBookingManualPaymentDTO
+        { Api.pbmpPaymentMethod = paymentMethod
+        , Api.pbmpStatus = status
+        , Api.pbmpSubmittedAt = submittedAt
+        }
+    _ -> Nothing
+
+loadPublicBookingCheckoutDTO
+  :: Key Booking
+  -> Maybe Text
+  -> AppM Api.PublicBookingCheckoutDTO
+loadPublicBookingCheckoutDTO bookingKey lookupToken = do
+  Env{ envPool } <- ask
+  loaded <- liftIO $ flip runSqlPool envPool $ do
+    mBooking <- getEntity bookingKey
+    mRuntime <- loadServiceBookingRuntimeView bookingKey
+    case (mBooking, mRuntime) of
+      (Just bookingEntity, Just runtimeView) -> do
+        dtos <- buildBookingDTOs [bookingEntity]
+        pure $ case requirePersistedBookingDTO dtos of
+          Left _ -> Nothing
+          Right dto -> Just (dto, runtimeView)
+      _ -> pure Nothing
+  case loaded of
+    Nothing -> throwError serviceBookingLookupNotFound
+    Just (dto, ServiceBookingRuntimeView{..}) -> do
+      let checkout = Checkout.CheckoutReference sbrvCheckoutId
+      manualPayment <- runDB (loadPublicBookingManualPayment checkout)
+      paymentMethods <- loadPublicBookingPaymentMethods
+        checkout
+        sbrvPaymentStatus
+        sbrvHoldExpiresAt
+        (Api.pbmpStatus <$> manualPayment)
+      pure Api.PublicBookingCheckoutDTO
+        { Api.pbcBooking = dto
+        , Api.pbcCheckoutId = sbrvCheckoutId
+        , Api.pbcLookupToken = lookupToken
+        , Api.pbcPaymentStatus = sbrvPaymentStatus
+        , Api.pbcFulfillmentStatus = sbrvFulfillmentStatus
+        , Api.pbcHoldExpiresAt = sbrvHoldExpiresAt
+        , Api.pbcQuote = Api.PublicBookingQuoteDTO
+            { Api.pbqPolicyVersion = sbrvPolicyVersion
+            , Api.pbqCurrency = sbrvCurrency
+            , Api.pbqDurationMinutes = sbrvDurationMinutes
+            , Api.pbqSubtotalMinor = sbrvSubtotalMinor
+            , Api.pbqTaxMinor = sbrvTaxMinor
+            , Api.pbqTotalMinor = sbrvTotalMinor
+            , Api.pbqDepositMinor = sbrvDepositMinor
+            , Api.pbqBalanceMinor = sbrvBalanceMinor
+            , Api.pbqDepositBps = sbrvDepositBps
+            , Api.pbqTermsVersion = sbrvTermsVersion
+            }
+        , Api.pbcPaymentMethods = paymentMethods
+        , Api.pbcManualPayment = manualPayment
+        }
+
+loadPublicBookingPaymentMethods
+  :: Checkout.CheckoutReference
+  -> Text
+  -> UTCTime
+  -> Maybe Text
+  -> AppM [Text]
+loadPublicBookingPaymentMethods checkout paymentStatus holdExpiresAt manualStatus = do
+  now <- liftIO getCurrentTime
+  if paymentStatus `notElem` ["awaiting_payment", "failed"]
+      || holdExpiresAt <= now
+      || manualStatus `elem` [Just "submitted", Just "under_review"]
+    then pure []
+    else do
+      storedEnvironment <- runDB (Checkout.loadCheckoutEnvironment checkout)
+        >>= either (const (pure Nothing)) (pure . Just)
+      case storedEnvironment of
+        Nothing -> pure []
+        Just checkoutEnvironment -> do
+          domainEnabled <- runDB $
+            Checkout.domainEnabledForEnvironment checkoutEnvironment "service_bookings"
+          if not domainEnabled
+            then pure []
+            else do
+              datafastEnabled <- ((\datafast -> do
+                  if ServiceStorefront.sdfEnvironment datafast /= checkoutEnvironment
+                    then pure False
+                    else runDB $ Checkout.providerEnabledForEnvironment
+                      checkoutEnvironment Checkout.ProviderDatafast)
+                =<< ServiceStorefront.loadServiceDatafastEnv)
+                `catchError` const (pure False)
+              paypalEnabled <- ((\(_, _, _, paypalEnvironment, _) -> do
+                  if paypalEnvironment /= checkoutEnvironment
+                    then pure False
+                    else runDB $ Checkout.providerEnabledForEnvironment
+                      checkoutEnvironment Checkout.ProviderPayPal)
+                =<< ServiceStorefront.loadPaypalEnvForService)
+                `catchError` const (pure False)
+              bankTransferEnabled <- runDB $ Checkout.providerEnabledForEnvironment
+                checkoutEnvironment Checkout.ProviderBankTransfer
+              pure $
+                ["datafast" | datafastEnabled]
+                  <> ["paypal" | paypalEnabled]
+                  <> ["bank_transfer" | bankTransferEnabled]
+
+serviceBookingLookupNotFound :: ServerError
+serviceBookingLookupNotFound = err404 { errBody = "Booking order not found" }
+
+getPublicBookingCheckout
+  :: Int64
+  -> Maybe Text
+  -> AppM Api.PublicBookingCheckoutDTO
+getPublicBookingCheckout rawBookingId mLookupToken = do
+  bookingId <- either throwError pure (validatePositiveIdField "bookingId" rawBookingId)
+  let bookingKey = toSqlKey (fromIntegral bookingId) :: Key Booking
+  requirePublicBookingLookupToken bookingKey mLookupToken
+  loadPublicBookingCheckoutDTO bookingKey Nothing
+
+requirePublicBookingLookupToken :: Key Booking -> Maybe Text -> AppM ()
+requirePublicBookingLookupToken bookingKey mLookupToken = do
+  suppliedToken <- maybe (throwError serviceBookingLookupNotFound) (pure . T.strip) mLookupToken
+  storedHashes <- runDB (rawSql
+    "SELECT lookup_token_hash FROM service_booking_checkout_runtime WHERE booking_id = ?"
+    [toPersistValue bookingKey] :: SqlPersistT IO [Single Text])
+  storedHash <- case storedHashes of
+    [Single value] -> pure value
+    _ -> throwError serviceBookingLookupNotFound
+  let suppliedHash = marketplaceSha256Text suppliedToken
+  unless (constEq (TE.encodeUtf8 storedHash) (TE.encodeUtf8 suppliedHash)) $
+    throwError serviceBookingLookupNotFound
+
+data ServiceBookingPaymentContext = ServiceBookingPaymentContext
+  { sbpcBookingKey :: Key Booking
+  , sbpcCheckout :: Checkout.CheckoutReference
+  , sbpcCreateIdempotencyKey :: Text
+  , sbpcCheckoutStatus :: Text
+  , sbpcEnvironment :: Checkout.CheckoutEnvironment
+  , sbpcDepositMinor :: Int64
+  , sbpcCurrency :: Text
+  , sbpcHoldExpiresAt :: UTCTime
+  , sbpcBuyerName :: Text
+  , sbpcBuyerEmail :: Text
+  , sbpcBuyerPhone :: Maybe Text
+  } deriving (Eq, Show)
+
+loadServiceBookingPaymentContext
+  :: Key Booking
+  -> AppM ServiceBookingPaymentContext
+loadServiceBookingPaymentContext bookingKey = do
+  rows <- runDB (rawSql
+    "SELECT runtime.checkout_id::text, runtime.create_idempotency_key, checkout.status,\
+    \ checkout.environment, runtime.deposit_minor, runtime.currency, runtime.hold_expires_at,\
+    \ party.display_name, party.primary_email, party.primary_phone\
+    \ FROM service_booking_checkout_runtime runtime\
+    \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+    \ JOIN booking booked ON booked.id = runtime.booking_id\
+    \ JOIN party party ON party.id = booked.party_id\
+    \ WHERE runtime.booking_id = ?\
+    \ AND checkout.domain_type = 'service_booking'\
+    \ AND checkout.domain_order_id = runtime.booking_id::text\
+    \ AND checkout.total_minor = runtime.deposit_minor\
+    \ AND checkout.currency = runtime.currency"
+    [toPersistValue bookingKey]
+    :: SqlPersistT IO
+      [( Single Text, Single Text, Single Text, Single Text, Single Int64
+       , Single Text, Single UTCTime, Single Text, Single (Maybe Text), Single (Maybe Text)
+       )])
+  case rows of
+    [( Single checkoutId, Single createKey, Single checkoutStatus, Single environmentText
+     , Single depositMinor, Single currency, Single holdExpiresAt, Single buyerName
+     , Single mBuyerEmail, Single buyerPhone
+     )] -> do
+      checkoutEnvironment <- either
+        (throwError . marketplaceCheckoutInternal)
+        pure
+        (Checkout.resolveCheckoutEnvironment (Just (T.unpack environmentText)))
+      buyerEmail <- maybe
+        (throwError (marketplaceCheckoutInternal
+          "Service booking customer email is missing"))
+        pure
+        mBuyerEmail
+      pure ServiceBookingPaymentContext
+        { sbpcBookingKey = bookingKey
+        , sbpcCheckout = Checkout.CheckoutReference checkoutId
+        , sbpcCreateIdempotencyKey = createKey
+        , sbpcCheckoutStatus = checkoutStatus
+        , sbpcEnvironment = checkoutEnvironment
+        , sbpcDepositMinor = depositMinor
+        , sbpcCurrency = currency
+        , sbpcHoldExpiresAt = holdExpiresAt
+        , sbpcBuyerName = buyerName
+        , sbpcBuyerEmail = buyerEmail
+        , sbpcBuyerPhone = buyerPhone
+        }
+    [] -> throwError serviceBookingLookupNotFound
+    _ -> throwError (marketplaceCheckoutInternal
+      "Service booking payment context is ambiguous")
+
+requireServiceBookingPaymentContext
+  :: Int64
+  -> Maybe Text
+  -> AppM ServiceBookingPaymentContext
+requireServiceBookingPaymentContext rawBookingId mLookupToken = do
+  context <- authorizeServiceBookingPaymentContext rawBookingId mLookupToken
+  now <- liftIO getCurrentTime
+  when
+      ( sbpcHoldExpiresAt context <= now
+        && sbpcCheckoutStatus context `elem` ["holding", "awaiting_payment", "failed"]
+      ) $ do
+    _ <- runDB (rawSql "SELECT service_booking_expire_holds(?)"
+      [PersistUTCTime now] :: SqlPersistT IO [Single Int])
+    throwError err409
+      { errBody = "This booking checkout hold expired; choose availability again" }
+  unless
+      (sbpcCheckoutStatus context `elem`
+        ["holding", "awaiting_payment", "processing", "failed", "paid"]) $
+    throwError err409
+      { errBody = "This booking checkout no longer accepts payment actions" }
+  pure context
+
+authorizeServiceBookingPaymentContext
+  :: Int64
+  -> Maybe Text
+  -> AppM ServiceBookingPaymentContext
+authorizeServiceBookingPaymentContext rawBookingId mLookupToken = do
+  bookingId <- either throwError pure (validatePositiveIdField "bookingId" rawBookingId)
+  let bookingKey = toSqlKey bookingId :: Key Booking
+  requirePublicBookingLookupToken bookingKey mLookupToken
+  loadServiceBookingPaymentContext bookingKey
+
+requireServiceBookingProvider
+  :: ServiceBookingPaymentContext
+  -> Checkout.CheckoutEnvironment
+  -> Checkout.PaymentProvider
+  -> AppM ()
+requireServiceBookingProvider context configuredEnvironment provider = do
+  unless (configuredEnvironment == sbpcEnvironment context) $
+    throwError err503
+      { errBody = "Configured provider environment does not match this immutable booking checkout" }
+  domainEnabled <- runDB $
+    Checkout.domainEnabledForEnvironment configuredEnvironment "service_bookings"
+  unless domainEnabled $
+    throwError err503
+      { errBody = "Public service booking checkout is disabled in this environment" }
+  providerEnabled <- runDB $
+    Checkout.providerEnabledForEnvironment configuredEnvironment provider
+  unless providerEnabled $
+    throwError err503
+      { errBody = "Payment provider is disabled for this checkout environment" }
+
+ensureNoSubmittedServiceBookingManualEvidence
+  :: ServiceBookingPaymentContext
+  -> AppM ()
+ensureNoSubmittedServiceBookingManualEvidence context = do
+  rows <- runDB (rawSql
+    "SELECT EXISTS (\
+    \ SELECT 1 FROM commerce_manual_payment_evidence evidence\
+    \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+    \ WHERE evidence.checkout_id = ?::uuid\
+    \ AND attempt.checkout_id = evidence.checkout_id\
+    \ AND attempt.provider IN ('bank_transfer','cash','pos')\
+    \ AND evidence.status IN ('submitted','under_review'))"
+    [PersistText (Checkout.checkoutReferenceId (sbpcCheckout context))]
+    :: SqlPersistT IO [Single Bool])
+  when (rows == [Single True]) $
+    throwError err409
+      { errBody = "Manual payment evidence is under review; another charge cannot be started" }
+
+ensureNoActiveServiceBookingOnlineAttempt
+  :: ServiceBookingPaymentContext
+  -> AppM ()
+ensureNoActiveServiceBookingOnlineAttempt context = do
+  rows <- runDB (rawSql
+    "SELECT EXISTS (\
+    \ SELECT 1 FROM commerce_payment_attempt\
+    \ WHERE checkout_id = ?::uuid\
+    \ AND provider NOT IN ('bank_transfer','cash','pos')\
+    \ AND status IN ('requires_customer_action','processing'))"
+    [PersistText (Checkout.checkoutReferenceId (sbpcCheckout context))]
+    :: SqlPersistT IO [Single Bool])
+  when (rows == [Single True]) $
+    throwError err409
+      { errBody = "An online payment attempt is still active; verify or cancel it before selecting manual payment" }
+
+serviceBookingPaymentIdempotencyKey
+  :: ServiceBookingPaymentContext
+  -> Checkout.PaymentProvider
+  -> Checkout.PaymentOperation
+  -> Text
+serviceBookingPaymentIdempotencyKey context provider operation =
+  marketplaceSha256Text $
+    "service-booking-payment:"
+      <> sbpcCreateIdempotencyKey context
+      <> ":" <> Checkout.paymentProviderText provider
+      <> ":" <> case operation of
+        Checkout.OperationCreate -> "create"
+        Checkout.OperationAuthorize -> "authorize"
+        Checkout.OperationCapture -> "capture"
+        Checkout.OperationManualVerify -> "manual-verify"
+
+serviceBookingPaymentCorrelationId
+  :: ServiceBookingPaymentContext
+  -> Checkout.PaymentProvider
+  -> Text
+  -> Text
+serviceBookingPaymentCorrelationId context provider operation =
+  "service-booking:"
+    <> toPathPiece (sbpcBookingKey context)
+    <> ":" <> Checkout.paymentProviderText provider
+    <> ":" <> operation
+
+beginServiceBookingPaymentAttempt
+  :: ServiceBookingPaymentContext
+  -> Checkout.PaymentProvider
+  -> Checkout.PaymentOperation
+  -> Text
+  -> Text
+  -> AppM Checkout.PaymentAttemptReference
+beginServiceBookingPaymentAttempt context provider operation merchantRef operationLabel = do
+  now <- liftIO getCurrentTime
+  result <- runDB $ Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+    { Checkout.pacCheckout = sbpcCheckout context
+    , Checkout.pacProvider = provider
+    , Checkout.pacEnvironment = sbpcEnvironment context
+    , Checkout.pacOperation = operation
+    , Checkout.pacAmountMinor = sbpcDepositMinor context
+    , Checkout.pacCurrency = sbpcCurrency context
+    , Checkout.pacMerchantRef = merchantRef
+    , Checkout.pacIdempotencyKey = serviceBookingPaymentIdempotencyKey context provider operation
+    , Checkout.pacCreatedAt = now
+    , Checkout.pacCorrelationId = serviceBookingPaymentCorrelationId
+        context provider operationLabel
+    }
+  either (throwError . marketplaceCheckoutConflict) pure result
+
+failServiceBookingPaymentAttempt
+  :: ServiceBookingPaymentContext
+  -> Checkout.PaymentAttemptReference
+  -> Checkout.PaymentProvider
+  -> Text
+  -> ServerError
+  -> AppM a
+failServiceBookingPaymentAttempt context attempt provider failureCode providerError = do
+  now <- liftIO getCurrentTime
+  runDB $ Checkout.recordPaymentFailure
+    (sbpcCheckout context)
+    attempt
+    provider
+    failureCode
+    (serviceBookingPaymentCorrelationId context provider "provider-error")
+    now
+  throwError providerError
+
+loadServiceBookingProviderBinding
+  :: ServiceBookingPaymentContext
+  -> Checkout.PaymentProvider
+  -> Text
+  -> Text
+  -> AppM (Maybe (Text, Maybe Text))
+loadServiceBookingProviderBinding context provider merchantRef resourceType = do
+  rows <- runDB (rawSql
+    "SELECT binding.provider_resource_id, binding.provider_resource_path\
+    \ FROM commerce_provider_binding binding\
+    \ JOIN commerce_payment_attempt attempt ON attempt.id = binding.payment_attempt_id\
+    \ WHERE attempt.checkout_id = ?::uuid AND attempt.provider = ?\
+    \ AND attempt.environment = ? AND attempt.merchant_account_ref = ?\
+    \ AND binding.provider = attempt.provider\
+    \ AND binding.environment = attempt.environment\
+    \ AND binding.merchant_account_ref = attempt.merchant_account_ref\
+    \ AND binding.resource_type = ? AND binding.merchant_reference = ?\
+    \ AND binding.amount_minor = ? AND binding.currency = ?"
+    [ PersistText (Checkout.checkoutReferenceId (sbpcCheckout context))
+    , PersistText (Checkout.paymentProviderText provider)
+    , PersistText (Checkout.checkoutEnvironmentText (sbpcEnvironment context))
+    , PersistText merchantRef
+    , PersistText resourceType
+    , PersistText (toPathPiece (sbpcBookingKey context))
+    , PersistInt64 (sbpcDepositMinor context)
+    , PersistText (sbpcCurrency context)
+    ] :: SqlPersistT IO [(Single Text, Single (Maybe Text))])
+  case rows of
+    [] -> pure Nothing
+    [(Single resourceId, Single resourcePath)] -> pure (Just (resourceId, resourcePath))
+    _ -> throwError (marketplaceCheckoutInternal
+      "Service booking provider binding is ambiguous")
+
+bindServiceBookingProviderResource
+  :: ServiceBookingPaymentContext
+  -> Checkout.PaymentAttemptReference
+  -> Checkout.PaymentProvider
+  -> Checkout.CheckoutEnvironment
+  -> Text
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> Checkout.PaymentAttemptStage
+  -> Text
+  -> AppM ()
+bindServiceBookingProviderResource
+    context attempt provider environment merchantRef resourceType resourceId resourcePath stage operationLabel = do
+  now <- liftIO getCurrentTime
+  result <- runDB $ Checkout.bindProviderResource Checkout.ProviderBindingCreation
+    { Checkout.pbcAttempt = attempt
+    , Checkout.pbcCheckout = sbpcCheckout context
+    , Checkout.pbcProvider = provider
+    , Checkout.pbcEnvironment = environment
+    , Checkout.pbcMerchantRef = merchantRef
+    , Checkout.pbcResourceType = resourceType
+    , Checkout.pbcProviderResource = resourceId
+    , Checkout.pbcResourcePath = resourcePath
+    , Checkout.pbcOrderReference = toPathPiece (sbpcBookingKey context)
+    , Checkout.pbcAmountMinor = sbpcDepositMinor context
+    , Checkout.pbcCurrency = sbpcCurrency context
+    , Checkout.pbcStage = stage
+    , Checkout.pbcOccurredAt = now
+    , Checkout.pbcCorrelationId = serviceBookingPaymentCorrelationId
+        context provider operationLabel
+    }
+  either (throwError . marketplaceCheckoutConflict) pure result
+
+createPublicBookingDatafastCheckout
+  :: Int64
+  -> Maybe Text
+  -> AppM DatafastCheckoutDTO
+createPublicBookingDatafastCheckout rawBookingId mLookupToken = do
+  context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
+  when (sbpcCheckoutStatus context == "paid") $
+    throwError err409 { errBody = "This booking deposit is already paid" }
+  ensureNoSubmittedServiceBookingManualEvidence context
+  datafast <- ServiceStorefront.loadServiceDatafastEnv
+  requireServiceBookingProvider
+    context (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
+  attempt <- beginServiceBookingPaymentAttempt
+    context Checkout.ProviderDatafast Checkout.OperationCreate
+    (ServiceStorefront.sdfEntityId datafast) "create"
+  existing <- loadServiceBookingProviderBinding
+    context Checkout.ProviderDatafast (ServiceStorefront.sdfEntityId datafast) "checkout"
+  (checkoutId, widgetUrl) <- case existing of
+    Just (storedCheckoutId, _) -> pure
+      ( storedCheckoutId
+      , normalizeBaseUrl (ServiceStorefront.sdfBaseUrl datafast)
+          <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack storedCheckoutId
+      )
+    Nothing -> ServiceStorefront.requestDatafastCheckoutForService
+      (toPathPiece (sbpcBookingKey context))
+      (fromIntegral (sbpcDepositMinor context))
+      (sbpcCurrency context)
+      (sbpcBuyerName context)
+      (sbpcBuyerEmail context)
+      (sbpcBuyerPhone context)
+      `catchError` failServiceBookingPaymentAttempt
+        context attempt Checkout.ProviderDatafast "datafast_checkout_create"
+  let resourcePath = "/v1/checkouts/" <> checkoutId <> "/payment"
+  bindServiceBookingProviderResource
+    context attempt Checkout.ProviderDatafast (ServiceStorefront.sdfEnvironment datafast)
+    (ServiceStorefront.sdfEntityId datafast) "checkout" checkoutId
+    (Just resourcePath) Checkout.AttemptRequiresCustomerAction "create"
+  pure DatafastCheckoutDTO
+    { dcOrderId = toPathPiece (sbpcBookingKey context)
+    , dcCheckoutId = checkoutId
+    , dcWidgetUrl = T.pack widgetUrl
+    , dcAmount = Internationalization.formatMinorUnitsDecimal
+        (sbpcCurrency context) (fromIntegral (sbpcDepositMinor context))
+    , dcCurrency = sbpcCurrency context
+    , dcLookupToken = Nothing
+    }
+
+confirmPublicBookingDatafastStatus
+  :: Int64
+  -> Maybe Text
+  -> Text
+  -> AppM Api.PublicBookingCheckoutDTO
+confirmPublicBookingDatafastStatus rawBookingId mLookupToken rawResourcePath = do
+  initialContext <- authorizeServiceBookingPaymentContext rawBookingId mLookupToken
+  nowBeforeVerification <- liftIO getCurrentTime
+  when
+      ( sbpcHoldExpiresAt initialContext <= nowBeforeVerification
+        && sbpcCheckoutStatus initialContext `elem` ["holding", "awaiting_payment", "failed"]
+      ) $ do
+    _ <- runDB (rawSql "SELECT service_booking_expire_holds(?)"
+      [PersistUTCTime nowBeforeVerification] :: SqlPersistT IO [Single Int])
+    pure ()
+  context <- loadServiceBookingPaymentContext (sbpcBookingKey initialContext)
+  if sbpcCheckoutStatus context == "paid"
+    then loadPublicBookingCheckoutDTO (sbpcBookingKey context) Nothing
+    else do
+      datafast <- ServiceStorefront.loadServiceDatafastEnv
+      unless (ServiceStorefront.sdfEnvironment datafast == sbpcEnvironment context) $
+        throwError err503
+          { errBody = "Configured Datafast environment does not match this immutable booking checkout" }
+      existing <- loadServiceBookingProviderBinding
+        context Checkout.ProviderDatafast (ServiceStorefront.sdfEntityId datafast) "checkout"
+      (checkoutId, storedResourcePath) <- maybe
+        (throwError err409 { errBody = "This booking has no bound Datafast checkout" })
+        pure
+        existing
+      resourcePath <- either
+        (throwError . marketplaceCheckoutBadRequest)
+        pure
+        (ServiceStorefront.validateDatafastOrderResourcePath (Just checkoutId) rawResourcePath)
+      unless (storedResourcePath == Just resourcePath) $
+        throwError err409
+          { errBody = "Datafast resource path does not match the immutable booking binding" }
+      attempt <- beginServiceBookingPaymentAttempt
+        context Checkout.ProviderDatafast Checkout.OperationCreate
+        (ServiceStorefront.sdfEntityId datafast) "create"
+      providerStatus <- ServiceStorefront.checkDatafastPaymentStatus resourcePath
+        `catchError` failServiceBookingPaymentAttempt
+          context attempt Checkout.ProviderDatafast "datafast_status_request"
+      now <- liftIO getCurrentTime
+      let resultCode = ServiceStorefront.sdfpsResultCode providerStatus
+          success = ServiceStorefront.isDatafastPaymentSuccess
+            (ServiceStorefront.sdfEnvironment datafast) resultCode
+          pending = resultCode == "000.200.000"
+      if success
+        then do
+          case ServiceStorefront.validateDatafastSuccessfulPayment
+              (toPathPiece (sbpcBookingKey context))
+              (fromIntegral (sbpcDepositMinor context))
+              (sbpcCurrency context)
+              providerStatus of
+            Left validationMessage -> do
+              let actualAmount = ServiceStorefront.sdfpsAmount providerStatus
+                    >>= either (const Nothing) Just . ServiceStorefront.parseDatafastCents
+                  providerRef = fromMaybe checkoutId
+                    (ServiceStorefront.sdfpsPaymentId providerStatus)
+              runDB $ do
+                Checkout.recordReconciliationException
+                  Checkout.ProviderDatafast (sbpcEnvironment context)
+                  (ServiceStorefront.sdfEntityId datafast)
+                  "provider_binding_mismatch"
+                  (toPathPiece (sbpcBookingKey context))
+                  providerRef
+                  (sbpcDepositMinor context)
+                  (fromIntegral <$> actualAmount)
+                  (sbpcCurrency context)
+                  now
+                Checkout.recordPaymentFailure
+                  (sbpcCheckout context) attempt Checkout.ProviderDatafast
+                  "provider_binding_mismatch"
+                  (serviceBookingPaymentCorrelationId context Checkout.ProviderDatafast "status")
+                  now
+              throwError err502
+                { errBody = BL.fromStrict (TE.encodeUtf8 validationMessage) }
+            Right () -> pure ()
+          when (sbpcCheckoutStatus context == "expired") $ do
+            let actualAmount = ServiceStorefront.sdfpsAmount providerStatus
+                  >>= either (const Nothing) Just . ServiceStorefront.parseDatafastCents
+                providerRef = fromMaybe checkoutId
+                  (ServiceStorefront.sdfpsPaymentId providerStatus)
+            runDB $ Checkout.recordReconciliationException
+              Checkout.ProviderDatafast (sbpcEnvironment context)
+              (ServiceStorefront.sdfEntityId datafast)
+              "payment_after_booking_hold_expiry"
+              (toPathPiece (sbpcBookingKey context))
+              providerRef
+              (sbpcDepositMinor context)
+              (fromIntegral <$> actualAmount)
+              (sbpcCurrency context)
+              now
+            throwError err409
+              { errBody = "Datafast reports payment after this booking hold expired; staff reconciliation is required and the booking is not confirmed" }
+          paymentId <- maybe
+            (throwError err502 { errBody = "Datafast payment ID is missing" })
+            pure
+            (ServiceStorefront.sdfpsPaymentId providerStatus)
+          bindServiceBookingProviderResource
+            context attempt Checkout.ProviderDatafast (sbpcEnvironment context)
+            (ServiceStorefront.sdfEntityId datafast) "payment" paymentId
+            (Just resourcePath) Checkout.AttemptProcessing "status"
+          verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+            { Checkout.vpAttempt = attempt
+            , Checkout.vpCheckout = sbpcCheckout context
+            , Checkout.vpProvider = Checkout.ProviderDatafast
+            , Checkout.vpEnvironment = sbpcEnvironment context
+            , Checkout.vpMerchantRef = ServiceStorefront.sdfEntityId datafast
+            , Checkout.vpResourceType = "checkout"
+            , Checkout.vpProviderResource = checkoutId
+            , Checkout.vpProviderResourcePath = Just resourcePath
+            , Checkout.vpOrderReference = toPathPiece (sbpcBookingKey context)
+            , Checkout.vpAmountMinor = sbpcDepositMinor context
+            , Checkout.vpCurrency = sbpcCurrency context
+            , Checkout.vpEvidence = "server_to_server"
+            , Checkout.vpOccurredAt = now
+            , Checkout.vpCorrelationId = serviceBookingPaymentCorrelationId
+                context Checkout.ProviderDatafast "status"
+            }
+          either (throwError . marketplaceCheckoutConflict) (const (pure ())) verified
+        else if sbpcCheckoutStatus context == "expired"
+          then pure ()
+          else if pending
+          then runDB $ Checkout.recordPaymentProcessing
+            (sbpcCheckout context) attempt Checkout.ProviderDatafast
+            (serviceBookingPaymentCorrelationId context Checkout.ProviderDatafast "status")
+            now
+          else runDB $ Checkout.recordPaymentFailure
+            (sbpcCheckout context) attempt Checkout.ProviderDatafast resultCode
+            (serviceBookingPaymentCorrelationId context Checkout.ProviderDatafast "status")
+            now
+      loadPublicBookingCheckoutDTO (sbpcBookingKey context) Nothing
+
+createPublicBookingPaypalOrder
+  :: Int64
+  -> Maybe Text
+  -> AppM PaypalCreateDTO
+createPublicBookingPaypalOrder rawBookingId mLookupToken = do
+  context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
+  when (sbpcCheckoutStatus context == "paid") $
+    throwError err409 { errBody = "This booking deposit is already paid" }
+  ensureNoSubmittedServiceBookingManualEvidence context
+  (clientId, clientSecret, baseUrl, paypalEnvironment, merchantRef) <-
+    ServiceStorefront.loadPaypalEnvForService
+  requireServiceBookingProvider context paypalEnvironment Checkout.ProviderPayPal
+  attempt <- beginServiceBookingPaymentAttempt
+    context Checkout.ProviderPayPal Checkout.OperationCreate merchantRef "create"
+  existing <- loadServiceBookingProviderBinding
+    context Checkout.ProviderPayPal merchantRef "order"
+  (paypalOrderId, approvalUrl) <- case existing of
+    Just (storedOrderId, _) -> pure (storedOrderId, Nothing)
+    Nothing -> ServiceStorefront.createPaypalOrderRemoteForService
+      sharedTlsManager clientId clientSecret baseUrl
+      (toPathPiece (sbpcBookingKey context))
+      (fromIntegral (sbpcDepositMinor context))
+      (sbpcCurrency context)
+      (sbpcBuyerName context)
+      (sbpcBuyerEmail context)
+      `catchError` failServiceBookingPaymentAttempt
+        context attempt Checkout.ProviderPayPal "paypal_create_order"
+  bindServiceBookingProviderResource
+    context attempt Checkout.ProviderPayPal paypalEnvironment merchantRef
+    "order" paypalOrderId (Just ("/v2/checkout/orders/" <> paypalOrderId))
+    Checkout.AttemptRequiresCustomerAction "create"
+  pure PaypalCreateDTO
+    { pcOrderId = toPathPiece (sbpcBookingKey context)
+    , pcPaypalOrderId = paypalOrderId
+    , pcApprovalUrl = approvalUrl
+    , pcLookupToken = Nothing
+    }
+
+capturePublicBookingPaypalOrder
+  :: Int64
+  -> Maybe Text
+  -> Api.PublicBookingPaypalCaptureReq
+  -> AppM Api.PublicBookingCheckoutDTO
+capturePublicBookingPaypalOrder
+    rawBookingId mLookupToken Api.PublicBookingPaypalCaptureReq{..} = do
+  context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
+  if sbpcCheckoutStatus context == "paid"
+    then loadPublicBookingCheckoutDTO (sbpcBookingKey context) Nothing
+    else do
+      ensureNoSubmittedServiceBookingManualEvidence context
+      suppliedPaypalOrderId <- either throwError pure $
+        validatePayPalCaptureOrderId pbpcPaypalOrderId
+      (clientId, clientSecret, baseUrl, paypalEnvironment, merchantRef) <-
+        ServiceStorefront.loadPaypalEnvForService
+      requireServiceBookingProvider context paypalEnvironment Checkout.ProviderPayPal
+      existing <- loadServiceBookingProviderBinding
+        context Checkout.ProviderPayPal merchantRef "order"
+      storedPaypalOrderId <- maybe
+        (throwError err409 { errBody = "This booking has no bound PayPal order" })
+        (pure . fst)
+        existing
+      unless (storedPaypalOrderId == suppliedPaypalOrderId) $
+        throwError err409
+          { errBody = "PayPal order does not match the immutable booking binding" }
+      attempt <- beginServiceBookingPaymentAttempt
+        context Checkout.ProviderPayPal Checkout.OperationCapture merchantRef "capture"
+      outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
+        sharedTlsManager clientId clientSecret baseUrl suppliedPaypalOrderId
+        `catchError` failServiceBookingPaymentAttempt
+          context attempt Checkout.ProviderPayPal "paypal_capture_request"
+      now <- liftIO getCurrentTime
+      case ServiceStorefront.spcoStatus outcome of
+        "COMPLETED" -> do
+          case ServiceStorefront.validatePaypalSuccessfulCapture
+              (toPathPiece (sbpcBookingKey context))
+              (fromIntegral (sbpcDepositMinor context))
+              (sbpcCurrency context)
+              merchantRef
+              outcome of
+            Left validationMessage -> do
+              let actualAmount = ServiceStorefront.spcoAmount outcome
+                    >>= either (const Nothing) Just . ServiceStorefront.parseDatafastCents
+              runDB $ do
+                Checkout.recordReconciliationException
+                  Checkout.ProviderPayPal paypalEnvironment merchantRef
+                  "provider_binding_mismatch"
+                  (toPathPiece (sbpcBookingKey context))
+                  suppliedPaypalOrderId
+                  (sbpcDepositMinor context)
+                  (fromIntegral <$> actualAmount)
+                  (sbpcCurrency context)
+                  now
+                Checkout.recordPaymentFailure
+                  (sbpcCheckout context) attempt Checkout.ProviderPayPal
+                  "provider_binding_mismatch"
+                  (serviceBookingPaymentCorrelationId context Checkout.ProviderPayPal "capture")
+                  now
+              throwError err502
+                { errBody = BL.fromStrict (TE.encodeUtf8 validationMessage) }
+            Right () -> pure ()
+          captureId <- maybe
+            (throwError err502 { errBody = "PayPal capture ID is missing" })
+            pure
+            (ServiceStorefront.spcoCaptureId outcome)
+          bindServiceBookingProviderResource
+            context attempt Checkout.ProviderPayPal paypalEnvironment merchantRef
+            "capture" captureId
+            (Just ("/v2/checkout/orders/" <> suppliedPaypalOrderId <> "/capture"))
+            Checkout.AttemptProcessing "capture"
+          verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+            { Checkout.vpAttempt = attempt
+            , Checkout.vpCheckout = sbpcCheckout context
+            , Checkout.vpProvider = Checkout.ProviderPayPal
+            , Checkout.vpEnvironment = paypalEnvironment
+            , Checkout.vpMerchantRef = merchantRef
+            , Checkout.vpResourceType = "capture"
+            , Checkout.vpProviderResource = captureId
+            , Checkout.vpProviderResourcePath = Just
+                ("/v2/checkout/orders/" <> suppliedPaypalOrderId <> "/capture")
+            , Checkout.vpOrderReference = toPathPiece (sbpcBookingKey context)
+            , Checkout.vpAmountMinor = sbpcDepositMinor context
+            , Checkout.vpCurrency = sbpcCurrency context
+            , Checkout.vpEvidence = "server_to_server"
+            , Checkout.vpOccurredAt = now
+            , Checkout.vpCorrelationId = serviceBookingPaymentCorrelationId
+                context Checkout.ProviderPayPal "capture"
+            }
+          either (throwError . marketplaceCheckoutConflict) (const (pure ())) verified
+        "APPROVED" -> runDB $ Checkout.recordPaymentProcessing
+          (sbpcCheckout context) attempt Checkout.ProviderPayPal
+          (serviceBookingPaymentCorrelationId context Checkout.ProviderPayPal "capture")
+          now
+        "PENDING" -> runDB $ Checkout.recordPaymentProcessing
+          (sbpcCheckout context) attempt Checkout.ProviderPayPal
+          (serviceBookingPaymentCorrelationId context Checkout.ProviderPayPal "capture")
+          now
+        status -> runDB $ Checkout.recordPaymentFailure
+          (sbpcCheckout context) attempt Checkout.ProviderPayPal
+          ("paypal_" <> T.toLower status)
+          (serviceBookingPaymentCorrelationId context Checkout.ProviderPayPal "capture")
+          now
+      loadPublicBookingCheckoutDTO (sbpcBookingKey context) Nothing
+
+selectPublicBookingManualPayment
+  :: Int64
+  -> Maybe Text
+  -> Api.PublicBookingManualPaymentReq
+  -> AppM Api.PublicBookingCheckoutDTO
+selectPublicBookingManualPayment
+    rawBookingId mLookupToken Api.PublicBookingManualPaymentReq{..} = do
+  context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
+  let method = T.toLower (T.strip pbmprPaymentMethod)
+  unless (method == "bank_transfer") $
+    throwError err400 { errBody = "Only bank transfer is available for public manual payment" }
+  when (sbpcCheckoutStatus context == "processing") $
+    throwError err409
+      { errBody = "Another payment rail is currently processing; verify it before switching methods" }
+  ensureNoActiveServiceBookingOnlineAttempt context
+  requireServiceBookingProvider
+    context (sbpcEnvironment context) Checkout.ProviderBankTransfer
+  attempt <- beginServiceBookingPaymentAttempt
+    context Checkout.ProviderBankTransfer Checkout.OperationManualVerify
+    "tdf-manual-settlement" "manual-select"
+  now <- liftIO getCurrentTime
+  runDB $ Checkout.recordManualPaymentSelection
+    (sbpcCheckout context) attempt Checkout.ProviderBankTransfer
+    (serviceBookingPaymentCorrelationId context Checkout.ProviderBankTransfer "manual-select")
+    now
+  loadPublicBookingCheckoutDTO (sbpcBookingKey context) Nothing
+
+validatePublicBookingManualReference :: Text -> Either ServerError Text
+validatePublicBookingManualReference raw
+  | T.length clean < 3 || T.length clean > 120 =
+      Left err400 { errBody = "Bank transfer reference must contain 3 to 120 characters" }
+  | T.any isUnsafeAccessRequestTextChar clean =
+      Left err400 { errBody = "Bank transfer reference contains unsupported characters" }
+  | otherwise = Right clean
+  where
+    clean = T.strip raw
+
+submitPublicBookingManualEvidence
+  :: Int64
+  -> Maybe Text
+  -> Api.PublicBookingManualEvidenceReq
+  -> AppM Api.PublicBookingCheckoutDTO
+submitPublicBookingManualEvidence
+    rawBookingId mLookupToken Api.PublicBookingManualEvidenceReq{..} = do
+  context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
+  customerReference <- either throwError pure $
+    validatePublicBookingManualReference pbmeCustomerReference
+  outcome <- runDB $ do
+    rows <- (rawSql
+      "SELECT evidence.id::text, evidence.status, evidence.customer_reference,\
+      \ evidence.submitted_by, attempt.id::text, booked.party_id\
+      \ FROM commerce_manual_payment_evidence evidence\
+      \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+      \ JOIN service_booking_checkout_runtime runtime ON runtime.checkout_id = evidence.checkout_id\
+      \ JOIN booking booked ON booked.id = runtime.booking_id\
+      \ WHERE evidence.checkout_id = ?::uuid\
+      \ AND attempt.checkout_id = evidence.checkout_id\
+      \ AND attempt.provider = 'bank_transfer'\
+      \ AND attempt.operation = 'manual_verify'\
+      \ FOR UPDATE OF evidence, attempt"
+      [PersistText (Checkout.checkoutReferenceId (sbpcCheckout context))]
+      :: SqlPersistT IO
+        [( Single Text, Single Text, Single (Maybe Text), Single (Maybe Int64)
+         , Single Text, Single (Maybe Int64)
+         )])
+    case rows of
+      [( Single evidenceId, Single status, Single existingReference
+       , Single existingSubmitter, Single attemptId, Single mCustomerId
+       )] -> case mCustomerId of
+        Nothing -> pure (Left "Booking customer identity is missing")
+        Just customerId
+          | status `elem` ["submitted", "under_review"]
+              && existingReference == Just customerReference
+              && existingSubmitter == Just customerId -> pure (Right ())
+          | status == "approved" -> pure (Right ())
+          | status `elem` ["submitted", "under_review"] ->
+              pure (Left "Different manual evidence is already under review")
+          | status `elem` ["awaiting_evidence", "rejected"] -> do
+              now <- liftIO getCurrentTime
+              when (status == "rejected") $
+                Checkout.recordManualPaymentSelection
+                  (sbpcCheckout context)
+                  (Checkout.PaymentAttemptReference attemptId)
+                  Checkout.ProviderBankTransfer
+                  (serviceBookingPaymentCorrelationId
+                    context Checkout.ProviderBankTransfer "manual-resubmit")
+                  now
+              rawExecute
+                "UPDATE commerce_manual_payment_evidence\
+                \ SET customer_reference = ?, submitted_amount_minor = ?, currency = ?,\
+                \ submitted_at = ?, submitted_by = ?, status = 'submitted',\
+                \ reviewed_by = NULL, reviewed_at = NULL, review_notes = NULL\
+                \ WHERE id = ?::uuid"
+                [ PersistText customerReference
+                , PersistInt64 (sbpcDepositMinor context)
+                , PersistText (sbpcCurrency context)
+                , PersistUTCTime now
+                , PersistInt64 customerId
+                , PersistText evidenceId
+                ]
+              rawExecute
+                "INSERT INTO commerce_checkout_audit_event(\
+                \ checkout_id, event_type, actor_type, actor_id, correlation_id, metadata\
+                \) VALUES (?::uuid, 'manual_payment_evidence_submitted', 'customer', ?, ?,\
+                \ jsonb_build_object('attempt_id', ?))"
+                [ PersistText (Checkout.checkoutReferenceId (sbpcCheckout context))
+                , PersistText (T.pack (show customerId))
+                , PersistText (serviceBookingPaymentCorrelationId
+                    context Checkout.ProviderBankTransfer "manual-evidence")
+                , PersistText attemptId
+                ]
+              pure (Right ())
+          | otherwise -> pure (Left "Manual evidence cannot be submitted in its current state")
+      [] -> pure (Left "Select bank transfer before submitting evidence")
+      _ -> pure (Left "Manual payment evidence is ambiguous")
+  either (throwError . marketplaceCheckoutConflict) pure outcome
+  loadPublicBookingCheckoutDTO (sbpcBookingKey context) Nothing
+
+createPublicBookingCheckout
+  :: Maybe Text
+  -> Api.PublicBookingCheckoutReq
+  -> AppM Api.PublicBookingCheckoutDTO
+createPublicBookingCheckout mIdempotency Api.PublicBookingCheckoutReq{..} = do
+  unless pbcTermsAccepted $
+    throwError err400 { errBody = "Booking terms must be accepted before checkout" }
+  idempotencyKey <- either (throwError . marketplaceCheckoutBadRequest) pure $
+    ServiceStorefront.validateIdempotencyKey mIdempotency
+  fullNameClean <- either throwError pure (validatePublicBookingFullName pbcFullName)
+  (emailClean, phoneClean) <- either throwError pure $
+    validatePublicBookingContactDetails pbcEmail pbcPhone
+  durationMinutes <- either throwError pure $
+    validatePublicBookingDurationMinutes (Just pbcDurationMinutes)
+  now <- liftIO getCurrentTime
+  startsAtClean <- either throwError pure $
+    validatePublicBookingStartAt now pbcStartsAt
+  offering@(Entity offeringKey offeringValue) <- runDB $
+    loadSelectableServiceOffering now pbcServiceOfferingId
+  policy <- runDB (loadApprovedServiceBookingPolicy now offeringKey)
+    >>= maybe (throwError err409
+          { errBody = "This service does not have an approved active booking price and policy" }) pure
+  price <- either throwError pure $
+    calculateApprovedServiceBookingPrice policy durationMinutes
+  when (ServiceBookings.bpbTotalMinor price > fromIntegral (maxBound :: Int)) $
+    throwError err409 { errBody = "Booking quote exceeds the supported service-order range" }
+  checkoutEnvironment <- loadMarketplaceCheckoutEnvironment
+  domainEnabled <- runDB $
+    Checkout.domainEnabledForEnvironment checkoutEnvironment "service_bookings"
+  unless domainEnabled $
+    throwError err503 { errBody = "Public service booking checkout is disabled in this environment" }
+  engineerIdClean <- either throwError pure $
+    validateOptionalPositiveIdField "engineerPartyId" pbcEngineerPartyId
+  let engineerNameClean = normalizeOptionalInput pbcEngineerName
+  case validateEngineer
+      (Catalog.serviceOfferingRequiresEngineer offeringValue)
+      engineerIdClean engineerNameClean of
+    Left message -> throwBadRequest message
+    Right () -> pure ()
+  mEngineerParty <- runDB (resolveOptionalBookingEngineerReference engineerIdClean)
+    >>= either throwError pure
+  notesClean <- either throwError pure (validatePublicBookingNotes pbcNotes)
+  let endsAtClean = addUTCTime (fromIntegral durationMinutes * 60) startsAtClean
+      requestedResourceIds = fromMaybe [] pbcResourceIds
+      requestHash = marketplaceSha256Text . TE.decodeUtf8 . BL.toStrict . encode $ object
+        [ "full_name" .= fullNameClean
+        , "email" .= emailClean
+        , "phone" .= phoneClean
+        , "service_offering_id" .= UUID.toText pbcServiceOfferingId
+        , "starts_at" .= startsAtClean
+        , "duration_minutes" .= durationMinutes
+        , "notes" .= notesClean
+        , "engineer_party_id" .= engineerIdClean
+        , "engineer_name" .= engineerNameClean
+        , "resource_ids" .= requestedResourceIds
+        , "terms_version" .= asbpTermsVersion policy
+        ]
+  existing <- lookupServiceBookingIdempotency idempotencyKey
+  let lookupToken = marketplaceSha256Text
+        ("service-booking-order-lookup:" <> idempotencyKey)
+  case existing of
+    Just (existingBookingKey, storedHash)
+      | storedHash == requestHash ->
+          loadPublicBookingCheckoutDTO existingBookingKey (Just lookupToken)
+      | otherwise -> throwError err409
+          { errBody = "Idempotency key was already used for a different booking checkout" }
+    Nothing -> do
+      partyId <- ensurePartyRecord (Just fullNameClean) emailClean phoneClean
+      resourceKeys <- runDB $
+        resolveResourcesForBooking (Just offering) requestedResourceIds startsAtClean endsAtClean
+      let lookupHash = marketplaceSha256Text lookupToken
+          holdExpiresAt = addUTCTime (fromIntegral (asbpHoldMinutes policy) * 60) now
+          resolvedEngineerName = resolveBookingEngineerName engineerNameClean mEngineerParty
+      creation <- createServiceBookingCheckoutTransaction
+        checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupHash
+        fullNameClean emailClean notesClean partyId mEngineerParty resolvedEngineerName
+        offering policy price startsAtClean endsAtClean resourceKeys
+      case creation of
+        Left serverErr -> throwError serverErr
+        Right bookingKey -> loadPublicBookingCheckoutDTO bookingKey (Just lookupToken)
+
+lookupServiceBookingIdempotency
+  :: Text
+  -> AppM (Maybe (Key Booking, Text))
+lookupServiceBookingIdempotency idempotencyKey = do
+  rows <- runDB (rawSql
+    "SELECT booking_id, create_request_sha256\
+    \ FROM service_booking_checkout_runtime WHERE create_idempotency_key = ?"
+    [PersistText idempotencyKey]
+    :: SqlPersistT IO [(Single Int64, Single Text)])
+  pure $ case rows of
+    [(Single bookingId, Single requestHash)] ->
+      Just (toSqlKey bookingId, requestHash)
+    _ -> Nothing
+
+createServiceBookingCheckoutTransaction
+  :: Checkout.CheckoutEnvironment
+  -> UTCTime
+  -> UTCTime
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> Key Party
+  -> Maybe (Entity Party)
+  -> Maybe Text
+  -> Entity Catalog.ServiceOffering
+  -> ApprovedServiceBookingPolicy
+  -> ServiceBookings.BookingPriceBreakdown
+  -> UTCTime
+  -> UTCTime
+  -> [Key Resource]
+  -> AppM (Either ServerError (Key Booking))
+createServiceBookingCheckoutTransaction
+    checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupHash
+    fullNameClean emailClean notesClean partyId mEngineerParty resolvedEngineerName
+    (Entity offeringKey offering) policy price startsAtClean endsAtClean resourceKeys = do
+  Env{ envPool } <- ask
+  result <- liftIO $
+    (try (flip runSqlPool envPool transactionBody)
+      :: IO (Either SomeException (Either ServerError (Key Booking))))
+  case result of
+    Right value -> pure value
+    Left exception -> case fromException exception :: Maybe SomeAsyncException of
+      Just _ -> liftIO (throwIO exception)
+      Nothing -> case fromException exception :: Maybe SqlError of
+        Just sqlError | sqlState sqlError == "23P01" -> pure (Left err409
+          { errBody = "The selected room or resource was reserved by another request" })
+        _ -> liftIO (throwIO exception)
+  where
+    transactionBody = do
+      _ <- (rawSql
+        "SELECT 1::bigint FROM (SELECT pg_advisory_xact_lock(hashtextextended(?, 0))) locked"
+        [PersistText ("service-booking:" <> idempotencyKey)]
+        :: SqlPersistT IO [Single Int64])
+      existing <- (rawSql
+        "SELECT booking_id, create_request_sha256\
+        \ FROM service_booking_checkout_runtime WHERE create_idempotency_key = ?"
+        [PersistText idempotencyKey]
+        :: SqlPersistT IO [(Single Int64, Single Text)])
+      case existing of
+        [(Single existingBookingId, Single storedHash)]
+          | storedHash == requestHash -> pure (Right (toSqlKey existingBookingId))
+          | otherwise -> pure (Left err409
+              { errBody = "Idempotency key was already used for a different booking checkout" })
+        [] -> createNew
+        _ -> pure (Left err500 { errBody = "Booking idempotency lookup was ambiguous" })
+    createNew = do
+      _ <- (rawSql "SELECT service_booking_expire_holds(?)"
+        [PersistUTCTime now] :: SqlPersistT IO [Single Int])
+      forM_ resourceKeys $ \resourceKey -> do
+        _ <- (rawSql "SELECT id FROM resource WHERE id = ? FOR UPDATE"
+          [toPersistValue resourceKey] :: SqlPersistT IO [Single Int64])
+        pure ()
+      catalogKey <- case Catalog.serviceOfferingLegacyServiceCatalogId offering of
+        Just catalogId -> pure (toSqlKey catalogId :: Key ServiceCatalog)
+        Nothing -> liftIO . throwIO $ err409
+          { errBody = "Approved booking service is not linked to the service-order catalog" }
+      mCatalog <- get catalogKey
+      catalog <- maybe (liftIO . throwIO $ err409
+          { errBody = "Approved booking service references a missing service-order catalog" }) pure mCatalog
+      let totalMinorInt = fromIntegral (ServiceBookings.bpbTotalMinor price)
+          serviceLabel = Catalog.serviceOfferingNameEs offering
+      serviceOrderKey <- insert ServiceOrder
+        { serviceOrderCustomerId = partyId
+        , serviceOrderArtistId = entityKey <$> mEngineerParty
+        , serviceOrderCatalogId = catalogKey
+        , serviceOrderServiceOfferingId = serviceOfferingUUIDFromKey offeringKey
+        , serviceOrderServiceKind = serviceCatalogKind catalog
+        , serviceOrderTitle = Just (serviceLabel <> " · " <> fullNameClean)
+        , serviceOrderDescription = notesClean
+        , serviceOrderStatus = "deposit_due"
+        , serviceOrderPriceQuotedCents = Just totalMinorInt
+        , serviceOrderQuoteSentAt = Just now
+        , serviceOrderScheduledStart = Just startsAtClean
+        , serviceOrderScheduledEnd = Just endsAtClean
+        , serviceOrderCreatedAt = now
+        }
+      bookingKey <- insert Booking
+        { bookingTitle = serviceLabel <> " · " <> fullNameClean
+        , bookingServiceOrderId = Just serviceOrderKey
+        , bookingPartyId = Just partyId
+        , bookingServiceType = Nothing
+        , bookingServiceOfferingId = serviceOfferingUUIDFromKey offeringKey
+        , bookingBookingTypeId = Nothing
+        , bookingWorkflowStateId = Nothing
+        , bookingEngineerPartyId = entityKey <$> mEngineerParty
+        , bookingEngineerName = resolvedEngineerName
+        , bookingStartsAt = startsAtClean
+        , bookingEndsAt = endsAtClean
+        , bookingStatus = Tentative
+        , bookingCreatedBy = Nothing
+        , bookingNotes = notesClean
+        , bookingCreatedAt = now
+        }
+      let checkoutSnapshot = object
+            [ "domain" .= ("service_booking" :: Text)
+            , "booking_id" .= fromSqlKey bookingKey
+            , "service_order_id" .= fromSqlKey serviceOrderKey
+            , "service_offering_id" .= toPathPiece offeringKey
+            , "policy_id" .= asbpId policy
+            , "policy_version" .= asbpVersion policy
+            , "starts_at" .= startsAtClean
+            , "ends_at" .= endsAtClean
+            , "duration_minutes" .= ServiceBookings.bpbDurationMinutes price
+            , "rate_minor" .= asbpRateMinor policy
+            , "rate_unit_minutes" .= asbpRateUnitMinutes policy
+            , "tax_bps" .= asbpTaxBps policy
+            , "deposit_bps" .= asbpDepositBps policy
+            , "subtotal_minor" .= ServiceBookings.bpbSubtotalMinor price
+            , "tax_minor" .= ServiceBookings.bpbTaxMinor price
+            , "total_minor" .= ServiceBookings.bpbTotalMinor price
+            , "deposit_minor" .= ServiceBookings.bpbDepositMinor price
+            , "balance_minor" .= ServiceBookings.bpbBalanceMinor price
+            , "terms_version" .= asbpTermsVersion policy
+            , "resource_ids" .= map toPathPiece resourceKeys
+            ]
+      checkout <- Checkout.createCheckout Checkout.CheckoutCreation
+        { Checkout.ccDomainType = "service_booking"
+        , Checkout.ccDomainOrderId = T.pack (show (fromSqlKey bookingKey))
+        , Checkout.ccEnvironment = checkoutEnvironment
+        , Checkout.ccCurrency = asbpCurrency policy
+        , Checkout.ccAmountMinor = ServiceBookings.bpbDepositMinor price
+        , Checkout.ccCustomerEmail = emailClean
+        , Checkout.ccLookupTokenHash = lookupHash
+        , Checkout.ccIdempotencyKey = idempotencyKey
+        , Checkout.ccExpiresAt = holdExpiresAt
+        , Checkout.ccProductType = "service_booking_deposit"
+        , Checkout.ccProductId = toPathPiece offeringKey
+        , Checkout.ccProductVersion = asbpVersion policy
+        , Checkout.ccDescription = serviceLabel <> " — confirmation deposit"
+        , Checkout.ccSnapshot = checkoutSnapshot
+        , Checkout.ccCorrelationId = "service-booking-create:" <> T.pack (show (fromSqlKey bookingKey))
+        }
+      rawExecute
+        "INSERT INTO service_booking_checkout_runtime(\
+        \ booking_id, service_order_id, checkout_id, service_offering_id, policy_id, policy_version,\
+        \ lookup_token_hash, create_idempotency_key, create_request_sha256, fulfillment_status,\
+        \ deposit_status, balance_status, starts_at, ends_at, timezone, duration_minutes, currency,\
+        \ rate_minor, rate_unit_minutes, tax_bps, deposit_bps, subtotal_minor, tax_minor, total_minor,\
+        \ deposit_minor, balance_minor, terms_version, terms_accepted_at, hold_expires_at\
+        \) VALUES (?, ?, ?::uuid, ?::uuid, ?::uuid, ?, ?, ?, ?, 'on_hold',\
+        \ 'awaiting_payment', 'not_due', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)"
+        [ toPersistValue bookingKey
+        , toPersistValue serviceOrderKey
+        , PersistText (Checkout.checkoutReferenceId checkout)
+        , PersistText (toPathPiece offeringKey)
+        , PersistText (asbpId policy)
+        , PersistText (asbpVersion policy)
+        , PersistText lookupHash
+        , PersistText idempotencyKey
+        , PersistText requestHash
+        , PersistUTCTime startsAtClean
+        , PersistUTCTime endsAtClean
+        , PersistText (asbpTimezone policy)
+        , PersistInt64 (fromIntegral (ServiceBookings.bpbDurationMinutes price))
+        , PersistText (asbpCurrency policy)
+        , PersistInt64 (asbpRateMinor policy)
+        , PersistInt64 (fromIntegral (asbpRateUnitMinutes policy))
+        , PersistInt64 (fromIntegral (asbpTaxBps policy))
+        , PersistInt64 (fromIntegral (asbpDepositBps policy))
+        , PersistInt64 (ServiceBookings.bpbSubtotalMinor price)
+        , PersistInt64 (ServiceBookings.bpbTaxMinor price)
+        , PersistInt64 (ServiceBookings.bpbTotalMinor price)
+        , PersistInt64 (ServiceBookings.bpbDepositMinor price)
+        , PersistInt64 (ServiceBookings.bpbBalanceMinor price)
+        , PersistText (asbpTermsVersion policy)
+        , PersistUTCTime holdExpiresAt
+        ]
+      forM_ (zip [0 :: Int ..] (nub resourceKeys)) $ \(index, resourceKey) ->
+        insert_ BookingResource
+          { bookingResourceBookingId = bookingKey
+          , bookingResourceResourceId = resourceKey
+          , bookingResourceRole = if index == 0 then "primary" else "secondary"
+          }
+      rawExecute
+        "INSERT INTO service_booking_event(booking_id, from_status, to_status, actor_type, reason_code, notes)\
+        \ VALUES (?, NULL, 'on_hold', 'system', 'checkout_created',\
+        \ 'Atomic resource hold created; deposit payment and service fulfillment remain separate')"
+        [toPersistValue bookingKey]
+      pure (Right bookingKey)
 
 createPublicBooking :: PublicBookingReq -> AppM BookingDTO
 createPublicBooking PublicBookingReq{..} = do
@@ -13599,11 +15421,24 @@ marketplacePublicServer =
   :<|> createPaypalOrder
   :<|> capturePaypalOrder
   :<|> getOrder
+  :<|> submitMarketplaceManualEvidence
+  :<|> listMarketplaceCustomerRequestsPublic
+  :<|> submitMarketplaceCustomerRequest
 
 marketplaceAdminServer :: AuthedUser -> ServerT MarketplaceAdminAPI AppM
 marketplaceAdminServer user =
-       listMarketplaceOrders user
+       updateMarketplaceRentalTerms user
+  :<|> listMarketplaceOrders user
+  :<|> getMarketplaceCommerce user
+  :<|> reviewMarketplaceManualPayment user
   :<|> updateMarketplaceOrder user
+  :<|> updateMarketplaceFulfillment user
+  :<|> updateMarketplaceRental user
+  :<|> listMarketplaceCustomerRequestsAdmin user
+  :<|> reviewMarketplaceCustomerRequest user
+  :<|> listMarketplaceDepositSettlements user
+  :<|> submitMarketplaceDepositSettlement user
+  :<|> reviewMarketplaceDepositSettlement user
 
 labelServer :: AuthedUser -> ServerT LabelAPI AppM
 labelServer user =
@@ -13686,6 +15521,94 @@ getMarketplaceItem rawId = do
       mDto <- toMarketplaceDTO assetsBase row
       maybe (throwError marketplaceListingNotFound) pure mDto
 
+updateMarketplaceRentalTerms
+  :: AuthedUser
+  -> Text
+  -> MarketplaceRentalTermsUpdate
+  -> AppM MarketplaceItemDTO
+updateMarketplaceRentalTerms user rawId MarketplaceRentalTermsUpdate{..} = do
+  requireMarketplaceAccess user
+  listingKey <- parseListingId rawId
+  let upperMinorBound = 2147483647
+      termsVersion = T.strip mrtuTermsVersion
+      termsSummary = T.strip mrtuTermsSummary
+      timezone = T.strip mrtuTimezone
+      inMinorBounds amount = amount >= 0 && amount <= upperMinorBound
+  unless (mrtuDailyRateUsdCents >= 1 && mrtuDailyRateUsdCents <= upperMinorBound) $
+    throwError err400 { errBody = "Rental daily rate is outside the supported minor-unit range" }
+  unless (maybe True (\amount -> amount >= 1 && amount <= upperMinorBound) mrtuWeeklyRateUsdCents) $
+    throwError err400 { errBody = "Rental weekly rate is outside the supported minor-unit range" }
+  unless (inMinorBounds mrtuSecurityDepositUsdCents && inMinorBounds mrtuLateFeeUsdCents) $
+    throwError err400 { errBody = "Rental deposit or late fee is outside the supported minor-unit range" }
+  unless (mrtuMinDays >= 1 && mrtuMaxDays >= mrtuMinDays && mrtuMaxDays <= 366) $
+    throwError err400 { errBody = "Rental duration limits are invalid" }
+  unless (mrtuCancellationWindowHours >= 0 && mrtuCancellationWindowHours <= 8760) $
+    throwError err400 { errBody = "Rental cancellation window is invalid" }
+  unless (timezone == "America/Guayaquil") $
+    throwError err400 { errBody = "Marketplace rentals currently require America/Guayaquil" }
+  unless (not (T.null termsVersion) && T.length termsVersion <= 80) $
+    throwError err400 { errBody = "Rental terms version must contain 1 to 80 characters" }
+  unless (not (T.null termsSummary) && T.length termsSummary <= 1000) $
+    throwError err400 { errBody = "Rental terms summary must contain 1 to 1000 characters" }
+  void . either (throwError . marketplaceCheckoutBadRequest) pure $
+    MarketplaceRentals.calculateRentalPrice
+      mrtuDailyRateUsdCents
+      mrtuWeeklyRateUsdCents
+      mrtuSecurityDepositUsdCents
+      mrtuMinDays
+      mrtuMaxDays
+      mrtuMinDays
+  Env{ envPool } <- ask
+  let actor = "party:" <> T.pack (show (fromSqlKey (auPartyId user)))
+  result <- liftIO $ flip runSqlPool envPool $ do
+    mListing <- get listingKey
+    case mListing of
+      Nothing -> pure (Left marketplaceListingNotFound)
+      Just listing
+        | T.toLower (T.strip (ME.marketplaceListingPurpose listing)) /= "rent" ->
+            pure (Left err409 { errBody = "Rental terms can only be configured for a rent listing" })
+        | not (ME.marketplaceListingActive listing) ->
+            pure (Left err409 { errBody = "Activate the marketplace listing before enabling rental terms" })
+        | otherwise -> do
+            _ <- (rawSql "SELECT set_config('tdf.actor_id', ?, TRUE)"
+              [PersistText actor] :: SqlPersistT IO [Single Text])
+            rawExecute
+              "INSERT INTO marketplace_rental_listing_terms(\
+              \ listing_id, daily_rate_usd_cents, weekly_rate_usd_cents,\
+              \ security_deposit_usd_cents, late_fee_usd_cents, min_days, max_days,\
+              \ cancellation_window_hours, timezone, terms_version, terms_summary, active,\
+              \ approved_at, approved_by\
+              \) VALUES (?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,\
+              \ CASE WHEN ? THEN NOW() ELSE NULL END, CASE WHEN ? THEN ? ELSE NULL END)\
+              \ ON CONFLICT (listing_id) DO UPDATE SET\
+              \ daily_rate_usd_cents=EXCLUDED.daily_rate_usd_cents,\
+              \ weekly_rate_usd_cents=EXCLUDED.weekly_rate_usd_cents,\
+              \ security_deposit_usd_cents=EXCLUDED.security_deposit_usd_cents,\
+              \ late_fee_usd_cents=EXCLUDED.late_fee_usd_cents, min_days=EXCLUDED.min_days,\
+              \ max_days=EXCLUDED.max_days, cancellation_window_hours=EXCLUDED.cancellation_window_hours,\
+              \ timezone=EXCLUDED.timezone, terms_version=EXCLUDED.terms_version,\
+              \ terms_summary=EXCLUDED.terms_summary, active=EXCLUDED.active,\
+              \ approved_at=EXCLUDED.approved_at, approved_by=EXCLUDED.approved_by, updated_at=NOW()"
+              [ PersistText (toPathPiece listingKey)
+              , PersistInt64 (fromIntegral mrtuDailyRateUsdCents)
+              , maybe PersistNull (PersistInt64 . fromIntegral) mrtuWeeklyRateUsdCents
+              , PersistInt64 (fromIntegral mrtuSecurityDepositUsdCents)
+              , PersistInt64 (fromIntegral mrtuLateFeeUsdCents)
+              , PersistInt64 (fromIntegral mrtuMinDays)
+              , PersistInt64 (fromIntegral mrtuMaxDays)
+              , PersistInt64 (fromIntegral mrtuCancellationWindowHours)
+              , PersistText timezone
+              , PersistText termsVersion
+              , PersistText termsSummary
+              , PersistBool mrtuActive
+              , PersistBool mrtuActive
+              , PersistBool mrtuActive
+              , PersistText actor
+              ]
+            pure (Right ())
+  either throwError pure result
+  getMarketplaceItem rawId
+
 toMarketplaceDTO
   :: Text
   -> (Key ME.MarketplaceListing, ME.MarketplaceListing, Maybe ME.Asset)
@@ -13693,6 +15616,13 @@ toMarketplaceDTO
 toMarketplaceDTO _ (_, _, Nothing) = pure Nothing
 toMarketplaceDTO assetsBase (lid, listing, Just asset) = do
   mPhoto <- liftIO $ resolveMarketplacePhotoUrl assetsBase (ME.assetPhotoUrl asset)
+  Env{ envPool } <- ask
+  mRentalTerms <- liftIO $ flip runSqlPool envPool $ loadActiveMarketplaceRentalTerms lid
+  let listedPrice = maybe
+        (ME.marketplaceListingPriceUsdCents listing)
+        mrtDailyRateCents
+        mRentalTerms
+      currency = ME.marketplaceListingCurrency listing
   pure $ Just MarketplaceItemDTO
     { miListingId      = toPathPiece lid
     , miAssetId        = toPathPiece (ME.marketplaceListingAssetId listing)
@@ -13704,14 +15634,74 @@ toMarketplaceDTO assetsBase (lid, listing, Just asset) = do
     , miPhotoUrl       = mPhoto
     , miStatus         = Just (assetStatusLabel (ME.assetStatus asset))
     , miCondition      = Just (assetConditionLabel (ME.assetCondition asset))
-    , miPriceUsdCents  = ME.marketplaceListingPriceUsdCents listing
+    , miPriceUsdCents  = listedPrice
     , miPriceDisplay   =
         formatUsd
-          (ME.marketplaceListingPriceUsdCents listing)
-          (ME.marketplaceListingCurrency listing)
+          listedPrice
+          currency
     , miMarkupPct      = ME.marketplaceListingMarkupPct listing
-    , miCurrency       = ME.marketplaceListingCurrency listing
+    , miCurrency       = currency
+    , miRentalWeeklyPriceUsdCents = mrtWeeklyRateCents =<< mRentalTerms
+    , miRentalWeeklyPriceDisplay =
+        (\amount -> formatUsd amount currency) <$> (mrtWeeklyRateCents =<< mRentalTerms)
+    , miRentalSecurityDepositUsdCents = mrtSecurityDepositCents <$> mRentalTerms
+    , miRentalSecurityDepositDisplay =
+        (\terms -> formatUsd (mrtSecurityDepositCents terms) currency) <$> mRentalTerms
+    , miRentalMinDays = mrtMinDays <$> mRentalTerms
+    , miRentalMaxDays = mrtMaxDays <$> mRentalTerms
+    , miRentalLateFeeUsdCents = mrtLateFeeCents <$> mRentalTerms
+    , miRentalLateFeeDisplay =
+        (\terms -> formatUsd (mrtLateFeeCents terms) currency) <$> mRentalTerms
+    , miRentalCancellationWindowHours = mrtCancellationWindowHours <$> mRentalTerms
+    , miRentalTermsVersion = mrtTermsVersion <$> mRentalTerms
+    , miRentalTermsSummary = mrtTermsSummary <$> mRentalTerms
+    , miRentalTimezone = mrtTimezone <$> mRentalTerms
     }
+
+data MarketplaceRentalTerms = MarketplaceRentalTerms
+  { mrtDailyRateCents :: Int
+  , mrtWeeklyRateCents :: Maybe Int
+  , mrtSecurityDepositCents :: Int
+  , mrtLateFeeCents :: Int
+  , mrtMinDays :: Int
+  , mrtMaxDays :: Int
+  , mrtCancellationWindowHours :: Int
+  , mrtTimezone :: Text
+  , mrtTermsVersion :: Text
+  , mrtTermsSummary :: Text
+  } deriving (Eq, Show)
+
+loadActiveMarketplaceRentalTerms
+  :: Key ME.MarketplaceListing
+  -> SqlPersistT IO (Maybe MarketplaceRentalTerms)
+loadActiveMarketplaceRentalTerms listingKey = do
+  rows <- (rawSql
+    "SELECT daily_rate_usd_cents, weekly_rate_usd_cents, security_deposit_usd_cents,\
+    \ late_fee_usd_cents, min_days, max_days, cancellation_window_hours, timezone, terms_version, terms_summary\
+    \ FROM marketplace_rental_listing_terms\
+    \ WHERE listing_id = ?::uuid AND active AND approved_at IS NOT NULL"
+    [PersistText (toPathPiece listingKey)]
+    :: SqlPersistT IO
+      [( Single Int64, Single (Maybe Int64), Single Int64, Single Int64
+       , Single Int, Single Int, Single Int, Single Text, Single Text, Single Text
+       )])
+  pure $ case rows of
+    [( Single dailyRate, Single weeklyRate, Single securityDeposit, Single lateFee
+     , Single minDays, Single maxDays, Single cancellationWindowHours, Single timezone, Single termsVersion
+     , Single termsSummary
+     )] -> Just MarketplaceRentalTerms
+        { mrtDailyRateCents = fromIntegral dailyRate
+        , mrtWeeklyRateCents = fromIntegral <$> weeklyRate
+        , mrtSecurityDepositCents = fromIntegral securityDeposit
+        , mrtLateFeeCents = fromIntegral lateFee
+        , mrtMinDays = minDays
+        , mrtMaxDays = maxDays
+        , mrtCancellationWindowHours = cancellationWindowHours
+        , mrtTimezone = timezone
+        , mrtTermsVersion = termsVersion
+        , mrtTermsSummary = termsSummary
+        }
+    _ -> Nothing
 
 resolveMarketplacePhotoUrl :: Text -> Maybe Text -> IO (Maybe Text)
 resolveMarketplacePhotoUrl _ Nothing = pure Nothing
@@ -13770,103 +15760,812 @@ upsertCartItem rawId MarketplaceCartItemUpdate{..} = do
         pure (Left marketplaceCartNotFound)
       (_, Nothing) ->
         pure (Left marketplaceListingNotFound)
-      (Just _, Just listing) ->
+      (Just _, Just listing) -> do
+        let purpose = T.toLower (T.strip (ME.marketplaceListingPurpose listing))
         case validateMarketplacePublicListingActive (ME.marketplaceListingActive listing) of
           Left serverErr -> pure (Left serverErr)
+          Right () | mciuQuantity > 1 ->
+            pure (Left err409
+              { errBody = "Each physical marketplace asset can only be added once"
+              })
+          Right () | purpose `notElem` ["sale", "rent"] ->
+            pure (Left err409 { errBody = "Marketplace listing purpose is not supported" })
           Right () -> do
-            existing <-
-              selectFirst
-                [ ME.MarketplaceCartItemCartId ==. cartKey
-                , ME.MarketplaceCartItemListingId ==. listingKey
-                ]
-                []
-            case existing of
-              Nothing ->
-                if mciuQuantity == 0
-                  then pure ()
-                  else void $ insert ME.MarketplaceCartItem
-                         { ME.marketplaceCartItemCartId = cartKey
-                         , ME.marketplaceCartItemListingId = listingKey
-                         , ME.marketplaceCartItemQuantity = mciuQuantity
-                         }
-              Just (Entity itemId _) ->
-                if mciuQuantity == 0
-                  then delete itemId
-                  else update itemId [ME.MarketplaceCartItemQuantity =. mciuQuantity]
-            update cartKey [ME.MarketplaceCartUpdatedAt =. now]
-            maybe (Left marketplaceCartNotFound) Right <$> loadCartDTO (defaultCurrency envConfig) cartKey
+            existingCartItems <- selectList
+              [ME.MarketplaceCartItemCartId ==. cartKey] [Asc ME.MarketplaceCartItemId]
+            existingPurposes <- forM existingCartItems $ \(Entity itemId cartItem) -> do
+              existingListing <- getJust (ME.marketplaceCartItemListingId cartItem)
+              pure (itemId, T.toLower (T.strip (ME.marketplaceListingPurpose existingListing)))
+            let otherPurposes =
+                  [ existingPurpose
+                  | (itemId, existingPurpose) <- existingPurposes
+                  , Just (Entity currentItemId _) <-
+                      [find (\(Entity _ item) -> ME.marketplaceCartItemListingId item == listingKey) existingCartItems]
+                  , itemId /= currentItemId
+                  ]
+                  <> if any (\(Entity _ item) -> ME.marketplaceCartItemListingId item == listingKey) existingCartItems
+                       then []
+                       else map snd existingPurposes
+                mixedPurpose = any (/= purpose) otherPurposes
+                rentalHasOtherAsset = purpose == "rent" && not (null otherPurposes)
+            if mciuQuantity > 0 && (mixedPurpose || rentalHasOtherAsset)
+              then pure (Left err409
+                { errBody = "Sales and rentals use separate carts; each rental checkout contains one asset"
+                })
+              else do
+                selectionResult <- if mciuQuantity == 0
+                  then pure (Right Nothing)
+                  else validateMarketplaceCartSelection
+                    (utctDay now) listingKey listing mciuRentalStartDate mciuRentalEndDate
+                case selectionResult of
+                  Left serverErr -> pure (Left serverErr)
+                  Right selection -> do
+                    let existing = find
+                          (\(Entity _ item) -> ME.marketplaceCartItemListingId item == listingKey)
+                          existingCartItems
+                    storedItemId <- case existing of
+                      Nothing ->
+                        if mciuQuantity == 0
+                          then pure Nothing
+                          else Just <$> insert ME.MarketplaceCartItem
+                                 { ME.marketplaceCartItemCartId = cartKey
+                                 , ME.marketplaceCartItemListingId = listingKey
+                                 , ME.marketplaceCartItemQuantity = mciuQuantity
+                                 }
+                      Just (Entity itemId _) ->
+                        if mciuQuantity == 0
+                          then delete itemId >> pure Nothing
+                          else update itemId [ME.MarketplaceCartItemQuantity =. mciuQuantity]
+                                >> pure (Just itemId)
+                    case (storedItemId, selection) of
+                      (Just itemId, Just (startDate, endDate, durationDays)) ->
+                        rawExecute
+                          "INSERT INTO marketplace_rental_cart_selection(\
+                          \ cart_item_id, start_date, end_date, duration_days\
+                          \) VALUES (?::uuid, ?, ?, ?)\
+                          \ ON CONFLICT (cart_item_id) DO UPDATE SET\
+                          \ start_date = EXCLUDED.start_date, end_date = EXCLUDED.end_date,\
+                          \ duration_days = EXCLUDED.duration_days, updated_at = NOW()"
+                          [ PersistText (toPathPiece itemId)
+                          , PersistDay startDate
+                          , PersistDay endDate
+                          , PersistInt64 (fromIntegral durationDays)
+                          ]
+                      (Just itemId, Nothing) -> rawExecute
+                        "DELETE FROM marketplace_rental_cart_selection WHERE cart_item_id = ?::uuid"
+                        [PersistText (toPathPiece itemId)]
+                      _ -> pure ()
+                    update cartKey [ME.MarketplaceCartUpdatedAt =. now]
+                    maybe (Left marketplaceCartNotFound) Right
+                      <$> loadCartDTO (defaultCurrency envConfig) cartKey
   either throwError pure result
 
-checkoutCart :: Text -> MarketplaceCheckoutReq -> AppM MarketplaceOrderDTO
-checkoutCart rawId MarketplaceCheckoutReq{..} = do
+validateMarketplaceCartSelection
+  :: Day
+  -> Key ME.MarketplaceListing
+  -> ME.MarketplaceListing
+  -> Maybe Day
+  -> Maybe Day
+  -> SqlPersistT IO (Either ServerError (Maybe (Day, Day, Int)))
+validateMarketplaceCartSelection today listingKey listing mStartDate mEndDate =
+  case T.toLower (T.strip (ME.marketplaceListingPurpose listing)) of
+    "sale" -> pure $ case (mStartDate, mEndDate) of
+      (Nothing, Nothing) -> Right Nothing
+      _ -> Left err400 { errBody = "Sale cart items must not include rental dates" }
+    "rent" -> case (mStartDate, mEndDate) of
+      (Just startDate, Just endDate)
+        | startDate < today -> pure (Left err400
+            { errBody = "Rental start date must not be in the past" })
+        | otherwise -> case MarketplaceRentals.rentalDurationDays startDate endDate of
+            Left message -> pure (Left (marketplaceCheckoutBadRequest message))
+            Right durationDays -> do
+              mTerms <- loadActiveMarketplaceRentalTerms listingKey
+              case mTerms of
+                Nothing -> pure (Left err409
+                  { errBody = "This rental listing does not have approved active terms" })
+                Just terms ->
+                  case MarketplaceRentals.calculateRentalPrice
+                    (mrtDailyRateCents terms)
+                    (mrtWeeklyRateCents terms)
+                    (mrtSecurityDepositCents terms)
+                    (mrtMinDays terms)
+                    (mrtMaxDays terms)
+                    durationDays of
+                      Left message -> pure (Left (marketplaceCheckoutBadRequest message))
+                      Right _ -> do
+                        overlap <- (rawSql
+                          "SELECT 1::bigint FROM marketplace_rental_order_runtime\
+                          \ WHERE listing_id = ?::uuid\
+                          \ AND rental_status IN ('on_hold','confirmed','ready_for_handoff',\
+                          \ 'checked_out','return_due','returned_pending_inspection','damage_review',\
+                          \ 'deposit_refund_due','lost','disputed')\
+                          \ AND daterange(start_date, end_date, '[]') && daterange(?::date, ?::date, '[]')\
+                          \ LIMIT 1"
+                          [ PersistText (toPathPiece listingKey)
+                          , PersistDay startDate
+                          , PersistDay endDate
+                          ] :: SqlPersistT IO [Single Int64])
+                        pure $ if null overlap
+                          then Right (Just (startDate, endDate, durationDays))
+                          else Left err409
+                            { errBody = "The rental asset is not available for the selected dates" }
+      _ -> pure (Left err400
+        { errBody = "Rental cart items require both start and end dates" })
+    _ -> pure (Left err409 { errBody = "Marketplace listing purpose is not supported" })
+
+data MarketplaceSaleCheckoutContext = MarketplaceSaleCheckoutContext
+  { msccOrderKey :: Key ME.MarketplaceOrder
+  , msccCheckout :: Checkout.CheckoutReference
+  , msccEnvironment :: Checkout.CheckoutEnvironment
+  , msccLookupToken :: Text
+  , msccIdempotencyKey :: Text
+  , msccCreated :: Bool
+  , msccTotalCents :: Int
+  , msccCurrency :: Text
+  , msccOrderKind :: Text
+  }
+
+checkoutCart :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM MarketplaceOrderDTO
+checkoutCart rawId mIdempotency payload = do
+  context <- prepareMarketplaceSaleCheckout "bank_transfer" rawId mIdempotency payload
+  now <- liftIO getCurrentTime
+  Env{ envPool } <- ask
+  providerEnabled <- liftIO $ flip runSqlPool envPool $
+    Checkout.providerEnabledForEnvironment
+      (msccEnvironment context) Checkout.ProviderBankTransfer
+  unless providerEnabled $
+    throwError err503
+      { errBody = "Bank transfer checkout is disabled in this environment" }
+  attemptResult <- liftIO $ flip runSqlPool envPool $
+    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+        { Checkout.pacCheckout = msccCheckout context
+        , Checkout.pacProvider = Checkout.ProviderBankTransfer
+        , Checkout.pacEnvironment = msccEnvironment context
+        , Checkout.pacOperation = Checkout.OperationManualVerify
+        , Checkout.pacAmountMinor = fromIntegral (msccTotalCents context)
+        , Checkout.pacCurrency = msccCurrency context
+        , Checkout.pacMerchantRef = "tdf-marketplace-manual"
+        , Checkout.pacIdempotencyKey = msccIdempotencyKey context
+        , Checkout.pacCreatedAt = now
+        , Checkout.pacCorrelationId = "marketplace-manual:" <> toPathPiece (msccOrderKey context)
+        }
+  attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
+  liftIO $ flip runSqlPool envPool $ do
+    Checkout.recordManualPaymentSelection
+      (msccCheckout context)
+      attempt
+      Checkout.ProviderBankTransfer
+      ("marketplace-manual:" <> toPathPiece (msccOrderKey context))
+      now
+    update (msccOrderKey context)
+      [ ME.MarketplaceOrderStatus =. "awaiting_manual_confirmation"
+      , ME.MarketplaceOrderPaymentProvider =. Just "bank_transfer"
+      , ME.MarketplaceOrderUpdatedAt =. now
+      ]
+  orderDto <- loadMarketplaceOrderWithLookup context
+  when (msccCreated context) $ sendMarketplaceOrderCreatedEmail orderDto
+  pure orderDto
+
+prepareMarketplaceSaleCheckout
+  :: Text
+  -> Text
+  -> Maybe Text
+  -> MarketplaceCheckoutReq
+  -> AppM MarketplaceSaleCheckoutContext
+prepareMarketplaceSaleCheckout provider rawCartId mIdempotency payload@MarketplaceCheckoutReq{..} = do
+  idempotencyKey <- either (throwError . marketplaceCheckoutBadRequest) pure
+    (ServiceStorefront.validateIdempotencyKey mIdempotency)
   buyerNameTxt <- either throwError pure (validateMarketplaceBuyerName mcrBuyerName)
   buyerEmailTxt <- either throwError pure (validateMarketplaceBuyerEmail mcrBuyerEmail)
   buyerPhoneTxt <- either throwError pure (validateMarketplaceBuyerPhone mcrBuyerPhone)
-  cartKey <- parseCartId rawId
+  cartKey <- parseCartId rawCartId
+  method <- either (throwError . marketplaceCheckoutBadRequest) pure $
+    MarketplaceSales.parseMarketplaceFulfillmentMethod
+      (fromMaybe "pickup" mcrFulfillmentMethod)
+  validateMarketplaceShippingAddress method mcrShippingAddress
+  checkoutEnvironment <- loadMarketplaceCheckoutEnvironment
   now <- liftIO getCurrentTime
+  let holdExpiresAt = addUTCTime (15 * 60) now
+      cartIdText = toPathPiece cartKey
+      methodText = MarketplaceSales.marketplaceFulfillmentMethodText method
+      requestHash = marketplaceSha256Text . TE.decodeUtf8 . BL.toStrict . encode $ object
+        [ "cart_id" .= cartIdText
+        , "buyer_name" .= buyerNameTxt
+        , "buyer_email" .= buyerEmailTxt
+        , "buyer_phone" .= buyerPhoneTxt
+        , "fulfillment_method" .= methodText
+        , "shipping_address" .= mcrShippingAddress
+        , "rental_terms_accepted" .= mcrRentalTermsAccepted
+        , "identity_document_type" .= (T.toLower . T.strip <$> mcrIdentityDocumentType)
+        -- The full document number is validated and then discarded.  Binding
+        -- idempotency to the type and last four characters avoids retaining a
+        -- cheaply reversible hash of a low-entropy government identifier.
+        , "identity_document_last4" .=
+            (T.takeEnd 4 . T.toUpper . T.filter isAlphaNum <$> mcrIdentityDocumentNumber)
+        ]
+      lookupToken = marketplaceSha256Text
+        ("marketplace-order-lookup:" <> idempotencyKey <> ":" <> cartIdText)
+      lookupHash = marketplaceSha256Text lookupToken
   Env{ envPool } <- ask
-  cartTotalsState <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
-  (cartItems, totalCents, currency) <-
-    either throwError pure (requireMarketplaceCartTotals cartTotalsState)
-  mOrder <- liftIO $ flip runSqlPool envPool $ do
-    let statusTxt = if totalCents > 0 then "pending" else "contact"
-    orderId <- insert ME.MarketplaceOrder
-      { ME.marketplaceOrderCartId        = Just cartKey
-      , ME.marketplaceOrderBuyerName     = buyerNameTxt
-      , ME.marketplaceOrderBuyerEmail    = buyerEmailTxt
-      , ME.marketplaceOrderBuyerPhone    = buyerPhoneTxt
-      , ME.marketplaceOrderTotalUsdCents = totalCents
-      , ME.marketplaceOrderCurrency      = currency
-      , ME.marketplaceOrderStatus        = statusTxt
-      , ME.marketplaceOrderPaymentProvider = Nothing
-      , ME.marketplaceOrderStripePaymentIntentId = Nothing
-      , ME.marketplaceOrderStripeIdempotencyKey = Nothing
-      , ME.marketplaceOrderPaypalOrderId = Nothing
-      , ME.marketplaceOrderPaypalPayerEmail = Nothing
-      , ME.marketplaceOrderDatafastCheckoutId = Nothing
-      , ME.marketplaceOrderDatafastResourcePath = Nothing
-      , ME.marketplaceOrderDatafastPaymentId = Nothing
-      , ME.marketplaceOrderDatafastResultCode = Nothing
-      , ME.marketplaceOrderDatafastResultDescription = Nothing
-      , ME.marketplaceOrderDatafastPaymentBrand = Nothing
-      , ME.marketplaceOrderDatafastAuthCode = Nothing
-      , ME.marketplaceOrderDatafastAcquirerCode = Nothing
-      , ME.marketplaceOrderPaidAt        = Nothing
-      , ME.marketplaceOrderCreatedAt     = now
-      , ME.marketplaceOrderUpdatedAt     = now
+  result <- liftIO $ flip runSqlPool envPool $ do
+    _ <- (rawSql
+      "SELECT 1::bigint FROM (SELECT pg_advisory_xact_lock(hashtextextended(?, 0))) locked"
+      [PersistText ("marketplace-sale:" <> idempotencyKey)]
+      :: SqlPersistT IO [Single Int64])
+    existingRows <- (rawSql
+      "SELECT order_id::text, checkout_id::text, create_request_sha256, order_kind\
+      \ FROM marketplace_order_checkout_runtime WHERE create_idempotency_key = ?"
+      [PersistText idempotencyKey]
+      :: SqlPersistT IO [(Single Text, Single Text, Single Text, Single Text)])
+    case existingRows of
+      [(Single orderIdText, Single checkoutId, Single storedRequestHash, Single orderKind)]
+        | storedRequestHash /= requestHash ->
+            pure (Left (marketplaceCheckoutConflict
+              "Idempotency key was already used for a different marketplace checkout"))
+        | otherwise ->
+            case fromPathPiece orderIdText of
+              Nothing -> pure (Left (marketplaceCheckoutInternal
+                "Stored marketplace runtime has an invalid order reference"))
+              Just orderKey -> do
+                mOrder <- get orderKey
+                storedEnvironment <- Checkout.loadCheckoutEnvironment
+                  (Checkout.CheckoutReference checkoutId)
+                case (mOrder, storedEnvironment) of
+                  (_, Left _) -> pure (Left (marketplaceCheckoutInternal
+                    "Stored marketplace checkout environment is invalid"))
+                  (_, Right environment) | environment /= checkoutEnvironment ->
+                    pure (Left (marketplaceCheckoutConflict
+                      "Checkout environment changed; the existing order must be reconciled"))
+                  (Nothing, _) -> pure (Left (marketplaceCheckoutInternal
+                    "Stored marketplace runtime order is missing"))
+                  (Just order, Right environment) -> pure (Right MarketplaceSaleCheckoutContext
+                    { msccOrderKey = orderKey
+                    , msccCheckout = Checkout.CheckoutReference checkoutId
+                    , msccEnvironment = environment
+                    , msccLookupToken = lookupToken
+                    , msccIdempotencyKey = idempotencyKey
+                    , msccCreated = False
+                    , msccTotalCents = ME.marketplaceOrderTotalUsdCents order
+                    , msccCurrency = ME.marketplaceOrderCurrency order
+                    , msccOrderKind = orderKind
+                    })
+      [] -> createMarketplaceCheckout
+        checkoutEnvironment
+        now
+        holdExpiresAt
+        idempotencyKey
+        requestHash
+        lookupToken
+        lookupHash
+        methodText
+        buyerNameTxt
+        buyerEmailTxt
+        buyerPhoneTxt
+        cartKey
+        payload
+      _ -> pure (Left (marketplaceCheckoutInternal
+        "Marketplace idempotency lookup was ambiguous"))
+  context <- either throwError pure result
+  ensureMarketplacePaymentRailAvailable provider context
+  pure context
+
+ensureMarketplacePaymentRailAvailable :: Text -> MarketplaceSaleCheckoutContext -> AppM ()
+ensureMarketplacePaymentRailAvailable rawProvider context = do
+  let provider = T.toLower (T.strip rawProvider)
+      checkoutId = Checkout.checkoutReferenceId (msccCheckout context)
+  conflicts <- runDB $ case provider of
+    "bank_transfer" -> rawSql
+      "SELECT 1::bigint FROM commerce_payment_attempt\
+      \ WHERE checkout_id = ?::uuid\
+      \ AND provider IN ('datafast','paypal','stripe')\
+      \ AND status IN ('requires_customer_action','processing') LIMIT 1"
+      [PersistText checkoutId]
+    "datafast" -> manualConflict checkoutId
+    "paypal" -> manualConflict checkoutId
+    _ -> pure []
+  unless (null (conflicts :: [Single Int64])) $
+    throwError err409
+      { errBody = if provider == "bank_transfer"
+          then "An online payment is awaiting customer action or processing; verify it before selecting bank transfer"
+          else "Manual payment evidence is under review; resolve it before starting an online payment"
       }
-    forM_ cartItems $ \(_, listingEnt, _, qty) -> do
-      let listing   = entityVal listingEnt
-          unitPrice = ME.marketplaceListingPriceUsdCents listing
-          subtotal  = unitPrice * qty
-      void $ insert ME.MarketplaceOrderItem
-        { ME.marketplaceOrderItemOrderId           = orderId
-        , ME.marketplaceOrderItemListingId         = entityKey listingEnt
-        , ME.marketplaceOrderItemQuantity          = qty
-        , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
-        , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
-        }
-    loadOrderDTO orderId
+  where
+    manualConflict checkoutId = rawSql
+      "SELECT 1::bigint FROM commerce_manual_payment_evidence\
+      \ WHERE checkout_id = ?::uuid\
+      \ AND status IN ('submitted','under_review','approved') LIMIT 1"
+      [PersistText checkoutId]
+
+createMarketplaceCheckout
+  :: Checkout.CheckoutEnvironment
+  -> UTCTime
+  -> UTCTime
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> Key ME.MarketplaceCart
+  -> MarketplaceCheckoutReq
+  -> SqlPersistT IO (Either ServerError MarketplaceSaleCheckoutContext)
+createMarketplaceCheckout checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupToken lookupHash methodText buyerNameTxt buyerEmailTxt buyerPhoneTxt cartKey payload = do
+      _ <- (rawSql "SELECT marketplace_expire_sale_holds(?)"
+        [PersistUTCTime now] :: SqlPersistT IO [Single Int])
+      _ <- (rawSql
+        "SELECT asset.id::text FROM marketplace_cart cart\
+        \ JOIN marketplace_cart_item item ON item.cart_id = cart.id\
+        \ JOIN marketplace_listing listing ON listing.id = item.listing_id\
+        \ JOIN asset ON asset.id = listing.asset_id\
+        \ WHERE cart.id = ?::uuid FOR UPDATE OF cart, item, listing, asset"
+        [PersistText (toPathPiece cartKey)] :: SqlPersistT IO [Single Text])
+      cartTotalsState <- loadCartTotals cartKey
+      case requireMarketplaceCartTotals cartTotalsState of
+        Left serverErr -> pure (Left serverErr)
+        Right (cartItems, totalCentsRaw, currency) -> do
+          case resolveMarketplaceCartKind cartItems of
+            Left serverErr -> pure (Left serverErr)
+            Right orderKind -> do
+              let domainFlag = case orderKind of
+                    MarketplaceCartSale -> "marketplace_sales"
+                    MarketplaceCartRental -> "marketplace_rentals"
+                  domainType = case orderKind of
+                    MarketplaceCartSale -> "marketplace_sale"
+                    MarketplaceCartRental -> "marketplace_rental"
+                  orderKindText = case orderKind of
+                    MarketplaceCartSale -> "sale"
+                    MarketplaceCartRental -> "rental"
+              domainEnabled <- Checkout.domainEnabledForEnvironment checkoutEnvironment domainFlag
+              if not domainEnabled
+                then pure (Left err503
+                  { errBody = BL.fromStrict . TE.encodeUtf8 $
+                      "Marketplace " <> orderKindText <> " checkout is disabled in this environment"
+                  })
+                else case validateMarketplaceCartForCheckout (utctDay now) orderKind payload cartItems of
+                  Left serverErr -> pure (Left serverErr)
+                  Right () -> do
+                    availability <- validateMarketplaceRentalAvailability orderKind cartItems
+                    case availability of
+                      Left serverErr -> pure (Left serverErr)
+                      Right () -> do {
+              case validateMarketplaceOnlinePaymentTotal totalCentsRaw of
+                Left serverErr -> pure (Left serverErr)
+                Right totalCents -> do
+                  let orderRecord = ME.MarketplaceOrder
+                        { ME.marketplaceOrderCartId = Just cartKey
+                        , ME.marketplaceOrderBuyerName = buyerNameTxt
+                        , ME.marketplaceOrderBuyerEmail = buyerEmailTxt
+                        , ME.marketplaceOrderBuyerPhone = buyerPhoneTxt
+                        , ME.marketplaceOrderTotalUsdCents = totalCents
+                        , ME.marketplaceOrderCurrency = currency
+                        , ME.marketplaceOrderStatus = "awaiting_payment"
+                        , ME.marketplaceOrderPaymentProvider = Nothing
+                        , ME.marketplaceOrderStripePaymentIntentId = Nothing
+                        , ME.marketplaceOrderStripeIdempotencyKey = Nothing
+                        , ME.marketplaceOrderPaypalOrderId = Nothing
+                        , ME.marketplaceOrderPaypalPayerEmail = Nothing
+                        , ME.marketplaceOrderDatafastCheckoutId = Nothing
+                        , ME.marketplaceOrderDatafastResourcePath = Nothing
+                        , ME.marketplaceOrderDatafastPaymentId = Nothing
+                        , ME.marketplaceOrderDatafastResultCode = Nothing
+                        , ME.marketplaceOrderDatafastResultDescription = Nothing
+                        , ME.marketplaceOrderDatafastPaymentBrand = Nothing
+                        , ME.marketplaceOrderDatafastAuthCode = Nothing
+                        , ME.marketplaceOrderDatafastAcquirerCode = Nothing
+                        , ME.marketplaceOrderPaidAt = Nothing
+                        , ME.marketplaceOrderCreatedAt = now
+                        , ME.marketplaceOrderUpdatedAt = now
+                        }
+                  orderKey <- insert orderRecord
+                  forM_ cartItems $ \line -> do
+                    let listingEnt = mclListing line
+                        unitPrice = mclUnitPriceCents line
+                    void $ insert ME.MarketplaceOrderItem
+                      { ME.marketplaceOrderItemOrderId = orderKey
+                      , ME.marketplaceOrderItemListingId = entityKey listingEnt
+                      , ME.marketplaceOrderItemQuantity = mclQuantity line
+                      , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
+                      , ME.marketplaceOrderItemSubtotalUsdCents = mclSubtotalCents line
+                      }
+                  let checkoutSnapshot = object
+                        [ "domain" .= domainType
+                        , "order_id" .= toPathPiece orderKey
+                        , "cart_id" .= toPathPiece cartKey
+                        , "currency" .= currency
+                        , "total_minor" .= totalCents
+                        , "fulfillment_method" .= methodText
+                        , "shipping_address" .= mcrShippingAddress payload
+                        ]
+                      checkoutLines = map marketplaceCheckoutLine cartItems
+                  checkout <- Checkout.createCheckoutWithLines Checkout.CheckoutCreation
+                    { Checkout.ccDomainType = domainType
+                    , Checkout.ccDomainOrderId = toPathPiece orderKey
+                    , Checkout.ccEnvironment = checkoutEnvironment
+                    , Checkout.ccCurrency = currency
+                    , Checkout.ccAmountMinor = fromIntegral totalCents
+                    , Checkout.ccCustomerEmail = buyerEmailTxt
+                    , Checkout.ccLookupTokenHash = lookupHash
+                    , Checkout.ccIdempotencyKey = idempotencyKey
+                    , Checkout.ccExpiresAt = holdExpiresAt
+                    , Checkout.ccProductType = "marketplace_cart"
+                    , Checkout.ccProductId = toPathPiece cartKey
+                    , Checkout.ccProductVersion = T.pack
+                        (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S%QZ" now)
+                    , Checkout.ccDescription = case orderKind of
+                        MarketplaceCartSale -> "TDF equipment sale"
+                        MarketplaceCartRental -> "TDF equipment rental"
+                    , Checkout.ccSnapshot = checkoutSnapshot
+                    , Checkout.ccCorrelationId = "marketplace-order:" <> toPathPiece orderKey
+                    } checkoutLines
+                  case orderKind of
+                    MarketplaceCartSale -> insertMarketplaceRuntime
+                      orderKey checkout lookupHash idempotencyKey requestHash methodText
+                      buyerNameTxt buyerPhoneTxt holdExpiresAt (mcrShippingAddress payload)
+                    MarketplaceCartRental -> insertMarketplaceRentalRuntime
+                      orderKey checkout lookupHash idempotencyKey requestHash methodText
+                      buyerNameTxt buyerPhoneTxt holdExpiresAt (mcrShippingAddress payload)
+                      payload cartItems
+                  forM_ cartItems $ \line ->
+                    rawExecute
+                      "INSERT INTO commerce_reservation_hold(\
+                      \ checkout_id, resource_type, resource_id, quantity, status, expires_at\
+                      \) VALUES (?::uuid, ?, ?, 1, 'active', ?)"
+                      [ PersistText (Checkout.checkoutReferenceId checkout)
+                      , PersistText (case orderKind of
+                          MarketplaceCartSale -> "marketplace_asset_sale"
+                          MarketplaceCartRental -> "marketplace_asset_rental")
+                      , PersistText (toPathPiece (entityKey (mclAsset line)))
+                      , PersistUTCTime holdExpiresAt
+                      ]
+                  pure (Right MarketplaceSaleCheckoutContext
+                    { msccOrderKey = orderKey
+                    , msccCheckout = checkout
+                    , msccEnvironment = checkoutEnvironment
+                    , msccLookupToken = lookupToken
+                    , msccIdempotencyKey = idempotencyKey
+                    , msccCreated = True
+                    , msccTotalCents = totalCents
+                    , msccCurrency = currency
+                    , msccOrderKind = orderKindText
+                    })
+              }
+
+marketplaceCheckoutLine
+  :: MarketplaceCartLine
+  -> Checkout.CheckoutLineCreation
+marketplaceCheckoutLine line =
+  let listing = entityVal listingEnt
+      asset = entityVal assetEnt
+      listingEnt = mclListing line
+      assetEnt = mclAsset line
+      quantity = mclQuantity line
+      mBreakdown = mclRentalBreakdown line
+      mTerms = mclRentalTerms line
+  in Checkout.CheckoutLineCreation
+      { Checkout.clProductType = if mclPurpose line == "rent"
+          then "marketplace_rental_asset" else "marketplace_asset"
+      , Checkout.clProductId = toPathPiece (entityKey assetEnt)
+      , Checkout.clProductVersion = T.pack
+          (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S%QZ"
+            (ME.marketplaceListingUpdatedAt listing))
+      , Checkout.clDescription = ME.marketplaceListingTitle listing
+      , Checkout.clQuantity = quantity
+      , Checkout.clUnitAmountMinor = fromIntegral (mclSubtotalCents line)
+      , Checkout.clSnapshot = object
+          [ "listing_id" .= toPathPiece (entityKey listingEnt)
+          , "asset_id" .= toPathPiece (entityKey assetEnt)
+          , "title" .= ME.marketplaceListingTitle listing
+          , "purpose" .= ME.marketplaceListingPurpose listing
+          , "asset_category" .= ME.assetCategory asset
+          , "asset_brand" .= ME.assetBrand asset
+          , "asset_model" .= ME.assetModel asset
+          , "daily_rate_minor" .= mclUnitPriceCents line
+          , "line_total_minor" .= mclSubtotalCents line
+          , "currency" .= ME.marketplaceListingCurrency listing
+          , "rental_start_date" .= mclRentalStartDate line
+          , "rental_end_date" .= mclRentalEndDate line
+          , "rental_duration_days" .= (MarketplaceRentals.rpbDurationDays <$> mBreakdown)
+          , "rental_charge_minor" .= (MarketplaceRentals.rpbRentalChargeMinor <$> mBreakdown)
+          , "security_deposit_minor" .= (MarketplaceRentals.rpbSecurityDepositMinor <$> mBreakdown)
+          , "rental_terms_version" .= (mrtTermsVersion <$> mTerms)
+          , "rental_timezone" .= (mrtTimezone <$> mTerms)
+          ]
+      }
+
+insertMarketplaceRuntime
+  :: Key ME.MarketplaceOrder
+  -> Checkout.CheckoutReference
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> UTCTime
+  -> Maybe MarketplaceShippingAddress
+  -> SqlPersistT IO ()
+insertMarketplaceRuntime orderKey checkout lookupHash idempotencyKey requestHash methodText recipientName recipientPhone holdExpiresAt mAddress = do
+  rawExecute
+    "INSERT INTO marketplace_sale_order_runtime(\
+    \ order_id, checkout_id, lookup_token_hash, create_idempotency_key,\
+    \ create_request_sha256, fulfillment_method, fulfillment_status, recipient_name,\
+    \ recipient_phone, address_line_1, address_line_2, city, province, postal_code,\
+    \ country_code, hold_expires_at\
+    \) VALUES (?::uuid, ?::uuid, ?, ?, ?, ?, 'on_hold', ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    [ PersistText (toPathPiece orderKey)
+    , PersistText (Checkout.checkoutReferenceId checkout)
+    , PersistText lookupHash
+    , PersistText idempotencyKey
+    , PersistText requestHash
+    , PersistText methodText
+    , PersistText recipientName
+    , maybe PersistNull PersistText recipientPhone
+    , maybe PersistNull (PersistText . msaAddressLine1) mAddress
+    , maybe PersistNull (maybe PersistNull PersistText . msaAddressLine2) mAddress
+    , maybe PersistNull (PersistText . msaCity) mAddress
+    , maybe PersistNull (PersistText . msaProvince) mAddress
+    , maybe PersistNull (maybe PersistNull PersistText . msaPostalCode) mAddress
+    , maybe PersistNull (PersistText . msaCountryCode) mAddress
+    , PersistUTCTime holdExpiresAt
+    ]
+  rawExecute
+    "INSERT INTO marketplace_sale_fulfillment_event(\
+    \ order_id, from_status, to_status, actor_type, reason_code, notes\
+    \) VALUES (?::uuid, NULL, 'on_hold', 'system', 'checkout_created',\
+    \ 'Asset hold created; payment and fulfillment remain separate')"
+    [PersistText (toPathPiece orderKey)]
+
+data MarketplaceCartKind = MarketplaceCartSale | MarketplaceCartRental
+  deriving (Eq, Show)
+
+resolveMarketplaceCartKind :: [MarketplaceCartLine] -> Either ServerError MarketplaceCartKind
+resolveMarketplaceCartKind cartItems =
+  case nub (map mclPurpose cartItems) of
+    ["sale"] -> Right MarketplaceCartSale
+    ["rent"]
+      | length cartItems == 1 -> Right MarketplaceCartRental
+      | otherwise -> Left err409
+          { errBody = "Each rental checkout must contain exactly one physical asset" }
+    [_] -> Left err409 { errBody = "Marketplace cart purpose is not supported" }
+    _ -> Left err409 { errBody = "Sales and rentals must use separate carts" }
+
+validateMarketplaceCartForCheckout
+  :: Day
+  -> MarketplaceCartKind
+  -> MarketplaceCheckoutReq
+  -> [MarketplaceCartLine]
+  -> Either ServerError ()
+validateMarketplaceCartForCheckout today orderKind payload cartItems = do
+  forM_ cartItems $ \line -> do
+    let listing = entityVal (mclListing line)
+        asset = entityVal (mclAsset line)
+    unless (ME.marketplaceListingActive listing) (Left marketplaceListingNotFound)
+    unless (mclQuantity line == 1) $ Left err409
+      { errBody = "Each physical marketplace asset can only appear once" }
+    case orderKind of
+      MarketplaceCartSale -> do
+        unless (mclPurpose line == "sale") $ Left err409
+          { errBody = "Rental listings require the dedicated dated rental checkout" }
+        unless (ME.assetStatus asset == ME.Active) $ Left err409
+          { errBody = "A marketplace asset is no longer available for sale" }
+      MarketplaceCartRental -> do
+        unless (mclPurpose line == "rent") $ Left err409
+          { errBody = "A rental checkout cannot contain sale listings" }
+        unless (ME.assetStatus asset `elem` [ME.Active, ME.Booked]) $ Left err409
+          { errBody = "A marketplace asset is unavailable for rental" }
+        startDate <- maybe
+          (Left err409 { errBody = "Rental cart item is missing its start date" })
+          Right
+          (mclRentalStartDate line)
+        when (startDate < today) $ Left err409
+          { errBody = "Rental start date is now in the past; choose new dates" }
+        unless (isJust (mclRentalEndDate line)
+            && isJust (mclRentalBreakdown line)
+            && isJust (mclRentalTerms line)) $
+          Left err409 { errBody = "Rental price or approved terms are incomplete" }
+  case orderKind of
+    MarketplaceCartSale -> when
+      (isJust (mcrRentalTermsAccepted payload)
+        || isJust (mcrIdentityDocumentType payload)
+        || isJust (mcrIdentityDocumentNumber payload)) $
+      Left err400 { errBody = "Sale checkout must not include rental identity or terms fields" }
+    MarketplaceCartRental -> do
+      unless (mcrRentalTermsAccepted payload == Just True) $ Left err400
+        { errBody = "Rental terms must be explicitly accepted" }
+      when (isNothing (mcrBuyerPhone payload)) $ Left err400
+        { errBody = "Rental checkout requires a verified-format contact phone" }
+      void (validateMarketplaceRentalIdentity payload)
+
+validateMarketplaceRentalIdentity
+  :: MarketplaceCheckoutReq
+  -> Either ServerError (Text, Text)
+validateMarketplaceRentalIdentity MarketplaceCheckoutReq{..} = do
+  documentType <- case T.toLower . T.strip <$> mcrIdentityDocumentType of
+    Just value | value `elem` ["cedula", "passport", "ruc"] -> Right value
+    _ -> Left err400 { errBody = "Rental identity document type must be cedula, passport, or ruc" }
+  rawNumber <- maybe
+    (Left err400 { errBody = "Rental identity document number is required" })
+    Right
+    mcrIdentityDocumentNumber
+  let normalizedNumber = T.toUpper (T.strip rawNumber)
+      canonicalNumber = T.filter isAlphaNum normalizedNumber
+      validInputCharacter ch = isAlphaNum ch || ch `elem` ("- ." :: String)
+  unless (T.length canonicalNumber >= 5
+      && T.length canonicalNumber <= 32
+      && T.all validInputCharacter normalizedNumber
+      && T.all isAscii canonicalNumber) $
+    Left err400 { errBody = "Rental identity document number is invalid" }
+  pure (documentType, T.takeEnd 4 canonicalNumber)
+
+validateMarketplaceRentalAvailability
+  :: MarketplaceCartKind
+  -> [MarketplaceCartLine]
+  -> SqlPersistT IO (Either ServerError ())
+validateMarketplaceRentalAvailability MarketplaceCartSale _ = pure (Right ())
+validateMarketplaceRentalAvailability MarketplaceCartRental [line] =
+  case (mclRentalStartDate line, mclRentalEndDate line) of
+    (Just startDate, Just endDate) -> do
+      overlaps <- (rawSql
+        "SELECT 1::bigint FROM marketplace_rental_order_runtime\
+        \ WHERE asset_id = ?::uuid\
+        \ AND rental_status IN ('on_hold','confirmed','ready_for_handoff','checked_out',\
+        \ 'return_due','returned_pending_inspection','damage_review','deposit_refund_due',\
+        \ 'lost','disputed')\
+        \ AND daterange(start_date, end_date, '[]') && daterange(?::date, ?::date, '[]')\
+        \ LIMIT 1"
+        [ PersistText (toPathPiece (entityKey (mclAsset line)))
+        , PersistDay startDate
+        , PersistDay endDate
+        ] :: SqlPersistT IO [Single Int64])
+      pure $ if null overlaps
+        then Right ()
+        else Left err409 { errBody = "The rental asset is already held for the selected dates" }
+    _ -> pure (Left err409 { errBody = "Rental dates are missing" })
+validateMarketplaceRentalAvailability MarketplaceCartRental _ =
+  pure (Left err409 { errBody = "Each rental checkout must contain exactly one asset" })
+
+insertMarketplaceRentalRuntime
+  :: Key ME.MarketplaceOrder
+  -> Checkout.CheckoutReference
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> UTCTime
+  -> Maybe MarketplaceShippingAddress
+  -> MarketplaceCheckoutReq
+  -> [MarketplaceCartLine]
+  -> SqlPersistT IO ()
+insertMarketplaceRentalRuntime orderKey checkout lookupHash idempotencyKey requestHash methodText recipientName recipientPhone holdExpiresAt mAddress payload [line] =
+  case (mclRentalStartDate line, mclRentalEndDate line, mclRentalBreakdown line, mclRentalTerms line) of
+    (Just startDate, Just endDate, Just breakdown, Just terms) -> do
+      (documentType, last4) <-
+        either (liftIO . throwIO) pure (validateMarketplaceRentalIdentity payload)
+      rawExecute
+        "INSERT INTO marketplace_rental_order_runtime(\
+        \ order_id, checkout_id, listing_id, asset_id, lookup_token_hash,\
+        \ create_idempotency_key, create_request_sha256, fulfillment_method,\
+        \ rental_status, deposit_status, start_date, end_date, duration_days, timezone,\
+        \ daily_rate_usd_cents, weekly_rate_usd_cents, rental_charge_usd_cents,\
+        \ security_deposit_usd_cents, late_fee_usd_cents, terms_version, terms_accepted_at,\
+        \ identity_document_type, identity_document_last4,\
+        \ recipient_name, recipient_phone, address_line_1, address_line_2, city, province,\
+        \ postal_code, country_code, hold_expires_at\
+        \) VALUES (?::uuid, ?::uuid, ?::uuid, ?::uuid, ?, ?, ?, ?, 'on_hold',\
+        \ 'awaiting_payment', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        [ PersistText (toPathPiece orderKey)
+        , PersistText (Checkout.checkoutReferenceId checkout)
+        , PersistText (toPathPiece (entityKey (mclListing line)))
+        , PersistText (toPathPiece (entityKey (mclAsset line)))
+        , PersistText lookupHash
+        , PersistText idempotencyKey
+        , PersistText requestHash
+        , PersistText methodText
+        , PersistDay startDate
+        , PersistDay endDate
+        , PersistInt64 (fromIntegral (MarketplaceRentals.rpbDurationDays breakdown))
+        , PersistText (mrtTimezone terms)
+        , PersistInt64 (fromIntegral (mrtDailyRateCents terms))
+        , maybe PersistNull (PersistInt64 . fromIntegral) (mrtWeeklyRateCents terms)
+        , PersistInt64 (fromIntegral (MarketplaceRentals.rpbRentalChargeMinor breakdown))
+        , PersistInt64 (fromIntegral (MarketplaceRentals.rpbSecurityDepositMinor breakdown))
+        , PersistInt64 (fromIntegral (mrtLateFeeCents terms))
+        , PersistText (mrtTermsVersion terms)
+        , PersistText documentType
+        , PersistText last4
+        , PersistText recipientName
+        , maybe PersistNull PersistText recipientPhone
+        , maybe PersistNull (PersistText . msaAddressLine1) mAddress
+        , maybe PersistNull (maybe PersistNull PersistText . msaAddressLine2) mAddress
+        , maybe PersistNull (PersistText . msaCity) mAddress
+        , maybe PersistNull (PersistText . msaProvince) mAddress
+        , maybe PersistNull (maybe PersistNull PersistText . msaPostalCode) mAddress
+        , maybe PersistNull (PersistText . msaCountryCode) mAddress
+        , PersistUTCTime holdExpiresAt
+        ]
+      rawExecute
+        "INSERT INTO marketplace_rental_event(\
+        \ order_id, from_status, to_status, actor_type, reason_code, notes\
+        \) VALUES (?::uuid, NULL, 'on_hold', 'system', 'checkout_created',\
+        \ 'Date-aware asset hold created; payment, custody, and deposit settlement remain separate')"
+        [PersistText (toPathPiece orderKey)]
+    _ -> liftIO $ throwIO (marketplaceCheckoutInternal "Rental checkout snapshot is incomplete")
+insertMarketplaceRentalRuntime _ _ _ _ _ _ _ _ _ _ _ _ =
+  liftIO $ throwIO (marketplaceCheckoutInternal "Rental checkout must contain exactly one asset")
+
+validateMarketplaceShippingAddress
+  :: MarketplaceSales.MarketplaceFulfillmentMethod
+  -> Maybe MarketplaceShippingAddress
+  -> AppM ()
+validateMarketplaceShippingAddress MarketplaceSales.MarketplacePickup _ = pure ()
+validateMarketplaceShippingAddress _ Nothing =
+  throwError err400 { errBody = "Shipping address is required for delivery and shipping" }
+validateMarketplaceShippingAddress _ (Just _) = pure ()
+
+loadMarketplaceCheckoutEnvironment :: AppM Checkout.CheckoutEnvironment
+loadMarketplaceCheckoutEnvironment = do
+  rawEnvironment <- liftIO $ lookupEnv "COMMERCE_CHECKOUT_ENV"
+  either (throwError . marketplaceCheckoutInternal) pure
+    (Checkout.resolveCheckoutEnvironment rawEnvironment)
+
+loadMarketplaceOrderWithLookup
+  :: MarketplaceSaleCheckoutContext
+  -> AppM MarketplaceOrderDTO
+loadMarketplaceOrderWithLookup MarketplaceSaleCheckoutContext{..} = do
+  Env{ envPool } <- ask
+  mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO msccOrderKey
   orderDto <- either throwError pure
-    (requireLoadedMarketplaceWriteResult "Marketplace order" mOrder)
+    (requireLoadedMarketplaceWriteResult "Marketplace order" mDto)
+  pure orderDto { moLookupToken = Just msccLookupToken }
+
+sendMarketplaceOrderCreatedEmail :: MarketplaceOrderDTO -> AppM ()
+sendMarketplaceOrderCreatedEmail orderDto = do
   env <- ask
-  -- fire-and-forget email confirmation
   let emailSvc = EmailSvc.mkEmailService (envConfig env)
-      itemsSummary = map (\oi -> T.pack (show (moiQuantity oi)) <> " × " <> moiTitle oi <> " — " <> moiSubtotalDisplay oi) (moItems orderDto)
+      itemsSummary = map
+        (\oi -> T.pack (show (moiQuantity oi)) <> " × " <> moiTitle oi <> " — " <> moiSubtotalDisplay oi)
+        (moItems orderDto)
   liftIO $ void $ forkIO $ do
     _ <- (try $
       EmailSvc.sendMarketplaceOrder
         emailSvc
-        buyerNameTxt
-        buyerEmailTxt
+        (moBuyerName orderDto)
+        (moBuyerEmail orderDto)
         (moOrderId orderDto)
         (moTotalDisplay orderDto)
         itemsSummary) :: IO (Either SomeException ())
     pure ()
-  pure orderDto
 
-createMarketplaceStripePaymentIntent :: Text -> MarketplaceCheckoutReq -> AppM StripePaymentIntentDTO
-createMarketplaceStripePaymentIntent rawId payload = do
+marketplaceSha256Text :: Text -> Text
+marketplaceSha256Text value =
+  TE.decodeUtf8
+    (BAE.convertToBase BAE.Base16
+      (hash (TE.encodeUtf8 value) :: Digest SHA256))
+
+marketplaceCheckoutBadRequest :: Text -> ServerError
+marketplaceCheckoutBadRequest message =
+  err400 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+marketplaceCheckoutConflict :: Text -> ServerError
+marketplaceCheckoutConflict message =
+  err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+marketplaceCheckoutInternal :: Text -> ServerError
+marketplaceCheckoutInternal message =
+  err500 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+createMarketplaceStripePaymentIntent :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM StripePaymentIntentDTO
+createMarketplaceStripePaymentIntent _ _ _ =
+  throwError err503
+    { errBody = "Stripe marketplace checkout is disabled until it uses the canonical verified-payment runtime; use Datafast or PayPal"
+    }
+
+createLegacyMarketplaceStripePaymentIntent :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM StripePaymentIntentDTO
+createLegacyMarketplaceStripePaymentIntent rawId _ payload = do
   nameTxt <- either throwError pure (validateMarketplaceBuyerName (mcrBuyerName payload))
   emailTxt <- either throwError pure (validateMarketplaceBuyerEmail (mcrBuyerEmail payload))
   phoneTxt <- either throwError pure (validateMarketplaceBuyerPhone (mcrBuyerPhone payload))
@@ -13928,14 +16627,14 @@ createMarketplaceStripePaymentIntent rawId payload = do
                     { ME.marketplaceOrderStripeIdempotencyKey = Just idempotencyKey
                     }
             update oid [ME.MarketplaceOrderStripeIdempotencyKey =. Just idempotencyKey]
-            forM_ cartItems $ \(_, listingEnt, _, qty) -> do
-              let listing   = entityVal listingEnt
-                  unitPrice = ME.marketplaceListingPriceUsdCents listing
-                  subtotal  = unitPrice * qty
+            forM_ cartItems $ \line -> do
+              let listingEnt = mclListing line
+                  unitPrice = mclUnitPriceCents line
+                  subtotal = mclSubtotalCents line
               void $ insert ME.MarketplaceOrderItem
                 { ME.marketplaceOrderItemOrderId           = oid
                 , ME.marketplaceOrderItemListingId         = entityKey listingEnt
-                , ME.marketplaceOrderItemQuantity          = qty
+                , ME.marketplaceOrderItemQuantity          = mclQuantity line
                 , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
                 , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
                 }
@@ -14065,6 +16764,7 @@ createMarketplaceStripePaymentIntent rawId payload = do
     , spiAmountCents = totalCents
     , spiCurrency = currency
     , spiPaymentSheet = Nothing
+    , spiLookupToken = Nothing
     }
 
 isMarketplaceStripeRetryStale :: UTCTime -> UTCTime -> Bool
@@ -14089,79 +16789,98 @@ isMarketplaceActiveStripeOrderConflict exception =
           `BS8.isInfixOf` (sqlErrorMsg sqlErr <> " " <> sqlErrorDetail sqlErr)
     Nothing -> False
 
-createDatafastCheckout :: Text -> MarketplaceCheckoutReq -> AppM DatafastCheckoutDTO
-createDatafastCheckout rawId payload = do
-  nameTxt <- either throwError pure (validateMarketplaceBuyerName (mcrBuyerName payload))
-  emailTxt <- either throwError pure (validateMarketplaceBuyerEmail (mcrBuyerEmail payload))
-  phoneTxt <- either throwError pure (validateMarketplaceBuyerPhone (mcrBuyerPhone payload))
-  cartKey <- parseCartId rawId
+createDatafastCheckout :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM DatafastCheckoutDTO
+createDatafastCheckout rawId mIdempotency payload = do
+  context <- prepareMarketplaceSaleCheckout "datafast" rawId mIdempotency payload
+  dfEnv <- loadDatafastEnv
+  unless (dfEnvironment dfEnv == msccEnvironment context) $
+    throwError err500
+      { errBody = "DATAFAST_ENV must match COMMERCE_CHECKOUT_ENV for marketplace checkout"
+      }
   now <- liftIO getCurrentTime
   Env{ envPool } <- ask
-  cartTotalsState <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
-  (cartItems, totalCentsRaw, currency) <-
-    either throwError pure (requireMarketplaceCartTotals cartTotalsState)
-  totalCents <-
-    either throwError pure (validateMarketplaceOnlinePaymentTotal totalCentsRaw)
-  orderKey <- liftIO $ flip runSqlPool envPool $ do
-    oid <- insert ME.MarketplaceOrder
-      { ME.marketplaceOrderCartId        = Just cartKey
-      , ME.marketplaceOrderBuyerName     = nameTxt
-      , ME.marketplaceOrderBuyerEmail    = emailTxt
-      , ME.marketplaceOrderBuyerPhone    = phoneTxt
-      , ME.marketplaceOrderTotalUsdCents = totalCents
-      , ME.marketplaceOrderCurrency      = currency
-      , ME.marketplaceOrderStatus        = "datafast_init"
-      , ME.marketplaceOrderPaymentProvider = Just "datafast"
-      , ME.marketplaceOrderStripePaymentIntentId = Nothing
-      , ME.marketplaceOrderStripeIdempotencyKey = Nothing
-      , ME.marketplaceOrderPaypalOrderId = Nothing
-      , ME.marketplaceOrderPaypalPayerEmail = Nothing
-      , ME.marketplaceOrderDatafastCheckoutId = Nothing
-      , ME.marketplaceOrderDatafastResourcePath = Nothing
-      , ME.marketplaceOrderDatafastPaymentId = Nothing
-      , ME.marketplaceOrderDatafastResultCode = Nothing
-      , ME.marketplaceOrderDatafastResultDescription = Nothing
-      , ME.marketplaceOrderDatafastPaymentBrand = Nothing
-      , ME.marketplaceOrderDatafastAuthCode = Nothing
-      , ME.marketplaceOrderDatafastAcquirerCode = Nothing
-      , ME.marketplaceOrderPaidAt        = Nothing
-      , ME.marketplaceOrderCreatedAt     = now
-      , ME.marketplaceOrderUpdatedAt     = now
+  providerEnabled <- liftIO $ flip runSqlPool envPool $
+    Checkout.providerEnabledForEnvironment (msccEnvironment context) Checkout.ProviderDatafast
+  unless providerEnabled $
+    throwError err503 { errBody = "Datafast checkout is disabled in this environment" }
+  attemptResult <- liftIO $ flip runSqlPool envPool $
+    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+      { Checkout.pacCheckout = msccCheckout context
+      , Checkout.pacProvider = Checkout.ProviderDatafast
+      , Checkout.pacEnvironment = msccEnvironment context
+      , Checkout.pacOperation = Checkout.OperationCreate
+      , Checkout.pacAmountMinor = fromIntegral (msccTotalCents context)
+      , Checkout.pacCurrency = msccCurrency context
+      , Checkout.pacMerchantRef = dfEntityId dfEnv
+      , Checkout.pacIdempotencyKey = msccIdempotencyKey context
+      , Checkout.pacCreatedAt = now
+      , Checkout.pacCorrelationId = "marketplace-datafast:" <> toPathPiece (msccOrderKey context)
       }
-    forM_ cartItems $ \(_, listingEnt, _, qty) -> do
-      let listing   = entityVal listingEnt
-          unitPrice = ME.marketplaceListingPriceUsdCents listing
-          subtotal  = unitPrice * qty
-      void $ insert ME.MarketplaceOrderItem
-        { ME.marketplaceOrderItemOrderId           = oid
-        , ME.marketplaceOrderItemListingId         = entityKey listingEnt
-        , ME.marketplaceOrderItemQuantity          = qty
-        , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
-        , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
-        }
-    pure oid
-  (checkoutId, widgetUrl) <- requestDatafastCheckout orderKey totalCents currency nameTxt emailTxt phoneTxt
-  now2 <- liftIO getCurrentTime
-  liftIO $ flip runSqlPool envPool $
-    update orderKey
-      [ ME.MarketplaceOrderStatus =. "datafast_pending"
-      , ME.MarketplaceOrderPaymentProvider =. Just "datafast"
-      , ME.MarketplaceOrderDatafastCheckoutId =. Just checkoutId
-      , ME.MarketplaceOrderUpdatedAt =. now2
-      ]
+  attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
+  mOrder <- liftIO $ flip runSqlPool envPool $ get (msccOrderKey context)
+  order <- maybe (throwError marketplaceOrderNotFound) pure mOrder
+  (checkoutId, widgetUrl) <- case ME.marketplaceOrderDatafastCheckoutId order of
+    Just storedCheckoutId -> do
+      validatedCheckoutId <- either throwError pure
+        (validateStoredDatafastCheckoutId storedCheckoutId)
+      pure
+        ( validatedCheckoutId
+        , normalizeBaseUrl (dfBaseUrl dfEnv)
+            <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack validatedCheckoutId
+        )
+    Nothing ->
+      requestDatafastCheckout
+        (msccOrderKey context)
+        (msccTotalCents context)
+        (msccCurrency context)
+        (ME.marketplaceOrderBuyerName order)
+        (ME.marketplaceOrderBuyerEmail order)
+        (ME.marketplaceOrderBuyerPhone order)
+  bindingResult <- liftIO $ flip runSqlPool envPool $ do
+    result <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
+      { Checkout.pbcAttempt = attempt
+      , Checkout.pbcCheckout = msccCheckout context
+      , Checkout.pbcProvider = Checkout.ProviderDatafast
+      , Checkout.pbcEnvironment = msccEnvironment context
+      , Checkout.pbcMerchantRef = dfEntityId dfEnv
+      , Checkout.pbcResourceType = "checkout"
+      , Checkout.pbcProviderResource = checkoutId
+      , Checkout.pbcResourcePath = Just
+          ("/v1/checkouts/" <> checkoutId <> "/payment")
+      , Checkout.pbcOrderReference = toPathPiece (msccOrderKey context)
+      , Checkout.pbcAmountMinor = fromIntegral (msccTotalCents context)
+      , Checkout.pbcCurrency = msccCurrency context
+      , Checkout.pbcStage = Checkout.AttemptRequiresCustomerAction
+      , Checkout.pbcOccurredAt = now
+      , Checkout.pbcCorrelationId = "marketplace-datafast:" <> toPathPiece (msccOrderKey context)
+      }
+    case result of
+      Left err -> pure (Left err)
+      Right () -> do
+        update (msccOrderKey context)
+          [ ME.MarketplaceOrderStatus =. "datafast_pending"
+          , ME.MarketplaceOrderPaymentProvider =. Just "datafast"
+          , ME.MarketplaceOrderDatafastCheckoutId =. Just checkoutId
+          , ME.MarketplaceOrderUpdatedAt =. now
+          ]
+        pure (Right ())
+  either (throwError . marketplaceCheckoutConflict) pure bindingResult
   pure DatafastCheckoutDTO
-    { dcOrderId    = toPathPiece orderKey
+    { dcOrderId    = toPathPiece (msccOrderKey context)
     , dcCheckoutId = checkoutId
     , dcWidgetUrl  = T.pack widgetUrl
-    , dcAmount     = formatUsd totalCents currency
-    , dcCurrency   = currency
+    , dcAmount     = Internationalization.formatMinorUnitsDecimal
+        (msccCurrency context) (fromIntegral (msccTotalCents context))
+    , dcCurrency   = msccCurrency context
+    , dcLookupToken = Just (msccLookupToken context)
     }
 
-confirmDatafastPayment :: Maybe Text -> Maybe Text -> AppM MarketplaceOrderDTO
-confirmDatafastPayment mOrderId mResourcePath = do
+confirmDatafastPayment :: Maybe Text -> Maybe Text -> Maybe Text -> AppM MarketplaceOrderDTO
+confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
   orderKey <- case mOrderId of
     Just oid -> parseOrderId oid
     Nothing  -> throwBadRequest "orderId requerido"
+  requireMarketplaceOrderLookupToken orderKey mLookupToken
   Env{ envPool } <- ask
   mOrder <- liftIO $ flip runSqlPool envPool $ get orderKey
   order <- maybe (throwError err404) pure mOrder
@@ -14174,15 +16893,19 @@ confirmDatafastPayment mOrderId mResourcePath = do
   statusResp <- datafastPaymentStatus dfEnv resourcePathTxt
   now <- liftIO getCurrentTime
   code <- either throwError pure (validateDatafastResultCodeField (dfrCode (dfpResult statusResp)))
-  let success = isDfPaymentSuccess code
+  let success = ServiceStorefront.isDatafastPaymentSuccess (dfEnvironment dfEnv) code
       pending = isDfPaymentPending code
-  when success $
+  when success $ do
     either throwError pure $
       validateDatafastSuccessfulPaymentAmountAndCurrency
         (ME.marketplaceOrderTotalUsdCents order)
         (ME.marketplaceOrderCurrency order)
         (dfpAmount statusResp)
         (dfpCurrency statusResp)
+    unless (dfpMerchantTransactionId statusResp == Just (toPathPiece orderKey)) $
+      throwError err502
+        { errBody = "Datafast merchant transaction reference does not match this order"
+        }
   paymentId <- either throwError pure (validateOptionalDatafastPaymentIdField (dfpId statusResp))
   resultDescription <- either throwError pure $
     validateOptionalDatafastMetadataField
@@ -14200,15 +16923,81 @@ confirmDatafastPayment mOrderId mResourcePath = do
     validateOptionalDatafastMetadataField
       "Datafast acquirer code"
       (dfpResultDetails statusResp >>= dfrdAcquirerCode)
+  runtimeRows <- liftIO $ flip runSqlPool envPool $
+    (rawSql
+      "SELECT checkout_id::text, create_idempotency_key\
+      \ FROM marketplace_order_checkout_runtime WHERE order_id = ?::uuid"
+      [PersistText (toPathPiece orderKey)]
+      :: SqlPersistT IO [(Single Text, Single Text)])
+  case runtimeRows of
+    [(Single canonicalCheckoutId, Single createIdempotencyKey)] -> do
+      let checkout = Checkout.CheckoutReference canonicalCheckoutId
+      checkoutEnvironmentResult <- liftIO $ flip runSqlPool envPool $
+        Checkout.loadCheckoutEnvironment checkout
+      checkoutEnvironment <- either (throwError . marketplaceCheckoutInternal) pure
+        checkoutEnvironmentResult
+      unless (checkoutEnvironment == dfEnvironment dfEnv) $
+        throwError err500
+          { errBody = "DATAFAST_ENV does not match the stored checkout environment"
+          }
+      attemptResult <- liftIO $ flip runSqlPool envPool $
+        Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+          { Checkout.pacCheckout = checkout
+          , Checkout.pacProvider = Checkout.ProviderDatafast
+          , Checkout.pacEnvironment = checkoutEnvironment
+          , Checkout.pacOperation = Checkout.OperationCreate
+          , Checkout.pacAmountMinor = fromIntegral (ME.marketplaceOrderTotalUsdCents order)
+          , Checkout.pacCurrency = ME.marketplaceOrderCurrency order
+          , Checkout.pacMerchantRef = dfEntityId dfEnv
+          , Checkout.pacIdempotencyKey = createIdempotencyKey
+          , Checkout.pacCreatedAt = now
+          , Checkout.pacCorrelationId = "marketplace-datafast:" <> toPathPiece orderKey
+          }
+      attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
+      if success
+        then do
+          verified <- liftIO $ flip runSqlPool envPool $
+            Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+              { Checkout.vpAttempt = attempt
+              , Checkout.vpCheckout = checkout
+              , Checkout.vpProvider = Checkout.ProviderDatafast
+              , Checkout.vpEnvironment = checkoutEnvironment
+              , Checkout.vpMerchantRef = dfEntityId dfEnv
+              , Checkout.vpResourceType = "checkout"
+              , Checkout.vpProviderResource = fromMaybe "" (ME.marketplaceOrderDatafastCheckoutId order)
+              , Checkout.vpProviderResourcePath = Just resourcePathTxt
+              , Checkout.vpOrderReference = toPathPiece orderKey
+              , Checkout.vpAmountMinor = fromIntegral (ME.marketplaceOrderTotalUsdCents order)
+              , Checkout.vpCurrency = ME.marketplaceOrderCurrency order
+              , Checkout.vpEvidence = "server_to_server"
+              , Checkout.vpOccurredAt = now
+              , Checkout.vpCorrelationId = "marketplace-datafast:" <> toPathPiece orderKey
+              }
+          either (throwError . marketplaceCheckoutConflict) (const (pure ())) verified
+        else liftIO $ flip runSqlPool envPool $
+          if pending
+            then Checkout.recordPaymentProcessing checkout attempt Checkout.ProviderDatafast
+              ("marketplace-datafast:" <> toPathPiece orderKey) now
+            else Checkout.recordPaymentFailure checkout attempt Checkout.ProviderDatafast code
+              ("marketplace-datafast:" <> toPathPiece orderKey) now
+    [] -> pure ()
+    _ -> throwError (marketplaceCheckoutInternal
+      "Marketplace Datafast runtime lookup was ambiguous")
   let nextStatus
         | success = "paid"
         | pending = "datafast_pending"
         | otherwise = "datafast_failed"
-      paidAtVal = if success then Just now else ME.marketplaceOrderPaidAt order
-      updateFields =
-        [ ME.MarketplaceOrderStatus =. nextStatus
-        , ME.MarketplaceOrderPaymentProvider =. Just "datafast"
-        , ME.MarketplaceOrderPaidAt =. paidAtVal
+      legacyPaymentFields =
+        if null runtimeRows
+          then [ ME.MarketplaceOrderStatus =. nextStatus
+               , ME.MarketplaceOrderPaidAt =.
+                   (if success then Just now else ME.marketplaceOrderPaidAt order)
+               ]
+          else if success
+            then []
+            else [ME.MarketplaceOrderStatus =. nextStatus]
+      updateFields = legacyPaymentFields <>
+        [ ME.MarketplaceOrderPaymentProvider =. Just "datafast"
         , ME.MarketplaceOrderUpdatedAt =. now
         , ME.MarketplaceOrderDatafastResourcePath =. Just resourcePathTxt
         , ME.MarketplaceOrderDatafastPaymentId =. paymentId
@@ -14223,106 +17012,312 @@ confirmDatafastPayment mOrderId mResourcePath = do
   either throwError pure $
     requireLoadedMarketplacePublicOrderResponse "Marketplace order" mDto
 
-createPaypalOrder :: Text -> MarketplaceCheckoutReq -> AppM PaypalCreateDTO
-createPaypalOrder rawId MarketplaceCheckoutReq{..} = do
-  nameTxt <- either throwError pure (validateMarketplaceBuyerName mcrBuyerName)
-  emailTxt <- either throwError pure (validateMarketplaceBuyerEmail mcrBuyerEmail)
-  phoneTxt <- either throwError pure (validateMarketplaceBuyerPhone mcrBuyerPhone)
-  cartKey <- parseCartId rawId
+createPaypalOrder :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM PaypalCreateDTO
+createPaypalOrder rawId mIdempotency payload = do
+  context <- prepareMarketplaceSaleCheckout "paypal" rawId mIdempotency payload
+  (cid, sec, baseUrl, paypalEnvironment, merchantRef) <-
+    ServiceStorefront.loadPaypalEnvForService
+  unless (paypalEnvironment == msccEnvironment context) $
+    throwError err500
+      { errBody = "PAYPAL_ENV must match COMMERCE_CHECKOUT_ENV for marketplace checkout"
+      }
   now <- liftIO getCurrentTime
   Env{ envPool } <- ask
-  cartTotalsState <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
-  (cartItems, totalCentsRaw, currency) <-
-    either throwError pure (requireMarketplaceCartTotals cartTotalsState)
-  totalCents <-
-    either throwError pure (validateMarketplaceOnlinePaymentTotal totalCentsRaw)
-  (cid, sec, baseUrl) <- loadPaypalEnv
-  manager <- pure sharedTlsManager
-  (ppOrderId, approvalUrl) <- createPaypalOrderRemote manager cid sec baseUrl totalCents currency nameTxt emailTxt
-  orderId <- liftIO $ flip runSqlPool envPool $ do
-    oid <- insert ME.MarketplaceOrder
-      { ME.marketplaceOrderCartId        = Just cartKey
-      , ME.marketplaceOrderBuyerName     = nameTxt
-      , ME.marketplaceOrderBuyerEmail    = emailTxt
-      , ME.marketplaceOrderBuyerPhone    = phoneTxt
-      , ME.marketplaceOrderTotalUsdCents = totalCents
-      , ME.marketplaceOrderCurrency      = currency
-      , ME.marketplaceOrderStatus        = "paypal_pending"
-      , ME.marketplaceOrderPaymentProvider = Just "paypal"
-      , ME.marketplaceOrderStripePaymentIntentId = Nothing
-      , ME.marketplaceOrderStripeIdempotencyKey = Nothing
-      , ME.marketplaceOrderPaypalOrderId = Just ppOrderId
-      , ME.marketplaceOrderPaypalPayerEmail = Nothing
-      , ME.marketplaceOrderDatafastCheckoutId = Nothing
-      , ME.marketplaceOrderDatafastResourcePath = Nothing
-      , ME.marketplaceOrderDatafastPaymentId = Nothing
-      , ME.marketplaceOrderDatafastResultCode = Nothing
-      , ME.marketplaceOrderDatafastResultDescription = Nothing
-      , ME.marketplaceOrderDatafastPaymentBrand = Nothing
-      , ME.marketplaceOrderDatafastAuthCode = Nothing
-      , ME.marketplaceOrderDatafastAcquirerCode = Nothing
-      , ME.marketplaceOrderPaidAt        = Nothing
-      , ME.marketplaceOrderCreatedAt     = now
-      , ME.marketplaceOrderUpdatedAt     = now
+  providerEnabled <- liftIO $ flip runSqlPool envPool $
+    Checkout.providerEnabledForEnvironment (msccEnvironment context) Checkout.ProviderPayPal
+  unless providerEnabled $
+    throwError err503 { errBody = "PayPal checkout is disabled in this environment" }
+  attemptResult <- liftIO $ flip runSqlPool envPool $
+    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+      { Checkout.pacCheckout = msccCheckout context
+      , Checkout.pacProvider = Checkout.ProviderPayPal
+      , Checkout.pacEnvironment = msccEnvironment context
+      , Checkout.pacOperation = Checkout.OperationCreate
+      , Checkout.pacAmountMinor = fromIntegral (msccTotalCents context)
+      , Checkout.pacCurrency = msccCurrency context
+      , Checkout.pacMerchantRef = merchantRef
+      , Checkout.pacIdempotencyKey = msccIdempotencyKey context
+      , Checkout.pacCreatedAt = now
+      , Checkout.pacCorrelationId = "marketplace-paypal:" <> toPathPiece (msccOrderKey context)
       }
-    forM_ cartItems $ \(_, listingEnt, _, qty) -> do
-      let listing   = entityVal listingEnt
-          unitPrice = ME.marketplaceListingPriceUsdCents listing
-          subtotal  = unitPrice * qty
-      void $ insert ME.MarketplaceOrderItem
-        { ME.marketplaceOrderItemOrderId           = oid
-        , ME.marketplaceOrderItemListingId         = entityKey listingEnt
-        , ME.marketplaceOrderItemQuantity          = qty
-        , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
-        , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
-        }
-    pure oid
+  attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
+  mOrder <- liftIO $ flip runSqlPool envPool $ get (msccOrderKey context)
+  order <- maybe (throwError marketplaceOrderNotFound) pure mOrder
+  (ppOrderId, approvalUrl) <- case ME.marketplaceOrderPaypalOrderId order of
+    Just storedOrderId -> pure (storedOrderId, Nothing)
+    Nothing -> ServiceStorefront.createPaypalOrderRemoteForService
+      sharedTlsManager cid sec baseUrl
+      (toPathPiece (msccOrderKey context))
+      (msccTotalCents context)
+      (msccCurrency context)
+      (ME.marketplaceOrderBuyerName order)
+      (ME.marketplaceOrderBuyerEmail order)
+  bindingResult <- liftIO $ flip runSqlPool envPool $ do
+    result <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
+      { Checkout.pbcAttempt = attempt
+      , Checkout.pbcCheckout = msccCheckout context
+      , Checkout.pbcProvider = Checkout.ProviderPayPal
+      , Checkout.pbcEnvironment = msccEnvironment context
+      , Checkout.pbcMerchantRef = merchantRef
+      , Checkout.pbcResourceType = "order"
+      , Checkout.pbcProviderResource = ppOrderId
+      , Checkout.pbcResourcePath = Just ("/v2/checkout/orders/" <> ppOrderId)
+      , Checkout.pbcOrderReference = toPathPiece (msccOrderKey context)
+      , Checkout.pbcAmountMinor = fromIntegral (msccTotalCents context)
+      , Checkout.pbcCurrency = msccCurrency context
+      , Checkout.pbcStage = Checkout.AttemptRequiresCustomerAction
+      , Checkout.pbcOccurredAt = now
+      , Checkout.pbcCorrelationId = "marketplace-paypal:" <> toPathPiece (msccOrderKey context)
+      }
+    case result of
+      Left err -> pure (Left err)
+      Right () -> do
+        update (msccOrderKey context)
+          [ ME.MarketplaceOrderStatus =. "paypal_pending"
+          , ME.MarketplaceOrderPaymentProvider =. Just "paypal"
+          , ME.MarketplaceOrderPaypalOrderId =. Just ppOrderId
+          , ME.MarketplaceOrderUpdatedAt =. now
+          ]
+        pure (Right ())
+  either (throwError . marketplaceCheckoutConflict) pure bindingResult
   pure PaypalCreateDTO
-    { pcOrderId = toPathPiece orderId
+    { pcOrderId = toPathPiece (msccOrderKey context)
     , pcPaypalOrderId = ppOrderId
     , pcApprovalUrl = approvalUrl
+    , pcLookupToken = Just (msccLookupToken context)
     }
 
-capturePaypalOrder :: PaypalCaptureReq -> AppM MarketplaceOrderDTO
-capturePaypalOrder PaypalCaptureReq{..} = do
+capturePaypalOrder :: Maybe Text -> PaypalCaptureReq -> AppM MarketplaceOrderDTO
+capturePaypalOrder mLookupToken PaypalCaptureReq{..} = do
   orderKey <- parseOrderId pcCaptureOrderId
+  requireMarketplaceOrderLookupToken orderKey mLookupToken
   paypalOrderId <- either throwError pure (validatePayPalCaptureOrderId pcCapturePaypalId)
   Env{ envPool } <- ask
   mOrder <- liftIO $ flip runSqlPool envPool $ get orderKey
-  case mOrder of
-    Nothing -> throwError err404
-    Just order -> do
-      paypalOrderIdForCapture <- either throwError pure $
-        validatePayPalCaptureOrderReference
-          (ME.marketplaceOrderPaypalOrderId order)
-          paypalOrderId
-      (cid, sec, baseUrl) <- loadPaypalEnv
-      manager <- pure sharedTlsManager
-      PayPalCaptureOutcome statusTxt payerEmail <-
-        capturePaypalOrderRemote manager cid sec baseUrl paypalOrderIdForCapture
-      now <- liftIO getCurrentTime
-      nextStatus <- either throwError pure (parsePayPalCaptureOrderStatus statusTxt)
-      let paidAtVal =
-            if nextStatus == "paid"
-              then Just now
-              else ME.marketplaceOrderPaidAt order
-      liftIO $ flip runSqlPool envPool $ update orderKey
-        [ ME.MarketplaceOrderStatus =. nextStatus
-        , ME.MarketplaceOrderPaypalOrderId =. Just paypalOrderId
-        , ME.MarketplaceOrderPaymentProvider =. Just "paypal"
-        , ME.MarketplaceOrderPaypalPayerEmail =. (payerEmail <|> ME.marketplaceOrderPaypalPayerEmail order)
-        , ME.MarketplaceOrderPaidAt =. paidAtVal
+  order <- maybe (throwError marketplaceOrderNotFound) pure mOrder
+  paypalOrderIdForCapture <- either throwError pure $
+    validatePayPalCaptureOrderReference
+      (ME.marketplaceOrderPaypalOrderId order)
+      paypalOrderId
+  runtimeRows <- liftIO $ flip runSqlPool envPool $
+    (rawSql
+      "SELECT runtime.checkout_id::text, runtime.create_idempotency_key, checkout.status\
+      \ FROM marketplace_order_checkout_runtime runtime\
+      \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+      \ WHERE runtime.order_id = ?::uuid"
+      [PersistText (toPathPiece orderKey)]
+      :: SqlPersistT IO [(Single Text, Single Text, Single Text)])
+  case runtimeRows of
+    [(Single canonicalCheckoutId, Single createIdempotencyKey, Single checkoutStatus)]
+      | checkoutStatus == "paid" -> do
+          mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
+          either throwError pure $
+            requireLoadedMarketplacePublicOrderResponse "Marketplace order" mDto
+      | otherwise -> captureCanonicalPaypalOrder
+          orderKey order canonicalCheckoutId createIdempotencyKey paypalOrderIdForCapture
+    [] -> captureLegacyPaypalOrder orderKey order paypalOrderIdForCapture
+    _ -> throwError (marketplaceCheckoutInternal
+      "Marketplace PayPal runtime lookup was ambiguous")
+
+captureCanonicalPaypalOrder
+  :: Key ME.MarketplaceOrder
+  -> ME.MarketplaceOrder
+  -> Text
+  -> Text
+  -> Text
+  -> AppM MarketplaceOrderDTO
+captureCanonicalPaypalOrder orderKey order canonicalCheckoutId createIdempotencyKey paypalOrderId = do
+  Env{ envPool } <- ask
+  now <- liftIO getCurrentTime
+  (cid, sec, baseUrl, paypalEnvironment, merchantRef) <-
+    ServiceStorefront.loadPaypalEnvForService
+  let checkout = Checkout.CheckoutReference canonicalCheckoutId
+      captureIdempotencyKey = marketplaceSha256Text ("capture:" <> createIdempotencyKey)
+      correlationId = "marketplace-paypal-capture:" <> toPathPiece orderKey
+  storedEnvironmentResult <- liftIO $ flip runSqlPool envPool $
+    Checkout.loadCheckoutEnvironment checkout
+  storedEnvironment <- either (throwError . marketplaceCheckoutInternal) pure
+    storedEnvironmentResult
+  unless (storedEnvironment == paypalEnvironment) $
+    throwError err500
+      { errBody = "PAYPAL_ENV does not match the stored checkout environment"
+      }
+  attemptResult <- liftIO $ flip runSqlPool envPool $
+    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+      { Checkout.pacCheckout = checkout
+      , Checkout.pacProvider = Checkout.ProviderPayPal
+      , Checkout.pacEnvironment = paypalEnvironment
+      , Checkout.pacOperation = Checkout.OperationCapture
+      , Checkout.pacAmountMinor = fromIntegral (ME.marketplaceOrderTotalUsdCents order)
+      , Checkout.pacCurrency = ME.marketplaceOrderCurrency order
+      , Checkout.pacMerchantRef = merchantRef
+      , Checkout.pacIdempotencyKey = captureIdempotencyKey
+      , Checkout.pacCreatedAt = now
+      , Checkout.pacCorrelationId = correlationId
+      }
+  attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
+  outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
+    sharedTlsManager cid sec baseUrl paypalOrderId
+    `catchError` \serverErr -> do
+      liftIO $ flip runSqlPool envPool $
+        Checkout.recordPaymentFailure checkout attempt Checkout.ProviderPayPal
+          "paypal_capture_request" correlationId now
+      throwError serverErr
+  let status = ServiceStorefront.spcoStatus outcome
+  case status of
+    "COMPLETED" -> do
+      case ServiceStorefront.validatePaypalSuccessfulCapture
+        (toPathPiece orderKey)
+        (ME.marketplaceOrderTotalUsdCents order)
+        (ME.marketplaceOrderCurrency order)
+        merchantRef
+        outcome of
+          Left validationMessage -> do
+            liftIO $ flip runSqlPool envPool $ do
+              Checkout.recordReconciliationException
+                Checkout.ProviderPayPal paypalEnvironment merchantRef
+                "provider_binding_mismatch" (toPathPiece orderKey) paypalOrderId
+                (fromIntegral (ME.marketplaceOrderTotalUsdCents order)) Nothing
+                (ME.marketplaceOrderCurrency order) now
+              Checkout.recordPaymentFailure checkout attempt Checkout.ProviderPayPal
+                "provider_binding_mismatch" correlationId now
+            throwError err502
+              { errBody = BL.fromStrict (TE.encodeUtf8 validationMessage)
+              }
+          Right () -> pure ()
+      captureId <- maybe
+        (throwError err502 { errBody = "PayPal capture ID is missing" })
+        pure
+        (ServiceStorefront.spcoCaptureId outcome)
+      result <- liftIO $ flip runSqlPool envPool $ do
+        binding <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
+          { Checkout.pbcAttempt = attempt
+          , Checkout.pbcCheckout = checkout
+          , Checkout.pbcProvider = Checkout.ProviderPayPal
+          , Checkout.pbcEnvironment = paypalEnvironment
+          , Checkout.pbcMerchantRef = merchantRef
+          , Checkout.pbcResourceType = "capture"
+          , Checkout.pbcProviderResource = captureId
+          , Checkout.pbcResourcePath = Just
+              ("/v2/checkout/orders/" <> paypalOrderId <> "/capture")
+          , Checkout.pbcOrderReference = toPathPiece orderKey
+          , Checkout.pbcAmountMinor = fromIntegral (ME.marketplaceOrderTotalUsdCents order)
+          , Checkout.pbcCurrency = ME.marketplaceOrderCurrency order
+          , Checkout.pbcStage = Checkout.AttemptProcessing
+          , Checkout.pbcOccurredAt = now
+          , Checkout.pbcCorrelationId = correlationId
+          }
+        case binding of
+          Left message -> pure (Left message)
+          Right () -> do
+            verified <- Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+              { Checkout.vpAttempt = attempt
+              , Checkout.vpCheckout = checkout
+              , Checkout.vpProvider = Checkout.ProviderPayPal
+              , Checkout.vpEnvironment = paypalEnvironment
+              , Checkout.vpMerchantRef = merchantRef
+              , Checkout.vpResourceType = "capture"
+              , Checkout.vpProviderResource = captureId
+              , Checkout.vpProviderResourcePath = Just
+                  ("/v2/checkout/orders/" <> paypalOrderId <> "/capture")
+              , Checkout.vpOrderReference = toPathPiece orderKey
+              , Checkout.vpAmountMinor = fromIntegral (ME.marketplaceOrderTotalUsdCents order)
+              , Checkout.vpCurrency = ME.marketplaceOrderCurrency order
+              , Checkout.vpEvidence = "server_to_server"
+              , Checkout.vpOccurredAt = now
+              , Checkout.vpCorrelationId = correlationId
+              }
+            case verified of
+              Left message -> pure (Left message)
+              Right _ -> do
+                update orderKey
+                  [ ME.MarketplaceOrderPaypalPayerEmail =.
+                      (ServiceStorefront.spcoPayerEmail outcome <|>
+                        ME.marketplaceOrderPaypalPayerEmail order)
+                  , ME.MarketplaceOrderUpdatedAt =. now
+                  ]
+                pure (Right ())
+      either (throwError . marketplaceCheckoutConflict) pure result
+    "APPROVED" -> recordPendingPaypalCapture
+      checkout attempt orderKey order outcome correlationId now
+    "PENDING" -> recordPendingPaypalCapture
+      checkout attempt orderKey order outcome correlationId now
+    _ -> liftIO $ flip runSqlPool envPool $ do
+      Checkout.recordPaymentFailure checkout attempt Checkout.ProviderPayPal
+        ("paypal_" <> T.toLower status) correlationId now
+      update orderKey
+        [ ME.MarketplaceOrderStatus =. "paypal_failed"
         , ME.MarketplaceOrderUpdatedAt =. now
         ]
-      mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
-      either throwError pure $
-        requireLoadedMarketplacePublicOrderResponse "Marketplace order" mDto
+  mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
+  either throwError pure $
+    requireLoadedMarketplacePublicOrderResponse "Marketplace order" mDto
+
+recordPendingPaypalCapture
+  :: Checkout.CheckoutReference
+  -> Checkout.PaymentAttemptReference
+  -> Key ME.MarketplaceOrder
+  -> ME.MarketplaceOrder
+  -> ServiceStorefront.ServicePaypalCaptureOutcome
+  -> Text
+  -> UTCTime
+  -> AppM ()
+recordPendingPaypalCapture checkout attempt orderKey order outcome correlationId now = do
+  Env{ envPool } <- ask
+  liftIO $ flip runSqlPool envPool $ do
+    Checkout.recordPaymentProcessing checkout attempt Checkout.ProviderPayPal correlationId now
+    update orderKey
+      [ ME.MarketplaceOrderStatus =. "paypal_pending"
+      , ME.MarketplaceOrderPaypalPayerEmail =.
+          (ServiceStorefront.spcoPayerEmail outcome <|>
+            ME.marketplaceOrderPaypalPayerEmail order)
+      , ME.MarketplaceOrderUpdatedAt =. now
+      ]
+
+captureLegacyPaypalOrder
+  :: Key ME.MarketplaceOrder
+  -> ME.MarketplaceOrder
+  -> Text
+  -> AppM MarketplaceOrderDTO
+captureLegacyPaypalOrder orderKey order paypalOrderId = do
+  Env{ envPool } <- ask
+  (cid, sec, baseUrl, _, merchantRef) <- ServiceStorefront.loadPaypalEnvForService
+  outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
+    sharedTlsManager cid sec baseUrl paypalOrderId
+  now <- liftIO getCurrentTime
+  let status = ServiceStorefront.spcoStatus outcome
+      nextStatus
+        | status == "COMPLETED" = "paid"
+        | status `elem` ["APPROVED", "PENDING"] = "paypal_pending"
+        | otherwise = "paypal_failed"
+  when (status == "COMPLETED") $
+    either (throwError . marketplaceCheckoutConflict) pure $
+      ServiceStorefront.validatePaypalSuccessfulCapture
+        (toPathPiece orderKey)
+        (ME.marketplaceOrderTotalUsdCents order)
+        (ME.marketplaceOrderCurrency order)
+        merchantRef
+        outcome
+  liftIO $ flip runSqlPool envPool $ update orderKey
+    [ ME.MarketplaceOrderStatus =. nextStatus
+    , ME.MarketplaceOrderPaymentProvider =. Just "paypal"
+    , ME.MarketplaceOrderPaypalPayerEmail =.
+        (ServiceStorefront.spcoPayerEmail outcome <|>
+          ME.marketplaceOrderPaypalPayerEmail order)
+    , ME.MarketplaceOrderPaidAt =.
+        (if status == "COMPLETED" then Just now else ME.marketplaceOrderPaidAt order)
+    , ME.MarketplaceOrderUpdatedAt =. now
+    ]
+  mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
+  either throwError pure $
+    requireLoadedMarketplacePublicOrderResponse "Marketplace order" mDto
 
 requestDatafastCheckout :: Key ME.MarketplaceOrder -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
 requestDatafastCheckout orderKey totalCents currency name email mPhone = do
   dfEnv <- loadDatafastEnv
   manager <- pure sharedTlsManager
-  let amountTxt = T.pack (printf "%.2f" (fromIntegral totalCents / 100 :: Double))
+  let amountTxt = Internationalization.formatMinorUnitsDecimal
+        currency (fromIntegral totalCents)
       currencyTxt = T.toUpper (T.strip currency)
       (givenName, surname) = splitName name
       baseParams =
@@ -14682,6 +17677,1034 @@ isAsciiDecimalDigit :: Char -> Bool
 isAsciiDecimalDigit ch =
   ch >= '0' && ch <= '9'
 
+data MarketplacePaymentContext = MarketplacePaymentContext
+  { mpcxOrderKey      :: Key ME.MarketplaceOrder
+  , mpcxCheckout      :: Checkout.CheckoutReference
+  , mpcxCheckoutStatus :: Text
+  , mpcxEnvironment   :: Checkout.CheckoutEnvironment
+  , mpcxTotalMinor    :: Int64
+  , mpcxCurrency      :: Text
+  , mpcxHoldExpiresAt :: UTCTime
+  , mpcxOrderKind     :: Text
+  , mpcxBuyerName     :: Text
+  , mpcxBuyerEmail    :: Text
+  , mpcxBuyerPhone    :: Maybe Text
+  }
+
+type MarketplaceManualEvidenceRow =
+  ( Single Text, Single Text, Single Text, Single (Maybe Text)
+  , Single (Maybe Int64), Single (Maybe Text), Single (Maybe Int64)
+  , Single (Maybe UTCTime), Single (Maybe Int64), Single (Maybe UTCTime)
+  , Single (Maybe Text)
+  )
+
+loadMarketplacePaymentContext
+  :: Key ME.MarketplaceOrder
+  -> SqlPersistT IO (Either Text MarketplacePaymentContext)
+loadMarketplacePaymentContext orderKey = do
+  rows <- (rawSql
+    "SELECT checkout.id::text, checkout.status, checkout.environment,\
+    \ checkout.total_minor, checkout.currency, runtime.hold_expires_at,\
+    \ runtime.order_kind, orders.buyer_name, orders.buyer_email, orders.buyer_phone\
+    \ FROM marketplace_order_checkout_runtime runtime\
+    \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+    \ JOIN marketplace_order orders ON orders.id = runtime.order_id\
+    \ WHERE runtime.order_id = ?::uuid\
+    \ AND checkout.domain_order_id = runtime.order_id::text\
+    \ AND checkout.domain_type = CASE runtime.order_kind\
+    \   WHEN 'sale' THEN 'marketplace_sale' ELSE 'marketplace_rental' END\
+    \ AND checkout.total_minor = orders.total_usd_cents\
+    \ AND checkout.currency = orders.currency"
+    [PersistText (toPathPiece orderKey)]
+    :: SqlPersistT IO
+      [( Single Text, Single Text, Single Text, Single Int64, Single Text
+       , Single UTCTime, Single Text, Single Text, Single Text, Single (Maybe Text)
+       )])
+  pure $ case rows of
+    [( Single checkoutId, Single checkoutStatus, Single environmentText
+     , Single totalMinor, Single currency, Single holdExpiresAt, Single orderKind
+     , Single buyerName, Single buyerEmail, Single buyerPhone
+     )]
+      | totalMinor <= 0 -> Left "Marketplace checkout total is invalid"
+      | environmentText `notElem` ["sandbox", "production"] ->
+          Left "Marketplace checkout environment is invalid"
+      | otherwise -> Right MarketplacePaymentContext
+          { mpcxOrderKey = orderKey
+          , mpcxCheckout = Checkout.CheckoutReference checkoutId
+          , mpcxCheckoutStatus = checkoutStatus
+          , mpcxEnvironment = if environmentText == "production"
+              then Checkout.CheckoutProduction else Checkout.CheckoutSandbox
+          , mpcxTotalMinor = totalMinor
+          , mpcxCurrency = currency
+          , mpcxHoldExpiresAt = holdExpiresAt
+          , mpcxOrderKind = orderKind
+          , mpcxBuyerName = buyerName
+          , mpcxBuyerEmail = buyerEmail
+          , mpcxBuyerPhone = buyerPhone
+          }
+    [] -> Left "Marketplace order is not linked to a canonical checkout"
+    _ -> Left "Marketplace checkout context is ambiguous"
+
+requireMarketplacePaymentContext
+  :: Text
+  -> Maybe Text
+  -> AppM MarketplacePaymentContext
+requireMarketplacePaymentContext rawOrderId mLookupToken = do
+  orderKey <- parseOrderId rawOrderId
+  requireMarketplaceOrderLookupToken orderKey mLookupToken
+  context <- runDB (loadMarketplacePaymentContext orderKey)
+    >>= either (throwError . marketplaceCheckoutConflict) pure
+  now <- liftIO getCurrentTime
+  when
+      ( mpcxHoldExpiresAt context <= now
+        && mpcxCheckoutStatus context `elem` ["holding", "awaiting_payment", "failed"]
+      ) $ do
+    _ <- runDB (rawSql "SELECT marketplace_expire_sale_holds(?)"
+      [PersistUTCTime now] :: SqlPersistT IO [Single Int])
+    throwError err409
+      { errBody = "This marketplace checkout hold expired; start a new checkout before submitting payment evidence" }
+  pure context
+
+loadMarketplaceManualEvidenceRows
+  :: Checkout.CheckoutReference
+  -> SqlPersistT IO [MarketplaceManualEvidenceRow]
+loadMarketplaceManualEvidenceRows checkout = rawSql
+  "SELECT evidence.id::text, attempt.provider, evidence.status,\
+  \ evidence.customer_reference, evidence.submitted_amount_minor, evidence.currency,\
+  \ evidence.submitted_by, evidence.submitted_at, evidence.reviewed_by,\
+  \ evidence.reviewed_at, evidence.review_notes\
+  \ FROM commerce_manual_payment_evidence evidence\
+  \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+  \ WHERE evidence.checkout_id = ?::uuid\
+  \ AND attempt.checkout_id = evidence.checkout_id\
+  \ AND attempt.provider IN ('bank_transfer','cash','pos')\
+  \ AND attempt.operation = 'manual_verify'\
+  \ ORDER BY attempt.updated_at DESC, evidence.id DESC LIMIT 2"
+  [PersistText (Checkout.checkoutReferenceId checkout)]
+
+marketplaceManualEvidenceDTO
+  :: MarketplaceManualEvidenceRow
+  -> MarketplaceManualEvidenceDTO
+marketplaceManualEvidenceDTO
+    ( Single evidenceId, Single provider, Single status, Single customerReference
+    , Single submittedAmount, Single currency, Single submittedBy, Single submittedAt
+    , Single reviewedBy, Single reviewedAt, Single reviewNotes
+    ) = MarketplaceManualEvidenceDTO
+      { mmeEvidenceId = evidenceId
+      , mmePaymentMethod = provider
+      , mmeStatus = status
+      , mmeCustomerReference = customerReference
+      , mmeSubmittedAmountMinor = submittedAmount
+      , mmeCurrency = currency
+      , mmeSubmittedBy = submittedBy
+      , mmeSubmittedAt = submittedAt
+      , mmeReviewedBy = reviewedBy
+      , mmeReviewedAt = reviewedAt
+      , mmeReviewNotes = reviewNotes
+      }
+
+loadMarketplaceCommerceDTO
+  :: Key ME.MarketplaceOrder
+  -> SqlPersistT IO (Either Text MarketplaceCommerceDTO)
+loadMarketplaceCommerceDTO orderKey = do
+  contextResult <- loadMarketplacePaymentContext orderKey
+  case contextResult of
+    Left message -> pure (Left message)
+    Right context -> do
+      evidenceRows <- loadMarketplaceManualEvidenceRows (mpcxCheckout context)
+      pure $ case evidenceRows of
+        [] -> Right (toCommerce context Nothing)
+        [row] -> Right (toCommerce context (Just (marketplaceManualEvidenceDTO row)))
+        _ -> Left "Marketplace manual payment evidence is ambiguous and requires reconciliation"
+  where
+    toCommerce context evidence = MarketplaceCommerceDTO
+      { mpcOrderId = toPathPiece (mpcxOrderKey context)
+      , mpcCheckoutId = Checkout.checkoutReferenceId (mpcxCheckout context)
+      , mpcPaymentStatus = mpcxCheckoutStatus context
+      , mpcHoldExpiresAt = mpcxHoldExpiresAt context
+      , mpcOrderKind = mpcxOrderKind context
+      , mpcManualEvidence = evidence
+      }
+
+getMarketplaceCommerce :: AuthedUser -> Text -> AppM MarketplaceCommerceDTO
+getMarketplaceCommerce user rawOrderId = do
+  requireModule user ModuleInvoicing
+  orderKey <- parseOrderId rawOrderId
+  runDB (loadMarketplaceCommerceDTO orderKey)
+    >>= either (throwError . marketplaceCheckoutConflict) pure
+
+submitMarketplaceManualEvidence
+  :: Text
+  -> Maybe Text
+  -> MarketplaceManualEvidenceSubmit
+  -> AppM MarketplaceOrderDTO
+submitMarketplaceManualEvidence
+    rawOrderId mLookupToken MarketplaceManualEvidenceSubmit{..} = do
+  context <- requireMarketplacePaymentContext rawOrderId mLookupToken
+  customerReference <- either throwError pure $
+    validatePublicBookingManualReference mmesCustomerReference
+  customerParty <- ensurePartyRecord
+    (Just (mpcxBuyerName context)) (mpcxBuyerEmail context) (mpcxBuyerPhone context)
+  let customerId = fromSqlKey customerParty
+      checkoutId = Checkout.checkoutReferenceId (mpcxCheckout context)
+  outcome <- runDB $ do
+    rows <- (rawSql
+      "SELECT evidence.id::text, evidence.status, evidence.customer_reference,\
+      \ evidence.submitted_by, attempt.id::text, checkout.status,\
+      \ checkout.customer_party_id\
+      \ FROM commerce_manual_payment_evidence evidence\
+      \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+      \ JOIN commerce_checkout_session checkout ON checkout.id = evidence.checkout_id\
+      \ JOIN marketplace_order_checkout_runtime runtime ON runtime.checkout_id = checkout.id\
+      \ WHERE runtime.order_id = ?::uuid\
+      \ AND checkout.id = ?::uuid\
+      \ AND checkout.domain_order_id = runtime.order_id::text\
+      \ AND checkout.total_minor = ? AND checkout.currency = ?\
+      \ AND attempt.checkout_id = checkout.id\
+      \ AND attempt.provider = 'bank_transfer'\
+      \ AND attempt.operation = 'manual_verify'\
+      \ AND attempt.environment = checkout.environment\
+      \ AND attempt.amount_minor = checkout.total_minor\
+      \ AND attempt.currency = checkout.currency\
+      \ FOR UPDATE OF evidence, attempt, checkout"
+      [ PersistText (toPathPiece (mpcxOrderKey context))
+      , PersistText checkoutId
+      , PersistInt64 (mpcxTotalMinor context)
+      , PersistText (mpcxCurrency context)
+      ] :: SqlPersistT IO
+        [( Single Text, Single Text, Single (Maybe Text), Single (Maybe Int64)
+         , Single Text, Single Text, Single (Maybe Int64)
+         )])
+    case rows of
+      [( Single evidenceId, Single status, Single existingReference
+       , Single existingSubmitter, Single attemptId, Single checkoutStatus
+       , Single existingCustomer
+       )]
+        | maybe False (/= customerId) existingCustomer ->
+            pure (Left "Marketplace customer identity does not match the checkout")
+        | checkoutStatus == "paid" && status /= "approved" ->
+            pure (Left "This checkout is already paid by another payment attempt")
+        | status `elem` ["submitted", "under_review"]
+            && existingReference == Just customerReference
+            && existingSubmitter == Just customerId -> pure (Right ())
+        | status == "approved" -> pure (Right ())
+        | status `elem` ["submitted", "under_review"] ->
+            pure (Left "Different manual evidence is already under review")
+        | status `elem` ["awaiting_evidence", "rejected"] -> do
+            now <- liftIO getCurrentTime
+            rawExecute
+              "UPDATE commerce_checkout_session SET customer_party_id = COALESCE(customer_party_id, ?)\
+              \ WHERE id = ?::uuid"
+              [PersistInt64 customerId, PersistText checkoutId]
+            when (status == "rejected") $
+              Checkout.recordManualPaymentSelection
+                (mpcxCheckout context)
+                (Checkout.PaymentAttemptReference attemptId)
+                Checkout.ProviderBankTransfer
+                (marketplacePaymentCorrelationId context Checkout.ProviderBankTransfer "manual-resubmit")
+                now
+            rawExecute
+              "UPDATE commerce_manual_payment_evidence\
+              \ SET customer_reference = ?, submitted_amount_minor = ?, currency = ?,\
+              \ submitted_at = ?, submitted_by = ?, status = 'submitted',\
+              \ reviewed_by = NULL, reviewed_at = NULL, review_notes = NULL\
+              \ WHERE id = ?::uuid"
+              [ PersistText customerReference
+              , PersistInt64 (mpcxTotalMinor context)
+              , PersistText (mpcxCurrency context)
+              , PersistUTCTime now
+              , PersistInt64 customerId
+              , PersistText evidenceId
+              ]
+            rawExecute
+              "INSERT INTO commerce_checkout_audit_event(\
+              \ checkout_id, event_type, actor_type, actor_id, correlation_id, metadata\
+              \) VALUES (?::uuid, 'manual_payment_evidence_submitted', 'customer', ?, ?,\
+              \ jsonb_build_object('attempt_id', ?))"
+              [ PersistText checkoutId
+              , PersistText (T.pack (show customerId))
+              , PersistText (marketplacePaymentCorrelationId
+                  context Checkout.ProviderBankTransfer "manual-evidence")
+              , PersistText attemptId
+              ]
+            pure (Right ())
+        | otherwise -> pure (Left "Manual evidence cannot be submitted in its current state")
+      [] -> pure (Left "Select bank transfer before submitting evidence")
+      _ -> pure (Left "Marketplace manual payment evidence is ambiguous")
+  either (throwError . marketplaceCheckoutConflict) pure outcome
+  runDB (loadOrderDTO (mpcxOrderKey context))
+    >>= either throwError pure
+      . requireLoadedMarketplacePublicOrderResponse "Marketplace order"
+
+validateMarketplaceManualReview
+  :: MarketplaceManualPaymentReview
+  -> Either ServerError (Text, Text)
+validateMarketplaceManualReview MarketplaceManualPaymentReview{..}
+  | action `notElem` ["approve", "reject"] =
+      Left err400 { errBody = "Manual payment review action must be approve or reject" }
+  | T.length notes < 3 || T.length notes > 2000 =
+      Left err400 { errBody = "Manual payment review notes must contain 3 to 2000 characters" }
+  | T.any isUnsafeAccessRequestTextChar notes =
+      Left err400 { errBody = "Manual payment review notes contain unsupported characters" }
+  | otherwise = Right (action, notes)
+  where
+    action = T.toLower (T.strip mmprAction)
+    notes = T.strip mmprReviewNotes
+
+marketplacePaymentCorrelationId
+  :: MarketplacePaymentContext
+  -> Checkout.PaymentProvider
+  -> Text
+  -> Text
+marketplacePaymentCorrelationId context provider stage =
+  "marketplace-" <> mpcxOrderKind context <> ":"
+    <> toPathPiece (mpcxOrderKey context) <> ":"
+    <> Checkout.paymentProviderText provider <> ":" <> stage
+
+insertMarketplaceManualReviewAudit
+  :: MarketplacePaymentContext
+  -> Checkout.PaymentProvider
+  -> Int64
+  -> Text
+  -> Text
+  -> Text
+  -> SqlPersistT IO ()
+insertMarketplaceManualReviewAudit context provider reviewerId attemptId evidenceId eventType =
+  rawExecute
+    "INSERT INTO commerce_checkout_audit_event(\
+    \ checkout_id, event_type, actor_type, actor_id, correlation_id, metadata\
+    \) VALUES (?::uuid, ?, 'staff', ?, ?,\
+    \ jsonb_build_object('attempt_id', ?, 'evidence_id', ?))"
+    [ PersistText (Checkout.checkoutReferenceId (mpcxCheckout context))
+    , PersistText eventType
+    , PersistText (T.pack (show reviewerId))
+    , PersistText (marketplacePaymentCorrelationId context provider "manual-review")
+    , PersistText attemptId
+    , PersistText evidenceId
+    ]
+
+reviewMarketplaceManualPayment
+  :: AuthedUser
+  -> Text
+  -> MarketplaceManualPaymentReview
+  -> AppM MarketplaceCommerceDTO
+reviewMarketplaceManualPayment user rawOrderId request = do
+  requireModule user ModuleInvoicing
+  orderKey <- parseOrderId rawOrderId
+  context <- runDB (loadMarketplacePaymentContext orderKey)
+    >>= either (throwError . marketplaceCheckoutConflict) pure
+  (reviewAction, reviewNotes) <- either throwError pure $
+    validateMarketplaceManualReview request
+  now <- liftIO getCurrentTime
+  let reviewerId = fromSqlKey (auPartyId user)
+      checkoutId = Checkout.checkoutReferenceId (mpcxCheckout context)
+  outcome <- runDB $ do
+    rows <- (rawSql
+      "SELECT checkout.status, attempt.id::text, attempt.provider,\
+      \ attempt.merchant_account_ref, attempt.status, evidence.id::text,\
+      \ evidence.status, evidence.submitted_by, evidence.reviewed_by,\
+      \ EXISTS (SELECT 1 FROM commerce_reservation_hold hold\
+      \   WHERE hold.checkout_id = checkout.id AND hold.status = 'active'\
+      \   AND hold.expires_at > ?)\
+      \ FROM marketplace_order_checkout_runtime runtime\
+      \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+      \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id = checkout.id\
+      \ JOIN commerce_manual_payment_evidence evidence\
+      \   ON evidence.checkout_id = checkout.id\
+      \  AND evidence.payment_attempt_id = attempt.id\
+      \ WHERE runtime.order_id = ?::uuid AND checkout.id = ?::uuid\
+      \ AND checkout.domain_order_id = runtime.order_id::text\
+      \ AND checkout.environment = ? AND checkout.total_minor = ?\
+      \ AND checkout.currency = ? AND attempt.environment = checkout.environment\
+      \ AND attempt.amount_minor = checkout.total_minor\
+      \ AND attempt.currency = checkout.currency\
+      \ AND attempt.provider IN ('bank_transfer','cash','pos')\
+      \ AND attempt.operation = 'manual_verify'\
+      \ ORDER BY (attempt.status = 'succeeded') DESC, attempt.updated_at DESC\
+      \ FOR UPDATE OF checkout, attempt, evidence"
+      [ PersistUTCTime now
+      , PersistText (toPathPiece orderKey)
+      , PersistText checkoutId
+      , PersistText (Checkout.checkoutEnvironmentText (mpcxEnvironment context))
+      , PersistInt64 (mpcxTotalMinor context)
+      , PersistText (mpcxCurrency context)
+      ] :: SqlPersistT IO
+        [( Single Text, Single Text, Single Text, Single Text, Single Text
+         , Single Text, Single Text, Single (Maybe Int64), Single (Maybe Int64)
+         , Single Bool
+         )])
+    case rows of
+      [] -> pure (Left "No submitted manual payment evidence exists for this marketplace order")
+      [_first, _second] -> pure (Left "Marketplace manual payment evidence is ambiguous and requires reconciliation")
+      (_:_:_) -> pure (Left "Marketplace manual payment evidence is ambiguous and requires reconciliation")
+      [( Single checkoutStatus, Single attemptId, Single providerText, Single merchantRef
+       , Single attemptStatus, Single evidenceId, Single evidenceStatus
+       , Single mSubmittedBy, Single mReviewedBy, Single holdActive
+       )] -> case (mSubmittedBy, manualPaymentProviderFromText providerText) of
+        (Nothing, _) -> pure (Left "Manual payment evidence has no verified submitter")
+        (_, Nothing) -> pure (Left "Manual payment evidence uses an unsupported provider")
+        (Just submittedBy, Just provider)
+          | submittedBy == reviewerId ->
+              pure (Left "Manual payment evidence requires an independent reviewer")
+          | evidenceStatus == "approved" && reviewAction == "approve"
+              && checkoutStatus == "paid" && attemptStatus == "succeeded" -> pure (Right ())
+          | evidenceStatus == "approved" ->
+              pure (Left "Approved manual payment evidence cannot be changed")
+          | evidenceStatus == "rejected" && reviewAction == "reject" -> pure (Right ())
+          | evidenceStatus == "rejected" ->
+              pure (Left "Rejected evidence must be resubmitted before approval")
+          | evidenceStatus `notElem` ["submitted", "under_review"] ->
+              pure (Left "Manual payment evidence is not ready for review")
+          | evidenceStatus == "under_review" && mReviewedBy /= Just reviewerId ->
+              pure (Left "Manual payment evidence is already under review by another staff member")
+          | checkoutStatus == "paid" -> do
+              Checkout.recordReconciliationException
+                provider (mpcxEnvironment context) merchantRef
+                "manual_evidence_after_other_payment"
+                (toPathPiece orderKey) evidenceId
+                (mpcxTotalMinor context) (Just (mpcxTotalMinor context))
+                (mpcxCurrency context) now
+              pure (Left "This checkout is already paid by another payment attempt")
+          | reviewAction == "approve" && not holdActive -> do
+              Checkout.recordReconciliationException
+                provider (mpcxEnvironment context) merchantRef
+                "manual_payment_after_marketplace_hold_expiry"
+                (toPathPiece orderKey) evidenceId
+                (mpcxTotalMinor context) (Just (mpcxTotalMinor context))
+                (mpcxCurrency context) now
+              pure (Left "The marketplace hold expired; payment requires reconciliation and cannot confirm this order")
+          | reviewAction == "approve"
+              && checkoutStatus `notElem` ["awaiting_payment", "failed", "processing"] ->
+              pure (Left "This checkout no longer accepts manual payment approval")
+          | otherwise -> do
+              transactionSave
+              when (evidenceStatus == "submitted") $
+                rawExecute
+                  "UPDATE commerce_manual_payment_evidence\
+                  \ SET status = 'under_review', reviewed_by = ?, review_notes = ?\
+                  \ WHERE id = ?::uuid"
+                  [PersistInt64 reviewerId, PersistText reviewNotes, PersistText evidenceId]
+              if reviewAction == "reject"
+                then do
+                  rawExecute
+                    "UPDATE commerce_manual_payment_evidence\
+                    \ SET status = 'rejected', reviewed_at = ?, review_notes = ?\
+                    \ WHERE id = ?::uuid"
+                    [PersistUTCTime now, PersistText reviewNotes, PersistText evidenceId]
+                  Checkout.recordPaymentFailure
+                    (mpcxCheckout context) (Checkout.PaymentAttemptReference attemptId)
+                    provider "manual_evidence_rejected"
+                    (marketplacePaymentCorrelationId context provider "manual-review") now
+                  insertMarketplaceManualReviewAudit
+                    context provider reviewerId attemptId evidenceId "manual_payment_rejected"
+                  pure (Right ())
+                else do
+                  rawExecute
+                    "UPDATE commerce_manual_payment_evidence\
+                    \ SET status = 'approved', reviewed_at = ?, review_notes = ?\
+                    \ WHERE id = ?::uuid"
+                    [PersistUTCTime now, PersistText reviewNotes, PersistText evidenceId]
+                  binding <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
+                    { Checkout.pbcAttempt = Checkout.PaymentAttemptReference attemptId
+                    , Checkout.pbcCheckout = mpcxCheckout context
+                    , Checkout.pbcProvider = provider
+                    , Checkout.pbcEnvironment = mpcxEnvironment context
+                    , Checkout.pbcMerchantRef = merchantRef
+                    , Checkout.pbcResourceType = "manual_evidence"
+                    , Checkout.pbcProviderResource = evidenceId
+                    , Checkout.pbcResourcePath = Nothing
+                    , Checkout.pbcOrderReference = toPathPiece orderKey
+                    , Checkout.pbcAmountMinor = mpcxTotalMinor context
+                    , Checkout.pbcCurrency = mpcxCurrency context
+                    , Checkout.pbcStage = Checkout.AttemptProcessing
+                    , Checkout.pbcOccurredAt = now
+                    , Checkout.pbcCorrelationId = marketplacePaymentCorrelationId
+                        context provider "manual-review"
+                    }
+                  case binding of
+                    Left bindingError -> transactionUndo >> pure (Left bindingError)
+                    Right () -> do
+                      verified <- Checkout.recordApprovedManualPayment Checkout.VerifiedPayment
+                        { Checkout.vpAttempt = Checkout.PaymentAttemptReference attemptId
+                        , Checkout.vpCheckout = mpcxCheckout context
+                        , Checkout.vpProvider = provider
+                        , Checkout.vpEnvironment = mpcxEnvironment context
+                        , Checkout.vpMerchantRef = merchantRef
+                        , Checkout.vpResourceType = "manual_evidence"
+                        , Checkout.vpProviderResource = evidenceId
+                        , Checkout.vpProviderResourcePath = Nothing
+                        , Checkout.vpOrderReference = toPathPiece orderKey
+                        , Checkout.vpAmountMinor = mpcxTotalMinor context
+                        , Checkout.vpCurrency = mpcxCurrency context
+                        , Checkout.vpEvidence = "staff_verified_manual"
+                        , Checkout.vpOccurredAt = now
+                        , Checkout.vpCorrelationId = marketplacePaymentCorrelationId
+                            context provider "manual-review"
+                        }
+                      case verified of
+                        Left verificationError -> transactionUndo >> pure (Left verificationError)
+                        Right _ -> do
+                          insertMarketplaceManualReviewAudit
+                            context provider reviewerId attemptId evidenceId "manual_payment_approved"
+                          pure (Right ())
+  either (throwError . marketplaceCheckoutConflict) pure outcome
+  runDB (loadMarketplaceCommerceDTO orderKey)
+    >>= either (throwError . marketplaceCheckoutConflict) pure
+
+data MarketplaceCustomerRequestContext = MarketplaceCustomerRequestContext
+  { mcrcOrderKind    :: Text
+  , mcrcDomainStatus :: Text
+  , mcrcCurrentEnd   :: Maybe Day
+  }
+
+type MarketplaceCustomerRequestRow =
+  ( Single Text, Single Text, Single Text, Single Text, Single Text, Single Text
+  , Single (Maybe Day), Single (Maybe Text), Single UTCTime
+  , Single (Maybe UTCTime), Single (Maybe Text)
+  )
+
+marketplaceCustomerRequestDTO
+  :: MarketplaceCustomerRequestRow
+  -> MarketplaceCustomerRequestDTO
+marketplaceCustomerRequestDTO
+    ( Single requestId, Single orderId, Single orderKind, Single requestType
+    , Single status, Single reason, Single requestedEndDate, Single evidenceUrl
+    , Single requestedAt, Single reviewedAt, Single reviewNotes
+    ) = MarketplaceCustomerRequestDTO
+      { mcrRequestId = requestId
+      , mcrOrderId = orderId
+      , mcrOrderKind = orderKind
+      , mcrRequestType = requestType
+      , mcrStatus = status
+      , mcrReason = reason
+      , mcrRequestedEndDate = requestedEndDate
+      , mcrEvidenceUrl = evidenceUrl
+      , mcrRequestedAt = requestedAt
+      , mcrReviewedAt = reviewedAt
+      , mcrReviewNotes = reviewNotes
+      }
+
+loadMarketplaceCustomerRequestContext
+  :: Key ME.MarketplaceOrder
+  -> SqlPersistT IO (Maybe MarketplaceCustomerRequestContext)
+loadMarketplaceCustomerRequestContext orderKey = do
+  rows <- (rawSql
+    "SELECT runtime.order_kind, runtime.domain_status, rental.end_date\
+    \ FROM marketplace_order_checkout_runtime runtime\
+    \ LEFT JOIN marketplace_rental_order_runtime rental\
+    \   ON rental.order_id = runtime.order_id AND runtime.order_kind = 'rental'\
+    \ WHERE runtime.order_id = ?::uuid"
+    [PersistText (toPathPiece orderKey)]
+    :: SqlPersistT IO
+      [(Single Text, Single Text, Single (Maybe Day))])
+  pure $ case rows of
+    [(Single orderKind, Single domainStatus, Single currentEnd)] ->
+      Just MarketplaceCustomerRequestContext
+        { mcrcOrderKind = orderKind
+        , mcrcDomainStatus = domainStatus
+        , mcrcCurrentEnd = currentEnd
+        }
+    _ -> Nothing
+
+loadMarketplaceCustomerRequestDTO
+  :: Key ME.MarketplaceOrder
+  -> Text
+  -> SqlPersistT IO (Maybe MarketplaceCustomerRequestDTO)
+loadMarketplaceCustomerRequestDTO orderKey requestId = do
+  rows <- (rawSql
+    "SELECT id::text, order_id::text, order_kind, request_type, status, reason,\
+    \ requested_end_date, evidence_url, requested_at, reviewed_at, review_notes\
+    \ FROM marketplace_customer_request\
+    \ WHERE order_id = ?::uuid AND id = ?::uuid"
+    [PersistText (toPathPiece orderKey), PersistText requestId]
+    :: SqlPersistT IO [MarketplaceCustomerRequestRow])
+  pure (marketplaceCustomerRequestDTO <$> listToMaybe rows)
+
+listMarketplaceCustomerRequestDTOs
+  :: Key ME.MarketplaceOrder
+  -> SqlPersistT IO [MarketplaceCustomerRequestDTO]
+listMarketplaceCustomerRequestDTOs orderKey = do
+  rows <- (rawSql
+    "SELECT id::text, order_id::text, order_kind, request_type, status, reason,\
+    \ requested_end_date, evidence_url, requested_at, reviewed_at, review_notes\
+    \ FROM marketplace_customer_request WHERE order_id = ?::uuid\
+    \ ORDER BY requested_at DESC, id DESC"
+    [PersistText (toPathPiece orderKey)]
+    :: SqlPersistT IO [MarketplaceCustomerRequestRow])
+  pure (map marketplaceCustomerRequestDTO rows)
+
+validateMarketplaceRequiredOperationText
+  :: Text
+  -> Int
+  -> Text
+  -> Either ServerError Text
+validateMarketplaceRequiredOperationText fieldName maxLength rawValue
+  | T.length value < 3 || T.length value > maxLength = Left invalid
+  | T.any isUnsafeAccessRequestTextChar value = Left invalid
+  | otherwise = Right value
+  where
+    value = T.strip rawValue
+    invalid = err400
+      { errBody = BL.fromStrict . TE.encodeUtf8 $
+          fieldName <> " must contain 3 to " <> T.pack (show maxLength)
+            <> " safe characters"
+      }
+
+tryMarketplaceOperationIO :: IO a -> IO (Either SomeException a)
+tryMarketplaceOperationIO = try
+
+runMarketplaceOperationWrite
+  :: Text
+  -> SqlPersistT IO a
+  -> AppM a
+runMarketplaceOperationWrite conflictMessage action = do
+  Env{ envPool } <- ask
+  result <- liftIO (tryMarketplaceOperationIO (flip runSqlPool envPool action))
+  case result of
+    Right value -> pure value
+    Left exception -> case fromException exception :: Maybe SomeAsyncException of
+      Just _ -> liftIO (throwIO exception)
+      Nothing -> case fromException exception :: Maybe SqlError of
+        Just sqlError
+          | sqlState sqlError == "P0001"
+              || "23" `BS8.isPrefixOf` sqlState sqlError ->
+                  throwError (marketplaceCheckoutConflict conflictMessage)
+        _ -> liftIO (throwIO exception)
+
+listMarketplaceCustomerRequestsPublic
+  :: Text
+  -> Maybe Text
+  -> AppM [MarketplaceCustomerRequestDTO]
+listMarketplaceCustomerRequestsPublic rawOrderId mLookupToken = do
+  orderKey <- parseOrderId rawOrderId
+  requireMarketplaceOrderLookupToken orderKey mLookupToken
+  runDB (listMarketplaceCustomerRequestDTOs orderKey)
+
+submitMarketplaceCustomerRequest
+  :: Text
+  -> Maybe Text
+  -> Maybe Text
+  -> MarketplaceCustomerRequestSubmit
+  -> AppM MarketplaceCustomerRequestDTO
+submitMarketplaceCustomerRequest
+    rawOrderId mLookupToken mIdempotency MarketplaceCustomerRequestSubmit{..} = do
+  orderKey <- parseOrderId rawOrderId
+  requireMarketplaceOrderLookupToken orderKey mLookupToken
+  lookupToken <- case T.strip <$> mLookupToken of
+    Just token | not (T.null token) -> pure token
+    _ -> throwError marketplaceOrderNotFound
+  idempotencyKey <- either (throwError . marketplaceCheckoutBadRequest) pure
+    (ServiceStorefront.validateIdempotencyKey mIdempotency)
+  requestKind <- either (throwError . marketplaceCheckoutBadRequest) pure
+    (MarketplaceOperations.parseMarketplaceCustomerRequestKind mcrsRequestType)
+  reason <- either throwError pure
+    (validateMarketplaceRequiredOperationText "reason" 1000 mcrsReason)
+  evidenceUrl <- either throwError pure
+    (validateMarketplaceRentalEvidenceUrl mcrsEvidenceUrl)
+  context <- runDB (loadMarketplaceCustomerRequestContext orderKey)
+    >>= maybe (throwError err409
+          { errBody = "This historical order does not support customer operations" }) pure
+  either (throwError . marketplaceCheckoutConflict) pure $
+    MarketplaceOperations.validateMarketplaceCustomerRequest
+      requestKind (mcrcOrderKind context) (mcrcDomainStatus context)
+      (mcrcCurrentEnd context) mcrsRequestedEndDate
+  let orderId = toPathPiece orderKey
+      requestType = MarketplaceOperations.marketplaceCustomerRequestKindText requestKind
+      requestHash = marketplaceSha256Text . TE.decodeUtf8 . BL.toStrict . encode $ object
+        [ "order_id" .= orderId
+        , "request_type" .= requestType
+        , "reason" .= reason
+        , "requested_end_date" .= mcrsRequestedEndDate
+        , "evidence_url" .= evidenceUrl
+        ]
+      customerActor = "lookup:" <> T.take 24 (marketplaceSha256Text lookupToken)
+  created <- runMarketplaceOperationWrite
+    "A request for this order is already pending or the order state changed" $ do
+      _ <- (rawSql
+        "SELECT 1::bigint FROM (\
+        \ SELECT pg_advisory_xact_lock(hashtextextended(?, 0))\
+        \) lock_acquired"
+        [PersistText ("marketplace-customer-request:" <> orderId <> ":" <> idempotencyKey)]
+        :: SqlPersistT IO [Single Int64])
+      existing <- (rawSql
+        "SELECT id::text, request_sha256 FROM marketplace_customer_request\
+        \ WHERE order_id = ?::uuid AND idempotency_key = ?"
+        [PersistText orderId, PersistText idempotencyKey]
+        :: SqlPersistT IO [(Single Text, Single Text)])
+      case existing of
+        [(Single requestId, Single storedHash)]
+          | storedHash == requestHash -> pure (Right requestId)
+          | otherwise -> pure (Left
+              "Idempotency key was already used for a different marketplace request")
+        [] -> do
+          _ <- (rawSql
+            "SELECT set_config('tdf.actor_type', 'customer', true),\
+            \ set_config('tdf.actor_id', ?, true)"
+            [PersistText customerActor]
+            :: SqlPersistT IO [(Single Text, Single Text)])
+          inserted <- (rawSql
+            "INSERT INTO marketplace_customer_request(\
+            \ order_id, order_kind, request_type, reason, requested_end_date,\
+            \ evidence_url, idempotency_key, request_sha256\
+            \) VALUES (?::uuid, ?, ?, ?, ?, ?, ?, ?) RETURNING id::text"
+            [ PersistText orderId
+            , PersistText (mcrcOrderKind context)
+            , PersistText requestType
+            , PersistText reason
+            , maybe PersistNull PersistDay mcrsRequestedEndDate
+            , maybe PersistNull PersistText evidenceUrl
+            , PersistText idempotencyKey
+            , PersistText requestHash
+            ] :: SqlPersistT IO [Single Text])
+          pure $ case inserted of
+            [Single requestId] -> Right requestId
+            _ -> Left "Marketplace request could not be created"
+        _ -> pure (Left "Marketplace request idempotency state is ambiguous")
+  requestId <- either (throwError . marketplaceCheckoutConflict) pure created
+  runDB (loadMarketplaceCustomerRequestDTO orderKey requestId)
+    >>= either throwError pure
+      . requireLoadedMarketplaceWriteResult "Marketplace customer request"
+
+listMarketplaceCustomerRequestsAdmin
+  :: AuthedUser
+  -> Text
+  -> AppM [MarketplaceCustomerRequestDTO]
+listMarketplaceCustomerRequestsAdmin user rawOrderId = do
+  requireMarketplaceAccess user
+  orderKey <- parseOrderId rawOrderId
+  runDB (listMarketplaceCustomerRequestDTOs orderKey)
+
+reviewMarketplaceCustomerRequest
+  :: AuthedUser
+  -> Text
+  -> Text
+  -> MarketplaceCustomerRequestReview
+  -> AppM MarketplaceCustomerRequestDTO
+reviewMarketplaceCustomerRequest
+    user rawOrderId rawRequestId MarketplaceCustomerRequestReview{..} = do
+  requireMarketplaceAccess user
+  orderKey <- parseOrderId rawOrderId
+  requestId <- either throwError pure
+    (validateMarketplacePathId "request" rawRequestId)
+  reviewAction <- either (throwError . marketplaceCheckoutBadRequest) pure
+    (MarketplaceOperations.parseMarketplaceCustomerReviewAction mcrrAction)
+  reviewNotes <- either throwError pure
+    (validateMarketplaceRequiredOperationText "reviewNotes" 1000 mcrrReviewNotes)
+  requestRows <- runDB (rawSql
+    "SELECT request_type, status FROM marketplace_customer_request\
+    \ WHERE id = ?::uuid AND order_id = ?::uuid"
+    [PersistText requestId, PersistText (toPathPiece orderKey)]
+    :: SqlPersistT IO [(Single Text, Single Text)])
+  (requestKind, currentStatus) <- case requestRows of
+    [(Single requestType, Single status)] -> do
+      kind <- either (throwError . marketplaceCheckoutInternal) pure
+        (MarketplaceOperations.parseMarketplaceCustomerRequestKind requestType)
+      parsedStatus <- either (throwError . marketplaceCheckoutInternal) pure
+        (MarketplaceOperations.parseMarketplaceCustomerRequestStatus status)
+      pure (kind, parsedStatus)
+    [] -> throwError marketplaceOrderNotFound
+    _ -> throwError (marketplaceCheckoutInternal
+      "Marketplace customer request lookup was ambiguous")
+  nextStatus <- either (throwError . marketplaceCheckoutConflict) pure
+    (MarketplaceOperations.validateMarketplaceCustomerReview
+      requestKind currentStatus reviewAction)
+  now <- liftIO getCurrentTime
+  let reviewerId = fromSqlKey (auPartyId user)
+      currentStatusText = MarketplaceOperations.marketplaceCustomerRequestStatusText currentStatus
+      nextStatusText = MarketplaceOperations.marketplaceCustomerRequestStatusText nextStatus
+  updated <- runMarketplaceOperationWrite
+    "Marketplace request or order state changed before review" $
+      (rawSql
+        "WITH actor_context AS MATERIALIZED (\
+        \ SELECT set_config('tdf.actor_type', 'operator', true),\
+        \ set_config('tdf.actor_id', ?, true)\
+        \) UPDATE marketplace_customer_request SET status = ?, reviewed_by = ?,\
+        \ reviewed_at = ?, review_notes = ? FROM actor_context\
+        \ WHERE id = ?::uuid AND order_id = ?::uuid AND status = ?\
+        \ RETURNING marketplace_customer_request.id::text"
+        [ PersistText (T.pack (show reviewerId))
+        , PersistText nextStatusText
+        , PersistInt64 reviewerId
+        , PersistUTCTime now
+        , PersistText reviewNotes
+        , PersistText requestId
+        , PersistText (toPathPiece orderKey)
+        , PersistText currentStatusText
+        ] :: SqlPersistT IO [Single Text])
+  when (null updated) $
+    throwError (marketplaceCheckoutConflict
+      "Marketplace request changed concurrently; reload before retrying")
+  runDB (loadMarketplaceCustomerRequestDTO orderKey requestId)
+    >>= either throwError pure
+      . requireLoadedMarketplaceWriteResult "Marketplace customer request"
+
+type MarketplaceDepositSettlementRow =
+  ( Single Text, Single Text, Single Text, Single Text, Single Int64, Single Int64
+  , Single Int64, Single Text, Single Text, Single Text, Single Text, Single Int64
+  , Single UTCTime, Single (Maybe Int64), Single (Maybe UTCTime), Single (Maybe Text)
+  )
+
+marketplaceDepositSettlementDTO
+  :: MarketplaceDepositSettlementRow
+  -> MarketplaceDepositSettlementDTO
+marketplaceDepositSettlementDTO
+    ( Single settlementId, Single orderId, Single checkoutId, Single currency
+    , Single depositAmount, Single deductionAmount, Single refundAmount
+    , Single settlementMethod, Single externalReference, Single evidenceUrl
+    , Single status, Single submittedBy, Single submittedAt, Single reviewedBy
+    , Single reviewedAt, Single reviewNotes
+    ) = MarketplaceDepositSettlementDTO
+      { mdsSettlementId = settlementId
+      , mdsOrderId = orderId
+      , mdsCheckoutId = checkoutId
+      , mdsCurrency = currency
+      , mdsDepositAmountMinor = depositAmount
+      , mdsDeductionAmountMinor = deductionAmount
+      , mdsRefundAmountMinor = refundAmount
+      , mdsSettlementMethod = settlementMethod
+      , mdsExternalReference = externalReference
+      , mdsEvidenceUrl = evidenceUrl
+      , mdsStatus = status
+      , mdsSubmittedBy = submittedBy
+      , mdsSubmittedAt = submittedAt
+      , mdsReviewedBy = reviewedBy
+      , mdsReviewedAt = reviewedAt
+      , mdsReviewNotes = reviewNotes
+      }
+
+marketplaceDepositSettlementSelect :: Text
+marketplaceDepositSettlementSelect =
+  "SELECT id::text, order_id::text, checkout_id::text, currency,\
+  \ deposit_amount_minor, deduction_amount_minor, refund_amount_minor,\
+  \ settlement_method, external_reference, evidence_url, status, submitted_by,\
+  \ submitted_at, reviewed_by, reviewed_at, review_notes\
+  \ FROM marketplace_rental_deposit_settlement"
+
+loadMarketplaceDepositSettlementDTO
+  :: Key ME.MarketplaceOrder
+  -> Text
+  -> SqlPersistT IO (Maybe MarketplaceDepositSettlementDTO)
+loadMarketplaceDepositSettlementDTO orderKey settlementId = do
+  rows <- (rawSql
+    (marketplaceDepositSettlementSelect
+      <> " WHERE order_id = ?::uuid AND id = ?::uuid")
+    [PersistText (toPathPiece orderKey), PersistText settlementId]
+    :: SqlPersistT IO [MarketplaceDepositSettlementRow])
+  pure (marketplaceDepositSettlementDTO <$> listToMaybe rows)
+
+listMarketplaceDepositSettlementDTOs
+  :: Key ME.MarketplaceOrder
+  -> SqlPersistT IO [MarketplaceDepositSettlementDTO]
+listMarketplaceDepositSettlementDTOs orderKey = do
+  rows <- (rawSql
+    (marketplaceDepositSettlementSelect
+      <> " WHERE order_id = ?::uuid ORDER BY submitted_at DESC, id DESC")
+    [PersistText (toPathPiece orderKey)]
+    :: SqlPersistT IO [MarketplaceDepositSettlementRow])
+  pure (map marketplaceDepositSettlementDTO rows)
+
+listMarketplaceDepositSettlements
+  :: AuthedUser
+  -> Text
+  -> AppM [MarketplaceDepositSettlementDTO]
+listMarketplaceDepositSettlements user rawOrderId = do
+  requireMarketplaceAccess user
+  requireModule user ModuleInvoicing
+  orderKey <- parseOrderId rawOrderId
+  runDB (listMarketplaceDepositSettlementDTOs orderKey)
+
+submitMarketplaceDepositSettlement
+  :: AuthedUser
+  -> Text
+  -> Maybe Text
+  -> MarketplaceDepositSettlementSubmit
+  -> AppM MarketplaceDepositSettlementDTO
+submitMarketplaceDepositSettlement
+    user rawOrderId mIdempotency MarketplaceDepositSettlementSubmit{..} = do
+  requireMarketplaceAccess user
+  requireModule user ModuleInvoicing
+  orderKey <- parseOrderId rawOrderId
+  idempotencyKey <- either (throwError . marketplaceCheckoutBadRequest) pure
+    (ServiceStorefront.validateIdempotencyKey mIdempotency)
+  method <- either (throwError . marketplaceCheckoutBadRequest) pure
+    (MarketplaceOperations.parseMarketplaceDepositSettlementMethod mdssSettlementMethod)
+  externalReference <- either throwError pure
+    (validateMarketplaceRequiredOperationText
+      "externalReference" 160 mdssExternalReference)
+  evidenceUrl <- either throwError pure
+    (validateMarketplaceRentalEvidenceUrl (Just mdssEvidenceUrl))
+      >>= maybe (throwError err400 { errBody = "evidenceUrl is required" }) pure
+  runtimeRows <- runDB (rawSql
+    "SELECT runtime.checkout_id::text, checkout.currency,\
+    \ runtime.security_deposit_usd_cents, runtime.deposit_deduction_usd_cents,\
+    \ runtime.security_deposit_usd_cents - runtime.deposit_deduction_usd_cents,\
+    \ runtime.rental_status, runtime.deposit_status\
+    \ FROM marketplace_rental_order_runtime runtime\
+    \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+    \ WHERE runtime.order_id = ?::uuid"
+    [PersistText (toPathPiece orderKey)]
+    :: SqlPersistT IO
+      [( Single Text, Single Text, Single Int64, Single Int64, Single Int64
+       , Single Text, Single Text
+       )])
+  (checkoutId, currency, depositAmount, deductionAmount, refundAmount) <-
+    case runtimeRows of
+      [( Single storedCheckoutId, Single storedCurrency, Single deposit
+       , Single deduction, Single refund, Single rentalStatus, Single depositStatus
+       )]
+        | rentalStatus /= "deposit_refund_due"
+            || depositStatus `notElem` ["refund_due", "partial_refund_due"] ->
+                throwError (marketplaceCheckoutConflict
+                  "Rental deposit is not due for settlement")
+        | otherwise -> pure
+            (storedCheckoutId, storedCurrency, deposit, deduction, refund)
+      [] -> throwError err409
+        { errBody = "This order is not a canonical marketplace rental" }
+      _ -> throwError (marketplaceCheckoutInternal
+        "Marketplace rental deposit context is ambiguous")
+  either (throwError . marketplaceCheckoutBadRequest) pure
+    (MarketplaceOperations.validateMarketplaceDepositSettlement
+      method depositAmount deductionAmount refundAmount)
+  environment <- runDB
+    (Checkout.loadCheckoutEnvironment (Checkout.CheckoutReference checkoutId))
+    >>= either (throwError . marketplaceCheckoutInternal) pure
+  capabilityEnabled <- runDB $
+    Checkout.capabilityEnabledForEnvironment environment
+      "commerce.marketplace_manual_deposit_settlement"
+  unless capabilityEnabled $
+    throwError err503
+      { errBody = "Manual marketplace deposit settlement is disabled in this environment" }
+  let orderId = toPathPiece orderKey
+      methodText = MarketplaceOperations.marketplaceDepositSettlementMethodText method
+      submittedBy = fromSqlKey (auPartyId user)
+      requestHash = marketplaceSha256Text . TE.decodeUtf8 . BL.toStrict . encode $ object
+        [ "order_id" .= orderId
+        , "checkout_id" .= checkoutId
+        , "currency" .= currency
+        , "deposit_amount_minor" .= depositAmount
+        , "deduction_amount_minor" .= deductionAmount
+        , "refund_amount_minor" .= refundAmount
+        , "settlement_method" .= methodText
+        , "external_reference" .= externalReference
+        , "evidence_url" .= evidenceUrl
+        ]
+  created <- runMarketplaceOperationWrite
+    "Deposit settlement evidence conflicts with existing or changed rental state" $ do
+      _ <- (rawSql
+        "SELECT 1::bigint FROM (\
+        \ SELECT pg_advisory_xact_lock(hashtextextended(?, 0))\
+        \) lock_acquired"
+        [PersistText ("marketplace-deposit-settlement:" <> orderId <> ":" <> idempotencyKey)]
+        :: SqlPersistT IO [Single Int64])
+      existing <- (rawSql
+        "SELECT id::text, request_sha256\
+        \ FROM marketplace_rental_deposit_settlement\
+        \ WHERE order_id = ?::uuid AND idempotency_key = ?"
+        [PersistText orderId, PersistText idempotencyKey]
+        :: SqlPersistT IO [(Single Text, Single Text)])
+      case existing of
+        [(Single settlementId, Single storedHash)]
+          | storedHash == requestHash -> pure (Right settlementId)
+          | otherwise -> pure (Left
+              "Idempotency key was already used for different deposit evidence")
+        [] -> do
+          inserted <- (rawSql
+            "INSERT INTO marketplace_rental_deposit_settlement(\
+            \ order_id, checkout_id, currency, deposit_amount_minor,\
+            \ deduction_amount_minor, refund_amount_minor, settlement_method,\
+            \ external_reference, evidence_url, idempotency_key, request_sha256, submitted_by\
+            \) VALUES (?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\
+            \ RETURNING id::text"
+            [ PersistText orderId
+            , PersistText checkoutId
+            , PersistText currency
+            , PersistInt64 depositAmount
+            , PersistInt64 deductionAmount
+            , PersistInt64 refundAmount
+            , PersistText methodText
+            , PersistText externalReference
+            , PersistText evidenceUrl
+            , PersistText idempotencyKey
+            , PersistText requestHash
+            , PersistInt64 submittedBy
+            ] :: SqlPersistT IO [Single Text])
+          pure $ case inserted of
+            [Single settlementId] -> Right settlementId
+            _ -> Left "Deposit settlement evidence could not be created"
+        _ -> pure (Left "Deposit settlement idempotency state is ambiguous")
+  settlementId <- either (throwError . marketplaceCheckoutConflict) pure created
+  runDB (loadMarketplaceDepositSettlementDTO orderKey settlementId)
+    >>= either throwError pure
+      . requireLoadedMarketplaceWriteResult "Marketplace deposit settlement"
+
+reviewMarketplaceDepositSettlement
+  :: AuthedUser
+  -> Text
+  -> Text
+  -> MarketplaceDepositSettlementReview
+  -> AppM MarketplaceDepositSettlementDTO
+reviewMarketplaceDepositSettlement
+    user rawOrderId rawSettlementId MarketplaceDepositSettlementReview{..} = do
+  requireMarketplaceAccess user
+  requireModule user ModuleInvoicing
+  orderKey <- parseOrderId rawOrderId
+  settlementId <- either throwError pure
+    (validateMarketplacePathId "settlement" rawSettlementId)
+  action <- either (throwError . marketplaceCheckoutBadRequest) pure
+    (MarketplaceOperations.parseMarketplaceCustomerReviewAction mdsrAction)
+  nextStatus <- case action of
+    MarketplaceOperations.CustomerRequestApprove -> pure "verified"
+    MarketplaceOperations.CustomerRequestReject -> pure "rejected"
+    MarketplaceOperations.CustomerRequestRequireReconciliation ->
+      pure "requires_reconciliation"
+    MarketplaceOperations.CustomerRequestNeedsQuoteAction ->
+      throwError err400
+        { errBody = "Deposit settlement review action must be approve, reject, or requires_reconciliation" }
+  reviewNotes <- either throwError pure
+    (validateMarketplaceRequiredOperationText "reviewNotes" 1000 mdsrReviewNotes)
+  settlementRows <- runDB (rawSql
+    "SELECT status, submitted_by FROM marketplace_rental_deposit_settlement\
+    \ WHERE id = ?::uuid AND order_id = ?::uuid"
+    [PersistText settlementId, PersistText (toPathPiece orderKey)]
+    :: SqlPersistT IO [(Single Text, Single Int64)])
+  (currentStatus, submittedBy) <- case settlementRows of
+    [(Single status, Single submitter)] -> pure (status, submitter)
+    [] -> throwError marketplaceOrderNotFound
+    _ -> throwError (marketplaceCheckoutInternal
+      "Marketplace deposit settlement lookup was ambiguous")
+  let reviewerId = fromSqlKey (auPartyId user)
+  either (throwError . marketplaceCheckoutConflict) pure
+    (MarketplaceOperations.validateIndependentDepositReviewer submittedBy reviewerId)
+  if currentStatus == nextStatus
+    then runDB (loadMarketplaceDepositSettlementDTO orderKey settlementId)
+      >>= either throwError pure
+        . requireLoadedMarketplaceWriteResult "Marketplace deposit settlement"
+    else do
+      when (currentStatus /= "submitted") $
+        throwError (marketplaceCheckoutConflict
+          "Reviewed deposit settlement evidence cannot be changed")
+      now <- liftIO getCurrentTime
+      updated <- runMarketplaceOperationWrite
+        "Rental or checkout state changed before deposit settlement review" $
+          (rawSql
+            "UPDATE marketplace_rental_deposit_settlement SET status = ?, reviewed_by = ?,\
+            \ reviewed_at = ?, review_notes = ?\
+            \ WHERE id = ?::uuid AND order_id = ?::uuid AND status = 'submitted'\
+            \ RETURNING id::text"
+            [ PersistText nextStatus
+            , PersistInt64 reviewerId
+            , PersistUTCTime now
+            , PersistText reviewNotes
+            , PersistText settlementId
+            , PersistText (toPathPiece orderKey)
+            ] :: SqlPersistT IO [Single Text])
+      when (null updated) $
+        throwError (marketplaceCheckoutConflict
+          "Deposit settlement changed concurrently; reload before retrying")
+      runDB (loadMarketplaceDepositSettlementDTO orderKey settlementId)
+        >>= either throwError pure
+          . requireLoadedMarketplaceWriteResult "Marketplace deposit settlement"
+
 listMarketplaceOrders :: AuthedUser -> Maybe Text -> Maybe Int -> Maybe Int -> AppM [MarketplaceOrderDTO]
 listMarketplaceOrders user mStatus mLimit mOffset = do
   requireMarketplaceAccess user
@@ -14703,6 +18726,15 @@ updateMarketplaceOrder user rawId MarketplaceOrderUpdate{..} = do
   now <- liftIO getCurrentTime
   paidAtInput <- either throwError pure (validateMarketplaceOrderPaidAtUpdate now mouPaidAt)
   Env{..} <- ask
+  when (nextStatus == Just "paid") $ do
+    canonicalRuntime <- liftIO $ flip runSqlPool envPool $
+      (rawSql
+        "SELECT 1::bigint FROM marketplace_order_checkout_runtime WHERE order_id = ?::uuid"
+        [PersistText (toPathPiece orderKey)] :: SqlPersistT IO [Single Int64])
+    unless (null canonicalRuntime) $
+      throwError err409
+        { errBody = "Canonical marketplace payments can only become paid from verified provider evidence"
+        }
   mDto <- liftIO $ flip runSqlPool envPool $ do
     mOrder <- get orderKey
     case mOrder of
@@ -14739,6 +18771,211 @@ updateMarketplaceOrder user rawId MarketplaceOrderUpdate{..} = do
         loadOrderDTO orderKey
   either throwError pure (requireMarketplaceOrderLookupResult mDto)
 
+updateMarketplaceFulfillment
+  :: AuthedUser
+  -> Text
+  -> MarketplaceFulfillmentUpdate
+  -> AppM MarketplaceOrderDTO
+updateMarketplaceFulfillment user rawId MarketplaceFulfillmentUpdate{..} = do
+  requireMarketplaceAccess user
+  orderKey <- parseOrderId rawId
+  nextState <- either (throwError . marketplaceCheckoutBadRequest) pure
+    (MarketplaceSales.parseMarketplaceFulfillmentState mfuStatus)
+  carrier <- either throwError pure
+    (normalizeMarketplaceFulfillmentField "carrier" 120 mfuCarrier)
+  trackingReference <- either throwError pure
+    (normalizeMarketplaceFulfillmentField "trackingReference" 160 mfuTrackingReference)
+  reasonCode <- either throwError pure
+    (normalizeMarketplaceFulfillmentField "reasonCode" 80 mfuReasonCode)
+  notes <- either throwError pure
+    (normalizeMarketplaceFulfillmentField "notes" 500 mfuNotes)
+  Env{ envPool } <- ask
+  runtimeRows <- liftIO $ flip runSqlPool envPool $
+    (rawSql
+      "SELECT fulfillment_method, fulfillment_status, tracking_reference\
+      \ FROM marketplace_sale_order_runtime WHERE order_id = ?::uuid"
+      [PersistText (toPathPiece orderKey)]
+      :: SqlPersistT IO [(Single Text, Single Text, Single (Maybe Text))])
+  (methodText, currentStateText, storedTracking) <- case runtimeRows of
+    [(Single methodValue, Single statusValue, Single trackingValue)] ->
+      pure (methodValue, statusValue, trackingValue)
+    [] -> throwError err409
+      { errBody = "This historical order is not linked to the marketplace fulfillment runtime"
+      }
+    _ -> throwError (marketplaceCheckoutInternal
+      "Marketplace fulfillment runtime lookup was ambiguous")
+  method <- either (throwError . marketplaceCheckoutInternal) pure
+    (MarketplaceSales.parseMarketplaceFulfillmentMethod methodText)
+  currentState <- either (throwError . marketplaceCheckoutInternal) pure
+    (MarketplaceSales.parseMarketplaceFulfillmentState currentStateText)
+  either (throwError . marketplaceCheckoutConflict) pure
+    (MarketplaceSales.validateMarketplaceFulfillmentTransition method currentState nextState)
+  when (nextState == MarketplaceSales.MarketplaceShipped
+      && isNothing (trackingReference <|> storedTracking)) $
+    throwError err400 { errBody = "Tracking reference is required before an order is shipped" }
+  let nextStateText = MarketplaceSales.marketplaceFulfillmentStateText nextState
+      actorId = toPathPiece (auPartyId user)
+  updatedRows <- liftIO $ flip runSqlPool envPool $
+    (rawSql
+      "WITH actor_context AS MATERIALIZED (\
+      \ SELECT set_config('tdf.actor_type', 'operator', true),\
+      \ set_config('tdf.actor_id', ?, true),\
+      \ set_config('tdf.reason_code', ?, true),\
+      \ set_config('tdf.notes', ?, true)\
+      \) UPDATE marketplace_sale_order_runtime SET fulfillment_status = ?,\
+      \ carrier = COALESCE(?, carrier),\
+      \ tracking_reference = COALESCE(?, tracking_reference)\
+      \ FROM actor_context WHERE order_id = ?::uuid AND fulfillment_status = ?\
+      \ RETURNING marketplace_sale_order_runtime.fulfillment_status"
+      [ PersistText actorId
+      , PersistText (fromMaybe "" reasonCode)
+      , PersistText (fromMaybe "" notes)
+      , PersistText nextStateText
+      , maybe PersistNull PersistText carrier
+      , maybe PersistNull PersistText trackingReference
+      , PersistText (toPathPiece orderKey)
+      , PersistText currentStateText
+      ] :: SqlPersistT IO [Single Text])
+  when (null updatedRows) $
+    throwError (marketplaceCheckoutConflict
+      "Marketplace fulfillment state changed concurrently; reload the order before retrying")
+  mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
+  either throwError pure (requireLoadedMarketplaceWriteResult "Marketplace order" mDto)
+
+updateMarketplaceRental
+  :: AuthedUser
+  -> Text
+  -> MarketplaceRentalUpdate
+  -> AppM MarketplaceOrderDTO
+updateMarketplaceRental user rawId MarketplaceRentalUpdate{..} = do
+  requireMarketplaceAccess user
+  orderKey <- parseOrderId rawId
+  nextState <- either (throwError . marketplaceCheckoutBadRequest) pure
+    (MarketplaceRentals.parseMarketplaceRentalState mruStatus)
+  conditionOut <- either throwError pure
+    (normalizeMarketplaceFulfillmentField "conditionOut" 1000 mruConditionOut)
+  conditionIn <- either throwError pure
+    (normalizeMarketplaceFulfillmentField "conditionIn" 1000 mruConditionIn)
+  evidenceUrl <- either throwError pure (validateMarketplaceRentalEvidenceUrl mruEvidenceUrl)
+  reasonCode <- either throwError pure
+    (normalizeMarketplaceFulfillmentField "reasonCode" 80 mruReasonCode)
+  notes <- either throwError pure
+    (normalizeMarketplaceFulfillmentField "notes" 1000 mruNotes)
+  deduction <- case mruDepositDeductionUsdCents of
+    Nothing -> pure Nothing
+    Just amount | amount >= 0 -> pure (Just amount)
+    Just _ -> throwError err400 { errBody = "Deposit deduction cannot be negative" }
+  Env{ envPool } <- ask
+  runtimeRows <- liftIO $ flip runSqlPool envPool $
+    (rawSql
+      "SELECT rental_status, deposit_status, security_deposit_usd_cents,\
+      \ deposit_deduction_usd_cents, condition_out, condition_in\
+      \ FROM marketplace_rental_order_runtime WHERE order_id = ?::uuid"
+      [PersistText (toPathPiece orderKey)]
+      :: SqlPersistT IO
+        [( Single Text, Single Text, Single Int64, Single Int64
+         , Single (Maybe Text), Single (Maybe Text)
+         )])
+  (currentStateText, depositStatus, securityDeposit, currentDeduction, storedConditionOut, storedConditionIn) <-
+    case runtimeRows of
+      [( Single stateValue, Single depositValue, Single depositAmount, Single deductionAmount
+       , Single outboundCondition, Single inboundCondition
+       )] -> pure
+          ( stateValue, depositValue, fromIntegral depositAmount, fromIntegral deductionAmount
+          , outboundCondition, inboundCondition
+          )
+      [] -> throwError err409 { errBody = "This order is not a canonical marketplace rental" }
+      _ -> throwError (marketplaceCheckoutInternal "Marketplace rental runtime lookup was ambiguous")
+  currentState <- either (throwError . marketplaceCheckoutInternal) pure
+    (MarketplaceRentals.parseMarketplaceRentalState currentStateText)
+  either (throwError . marketplaceCheckoutConflict) pure
+    (MarketplaceRentals.validateMarketplaceRentalTransition currentState nextState)
+  let finalDeduction = fromMaybe currentDeduction deduction
+      finalConditionOut = conditionOut <|> storedConditionOut
+      finalConditionIn = conditionIn <|> storedConditionIn
+  when (finalDeduction > securityDeposit) $
+    throwError err400 { errBody = "Deposit deduction cannot exceed the collected security deposit" }
+  when (isJust deduction && nextState `notElem`
+      [ MarketplaceRentals.RentalDamageReview
+      , MarketplaceRentals.RentalDepositRefundDue
+      , MarketplaceRentals.RentalDisputed
+      ]) $
+    throwError err400 { errBody = "Deposit deductions require damage review, refund due, or dispute state" }
+  when (nextState == MarketplaceRentals.RentalCheckedOut && isNothing finalConditionOut) $
+    throwError err400 { errBody = "Rental handoff requires an outbound condition report" }
+  when (nextState == MarketplaceRentals.RentalReturnedPendingInspection && isNothing finalConditionIn) $
+    throwError err400 { errBody = "Rental return requires an inbound condition report" }
+  when (nextState == MarketplaceRentals.RentalClosed
+      && securityDeposit > 0
+      && depositStatus `notElem` ["refunded", "partially_refunded", "forfeited"]) $
+    throwError err409
+      { errBody = "Rental cannot close until deposit settlement has verified terminal evidence" }
+  let nextStateText = MarketplaceRentals.marketplaceRentalStateText nextState
+      actorId = toPathPiece (auPartyId user)
+  updatedRows <- liftIO $ flip runSqlPool envPool $
+    (rawSql
+      "WITH actor_context AS MATERIALIZED (\
+      \ SELECT set_config('tdf.actor_type', 'operator', true),\
+      \ set_config('tdf.actor_id', ?, true), set_config('tdf.reason_code', ?, true),\
+      \ set_config('tdf.notes', ?, true)\
+      \) UPDATE marketplace_rental_order_runtime SET rental_status = ?,\
+      \ condition_out = COALESCE(?, condition_out), condition_in = COALESCE(?, condition_in),\
+      \ evidence_url = COALESCE(?, evidence_url),\
+      \ deposit_deduction_usd_cents = COALESCE(?, deposit_deduction_usd_cents),\
+      \ checked_out_at = CASE WHEN ? = 'checked_out' THEN COALESCE(checked_out_at, NOW()) ELSE checked_out_at END,\
+      \ returned_at = CASE WHEN ? = 'returned_pending_inspection' THEN COALESCE(returned_at, NOW()) ELSE returned_at END\
+      \ FROM actor_context WHERE order_id = ?::uuid AND rental_status = ?\
+      \ RETURNING marketplace_rental_order_runtime.rental_status"
+      [ PersistText actorId
+      , PersistText (fromMaybe "" reasonCode)
+      , PersistText (fromMaybe "" notes)
+      , PersistText nextStateText
+      , maybe PersistNull PersistText conditionOut
+      , maybe PersistNull PersistText conditionIn
+      , maybe PersistNull PersistText evidenceUrl
+      , maybe PersistNull (PersistInt64 . fromIntegral) deduction
+      , PersistText nextStateText
+      , PersistText nextStateText
+      , PersistText (toPathPiece orderKey)
+      , PersistText currentStateText
+      ] :: SqlPersistT IO [Single Text])
+  when (null updatedRows) $
+    throwError (marketplaceCheckoutConflict
+      "Marketplace rental state changed concurrently; reload the order before retrying")
+  mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
+  either throwError pure (requireLoadedMarketplaceWriteResult "Marketplace rental" mDto)
+
+validateMarketplaceRentalEvidenceUrl :: Maybe Text -> Either ServerError (Maybe Text)
+validateMarketplaceRentalEvidenceUrl Nothing = Right Nothing
+validateMarketplaceRentalEvidenceUrl (Just rawValue)
+  | T.null value || T.length value > 2048 = Left invalid
+  | T.any (\ch -> isControl ch || generalCategory ch == Format || isSpace ch) value = Left invalid
+  | "https://" `T.isPrefixOf` T.toLower value = Right (Just value)
+  | "/assets/" `T.isPrefixOf` value = Right (Just value)
+  | otherwise = Left invalid
+  where
+    value = T.strip rawValue
+    invalid = err400
+      { errBody = "evidenceUrl must be an HTTPS or private application asset reference" }
+
+normalizeMarketplaceFulfillmentField
+  :: Text
+  -> Int
+  -> Maybe Text
+  -> Either ServerError (Maybe Text)
+normalizeMarketplaceFulfillmentField _ _ Nothing = Right Nothing
+normalizeMarketplaceFulfillmentField fieldName maxLength (Just rawValue)
+  | T.null value = Left invalid
+  | T.length value > maxLength = Left invalid
+  | T.any (\ch -> isControl ch || generalCategory ch == Format) value = Left invalid
+  | otherwise = Right (Just value)
+  where
+    value = T.strip rawValue
+    invalid = err400
+      { errBody = BL.fromStrict . TE.encodeUtf8 $
+          fieldName <> " must contain 1 to " <> T.pack (show maxLength) <> " safe characters"
+      }
+
 validateMarketplaceStripeAdminUpdate
   :: Text
   -> Maybe Text
@@ -14760,9 +18997,10 @@ validateMarketplaceStripeAdminUpdate currentStatus currentProvider nextStatus ne
     finalStatus = fromMaybe currentStatus nextStatus
     finalProvider = fromMaybe currentProvider nextProvider
 
-getOrder :: Text -> AppM MarketplaceOrderDTO
-getOrder rawId = do
+getOrder :: Text -> Maybe Text -> AppM MarketplaceOrderDTO
+getOrder rawId mLookupToken = do
   orderKey <- parseOrderId rawId
+  requireMarketplaceOrderLookupToken orderKey mLookupToken
   Env{..} <- ask
   mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
   orderDto <- either throwError pure (requireMarketplaceOrderLookupResult mDto)
@@ -14777,7 +19015,27 @@ redactMarketplaceOrderForPublicLookup orderDto =
     , moBuyerPhone = Nothing
     , moPaypalOrderId = Nothing
     , moPaypalPayerEmail = Nothing
+    , moLookupToken = Nothing
     }
+
+requireMarketplaceOrderLookupToken
+  :: Key ME.MarketplaceOrder
+  -> Maybe Text
+  -> AppM ()
+requireMarketplaceOrderLookupToken orderKey mRawToken = do
+  Env{ envPool } <- ask
+  storedHashes <- liftIO $ flip runSqlPool envPool $
+    (rawSql
+      "SELECT lookup_token_hash FROM marketplace_order_checkout_runtime WHERE order_id = ?::uuid"
+      [PersistText (toPathPiece orderKey)] :: SqlPersistT IO [Single Text])
+  case storedHashes of
+    [] -> throwError marketplaceOrderNotFound
+    [Single expectedHash]
+      | Just rawToken <- T.strip <$> mRawToken
+      , not (T.null rawToken)
+      , TE.encodeUtf8 expectedHash `constEq`
+          TE.encodeUtf8 (marketplaceSha256Text rawToken) -> pure ()
+    _ -> throwError marketplaceOrderNotFound
 
 parseOrderId :: Text -> AppM (Key ME.MarketplaceOrder)
 parseOrderId rawId = do
@@ -14863,6 +19121,7 @@ data MarketplaceCartTotalsState a
   = MarketplaceCartMissing
   | MarketplaceCartEmpty
   | MarketplaceCartInvalidQuantity Int
+  | MarketplaceCartInvalidRental Text
   | MarketplaceCartInvalidCurrency Text
   | MarketplaceCartMixedCurrencies [Text]
   | MarketplaceCartTotalsReady a
@@ -14877,9 +19136,24 @@ loadCartDTO configuredDefault cartId = do
       items <- loadCartLines cartId
       pure (Just (cartToDTO configuredDefault cartId items))
 
+data MarketplaceCartLine = MarketplaceCartLine
+  { mclCartItem :: Entity ME.MarketplaceCartItem
+  , mclListing :: Entity ME.MarketplaceListing
+  , mclAsset :: Entity ME.Asset
+  , mclQuantity :: Int
+  , mclPurpose :: Text
+  , mclUnitPriceCents :: Int
+  , mclSubtotalCents :: Int
+  , mclRentalStartDate :: Maybe Day
+  , mclRentalEndDate :: Maybe Day
+  , mclRentalBreakdown :: Maybe MarketplaceRentals.RentalPriceBreakdown
+  , mclRentalTerms :: Maybe MarketplaceRentalTerms
+  , mclPricingError :: Maybe Text
+  } deriving (Show)
+
 loadCartTotals
   :: Key ME.MarketplaceCart
-  -> SqlPersistT IO (MarketplaceCartTotalsState ([(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)], Int, Text))
+  -> SqlPersistT IO (MarketplaceCartTotalsState ([MarketplaceCartLine], Int, Text))
 loadCartTotals cartId = do
   mCart <- get cartId
   case mCart of
@@ -14889,19 +19163,18 @@ loadCartTotals cartId = do
       if null items
         then pure MarketplaceCartEmpty
         else do
-          let quantities = [ qty | (_, _, _, qty) <- items ]
+          let pricingErrors = mapMaybe mclPricingError items
+              quantities = map mclQuantity items
           case find isInvalidMarketplaceCartLineQuantity quantities of
             Just invalidQuantity ->
               pure (MarketplaceCartInvalidQuantity invalidQuantity)
+            Nothing | pricingError : _ <- pricingErrors ->
+              pure (MarketplaceCartInvalidRental pricingError)
             Nothing -> do
               let totalCents =
-                    sum [ qty * ME.marketplaceListingPriceUsdCents (entityVal listing)
-                        | (_, listing, _, qty) <- items
-                        ]
+                    sum (map mclSubtotalCents items)
                   rawCurrencies =
-                    [ ME.marketplaceListingCurrency (entityVal listing)
-                    | (_, listing, _, _) <- items
-                    ]
+                    map (ME.marketplaceListingCurrency . entityVal . mclListing) items
               case resolveMarketplaceCartCurrency rawCurrencies of
                 Left invalidCurrencyState -> pure invalidCurrencyState
                 Right currency ->
@@ -14914,6 +19187,8 @@ requireMarketplaceCartTotals MarketplaceCartEmpty =
   Left err400 { errBody = "El carrito esta vacio." }
 requireMarketplaceCartTotals (MarketplaceCartInvalidQuantity rawQuantity) =
   Left (marketplaceCartInvalidQuantityError rawQuantity)
+requireMarketplaceCartTotals (MarketplaceCartInvalidRental message) =
+  Left err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
 requireMarketplaceCartTotals (MarketplaceCartInvalidCurrency _) =
   Left err500 { errBody = "Stored marketplace listing currency is invalid" }
 requireMarketplaceCartTotals (MarketplaceCartMixedCurrencies currencies) =
@@ -15015,41 +19290,116 @@ isPaidMarketplaceOrderStatus rawStatus =
 
 loadCartLines
   :: Key ME.MarketplaceCart
-  -> SqlPersistT IO [(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)]
+  -> SqlPersistT IO [MarketplaceCartLine]
 loadCartLines cartId = do
   cartItems <- selectList [ME.MarketplaceCartItemCartId ==. cartId] [Asc ME.MarketplaceCartItemId]
   forM cartItems $ \ent@(Entity _ ci) -> do
     listing <- getJustEntity (ME.marketplaceCartItemListingId ci)
     asset   <- getJustEntity (ME.marketplaceListingAssetId (entityVal listing))
     let qty = ME.marketplaceCartItemQuantity ci
-    pure (ent, listing, asset, qty)
+        purpose = T.toLower (T.strip (ME.marketplaceListingPurpose (entityVal listing)))
+        saleLine = MarketplaceCartLine
+          { mclCartItem = ent
+          , mclListing = listing
+          , mclAsset = asset
+          , mclQuantity = qty
+          , mclPurpose = purpose
+          , mclUnitPriceCents = ME.marketplaceListingPriceUsdCents (entityVal listing)
+          , mclSubtotalCents = ME.marketplaceListingPriceUsdCents (entityVal listing) * qty
+          , mclRentalStartDate = Nothing
+          , mclRentalEndDate = Nothing
+          , mclRentalBreakdown = Nothing
+          , mclRentalTerms = Nothing
+          , mclPricingError = if purpose == "sale" then Nothing else Just "Unsupported marketplace cart line"
+          }
+    if purpose /= "rent"
+      then pure saleLine
+      else do
+        selectionRows <- (rawSql
+          "SELECT start_date, end_date, duration_days\
+          \ FROM marketplace_rental_cart_selection WHERE cart_item_id = ?::uuid"
+          [PersistText (toPathPiece (entityKey ent))]
+          :: SqlPersistT IO [(Single Day, Single Day, Single Int)])
+        mTerms <- loadActiveMarketplaceRentalTerms (entityKey listing)
+        pure $ case (selectionRows, mTerms) of
+          ([(Single startDate, Single endDate, Single durationDays)], Just terms) ->
+            case MarketplaceRentals.calculateRentalPrice
+              (mrtDailyRateCents terms)
+              (mrtWeeklyRateCents terms)
+              (mrtSecurityDepositCents terms)
+              (mrtMinDays terms)
+              (mrtMaxDays terms)
+              durationDays of
+                Left message -> saleLine
+                  { mclPurpose = "rent"
+                  , mclRentalStartDate = Just startDate
+                  , mclRentalEndDate = Just endDate
+                  , mclRentalTerms = Just terms
+                  , mclPricingError = Just message
+                  }
+                Right breakdown -> saleLine
+                  { mclPurpose = "rent"
+                  , mclUnitPriceCents = mrtDailyRateCents terms
+                  , mclSubtotalCents = MarketplaceRentals.rpbCheckoutTotalMinor breakdown
+                  , mclRentalStartDate = Just startDate
+                  , mclRentalEndDate = Just endDate
+                  , mclRentalBreakdown = Just breakdown
+                  , mclRentalTerms = Just terms
+                  , mclPricingError = Nothing
+                  }
+          ([], _) -> saleLine
+            { mclPurpose = "rent"
+            , mclPricingError = Just "Rental cart item is missing its date selection"
+            }
+          (_, Nothing) -> saleLine
+            { mclPurpose = "rent"
+            , mclPricingError = Just "Rental listing terms are no longer active"
+            }
+          _ -> saleLine
+            { mclPurpose = "rent"
+            , mclPricingError = Just "Rental cart date selection is ambiguous"
+            }
 
 cartToDTO
   :: Text
   -> Key ME.MarketplaceCart
-  -> [(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)]
+  -> [MarketplaceCartLine]
   -> MarketplaceCartDTO
 cartToDTO configuredDefault cartId items =
-  let currency = maybe configuredDefault (ME.marketplaceListingCurrency . entityVal) (listToMaybe [listing | (_, listing, _, _) <- items])
-      subtotal = sum [ ME.marketplaceListingPriceUsdCents (entityVal listing) * qty
-                     | (_, listing, _, qty) <- items
-                     ]
-      itemDtos = flip map items $ \(_, listingEnt, assetEnt, qty) ->
-        let listing = entityVal listingEnt
-            asset   = entityVal assetEnt
-            unitPrice = ME.marketplaceListingPriceUsdCents listing
-            subtotalC = unitPrice * qty
+  let currency = maybe configuredDefault
+        (ME.marketplaceListingCurrency . entityVal . mclListing) (listToMaybe items)
+      subtotal = sum (map mclSubtotalCents items)
+      itemDtos = flip map items $ \line ->
+        let listingEnt = mclListing line
+            assetEnt = mclAsset line
+            listing = entityVal listingEnt
+            asset = entityVal assetEnt
+            unitPrice = mclUnitPriceCents line
+            subtotalC = mclSubtotalCents line
+            mBreakdown = mclRentalBreakdown line
         in MarketplaceCartItemDTO
             { mciListingId         = toPathPiece (entityKey listingEnt)
             , mciTitle             = ME.marketplaceListingTitle listing
             , mciCategory          = ME.assetCategory asset
             , mciBrand             = ME.assetBrand asset
             , mciModel             = ME.assetModel asset
-            , mciQuantity          = qty
+            , mciQuantity          = mclQuantity line
             , mciUnitPriceUsdCents = unitPrice
             , mciSubtotalCents     = subtotalC
             , mciUnitPriceDisplay  = formatUsd unitPrice currency
             , mciSubtotalDisplay   = formatUsd subtotalC currency
+            , mciPurpose           = mclPurpose line
+            , mciRentalStartDate   = mclRentalStartDate line
+            , mciRentalEndDate     = mclRentalEndDate line
+            , mciRentalDurationDays = MarketplaceRentals.rpbDurationDays <$> mBreakdown
+            , mciRentalChargeCents = MarketplaceRentals.rpbRentalChargeMinor <$> mBreakdown
+            , mciRentalChargeDisplay =
+                (\breakdown -> formatUsd (MarketplaceRentals.rpbRentalChargeMinor breakdown) currency)
+                  <$> mBreakdown
+            , mciSecurityDepositCents = MarketplaceRentals.rpbSecurityDepositMinor <$> mBreakdown
+            , mciSecurityDepositDisplay =
+                (\breakdown -> formatUsd (MarketplaceRentals.rpbSecurityDepositMinor breakdown) currency)
+                  <$> mBreakdown
             }
   in MarketplaceCartDTO
       { mcCartId          = toPathPiece cartId
@@ -15069,7 +19419,94 @@ loadOrderDTO orderId = do
       listings <- forM orderItems $ \(Entity _ oi) -> do
         mListing <- get (ME.marketplaceOrderItemListingId oi)
         pure (oi, mListing)
-      pure (Just (orderToDTO orderEnt listings))
+      runtimeRows <- (rawSql
+        "SELECT checkout.status, runtime.order_kind, runtime.fulfillment_method, runtime.domain_status,\
+        \ runtime.hold_expires_at, runtime.tracking_reference\
+        \ FROM marketplace_order_checkout_runtime runtime\
+        \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+        \ WHERE runtime.order_id = ?::uuid"
+        [PersistText (toPathPiece orderId)]
+        :: SqlPersistT IO
+          [( Single Text, Single Text, Single Text, Single Text
+           , Single UTCTime, Single (Maybe Text)
+           )])
+      rentalRows <- (rawSql
+        "SELECT start_date, end_date, duration_days, rental_charge_usd_cents,\
+        \ security_deposit_usd_cents, deposit_status, deposit_deduction_usd_cents,\
+        \ terms_version, timezone, condition_out, condition_in\
+        \ FROM marketplace_rental_order_runtime WHERE order_id = ?::uuid"
+        [PersistText (toPathPiece orderId)]
+        :: SqlPersistT IO
+          [( Single Day, Single Day, Single Int, Single Int64, Single Int64
+           , Single Text, Single Int64, Single Text, Single Text
+           , Single (Maybe Text), Single (Maybe Text)
+           )])
+      manualRows <- (rawSql
+        "SELECT evidence.status, evidence.submitted_at\
+        \ FROM marketplace_order_checkout_runtime runtime\
+        \ JOIN commerce_manual_payment_evidence evidence ON evidence.checkout_id = runtime.checkout_id\
+        \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+        \ WHERE runtime.order_id = ?::uuid\
+        \ AND attempt.checkout_id = runtime.checkout_id\
+        \ AND attempt.provider IN ('bank_transfer','cash','pos')\
+        \ AND attempt.operation = 'manual_verify'\
+        \ ORDER BY attempt.updated_at DESC, evidence.id DESC LIMIT 2"
+        [PersistText (toPathPiece orderId)]
+        :: SqlPersistT IO [(Single Text, Single (Maybe UTCTime))])
+      fulfillmentHistory <- case runtimeRows of
+        [(Single _, Single "rental", _, _, _, _)] -> (rawSql
+          "SELECT to_status, created_at FROM marketplace_rental_event\
+          \ WHERE order_id = ?::uuid ORDER BY created_at, id"
+          [PersistText (toPathPiece orderId)]
+          :: SqlPersistT IO [(Single Text, Single UTCTime)])
+        _ -> (rawSql
+          "SELECT to_status, created_at FROM marketplace_sale_fulfillment_event\
+          \ WHERE order_id = ?::uuid ORDER BY created_at, id"
+          [PersistText (toPathPiece orderId)]
+          :: SqlPersistT IO [(Single Text, Single UTCTime)])
+      let baseDto = orderToDTO orderEnt listings
+          history = [(status, occurredAt) | (Single status, Single occurredAt) <- fulfillmentHistory]
+          withRuntime = case runtimeRows of
+            [( Single checkoutStatus, Single orderKind, Single method, Single domainStatus
+             , Single holdExpiresAt, Single trackingReference
+             )] -> baseDto
+              { moCheckoutStatus = Just checkoutStatus
+            , moOrderKind = Just orderKind
+            , moFulfillmentMethod = Just method
+            , moFulfillmentStatus = Just domainStatus
+            , moHoldExpiresAt = Just holdExpiresAt
+            , moTrackingReference = trackingReference
+            , moFulfillmentHistory = history
+              }
+            _ -> baseDto
+          withManual = case manualRows of
+            [(Single manualStatus, Single submittedAt)] -> withRuntime
+              { moManualPaymentStatus = Just manualStatus
+              , moManualPaymentSubmittedAt = submittedAt
+              }
+            [] -> withRuntime
+            _ -> withRuntime
+              { moManualPaymentStatus = Just "requires_reconciliation"
+              , moManualPaymentSubmittedAt = Nothing
+              }
+      pure . Just $ case rentalRows of
+        [( Single startDate, Single endDate, Single durationDays, Single rentalCharge
+         , Single securityDeposit, Single depositStatus, Single depositDeduction
+         , Single termsVersion, Single timezone, Single conditionOut, Single conditionIn
+         )] -> withManual
+            { moRentalStartDate = Just startDate
+            , moRentalEndDate = Just endDate
+            , moRentalDurationDays = Just durationDays
+            , moRentalChargeUsdCents = Just (fromIntegral rentalCharge)
+            , moSecurityDepositUsdCents = Just (fromIntegral securityDeposit)
+            , moDepositStatus = Just depositStatus
+            , moDepositDeductionUsdCents = Just (fromIntegral depositDeduction)
+            , moRentalTermsVersion = Just termsVersion
+            , moRentalTimezone = Just timezone
+            , moConditionOut = conditionOut
+            , moConditionIn = conditionIn
+            }
+        _ -> withManual
 
 orderToDTO
   :: Entity ME.MarketplaceOrder
@@ -15103,6 +19540,27 @@ orderToDTO (Entity oid order) items =
     , moPaypalOrderId   = ME.marketplaceOrderPaypalOrderId order
     , moPaypalPayerEmail = ME.marketplaceOrderPaypalPayerEmail order
     , moPaidAt          = ME.marketplaceOrderPaidAt order
+    , moLookupToken     = Nothing
+    , moCheckoutStatus  = Nothing
+    , moManualPaymentStatus = Nothing
+    , moManualPaymentSubmittedAt = Nothing
+    , moFulfillmentMethod = Nothing
+    , moFulfillmentStatus = Nothing
+    , moHoldExpiresAt   = Nothing
+    , moTrackingReference = Nothing
+    , moFulfillmentHistory = []
+    , moOrderKind       = Nothing
+    , moRentalStartDate = Nothing
+    , moRentalEndDate   = Nothing
+    , moRentalDurationDays = Nothing
+    , moRentalChargeUsdCents = Nothing
+    , moSecurityDepositUsdCents = Nothing
+    , moDepositStatus = Nothing
+    , moDepositDeductionUsdCents = Nothing
+    , moRentalTermsVersion = Nothing
+    , moRentalTimezone = Nothing
+    , moConditionOut = Nothing
+    , moConditionIn = Nothing
     , moCreatedAt       = ME.marketplaceOrderCreatedAt order
     , moUpdatedAt       = ME.marketplaceOrderUpdatedAt order
     , moItems           = itemDtos
@@ -15110,8 +19568,12 @@ orderToDTO (Entity oid order) items =
 
 formatUsd :: Int -> Text -> Text
 formatUsd cents currency =
-  let amount = (fromIntegral cents :: Double) / 100
-  in T.pack (printf "%s $%.2f" (T.unpack (T.toUpper currency)) amount)
+  let wholeUnits = cents `div` 100
+      fractionalUnits = cents `mod` 100
+      fractionText
+        | fractionalUnits < 10 = "0" <> T.pack (show fractionalUnits)
+        | otherwise = T.pack (show fractionalUnits)
+  in T.toUpper currency <> " $" <> T.pack (show wholeUnits) <> "." <> fractionText
 
 -- Datafast / OPPWA types and helpers
 data DFResult = DFResult
@@ -15146,6 +19608,7 @@ data DFPaymentStatus = DFPaymentStatus
   , dfpPaymentBrand  :: Maybe Text
   , dfpAmount        :: Maybe Text
   , dfpCurrency      :: Maybe Text
+  , dfpMerchantTransactionId :: Maybe Text
   , dfpResult        :: DFResult
   , dfpResultDetails :: Maybe DFResultDetails
   } deriving (Show, Generic)
@@ -15157,6 +19620,7 @@ instance FromJSON DFPaymentStatus where
       <*> o .:? "paymentBrand"
       <*> o .:? "amount"
       <*> o .:? "currency"
+      <*> o .:? "merchantTransactionId"
       <*> o .:  "result"
       <*> o .:? "resultDetails"
 
@@ -15166,6 +19630,7 @@ data DatafastEnv = DatafastEnv
   , dfBaseUrl      :: String
   , dfTestMode     :: Maybe Text
   , dfExtraParams  :: [(ByteString, ByteString)]
+  , dfEnvironment  :: Checkout.CheckoutEnvironment
   } deriving (Show)
 
 loadDatafastEnv :: AppM DatafastEnv
@@ -15174,6 +19639,7 @@ loadDatafastEnv = do
   mBearer <- liftIO $ lookupEnv "DATAFAST_BEARER_TOKEN"
   mBase   <- liftIO $ lookupEnv "DATAFAST_BASE_URL"
   mTest   <- liftIO $ lookupEnv "DATAFAST_TEST_MODE"
+  mEnvironment <- liftIO $ lookupEnv "DATAFAST_ENV"
   mMid    <- liftIO $ lookupEnv "DATAFAST_MID"
   mTid    <- liftIO $ lookupEnv "DATAFAST_TID"
   mPserv  <- liftIO $ lookupEnv "DATAFAST_PSERV"
@@ -15190,6 +19656,13 @@ loadDatafastEnv = do
   userData2Val <-
     either throwError pure (validateOptionalDatafastCredential "DATAFAST_USER_DATA2" mUserData2)
   versionDf <- either throwError pure (validateOptionalDatafastVersionDf mVersionDf)
+  environment <- either (throwError . marketplaceCheckoutInternal) pure
+    (Checkout.resolveCheckoutEnvironment mEnvironment)
+  either (throwError . marketplaceCheckoutInternal) pure
+    (ServiceStorefront.validateDatafastEnvironmentBase environment baseUrl)
+  when (environment == Checkout.CheckoutProduction && isJust testModeVal) $
+    throwError (marketplaceCheckoutInternal
+      "DATAFAST_TEST_MODE must be unset when DATAFAST_ENV=production")
   let
       optPair k mv = (\v -> (k, TE.encodeUtf8 v)) <$> mv
       extras =
@@ -15206,6 +19679,7 @@ loadDatafastEnv = do
     , dfBaseUrl = baseUrl
     , dfTestMode = testModeVal
     , dfExtraParams = extras
+    , dfEnvironment = environment
     }
 
 validateDatafastCredential :: Text -> Maybe String -> Either ServerError Text
@@ -15824,6 +20298,7 @@ assetStatusLabel st =
     ME.Booked            -> "Reservado"
     ME.OutForMaintenance -> "Mantenimiento"
     ME.Retired           -> "No disponible"
+    ME.Sold              -> "Vendido"
 
 assetConditionLabel :: ME.AssetCondition -> Text
 assetConditionLabel cond =

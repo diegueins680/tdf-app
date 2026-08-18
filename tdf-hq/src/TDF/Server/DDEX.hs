@@ -8,22 +8,35 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask)
 import Control.Monad (forM, unless, when)
 import Control.Applicative ((<|>))
+import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as BL
+import Data.Char (isControl)
 import Data.List (nub, sortOn)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (catMaybes, isNothing)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
+import Data.Time (getCurrentTime)
 import Database.Persist (Entity(..), PersistValue(PersistText), SelectOpt(Asc), get, getBy, selectFirst, selectList, entityKey, entityVal, toPersistValue, (==.), (<-.))
 import Database.Persist.Sql (Single(..), SqlPersistT, rawSql, runSqlPool, toSqlKey, fromSqlKey)
 import Servant
+import System.Environment (lookupEnv)
+import System.FilePath (isAbsolute, takeFileName)
 import TDF.API.DDEX
 import TDF.Auth (AuthedUser(..), validateModuleAccess, ModuleAccess(..))
 import qualified TDF.Catalog.Models as Catalog
 import TDF.DB (Env(..))
 import qualified TDF.DDEX.DB as DB
+import qualified TDF.DDEX.Detect as Detect
+import qualified TDF.DDEX.ERN.V432.BusinessRules as BusinessRules
+import qualified TDF.DDEX.ERN.V432.Normalize as Normalize
+import qualified TDF.DDEX.ERN.V432.Parse as Parse
+import qualified TDF.DDEX.ERN.V432.Types as ERN
 import qualified TDF.DDEX.Models as M
+import qualified TDF.DDEX.Security as Security
+import qualified TDF.DDEX.Storage as Storage
+import qualified TDF.DDEX.Types as DDEXTypes
 import Web.PathPieces (PathPiece, fromPathPiece, toPathPiece)
 
 type AppM = ReaderT Env Handler
@@ -308,10 +321,63 @@ ddexServer user =
 
 -- | Upload a DDEX document
 uploadDocumentHandler :: AuthedUser -> DdexUploadRequest -> AppM DdexDocumentDTO
-uploadDocumentHandler user _req = do
+uploadDocumentHandler user DdexUploadRequest{..} = do
   requireDdexCapability user "catalog.import"
-  -- TODO: Implement actual file storage and SHA-256 calculation
-  throwError err501 { errBody = "Not Implemented: Upload requires file storage integration" }
+  fileName <- either (throwError . invalidUpload) pure (validateUploadName uploadFileName)
+  let uploadMimeType = T.toLower (T.strip uploadContentType)
+  unless (uploadMimeType `elem` ["application/xml", "text/xml"]) $
+    throwError err415 { errBody = "DDEX upload must use application/xml or text/xml" }
+  when (T.length uploadContentBase64 > 69905068) $
+    throwError err413 { errBody = "DDEX upload exceeds the 50 MiB decoded limit" }
+  decoded <- case B64.decode (TE.encodeUtf8 (T.strip uploadContentBase64)) of
+    Left _ -> throwError err400 { errBody = "DDEX upload content is not valid base64" }
+    Right value -> pure (BL.fromStrict value)
+  _ <- either (throwError . unsafeXml) pure $
+    Security.safeParseXml Security.defaultXmlParseConfig decoded
+  detection <- maybe
+    (throwError err422 { errBody = "The XML root and namespace do not identify a supported DDEX family" })
+    pure
+    (Detect.detectDocument decoded)
+  (standardVersionId, messageTypeId, receivedStateId) <- resolveUploadReferences detection
+  storage <- loadDdexStorage
+  env <- ask
+  let sha256 = Storage.computeSha256 decoded
+  existing <- liftIO $ runSqlPool (DB.findDocumentBySha256 sha256) (envPool env)
+  case existing of
+    Just document -> loadDocumentDTOs [document] >>= singleDocumentDTO
+    Nothing -> do
+      stored <- liftIO $ Storage.storeFile storage fileName decoded uploadMimeType
+      let namespace = nonEmpty (DDEXTypes.detectionNamespace detection)
+          uploadActor = fromIntegral (fromSqlKey (auPartyId user))
+      inserted <- liftIO $ runSqlPool
+        (DB.insertDocument
+          fileName
+          (Storage.storedFileUri stored)
+          sha256
+          (fromIntegral (Storage.storedFileSize stored))
+          standardVersionId
+          messageTypeId
+          receivedStateId
+          namespace
+          uploadActor
+          Nothing
+          Nothing
+          Nothing)
+        (envPool env)
+      case inserted of
+        Nothing -> do
+          _ <- liftIO $ Storage.deleteFile storage (Storage.storedFilePath stored)
+          raced <- liftIO $ runSqlPool (DB.findDocumentBySha256 sha256) (envPool env)
+          maybe
+            (throwError err409 { errBody = "A concurrent upload created this document; retry retrieval" })
+            (\document -> loadDocumentDTOs [document] >>= singleDocumentDTO)
+            raced
+        Just documentId -> do
+          created <- liftIO $ runSqlPool (DB.getDocumentById documentId) (envPool env)
+          maybe
+            (throwError err500 { errBody = "Stored DDEX document could not be reloaded" })
+            (\document -> loadDocumentDTOs [document] >>= singleDocumentDTO)
+            created
 
 -- | List DDEX documents
 listDocumentsHandler :: AuthedUser -> Maybe Text -> AppM [DdexDocumentDTO]
@@ -347,16 +413,70 @@ ensureDocumentExists docId = do
 
 -- | Download raw XML file
 downloadRawHandler :: AuthedUser -> Int -> AppM DdexDownloadResponse
-downloadRawHandler user _ = do
+downloadRawHandler user docId = do
   requireDdexCapability user "catalog.read"
-  throwError err501 { errBody = "Not Implemented: Download Raw" }
+  (document, content) <- loadStoredDocument docId
+  pure DdexDownloadResponse
+    { downloadFileName = M.ddexDocumentFileName document
+    , downloadContentType = "application/xml"
+    , downloadContentBase64 = TE.decodeUtf8 (B64.encode (BL.toStrict content))
+    }
 
 -- | Validate a document
 validateDocumentHandler :: AuthedUser -> Int -> AppM ValidationRunDTO
 validateDocumentHandler user docId = do
   requireDdexCapability user "catalog.import"
-  ensureDocumentExists docId
-  throwError err501 { errBody = "Not Implemented: governed DDEX validation execution" }
+  (document, content) <- loadStoredDocument docId
+  standard <- loadDocumentStandard document
+  env <- ask
+  (runningState, failedState, warningState, invalidState, mappingState) <-
+    loadValidationStates
+  now <- liftIO getCurrentTime
+  runId <- liftIO $ runSqlPool
+    (DB.insertValidationRun
+      (toSqlKey (fromIntegral docId))
+      (entityKey runningState)
+      (Just "tdf-structural-2")
+      (Just (Catalog.ddexStandardVersionVersionCode standard)))
+    (envPool env)
+  let internalIssues = validateStoredErn standard docId content
+      profileIssue = InternalValidationIssue
+        DDEXTypes.SeverityWarning
+        DDEXTypes.LayerXSD
+        "PROFILE_VALIDATION_REQUIRED"
+        "Official DDEX XSD and recipient business-profile validation has not run"
+        (Just "Configure licensed schemas and an approved recipient profile before import or delivery")
+      issues = internalIssues ++ [profileIssue]
+      errorCount = length [() | issue <- issues, iviSeverity issue == DDEXTypes.SeverityError]
+      warningCount = length [() | issue <- issues, iviSeverity issue == DDEXTypes.SeverityWarning]
+      (resultCode, legacyResult, finalValidationState, finalDocumentState)
+        | errorCount > 0 = ("failure", M.ResultFailure, failedState, invalidState)
+        | otherwise = ("warning", M.ResultWarning, warningState, mappingState)
+  resultId <- loadValidationResultId resultCode
+  liftIO $ runSqlPool (do
+    prepareDocumentValidation (toSqlKey (fromIntegral docId)) document
+    mapM_ (persistInternalIssue runId) issues
+    DB.completeValidationRun
+      runId
+      (entityKey finalValidationState)
+      resultId
+      legacyResult
+      errorCount
+      warningCount
+    DB.updateDocumentStatus (toSqlKey (fromIntegral docId)) (entityKey finalDocumentState))
+    (envPool env)
+  finished <- liftIO getCurrentTime
+  let finalState = entityVal finalValidationState
+  pure ValidationRunDTO
+    { validationRunId = fromIntegral $ fromSqlKey runId
+    , validationRunDocumentId = docId
+    , validationRunWorkflowStateId = toPathPiece (entityKey finalValidationState)
+    , validationRunWorkflowStateCode = Catalog.workflowStateCode finalState
+    , validationRunWorkflowStateNameEs = Catalog.workflowStateNameEs finalState
+    , validationRunWorkflowStateNameEn = Catalog.workflowStateNameEn finalState
+    , validationRunStartedAt = now
+    , validationRunFinishedAt = Just finished
+    }
 
 -- | Get validation report
 getValidationReportHandler :: AuthedUser -> Int -> AppM ValidationReportDTO
@@ -373,33 +493,50 @@ getValidationReportHandler user docId = do
     Just (runEntity, issues) -> return ValidationReportDTO
       { reportRunId = fromIntegral $ fromSqlKey (entityKey runEntity)
       , reportIssues = map issueToDTO issues
-      , reportIsValid = M.ddexValidationRunErrorCount (entityVal runEntity) == 0
+      , reportIsValid = M.ddexValidationRunResult (entityVal runEntity) == Just M.ResultSuccess
       }
 
 -- | Get document preview
 getPreviewHandler :: AuthedUser -> Int -> AppM DdexPreviewDTO
-getPreviewHandler user _ = do
+getPreviewHandler user docId = do
   requireDdexCapability user "catalog.read"
-  throwError err501 { errBody = "Not Implemented: Preview" }
+  (document, content) <- loadStoredDocument docId
+  standard <- loadDocumentStandard document
+  unless
+    (Catalog.ddexStandardVersionStandardCode standard == "ERN"
+      && Catalog.ddexStandardVersionVersionCode standard == "4.3.2") $
+    throwError err503 { errBody = "Preview is enabled only for the validated ERN 4.3.2 profile" }
+  parsed <- either (throwError . parseFailure) pure (Parse.parseErnMessage content)
+  normalized <- either (throwError . normalizeFailure) pure (Normalize.normalizeErnMessage docId parsed)
+  pure DdexPreviewDTO
+    { previewMessageId = ERN.mhMessageId (ERN.ernMessageHeader parsed)
+    , previewSender = T.pack (show (ERN.mhSenderPartyId (ERN.ernMessageHeader parsed)))
+    , previewReleaseCount = length (Normalize.ciReleases normalized)
+    , previewResourceCount = length (Normalize.ciResources normalized)
+    , previewWarnings =
+        [ "Preview only: no catalog records, deliveries, or statuses were changed."
+        , "Official XSD and recipient-profile validation must pass before import."
+        ]
+    }
 
 -- | Create import plan
 createImportPlanHandler :: AuthedUser -> Int -> AppM ImportPlanDTO
 createImportPlanHandler user docId = do
   requireDdexCapability user "catalog.import"
   ensureDocumentExists docId
-  throwError err501 { errBody = "Not Implemented: typed DDEX import planning" }
+  capabilityDisabled "DDEX import planning" "official schema/profile validation and the transactional conflict engine are not enabled"
 
 -- | Resolve import plan conflicts
 resolveImportPlanHandler :: AuthedUser -> Int -> ImportPlanResolution -> AppM ImportPlanDTO
 resolveImportPlanHandler user _ _ = do
   requireDdexCapability user "catalog.import"
-  throwError err501 { errBody = "Not Implemented: Resolve Plan" }
+  capabilityDisabled "DDEX import resolution" "the transactional conflict engine is not enabled"
 
 -- | Commit import plan
 commitImportPlanHandler :: AuthedUser -> Int -> AppM ImportRunDTO
 commitImportPlanHandler user _ = do
   requireDdexCapability user "catalog.import"
-  throwError err501 { errBody = "Not Implemented: Commit Plan" }
+  capabilityDisabled "DDEX import commit" "rollback-tested catalog import is not enabled"
 
 -- | Create export
 createExportHandler :: AuthedUser -> DdexExportRequest -> AppM DdexExportDTO
@@ -410,13 +547,13 @@ createExportHandler user req = do
   exportAllowed <- liftIO $ runSqlPool (partnerAllowsExportVersion (toSqlKey (fromIntegral (exportPartnerId req))) standardVersionId) (envPool env)
   unless exportAllowed $
     throwError err422 { errBody = "Partner does not allow an active export-enabled DDEX standard version" }
-  throwError err501 { errBody = "Not Implemented: DDEX export rendering and storage" }
+  capabilityDisabled "DDEX export" "a validated recipient profile, sender DPID, and private package store are required"
 
 -- | Download export
 downloadExportHandler :: AuthedUser -> Int -> AppM DdexDownloadResponse
 downloadExportHandler user _exportId = do
   requireDdexCapability user "catalog.export"
-  throwError err501 { errBody = "Not Implemented: DDEX export download" }
+  capabilityDisabled "DDEX export download" "no immutable validated export package exists"
 
 -- | List partners
 listPartnersHandler :: AuthedUser -> AppM [DdexPartnerDTO]
@@ -452,6 +589,300 @@ createPartnerHandler user req = do
           let supportMap = Map.fromList [(Catalog.ddexStandardSupportStandardVersionId value, value) | Entity _ value <- supportRows]
           pure (partnerToDTO supportMap partnerId partner versions)
         _ -> throwError err500 { errBody = "Failed to resolve partner standard versions" }
+
+resolveUploadReferences
+  :: DDEXTypes.DdexDetection
+  -> AppM
+       ( Catalog.DdexStandardVersionId
+       , Maybe Catalog.DdexMessageTypeId
+       , Catalog.WorkflowStateId
+       )
+resolveUploadReferences detection = do
+  env <- ask
+  let standardCode = DDEXTypes.familyToText (DDEXTypes.detectionFamily detection)
+      versionCode = DDEXTypes.detectionVersion detection
+      messageCode = last (T.splitOn ":" (DDEXTypes.detectionRoot detection))
+  result <- liftIO $ runSqlPool (do
+    standard <- selectFirst
+      [ Catalog.DdexStandardVersionStandardCode ==. standardCode
+      , Catalog.DdexStandardVersionVersionCode ==. versionCode
+      , Catalog.DdexStandardVersionActive ==. True
+      ]
+      []
+    case standard of
+      Nothing -> pure Nothing
+      Just (Entity standardId _) -> do
+        support <- selectFirst
+          [ Catalog.DdexStandardSupportStandardVersionId ==. standardId
+          , Catalog.DdexStandardSupportDeploymentCode ==. "default"
+          , Catalog.DdexStandardSupportDetectionEnabled ==. True
+          , Catalog.DdexStandardSupportActive ==. True
+          ]
+          []
+        message <- selectFirst
+          [ Catalog.DdexMessageTypeStandardVersionId ==. standardId
+          , Catalog.DdexMessageTypeCode ==. messageCode
+          , Catalog.DdexMessageTypeRuntimeSupported ==. True
+          , Catalog.DdexMessageTypeActive ==. True
+          ]
+          []
+        received <- findWorkflowState "ddex-document-lifecycle" "received"
+        pure $ case (support, received) of
+          (Just _, Just (Entity receivedId _)) ->
+            Just (standardId, entityKey <$> message, receivedId)
+          _ -> Nothing)
+    (envPool env)
+  maybe
+    (throwError err422
+      { errBody = "Detected DDEX standard is not enabled in the governed runtime profile" })
+    pure
+    result
+
+singleDocumentDTO :: [DdexDocumentDTO] -> AppM DdexDocumentDTO
+singleDocumentDTO [document] = pure document
+singleDocumentDTO _ = throwError err500
+  { errBody = "Unable to resolve canonical DDEX document references" }
+
+loadValidationStates
+  :: AppM
+       ( Entity Catalog.WorkflowState
+       , Entity Catalog.WorkflowState
+       , Entity Catalog.WorkflowState
+       , Entity Catalog.WorkflowState
+       , Entity Catalog.WorkflowState
+       )
+loadValidationStates = do
+  env <- ask
+  states <- liftIO $ runSqlPool
+    ((,,,,)
+      <$> requireWorkflowState "ddex-validation-lifecycle" "running"
+      <*> requireWorkflowState "ddex-validation-lifecycle" "failed"
+      <*> requireWorkflowState "ddex-validation-lifecycle" "warning"
+      <*> requireWorkflowState "ddex-document-lifecycle" "invalid"
+      <*> requireWorkflowState "ddex-document-lifecycle" "mapping_required")
+    (envPool env)
+  pure states
+
+loadValidationResultId :: Text -> AppM M.DdexValidationResultId
+loadValidationResultId code = do
+  env <- ask
+  result <- liftIO $ runSqlPool
+    (getBy (M.UniqueDdexValidationResultCode code))
+    (envPool env)
+  case result of
+    Just (Entity resultId value) | M.ddexValidationResultActive value -> pure resultId
+    _ -> throwError err503
+      { errBody = "The governed DDEX validation-result registry is unavailable" }
+
+findWorkflowState
+  :: Text
+  -> Text
+  -> SqlPersistT IO (Maybe (Entity Catalog.WorkflowState))
+findWorkflowState workflowCode stateCode = do
+  workflow <- getBy (Catalog.UniqueWorkflowDefinitionCode workflowCode)
+  case workflow of
+    Just (Entity workflowId value) | Catalog.workflowDefinitionActive value -> do
+      state <- getBy (Catalog.UniqueWorkflowStateCode workflowId stateCode)
+      pure $ case state of
+        Just row | Catalog.workflowStateActive (entityVal row) -> Just row
+        _ -> Nothing
+    _ -> pure Nothing
+
+requireWorkflowState
+  :: Text
+  -> Text
+  -> SqlPersistT IO (Entity Catalog.WorkflowState)
+requireWorkflowState workflowCode stateCode = do
+  state <- findWorkflowState workflowCode stateCode
+  maybe
+    (liftIO . ioError . userError $
+      "Missing active workflow state " <> T.unpack workflowCode <> "/" <> T.unpack stateCode)
+    pure
+    state
+
+prepareDocumentValidation
+  :: M.DdexDocumentId
+  -> M.DdexDocument
+  -> SqlPersistT IO ()
+prepareDocumentValidation documentId document = do
+  currentStateId <- maybe
+    (liftIO . ioError . userError $ "DDEX document has no governed workflow state")
+    pure
+    (M.ddexDocumentWorkflowStateId document)
+  currentState <- get currentStateId >>= maybe
+    (liftIO . ioError . userError $ "DDEX document references a missing workflow state")
+    pure
+  queued <- requireWorkflowState "ddex-document-lifecycle" "queued"
+  validating <- requireWorkflowState "ddex-document-lifecycle" "validating"
+  case Catalog.workflowStateCode currentState of
+    "received" -> queueThenValidate queued validating
+    "quarantined" -> queueThenValidate queued validating
+    "invalid" -> queueThenValidate queued validating
+    "queued" -> DB.updateDocumentStatus documentId (entityKey validating)
+    "validating" -> pure ()
+    _ -> liftIO . ioError . userError $
+      "DDEX document cannot be revalidated from its current workflow state"
+  where
+    queueThenValidate queued validating = do
+      DB.updateDocumentStatus documentId (entityKey queued)
+      DB.updateDocumentStatus documentId (entityKey validating)
+
+loadDdexStorage :: AppM Storage.StorageBackend
+loadDdexStorage = do
+  backend <- liftIO $ lookupEnv "DDEX_STORAGE_BACKEND"
+  root <- liftIO $ lookupEnv "DDEX_PRIVATE_STORAGE_ROOT"
+  case (backend, root) of
+    (Just "local-private", Just storageRoot)
+      | isAbsolute storageRoot && not (null storageRoot) ->
+          pure $ Storage.localStorageBackend Storage.StorageConfig
+            { Storage.storageBasePath = storageRoot
+            , Storage.storageBucket = "ddex-private"
+            }
+    _ -> capabilityDisabled
+      "DDEX private storage"
+      "set DDEX_STORAGE_BACKEND=local-private and an absolute DDEX_PRIVATE_STORAGE_ROOT for staging; production object storage is not configured"
+
+loadStoredDocument :: Int -> AppM (M.DdexDocument, BL.ByteString)
+loadStoredDocument docId = do
+  env <- ask
+  row <- liftIO $ runSqlPool
+    (DB.getDocumentById (toSqlKey (fromIntegral docId)))
+    (envPool env)
+  document <- maybe
+    (throwError err404 { errBody = "Document not found" })
+    (pure . entityVal)
+    row
+  relativePath <- case T.stripPrefix "local-private://" (M.ddexDocumentPrivateUri document) of
+    Just path | not (T.null path) -> pure (T.unpack path)
+    _ -> capabilityDisabled
+      "DDEX document retrieval"
+      "the document uses an unavailable private-storage adapter"
+  storage <- loadDdexStorage
+  content <- liftIO $ Storage.retrieveFile storage relativePath
+  bytes <- maybe
+    (throwError err404 { errBody = "Private DDEX object is unavailable" })
+    pure
+    content
+  unless (Storage.computeSha256 bytes == M.ddexDocumentSha256 document) $
+    throwError err500 { errBody = "Private DDEX object checksum verification failed" }
+  pure (document, bytes)
+
+loadDocumentStandard :: M.DdexDocument -> AppM Catalog.DdexStandardVersion
+loadDocumentStandard document = do
+  standardId <- maybe
+    (throwError err500 { errBody = "DDEX document is missing standardVersionId" })
+    pure
+    (M.ddexDocumentStandardVersionId document)
+  env <- ask
+  standard <- liftIO $ runSqlPool (get standardId) (envPool env)
+  maybe
+    (throwError err500 { errBody = "DDEX document references an unknown standard version" })
+    pure
+    standard
+
+validateUploadName :: Text -> Either Text Text
+validateUploadName rawName =
+  let cleanName = T.strip rawName
+      fileNameOnly = T.pack (takeFileName (T.unpack cleanName))
+  in if T.null cleanName
+        || T.length cleanName > 255
+        || fileNameOnly /= cleanName
+        || T.any isControl cleanName
+        || not (".xml" `T.isSuffixOf` T.toLower cleanName)
+      then Left "DDEX filename must be a safe .xml basename of at most 255 characters"
+      else Right cleanName
+
+nonEmpty :: Text -> Maybe Text
+nonEmpty value
+  | T.null (T.strip value) = Nothing
+  | otherwise = Just (T.strip value)
+
+invalidUpload :: Text -> ServerError
+invalidUpload message = err400 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+unsafeXml :: [Security.XmlSecurityError] -> ServerError
+unsafeXml errors = err422
+  { errBody = BL.fromStrict (TE.encodeUtf8 ("Unsafe or malformed XML: " <> T.pack (show errors))) }
+
+parseFailure :: [Parse.ParseError] -> ServerError
+parseFailure errors = err422
+  { errBody = BL.fromStrict (TE.encodeUtf8 ("ERN parsing failed: " <> T.pack (show errors))) }
+
+normalizeFailure :: [Normalize.NormalizationError] -> ServerError
+normalizeFailure errors = err422
+  { errBody = BL.fromStrict (TE.encodeUtf8 ("ERN normalization failed: " <> T.pack (show errors))) }
+
+capabilityDisabled :: Text -> Text -> AppM a
+capabilityDisabled capability blocker =
+  throwError err503
+    { errBody = BL.fromStrict . TE.encodeUtf8 $
+        capability <> " is feature-disabled: " <> blocker
+    }
+
+data InternalValidationIssue = InternalValidationIssue
+  { iviSeverity   :: DDEXTypes.ValidationSeverity
+  , iviLayer      :: DDEXTypes.ValidationLayer
+  , iviCode       :: Text
+  , iviMessage    :: Text
+  , iviSuggestion :: Maybe Text
+  }
+
+validateStoredErn
+  :: Catalog.DdexStandardVersion
+  -> Int
+  -> BL.ByteString
+  -> [InternalValidationIssue]
+validateStoredErn standard docId content
+  | Catalog.ddexStandardVersionStandardCode standard /= "ERN" =
+      [unsupported "FAMILY_NOT_IMPLEMENTED" "Only ERN intake validation is implemented"]
+  | Catalog.ddexStandardVersionVersionCode standard /= "4.3.2" =
+      [unsupported "ERN_PROFILE_NOT_IMPLEMENTED" "Only ERN 4.3.2 intake validation is implemented"]
+  | otherwise = case Parse.parseErnMessage content of
+      Left errors -> map parseIssue errors
+      Right ern -> case Normalize.normalizeErnMessage docId ern of
+        Left errors -> map normalizationIssue errors
+        Right normalized -> map businessIssue (BusinessRules.validateBusinessRules normalized)
+  where
+    unsupported code message = InternalValidationIssue
+      DDEXTypes.SeverityError DDEXTypes.LayerBusiness code message Nothing
+    parseIssue issue = InternalValidationIssue
+      DDEXTypes.SeverityError
+      DDEXTypes.LayerXML
+      "ERN_PARSE_ERROR"
+      (Parse.peMessage issue)
+      Nothing
+    normalizationIssue issue = InternalValidationIssue
+      DDEXTypes.SeverityError
+      DDEXTypes.LayerBusiness
+      "ERN_NORMALIZATION_ERROR"
+      (Normalize.neMessage issue)
+      Nothing
+    businessIssue violation = InternalValidationIssue
+      (case BusinessRules.brvSeverity violation of
+        BusinessRules.RuleError -> DDEXTypes.SeverityError
+        BusinessRules.RuleWarning -> DDEXTypes.SeverityWarning
+        BusinessRules.RuleInfo -> DDEXTypes.SeverityInfo)
+      DDEXTypes.LayerBusiness
+      (BusinessRules.brvRule violation)
+      (BusinessRules.brvMessage violation)
+      (BusinessRules.brvSuggestion violation)
+
+persistInternalIssue
+  :: M.DdexValidationRunId
+  -> InternalValidationIssue
+  -> SqlPersistT IO ()
+persistInternalIssue runId issue = do
+  _ <- DB.insertValidationIssue
+    runId
+    (iviSeverity issue)
+    (iviLayer issue)
+    (Just (iviCode issue))
+    Nothing
+    Nothing
+    Nothing
+    (iviMessage issue)
+    (iviSuggestion issue)
+  pure ()
 
 -- ============================================================
 -- Conversion helpers

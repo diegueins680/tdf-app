@@ -262,6 +262,9 @@ export function canAccessPath(
   if (path.startsWith('/admin/roles')) {
     return hasStrictAdminAccess(roles, modules);
   }
+  if (path.startsWith('/admin/commerce')) {
+    return hasStrictAdminAccess(roles, modules);
+  }
   if (path.startsWith('/social/inbox')) {
     return hasSocialInboxAccess(roles, modules);
   }

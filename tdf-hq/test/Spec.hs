@@ -100,6 +100,20 @@ import TDF.CampaignAutomation
       validateCampaignAutomationDailyLimit,
       validateCampaignAutomationStatus )
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
+import qualified TDF.Commerce.CheckoutStore as CheckoutStore
+import qualified TDF.Commerce.CourseCheckout as CourseCheckout
+import qualified TDF.Commerce.EventTickets as EventTickets
+import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
+import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
+import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
+import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
+import qualified TDF.Commerce.ServiceBookings as ServiceBookings
+import qualified TDF.Commerce.ProviderEventStore as ProviderEventStore
+import qualified TDF.Commerce.ProviderEventWorker as ProviderEventWorker
+import qualified TDF.Commerce.RefundStore as RefundStore
+import qualified TDF.Commerce.StateMachine as Commerce
+import qualified TDF.Routes.EventTickets as EventTicketRoutes
+import qualified TDF.Distribution.StateMachine as Distribution
 import qualified TDF.Catalog.CountryReferenceSeed as CountrySeed
 import qualified TDF.Catalog.RecordsSpec as CatalogRecordsSpec
 import qualified TDF.Catalog.SecuritySpec as CatalogSecuritySpec
@@ -108,6 +122,7 @@ import qualified TDF.Directory.PolicySpec as DirectoryPolicySpec
 import TDF.Email (resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
+import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.EventResearchSpec as EventResearchSpec
 import TDF.Services.EventLogisticsRoutes (RouteEstimateResult (..), parseGoogleDurationSeconds, parseGoogleRouteResponse)
 import TDF.DB (Env (..))
@@ -162,7 +177,13 @@ import qualified TDF.ModelsExtra as ME
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.Operations.ModelSpec as OperationsModelSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
-import qualified TDF.Server.DDEX as DDEXServer
+import qualified TDF.DDEX.Detect as DDEXDetect
+import qualified TDF.DDEX.Security as DDEXSecurity
+import qualified TDF.DDEX.ERN.V432.BusinessRulesSpec as DDEXBusinessRulesSpec
+import qualified TDF.DDEX.ERN.V432.Convert as DDEXConvert
+import qualified TDF.DDEX.ERN.V432.ParseSpec as DDEXParseSpec
+import qualified TDF.DDEX.Types as DDEXTypes
+import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.ServerProposalsSpec as ServerProposalsSpec
 import TDF.ServerRadio
     ( StreamMetadata (..),
@@ -387,6 +408,9 @@ import TDF.Server.SocialEventsHandlers (
     parseStripeRefundResponse,
     parseStripeWebhookEventEnvelope,
     verifyAndDecodeStripeWebhook,
+    StripeTicketPaymentEvidence (..),
+    parseStripeTicketPaymentEvidence,
+    validateStripeTicketPaymentEvidence,
     parseStripeWebhookMarketplaceOrderId,
     parseStripeWebhookPaymentIntentId,
     canRecoverMarketplaceStripeOrder,
@@ -747,6 +771,908 @@ main = hspec $ do
         it "rejects legacy partner allowedVersions arrays" $ do
             let payload = "{\"partnerName\":\"DSP\",\"partnerDpid\":null,\"partnerAllowedStandardVersionIds\":[\"40000000-0000-4000-8000-000000000001\"],\"allowedVersions\":[\"4.3.2\"]}"
             isLeft (eitherDecode payload :: Either String DdexPartnerCreateRequest) `shouldBe` True
+
+    describe "service storefront commercial invariants" $ do
+        it "accepts only server-configured package quantities" $
+            QC.property $ \(QC.Positive priceCents) (QC.Positive minSongs) (QC.NonNegative range) ->
+                let boundedRange = range `mod` 20
+                    maxSongs = minSongs + boundedRange
+                    requested = minSongs + (boundedRange `div` 2)
+                in ServiceStorefront.validatePackageOrder priceCents "USD" minSongs maxSongs requested
+                    == Right requested
+
+        it "rejects quantity and price tampering" $
+            QC.property $ \(QC.Positive priceCents) (QC.Positive minSongs) (QC.NonNegative range) ->
+                let maxSongs = minSongs + (range `mod` 20)
+                in isLeft (ServiceStorefront.validatePackageOrder priceCents "USD" minSongs maxSongs (maxSongs + 1))
+                    && isLeft (ServiceStorefront.validatePackageOrder 0 "USD" minSongs maxSongs minSongs)
+
+        it "binds a Datafast resource path to the stored checkout" $ do
+            ServiceStorefront.validateDatafastOrderResourcePath
+              (Just "checkout-abc")
+              "/v1/checkouts/checkout-abc/payment"
+              `shouldBe` Right "/v1/checkouts/checkout-abc/payment"
+
+            ServiceStorefront.validateDatafastOrderResourcePath
+              (Just "checkout-abc")
+              "/v1/checkouts/checkout-other/payment"
+              `shouldSatisfy` isLeft
+
+        it "requires a bounded visible-ASCII order idempotency key" $ do
+            ServiceStorefront.validateIdempotencyKey (Just "2e7c0f84-2945-4bed-a838-28cf482c5afb")
+              `shouldBe` Right "2e7c0f84-2945-4bed-a838-28cf482c5afb"
+            ServiceStorefront.validateIdempotencyKey Nothing `shouldSatisfy` isLeft
+            ServiceStorefront.validateIdempotencyKey (Just "too-short") `shouldSatisfy` isLeft
+            ServiceStorefront.validateIdempotencyKey (Just "invalid key with spaces") `shouldSatisfy` isLeft
+
+        it "defaults checkout configuration to sandbox and requires an explicit valid production value" $ do
+            CheckoutStore.resolveCheckoutEnvironment Nothing
+              `shouldBe` Right CheckoutStore.CheckoutSandbox
+            CheckoutStore.resolveCheckoutEnvironment (Just " production ")
+              `shouldBe` Right CheckoutStore.CheckoutProduction
+            CheckoutStore.resolveCheckoutEnvironment (Just "staging")
+              `shouldSatisfy` isLeft
+
+        it "accepts only staff-verified manual evidence on manual settlement rails" $ do
+            let now = UTCTime (fromGregorian 2026 8 17) (secondsToDiffTime 0)
+                payment = CheckoutStore.VerifiedPayment
+                  { CheckoutStore.vpAttempt = CheckoutStore.PaymentAttemptReference "attempt-1"
+                  , CheckoutStore.vpCheckout = CheckoutStore.CheckoutReference "checkout-1"
+                  , CheckoutStore.vpProvider = CheckoutStore.ProviderBankTransfer
+                  , CheckoutStore.vpEnvironment = CheckoutStore.CheckoutSandbox
+                  , CheckoutStore.vpMerchantRef = "tdf-manual-settlement"
+                  , CheckoutStore.vpResourceType = "manual_evidence"
+                  , CheckoutStore.vpProviderResource = "evidence-1"
+                  , CheckoutStore.vpProviderResourcePath = Nothing
+                  , CheckoutStore.vpOrderReference = "booking-1"
+                  , CheckoutStore.vpAmountMinor = 5000
+                  , CheckoutStore.vpCurrency = "USD"
+                  , CheckoutStore.vpEvidence = "staff_verified_manual"
+                  , CheckoutStore.vpOccurredAt = now
+                  , CheckoutStore.vpCorrelationId = "manual-review-1"
+                  }
+            CheckoutStore.validateApprovedManualPayment payment `shouldBe` Right ()
+            CheckoutStore.validateApprovedManualPayment
+              payment { CheckoutStore.vpEvidence = "customer_submitted" }
+              `shouldSatisfy` isLeft
+            CheckoutStore.validateApprovedManualPayment
+              payment { CheckoutStore.vpProvider = CheckoutStore.ProviderPayPal }
+              `shouldSatisfy` isLeft
+            CheckoutStore.validateApprovedManualPayment
+              payment { CheckoutStore.vpResourceType = "bank_reference" }
+              `shouldSatisfy` isLeft
+
+        it "binds Datafast environment declarations to the configured gateway host" $ do
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutSandbox
+              "https://eu-test.oppwa.com"
+              `shouldBe` Right ()
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutProduction
+              "https://eu-prod.oppwa.com"
+              `shouldBe` Right ()
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutProduction
+              "https://eu-test.oppwa.com"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutSandbox
+              "http://eu-test.oppwa.com"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutSandbox
+              "https://eu-test.oppwa.com.attacker.example"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutSandbox
+              "https://eu-test.oppwa.com@attacker.example"
+              `shouldSatisfy` isLeft
+
+        it "accepts only documented Datafast success codes for the immutable environment" $ do
+            ServiceStorefront.isDatafastCheckoutCreationSuccess "000.200.100"
+              `shouldBe` True
+            ServiceStorefront.isDatafastCheckoutCreationSuccess "000.200.000"
+              `shouldBe` False
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutProduction "000.000.000"
+              `shouldBe` True
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutProduction "000.100.110"
+              `shouldBe` False
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutSandbox "000.100.110"
+              `shouldBe` True
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutSandbox "000.100.112"
+              `shouldBe` True
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutSandbox "000.100.999"
+              `shouldBe` False
+
+        it "uses the nested PayPal capture status rather than the order status" $ do
+            let pendingPayload = A.object
+                  [ "status" .= ("COMPLETED" :: Text)
+                  , "purchase_units" .=
+                      [ A.object
+                          [ "custom_id" .= ("internal-order" :: Text)
+                          , "payee" .= A.object ["merchant_id" .= ("MERCHANT" :: Text)]
+                          , "payments" .= A.object
+                              [ "captures" .=
+                                  [ A.object
+                                      [ "id" .= ("CAPTURE-1" :: Text)
+                                      , "status" .= ("PENDING" :: Text)
+                                      , "amount" .= A.object
+                                          [ "value" .= ("80.00" :: Text)
+                                          , "currency_code" .= ("USD" :: Text)
+                                          ]
+                                      ]
+                                  ]
+                              ]
+                          ]
+                      ]
+                  ]
+            case ServiceStorefront.parsePaypalCaptureOutcome pendingPayload of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right outcome -> do
+                ServiceStorefront.spcoStatus outcome `shouldBe` "PENDING"
+                ServiceStorefront.spcoCaptureId outcome `shouldBe` Just "CAPTURE-1"
+
+        it "rejects ambiguous multi-capture PayPal responses" $ do
+            let capture captureId = A.object
+                  [ "id" .= (captureId :: Text)
+                  , "status" .= ("COMPLETED" :: Text)
+                  ]
+                ambiguousPayload = A.object
+                  [ "status" .= ("COMPLETED" :: Text)
+                  , "purchase_units" .=
+                      [ A.object
+                          [ "payments" .= A.object
+                              [ "captures" .= [capture "CAPTURE-1", capture "CAPTURE-2"] ]
+                          ]
+                      ]
+                  ]
+            case ServiceStorefront.parsePaypalCaptureOutcome ambiguousPayload of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right outcome -> do
+                ServiceStorefront.spcoStatus outcome `shouldBe` "UNKNOWN"
+                ServiceStorefront.spcoCaptureId outcome `shouldBe` Nothing
+
+        it "preserves the exact raw webhook event in PayPal verification requests" $ do
+            let now = UTCTime (fromGregorian 2026 8 14) (secondsToDiffTime (12 * 60 * 60 + 60))
+                rawEvent = "{\"id\":\"WH-1\", \"event_type\":\"PAYMENT.CAPTURE.COMPLETED\",\"create_time\":\"2026-08-14T12:00:00Z\",\"resource\":{}}"
+                expected = "{\"transmission_id\":\"transmission-1\",\"transmission_time\":\"2026-08-14T12:00:00Z\",\"cert_url\":\"https://api-m.sandbox.paypal.com/certs/cert.pem\",\"auth_algo\":\"SHA256withRSA\",\"transmission_sig\":\"signature-1\",\"webhook_id\":\"webhook-1\",\"webhook_event\":"
+                    <> rawEvent <> "}"
+            case ServiceStorefront.validatePaypalWebhookHeaders
+                    now
+                    (Just "transmission-1")
+                    (Just "2026-08-14T12:00:00Z")
+                    (Just "https://api-m.sandbox.paypal.com/certs/cert.pem")
+                    (Just "SHA256withRSA")
+                    (Just "signature-1") of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right headers ->
+                ServiceStorefront.buildPaypalWebhookVerificationBody
+                  "webhook-1" headers rawEvent `shouldBe` expected
+
+        it "rejects stale, future, and unsupported PayPal webhook headers" $ do
+            let now = UTCTime (fromGregorian 2026 8 14) (secondsToDiffTime (12 * 60 * 60))
+            ProviderEventStore.validateProviderEventTimestamp
+              now (addUTCTime (negate (4 * 24 * 60 * 60 + 1)) now)
+              `shouldSatisfy` isLeft
+
+        it "replays only payloads that match immutable verified event metadata" $ do
+            let createdAt = UTCTime (fromGregorian 2026 8 14)
+                  (secondsToDiffTime (12 * 60 * 60))
+                rawEvent = TE.encodeUtf8
+                  "{\"id\":\"WH-RETRY-1\",\"event_type\":\"PAYMENT.CAPTURE.COMPLETED\",\"create_time\":\"2026-08-14T12:00:00Z\",\"resource\":{\"id\":\"CAPTURE-RETRY-1\"}}"
+                payload = ProviderEventStore.ProviderEventPayload
+                  { ProviderEventStore.pepReference =
+                      ProviderEventStore.ProviderEventReference
+                        "00000000-0000-4000-8000-000000000010"
+                  , ProviderEventStore.pepProvider = "paypal"
+                  , ProviderEventStore.pepEnvironment = "sandbox"
+                  , ProviderEventStore.pepMerchantRef = "MERCHANT-RETRY"
+                  , ProviderEventStore.pepProviderEventId = "WH-RETRY-1"
+                  , ProviderEventStore.pepEventType = "PAYMENT.CAPTURE.COMPLETED"
+                  , ProviderEventStore.pepProviderCreatedAt = Just createdAt
+                  , ProviderEventStore.pepProviderResourceId = Just "CAPTURE-RETRY-1"
+                  , ProviderEventStore.pepRawPayload = rawEvent
+                  }
+            case ProviderEventWorker.validateStoredPaypalEvent payload of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right (environment, envelope) -> do
+                environment `shouldBe` CheckoutStore.CheckoutSandbox
+                ServiceStorefront.pweEventId envelope `shouldBe` "WH-RETRY-1"
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepProviderEventId = "WH-TAMPERED" }
+              `shouldSatisfy` isLeft
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepProvider = "datafast" }
+              `shouldSatisfy` isLeft
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepEventType = "PAYMENT.CAPTURE.REFUNDED" }
+              `shouldSatisfy` isLeft
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepProviderCreatedAt =
+                Just (addUTCTime 1 createdAt) }
+              `shouldSatisfy` isLeft
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepProviderResourceId = Just "CAPTURE-TAMPERED" }
+              `shouldSatisfy` isLeft
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepEnvironment = "production" }
+              `shouldSatisfy` isRight
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepEnvironment = "mock" }
+              `shouldSatisfy` isLeft
+
+        it "requires a UUID event reference and an auditable replay reason" $ do
+            let now = UTCTime (fromGregorian 2026 8 14)
+                  (secondsToDiffTime (12 * 60 * 60))
+            ProviderEventStore.parseProviderEventReference
+              "00000000-0000-4000-8000-000000000010"
+              `shouldSatisfy` isRight
+            ProviderEventStore.parseProviderEventReference "provider-event-1"
+              `shouldSatisfy` isLeft
+            CommerceOperationsServer.validateProviderEventReplayReason
+              "  Provider credentials were repaired  "
+              `shouldBe` Right "Provider credentials were repaired"
+            CommerceOperationsServer.validateProviderEventReplayReason "retry"
+              `shouldSatisfy` isLeft
+            CommerceOperationsServer.validateProviderEventReplayReason
+              "credentials repaired\nreplay now"
+              `shouldSatisfy` isLeft
+            CommerceOperationsServer.validateProviderEventReplayReason
+              (Data.Text.replicate 501 "r")
+              `shouldSatisfy` isLeft
+            ProviderEventStore.validateProviderEventTimestamp
+              now (addUTCTime (5 * 60 + 1) now)
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validatePaypalWebhookHeaders
+              now
+              (Just "transmission-1")
+              (Just "2026-08-14T12:00:00Z")
+              (Just "https://api-m.sandbox.paypal.com/certs/cert.pem")
+              (Just "SHA1withRSA")
+              (Just "signature-1")
+              `shouldSatisfy` isLeft
+
+        it "requires exact amount, currency, merchant, and order webhook bindings" $ do
+            let bound = ServiceStorefront.BoundPaypalCapture
+                  { ServiceStorefront.bpcCheckoutId = "00000000-0000-4000-8000-000000000001"
+                  , ServiceStorefront.bpcAttemptId = "00000000-0000-4000-8000-000000000002"
+                  , ServiceStorefront.bpcDomainType = "marketplace_sale"
+                  , ServiceStorefront.bpcDomainOrderId = "00000000-0000-4000-8000-000000000003"
+                  , ServiceStorefront.bpcExpectedAmount = 8000
+                  , ServiceStorefront.bpcCurrency = "USD"
+                  , ServiceStorefront.bpcMerchantRef = "MERCHANT"
+                  , ServiceStorefront.bpcPaypalOrderId = "ORDER-1"
+                  }
+                capture = ServiceStorefront.PaypalWebhookCapture
+                  { ServiceStorefront.pwcCaptureId = "CAPTURE-1"
+                  , ServiceStorefront.pwcStatus = "COMPLETED"
+                  , ServiceStorefront.pwcAmount = "80.00"
+                  , ServiceStorefront.pwcCurrency = "USD"
+                  , ServiceStorefront.pwcMerchantId = "MERCHANT"
+                  , ServiceStorefront.pwcPaypalOrderId = "ORDER-1"
+                  }
+            ServiceStorefront.validatePaypalWebhookCaptureBinding
+              "MERCHANT" bound capture `shouldBe` Right ()
+            ServiceStorefront.validatePaypalWebhookCaptureBinding
+              "MERCHANT" bound capture { ServiceStorefront.pwcAmount = "79.99" }
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validatePaypalWebhookCaptureBinding
+              "MERCHANT" bound capture { ServiceStorefront.pwcCurrency = "EUR" }
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validatePaypalWebhookCaptureBinding
+              "OTHER-MERCHANT" bound capture `shouldSatisfy` isLeft
+            ServiceStorefront.validatePaypalWebhookCaptureBinding
+              "MERCHANT" bound capture { ServiceStorefront.pwcPaypalOrderId = "ORDER-2" }
+              `shouldSatisfy` isLeft
+
+        it "builds stable PayPal request IDs within the provider length limit" $ do
+            let first = ServiceStorefront.paypalRequestId
+                  "capture" "PAYPAL-ORDER-WITH-A-LONG-PROVIDER-REFERENCE-0001"
+                replay = ServiceStorefront.paypalRequestId
+                  "capture" "PAYPAL-ORDER-WITH-A-LONG-PROVIDER-REFERENCE-0001"
+                other = ServiceStorefront.paypalRequestId
+                  "capture" "PAYPAL-ORDER-WITH-A-LONG-PROVIDER-REFERENCE-0002"
+            Data.Text.length first `shouldSatisfy` (<= 38)
+            first `shouldBe` replay
+            first `shouldNotBe` other
+
+        it "parses only represented PayPal refund evidence" $ do
+            let payload = A.object
+                  [ "id" .= ("REFUND-1" :: Text)
+                  , "status" .= ("COMPLETED" :: Text)
+                  , "amount" .= A.object
+                      [ "value" .= ("12.50" :: Text)
+                      , "currency_code" .= ("USD" :: Text)
+                      ]
+                  ]
+            ServiceStorefront.parsePaypalRefundOutcome payload
+              `shouldBe` Right ServiceStorefront.PaypalRefundOutcome
+                { ServiceStorefront.proRefundId = "REFUND-1"
+                , ServiceStorefront.proStatus = "COMPLETED"
+                , ServiceStorefront.proAmount = "12.50"
+                , ServiceStorefront.proCurrency = "USD"
+                }
+
+        it "never permits a requested refund above the unreserved captured balance" $ do
+            let refundBalanceProperty
+                  :: QC.Positive Int
+                  -> QC.NonNegative Int
+                  -> Bool
+                refundBalanceProperty
+                  (QC.Positive paidSeed) (QC.NonNegative refundedSeed) =
+                    let paid = fromIntegral (paidSeed `mod` 1000000 + 1) :: Int64
+                        refunded = fromIntegral
+                          (refundedSeed `mod` fromIntegral paid) :: Int64
+                        remaining = paid - refunded
+                    in RefundStore.validateRefundAmount
+                        paid refunded 0 remaining "USD" "usd" == Right ()
+                        && isLeft (RefundStore.validateRefundAmount
+                          paid refunded 0 (remaining + 1) "USD" "USD")
+            QC.property refundBalanceProperty
+
+        it "normalizes safe configured refund reason identifiers without hard-coding the catalog" $ do
+            RefundStore.validateRefundReason " Quality_Issue "
+              `shouldBe` Right "quality_issue"
+            RefundStore.validateRefundReason "refund reason"
+              `shouldSatisfy` isLeft
+            RefundStore.validateRefundReason "_internal"
+              `shouldSatisfy` isLeft
+
+        it "keeps payment states outside the generic service admin updater" $ do
+            ServiceStorefront.validateServiceFulfillmentTransition "paid" "in_progress"
+              `shouldBe` Right ()
+            ServiceStorefront.validateServiceFulfillmentTransition "in_progress" "v1_delivered"
+              `shouldBe` Right ()
+            ServiceStorefront.validateServiceFulfillmentTransition "awaiting_payment" "paid"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateServiceFulfillmentTransition "paid" "refunded"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateServiceFulfillmentTransition "paid" "completed"
+              `shouldSatisfy` isLeft
+
+    describe "marketplace sale fulfillment invariants" $ do
+        it "keeps terminal fulfillment states terminal" $
+            QC.property $ \(QC.NonNegative rawMethod) (QC.NonNegative rawState) ->
+                let methods =
+                        [ MarketplaceSales.MarketplacePickup
+                        , MarketplaceSales.MarketplaceLocalDelivery
+                        , MarketplaceSales.MarketplaceShipping
+                        ]
+                    states =
+                        [ MarketplaceSales.MarketplaceOnHold
+                        , MarketplaceSales.MarketplaceReadyToFulfill
+                        , MarketplaceSales.MarketplacePicking
+                        , MarketplaceSales.MarketplaceReadyForPickup
+                        , MarketplaceSales.MarketplaceShipped
+                        , MarketplaceSales.MarketplaceDelivered
+                        , MarketplaceSales.MarketplaceCancellationRequested
+                        , MarketplaceSales.MarketplaceCancelled
+                        , MarketplaceSales.MarketplaceReturnRequested
+                        , MarketplaceSales.MarketplaceReturnAuthorized
+                        , MarketplaceSales.MarketplaceReturnInTransit
+                        , MarketplaceSales.MarketplaceReturned
+                        , MarketplaceSales.MarketplaceClosed
+                        , MarketplaceSales.MarketplaceExpired
+                        ]
+                    method = methods !! (rawMethod `mod` length methods)
+                    candidate = states !! (rawState `mod` length states)
+                    isRejected terminal =
+                        candidate == terminal
+                          || isLeft
+                            (MarketplaceSales.validateMarketplaceFulfillmentTransition
+                              method terminal candidate)
+                in all isRejected
+                    [ MarketplaceSales.MarketplaceCancelled
+                    , MarketplaceSales.MarketplaceClosed
+                    , MarketplaceSales.MarketplaceExpired
+                    ]
+
+        it "routes pickup and shipped orders through different custody states" $ do
+            MarketplaceSales.validateMarketplaceFulfillmentTransition
+              MarketplaceSales.MarketplacePickup
+              MarketplaceSales.MarketplacePicking
+              MarketplaceSales.MarketplaceReadyForPickup
+              `shouldBe` Right ()
+            MarketplaceSales.validateMarketplaceFulfillmentTransition
+              MarketplaceSales.MarketplacePickup
+              MarketplaceSales.MarketplacePicking
+              MarketplaceSales.MarketplaceShipped
+              `shouldSatisfy` isLeft
+            MarketplaceSales.validateMarketplaceFulfillmentTransition
+              MarketplaceSales.MarketplaceShipping
+              MarketplaceSales.MarketplacePicking
+              MarketplaceSales.MarketplaceShipped
+              `shouldBe` Right ()
+
+        it "never treats payment readiness as physical delivery" $ do
+            MarketplaceSales.validateMarketplaceFulfillmentTransition
+              MarketplaceSales.MarketplacePickup
+              MarketplaceSales.MarketplaceOnHold
+              MarketplaceSales.MarketplaceDelivered
+              `shouldSatisfy` isLeft
+
+    describe "marketplace rental pricing and custody invariants" $ do
+        it "uses inclusive dates without allowing a negative duration" $ do
+            let startDate = fromGregorian 2030 1 10
+            MarketplaceRentals.rentalDurationDays startDate startDate
+              `shouldBe` Right 1
+            MarketplaceRentals.rentalDurationDays startDate (addDays 6 startDate)
+              `shouldBe` Right 7
+            MarketplaceRentals.rentalDurationDays startDate (addDays (-1) startDate)
+              `shouldSatisfy` isLeft
+
+        it "calculates weekly pricing and discloses the deposit separately" $ do
+            MarketplaceRentals.calculateRentalPrice 1000 (Just 6000) 500 1 30 10
+              `shouldBe` Right MarketplaceRentals.RentalPriceBreakdown
+                { MarketplaceRentals.rpbDurationDays = 10
+                , MarketplaceRentals.rpbRentalChargeMinor = 9000
+                , MarketplaceRentals.rpbSecurityDepositMinor = 500
+                , MarketplaceRentals.rpbCheckoutTotalMinor = 9500
+                }
+
+        it "rejects invalid limits, abusive weekly rates, and overflowing totals" $ do
+            MarketplaceRentals.calculateRentalPrice 1000 (Just 7001) 0 1 30 7
+              `shouldSatisfy` isLeft
+            MarketplaceRentals.calculateRentalPrice 1000 Nothing 0 5 3 4
+              `shouldSatisfy` isLeft
+            MarketplaceRentals.calculateRentalPrice maxBound Nothing maxBound 1 2 2
+              `shouldSatisfy` isLeft
+
+        it "makes transition validation idempotent and keeps terminal states terminal" $
+            QC.property $ \(QC.NonNegative rawFrom) (QC.NonNegative rawTo) ->
+                let states =
+                      [ MarketplaceRentals.RentalOnHold
+                      , MarketplaceRentals.RentalConfirmed
+                      , MarketplaceRentals.RentalReadyForHandoff
+                      , MarketplaceRentals.RentalCheckedOut
+                      , MarketplaceRentals.RentalReturnDue
+                      , MarketplaceRentals.RentalReturnedPendingInspection
+                      , MarketplaceRentals.RentalDamageReview
+                      , MarketplaceRentals.RentalDepositRefundDue
+                      , MarketplaceRentals.RentalClosed
+                      , MarketplaceRentals.RentalCancellationRequested
+                      , MarketplaceRentals.RentalCancelled
+                      , MarketplaceRentals.RentalNoShow
+                      , MarketplaceRentals.RentalLost
+                      , MarketplaceRentals.RentalDisputed
+                      , MarketplaceRentals.RentalExpired
+                      ]
+                    fromState = states !! (rawFrom `mod` length states)
+                    toState = states !! (rawTo `mod` length states)
+                    terminalStateIsClosed terminal =
+                      toState == terminal
+                        || isLeft (MarketplaceRentals.validateMarketplaceRentalTransition terminal toState)
+                in MarketplaceRentals.validateMarketplaceRentalTransition fromState fromState == Right ()
+                    && all terminalStateIsClosed
+                      [ MarketplaceRentals.RentalClosed
+                      , MarketplaceRentals.RentalCancelled
+                      , MarketplaceRentals.RentalExpired
+                      ]
+
+        it "never skips payment confirmation, handoff, or inspection states" $ do
+            MarketplaceRentals.validateMarketplaceRentalTransition
+              MarketplaceRentals.RentalOnHold
+              MarketplaceRentals.RentalCheckedOut
+              `shouldSatisfy` isLeft
+            MarketplaceRentals.validateMarketplaceRentalTransition
+              MarketplaceRentals.RentalCheckedOut
+              MarketplaceRentals.RentalClosed
+              `shouldSatisfy` isLeft
+            MarketplaceRentals.validateMarketplaceRentalTransition
+              MarketplaceRentals.RentalReadyForHandoff
+              MarketplaceRentals.RentalCheckedOut
+              `shouldBe` Right ()
+
+        it "allows operational disputes after return without implying a payment chargeback" $ do
+            MarketplaceRentals.validateMarketplaceRentalTransition
+              MarketplaceRentals.RentalReturnedPendingInspection
+              MarketplaceRentals.RentalDisputed
+              `shouldBe` Right ()
+            MarketplaceRentals.validateMarketplaceRentalTransition
+              MarketplaceRentals.RentalDepositRefundDue
+              MarketplaceRentals.RentalDisputed
+              `shouldBe` Right ()
+
+    describe "marketplace customer request and deposit settlement invariants" $ do
+        it "permits only domain-appropriate customer requests" $ do
+            let currentEnd = fromGregorian 2030 1 10
+            MarketplaceOperations.validateMarketplaceCustomerRequest
+              MarketplaceOperations.SaleReturnRequest "sale" "delivered" Nothing Nothing
+              `shouldBe` Right ()
+            MarketplaceOperations.validateMarketplaceCustomerRequest
+              MarketplaceOperations.SaleReturnRequest "rental" "delivered" Nothing Nothing
+              `shouldSatisfy` isLeft
+            MarketplaceOperations.validateMarketplaceCustomerRequest
+              MarketplaceOperations.RentalExtensionRequest "rental" "checked_out"
+              (Just currentEnd) (Just (addDays 2 currentEnd))
+              `shouldBe` Right ()
+            MarketplaceOperations.validateMarketplaceCustomerRequest
+              MarketplaceOperations.RentalExtensionRequest "rental" "checked_out"
+              (Just currentEnd) (Just currentEnd)
+              `shouldSatisfy` isLeft
+
+        it "keeps rental extensions in quote review instead of silently changing custody dates" $ do
+            MarketplaceOperations.validateMarketplaceCustomerReview
+              MarketplaceOperations.RentalExtensionRequest
+              MarketplaceOperations.CustomerRequestSubmitted
+              MarketplaceOperations.CustomerRequestNeedsQuoteAction
+              `shouldBe` Right MarketplaceOperations.CustomerRequestNeedsQuote
+            MarketplaceOperations.validateMarketplaceCustomerReview
+              MarketplaceOperations.RentalExtensionRequest
+              MarketplaceOperations.CustomerRequestSubmitted
+              MarketplaceOperations.CustomerRequestApprove
+              `shouldSatisfy` isLeft
+
+        it "requires exact deposit arithmetic and an independent reviewer" $ do
+            MarketplaceOperations.validateMarketplaceDepositSettlement
+              MarketplaceOperations.DepositBankTransfer 500 100 400
+              `shouldBe` Right ()
+            MarketplaceOperations.validateMarketplaceDepositSettlement
+              MarketplaceOperations.DepositForfeiture 500 500 0
+              `shouldBe` Right ()
+            MarketplaceOperations.validateMarketplaceDepositSettlement
+              MarketplaceOperations.DepositBankTransfer 500 100 399
+              `shouldSatisfy` isLeft
+            MarketplaceOperations.validateIndependentDepositReviewer 42 43
+              `shouldBe` Right ()
+            MarketplaceOperations.validateIndependentDepositReviewer 42 42
+              `shouldSatisfy` isLeft
+
+        it "never permits a final customer-request review to transition again" $
+            QC.forAll (QC.arbitrary :: QC.Gen (QC.NonNegative Int)) $ \(QC.NonNegative rawStatus) ->
+              let terminal = if even rawStatus
+                    then MarketplaceOperations.CustomerRequestApproved
+                    else MarketplaceOperations.CustomerRequestRejected
+              in isLeft (MarketplaceOperations.validateMarketplaceCustomerReview
+                  MarketplaceOperations.SaleReturnRequest terminal
+                  MarketplaceOperations.CustomerRequestReject)
+
+    describe "service booking pricing and fulfillment invariants" $ do
+        it "calculates tax, deposit, and balance from approved integer policy values" $ do
+            ServiceBookings.calculateBookingPrice 2500 60 1200 5000 60 480 60 180
+              `shouldBe` Right ServiceBookings.BookingPriceBreakdown
+                { ServiceBookings.bpbDurationMinutes = 180
+                , ServiceBookings.bpbBillingUnits = 3
+                , ServiceBookings.bpbSubtotalMinor = 7500
+                , ServiceBookings.bpbTaxMinor = 900
+                , ServiceBookings.bpbTotalMinor = 8400
+                , ServiceBookings.bpbDepositMinor = 4200
+                , ServiceBookings.bpbBalanceMinor = 4200
+                }
+
+        it "rejects client durations that would require silent price rounding" $ do
+            ServiceBookings.calculateBookingPrice 2500 60 1200 5000 60 480 30 90
+              `shouldSatisfy` isLeft
+            ServiceBookings.calculateBookingPrice 2500 60 1200 5000 60 480 60 45
+              `shouldSatisfy` isLeft
+
+        it "never equates deposit confirmation with service completion" $ do
+            ServiceBookings.validateServiceBookingTransition
+              ServiceBookings.BookingOnHold
+              ServiceBookings.BookingCompleted
+              `shouldSatisfy` isLeft
+            ServiceBookings.validateServiceBookingTransition
+              ServiceBookings.BookingOnHold
+              ServiceBookings.BookingConfirmed
+              `shouldBe` Right ()
+            ServiceBookings.validateServiceBookingTransition
+              ServiceBookings.BookingConfirmed
+              ServiceBookings.BookingScheduled
+              `shouldBe` Right ()
+
+        it "keeps completed, cancelled, and expired bookings terminal" $
+            QC.property $ \(QC.NonNegative rawState) ->
+                let states =
+                      [ ServiceBookings.BookingOnHold
+                      , ServiceBookings.BookingConfirmed
+                      , ServiceBookings.BookingScheduled
+                      , ServiceBookings.BookingInProgress
+                      , ServiceBookings.BookingBalanceDue
+                      , ServiceBookings.BookingCompleted
+                      , ServiceBookings.BookingRescheduleRequested
+                      , ServiceBookings.BookingCancellationRequested
+                      , ServiceBookings.BookingCancelled
+                      , ServiceBookings.BookingNoShow
+                      , ServiceBookings.BookingOvertimeReview
+                      , ServiceBookings.BookingDisputed
+                      , ServiceBookings.BookingExpired
+                      ]
+                    candidate = states !! (rawState `mod` length states)
+                    closed terminal = candidate == terminal
+                      || isLeft (ServiceBookings.validateServiceBookingTransition terminal candidate)
+                in all closed
+                    [ ServiceBookings.BookingCompleted
+                    , ServiceBookings.BookingCancelled
+                    , ServiceBookings.BookingExpired
+                    ]
+
+    describe "course checkout pricing and enrollment invariants" $ do
+        it "calculates an ordinary full-payment cohort entirely in minor units" $ do
+            CourseCheckout.calculateCoursePrice
+              15000 1200 CourseCheckout.CourseFullPayment 10000
+              `shouldBe` Right CourseCheckout.CoursePriceBreakdown
+                { CourseCheckout.cpbSubtotalMinor = 15000
+                , CourseCheckout.cpbTaxMinor = 1800
+                , CourseCheckout.cpbTotalMinor = 16800
+                , CourseCheckout.cpbDueNowMinor = 16800
+                , CourseCheckout.cpbBalanceMinor = 0
+                }
+
+        it "requires an explicit approved deposit policy instead of silently undercharging" $ do
+            CourseCheckout.calculateCoursePrice
+              15000 0 CourseCheckout.CourseFullPayment 5000
+              `shouldSatisfy` isLeft
+            CourseCheckout.calculateCoursePrice
+              15000 0 CourseCheckout.CourseDeposit 5000
+              `shouldBe` Right CourseCheckout.CoursePriceBreakdown
+                { CourseCheckout.cpbSubtotalMinor = 15000
+                , CourseCheckout.cpbTaxMinor = 0
+                , CourseCheckout.cpbTotalMinor = 15000
+                , CourseCheckout.cpbDueNowMinor = 7500
+                , CourseCheckout.cpbBalanceMinor = 7500
+                }
+
+        it "never equates a seat hold with enrollment or course completion" $ do
+            CourseCheckout.validateCourseEnrollmentTransition
+              CourseCheckout.EnrollmentSeatHeld CourseCheckout.EnrollmentCompleted
+              `shouldSatisfy` isLeft
+            CourseCheckout.validateCourseEnrollmentTransition
+              CourseCheckout.EnrollmentSeatHeld CourseCheckout.EnrollmentEnrolled
+              `shouldBe` Right ()
+            CourseCheckout.validateCourseEnrollmentTransition
+              CourseCheckout.EnrollmentEnrolled CourseCheckout.EnrollmentCompleted
+              `shouldBe` Right ()
+
+        it "keeps cancelled, completed, transferred, and expired seats terminal" $
+            QC.property $ \(QC.NonNegative rawState) ->
+              let states =
+                    [ CourseCheckout.EnrollmentSeatHeld
+                    , CourseCheckout.EnrollmentEnrolled
+                    , CourseCheckout.EnrollmentWaitlisted
+                    , CourseCheckout.EnrollmentTransferRequested
+                    , CourseCheckout.EnrollmentTransferred
+                    , CourseCheckout.EnrollmentCancelled
+                    , CourseCheckout.EnrollmentCompleted
+                    , CourseCheckout.EnrollmentExpired
+                    ]
+                  candidate = states !! (rawState `mod` length states)
+                  closed terminal = candidate == terminal
+                    || isLeft (CourseCheckout.validateCourseEnrollmentTransition terminal candidate)
+              in all closed
+                  [ CourseCheckout.EnrollmentTransferred
+                  , CourseCheckout.EnrollmentCancelled
+                  , CourseCheckout.EnrollmentCompleted
+                  , CourseCheckout.EnrollmentExpired
+                  ]
+
+    describe "event ticket pricing and fulfillment invariants" $ do
+        it "derives stable unguessable lookup capabilities from a server-only key" $ do
+            let secret = BS.replicate 32 0x5a
+                first = EventTicketCheckoutServer.deriveTicketLookupToken
+                  secret "event-ticket-checkout-00000001" 41
+                replay = EventTicketCheckoutServer.deriveTicketLookupToken
+                  secret "event-ticket-checkout-00000001" 41
+                otherOrder = EventTicketCheckoutServer.deriveTicketLookupToken
+                  secret "event-ticket-checkout-00000002" 41
+                otherEvent = EventTicketCheckoutServer.deriveTicketLookupToken
+                  secret "event-ticket-checkout-00000001" 42
+            first `shouldBe` replay
+            first `shouldSatisfy` either (const False) ((== 64) . Data.Text.length)
+            otherOrder `shouldNotBe` first
+            otherEvent `shouldNotBe` first
+            EventTicketCheckoutServer.deriveTicketLookupToken
+              (BS.replicate 31 0x5a) "event-ticket-checkout-00000001" 41
+              `shouldSatisfy` isLeft
+
+        it "accepts an explicit public checkout request with optional fields omitted" $ do
+            let payload =
+                  "{\"tierId\":7,\"quantity\":2,\"buyerName\":\"Ana Rivera\",\"buyerEmail\":\"ana@example.com\",\"termsAccepted\":true}"
+            (eitherDecode payload :: Either String EventTicketRoutes.PublicEventTicketCheckoutRequest)
+              `shouldSatisfy` isRight
+
+        it "rejects null public checkout optionals instead of treating them as omitted" $ do
+            let payload =
+                  "{\"tierId\":7,\"quantity\":2,\"buyerName\":\"Ana Rivera\",\"buyerEmail\":\"ana@example.com\",\"buyerPhone\":null,\"termsAccepted\":true}"
+            (eitherDecode payload :: Either String EventTicketRoutes.PublicEventTicketCheckoutRequest)
+              `shouldSatisfy` isLeft
+
+        it "rejects unknown public checkout fields before server pricing" $ do
+            let payload =
+                  "{\"tierId\":7,\"quantity\":2,\"buyerName\":\"Ana Rivera\",\"buyerEmail\":\"ana@example.com\",\"termsAccepted\":true,\"totalMinor\":1}"
+            (eitherDecode payload :: Either String EventTicketRoutes.PublicEventTicketCheckoutRequest)
+              `shouldSatisfy` isLeft
+
+        it "snapshots buyer and organizer fee allocations in integer minor units" $ do
+            EventTickets.calculateTicketPrice 2500 2 0 200 200 0
+              `shouldBe` Right EventTickets.TicketPriceBreakdown
+                { EventTickets.tpbGrossFaceValueMinor = 5000
+                , EventTickets.tpbDiscountMinor = 0
+                , EventTickets.tpbNetFaceValueMinor = 5000
+                , EventTickets.tpbBuyerFeeMinor = 100
+                , EventTickets.tpbOrganizerFeeMinor = 100
+                , EventTickets.tpbTaxMinor = 0
+                , EventTickets.tpbCheckoutTotalMinor = 5100
+                , EventTickets.tpbOrganizerPayableMinor = 4900
+                , EventTickets.tpbPlatformFeeMinor = 200
+                }
+
+        it "rejects quantity, discount, fee, tax, and overflow tampering" $ do
+            EventTickets.calculateTicketPrice 2500 0 0 200 200 0 `shouldSatisfy` isLeft
+            EventTickets.calculateTicketPrice 2500 101 0 200 200 0 `shouldSatisfy` isLeft
+            EventTickets.calculateTicketPrice 2500 1 2501 200 200 0 `shouldSatisfy` isLeft
+            EventTickets.calculateTicketPrice 2500 1 0 10001 200 0 `shouldSatisfy` isLeft
+            EventTickets.calculateTicketPrice maxBound 2 0 200 200 0 `shouldSatisfy` isLeft
+
+        it "cannot issue a held ticket from an unverified browser or provider return" $ do
+            EventTickets.validateTicketFulfillmentTransition
+              EventTickets.TicketPaymentPending
+              EventTickets.TicketSeatHeld
+              EventTickets.TicketIssued
+              `shouldSatisfy` isLeft
+            EventTickets.validateTicketFulfillmentTransition
+              EventTickets.TicketPaymentVerified
+              EventTickets.TicketSeatHeld
+              EventTickets.TicketIssued
+              `shouldBe` Right ()
+            EventTickets.validateTicketFulfillmentTransition
+              EventTickets.TicketPaymentVerified
+              EventTickets.TicketSeatHeld
+              EventTickets.TicketCheckedIn
+              `shouldSatisfy` isLeft
+
+        it "keeps checked-in, refunded, cancelled, and expired tickets terminal" $
+            QC.property $ \(QC.NonNegative rawState) ->
+              let states =
+                    [ EventTickets.TicketSeatHeld
+                    , EventTickets.TicketIssued
+                    , EventTickets.TicketTransferRequested
+                    , EventTickets.TicketTransferred
+                    , EventTickets.TicketCheckedIn
+                    , EventTickets.TicketCancelled
+                    , EventTickets.TicketRefunded
+                    , EventTickets.TicketExpired
+                    ]
+                  candidate = states !! (rawState `mod` length states)
+                  closed terminal = candidate == terminal
+                    || isLeft
+                        (EventTickets.validateTicketFulfillmentTransition
+                          EventTickets.TicketPaymentVerified terminal candidate)
+              in all closed
+                  [ EventTickets.TicketCheckedIn
+                  , EventTickets.TicketCancelled
+                  , EventTickets.TicketRefunded
+                  , EventTickets.TicketExpired
+                  ]
+
+    describe "provider-neutral checkout state machine" $ do
+        let verifiedPayment = Commerce.PaymentVerification
+                { Commerce.pvCheckoutEnvironment = Commerce.ProviderProduction
+                , Commerce.pvEventEnvironment = Commerce.ProviderProduction
+                , Commerce.pvEvidence = Commerce.SignatureVerifiedWebhook
+                , Commerce.pvExpectedAmountMinor = 12500
+                , Commerce.pvActualAmountMinor = 12500
+                , Commerce.pvExpectedCurrency = "USD"
+                , Commerce.pvActualCurrency = "usd"
+                , Commerce.pvExpectedMerchant = "tdf-merchant"
+                , Commerce.pvActualMerchant = "tdf-merchant"
+                , Commerce.pvExpectedOrder = "order-123"
+                , Commerce.pvActualOrder = "order-123"
+                , Commerce.pvExpectedResource = "/v1/checkouts/resource-123/payment"
+                , Commerce.pvActualResource = "/v1/checkouts/resource-123/payment"
+                }
+
+        it "allows payment only from authoritative, fully bound evidence" $
+            Commerce.transitionCheckout
+              Commerce.CheckoutProcessing
+              (Commerce.CheckoutPaymentVerified verifiedPayment)
+              `shouldBe` Right Commerce.CheckoutPaid
+
+        it "never treats a browser return or mocked evidence as payment" $
+            QC.property $ \useBrowserReturn ->
+                let evidence = if useBrowserReturn then Commerce.BrowserReturnOnly else Commerce.MockedEvidence
+                    untrusted = verifiedPayment { Commerce.pvEvidence = evidence }
+                in isLeft (Commerce.transitionCheckout Commerce.CheckoutProcessing (Commerce.CheckoutPaymentVerified untrusted))
+
+        it "rejects sandbox events for production checkouts" $ do
+            let sandboxEvent = verifiedPayment { Commerce.pvEventEnvironment = Commerce.ProviderSandbox }
+            Commerce.transitionCheckout Commerce.CheckoutProcessing (Commerce.CheckoutPaymentVerified sandboxEvent)
+              `shouldSatisfy` isLeft
+
+        it "rejects every provider amount mutation" $
+            QC.property $ \(QC.NonZero delta) ->
+                isLeft (Commerce.verifyPaymentBinding verifiedPayment
+                  { Commerce.pvActualAmountMinor = 12500 + delta })
+
+        it "keeps fulfillment out of the payment state machine" $
+            Commerce.transitionCheckout Commerce.CheckoutPaid Commerce.CheckoutProviderProcessing
+              `shouldSatisfy` isLeft
+
+        it "balances immutable ledger entries independently per currency" $ do
+            Commerce.ledgerBalances [("USD", 10000), ("usd", -10000), ("EUR", 8000), ("EUR", -8000)]
+              `shouldBe` True
+            Commerce.ledgerBalances [("USD", 10000), ("EUR", -10000)]
+              `shouldBe` False
+
+    describe "distribution state machine invariants" $ do
+        let completeGates = Distribution.DistributionGates
+              { Distribution.metadataValid = True
+              , Distribution.identifiersValid = True
+              , Distribution.assetsValid = True
+              , Distribution.rightsComplete = True
+              , Distribution.splitsAccepted = True
+              , Distribution.termsAccepted = True
+              , Distribution.commerciallyCleared = True
+              }
+
+        it "requires every intake and rights gate before validation" $
+            QC.property $ \metadata identifiers assets rights splits terms ->
+              let gates = completeGates
+                    { Distribution.metadataValid = metadata
+                    , Distribution.identifiersValid = identifiers
+                    , Distribution.assetsValid = assets
+                    , Distribution.rightsComplete = rights
+                    , Distribution.splitsAccepted = splits
+                    , Distribution.termsAccepted = terms
+                    }
+              in isRight (Distribution.transitionDistribution gates
+                    Distribution.DistributionDraft Distribution.DistributionValidated)
+                    == and [metadata, identifiers, assets, rights, splits, terms]
+
+        it "accepts only positive splits totaling exactly 100 percent" $
+            QC.property $ \(QC.NonEmpty rawShares) ->
+              let shares = map (\value -> 1 + abs value `mod` 9999) rawShares
+              in Distribution.splitTotalValid shares == (sum shares == 10000)
+
+        it "cannot mark distribution paid without commercial clearance" $
+            Distribution.transitionDistribution
+              (completeGates { Distribution.commerciallyCleared = False })
+              Distribution.DistributionPaymentDue
+              Distribution.DistributionPaid
+              `shouldSatisfy` isLeft
+
+        it "rejects mock and sandbox evidence for production status" $
+            QC.property $ \useMock ->
+              let evidence = if useMock then Distribution.MockEvidence else Distribution.SandboxEvidence
+              in isLeft (Distribution.validateRecipientEvidence Distribution.EvidenceProduction evidence)
+
+        it "keeps package generation, send, acknowledgement, acceptance, and live distinct" $ do
+            Distribution.transitionDistribution completeGates
+              Distribution.DistributionScheduled Distribution.DistributionPackageGenerated
+              `shouldBe` Right Distribution.DistributionPackageGenerated
+            Distribution.transitionDistribution completeGates
+              Distribution.DistributionPackageGenerated Distribution.DistributionSent
+              `shouldSatisfy` isLeft
+            Distribution.transitionDistribution completeGates
+              Distribution.DistributionSent Distribution.DistributionLive
+              `shouldSatisfy` isLeft
+
+    describe "DDEX intake safety and truthfulness" $ do
+        it "rejects entities, XInclude, malformed XML, and invalid UTF-8" $ do
+            let unsafePayloads =
+                  [ "<?xml version=\"1.0\"?><!DOCTYPE x [<!ENTITY e SYSTEM \"file:///etc/passwd\">]><x>&e;</x>"
+                  , "<?xml version=\"1.0\"?><x xmlns:xi=\"http://www.w3.org/2001/XInclude\"><xi:include href=\"file:///etc/passwd\"/></x>"
+                  , "<?xml version=\"1.0\"?><unclosed>"
+                  ]
+            mapM_ (\payload ->
+              DDEXSecurity.safeParseXml DDEXSecurity.defaultXmlParseConfig (BL.pack payload)
+                `shouldSatisfy` isLeft) unsafePayloads
+            DDEXSecurity.safeParseXml DDEXSecurity.defaultXmlParseConfig (BL.pack "\255\254")
+              `shouldSatisfy` isLeft
+
+        it "detects ERN 4.3.2 without inventing a version" $ do
+            let payload = BL.pack "<ernNewReleaseMessage xmlns=\"http://ddex.net/xml/ern/432\" MessageSchemaVersionId=\"ern/432\"></ernNewReleaseMessage>"
+            fmap DDEXTypes.detectionVersion (DDEXDetect.detectDocument payload)
+              `shouldBe` Just "4.3.2"
+
+        it "refuses to render ERN with placeholder sender or recipient identities" $
+            DDEXConvert.catalogToErn DDEXConvert.defaultConvertConfig currentSocialSyncTestTime [] [] [] []
+              `shouldSatisfy` isLeft
+
     describe "governed country reference snapshot" $ do
         it "contains one complete, bilingual identity for every ISO alpha-2 code" $ do
             let seeds = CountrySeed.countryReferenceSeeds
@@ -1155,6 +2081,26 @@ main = hspec $ do
                     Nothing
             lookup "Idempotency-Key" (HTTP.requestHeaders request) `shouldBe` Nothing
 
+        it "binds mobile customer PaymentIntents to the same nested ticket context" $ do
+            request <-
+                Stripe.buildPaymentIntentForCustomerRequest
+                    (stripeTestConfig "whsec_test")
+                    (Just "ticket-order-party_123-request_123")
+                    "cus_123"
+                    5100
+                    "USD"
+                    "Tickets for event 12"
+                    (Just "{\"order_id\":\"41\",\"event_id\":\"12\"}")
+            lookup "Idempotency-Key" (HTTP.requestHeaders request)
+                `shouldBe` Just "ticket-order-party_123-request_123"
+            case HTTP.requestBody request of
+                HTTP.RequestBodyBS body -> do
+                    body `shouldSatisfy` BS.isInfixOf "customer=cus_123"
+                    body `shouldSatisfy` BS.isInfixOf "metadata[tdf_context]="
+                    body `shouldSatisfy` BS.isInfixOf "%22order_id%22%3a%2241%22"
+                    body `shouldNotSatisfy` BS.isInfixOf "&metadata="
+                _ -> expectationFailure "Expected a strict customer PaymentIntent form body"
+
         it "rejects unsafe idempotency keys before allocating an HTTP manager" $ do
             Stripe.createPaymentIntentWithIdempotencyKey
                 (stripeTestConfig "whsec_test")
@@ -1481,6 +2427,51 @@ main = hspec $ do
                 `shouldBe` Right ("evt_123", "payment_intent.succeeded")
             parseStripeWebhookPaymentIntentId webhookPayload
                 `shouldBe` Just "pi_123"
+
+        it "requires complete immutable ticket evidence before a signed webhook can issue tickets" $ do
+            let ticketPayload amount currency orderId eventId status =
+                    A.object
+                        [ "data"
+                            .= A.object
+                                [ "object"
+                                    .= A.object
+                                        [ "id" .= ("pi_ticket_123" :: Text)
+                                        , "status" .= (status :: Text)
+                                        , "amount_received" .= (amount :: Int)
+                                        , "currency" .= (currency :: Text)
+                                        , "metadata"
+                                            .= A.object
+                                                [ "tdf_context"
+                                                    .= ( TE.decodeUtf8 . BL.toStrict . A.encode $
+                                                            A.object
+                                                                [ "order_id" .= (orderId :: Text)
+                                                                , "event_id" .= (eventId :: Text)
+                                                                ]
+                                                       )
+                                                ]
+                                        ]
+                                ]
+                        ]
+                expectedEvidence =
+                    StripeTicketPaymentEvidence
+                        { stpePaymentIntentId = "pi_ticket_123"
+                        , stpeStatus = "succeeded"
+                        , stpeAmountReceived = 5100
+                        , stpeCurrency = "USD"
+                        , stpeOrderId = "41"
+                        , stpeEventId = "12"
+                        }
+                validPayload = ticketPayload 5100 "usd" "41" "12" "succeeded"
+            parseStripeTicketPaymentEvidence validPayload `shouldBe` Right expectedEvidence
+            validateStripeTicketPaymentEvidence "41" "12" "pi_ticket_123" 5100 "USD" expectedEvidence
+                `shouldBe` Right ()
+            validateStripeTicketPaymentEvidence "41" "12" "pi_ticket_123" 5000 "USD" expectedEvidence
+                `shouldBe` Left "Stripe ticket amount does not match the immutable order total"
+            validateStripeTicketPaymentEvidence "41" "99" "pi_ticket_123" 5100 "USD" expectedEvidence
+                `shouldBe` Left "Stripe ticket event metadata does not match the stored event"
+            parseStripeTicketPaymentEvidence
+                (A.object ["data" .= A.object ["object" .= A.object ["id" .= ("pi_ticket_123" :: Text)] ]])
+                `shouldBe` Left "Stripe ticket payment evidence is incomplete"
 
         it "recovers marketplace order ids from Stripe metadata context" $ do
             let webhookPayload =
@@ -9798,19 +10789,21 @@ main = hspec $ do
             ticketOrderInventoryAdjustment 2 "paid" "paid" `shouldBe` 0
 
     describe "direct ticket order pricing policy" $ do
-        it "allows buyers to claim free tiers and managers to issue paid tiers" $ do
+        it "allows only zero-priced direct issuance" $ do
             case validateDirectTicketOrderPricing False 0 of
                 Right () -> pure ()
                 Left err -> expectationFailure ("Expected free tier to be allowed: " <> show err)
             case validateDirectTicketOrderPricing True 2500 of
-                Right () -> pure ()
-                Left err -> expectationFailure ("Expected manager issuance to be allowed: " <> show err)
+                Left err -> do
+                    errHTTPCode err `shouldBe` 409
+                    BL.unpack (errBody err) `shouldContain` "server-verified checkout"
+                Right () -> expectationFailure "Expected manager identity not to count as payment evidence"
 
-        it "requires non-managers to buy paid tiers through Stripe" $
+        it "requires all priced direct orders to use a verified checkout" $
             case validateDirectTicketOrderPricing False 1 of
                 Left err -> do
-                    errHTTPCode err `shouldBe` 403
-                    BL.unpack (errBody err) `shouldContain` "must be purchased through Stripe"
+                    errHTTPCode err `shouldBe` 409
+                    BL.unpack (errBody err) `shouldContain` "server-verified checkout"
                 Right () -> expectationFailure "Expected direct paid issuance to be rejected"
 
     describe "ticket purchase event eligibility" $ do
@@ -14730,6 +15723,8 @@ main = hspec $ do
     CatalogRecordsSpec.spec
     CatalogSecuritySpec.spec
     CatalogPipelineSpec.spec
+    DDEXParseSpec.spec
+    DDEXBusinessRulesSpec.spec
     DirectoryPolicySpec.spec
     EventDiscoverySpec.spec
     EventResearchSpec.spec

@@ -192,8 +192,8 @@ export const postText = <T>(p: string, body: string) =>
   api<T>(p, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body });
 export const postForm = <T>(p: string, form: FormData) =>
   api<T>(p, { method: 'POST', body: form });
-export const put = <T>(p: string, body: unknown) =>
-  api<T>(p, { method: 'PUT', body: JSON.stringify(body) });
+export const put = <T>(p: string, body: unknown, init: RequestInit = {}) =>
+  api<T>(p, { ...init, method: 'PUT', body: JSON.stringify(body) });
 export const patch = <T>(p: string, body: unknown) =>
   api<T>(p, { method: 'PATCH', body: JSON.stringify(body) });
 export const del = <T>(p: string) =>
