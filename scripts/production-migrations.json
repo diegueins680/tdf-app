@@ -270,6 +270,11 @@
       "id": "2026-08-17_course_checkout_runtime",
       "path": "tdf-hq/sql/2026-08-17_course_checkout_runtime.sql",
       "introducedBy": "ae4b2317c0d450453dc20758e03d9942b6683a28"
+    },
+    {
+      "id": "2026-08-18_public_ticket_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql",
+      "introducedBy": "008d9767ddd91ce970a979a246be994bb69bb88d"
     }
   ]
 }
