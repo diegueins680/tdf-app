@@ -4188,6 +4188,7 @@ socialEventsServer user =
         mTier <- liftIO $ runSqlPool (get tierKey) envPool
         tier <- maybe (throwError err404{errBody = "Ticket tier not found"}) pure mTier
         let eventKey = eventTicketTierEventId tier
+        requireEventVisibleToUser eventKey
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         purchaseEnabled <- liftIO $ runSqlPool (eventTicketPurchaseEnabledFor eventVal) envPool
@@ -4920,6 +4921,10 @@ socialEventsServer user =
         transferEnt <- maybe (throwError err404{errBody = "Transfer not found"}) pure mTransferEnt
         let transferKey = entityKey transferEnt
             transfer = entityVal transferEnt
+            ticketKey = ticketTransferTicketId transfer
+        mTicket <- liftIO $ runSqlPool (get ticketKey) envPool
+        ticket <- maybe (throwError err404{errBody = "Ticket not found"}) pure mTicket
+        requireEventVisibleToUser (eventTicketEventId ticket)
         when (ticketTransferStatus transfer /= "pending") $
             throwError err400{errBody = "Transfer is not pending"}
         case ticketTransferExpiresAt transfer of
@@ -4927,9 +4932,6 @@ socialEventsServer user =
                 | now > expiresAt ->
                     throwError err400{errBody = "Transfer has expired"}
             _ -> pure ()
-        let ticketKey = ticketTransferTicketId transfer
-        mTicket <- liftIO $ runSqlPool (get ticketKey) envPool
-        ticket <- maybe (throwError err404{errBody = "Ticket not found"}) pure mTicket
         when (eventTicketStatus ticket `elem` ["cancelled", "refunded", "checked_in"]) $
             throwError err400{errBody = "Cannot accept transfer for this ticket"}
         liftIO $
@@ -4964,6 +4966,9 @@ socialEventsServer user =
         transferKey <- parseKeyOr400 "transfer" transferIdStr
         mTransfer <- liftIO $ runSqlPool (get transferKey) envPool
         transfer <- maybe (throwError err404{errBody = "Transfer not found"}) pure mTransfer
+        mTicket <- liftIO $ runSqlPool (get (ticketTransferTicketId transfer)) envPool
+        ticket <- maybe (throwError err404{errBody = "Ticket not found"}) pure mTicket
+        requireEventVisibleToUser (eventTicketEventId ticket)
         when (ticketTransferFromPartyId transfer /= Just currentPartyId) $
             throwError err403{errBody = "You can only cancel your own transfers"}
         when (ticketTransferStatus transfer /= "pending") $

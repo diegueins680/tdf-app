@@ -42,6 +42,11 @@ import TDF.DTO.SocialEventsDTO
     , NullableFieldUpdate (..)
     , RsvpCreateDTO (..)
     , RsvpDTO
+    , StripePaymentIntentDTO
+    , TicketDTO
+    , TicketPurchaseRequestDTO (..)
+    , TicketPurchaseWithPromoDTO (..)
+    , TicketTransferDTO
     )
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.DB (Env (..))
@@ -324,6 +329,12 @@ spec = describe "social event handler helpers" $ do
             hiddenEventKey = toSqlKey 13
             publicEventKey :: SocialEventId
             publicEventKey = toSqlKey 14
+            hiddenTierKey :: EventTicketTierId
+            hiddenTierKey = toSqlKey 21
+            hiddenTicketKey :: EventTicketId
+            hiddenTicketKey = toSqlKey 31
+            hiddenTransferKey :: TicketTransferId
+            hiddenTransferKey = toSqlKey 41
             sourceRef provider externalId eventKey sourceStatus sourceUrl =
                 ExternalEventRef
                     { externalEventRefProvider = provider
@@ -357,6 +368,64 @@ spec = describe "social event handler helpers" $ do
                 _ <- insert (sourceRef "ticketmaster" "pilot-private-13" hiddenEventKey "missing" "https://tickets.example.com/private-pilot")
                 _ <- insert (sourceRef "ticketmaster" "public-14" publicEventKey "on_sale" "https://tickets.example.com/public")
                 _ <- insert (sourceRef "buenplan" "draft-merge-14" publicEventKey "draft:on_sale" "https://tickets.example.com/draft-option")
+                insertKey
+                    hiddenTierKey
+                    EventTicketTier
+                        { eventTicketTierEventId = hiddenEventKey
+                        , eventTicketTierCode = "hidden-tier"
+                        , eventTicketTierName = "Hidden tier"
+                        , eventTicketTierDescription = Nothing
+                        , eventTicketTierPriceCents = 1000
+                        , eventTicketTierCurrency = "USD"
+                        , eventTicketTierCurrencyId = Nothing
+                        , eventTicketTierQuantityTotal = 10
+                        , eventTicketTierQuantitySold = 0
+                        , eventTicketTierSalesStart = Nothing
+                        , eventTicketTierSalesEnd = Nothing
+                        , eventTicketTierIsActive = True
+                        , eventTicketTierPosition = Nothing
+                        , eventTicketTierEnableWaitlist = False
+                        , eventTicketTierAllowTransfers = True
+                        , eventTicketTierRefundPolicy = "full"
+                        , eventTicketTierRefundDeadline = Nothing
+                        , eventTicketTierCreatedAt = now
+                        , eventTicketTierUpdatedAt = now
+                        }
+                insertKey
+                    hiddenTicketKey
+                    EventTicket
+                        { eventTicketEventId = hiddenEventKey
+                        , eventTicketTierRefId = hiddenTierKey
+                        , eventTicketOrderRefId = toSqlKey 99
+                        , eventTicketHolderName = Just "Original holder"
+                        , eventTicketHolderEmail = Just "holder@example.com"
+                        , eventTicketCode = "hidden-ticket"
+                        , eventTicketStatus = "active"
+                        , eventTicketCheckedInAt = Nothing
+                        , eventTicketCurrentHolderPartyId = Just "2"
+                        , eventTicketCurrentHolderEmail = Just "holder@example.com"
+                        , eventTicketCurrentHolderName = Just "Original holder"
+                        , eventTicketOriginalHolderPartyId = Just "2"
+                        , eventTicketTransferHistory = Nothing
+                        , eventTicketCreatedAt = now
+                        , eventTicketUpdatedAt = now
+                        }
+                insertKey
+                    hiddenTransferKey
+                    TicketTransfer
+                        { ticketTransferTicketId = hiddenTicketKey
+                        , ticketTransferFromPartyId = Just "2"
+                        , ticketTransferToPartyId = Nothing
+                        , ticketTransferToEmail = Just "recipient@example.com"
+                        , ticketTransferToName = Just "Recipient"
+                        , ticketTransferStatus = "pending"
+                        , ticketTransferTransferCode = "hidden-transfer-code"
+                        , ticketTransferMessage = Nothing
+                        , ticketTransferExpiresAt = Nothing
+                        , ticketTransferAcceptedAt = Nothing
+                        , ticketTransferCreatedAt = now
+                        , ticketTransferUpdatedAt = now
+                        }
                 pure ()
             )
             pool
@@ -440,6 +509,43 @@ spec = describe "social event handler helpers" $ do
                     )
                     env
         assertHiddenEventRoute "moment" momentResult
+
+        let (stripeHandler, acceptTransferHandler, cancelTransferHandler) =
+                socialEventIndirectTicketHandlersFor ordinaryUser
+        stripeResult <-
+            runHandler $
+                runReaderT
+                    ( stripeHandler
+                        ( TicketPurchaseWithPromoDTO
+                            (TicketPurchaseRequestDTO "21" 1 Nothing Nothing Nothing)
+                            Nothing
+                            Nothing
+                            Nothing
+                        )
+                    )
+                    env
+        assertHiddenEventRoute "Stripe payment intent" stripeResult
+
+        acceptTransferResult <-
+            runHandler $
+                runReaderT
+                    (acceptTransferHandler "hidden-transfer-code")
+                    env
+        assertHiddenEventRoute "transfer acceptance" acceptTransferResult
+
+        cancelTransferResult <-
+            runHandler $
+                runReaderT
+                    (cancelTransferHandler "41")
+                    env
+        assertHiddenEventRoute "transfer cancellation" cancelTransferResult
+
+        (transferAfter, ticketAfter) <-
+            runSqlPool
+                ((,) <$> get hiddenTransferKey <*> get hiddenTicketKey)
+                pool
+        fmap ticketTransferStatus transferAfter `shouldBe` Just "pending"
+        fmap eventTicketCurrentHolderPartyId ticketAfter `shouldBe` Just (Just "2")
 
     it "rejects punctuation-only ticket buyer names before creating ticket orders" $ do
         validateTicketPurchaseBuyerName Nothing `shouldBe` Right Nothing
@@ -815,6 +921,54 @@ socialEventMomentCreateHandlerFor user =
                     :<|> _commentOnMoment ->
                     createMomentHandler
 
+socialEventIndirectTicketHandlersFor
+    :: AuthedUser
+    -> ( TicketPurchaseWithPromoDTO -> ReaderT Env Handler StripePaymentIntentDTO
+       , T.Text -> ReaderT Env Handler TicketDTO
+       , T.Text -> ReaderT Env Handler TicketTransferDTO
+       )
+socialEventIndirectTicketHandlersFor user =
+    case socialEventsServer user of
+        _events
+            :<|> _cities
+            :<|> _sources
+            :<|> _research
+            :<|> _venues
+            :<|> _artists
+            :<|> _rsvps
+            :<|> _invitations
+            :<|> _moments
+            :<|> _liveBroadcasts
+            :<|> ticketsServer
+            :<|> _ -> case ticketsServer of
+                _listTicketTiers
+                    :<|> _createTicketTier
+                    :<|> _updateTicketTier
+                    :<|> _listMyTicketOrders
+                    :<|> _listTicketOrders
+                    :<|> _createTicketOrder
+                    :<|> _updateTicketOrderStatus
+                    :<|> _listTickets
+                    :<|> _checkInTicket
+                    :<|> _listPromoCodes
+                    :<|> _createPromoCode
+                    :<|> _updatePromoCode
+                    :<|> _validatePromoCode
+                    :<|> createStripePaymentIntentHandler
+                    :<|> _createRefundRequest
+                    :<|> _listRefunds
+                    :<|> _approveRefund
+                    :<|> _rejectRefund
+                    :<|> _createTransfer
+                    :<|> _listTransfers
+                    :<|> acceptTransferHandler
+                    :<|> cancelTransferHandler
+                    :<|> _remainingTicketHandlers ->
+                        ( createStripePaymentIntentHandler
+                        , acceptTransferHandler
+                        , cancelTransferHandler
+                        )
+
 artistGetHandlerFor
     :: AuthedUser
     -> T.Text
@@ -1089,6 +1243,15 @@ initializeSocialSchema = do
         []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"event_discovery_source\" (\"id\" INTEGER PRIMARY KEY,\"source_key\" VARCHAR NOT NULL,\"name\" VARCHAR NOT NULL,\"source_type\" VARCHAR NOT NULL,\"feed_url\" VARCHAR NULL,\"city_id\" INTEGER NULL,\"enabled\" BOOLEAN NOT NULL DEFAULT 1,\"priority\" INTEGER NOT NULL DEFAULT 100,\"configuration\" VARCHAR NULL,\"etag\" VARCHAR NULL,\"last_modified\" VARCHAR NULL,\"consecutive_failures\" INTEGER NOT NULL DEFAULT 0,\"last_success_at\" TIMESTAMP NULL,\"last_error\" VARCHAR NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL,UNIQUE (\"source_key\"))"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"event_ticket_tier\" (\"id\" INTEGER PRIMARY KEY,\"event_id\" INTEGER NOT NULL,\"code\" VARCHAR NOT NULL,\"name\" VARCHAR NOT NULL,\"description\" VARCHAR NULL,\"price_cents\" INTEGER NOT NULL,\"currency\" VARCHAR NOT NULL,\"currency_id\" VARCHAR NULL,\"quantity_total\" INTEGER NOT NULL,\"quantity_sold\" INTEGER NOT NULL,\"sales_start\" TIMESTAMP NULL,\"sales_end\" TIMESTAMP NULL,\"is_active\" BOOLEAN NOT NULL,\"position\" INTEGER NULL,\"enable_waitlist\" BOOLEAN NOT NULL,\"allow_transfers\" BOOLEAN NOT NULL,\"refund_policy\" VARCHAR NOT NULL,\"refund_deadline\" TIMESTAMP NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL,UNIQUE (\"event_id\",\"code\"))"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"event_ticket\" (\"id\" INTEGER PRIMARY KEY,\"event_id\" INTEGER NOT NULL,\"tier_ref_id\" INTEGER NOT NULL,\"order_ref_id\" INTEGER NOT NULL,\"holder_name\" VARCHAR NULL,\"holder_email\" VARCHAR NULL,\"code\" VARCHAR NOT NULL,\"status\" VARCHAR NOT NULL,\"checked_in_at\" TIMESTAMP NULL,\"current_holder_party_id\" VARCHAR NULL,\"current_holder_email\" VARCHAR NULL,\"current_holder_name\" VARCHAR NULL,\"original_holder_party_id\" VARCHAR NULL,\"transfer_history\" VARCHAR NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL,UNIQUE (\"code\"))"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"ticket_transfer\" (\"id\" INTEGER PRIMARY KEY,\"ticket_id\" INTEGER NOT NULL,\"from_party_id\" VARCHAR NULL,\"to_party_id\" VARCHAR NULL,\"to_email\" VARCHAR NULL,\"to_name\" VARCHAR NULL,\"status\" VARCHAR NOT NULL,\"transfer_code\" VARCHAR NOT NULL,\"message\" VARCHAR NULL,\"expires_at\" TIMESTAMP NULL,\"accepted_at\" TIMESTAMP NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL,UNIQUE (\"transfer_code\"))"
         []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"external_event_ref\" (\
