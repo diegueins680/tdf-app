@@ -23,6 +23,8 @@ datos de menores, tokens, reputación, orden de búsqueda y vínculos comerciale
 | XSS/Unicode engañoso | límites, rechazo de controles/format marks peligrosos, render escapado, sanitización de rich text. |
 | Geolocalización de domicilio | tabla privada separada, centroide público, distancia redondeada, mínimo de precisión. |
 | Spam masivo | límites por IP/cuenta/perfil/acción, fingerprint, cooldown, reputación interna y challenge configurable. |
+| URL maliciosa o exfiltración desde portafolio | DTO cerrado, límites de cantidad/tamaño y solo HTTP(S) o ruta same-origin sin espacios, controles ni credenciales embebidas; el render debe mantener escaping y políticas de navegación segura. |
+| Dirección residencial introducida al editar | El writer no contiene dirección ni coordenadas. Solo acepta ciudad/metro/sector público deliberado y el servidor deriva centroides del catálogo. |
 | Invitaciones no deseadas | preferencias opt-in/out y completitud mínima, selección explícita del perfil remitente, bloqueos bidireccionales, aceptación antes del chat, idempotencia y límite diario. |
 | Duplicados/suplantación | similitud de nombre/ubicación/link, claim con evidencia, cola de merge, alias preservados. |
 | Fraude laboral o bienes robados | categorías/reglas, reportes, moderación, trazabilidad y retención de evidencia. |

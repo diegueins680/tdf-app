@@ -36,15 +36,84 @@ data DirectoryReviewPage = DirectoryReviewPage
   } deriving (Show, Generic)
 instance ToJSON DirectoryReviewPage
 
+data DirectoryPortfolioItem = DirectoryPortfolioItem
+  { itemType :: Text
+  , title :: Text
+  , url :: Text
+  , description :: Maybe Text
+  , thumbnailUrl :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON DirectoryPortfolioItem
+instance ToJSON DirectoryPortfolioItem
+
+data DirectoryProfileLink = DirectoryProfileLink
+  { label :: Text
+  , url :: Text
+  } deriving (Show, Generic)
+instance FromJSON DirectoryProfileLink
+instance ToJSON DirectoryProfileLink
+
+data DirectoryProfessionInput = DirectoryProfessionInput
+  { professionId :: UUID
+  , headline :: Maybe Text
+  , yearsExperience :: Maybe Double
+  , rateMinMinor :: Maybe Int64
+  , rateMaxMinor :: Maybe Int64
+  , currencyId :: Maybe UUID
+  } deriving (Show, Generic)
+instance FromJSON DirectoryProfessionInput
+instance ToJSON DirectoryProfessionInput
+
+data DirectoryInstrumentInput = DirectoryInstrumentInput
+  { instrumentId :: UUID
+  , proficiency :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON DirectoryInstrumentInput
+instance ToJSON DirectoryInstrumentInput
+
+data DirectoryLanguageInput = DirectoryLanguageInput
+  { languageId :: UUID
+  , proficiency :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON DirectoryLanguageInput
+instance ToJSON DirectoryLanguageInput
+
+data DirectoryServiceAreaInput = DirectoryServiceAreaInput
+  { countryId :: UUID
+  , subdivisionId :: Maybe UUID
+  , cityId :: Maybe UUID
+  , metropolitanAreaId :: Maybe UUID
+  , sectorLabel :: Maybe Text
+  , serviceRadiusKm :: Maybe Double
+  , primaryLocation :: Bool
+  , onsite :: Bool
+  } deriving (Show, Generic)
+instance FromJSON DirectoryServiceAreaInput
+instance ToJSON DirectoryServiceAreaInput
+
 data DirectoryProfileUpsert = DirectoryProfileUpsert
   { profileKind :: Text
   , publicName :: Text
   , slug :: Text
   , bio :: Maybe Text
+  , experienceSummary :: Maybe Text
+  , creditsSummary :: Maybe Text
+  , portfolio :: Maybe [DirectoryPortfolioItem]
+  , links :: Maybe [DirectoryProfileLink]
+  , equipmentSummary :: Maybe Text
+  , rateMinMinor :: Maybe Int64
+  , rateMaxMinor :: Maybe Int64
+  , currencyId :: Maybe UUID
+  , clearRates :: Maybe Bool
+  , availabilityStatus :: Maybe Text
   , professionIds :: [UUID]
+  , professionDetails :: Maybe [DirectoryProfessionInput]
   , instrumentIds :: [UUID]
+  , instrumentDetails :: Maybe [DirectoryInstrumentInput]
   , genreIds :: [UUID]
   , serviceOfferingIds :: [UUID]
+  , languages :: Maybe [DirectoryLanguageInput]
+  , serviceAreas :: Maybe [DirectoryServiceAreaInput]
   , countryId :: UUID
   , cityId :: Maybe UUID
   , metropolitanAreaId :: Maybe UUID

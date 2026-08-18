@@ -9,6 +9,7 @@ module TDF.Server.Directory
   , directoryProtectedServer
   ) where
 
+import Control.Applicative ((<|>))
 import Control.Monad (forM_, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, asks)
@@ -21,7 +22,7 @@ import qualified Data.ByteString.Lazy as BL
 import Data.Char (isAlphaNum, isAscii, isControl)
 import Data.Foldable (toList)
 import Data.Int (Int64)
-import Data.Maybe (fromMaybe, listToMaybe)
+import Data.Maybe (fromMaybe, isJust, listToMaybe)
 import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -240,6 +241,11 @@ directoryTaxonomies mLocale =
    <> "'symbol',item.symbol,'minorUnits',item.minor_units) "
    <> "ORDER BY CASE WHEN item.code='USD' THEN 0 ELSE 1 END,item.sort_order,item.code),"
    <> "'[]'::jsonb) FROM currency_reference item WHERE item.active),"
+   <> "'languages',(SELECT coalesce(jsonb_agg(jsonb_build_object("
+   <> "'id',item.id,'code',coalesce(item.iso6391,item.iso6392_t),"
+   <> "'name',CASE WHEN requested.locale='en' THEN item.name_en ELSE item.name_es END) "
+   <> "ORDER BY item.sort_order,item.iso6392_t),'[]'::jsonb) "
+   <> "FROM language_reference item WHERE item.active),"
    <> "'instruments',(SELECT coalesce(jsonb_agg(jsonb_build_object("
    <> "'id',id,'code',code,'name',CASE WHEN requested.locale='en' "
    <> "THEN name_en ELSE name_es END) ORDER BY sort_order),'[]'::jsonb) "
@@ -257,7 +263,22 @@ directoryTaxonomies mLocale =
 
 publicProfile slugValue =
   jsonOne err404
-    "SELECT jsonb_build_object('id',profile.id,'kind',profile.profile_kind,'name',profile.public_name,'slug',profile.slug,'bio',profile.bio,'experience',profile.experience_summary,'creditsSummary',profile.credits_summary,'portfolio',profile.portfolio,'links',profile.links,'equipment',profile.equipment_summary,'rates',CASE WHEN profile.rate_min_minor IS NULL THEN NULL ELSE jsonb_build_object('minMinor',profile.rate_min_minor,'maxMinor',profile.rate_max_minor,'currencyId',profile.currency_id) END,'availability',jsonb_build_object('status',profile.availability_status,'onsite',profile.onsite,'remote',profile.remote,'travel',profile.available_to_travel,'radiusKm',profile.travel_radius_km),'locations',coalesce((SELECT jsonb_agg(jsonb_build_object('cityId',location.city_id,'city',city.name_es,'countryCode',country.alpha2,'sector',location.sector_label,'latitude',location.public_latitude,'longitude',location.public_longitude,'precision',location.precision)) FROM directory_profile_location location JOIN country_reference country ON country.id=location.country_id LEFT JOIN city_reference city ON city.id=location.city_id WHERE location.profile_id=profile.id),'[]'::jsonb),'professions',coalesce((SELECT jsonb_agg(jsonb_build_object('id',term.id,'code',term.code,'name',term.name_es,'headline',member.headline,'yearsExperience',member.years_experience) ORDER BY member.sort_order) FROM directory_profile_profession member JOIN profession term ON term.id=member.profession_id WHERE member.profile_id=profile.id),'[]'::jsonb),'instruments',coalesce((SELECT jsonb_agg(jsonb_build_object('id',term.id,'code',term.code,'name',term.name_es,'proficiency',member.proficiency) ORDER BY member.sort_order) FROM directory_profile_instrument member JOIN instrument term ON term.id=member.instrument_id WHERE member.profile_id=profile.id),'[]'::jsonb),'genres',coalesce((SELECT jsonb_agg(jsonb_build_object('id',term.id,'code',term.code,'name',term.name_es) ORDER BY member.sort_order) FROM directory_profile_genre member JOIN genre term ON term.id=member.genre_id WHERE member.profile_id=profile.id),'[]'::jsonb),'verification',coalesce((SELECT jsonb_agg(jsonb_build_object('type',verification.verification_type,'status',verification.status,'verifiedAt',verification.verified_at)) FROM directory_verification verification WHERE verification.profile_id=profile.id AND verification.status='verified'),'[]'::jsonb),'reputation',jsonb_build_object('completeness',profile.completeness_score,'responseRate',profile.response_rate,'medianResponseMinutes',profile.median_response_minutes,'completed',profile.completed_interactions,'reviewAverage',profile.review_average,'reviewCount',profile.review_count),'canonicalUrl','/directorio/'||profile.slug) FROM directory_public_profile_resolution profile WHERE profile.requested_slug=?"
+    ( T.replace "'portfolio',profile.portfolio,'links',profile.links" profileRichMediaProjectionSql
+    $ "SELECT jsonb_build_object('id',profile.id,'kind',profile.profile_kind,'name',profile.public_name,"
+   <> "'slug',profile.slug,'bio',profile.bio,'experience',profile.experience_summary,"
+   <> "'creditsSummary',profile.credits_summary,'portfolio',profile.portfolio,'links',profile.links,"
+   <> "'equipment',profile.equipment_summary,'rates',CASE WHEN profile.rate_min_minor IS NULL THEN NULL "
+   <> "ELSE jsonb_build_object('minMinor',profile.rate_min_minor,'maxMinor',profile.rate_max_minor,'currencyId',profile.currency_id) END,"
+   <> "'availability',jsonb_build_object('status',profile.availability_status,'onsite',profile.onsite,'remote',profile.remote,'travel',profile.available_to_travel,'radiusKm',profile.travel_radius_km),"
+   <> "'locations',coalesce((SELECT jsonb_agg(jsonb_build_object('cityId',location.city_id,'city',city.name_es,'countryCode',country.alpha2,'sector',location.sector_label,'latitude',location.public_latitude,'longitude',location.public_longitude,'precision',location.precision) ORDER BY location.primary_location DESC,location.created_at,location.id) FROM directory_profile_location location JOIN country_reference country ON country.id=location.country_id LEFT JOIN city_reference city ON city.id=location.city_id WHERE location.profile_id=profile.id),'[]'::jsonb),"
+   <> "'professions',coalesce((SELECT jsonb_agg(jsonb_build_object('id',term.id,'code',term.code,'name',term.name_es,'headline',member.headline,'yearsExperience',member.years_experience,'rateMinMinor',member.rate_min_minor,'rateMaxMinor',member.rate_max_minor,'currencyId',member.currency_id) ORDER BY member.sort_order) FROM directory_profile_profession member JOIN profession term ON term.id=member.profession_id WHERE member.profile_id=profile.id),'[]'::jsonb),"
+   <> "'instruments',coalesce((SELECT jsonb_agg(jsonb_build_object('id',term.id,'code',term.code,'name',term.name_es,'proficiency',member.proficiency) ORDER BY member.sort_order) FROM directory_profile_instrument member JOIN instrument term ON term.id=member.instrument_id WHERE member.profile_id=profile.id),'[]'::jsonb),"
+   <> "'genres',coalesce((SELECT jsonb_agg(jsonb_build_object('id',term.id,'code',term.code,'name',term.name_es) ORDER BY member.sort_order) FROM directory_profile_genre member JOIN genre term ON term.id=member.genre_id WHERE member.profile_id=profile.id),'[]'::jsonb),"
+   <> "'services',coalesce((SELECT jsonb_agg(jsonb_build_object('id',term.id,'code',term.code,'name',term.name_es,'bookable',member.bookable) ORDER BY member.sort_order) FROM directory_profile_service member JOIN service_offering term ON term.id=member.service_offering_id WHERE member.profile_id=profile.id),'[]'::jsonb),"
+   <> "'languages',coalesce((SELECT jsonb_agg(jsonb_build_object('id',term.id,'code',coalesce(term.iso6391,term.iso6392_t),'name',term.name_es,'proficiency',member.proficiency) ORDER BY term.sort_order,term.iso6392_t) FROM directory_profile_language member JOIN language_reference term ON term.id=member.language_id WHERE member.profile_id=profile.id),'[]'::jsonb),"
+   <> "'verification',coalesce((SELECT jsonb_agg(jsonb_build_object('type',verification.verification_type,'status',verification.status,'verifiedAt',verification.verified_at)) FROM directory_verification verification WHERE verification.profile_id=profile.id AND verification.status='verified'),'[]'::jsonb),"
+   <> "'reputation',jsonb_build_object('completeness',profile.completeness_score,'responseRate',profile.response_rate,'medianResponseMinutes',profile.median_response_minutes,'completed',profile.completed_interactions,'reviewAverage',profile.review_average,'reviewCount',profile.review_count),"
+   <> "'canonicalUrl','/directorio/'||profile.slug) FROM directory_public_profile_resolution profile WHERE profile.requested_slug=?" )
     [PersistText (T.toLower (T.strip slugValue))]
 
 publicProfileReviews slugValue mCursor mLimit = do
@@ -348,21 +369,53 @@ setAgeAssurance user AgeAssuranceRequest{adultAttestation,guardianPartyId} = do
 partyNumber :: AuthedUser -> Int64
 partyNumber = fromSqlKey . auPartyId
 
+safeStoredProfileUrlSql :: Text -> Text
+safeStoredProfileUrlSql expression =
+  "(strpos(" <> expression <> ",chr(92))=0 AND ((" <> expression <> " ~* '^https{0,1}://[^[:space:][:cntrl:]]+$' AND split_part(" <> expression <> ",'/',3) NOT LIKE '%@%') OR "
+    <> expression <> " ~ '^/[^/[:space:][:cntrl:]][^[:space:][:cntrl:]]*$'))"
+
+profilePortfolioProjectionSql :: Text
+profilePortfolioProjectionSql =
+  "(SELECT coalesce(jsonb_agg(jsonb_strip_nulls(jsonb_build_object("
+    <> "'itemType',CASE WHEN coalesce(entry.value->>'itemType',entry.value->>'kind') IN ('audio','video','image','release','credit','document','other') THEN coalesce(entry.value->>'itemType',entry.value->>'kind') ELSE 'other' END,"
+    <> "'title',left(coalesce(nullif(entry.value->>'title',''),nullif(initcap(replace(entry.value->>'kind','-',' ')),''),'Portfolio'),160),"
+    <> "'url',entry.value->>'url','description',left(entry.value->>'description',1000),"
+    <> "'thumbnailUrl',CASE WHEN " <> safeStoredProfileUrlSql "entry.value->>'thumbnailUrl'" <> " THEN entry.value->>'thumbnailUrl' END"
+    <> ")) ORDER BY entry.ordinality),'[]'::jsonb) FROM jsonb_array_elements(CASE WHEN jsonb_typeof(profile.portfolio)='array' THEN profile.portfolio ELSE '[]'::jsonb END) WITH ORDINALITY entry(value,ordinality) "
+    <> "WHERE jsonb_typeof(entry.value)='object' AND " <> safeStoredProfileUrlSql "entry.value->>'url'" <> ")"
+
+profileLinksProjectionSql :: Text
+profileLinksProjectionSql =
+  "(SELECT coalesce(jsonb_agg(jsonb_build_object("
+    <> "'label',left(coalesce(nullif(entry.value->>'label',''),nullif(initcap(replace(entry.value->>'kind','-',' ')),''),'Link'),80),"
+    <> "'url',entry.value->>'url') ORDER BY entry.ordinality),'[]'::jsonb) "
+    <> "FROM jsonb_array_elements(CASE WHEN jsonb_typeof(profile.links)='array' THEN profile.links ELSE '[]'::jsonb END) WITH ORDINALITY entry(value,ordinality) "
+    <> "WHERE jsonb_typeof(entry.value)='object' AND " <> safeStoredProfileUrlSql "entry.value->>'url'" <> ")"
+
+profileRichMediaProjectionSql :: Text
+profileRichMediaProjectionSql =
+  "'portfolio'," <> profilePortfolioProjectionSql <> ",'links'," <> profileLinksProjectionSql
+
 listManagedProfiles user = jsonRows managedProfileSql [toPersistValue (auPartyId user)]
 
 managedProfileSql =
-  "SELECT jsonb_build_object('id',profile.id,'kind',profile.profile_kind,'name',profile.public_name,'slug',profile.slug,'bio',profile.bio,'status',profile.profile_status,'visibility',profile.visibility,'moderationStatus',profile.moderation_status,'version',profile.version,'capabilities',jsonb_build_object('viewPrivate',manager.can_view_private,'edit',manager.can_edit,'publish',manager.can_publish,'contact',manager.can_contact,'manage',manager.can_manage)) FROM directory_profile_manager manager JOIN directory_profile profile ON profile.id=manager.profile_id WHERE manager.account_party_id=? AND manager.active ORDER BY profile.updated_at DESC,profile.id"
+  T.replace "'portfolio',profile.portfolio,'links',profile.links" profileRichMediaProjectionSql
+    "SELECT jsonb_build_object('id',profile.id,'kind',profile.profile_kind,'name',profile.public_name,'slug',profile.slug,'bio',profile.bio,'experienceSummary',profile.experience_summary,'creditsSummary',profile.credits_summary,'portfolio',profile.portfolio,'links',profile.links,'equipmentSummary',profile.equipment_summary,'rates',CASE WHEN profile.rate_min_minor IS NULL THEN NULL ELSE jsonb_build_object('minMinor',profile.rate_min_minor,'maxMinor',profile.rate_max_minor,'currencyId',profile.currency_id) END,'availabilityStatus',profile.availability_status,'onsite',profile.onsite,'remote',profile.remote,'availableToTravel',profile.available_to_travel,'travelRadiusKm',profile.travel_radius_km,'professionIds',coalesce((SELECT jsonb_agg(member.profession_id ORDER BY member.sort_order) FROM directory_profile_profession member WHERE member.profile_id=profile.id),'[]'::jsonb),'professionDetails',coalesce((SELECT jsonb_agg(jsonb_build_object('professionId',member.profession_id,'headline',member.headline,'yearsExperience',member.years_experience,'rateMinMinor',member.rate_min_minor,'rateMaxMinor',member.rate_max_minor,'currencyId',member.currency_id) ORDER BY member.sort_order) FROM directory_profile_profession member WHERE member.profile_id=profile.id),'[]'::jsonb),'instrumentIds',coalesce((SELECT jsonb_agg(member.instrument_id ORDER BY member.sort_order) FROM directory_profile_instrument member WHERE member.profile_id=profile.id),'[]'::jsonb),'instrumentDetails',coalesce((SELECT jsonb_agg(jsonb_build_object('instrumentId',member.instrument_id,'proficiency',member.proficiency) ORDER BY member.sort_order) FROM directory_profile_instrument member WHERE member.profile_id=profile.id),'[]'::jsonb),'genreIds',coalesce((SELECT jsonb_agg(member.genre_id ORDER BY member.sort_order) FROM directory_profile_genre member WHERE member.profile_id=profile.id),'[]'::jsonb),'serviceOfferingIds',coalesce((SELECT jsonb_agg(member.service_offering_id ORDER BY member.sort_order) FROM directory_profile_service member WHERE member.profile_id=profile.id),'[]'::jsonb),'languages',coalesce((SELECT jsonb_agg(jsonb_build_object('languageId',member.language_id,'proficiency',member.proficiency) ORDER BY member.language_id) FROM directory_profile_language member WHERE member.profile_id=profile.id),'[]'::jsonb),'serviceAreas',coalesce((SELECT jsonb_agg(jsonb_build_object('countryId',location.country_id,'subdivisionId',location.subdivision_id,'cityId',location.city_id,'metropolitanAreaId',location.metropolitan_area_id,'sectorLabel',location.sector_label,'serviceRadiusKm',location.service_radius_km,'primaryLocation',location.primary_location,'onsite',location.onsite) ORDER BY location.primary_location DESC,location.created_at,location.id) FROM directory_profile_location location WHERE location.profile_id=profile.id),'[]'::jsonb),'status',profile.profile_status,'visibility',profile.visibility,'moderationStatus',profile.moderation_status,'version',profile.version,'capabilities',jsonb_build_object('viewPrivate',manager.can_view_private,'edit',manager.can_edit,'publish',manager.can_publish,'contact',manager.can_contact,'manage',manager.can_manage)) AS value FROM directory_profile_manager manager JOIN directory_profile profile ON profile.id=manager.profile_id WHERE manager.account_party_id=? AND manager.active ORDER BY profile.updated_at DESC,profile.id"
 
 createProfile user idempotency request@DirectoryProfileUpsert
-  { profileKind, publicName, slug, bio, onsite, remote, availableToTravel, travelRadiusKm } = do
+  { profileKind, publicName, slug, bio, experienceSummary, creditsSummary, portfolio, links
+  , equipmentSummary, rateMinMinor, rateMaxMinor, currencyId, availabilityStatus
+  , onsite, remote, availableToTravel, travelRadiusKm } = do
   validateProfileRequest request
   profileId <- reserveIdempotency user "profile.create" idempotency request "profile"
   existing <- jsonRows "SELECT jsonb_build_object('id',id,'slug',slug,'status',profile_status,'version',version) FROM directory_profile WHERE id=?" [toPersistValue profileId]
   case existing of
-    value:_ -> pure value
+    _:_ -> profileSummary user profileId
     [] -> do
       now <- liftIO getCurrentTime
       locationId <- liftIO nextRandom
+      let normalizedPortfolio = map normalizePortfolioItem (fromMaybe [] portfolio)
+          normalizedLinks = map normalizeProfileLink (fromMaybe [] links)
       runDB $ do
         subjectPartyId <- if profileKind `Set.member` organizationalProfileKinds
           then do
@@ -373,59 +426,299 @@ createProfile user idempotency request@DirectoryProfileUpsert
               Single newPartyId:_ -> pure newPartyId
               _ -> liftIO (fail "organization Party insert did not return an id")
           else pure (partyNumber user)
-        rawExecute "INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,bio,onsite,remote,available_to_travel,travel_radius_km,profile_status,visibility,moderation_status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,'draft','public','allowed',?,?)"
-          [toPersistValue profileId,PersistInt64 subjectPartyId,PersistText profileKind,PersistText (T.strip publicName),PersistText (T.toLower (T.strip slug)),optionalText bio,PersistBool onsite,PersistBool remote,PersistBool availableToTravel,maybe PersistNull (PersistDouble . realToFrac) travelRadiusKm,toPersistValue now,toPersistValue now]
+        rawExecute "INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,bio,experience_summary,credits_summary,portfolio,links,equipment_summary,rate_min_minor,rate_max_minor,currency_id,availability_status,onsite,remote,available_to_travel,travel_radius_km,profile_status,visibility,moderation_status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?::jsonb,?::jsonb,?,?,?,?,?,?,?,?,?,'draft','public','allowed',?,?)"
+          [ toPersistValue profileId,PersistInt64 subjectPartyId,PersistText profileKind
+          , PersistText (T.strip publicName),PersistText (T.toLower (T.strip slug))
+          , optionalText (cleanOptionalText bio),optionalText (cleanOptionalText experienceSummary)
+          , optionalText (cleanOptionalText creditsSummary)
+          , PersistText (decodeJsonText (Aeson.toJSON normalizedPortfolio))
+          , PersistText (decodeJsonText (Aeson.toJSON normalizedLinks))
+          , optionalText (cleanOptionalText equipmentSummary),optionalInt64 rateMinMinor
+          , optionalInt64 rateMaxMinor,optionalUuid currencyId
+          , PersistText (fromMaybe "ask" availabilityStatus),PersistBool onsite,PersistBool remote
+          , PersistBool availableToTravel,maybe PersistNull (PersistDouble . realToFrac) travelRadiusKm
+          , toPersistValue now,toPersistValue now]
         rawExecute "INSERT INTO directory_profile_manager(profile_id,account_party_id,can_view_private,can_edit,can_publish,can_contact,can_manage,active,granted_by) VALUES (?,?,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,?)" [toPersistValue profileId,toPersistValue (auPartyId user),toPersistValue (auPartyId user)]
         rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,new_state,correlation_id,metadata) VALUES (?,'profile.created','profile',?,'draft',?,jsonb_build_object('subjectPartyId',?::bigint,'profileKind',?::text))"
           [toPersistValue (auPartyId user),PersistText (UUID.toText profileId),PersistText ("profile-created-"<>UUID.toText profileId),PersistInt64 subjectPartyId,PersistText profileKind]
         replaceProfileSelectionsDB locationId profileId request
-      profileSummary profileId
+      profileSummary user profileId
 
 organizationalProfileKinds :: Set.Set Text
 organizationalProfileKinds = Set.fromList
   ["band","project","organization","company","venue","studio","agency","label","distributor","school"]
 
 updateProfile user profileId request@DirectoryProfileUpsert
-  { profileKind, publicName, slug, bio, onsite, remote, availableToTravel, travelRadiusKm } = do
+  { profileKind, publicName, slug, bio, experienceSummary, creditsSummary, portfolio, links
+  , equipmentSummary, rateMinMinor, rateMaxMinor, currencyId, clearRates, availabilityStatus
+  , professionDetails, instrumentDetails, languages, serviceAreas
+  , onsite, remote, availableToTravel, travelRadiusKm } = do
   requireProfileCapability user profileId "edit"
   validateProfileRequest request
   currentKindValue <- jsonOne err404 "SELECT to_jsonb(profile_kind) FROM directory_profile WHERE id=?" [toPersistValue profileId]
   currentKind <- case currentKindValue of String value -> pure value; _ -> throwError err500
   when ((currentKind `Set.member` organizationalProfileKinds) /= (profileKind `Set.member` organizationalProfileKinds)) $
     throwError err409 {errBody="changing between a personal and organizational subject requires an audited reconciliation"}
+  let ratesRequested = fromMaybe False clearRates || any isJust [rateMinMinor,rateMaxMinor] || isJust currencyId
+      clearedRates = fromMaybe False clearRates
+      nextRateMin = if clearedRates then Nothing else rateMinMinor
+      nextRateMax = if clearedRates then Nothing else rateMaxMinor
+      nextCurrency = if clearedRates then Nothing else currencyId
+      normalizedPortfolio = map normalizePortfolioItem (fromMaybe [] portfolio)
+      normalizedLinks = map normalizeProfileLink (fromMaybe [] links)
   locationId <- liftIO nextRandom
   runDB $ do
-    rawExecute "UPDATE directory_profile SET profile_kind=?,public_name=?,slug=?,bio=?,onsite=?,remote=?,available_to_travel=?,travel_radius_km=?,updated_at=now(),version=version+1 WHERE id=?"
-      [PersistText profileKind,PersistText (T.strip publicName),PersistText (T.toLower (T.strip slug)),optionalText bio,PersistBool onsite,PersistBool remote,PersistBool availableToTravel,maybe PersistNull (PersistDouble . realToFrac) travelRadiusKm,toPersistValue profileId]
+    rawExecute "UPDATE directory_profile SET profile_kind=?,public_name=?,slug=?,bio=?,experience_summary=CASE WHEN ? THEN NULLIF(trim(?::text),'') ELSE experience_summary END,credits_summary=CASE WHEN ? THEN NULLIF(trim(?::text),'') ELSE credits_summary END,portfolio=CASE WHEN ? THEN ?::jsonb ELSE portfolio END,links=CASE WHEN ? THEN ?::jsonb ELSE links END,equipment_summary=CASE WHEN ? THEN NULLIF(trim(?::text),'') ELSE equipment_summary END,rate_min_minor=CASE WHEN ? THEN ?::bigint ELSE rate_min_minor END,rate_max_minor=CASE WHEN ? THEN ?::bigint ELSE rate_max_minor END,currency_id=CASE WHEN ? THEN ?::uuid ELSE currency_id END,availability_status=CASE WHEN ? THEN ?::text ELSE availability_status END,onsite=?,remote=?,available_to_travel=?,travel_radius_km=?,updated_at=now(),version=version+1 WHERE id=?"
+      [ PersistText profileKind,PersistText (T.strip publicName),PersistText (T.toLower (T.strip slug))
+      , optionalText (cleanOptionalText bio)
+      , PersistBool (isJust experienceSummary),optionalText (cleanOptionalText experienceSummary)
+      , PersistBool (isJust creditsSummary),optionalText (cleanOptionalText creditsSummary)
+      , PersistBool (isJust portfolio),PersistText (decodeJsonText (Aeson.toJSON normalizedPortfolio))
+      , PersistBool (isJust links),PersistText (decodeJsonText (Aeson.toJSON normalizedLinks))
+      , PersistBool (isJust equipmentSummary),optionalText (cleanOptionalText equipmentSummary)
+      , PersistBool ratesRequested,optionalInt64 nextRateMin,PersistBool ratesRequested,optionalInt64 nextRateMax
+      , PersistBool ratesRequested,optionalUuid nextCurrency
+      , PersistBool (isJust availabilityStatus),PersistText (fromMaybe "ask" availabilityStatus)
+      , PersistBool onsite,PersistBool remote,PersistBool availableToTravel
+      , maybe PersistNull (PersistDouble . realToFrac) travelRadiusKm,toPersistValue profileId]
     replaceProfileSelectionsDB locationId profileId request
-  profileSummary profileId
+    rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,correlation_id,metadata) VALUES (?,'profile.updated','profile',?, ?,jsonb_build_object('profileKind',?::text,'experienceRequested',?::boolean,'creditsRequested',?::boolean,'portfolioRequested',?::boolean,'linksRequested',?::boolean,'equipmentRequested',?::boolean,'ratesRequested',?::boolean,'availabilityRequested',?::boolean,'professionDetailsRequested',?::boolean,'instrumentDetailsRequested',?::boolean,'languagesRequested',?::boolean,'serviceAreasRequested',?::boolean))"
+      [ toPersistValue (auPartyId user),PersistText (UUID.toText profileId),PersistText ("profile-update-"<>UUID.toText locationId)
+      , PersistText profileKind,PersistBool (isJust experienceSummary),PersistBool (isJust creditsSummary)
+      , PersistBool (isJust portfolio),PersistBool (isJust links),PersistBool (isJust equipmentSummary)
+      , PersistBool ratesRequested,PersistBool (isJust availabilityStatus),PersistBool (isJust professionDetails)
+      , PersistBool (isJust instrumentDetails),PersistBool (isJust languages),PersistBool (isJust serviceAreas)]
+  profileSummary user profileId
 
-replaceProfileSelectionsDB locationId profileId DirectoryProfileUpsert
-  { professionIds, instrumentIds, genreIds, serviceOfferingIds, countryId
-  , cityId, metropolitanAreaId, travelRadiusKm, onsite } = do
-    rawExecute "DELETE FROM directory_profile_profession WHERE profile_id=?" [toPersistValue profileId]
-    rawExecute "DELETE FROM directory_profile_instrument WHERE profile_id=?" [toPersistValue profileId]
-    rawExecute "DELETE FROM directory_profile_genre WHERE profile_id=?" [toPersistValue profileId]
-    rawExecute "DELETE FROM directory_profile_service WHERE profile_id=?" [toPersistValue profileId]
-    forM_ (zip [0::Int ..] (Set.toList (Set.fromList professionIds))) $ \(position,itemId) -> rawExecute "INSERT INTO directory_profile_profession(profile_id,profession_id,sort_order) VALUES (?,?,?)" [toPersistValue profileId,toPersistValue itemId,PersistInt64 (fromIntegral position)]
-    forM_ (zip [0::Int ..] (Set.toList (Set.fromList instrumentIds))) $ \(position,itemId) -> rawExecute "INSERT INTO directory_profile_instrument(profile_id,instrument_id,sort_order) VALUES (?,?,?)" [toPersistValue profileId,toPersistValue itemId,PersistInt64 (fromIntegral position)]
-    forM_ (zip [0::Int ..] (Set.toList (Set.fromList genreIds))) $ \(position,itemId) -> rawExecute "INSERT INTO directory_profile_genre(profile_id,genre_id,sort_order) VALUES (?,?,?)" [toPersistValue profileId,toPersistValue itemId,PersistInt64 (fromIntegral position)]
-    forM_ (zip [0::Int ..] (Set.toList (Set.fromList serviceOfferingIds))) $ \(position,itemId) -> rawExecute "INSERT INTO directory_profile_service(profile_id,service_offering_id,sort_order) VALUES (?,?,?)" [toPersistValue profileId,toPersistValue itemId,PersistInt64 (fromIntegral position)]
-    rawExecute "UPDATE directory_profile_location SET primary_location=FALSE WHERE profile_id=? AND primary_location" [toPersistValue profileId]
-    rawExecute "INSERT INTO directory_profile_location(id,profile_id,country_id,city_id,metropolitan_area_id,service_radius_km,public_latitude,public_longitude,precision,primary_location,onsite) SELECT ?,?,?,?, ?,?,city.latitude,city.longitude,CASE WHEN ?::uuid IS NULL THEN 'country' ELSE 'city' END,TRUE,? FROM (SELECT 1) seed LEFT JOIN city_reference city ON city.id=?::uuid ON CONFLICT DO NOTHING"
-      [toPersistValue locationId,toPersistValue profileId,toPersistValue countryId,optionalUuid cityId,optionalUuid metropolitanAreaId,maybe PersistNull (PersistDouble . realToFrac) travelRadiusKm,optionalUuid cityId,PersistBool onsite,optionalUuid cityId]
-    rawExecute "UPDATE directory_profile profile SET completeness_score=least(1,.25+CASE WHEN length(trim(coalesce(profile.bio,'')))>=40 THEN .15 ELSE 0 END+CASE WHEN EXISTS(SELECT 1 FROM directory_profile_profession member WHERE member.profile_id=profile.id) OR EXISTS(SELECT 1 FROM directory_profile_service member WHERE member.profile_id=profile.id) THEN .20 ELSE 0 END+CASE WHEN EXISTS(SELECT 1 FROM directory_profile_location location WHERE location.profile_id=profile.id) OR profile.remote THEN .20 ELSE 0 END+CASE WHEN profile.onsite OR profile.remote OR profile.available_to_travel THEN .10 ELSE 0 END+CASE WHEN EXISTS(SELECT 1 FROM directory_profile_instrument member WHERE member.profile_id=profile.id) OR EXISTS(SELECT 1 FROM directory_profile_genre member WHERE member.profile_id=profile.id) THEN .10 ELSE 0 END) WHERE profile.id=?" [toPersistValue profileId]
+replaceProfileSelectionsDB _locationId profileId DirectoryProfileUpsert
+  { professionIds, professionDetails, instrumentIds, instrumentDetails, genreIds
+  , serviceOfferingIds, languages, serviceAreas, countryId, cityId
+  , metropolitanAreaId, travelRadiusKm, onsite } = do
+    let selectedProfessionIds = maybe professionIds (map professionId) professionDetails
+        selectedInstrumentIds = maybe instrumentIds (map instrumentId) instrumentDetails
+    rawExecute "DELETE FROM directory_profile_profession WHERE profile_id=? AND profession_id<>ALL(?::uuid[])" [toPersistValue profileId,uuidArrayValue selectedProfessionIds]
+    case professionDetails of
+      Nothing -> forM_ (zip [0::Int ..] professionIds) $ \(position,itemId) ->
+        rawExecute "INSERT INTO directory_profile_profession(profile_id,profession_id,sort_order) VALUES (?,?,?) ON CONFLICT(profile_id,profession_id) DO UPDATE SET sort_order=EXCLUDED.sort_order"
+          [toPersistValue profileId,toPersistValue itemId,PersistInt64 (fromIntegral position)]
+      Just details -> forM_ (zip [0::Int ..] details) $ \(position,DirectoryProfessionInput{professionId,headline,yearsExperience,rateMinMinor,rateMaxMinor,currencyId}) ->
+        rawExecute "INSERT INTO directory_profile_profession(profile_id,profession_id,headline,years_experience,rate_min_minor,rate_max_minor,currency_id,sort_order) VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(profile_id,profession_id) DO UPDATE SET headline=EXCLUDED.headline,years_experience=EXCLUDED.years_experience,rate_min_minor=EXCLUDED.rate_min_minor,rate_max_minor=EXCLUDED.rate_max_minor,currency_id=EXCLUDED.currency_id,sort_order=EXCLUDED.sort_order"
+          [toPersistValue profileId,toPersistValue professionId,optionalText (cleanOptionalText headline),maybe PersistNull PersistDouble yearsExperience,optionalInt64 rateMinMinor,optionalInt64 rateMaxMinor,optionalUuid currencyId,PersistInt64 (fromIntegral position)]
+
+    rawExecute "DELETE FROM directory_profile_instrument WHERE profile_id=? AND instrument_id<>ALL(?::uuid[])" [toPersistValue profileId,uuidArrayValue selectedInstrumentIds]
+    case instrumentDetails of
+      Nothing -> forM_ (zip [0::Int ..] instrumentIds) $ \(position,itemId) ->
+        rawExecute "INSERT INTO directory_profile_instrument(profile_id,instrument_id,sort_order) VALUES (?,?,?) ON CONFLICT(profile_id,instrument_id) DO UPDATE SET sort_order=EXCLUDED.sort_order"
+          [toPersistValue profileId,toPersistValue itemId,PersistInt64 (fromIntegral position)]
+      Just details -> forM_ (zip [0::Int ..] details) $ \(position,DirectoryInstrumentInput{instrumentId,proficiency}) ->
+        rawExecute "INSERT INTO directory_profile_instrument(profile_id,instrument_id,proficiency,sort_order) VALUES (?,?,?,?) ON CONFLICT(profile_id,instrument_id) DO UPDATE SET proficiency=EXCLUDED.proficiency,sort_order=EXCLUDED.sort_order"
+          [toPersistValue profileId,toPersistValue instrumentId,optionalText proficiency,PersistInt64 (fromIntegral position)]
+
+    rawExecute "DELETE FROM directory_profile_genre WHERE profile_id=? AND genre_id<>ALL(?::uuid[])" [toPersistValue profileId,uuidArrayValue genreIds]
+    forM_ (zip [0::Int ..] genreIds) $ \(position,itemId) -> rawExecute "INSERT INTO directory_profile_genre(profile_id,genre_id,sort_order) VALUES (?,?,?) ON CONFLICT(profile_id,genre_id) DO UPDATE SET sort_order=EXCLUDED.sort_order" [toPersistValue profileId,toPersistValue itemId,PersistInt64 (fromIntegral position)]
+    rawExecute "DELETE FROM directory_profile_service WHERE profile_id=? AND service_offering_id<>ALL(?::uuid[])" [toPersistValue profileId,uuidArrayValue serviceOfferingIds]
+    forM_ (zip [0::Int ..] serviceOfferingIds) $ \(position,itemId) -> rawExecute "INSERT INTO directory_profile_service(profile_id,service_offering_id,sort_order) VALUES (?,?,?) ON CONFLICT(profile_id,service_offering_id) DO UPDATE SET sort_order=EXCLUDED.sort_order" [toPersistValue profileId,toPersistValue itemId,PersistInt64 (fromIntegral position)]
+
+    case languages of
+      Nothing -> pure ()
+      Just details -> do
+        rawExecute "DELETE FROM directory_profile_language WHERE profile_id=? AND language_id<>ALL(?::uuid[])" [toPersistValue profileId,uuidArrayValue (map languageId details)]
+        forM_ details $ \DirectoryLanguageInput{languageId,proficiency} -> rawExecute "INSERT INTO directory_profile_language(profile_id,language_id,proficiency) VALUES (?,?,?) ON CONFLICT(profile_id,language_id) DO UPDATE SET proficiency=EXCLUDED.proficiency" [toPersistValue profileId,toPersistValue languageId,optionalText proficiency]
+
+    case serviceAreas of
+      Just areas -> do
+        rawExecute "DELETE FROM directory_profile_location WHERE profile_id=?" [toPersistValue profileId]
+        forM_ areas $ \DirectoryServiceAreaInput{countryId=areaCountryId,subdivisionId,cityId=areaCityId,metropolitanAreaId=areaMetropolitanAreaId,sectorLabel,serviceRadiusKm,primaryLocation,onsite=areaOnsite} ->
+          rawExecute "INSERT INTO directory_profile_location(profile_id,country_id,subdivision_id,city_id,metropolitan_area_id,sector_label,service_radius_km,public_latitude,public_longitude,precision,primary_location,onsite) SELECT ?,?,?,?,?,?,?,city.latitude,city.longitude,CASE WHEN ?::text IS NOT NULL THEN 'sector' WHEN ?::uuid IS NOT NULL THEN 'city' WHEN ?::uuid IS NOT NULL THEN 'metro' WHEN ?::uuid IS NOT NULL THEN 'region' ELSE 'country' END,?,? FROM (SELECT 1) seed LEFT JOIN city_reference city ON city.id=?::uuid"
+            [toPersistValue profileId,toPersistValue areaCountryId,optionalUuid subdivisionId,optionalUuid areaCityId,optionalUuid areaMetropolitanAreaId,optionalText (cleanOptionalText sectorLabel),maybe PersistNull PersistDouble serviceRadiusKm,optionalText (cleanOptionalText sectorLabel),optionalUuid areaCityId,optionalUuid areaMetropolitanAreaId,optionalUuid subdivisionId,PersistBool primaryLocation,PersistBool areaOnsite,optionalUuid areaCityId]
+      Nothing -> do
+        rawExecute "UPDATE directory_profile_location SET primary_location=FALSE WHERE profile_id=? AND primary_location" [toPersistValue profileId]
+        rawExecute "UPDATE directory_profile_location SET primary_location=TRUE,service_radius_km=?,onsite=?,updated_at=now() WHERE id=(SELECT id FROM directory_profile_location WHERE profile_id=? AND country_id=? AND subdivision_id IS NULL AND city_id IS NOT DISTINCT FROM ?::uuid AND metropolitan_area_id IS NOT DISTINCT FROM ?::uuid AND sector_label IS NULL ORDER BY created_at,id LIMIT 1)"
+          [maybe PersistNull PersistDouble travelRadiusKm,PersistBool onsite,toPersistValue profileId,toPersistValue countryId,optionalUuid cityId,optionalUuid metropolitanAreaId]
+        rawExecute "INSERT INTO directory_profile_location(id,profile_id,country_id,city_id,metropolitan_area_id,service_radius_km,public_latitude,public_longitude,precision,primary_location,onsite) SELECT ?,?,?,?, ?,?,city.latitude,city.longitude,CASE WHEN ?::uuid IS NULL THEN CASE WHEN ?::uuid IS NULL THEN 'country' ELSE 'metro' END ELSE 'city' END,TRUE,? FROM (SELECT 1) seed LEFT JOIN city_reference city ON city.id=?::uuid WHERE NOT EXISTS (SELECT 1 FROM directory_profile_location existing WHERE existing.profile_id=? AND existing.primary_location)"
+          [toPersistValue _locationId,toPersistValue profileId,toPersistValue countryId,optionalUuid cityId,optionalUuid metropolitanAreaId,maybe PersistNull PersistDouble travelRadiusKm,optionalUuid cityId,optionalUuid metropolitanAreaId,PersistBool onsite,optionalUuid cityId,toPersistValue profileId]
+
+    rawExecute "UPDATE directory_profile profile SET completeness_score=least(1,.20+CASE WHEN length(trim(coalesce(profile.bio,'')))>=40 THEN .15 ELSE 0 END+CASE WHEN length(trim(coalesce(profile.experience_summary,'')))>=20 OR jsonb_array_length(profile.portfolio)>0 THEN .10 ELSE 0 END+CASE WHEN EXISTS(SELECT 1 FROM directory_profile_profession member WHERE member.profile_id=profile.id) OR EXISTS(SELECT 1 FROM directory_profile_service member WHERE member.profile_id=profile.id) THEN .20 ELSE 0 END+CASE WHEN EXISTS(SELECT 1 FROM directory_profile_location location WHERE location.profile_id=profile.id) OR profile.remote THEN .15 ELSE 0 END+CASE WHEN profile.onsite OR profile.remote OR profile.available_to_travel THEN .10 ELSE 0 END+CASE WHEN EXISTS(SELECT 1 FROM directory_profile_instrument member WHERE member.profile_id=profile.id) OR EXISTS(SELECT 1 FROM directory_profile_genre member WHERE member.profile_id=profile.id) THEN .05 ELSE 0 END+CASE WHEN EXISTS(SELECT 1 FROM directory_profile_language member WHERE member.profile_id=profile.id) OR jsonb_array_length(profile.links)>0 OR profile.equipment_summary IS NOT NULL THEN .05 ELSE 0 END) WHERE profile.id=?" [toPersistValue profileId]
     refreshProfileDB profileId
+
+uuidArrayValue :: [UUID] -> PersistValue
+uuidArrayValue values = PersistText ("{" <> T.intercalate "," (map UUID.toText values) <> "}")
+
+cleanOptionalText :: Maybe Text -> Maybe Text
+cleanOptionalText value = case T.strip <$> value of
+  Just trimmed | not (T.null trimmed) -> Just trimmed
+  _ -> Nothing
+
+normalizePortfolioItem :: DirectoryPortfolioItem -> DirectoryPortfolioItem
+normalizePortfolioItem item@DirectoryPortfolioItem{title,url,description,thumbnailUrl} =
+  item
+    { title = T.strip title
+    , url = T.strip url
+    , description = cleanOptionalText description
+    , thumbnailUrl = cleanOptionalText thumbnailUrl
+    }
+
+normalizeProfileLink :: DirectoryProfileLink -> DirectoryProfileLink
+normalizeProfileLink item@DirectoryProfileLink{label,url} =
+  item { label = T.strip label, url = T.strip url }
 
 validateProfileRequest :: DirectoryProfileUpsert -> AppM ()
 validateProfileRequest DirectoryProfileUpsert
-  { profileKind, publicName, slug, onsite, remote, availableToTravel, travelRadiusKm } = do
+  { profileKind, publicName, slug, bio, experienceSummary, creditsSummary, portfolio, links
+  , equipmentSummary, rateMinMinor, rateMaxMinor, currencyId, clearRates, availabilityStatus
+  , professionIds, professionDetails, instrumentIds, instrumentDetails, genreIds
+  , serviceOfferingIds, languages, serviceAreas, onsite, remote, availableToTravel
+  , countryId, cityId, metropolitanAreaId, travelRadiusKm } = do
   validateSlug slug
   let nameValue=T.strip publicName
   when (T.length nameValue<1 || T.length nameValue>160 || T.any isControl nameValue) $ throwError err400 {errBody="publicName is invalid"}
   unless (profileKind `Set.member` Set.fromList ["person","artist","band","project","organization","company","venue","studio","agency","label","distributor","school"]) $ throwError err400 {errBody="invalid profileKind"}
   unless (onsite || remote || availableToTravel) $ throwError err400 {errBody="at least one work modality is required"}
   when (maybe False (\radius -> radius<0 || radius>20000) travelRadiusKm) $ throwError err400 {errBody="invalid travelRadiusKm"}
+  validateOptionalProfileText "bio" 10000 bio
+  validateOptionalProfileText "experienceSummary" 5000 experienceSummary
+  validateOptionalProfileText "creditsSummary" 5000 creditsSummary
+  validateOptionalProfileText "equipmentSummary" 5000 equipmentSummary
+  unless (maybe True (`Set.member` Set.fromList ["available","limited","unavailable","ask"]) availabilityStatus) $
+    throwError err400 {errBody="invalid availabilityStatus"}
+  validateUnique "professionIds" professionIds
+  validateUnique "instrumentIds" instrumentIds
+  validateUnique "genreIds" genreIds
+  validateUnique "serviceOfferingIds" serviceOfferingIds
+  case professionDetails of
+    Nothing -> pure ()
+    Just details -> do
+      validateUnique "professionDetails" (map professionId details)
+      unless (detailIdsMatch professionIds (map professionId details)) $
+        throwError err400 {errBody="professionIds and professionDetails must describe the same set"}
+      forM_ details validateProfessionInput
+  case instrumentDetails of
+    Nothing -> pure ()
+    Just details -> do
+      validateUnique "instrumentDetails" (map instrumentId details)
+      unless (detailIdsMatch instrumentIds (map instrumentId details)) $
+        throwError err400 {errBody="instrumentIds and instrumentDetails must describe the same set"}
+      forM_ details $ \DirectoryInstrumentInput{proficiency} ->
+        unless (maybe True (`Set.member` Set.fromList ["beginner","intermediate","advanced","professional","virtuoso"]) proficiency) $
+          throwError err400 {errBody="invalid instrument proficiency"}
+  case languages of
+    Nothing -> pure ()
+    Just details -> do
+      when (length details > 20) $ throwError err400 {errBody="languages accepts at most 20 entries"}
+      validateUnique "languages" (map languageId details)
+      forM_ details $ \DirectoryLanguageInput{proficiency} ->
+        unless (maybe True (`Set.member` Set.fromList ["basic","conversational","professional","native"]) proficiency) $
+          throwError err400 {errBody="invalid language proficiency"}
+  case portfolio of
+    Nothing -> pure ()
+    Just items -> do
+      when (length items > 50) $ throwError err400 {errBody="portfolio accepts at most 50 entries"}
+      forM_ items validatePortfolioItem
+  case links of
+    Nothing -> pure ()
+    Just items -> do
+      when (length items > 30) $ throwError err400 {errBody="links accepts at most 30 entries"}
+      forM_ items validateProfileLink
+  validateProfileRates rateMinMinor rateMaxMinor currencyId (fromMaybe False clearRates)
+  case serviceAreas of
+    Nothing -> validateServiceArea DirectoryServiceAreaInput
+      { countryId, subdivisionId=Nothing, cityId, metropolitanAreaId, sectorLabel=Nothing
+      , serviceRadiusKm=travelRadiusKm, primaryLocation=True, onsite }
+    Just areas -> do
+      when (length areas > 20) $ throwError err400 {errBody="serviceAreas accepts at most 20 entries"}
+      when (onsite && null areas) $ throwError err400 {errBody="onsite profiles require at least one service area"}
+      when (null areas) $ validateServiceArea DirectoryServiceAreaInput
+        { countryId, subdivisionId=Nothing, cityId=Nothing, metropolitanAreaId=Nothing, sectorLabel=Nothing
+        , serviceRadiusKm=Nothing, primaryLocation=True, onsite=False }
+      unless (serviceAreaPrimaryValid (map primaryLocation areas)) $
+        throwError err400 {errBody="serviceAreas requires exactly one primary location"}
+      unless (null areas) $
+        when (listToMaybe [areaCountry | DirectoryServiceAreaInput{countryId=areaCountry,primaryLocation=True} <- areas] /= Just countryId) $
+          throwError err400 {errBody="countryId must match the primary service area"}
+      let areaKeys = map serviceAreaKey areas
+      when (length areaKeys /= Set.size (Set.fromList areaKeys)) $
+        throwError err400 {errBody="serviceAreas contains duplicate locations"}
+      forM_ areas validateServiceArea
+
+validateOptionalProfileText :: Text -> Int -> Maybe Text -> AppM ()
+validateOptionalProfileText fieldName maximumLength value =
+  when (maybe False (\textValue -> T.length textValue > maximumLength || T.any isControl textValue) value) $
+    throwError err400 {errBody=BL.fromStrict (TE.encodeUtf8 (fieldName <> " is invalid"))}
+
+validateUnique :: Ord a => Text -> [a] -> AppM ()
+validateUnique fieldName values =
+  when (length values /= Set.size (Set.fromList values)) $
+    throwError err400 {errBody=BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain duplicates"))}
+
+validateProfessionInput :: DirectoryProfessionInput -> AppM ()
+validateProfessionInput DirectoryProfessionInput{headline,yearsExperience,rateMinMinor,rateMaxMinor,currencyId} = do
+  validateOptionalProfileText "profession headline" 160 headline
+  when (maybe False (\years -> years < 0 || years > 100) yearsExperience) $
+    throwError err400 {errBody="yearsExperience must be between 0 and 100"}
+  validateProfileRates rateMinMinor rateMaxMinor currencyId False
+
+validateProfileRates :: Maybe Int64 -> Maybe Int64 -> Maybe UUID -> Bool -> AppM ()
+validateProfileRates minimumRate maximumRate currency clear = do
+  when (clear && any isJust [minimumRate,maximumRate]) $
+    throwError err400 {errBody="clearRates cannot be combined with rate amounts"}
+  when (clear && isJust currency) $
+    throwError err400 {errBody="clearRates cannot be combined with currencyId"}
+  when (maybe False (<0) minimumRate || maybe False (<0) maximumRate) $
+    throwError err400 {errBody="rates cannot be negative"}
+  when (isJust maximumRate && not (isJust minimumRate)) $
+    throwError err400 {errBody="rateMaxMinor requires rateMinMinor"}
+  when (maybe False (\upper -> maybe False (>upper) minimumRate) maximumRate) $
+    throwError err400 {errBody="rateMaxMinor cannot be lower than rateMinMinor"}
+  when ((isJust minimumRate || isJust maximumRate) && not (isJust currency)) $
+    throwError err400 {errBody="currencyId is required when rates are present"}
+  when (isJust currency && not (isJust minimumRate)) $
+    throwError err400 {errBody="currencyId requires rateMinMinor"}
+
+validatePortfolioItem :: DirectoryPortfolioItem -> AppM ()
+validatePortfolioItem DirectoryPortfolioItem{itemType,title,url,description,thumbnailUrl} = do
+  unless (itemType `Set.member` Set.fromList ["audio","video","image","release","credit","document","other"]) $
+    throwError err400 {errBody="invalid portfolio itemType"}
+  validateRequiredProfileText "portfolio title" 160 title
+  validateHttpUrl "portfolio url" url
+  validateOptionalProfileText "portfolio description" 1000 description
+  forM_ thumbnailUrl (validateHttpUrl "portfolio thumbnailUrl")
+
+validateProfileLink :: DirectoryProfileLink -> AppM ()
+validateProfileLink DirectoryProfileLink{label,url} = do
+  validateRequiredProfileText "link label" 80 label
+  validateHttpUrl "link url" url
+
+validateRequiredProfileText :: Text -> Int -> Text -> AppM ()
+validateRequiredProfileText fieldName maximumLength value =
+  when (T.null (T.strip value) || T.length value > maximumLength || T.any isControl value) $
+    throwError err400 {errBody=BL.fromStrict (TE.encodeUtf8 (fieldName <> " is invalid"))}
+
+validateHttpUrl :: Text -> Text -> AppM ()
+validateHttpUrl fieldName raw = do
+  let value = T.strip raw
+      lower = T.toLower value
+      validScheme = "https://" `T.isPrefixOf` lower || "http://" `T.isPrefixOf` lower
+      authorityAndPath = fromMaybe "" (T.stripPrefix "https://" lower <|> T.stripPrefix "http://" lower)
+      authority = T.takeWhile (\character -> character /= '/' && character /= '?' && character /= '#') authorityAndPath
+      validAbsolute = validScheme && not (T.null authority) && not (T.any (=='@') authority)
+      validSameOrigin = "/" `T.isPrefixOf` value && not ("//" `T.isPrefixOf` value) && not (T.any (=='\\') value)
+  when (T.length value > 2048 || not (validAbsolute || validSameOrigin) || T.any (\character -> isControl character || character == ' ' || character == '\\') value) $
+    throwError err400 {errBody=BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be an HTTP(S) or same-origin URL without embedded credentials"))}
+
+serviceAreaKey :: DirectoryServiceAreaInput -> Text
+serviceAreaKey DirectoryServiceAreaInput{countryId,subdivisionId,cityId,metropolitanAreaId,sectorLabel} =
+  T.intercalate ":" [UUID.toText countryId,maybe "" UUID.toText subdivisionId,maybe "" UUID.toText cityId,maybe "" UUID.toText metropolitanAreaId,maybe "" (T.toLower . T.strip) sectorLabel]
+
+validateServiceArea :: DirectoryServiceAreaInput -> AppM ()
+validateServiceArea DirectoryServiceAreaInput{countryId,subdivisionId,cityId,metropolitanAreaId,sectorLabel,serviceRadiusKm} = do
+  validateOptionalProfileText "sectorLabel" 80 sectorLabel
+  when (maybe False (\radius -> radius < 0 || radius > 20000) serviceRadiusKm) $
+    throwError err400 {errBody="invalid serviceRadiusKm"}
+  hierarchyMatches <- jsonOne err500
+    "WITH requested AS (SELECT ?::uuid country_id,?::uuid subdivision_id,?::uuid city_id,?::uuid metro_id) SELECT to_jsonb(EXISTS (SELECT 1 FROM requested JOIN country_reference country ON country.id=requested.country_id AND country.active WHERE (requested.subdivision_id IS NULL OR EXISTS (SELECT 1 FROM subdivision_reference subdivision WHERE subdivision.id=requested.subdivision_id AND subdivision.country_id=country.id AND subdivision.active)) AND (requested.city_id IS NULL OR EXISTS (SELECT 1 FROM city_reference city WHERE city.id=requested.city_id AND city.country_id=country.id AND city.active AND (requested.subdivision_id IS NULL OR city.subdivision_id=requested.subdivision_id))) AND (requested.metro_id IS NULL OR EXISTS (SELECT 1 FROM metropolitan_area metro WHERE metro.id=requested.metro_id AND metro.country_id=country.id AND metro.active AND (requested.subdivision_id IS NULL OR metro.subdivision_id=requested.subdivision_id) AND (requested.city_id IS NULL OR EXISTS (SELECT 1 FROM metropolitan_area_city membership WHERE membership.metropolitan_area_id=metro.id AND membership.city_id=requested.city_id))))))"
+    [toPersistValue countryId,optionalUuid subdivisionId,optionalUuid cityId,optionalUuid metropolitanAreaId]
+  unless (hierarchyMatches == Bool True) $
+    throwError err400 {errBody="service area references must form one active geographic hierarchy"}
 
 validateSlug :: Text -> AppM ()
 validateSlug raw = do
@@ -451,12 +744,14 @@ changeProfileStatus user profileId DirectoryStatusRequest{status=newStatus,reaso
     refreshProfileDB profileId
   when (newStatus == "published") $
     recordAuthenticatedEvent user "profile_completed" "profile" (UUID.toText profileId)
-  profileSummary profileId
+  profileSummary user profileId
 
 parseProfileStatus value = lookup value
   [("draft",ProfileDraft),("pending_review",ProfilePendingReview),("published",ProfilePublished),("paused",ProfilePaused),("archived",ProfileArchived),("suspended",ProfileSuspended),("merged",ProfileMerged)]
 
-profileSummary profileId = jsonOne err404 "SELECT jsonb_build_object('id',id,'kind',profile_kind,'name',public_name,'slug',slug,'bio',bio,'status',profile_status,'visibility',visibility,'moderationStatus',moderation_status,'version',version) FROM directory_profile WHERE id=?" [toPersistValue profileId]
+profileSummary user profileId = jsonOne err404
+  ("SELECT managed.value FROM (" <> managedProfileSql <> ") managed WHERE managed.value->>'id'=?")
+  [toPersistValue (auPartyId user),PersistText (UUID.toText profileId)]
 
 listManagedClassifieds user = jsonRows "SELECT jsonb_build_object('id',classified.id,'authorProfileId',classified.author_profile_id,'title',classified.title,'slug',classified.slug,'status',classified.status,'moderationStatus',classified.moderation_status,'expiresAt',classified.expires_at,'version',classified.version) FROM classified JOIN directory_profile_manager manager ON manager.profile_id=classified.author_profile_id WHERE manager.account_party_id=? AND manager.active ORDER BY classified.updated_at DESC,classified.id" [toPersistValue (auPartyId user)]
 
