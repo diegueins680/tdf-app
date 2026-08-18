@@ -164,6 +164,8 @@ spec = do
 
         it "holds only unpublished references attached to private events" $ do
             materializationEventRefSourceStatus False False "on_sale" `shouldBe` "materialization_draft:on_sale"
+            materializationEventRefSourceStatus False False "draft:on_sale" `shouldBe` "materialization_draft:on_sale"
+            materializationPublicationHoldSourceStatus "materialization_draft:on_sale" `shouldBe` "materialization_draft:on_sale"
             materializationEventRefSourceStatus False True "on_sale" `shouldBe` "on_sale"
             materializationEventRefSourceStatus True False "on_sale" `shouldBe` "on_sale"
 

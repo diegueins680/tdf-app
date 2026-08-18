@@ -11,6 +11,7 @@ module TDF.Server.EventResearch
     , eventResearchCandidateContentHash
     , eventResearchMaterializationDedupeKey
     , materializationEventRefSourceStatus
+    , materializationPublicationHoldSourceStatus
     , materializationVenueCountryMatches
     , materializationWorkflowStateCode
     ) where
@@ -424,8 +425,7 @@ materializeCandidateDb organizerPartyId candidateId materializationRunId request
                             suitable <- existingEventCanSatisfy request eventId
                             if suitable
                                 then do
-                                    when request.erMaterializationPublish $
-                                        releaseMaterializationPublicationHold lockedCandidate eventId
+                                    applyMaterializationPublicationIntent lockedCandidate request eventId
                                     linkCandidateAndRespond candidateEntity materializationRunId eventId False now
                                 else pure (Left (conflict "the linked event does not satisfy the requested publication state"))
                         Nothing -> materializeUnlinkedCandidate organizerPartyId (eventResearchPilotControlApproved control) materializationRunId candidateEntity request now
@@ -468,8 +468,7 @@ materializeUnlinkedCandidate organizerPartyId pilotApproved materializationRunId
                                                 Left serverError -> pure (Left serverError)
                                                 Right artistIds -> do
                                                     attachMaterializationArtists eventId artistIds
-                                                    when request.erMaterializationPublish $
-                                                        releaseMaterializationPublicationHold candidate eventId
+                                                    applyMaterializationPublicationIntent candidate request eventId
                                                     linkCandidateAndRespond candidateEntity materializationRunId eventId False now
                                         else pure (Left (conflict "the existing provider event is not safely publishable"))
                                 Nothing -> createOrLinkMaterializedEvent organizerPartyId candidateEntity materializationRunId request validated now
@@ -762,7 +761,45 @@ insertMaterializationEventRef candidate request validated eventId now = do
 materializationEventRefSourceStatus :: Bool -> Bool -> T.Text -> T.Text
 materializationEventRefSourceStatus publish eventAlreadyPublished sourceStatus
     | publish || eventAlreadyPublished = sourceStatus
-    | otherwise = "materialization_draft:" <> sourceStatus
+    | otherwise = materializationPublicationHoldSourceStatus sourceStatus
+
+materializationPublicationHoldSourceStatus :: T.Text -> T.Text
+materializationPublicationHoldSourceStatus rawStatus
+    | Just sourceStatus <- T.stripPrefix "materialization_draft:" normalized =
+        "materialization_draft:" <> sourceStatus
+    | Just sourceStatus <- T.stripPrefix "draft:" normalized =
+        "materialization_draft:" <> sourceStatus
+    | otherwise = "materialization_draft:" <> normalized
+  where
+    normalized = T.toCaseFold (T.strip rawStatus)
+
+applyMaterializationPublicationIntent
+    :: EventResearchCandidate
+    -> EventResearchMaterializationRequestDTO
+    -> SocialEventId
+    -> SqlPersistT IO ()
+applyMaterializationPublicationIntent candidate request eventId
+    | request.erMaterializationPublish =
+        releaseMaterializationPublicationHold candidate eventId
+    | otherwise = do
+        eventAlreadyPublished <- materializedEventIsPublished eventId
+        unless eventAlreadyPublished $ do
+            existingRef <-
+                getBy
+                    ( UniqueExternalEventRef
+                        (eventResearchCandidateProvider candidate)
+                        (eventResearchCandidateExternalId candidate)
+                    )
+            case existingRef of
+                Just (Entity refId ref)
+                    | externalEventRefEventId ref == eventId ->
+                        update
+                            refId
+                            [ ExternalEventRefSourceStatus =.
+                                materializationPublicationHoldSourceStatus
+                                    (externalEventRefSourceStatus ref)
+                            ]
+                _ -> pure ()
 
 releaseMaterializationPublicationHold :: EventResearchCandidate -> SocialEventId -> SqlPersistT IO ()
 releaseMaterializationPublicationHold candidate eventId = do
