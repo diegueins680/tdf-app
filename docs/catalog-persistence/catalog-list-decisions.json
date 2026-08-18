@@ -4,6 +4,16 @@
   "generatedFrom": "docs/catalog-persistence/reports/static-list-inventory.json",
   "decisions": [
     {
+      "id": "a43462622b60606b37d9",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Accepting a capture for a checkout domain without a verified recovery handler could record payment without completing or safely reconciling its fulfillment.",
+      "justification": "The values form a closed PayPal webhook dispatch allowlist for checkout domains with implemented recovery semantics; they must remain aligned with backend handlers rather than become merchant-configurable catalog data.",
+      "reviewed": true
+    },
+    {
       "id": "c3d1e41b543e7cbdaf00",
       "classification": "dynamic-business-catalog",
       "disposition": "consumer-update",
