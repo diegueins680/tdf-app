@@ -2614,8 +2614,8 @@
       "recentBehavior": "record",
       "mobilePresentation": { "kind": "external-web", "destination": null, "documentedException": "Public courses are opened from shared links." },
       "accessRequestEligible": false,
-      "aliases": ["/curso/produccion-musical-dic-2025", "/curso/produccion-musical-abr-2026"],
-      "apiScopes": [{ "pathPrefix": "/public/courses", "methods": { "GET": "view" } }, { "pathPrefix": "/academy/microcourse", "methods": { "GET": "view" } }, { "pathPrefix": "/cohorts", "methods": { "GET": "view" } }]
+      "aliases": ["/curso/:slug/orden/:registrationId", "/curso/produccion-musical-dic-2025", "/curso/produccion-musical-abr-2026"],
+      "apiScopes": [{ "pathPrefix": "/public/courses", "methods": { "GET": "view", "POST": "submit" } }, { "pathPrefix": "/academy/microcourse", "methods": { "GET": "view" } }, { "pathPrefix": "/cohorts", "methods": { "GET": "view" } }]
     },
     {
       "id": "technical.course-registration",

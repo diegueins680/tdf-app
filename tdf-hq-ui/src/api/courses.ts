@@ -216,10 +216,14 @@ export const Courses = {
   upsert: (payload: CourseUpsert) => post<CourseMetadata>('/admin/courses', payload),
   listCohorts: () => get<CourseCohortOptionDTO[]>('/admin/courses/cohorts'),
   getMetadata: (slug: string) => get<CourseMetadata>(courseBase(normalizeCourseSlug(slug))),
-  register: (slug: string, payload: CourseRegistrationRequest, idempotencyKey: string) =>
-    post<CourseCheckoutResponse>(`${courseBase(normalizeCourseSlug(slug))}/registrations`, payload, {
-      headers: { 'Idempotency-Key': idempotencyKey },
-    }),
+  register: (slug: string, payload: CourseRegistrationRequest, idempotencyKey?: string) => {
+    const path = `${courseBase(normalizeCourseSlug(slug))}/registrations`;
+    return idempotencyKey
+      ? post<CourseCheckoutResponse>(path, payload, {
+        headers: { 'Idempotency-Key': idempotencyKey },
+      })
+      : post<CourseCheckoutResponse>(path, payload);
+  },
   getCheckout: (slug: string, registrationId: number, lookupToken: string) =>
     get<CourseCheckoutResponse>(
       `${courseBase(normalizeCourseSlug(slug))}/registrations/${requirePositiveInteger(registrationId, 'registrationId')}`,
