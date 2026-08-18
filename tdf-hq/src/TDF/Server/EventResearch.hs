@@ -153,7 +153,7 @@ eventResearchServer user =
         now <- liftIO getCurrentTime
         attempted <-
             liftIO
-                ( try (runSqlPool (materializeCandidateTransaction candidateId materializationRunId request now) envPool)
+                ( try (runSqlPool (materializeCandidateTransaction partyIdText candidateId materializationRunId request now) envPool)
                     :: IO (Either SomeException (Either ServerError EventResearchMaterializationDTO))
                 )
         case attempted of
@@ -257,6 +257,7 @@ validateEventResearchMaterialization
     -> Either T.Text ValidatedMaterialization
 validateEventResearchMaterialization pilotApproved _request candidate = do
     unless pilotApproved (Left "the event research pilot is not approved")
+    unless candidate.erCandidateIsPilot (Left "only pilot candidates can be materialized")
     validatedCandidate <- validateEventResearchCandidate (candidateDTOToWrite candidate)
     unless (validatedCandidate.erCandidateConfidence == "high")
         (Left "only high-confidence candidates can be materialized")
@@ -364,24 +365,26 @@ usableMaterializationImage (Just MaterializationImage{..})
     | otherwise = Right Nothing
 
 materializeCandidateTransaction
-    :: EventResearchCandidateId
+    :: T.Text
+    -> EventResearchCandidateId
     -> EventResearchRunId
     -> EventResearchMaterializationRequestDTO
     -> UTCTime
     -> SqlPersistT IO (Either ServerError EventResearchMaterializationDTO)
-materializeCandidateTransaction candidateId materializationRunId request now = do
-    result <- materializeCandidateDb candidateId materializationRunId request now
+materializeCandidateTransaction organizerPartyId candidateId materializationRunId request now = do
+    result <- materializeCandidateDb organizerPartyId candidateId materializationRunId request now
     case result of
         Left serverError -> transactionUndo >> pure (Left serverError)
         Right response -> transactionSave >> pure (Right response)
 
 materializeCandidateDb
-    :: EventResearchCandidateId
+    :: T.Text
+    -> EventResearchCandidateId
     -> EventResearchRunId
     -> EventResearchMaterializationRequestDTO
     -> UTCTime
     -> SqlPersistT IO (Either ServerError EventResearchMaterializationDTO)
-materializeCandidateDb candidateId materializationRunId request now = do
+materializeCandidateDb organizerPartyId candidateId materializationRunId request now = do
     controls <-
         rawSql
             "SELECT ?? FROM event_research_pilot_control WHERE control_key=? FOR UPDATE"
@@ -398,18 +401,19 @@ materializeCandidateDb candidateId materializationRunId request now = do
                 [candidateEntity@(Entity _ lockedCandidate)] ->
                     case eventResearchCandidateEventId lockedCandidate of
                         Just eventId -> linkCandidateAndRespond candidateEntity materializationRunId eventId False now
-                        Nothing -> materializeUnlinkedCandidate (eventResearchPilotControlApproved control) materializationRunId candidateEntity request now
+                        Nothing -> materializeUnlinkedCandidate organizerPartyId (eventResearchPilotControlApproved control) materializationRunId candidateEntity request now
                 _ -> pure (Left err500{errBody = "Event research candidate identity is ambiguous"})
         _ -> pure (Left err500{errBody = "Event research pilot control identity is ambiguous"})
 
 materializeUnlinkedCandidate
-    :: Bool
+    :: T.Text
+    -> Bool
     -> EventResearchRunId
     -> Entity EventResearchCandidate
     -> EventResearchMaterializationRequestDTO
     -> UTCTime
     -> SqlPersistT IO (Either ServerError EventResearchMaterializationDTO)
-materializeUnlinkedCandidate pilotApproved materializationRunId candidateEntity@(Entity _ candidate) request now = do
+materializeUnlinkedCandidate organizerPartyId pilotApproved materializationRunId candidateEntity@(Entity _ candidate) request now = do
     runResult <- materializationRunCanWrite materializationRunId
     case runResult of
         Left serverError -> pure (Left serverError)
@@ -432,7 +436,7 @@ materializeUnlinkedCandidate pilotApproved materializationRunId candidateEntity@
                                     if suitable
                                         then linkCandidateAndRespond candidateEntity materializationRunId (externalEventRefEventId ref) False now
                                         else pure (Left (conflict "the existing provider event is not safely publishable"))
-                                Nothing -> createOrLinkMaterializedEvent candidateEntity materializationRunId request validated now
+                                Nothing -> createOrLinkMaterializedEvent organizerPartyId candidateEntity materializationRunId request validated now
 
 materializationRunCanWrite :: EventResearchRunId -> SqlPersistT IO (Either ServerError ())
 materializationRunCanWrite runId = do
@@ -448,13 +452,14 @@ materializationRunCanWrite runId = do
         _ -> Left err500{errBody = "Event research materialization run identity is ambiguous"}
 
 createOrLinkMaterializedEvent
-    :: Entity EventResearchCandidate
+    :: T.Text
+    -> Entity EventResearchCandidate
     -> EventResearchRunId
     -> EventResearchMaterializationRequestDTO
     -> ValidatedMaterialization
     -> UTCTime
     -> SqlPersistT IO (Either ServerError EventResearchMaterializationDTO)
-createOrLinkMaterializedEvent candidateEntity@(Entity _ candidate) materializationRunId request validated now = do
+createOrLinkMaterializedEvent organizerPartyId candidateEntity@(Entity _ candidate) materializationRunId request validated now = do
     eventTypeResult <- resolveMaterializationEventType now validated.vmEventType
     case eventTypeResult of
         Left serverError -> pure (Left serverError)
@@ -487,7 +492,7 @@ createOrLinkMaterializedEvent candidateEntity@(Entity _ candidate) materializati
                                     eventId <-
                                         insert
                                             SocialEvent
-                                                { socialEventOrganizerPartyId = Just "system:event-research"
+                                                { socialEventOrganizerPartyId = Just organizerPartyId
                                                 , socialEventTitle = eventResearchCandidateTitle candidate
                                                 , socialEventDescription = validated.vmDescription
                                                 , socialEventVenueId = Just venueId

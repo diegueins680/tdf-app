@@ -75,8 +75,13 @@ spec = do
             validateEventResearchMaterialization True publishRequest materializationCandidate
                 `shouldSatisfy` isRight
 
-        it "requires pilot approval, high confidence, draft review, and a lineup" $ do
+        it "requires pilot approval, pilot membership, high confidence, draft review, and a lineup" $ do
             validateEventResearchMaterialization False publishRequest materializationCandidate
+                `shouldSatisfy` isLeft
+            validateEventResearchMaterialization
+                True
+                publishRequest
+                materializationCandidate{erCandidateIsPilot = False}
                 `shouldSatisfy` isLeft
             validateEventResearchMaterialization
                 True
