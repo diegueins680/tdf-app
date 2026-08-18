@@ -1,6 +1,6 @@
 # Evidencia de verificación
 
-Fecha: 2026-08-16. Esta evidencia corresponde a la rama de implementación; no demuestra un
+Fecha base: 2026-08-16. Esta evidencia corresponde a la rama de implementación; no demuestra un
 despliegue en producción. Las capturas usan fixtures sintéticos identificados como tales y no
 contienen personas, eventos, direcciones, credenciales ni verificaciones inventadas.
 
@@ -27,6 +27,23 @@ El export de Expo conserva un warning de resolución de `event-target-shim` prov
 `react-native-webrtc`. Las suites web conservan warnings históricos de React `act(...)`; no hubo
 fallos. No se ejecutó una entrega real de email/push ni una compra, y ningún fixture se marcó como
 transacción o entrega real.
+
+## Verificación incremental del editor enriquecido — 2026-08-17
+
+| Gate | Resultado |
+| --- | --- |
+| Backend | `stack build --fast`: 141 módulos enlazados, sin errores |
+| PostgreSQL/API | Pass en PostgreSQL 16: creación y replay idempotente, segundo perfil para la misma cuenta, dos profesiones con detalles, instrumento, idioma, servicio, dos áreas, tarifas/portafolio/enlaces, publicación, auditoría sin contenido y DTO público privado por construcción |
+| Compatibilidad | Pass: un `PUT` con el payload histórico conserva campos enriquecidos, detalles, idioma y área secundaria; vacíos explícitos/`clearRates` eliminan solo lo solicitado; multimedia histórica se normaliza al DTO cerrado sin reescribir su procedencia |
+| Validación negativa | Pass: profesión duplicada, URL con credenciales, dos áreas primarias y una ciudad asociada a un país incorrecto reciben 400; rutas same-origin seguras permanecen compatibles |
+| OpenAPI | Pass: contrato canónico y auditor de métodos formales sin errores; DTO de escritura/manager cerrados, idiomas gobernados, campos públicos sensibles prohibidos y tipos web/móvil regenerados |
+| Invariantes | Hspec/QuickCheck dirigido: 15 ejemplos, 0 fallos; 7 propiedades ejecutaron 100 casos cada una, incluida la semántica preserve/replace del editor |
+| Web | TypeScript pass; Jest dirigido: 9 pruebas, 0 fallos |
+| Móvil | Jest dirigido: 5 pruebas, 0 fallos; el typecheck global solo conserva faltantes locales preexistentes de `expo-notifications` y `expo-haptics`, sin errores en los archivos cambiados |
+
+No se añadió DDL: esta entrega activa de forma compatible el modelo normalizado ya existente. Las
+capturas históricas siguen siendo válidas para búsqueda; la evidencia visual del editor enriquecido
+queda como gate manual hasta ejecutar navegador y emulador con sesiones locales sintéticas.
 
 ## Evidencia visual reproducible
 

@@ -39,6 +39,13 @@ geográfica.
 - Backfill usa upserts idempotentes, procedencia y conteos. Las filas ambiguas quedan en revisión.
 - Writers antiguos pueden seguir operando durante el backfill; triggers/refresh sincronizan la
   proyección en el período dual.
+- El writer enriquecido mantiene obligatorios los campos históricos. En actualización, omitir
+  experiencia, créditos, portafolio, enlaces, equipo, tarifas, idiomas o áreas conserva el dato;
+  valores vacíos y `clearRates` son órdenes explícitas de borrado. La ruta histórica de una ciudad
+  no elimina áreas secundarias.
+- La edición no necesita un esquema paralelo: reutiliza las columnas y relaciones normalizadas de
+  `directory_profile`. Creación, actualización, transición y replay idempotente devuelven la misma
+  proyección privada limitada por `directory_profile_manager`.
 - No se activa PostGIS, email, push, geocoder ni monetización sin gate explícito.
 
 ## Alternativas rechazadas

@@ -63,10 +63,49 @@ assert.equal(spec.components.parameters.IdempotencyKey.required, true);
 const taxonomy = spec.components.schemas.DirectoryTaxonomies;
 for (const collection of [
   'professions', 'instruments', 'genres', 'serviceOfferings', 'classifiedCategories',
-  'compensationTypes', 'currencies', 'cities',
+  'compensationTypes', 'currencies', 'languages', 'cities',
 ]) {
   assert(taxonomy.required.includes(collection), `DirectoryTaxonomies requires ${collection}`);
   assert.equal(taxonomy.properties[collection].type, 'array', `${collection} is server-managed`);
+}
+for (const name of [
+  'DirectoryPortfolioItem',
+  'DirectoryProfileLink',
+  'DirectoryProfessionInput',
+  'DirectoryInstrumentInput',
+  'DirectoryLanguageInput',
+  'DirectoryServiceAreaInput',
+  'DirectoryProfileUpsert',
+  'ManagedDirectoryProfile',
+]) {
+  assert.equal(spec.components.schemas[name].additionalProperties, false, `${name} must be a closed write/private DTO`);
+}
+for (const collection of ['services', 'languages']) {
+  assert(spec.components.schemas.PublicDirectoryProfile.required.includes(collection), `PublicDirectoryProfile requires ${collection}`);
+}
+for (const collection of ['professionDetails', 'instrumentDetails', 'languages', 'serviceAreas']) {
+  assert(spec.components.schemas.ManagedDirectoryProfile.required.includes(collection), `ManagedDirectoryProfile requires ${collection}`);
+}
+assert.equal(spec.components.schemas.DirectoryProfileUpsert.properties.clearRates.default, undefined);
+assert.deepEqual(spec.components.schemas.DirectoryProfileKind.enum, [
+  'person', 'artist', 'band', 'project', 'organization', 'company',
+  'venue', 'studio', 'agency', 'label', 'distributor', 'school',
+]);
+assert.equal(spec.components.schemas.DirectoryProfileUpsert.properties.profileKind.$ref, '#/components/schemas/DirectoryProfileKind');
+assert.equal(spec.components.schemas.ManagedDirectoryProfile.properties.kind.$ref, '#/components/schemas/DirectoryProfileKind');
+assert.equal(spec.components.schemas.PublicDirectoryProfile.properties.kind.$ref, '#/components/schemas/DirectoryProfileKind');
+for (const [schemaName, fields] of Object.entries({
+  DirectoryPortfolioItem: ['description', 'thumbnailUrl'],
+  DirectoryProfessionInput: ['headline', 'yearsExperience', 'rateMinMinor', 'rateMaxMinor', 'currencyId'],
+  DirectoryInstrumentInput: ['proficiency'],
+  DirectoryLanguageInput: ['proficiency'],
+  DirectoryServiceAreaInput: ['subdivisionId', 'cityId', 'metropolitanAreaId', 'sectorLabel', 'serviceRadiusKm'],
+})) {
+  for (const field of fields) assert.equal(spec.components.schemas[schemaName].properties[field].nullable, true, `${schemaName}.${field} must represent manager projection nulls`);
+}
+for (const [schemaName, field] of [['DirectoryPortfolioItem', 'url'], ['DirectoryProfileLink', 'url']]) {
+  assert.equal(spec.components.schemas[schemaName].properties[field].format, 'uri-reference');
+  assert.match(spec.components.schemas[schemaName].properties[field].pattern, /https\?/);
 }
 assert.equal(spec.components.schemas.TaxonomyItem.properties.metadata.type, 'object');
 assert.equal(spec.components.schemas.TaxonomyItem.properties.minorUnits.type, 'integer');

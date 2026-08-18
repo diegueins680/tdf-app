@@ -120,7 +120,7 @@ paths:
       security: [{ bearerAuth: [] }]
       parameters: [{ $ref: '#/components/parameters/ProfileId' }]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/DirectoryProfileUpsert' } } } }
-      responses: { '200': { description: Updated explicitly managed profile } }
+      responses: { '200': { description: Updated explicitly managed profile, content: { application/json: { schema: { $ref: '#/components/schemas/ManagedDirectoryProfile' } } } } }
   /directory/profiles/{profileId}/status:
     patch:
       tags: [Music directory account]
@@ -128,7 +128,7 @@ paths:
       security: [{ bearerAuth: [] }]
       parameters: [{ $ref: '#/components/parameters/ProfileId' }]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StatusRequest' } } } }
-      responses: { '200': { description: Transitioned profile } }
+      responses: { '200': { description: Transitioned profile, content: { application/json: { schema: { $ref: '#/components/schemas/ManagedDirectoryProfile' } } } } }
   /directory/classifieds:
     get:
       tags: [Music classifieds]
@@ -403,23 +403,23 @@ components:
       properties: { id: { type: string, format: uuid }, code: { type: string }, slug: { type: string, nullable: true }, name: { type: string }, parentId: { type: string, format: uuid, nullable: true }, requirements: { type: object, additionalProperties: true }, metadata: { type: object, additionalProperties: true }, countryId: { type: string, format: uuid }, currencyId: { type: string, format: uuid }, symbol: { type: string }, minorUnits: { type: integer, minimum: 0, maximum: 6 }, latitude: { type: number, nullable: true }, longitude: { type: number, nullable: true } }
     DirectoryTaxonomies:
       type: object
-      required: [locale, professions, classifiedCategories, compensationTypes, serviceOfferings, currencies, instruments, genres, cities]
-      properties: { locale: { type: string }, professions: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, classifiedCategories: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, compensationTypes: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, serviceOfferings: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, currencies: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, instruments: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, genres: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, cities: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } } }
+      required: [locale, professions, classifiedCategories, compensationTypes, serviceOfferings, currencies, instruments, genres, languages, cities]
+      properties: { locale: { type: string }, professions: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, classifiedCategories: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, compensationTypes: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, serviceOfferings: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, currencies: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, instruments: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, genres: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, languages: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } }, cities: { type: array, items: { $ref: '#/components/schemas/TaxonomyItem' } } }
     PublicDirectoryProfile:
       type: object
       description: Public projection excludes Party PII and directory_private_location.
       additionalProperties: false
-      required: [id, kind, name, slug, availability, locations, professions, instruments, genres, verification, reputation, canonicalUrl]
+      required: [id, kind, name, slug, availability, locations, professions, instruments, genres, services, languages, verification, reputation, canonicalUrl]
       properties:
         id: { type: string, format: uuid }
-        kind: { type: string }
+        kind: { $ref: '#/components/schemas/DirectoryProfileKind' }
         name: { type: string }
         slug: { type: string }
         bio: { type: string, nullable: true }
         experience: { type: string, nullable: true }
         creditsSummary: { type: string, nullable: true }
-        portfolio: { type: array, items: { type: object, additionalProperties: true } }
-        links: { type: array, items: { type: object, additionalProperties: true } }
+        portfolio: { type: array, items: { $ref: '#/components/schemas/DirectoryPortfolioItem' } }
+        links: { type: array, items: { $ref: '#/components/schemas/DirectoryProfileLink' } }
         equipment: { type: string, nullable: true }
         rates: { type: object, nullable: true, additionalProperties: false, properties: { minMinor: { type: integer, format: int64 }, maxMinor: { type: integer, format: int64, nullable: true }, currencyId: { type: string, format: uuid, nullable: true } } }
         availability: { type: object, additionalProperties: false, required: [status, onsite, remote, travel], properties: { status: { type: string }, onsite: { type: boolean }, remote: { type: boolean }, travel: { type: boolean }, radiusKm: { type: number, nullable: true } } }
@@ -427,6 +427,8 @@ components:
         professions: { type: array, items: { $ref: '#/components/schemas/PublicTaxonomyMembership' } }
         instruments: { type: array, items: { $ref: '#/components/schemas/PublicTaxonomyMembership' } }
         genres: { type: array, items: { $ref: '#/components/schemas/PublicTaxonomyMembership' } }
+        services: { type: array, items: { $ref: '#/components/schemas/PublicTaxonomyMembership' } }
+        languages: { type: array, items: { $ref: '#/components/schemas/PublicTaxonomyMembership' } }
         verification: { type: array, items: { type: object, additionalProperties: false, required: [type, status], properties: { type: { type: string }, status: { type: string }, verifiedAt: { type: string, format: date-time, nullable: true } } } }
         reputation: { type: object, additionalProperties: false, properties: { completeness: { type: number }, responseRate: { type: number }, medianResponseMinutes: { type: integer }, completed: { type: integer }, reviewAverage: { type: number }, reviewCount: { type: integer } } }
         canonicalUrl: { type: string }
@@ -441,6 +443,9 @@ components:
         headline: { type: string, nullable: true }
         yearsExperience: { type: number, nullable: true }
         proficiency: { type: string, nullable: true }
+        rateMinMinor: { type: integer, format: int64, nullable: true }
+        rateMaxMinor: { type: integer, format: int64, nullable: true }
+        currencyId: { type: string, format: uuid, nullable: true }
     PublicClassified:
       type: object
       description: Published, current, moderated classified.
@@ -494,8 +499,129 @@ components:
       type: object
       additionalProperties: false
       required: [profileKind, publicName, slug, professionIds, instrumentIds, genreIds, serviceOfferingIds, countryId, onsite, remote, availableToTravel]
-      properties: { profileKind: { type: string }, publicName: { type: string, minLength: 1, maxLength: 160 }, slug: { type: string }, bio: { type: string }, professionIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }, instrumentIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }, genreIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }, serviceOfferingIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }, countryId: { type: string, format: uuid }, cityId: { type: string, format: uuid }, metropolitanAreaId: { type: string, format: uuid }, onsite: { type: boolean }, remote: { type: boolean }, availableToTravel: { type: boolean }, travelRadiusKm: { type: number, minimum: 0, maximum: 20000 } }
-    ManagedDirectoryProfile: { type: object, required: [id, kind, name, slug, status, visibility, moderationStatus, version, capabilities], properties: { id: { type: string, format: uuid }, kind: { type: string }, name: { type: string }, slug: { type: string }, bio: { type: string, nullable: true }, status: { type: string }, visibility: { type: string }, moderationStatus: { type: string }, version: { type: integer, format: int64 }, capabilities: { type: object, additionalProperties: { type: boolean } } } }
+      properties:
+        profileKind: { $ref: '#/components/schemas/DirectoryProfileKind' }
+        publicName: { type: string, minLength: 1, maxLength: 160 }
+        slug: { type: string }
+        bio: { type: string, maxLength: 10000 }
+        experienceSummary: { type: string, maxLength: 5000, description: Omit to preserve on update; send an empty string to clear. }
+        creditsSummary: { type: string, maxLength: 5000, description: Omit to preserve on update; send an empty string to clear. }
+        portfolio: { type: array, maxItems: 50, items: { $ref: '#/components/schemas/DirectoryPortfolioItem' }, description: 'Omit to preserve on update; send [] to clear.' }
+        links: { type: array, maxItems: 30, items: { $ref: '#/components/schemas/DirectoryProfileLink' }, description: 'Omit to preserve on update; send [] to clear.' }
+        equipmentSummary: { type: string, maxLength: 5000, description: Omit to preserve on update; send an empty string to clear. }
+        rateMinMinor: { type: integer, format: int64, minimum: 0, description: Omit both rate fields and currencyId to preserve on update. }
+        rateMaxMinor: { type: integer, format: int64, minimum: 0 }
+        currencyId: { type: string, format: uuid, description: Required with rateMinMinor and invalid without it. }
+        clearRates: { type: boolean, description: Explicitly clears all profile-level rates on update. }
+        availabilityStatus: { type: string, enum: [available, limited, unavailable, ask] }
+        professionIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }
+        professionDetails: { type: array, uniqueItems: true, items: { $ref: '#/components/schemas/DirectoryProfessionInput' }, description: Detail ids must be present in professionIds. }
+        instrumentIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }
+        instrumentDetails: { type: array, uniqueItems: true, items: { $ref: '#/components/schemas/DirectoryInstrumentInput' }, description: Detail ids must be present in instrumentIds. }
+        genreIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }
+        serviceOfferingIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }
+        languages: { type: array, uniqueItems: true, maxItems: 20, items: { $ref: '#/components/schemas/DirectoryLanguageInput' }, description: 'Omit to preserve on update; send [] to clear.' }
+        serviceAreas: { type: array, uniqueItems: true, maxItems: 20, items: { $ref: '#/components/schemas/DirectoryServiceAreaInput' }, description: 'Omit to use the backward-compatible single-location fields; send [] only for remote-only profiles.' }
+        countryId: { type: string, format: uuid, description: Country of the primary service area; retained as a required compatibility field. }
+        cityId: { type: string, format: uuid, description: Backward-compatible primary city when serviceAreas is omitted. }
+        metropolitanAreaId: { type: string, format: uuid, description: Backward-compatible primary metropolitan area when serviceAreas is omitted. }
+        onsite: { type: boolean }
+        remote: { type: boolean }
+        availableToTravel: { type: boolean }
+        travelRadiusKm: { type: number, minimum: 0, maximum: 20000 }
+    DirectoryPortfolioItem:
+      type: object
+      additionalProperties: false
+      required: [itemType, title, url]
+      properties:
+        itemType: { type: string, enum: [audio, video, image, release, credit, document, other] }
+        title: { type: string, minLength: 1, maxLength: 160 }
+        url: { type: string, format: uri-reference, maxLength: 2048, pattern: '^(https?://|/(?!/))' }
+        description: { type: string, nullable: true, maxLength: 1000 }
+        thumbnailUrl: { type: string, nullable: true, format: uri-reference, maxLength: 2048, pattern: '^(https?://|/(?!/))' }
+    DirectoryProfileKind:
+      type: string
+      enum: [person, artist, band, project, organization, company, venue, studio, agency, label, distributor, school]
+    DirectoryProfileLink:
+      type: object
+      additionalProperties: false
+      required: [label, url]
+      properties:
+        label: { type: string, minLength: 1, maxLength: 80 }
+        url: { type: string, format: uri-reference, maxLength: 2048, pattern: '^(https?://|/(?!/))' }
+    DirectoryProfessionInput:
+      type: object
+      additionalProperties: false
+      required: [professionId]
+      properties:
+        professionId: { type: string, format: uuid }
+        headline: { type: string, nullable: true, maxLength: 160 }
+        yearsExperience: { type: number, nullable: true, minimum: 0, maximum: 100 }
+        rateMinMinor: { type: integer, nullable: true, format: int64, minimum: 0 }
+        rateMaxMinor: { type: integer, nullable: true, format: int64, minimum: 0 }
+        currencyId: { type: string, nullable: true, format: uuid }
+    DirectoryInstrumentInput:
+      type: object
+      additionalProperties: false
+      required: [instrumentId]
+      properties:
+        instrumentId: { type: string, format: uuid }
+        proficiency: { type: string, nullable: true, enum: [beginner, intermediate, advanced, professional, virtuoso] }
+    DirectoryLanguageInput:
+      type: object
+      additionalProperties: false
+      required: [languageId]
+      properties:
+        languageId: { type: string, format: uuid }
+        proficiency: { type: string, nullable: true, enum: [basic, conversational, professional, native] }
+    DirectoryServiceAreaInput:
+      type: object
+      additionalProperties: false
+      required: [countryId, primaryLocation, onsite]
+      properties:
+        countryId: { type: string, format: uuid }
+        subdivisionId: { type: string, nullable: true, format: uuid }
+        cityId: { type: string, nullable: true, format: uuid }
+        metropolitanAreaId: { type: string, nullable: true, format: uuid }
+        sectorLabel: { type: string, nullable: true, maxLength: 80, description: Public only when intentionally supplied; never an exact address. }
+        serviceRadiusKm: { type: number, nullable: true, minimum: 0, maximum: 20000 }
+        primaryLocation: { type: boolean }
+        onsite: { type: boolean }
+    ManagedDirectoryProfile:
+      type: object
+      additionalProperties: false
+      description: Private editor projection available only through an explicit active manager grant.
+      required: [id, kind, name, slug, bio, experienceSummary, creditsSummary, portfolio, links, equipmentSummary, rates, availabilityStatus, onsite, remote, availableToTravel, travelRadiusKm, professionIds, professionDetails, instrumentIds, instrumentDetails, genreIds, serviceOfferingIds, languages, serviceAreas, status, visibility, moderationStatus, version, capabilities]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { $ref: '#/components/schemas/DirectoryProfileKind' }
+        name: { type: string }
+        slug: { type: string }
+        bio: { type: string, nullable: true }
+        experienceSummary: { type: string, nullable: true }
+        creditsSummary: { type: string, nullable: true }
+        portfolio: { type: array, items: { $ref: '#/components/schemas/DirectoryPortfolioItem' } }
+        links: { type: array, items: { $ref: '#/components/schemas/DirectoryProfileLink' } }
+        equipmentSummary: { type: string, nullable: true }
+        rates: { type: object, nullable: true, additionalProperties: false, required: [minMinor, maxMinor, currencyId], properties: { minMinor: { type: integer, format: int64, nullable: true }, maxMinor: { type: integer, format: int64, nullable: true }, currencyId: { type: string, format: uuid, nullable: true } } }
+        availabilityStatus: { type: string, enum: [available, limited, unavailable, ask] }
+        onsite: { type: boolean }
+        remote: { type: boolean }
+        availableToTravel: { type: boolean }
+        travelRadiusKm: { type: number, nullable: true }
+        professionIds: { type: array, items: { type: string, format: uuid } }
+        professionDetails: { type: array, items: { $ref: '#/components/schemas/DirectoryProfessionInput' } }
+        instrumentIds: { type: array, items: { type: string, format: uuid } }
+        instrumentDetails: { type: array, items: { $ref: '#/components/schemas/DirectoryInstrumentInput' } }
+        genreIds: { type: array, items: { type: string, format: uuid } }
+        serviceOfferingIds: { type: array, items: { type: string, format: uuid } }
+        languages: { type: array, items: { $ref: '#/components/schemas/DirectoryLanguageInput' } }
+        serviceAreas: { type: array, items: { $ref: '#/components/schemas/DirectoryServiceAreaInput' } }
+        status: { type: string }
+        visibility: { type: string }
+        moderationStatus: { type: string }
+        version: { type: integer, format: int64 }
+        capabilities: { type: object, additionalProperties: { type: boolean } }
     StatusRequest: { type: object, required: [status], properties: { status: { type: string }, reason: { type: string } } }
     ClassifiedCreate:
       type: object
