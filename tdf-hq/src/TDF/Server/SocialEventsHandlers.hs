@@ -8477,6 +8477,11 @@ postgresVisibleImportedMetadataClause metadataColumn =
         <> " ELSE jsonb_typeof("
         <> jsonMetadata
         <> ")='object'"
+        <> " AND (SELECT count(*) FROM json_each(("
+        <> metadataColumn
+        <> ")::json))=(SELECT count(DISTINCT metadata_field.key) FROM json_each(("
+        <> metadataColumn
+        <> ")::json) AS metadata_field)"
         <> " AND NOT EXISTS (SELECT 1 FROM jsonb_object_keys("
         <> jsonMetadata
         <> ") AS metadata_key WHERE metadata_key"
