@@ -1766,6 +1766,19 @@ socialEventsServer user =
     requireFeatureAction featureId action =
         either throwError pure (validateSocialEventsFeatureAction featureId action user)
 
+    requireEventVisibleToUser :: SocialEventId -> AppM ()
+    requireEventVisibleToUser eventKey =
+        unless (hasStrictAdminAccess user) $ do
+            Env{..} <- ask
+            hidden <- liftIO $ runSqlPool (isImportedEventHidden eventKey) envPool
+            when hidden $ throwError err404{errBody = "Event not found"}
+
+    parseVisibleEventKey :: T.Text -> AppM SocialEventId
+    parseVisibleEventKey rawId = do
+        eventKey <- parseKeyOr400 "event" rawId
+        requireEventVisibleToUser eventKey
+        pure eventKey
+
     -- Events
     eventsServer :: ServerT EventsRoutes AppM
     eventsServer =
@@ -1853,10 +1866,10 @@ socialEventsServer user =
                 if null eventIds
                     then pure [SocialEventId ==. toSqlKey 0]
                     else pure [SocialEventId <-. eventIds]
-        hiddenPilotDraftIds <-
+        hiddenImportedEventIds <-
             if hasStrictAdminAccess user
                 then pure []
-                else liftIO $ runSqlPool loadPilotDraftEventIds envPool
+                else liftIO $ runSqlPool loadHiddenImportedEventIds envPool
         let filters =
                 startFilter
                     ++ cityFilter
@@ -1864,9 +1877,9 @@ socialEventsServer user =
                     ++ artistFilter
                     ++ maybe [] (\eventTypeUuid -> [SocialEventEventTypeId ==. Just eventTypeUuid]) eventTypeFilter
                     ++ maybe [] (\stateUuid -> [SocialEventWorkflowStateId ==. Just stateUuid]) workflowStateFilter
-                    ++ if null hiddenPilotDraftIds
+                    ++ if null hiddenImportedEventIds
                         then []
-                        else [SocialEventId /<-. hiddenPilotDraftIds]
+                        else [SocialEventId /<-. hiddenImportedEventIds]
         let dateOrder =
                 case mStartAfter of
                     Just _ -> Asc SocialEventStartTime
@@ -2280,10 +2293,7 @@ socialEventsServer user =
     getEvent :: T.Text -> AppM EventDTO
     getEvent rawId = do
         Env{..} <- ask
-        eventKey <- parseKeyOr400 "event" rawId
-        when (not (hasStrictAdminAccess user)) $ do
-            pilotDraft <- liftIO $ runSqlPool (isPilotDraftEvent eventKey) envPool
-            when pilotDraft $ throwError err404{errBody = "Event not found"}
+        eventKey <- parseVisibleEventKey rawId
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         case mEvent of
             Nothing -> throwError err404{errBody = "Event not found"}
@@ -2297,7 +2307,7 @@ socialEventsServer user =
     updateEvent rawId EventUpdateDTO{..} = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" rawId
+        eventKey <- parseVisibleEventKey rawId
         mExisting <- liftIO $ runSqlPool (get eventKey) envPool
         existing <- maybe (throwError err404{errBody = "Event not found"}) pure mExisting
         managedEvent <- claimOrRequireEventManager currentPartyId envPool eventKey existing
@@ -2440,7 +2450,7 @@ socialEventsServer user =
     deleteEvent :: T.Text -> AppM NoContent
     deleteEvent rawId = do
         Env{..} <- ask
-        eventKey <- parseKeyOr400 "event" rawId
+        eventKey <- parseVisibleEventKey rawId
         mExisting <- liftIO $ runSqlPool (get eventKey) envPool
         existing <- maybe (throwError err404{errBody = "Event not found"}) pure mExisting
         _ <- claimOrRequireEventManager currentPartyId envPool eventKey existing
@@ -2924,7 +2934,7 @@ socialEventsServer user =
     listRsvps :: T.Text -> AppM [RsvpDTO]
     listRsvps eventIdStr = do
         Env{..} <- ask
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         when (isNothing mEvent) $ throwError err404{errBody = "Event not found"}
         rsvpRows <- liftIO $ runSqlPool (selectList [EventRsvpEventId ==. eventKey] []) envPool
@@ -2946,7 +2956,7 @@ socialEventsServer user =
     createRsvp eventIdStr dto = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         let eventIdVal = T.strip eventIdStr
             RsvpCreateDTO partyIdInput statusInput = dto
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
@@ -3033,7 +3043,7 @@ socialEventsServer user =
     listInvitations :: T.Text -> AppM [InvitationDTO]
     listInvitations eventIdStr = do
         Env{..} <- ask
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         when (isNothing mEvent) $ throwError err404{errBody = "Event not found"}
         rows <- liftIO $ runSqlPool (selectList [EventInvitationEventId ==. eventKey] [Desc EventInvitationCreatedAt]) envPool
@@ -3057,7 +3067,7 @@ socialEventsServer user =
     createInvitation eventIdStr dto = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         when (isNothing mEvent) $ throwError err404{errBody = "Event not found"}
         toParty <- either throwError pure (validateInvitationToPartyId (invitationToPartyId dto))
@@ -3141,7 +3151,7 @@ socialEventsServer user =
     listMoments :: T.Text -> AppM [EventMomentDTO]
     listMoments eventIdStr = do
         Env{..} <- ask
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         _ <- requireExistingEvent envPool eventKey
         liftIO $ loadEventMoments envPool eventKey
 
@@ -3149,7 +3159,7 @@ socialEventsServer user =
     createMoment eventIdStr EventMomentCreateDTO{..} = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         _ <- requireExistingEvent envPool eventKey
         mediaUrl <- maybe (throwError err400{errBody = "Moment media URL is required"}) pure (cleanMaybeText (Just emCreateMediaUrl))
         mediaType <- maybe (throwError err400{errBody = "Moment media type must be image or video"}) pure (normalizeMomentMediaType emCreateMediaType)
@@ -3199,7 +3209,7 @@ socialEventsServer user =
             either (throwError . eventImageUploadFormServerError) pure $
                 validateEventImageUploadForm rawUploadForm
         Env{..} <- ask
-        eventKey <- parseKeyOr400 "event" rawId
+        eventKey <- parseVisibleEventKey rawId
         _ <- requireExistingEvent envPool eventKey
         let mimeTypeVal = T.toLower (T.strip (fdFileCType eiuFile))
             fallbackName = nonEmptyText (fdFileName eiuFile)
@@ -3231,7 +3241,7 @@ socialEventsServer user =
     reactToMoment eventIdStr momentIdStr EventMomentReactionRequestDTO{..} = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         _ <- requireExistingEvent envPool eventKey
         momentKey <- parseKeyOr400 "moment" momentIdStr
         _ <- requireMomentForEvent envPool eventKey momentKey
@@ -3270,7 +3280,7 @@ socialEventsServer user =
     commentOnMoment eventIdStr momentIdStr EventMomentCommentCreateDTO{..} = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         _ <- requireExistingEvent envPool eventKey
         momentKey <- parseKeyOr400 "moment" momentIdStr
         _ <- requireMomentForEvent envPool eventKey momentKey
@@ -3299,7 +3309,7 @@ socialEventsServer user =
     listLiveBroadcasts :: T.Text -> AppM [EventLiveBroadcastDTO]
     listLiveBroadcasts eventIdStr = do
         Env{..} <- ask
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         _ <- requireExistingEvent envPool eventKey
         rows <-
             liftIO $
@@ -3327,7 +3337,7 @@ socialEventsServer user =
     createLiveBroadcast eventIdStr EventLiveBroadcastCreateDTO{..} = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         _ <- requireExistingEvent envPool eventKey
         artistKey <- parseArtistId elbCreateArtistId
         artistRow <- requireEventArtistProfile envPool eventKey artistKey
@@ -3395,7 +3405,7 @@ socialEventsServer user =
     heartbeatLiveBroadcast eventIdStr broadcastIdStr EventLiveBroadcastHeartbeatDTO{..} = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         _ <- requireExistingEvent envPool eventKey
         broadcastKey <- parseKeyOr400 "live broadcast" broadcastIdStr
         broadcastRow <- requireLiveBroadcastForEvent envPool eventKey broadcastKey
@@ -3424,7 +3434,7 @@ socialEventsServer user =
     endLiveBroadcast eventIdStr broadcastIdStr EventLiveBroadcastEndDTO{..} = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         _ <- requireExistingEvent envPool eventKey
         broadcastKey <- parseKeyOr400 "live broadcast" broadcastIdStr
         broadcastRow <- requireLiveBroadcastForEvent envPool eventKey broadcastKey
@@ -3484,7 +3494,7 @@ socialEventsServer user =
     listTicketTiers :: T.Text -> AppM [TicketTierDTO]
     listTicketTiers eventIdStr = do
         Env{..} <- ask
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         when (isNothing mEvent) $ throwError err404{errBody = "Event not found"}
         rows <-
@@ -3498,7 +3508,7 @@ socialEventsServer user =
     createTicketTier eventIdStr dto = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         _ <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
@@ -3558,7 +3568,7 @@ socialEventsServer user =
     updateTicketTier eventIdStr tierIdStr dto = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         tierKey <- parseKeyOr400 "ticket tier" tierIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
@@ -3652,7 +3662,7 @@ socialEventsServer user =
     listTicketOrders :: T.Text -> Maybe T.Text -> Maybe T.Text -> AppM [TicketOrderDTO]
     listTicketOrders eventIdStr mBuyerPartyId mStatus = do
         Env{..} <- ask
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         let manager = isEventManager currentPartyId eventVal
@@ -3689,7 +3699,7 @@ socialEventsServer user =
     createTicketOrder eventIdStr TicketPurchaseRequestDTO{..} = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         tierKey <- parseKeyOr400 "ticket tier" ticketPurchaseTierId
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
@@ -3817,7 +3827,7 @@ socialEventsServer user =
     updateTicketOrderStatus eventIdStr orderIdStr TicketOrderStatusUpdateDTO{..} = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         orderKey <- parseKeyOr400 "ticket order" orderIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
@@ -3953,7 +3963,7 @@ socialEventsServer user =
     listTickets :: T.Text -> Maybe T.Text -> Maybe T.Text -> AppM [TicketDTO]
     listTickets eventIdStr mOrderId mStatus = do
         Env{..} <- ask
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         let manager = isEventManager currentPartyId eventVal
@@ -3994,7 +4004,7 @@ socialEventsServer user =
     checkInTicket eventIdStr TicketCheckInRequestDTO{..} = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         _ <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
@@ -4042,7 +4052,7 @@ socialEventsServer user =
     listPromoCodes :: T.Text -> AppM [PromoCodeDTO]
     listPromoCodes eventIdStr = do
         Env{..} <- ask
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         _ <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         rows <-
@@ -4140,7 +4150,7 @@ socialEventsServer user =
     validatePromoCode eventIdStr codeStr mQueryCode mTierId = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         _ <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         let cleanCode = T.toUpper (T.strip codeStr)
@@ -4648,7 +4658,7 @@ socialEventsServer user =
     createRefundRequest eventIdStr orderIdStr RefundRequestDTO{..} = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         orderKey <- parseKeyOr400 "ticket order" orderIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
@@ -4701,7 +4711,7 @@ socialEventsServer user =
     listRefunds :: T.Text -> AppM [RefundDTO]
     listRefunds eventIdStr = do
         Env{..} <- ask
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         let manager = isEventManager currentPartyId eventVal
@@ -4829,7 +4839,7 @@ socialEventsServer user =
     createTransfer eventIdStr ticketIdStr TicketTransferCreateDTO{..} = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         ticketKey <- parseKeyOr400 "ticket" ticketIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
@@ -4883,7 +4893,7 @@ socialEventsServer user =
     listTransfers :: T.Text -> T.Text -> AppM [TicketTransferDTO]
     listTransfers eventIdStr ticketIdStr = do
         Env{..} <- ask
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         ticketKey <- parseKeyOr400 "ticket" ticketIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
@@ -4977,7 +4987,7 @@ socialEventsServer user =
     joinWaitlist eventIdStr WaitlistJoinDTO{..} = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         _ <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         mTierKey <- case cleanMaybeText wjTierId of
@@ -5077,7 +5087,7 @@ socialEventsServer user =
     removeFromWaitlist eventIdStr waitlistIdStr = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         waitlistKey <- parseKeyOr400 "waitlist entry" waitlistIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
@@ -5104,7 +5114,7 @@ socialEventsServer user =
     getTicketQR eventIdStr ticketIdStr = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventKey <- parseVisibleEventKey eventIdStr
         ticketKey <- parseKeyOr400 "ticket" ticketIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
@@ -5925,7 +5935,7 @@ socialEventsServer user =
     requireLogisticsAccess :: T.Text -> Bool -> AppM (SocialEventId, SocialEvent, T.Text)
     requireLogisticsAccess rawEventId requireEdit = do
         Env{..} <- ask
-        eventKey <- parseKeyOr400 "event" rawEventId
+        eventKey <- parseVisibleEventKey rawEventId
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventRow <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         role <- case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
@@ -6076,7 +6086,7 @@ socialEventsServer user =
     requireManagedEvent :: T.Text -> AppM (SocialEventId, SocialEvent)
     requireManagedEvent rawEventId = do
         Env{..} <- ask
-        eventKey <- parseKeyOr400 "event" rawEventId
+        eventKey <- parseVisibleEventKey rawEventId
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         claimed <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
@@ -6127,9 +6137,11 @@ socialEventsServer user =
             throwError err403{errBody = "Only followers of this artist can start a fanclub live broadcast"}
 
     parseIds :: T.Text -> T.Text -> AppM (SocialEventId, EventInvitationId)
-    parseIds eventIdStr invitationIdStr =
+    parseIds eventIdStr invitationIdStr = do
         case parseInvitationIdsEither eventIdStr invitationIdStr of
-            Right ids -> pure ids
+            Right ids@(eventKey, _) -> do
+                requireEventVisibleToUser eventKey
+                pure ids
             Left e -> throwError e
 
     parseArtistId :: T.Text -> AppM ArtistProfileId
@@ -8191,25 +8203,42 @@ loadExternalEventSources pool eventKey =
         )
         pool
 
-loadPilotDraftEventIds :: SqlPersistT IO [SocialEventId]
-loadPilotDraftEventIds = do
+loadHiddenImportedEventIds :: SqlPersistT IO [SocialEventId]
+loadHiddenImportedEventIds = do
     rows <-
         rawSql
-            "SELECT DISTINCT event_id FROM external_event_ref\
-            \ WHERE lower(trim(source_status)) LIKE 'draft:%'"
+            "SELECT DISTINCT social_event.id, social_event.metadata\
+            \ FROM social_event\
+            \ INNER JOIN external_event_ref\
+            \ ON external_event_ref.event_id=social_event.id"
             []
-    pure [eventKey | Single eventKey <- rows]
+    pure
+        [ eventKey
+        | (Single eventKey, Single metadata) <- rows
+        , importedEventMetadataHidden metadata
+        ]
 
-isPilotDraftEvent :: SocialEventId -> SqlPersistT IO Bool
-isPilotDraftEvent eventKey = do
+isImportedEventHidden :: SocialEventId -> SqlPersistT IO Bool
+isImportedEventHidden eventKey = do
     rows <-
         rawSql
-            "SELECT event_id FROM external_event_ref\
-            \ WHERE event_id=?\
-            \ AND lower(trim(source_status)) LIKE 'draft:%'\
+            "SELECT social_event.metadata\
+            \ FROM social_event\
+            \ INNER JOIN external_event_ref\
+            \ ON external_event_ref.event_id=social_event.id\
+            \ WHERE social_event.id=?\
             \ LIMIT 1"
             [toPersistValue eventKey]
-    pure (not (null (rows :: [Single SocialEventId])))
+    pure $
+        case rows of
+            Single metadata : _ -> importedEventMetadataHidden metadata
+            [] -> False
+
+importedEventMetadataHidden :: Maybe T.Text -> Bool
+importedEventMetadataHidden storedMetadata =
+    case decodeStoredEventMetadata storedMetadata of
+        Left _ -> True
+        Right metadata -> emIsPublic metadata == Just False
 
 eventEntityToDTO :: T.Text -> SocialEventId -> SocialEvent -> [ArtistDTO] -> SqlPersistT IO (Either ServerError EventDTO)
 eventEntityToDTO configuredDefault eid eventRow artists = do

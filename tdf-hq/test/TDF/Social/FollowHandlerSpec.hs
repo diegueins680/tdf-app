@@ -11,6 +11,7 @@ import Data.Int (Int64)
 import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
+import qualified Data.UUID as UUID
 import Database.Persist (Entity (..), get, insert, insertKey)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
@@ -34,9 +35,13 @@ import TDF.DTO.SocialEventsDTO
     , ArtistFollowerDTO (..)
     , EventDTO (..)
     , EventMetadataUpdateDTO (..)
+    , EventMomentCreateDTO (..)
+    , EventMomentDTO
     , EventUpdateDTO (..)
     , InvitationDTO (..)
     , NullableFieldUpdate (..)
+    , RsvpCreateDTO (..)
+    , RsvpDTO
     )
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.DB (Env (..))
@@ -311,36 +316,47 @@ spec = describe "social event handler helpers" $ do
             "name must not contain control characters or hidden formatting characters"
             (validateSocialEventsListFilter "name" (Just ("DJ" <> T.singleton (chr 0x202E))))
 
-    it "hides imported pilot drafts from ordinary event list and get handlers" $ do
+    it "uses canonical visibility for imported events across read and mutation routes" $ do
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
         runSqlPool initializeSocialSchema pool
         now <- getCurrentTime
-        let eventKey :: SocialEventId
-            eventKey = toSqlKey 13
+        let hiddenEventKey :: SocialEventId
+            hiddenEventKey = toSqlKey 13
+            publicEventKey :: SocialEventId
+            publicEventKey = toSqlKey 14
+            sourceRef provider externalId eventKey sourceStatus sourceUrl =
+                ExternalEventRef
+                    { externalEventRefProvider = provider
+                    , externalEventRefExternalId = externalId
+                    , externalEventRefEventId = eventKey
+                    , externalEventRefCity = "Quito"
+                    , externalEventRefCountryCode = Just "EC"
+                    , externalEventRefSourceUrl = Just sourceUrl
+                    , externalEventRefPriceCents = Nothing
+                    , externalEventRefCurrency = Just "USD"
+                    , externalEventRefLastSeenAt = now
+                    , externalEventRefMissingRuns = if sourceStatus == "missing" then 2 else 0
+                    , externalEventRefSourceStatus = sourceStatus
+                    }
         runSqlPool
             ( do
                 insertKey
-                    eventKey
-                    ( (seedSocialEvent "system:event-discovery" "Private pilot event" now)
-                        { socialEventMetadata = Just "{\"isPublic\":false}"
+                    hiddenEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Reconciled private pilot event" now)
+                        { socialEventMetadata = Just "{\"isPublic\":false,\"currency\":\"USD\"}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
                         }
                     )
-                _ <-
-                    insert
-                        ExternalEventRef
-                            { externalEventRefProvider = "ticketmaster"
-                            , externalEventRefExternalId = "pilot-private-13"
-                            , externalEventRefEventId = eventKey
-                            , externalEventRefCity = "Quito"
-                            , externalEventRefCountryCode = Just "EC"
-                            , externalEventRefSourceUrl =
-                                Just "https://tickets.example.com/private-pilot"
-                            , externalEventRefPriceCents = Nothing
-                            , externalEventRefCurrency = Just "USD"
-                            , externalEventRefLastSeenAt = now
-                            , externalEventRefMissingRuns = 0
-                            , externalEventRefSourceStatus = "draft:on_sale"
-                            }
+                insertKey
+                    publicEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Public canonical event" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true,\"currency\":\"USD\"}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
+                _ <- insert (sourceRef "ticketmaster" "pilot-private-13" hiddenEventKey "missing" "https://tickets.example.com/private-pilot")
+                _ <- insert (sourceRef "ticketmaster" "public-14" publicEventKey "on_sale" "https://tickets.example.com/public")
+                _ <- insert (sourceRef "buenplan" "draft-merge-14" publicEventKey "draft:on_sale" "https://tickets.example.com/draft-option")
                 pure ()
             )
             pool
@@ -368,10 +384,10 @@ spec = describe "social event handler helpers" $ do
                     )
                     env
         case listResult of
-            Right [] -> pure ()
+            Right [event] -> eventId event `shouldBe` Just "14"
             Right events ->
                 expectationFailure
-                    ("Expected pilot drafts to be hidden from event lists, got: " <> show events)
+                    ("Expected only the public canonical event, got: " <> show events)
             Left err ->
                 expectationFailure
                     ("Expected hidden pilot list to succeed, got: " <> show err)
@@ -388,6 +404,42 @@ spec = describe "social event handler helpers" $ do
             Right event ->
                 expectationFailure
                     ("Expected direct pilot draft access to be hidden, got: " <> show event)
+
+        publicGetResult <-
+            runHandler $
+                runReaderT
+                    (socialEventGetHandlerFor ordinaryUser "14")
+                    env
+        case publicGetResult of
+            Right event -> eventId event `shouldBe` Just "14"
+            Left err ->
+                expectationFailure
+                    ("Expected the canonical event with an active public source to remain visible, got: " <> show err)
+
+        rsvpResult <-
+            runHandler $
+                runReaderT
+                    (socialEventRsvpCreateHandlerFor ordinaryUser "13" (RsvpCreateDTO "2" "accepted"))
+                    env
+        assertHiddenEventRoute "RSVP" rsvpResult
+
+        invitationResult <-
+            runHandler $
+                runReaderT
+                    (socialEventInvitationCreateHandlerFor ordinaryUser "13" (invitationCreatePayload Nothing))
+                    env
+        assertHiddenEventRoute "invitation" invitationResult
+
+        momentResult <-
+            runHandler $
+                runReaderT
+                    ( socialEventMomentCreateHandlerFor
+                        ordinaryUser
+                        "13"
+                        (EventMomentCreateDTO Nothing Nothing "https://cdn.example.com/moment.jpg" "image" (Just 800) (Just 600) Nothing)
+                    )
+                    env
+        assertHiddenEventRoute "moment" momentResult
 
     it "rejects punctuation-only ticket buyer names before creating ticket orders" $ do
         validateTicketPurchaseBuyerName Nothing `shouldBe` Right Nothing
@@ -720,6 +772,49 @@ socialEventGetHandlerFor user =
                     :<|> _deleteEvent ->
                     getEventHandler
 
+socialEventRsvpCreateHandlerFor
+    :: AuthedUser
+    -> T.Text
+    -> RsvpCreateDTO
+    -> ReaderT Env Handler RsvpDTO
+socialEventRsvpCreateHandlerFor user =
+    case socialEventsServer user of
+        _events
+            :<|> _cities
+            :<|> _sources
+            :<|> _research
+            :<|> _venues
+            :<|> _artists
+            :<|> rsvpsServer
+            :<|> _ ->
+            case rsvpsServer of
+                _listRsvps :<|> createRsvpHandler -> createRsvpHandler
+
+socialEventMomentCreateHandlerFor
+    :: AuthedUser
+    -> T.Text
+    -> EventMomentCreateDTO
+    -> ReaderT Env Handler EventMomentDTO
+socialEventMomentCreateHandlerFor user =
+    case socialEventsServer user of
+        _events
+            :<|> _cities
+            :<|> _sources
+            :<|> _research
+            :<|> _venues
+            :<|> _artists
+            :<|> _rsvps
+            :<|> _invitations
+            :<|> momentsServer
+            :<|> _ ->
+            case momentsServer of
+                _listMoments
+                    :<|> createMomentHandler
+                    :<|> _uploadMomentImage
+                    :<|> _reactToMoment
+                    :<|> _commentOnMoment ->
+                    createMomentHandler
+
 artistGetHandlerFor
     :: AuthedUser
     -> T.Text
@@ -771,6 +866,16 @@ socialEventInvitationCreateHandlerFor user eventIdText =
                 _listInvitations :<|> createInvitationHandler :<|> _updateInvitation ->
                     createInvitationHandler
 
+assertHiddenEventRoute :: Show a => String -> Either ServerError a -> Expectation
+assertHiddenEventRoute label result =
+    case result of
+        Left err -> do
+            errHTTPCode err `shouldBe` 404
+            BL8.unpack (errBody err) `shouldContain` "Event not found"
+        Right value ->
+            expectationFailure
+                ("Expected hidden event " <> label <> " route to return 404, got: " <> show value)
+
 socialEventUser :: Int64 -> AuthedUser
 socialEventUser partyId =
     AuthedUser
@@ -786,6 +891,12 @@ socialEventStartFixture =
 socialEventEndFixture :: UTCTime
 socialEventEndFixture =
     UTCTime (fromGregorian 2026 1 1) (secondsToDiffTime 3600)
+
+socialEventWorkflowStateFixtureId :: UUID.UUID
+socialEventWorkflowStateFixtureId =
+    case UUID.fromString "00000000-0000-4000-8000-000000000233" of
+        Just workflowStateId -> workflowStateId
+        Nothing -> error "Invalid social-event workflow-state fixture UUID"
 
 seedSocialEvent :: T.Text -> T.Text -> UTCTime -> SocialEvent
 seedSocialEvent owner title now =
@@ -960,6 +1071,24 @@ initializeSocialSchema = do
         \\"created_at\" TIMESTAMP NOT NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL\
         \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"workflow_definition\" (\"id\" VARCHAR PRIMARY KEY,\"code\" VARCHAR NOT NULL UNIQUE,\"active\" BOOLEAN NOT NULL)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"workflow_state\" (\"id\" VARCHAR PRIMARY KEY,\"workflow_id\" VARCHAR NOT NULL,\"code\" VARCHAR NOT NULL,\"name_es\" VARCHAR NOT NULL,\"name_en\" VARCHAR NOT NULL,\"active\" BOOLEAN NOT NULL)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"workflow_state_capability\" (\"state_id\" VARCHAR NOT NULL,\"capability_code\" VARCHAR NOT NULL,\"enabled\" BOOLEAN NOT NULL,PRIMARY KEY (\"state_id\",\"capability_code\"))"
+        []
+    rawExecute
+        "INSERT INTO \"workflow_definition\" (\"id\",\"code\",\"active\") VALUES ('00000000-0000-4000-8000-000000000104','social-event-lifecycle',1)"
+        []
+    rawExecute
+        "INSERT INTO \"workflow_state\" (\"id\",\"workflow_id\",\"code\",\"name_es\",\"name_en\",\"active\") VALUES ('00000000-0000-4000-8000-000000000233','00000000-0000-4000-8000-000000000104','on_sale','En venta','On sale',1)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"event_discovery_source\" (\"id\" INTEGER PRIMARY KEY,\"source_key\" VARCHAR NOT NULL,\"name\" VARCHAR NOT NULL,\"source_type\" VARCHAR NOT NULL,\"feed_url\" VARCHAR NULL,\"city_id\" INTEGER NULL,\"enabled\" BOOLEAN NOT NULL DEFAULT 1,\"priority\" INTEGER NOT NULL DEFAULT 100,\"configuration\" VARCHAR NULL,\"etag\" VARCHAR NULL,\"last_modified\" VARCHAR NULL,\"consecutive_failures\" INTEGER NOT NULL DEFAULT 0,\"last_success_at\" TIMESTAMP NULL,\"last_error\" VARCHAR NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL,UNIQUE (\"source_key\"))"
         []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"external_event_ref\" (\
