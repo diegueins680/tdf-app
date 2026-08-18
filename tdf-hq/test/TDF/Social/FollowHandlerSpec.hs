@@ -42,6 +42,7 @@ import TDF.DTO.SocialEventsDTO
     , NullableFieldUpdate (..)
     , RefundDTO (..)
     , RefundRequestDTO (..)
+    , RejectionReasonDTO (..)
     , RsvpCreateDTO (..)
     , RsvpDTO
     , StripePaymentIntentDTO
@@ -53,7 +54,7 @@ import TDF.DTO.SocialEventsDTO
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import qualified TDF.Config as Config
 import TDF.DB (Env (..))
-import TDF.Models (Party (..), RoleEnum (Fan))
+import TDF.Models (Party (..), RoleEnum (Admin, Fan))
 import TDF.Models.SocialEventsModels
 import TDF.Server.SocialEventsHandlers
     ( decodeStoredPromoCodeTierIds
@@ -700,6 +701,7 @@ spec = describe "social event handler helpers" $ do
         let ( stripeHandler
                 , createRefundHandler
                 , listRefundsHandler
+                , rejectRefundHandler
                 , acceptTransferHandler
                 , cancelTransferHandler
                 ) =
@@ -709,13 +711,18 @@ spec = describe "social event handler helpers" $ do
                 runReaderT
                     (createRefundHandler "13" "51" (RefundRequestDTO (Just "Provider cancellation") Nothing))
                     env
-        case refundResult of
+        createdRefundId <- case refundResult of
             Right refund -> do
                 refundOrderId refund `shouldBe` "51"
                 refundStatus refund `shouldBe` "pending"
+                maybe
+                    (expectationFailure "Expected created refund ID" >> pure "")
+                    pure
+                    (refundId refund)
             Left err ->
                 expectationFailure
                     ("Expected the hidden-event buyer to retain refund access, got: " <> show err)
+                    >> pure ""
 
         refundListResult <-
             runHandler $
@@ -731,7 +738,7 @@ spec = describe "social event handler helpers" $ do
                 expectationFailure
                     ("Expected the hidden-event buyer to list refunds, got: " <> show err)
 
-        let (_, otherBuyerCreateRefund, otherBuyerListRefunds, _, _) =
+        let (_, otherBuyerCreateRefund, otherBuyerListRefunds, _, _, _) =
                 socialEventIndirectTicketHandlersFor (socialEventUser 3)
         unauthorizedRefundResult <-
             runHandler $
@@ -817,6 +824,46 @@ spec = describe "social event handler helpers" $ do
                     env
         assertHiddenEventRoute "transfer cancellation" cancelTransferResult
 
+        ownerRejectResult <-
+            runHandler $
+                runReaderT
+                    ( rejectRefundHandler
+                        "13"
+                        createdRefundId
+                        (RejectionReasonDTO "Buyer cannot moderate refunds")
+                    )
+                    env
+        assertHiddenEventRoute "buyer refund rejection" ownerRejectResult
+
+        let (_, _, adminListRefundsHandler, adminRejectRefundHandler, _, _) =
+                socialEventIndirectTicketHandlersFor (strictAdminSocialEventUser 1)
+        adminListResult <-
+            runHandler $
+                runReaderT (adminListRefundsHandler "13") env
+        case adminListResult of
+            Right [refund] -> refundId refund `shouldBe` Just createdRefundId
+            Right refunds ->
+                expectationFailure
+                    ("Expected strict admin to list hidden-event refund, got: " <> show refunds)
+            Left err ->
+                expectationFailure
+                    ("Expected strict admin to list hidden-event refund, got: " <> show err)
+        adminRejectResult <-
+            runHandler $
+                runReaderT
+                    ( adminRejectRefundHandler
+                        "13"
+                        createdRefundId
+                        (RejectionReasonDTO "Imported provider cancellation")
+                    )
+                    env
+        case adminRejectResult of
+            Right refund -> do
+                refundStatus refund `shouldBe` "rejected"
+                refundRejectionReason refund `shouldBe` Just "Imported provider cancellation"
+            Left err ->
+                expectationFailure
+                    ("Expected strict admin to process hidden-event refund, got: " <> show err)
         (transferAfter, ticketAfter) <-
             runSqlPool
                 ((,) <$> get hiddenTransferKey <*> get hiddenTicketKey)
@@ -1203,6 +1250,7 @@ socialEventIndirectTicketHandlersFor
     -> ( TicketPurchaseWithPromoDTO -> ReaderT Env Handler StripePaymentIntentDTO
        , T.Text -> T.Text -> RefundRequestDTO -> ReaderT Env Handler RefundDTO
        , T.Text -> ReaderT Env Handler [RefundDTO]
+       , T.Text -> T.Text -> RejectionReasonDTO -> ReaderT Env Handler RefundDTO
        , T.Text -> ReaderT Env Handler TicketDTO
        , T.Text -> ReaderT Env Handler TicketTransferDTO
        )
@@ -1237,7 +1285,7 @@ socialEventIndirectTicketHandlersFor user =
                     :<|> createRefundRequestHandler
                     :<|> listRefundsHandler
                     :<|> _approveRefund
-                    :<|> _rejectRefund
+                    :<|> rejectRefundHandler
                     :<|> _createTransfer
                     :<|> _listTransfers
                     :<|> acceptTransferHandler
@@ -1246,6 +1294,7 @@ socialEventIndirectTicketHandlersFor user =
                         ( createStripePaymentIntentHandler
                         , createRefundRequestHandler
                         , listRefundsHandler
+                        , rejectRefundHandler
                         , acceptTransferHandler
                         , cancelTransferHandler
                         )
@@ -1317,6 +1366,14 @@ socialEventUser partyId =
         { auPartyId = toSqlKey partyId
         , auRoles = [Fan]
         , auModules = modulesForRoles [Fan]
+        }
+
+strictAdminSocialEventUser :: Int64 -> AuthedUser
+strictAdminSocialEventUser partyId =
+    AuthedUser
+        { auPartyId = toSqlKey partyId
+        , auRoles = [Admin]
+        , auModules = modulesForRoles [Admin]
         }
 
 socialEventStartFixture :: UTCTime
