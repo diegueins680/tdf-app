@@ -88,6 +88,9 @@ module TDF.Server.SocialEventsHandlers (
     parseStripeWebhookEventEnvelope,
     verifyAndDecodeStripeWebhook,
     parseStripeWebhookPaymentIntentId,
+    StripeTicketPaymentEvidence (..),
+    parseStripeTicketPaymentEvidence,
+    validateStripeTicketPaymentEvidence,
     parseStripeWebhookMarketplaceOrderId,
     canRecoverMarketplaceStripeOrder,
     parseCheckoutSessionCourseSubscription,
@@ -327,6 +330,80 @@ parseStripeWebhookPaymentIntentId =
             paymentIntentObject <- dataObject Aeson..: "object" :: Parser Object
             paymentIntentObject Aeson..: "id"
 
+data StripeTicketPaymentEvidence = StripeTicketPaymentEvidence
+    { stpePaymentIntentId :: T.Text
+    , stpeStatus :: T.Text
+    , stpeAmountReceived :: Int
+    , stpeCurrency :: T.Text
+    , stpeOrderId :: T.Text
+    , stpeEventId :: T.Text
+    }
+    deriving (Eq, Show)
+
+-- | Decode the immutable ticket binding from the signed PaymentIntent event.
+-- Stripe stores the JSON snapshot in @metadata.tdf_context@. A succeeded event
+-- without every field is not enough evidence to issue tickets.
+parseStripeTicketPaymentEvidence :: Aeson.Value -> Either T.Text StripeTicketPaymentEvidence
+parseStripeTicketPaymentEvidence payload = do
+    (paymentIntentId, status, amountReceived, currency, contextJson) <-
+        maybe (Left "Stripe ticket payment evidence is incomplete") Right $
+            parseMaybe
+                ( Aeson.withObject "event" $ \eventObject -> do
+                    dataObject <- eventObject Aeson..: "data" :: Parser Object
+                    paymentIntentObject <- dataObject Aeson..: "object" :: Parser Object
+                    (,,,,)
+                        <$> paymentIntentObject Aeson..: "id"
+                        <*> paymentIntentObject Aeson..: "status"
+                        <*> paymentIntentObject Aeson..: "amount_received"
+                        <*> paymentIntentObject Aeson..: "currency"
+                        <*> (paymentIntentObject Aeson..: "metadata" >>= (Aeson..: "tdf_context"))
+                )
+                payload
+    contextValue <-
+        maybe (Left "Stripe ticket payment context is invalid") Right $
+            Aeson.decodeStrict' (TE.encodeUtf8 contextJson)
+    (orderId, eventId) <-
+        maybe (Left "Stripe ticket payment context is incomplete") Right $
+            parseMaybe
+                ( Aeson.withObject "ticket_payment_context" $ \contextObject ->
+                    (,)
+                        <$> contextObject Aeson..: "order_id"
+                        <*> contextObject Aeson..: "event_id"
+                )
+                contextValue
+    pure
+        StripeTicketPaymentEvidence
+            { stpePaymentIntentId = paymentIntentId
+            , stpeStatus = T.toLower (T.strip status)
+            , stpeAmountReceived = amountReceived
+            , stpeCurrency = T.toUpper (T.strip currency)
+            , stpeOrderId = T.strip orderId
+            , stpeEventId = T.strip eventId
+            }
+
+validateStripeTicketPaymentEvidence ::
+    T.Text ->
+    T.Text ->
+    T.Text ->
+    Int ->
+    T.Text ->
+    StripeTicketPaymentEvidence ->
+    Either T.Text ()
+validateStripeTicketPaymentEvidence expectedOrderId expectedEventId expectedPaymentIntentId expectedAmount expectedCurrency evidence
+    | stpeStatus evidence /= "succeeded" =
+        Left "Stripe ticket PaymentIntent is not succeeded"
+    | stpePaymentIntentId evidence /= expectedPaymentIntentId =
+        Left "Stripe ticket PaymentIntent does not match the stored order"
+    | stpeOrderId evidence /= expectedOrderId =
+        Left "Stripe ticket order metadata does not match the stored order"
+    | stpeEventId evidence /= expectedEventId =
+        Left "Stripe ticket event metadata does not match the stored event"
+    | stpeAmountReceived evidence /= expectedAmount =
+        Left "Stripe ticket amount does not match the immutable order total"
+    | stpeCurrency evidence /= T.toUpper (T.strip expectedCurrency) =
+        Left "Stripe ticket currency does not match the immutable order currency"
+    | otherwise = Right ()
+
 parseStripeWebhookMarketplaceOrderId :: Aeson.Value -> Maybe T.Text
 parseStripeWebhookMarketplaceOrderId payload = do
     contextJson <-
@@ -544,6 +621,16 @@ handleStripePaymentIntentSucceeded now payload =
                     piId
                     (parseStripeWebhookMarketplaceOrderId payload)
             Just (Entity orderKey order) -> do
+                paymentEvidence <-
+                    eitherStripeWebhookError (parseStripeTicketPaymentEvidence payload)
+                eitherStripeWebhookError $
+                    validateStripeTicketPaymentEvidence
+                        (renderKeyText orderKey)
+                        (renderKeyText (eventTicketOrderEventId order))
+                        piId
+                        (eventTicketOrderAmountCents order)
+                        (eventTicketOrderCurrency order)
+                        paymentEvidence
                 (statusChanged, ticketCodes) <-
                     liftIO $
                         runSqlPool
@@ -3817,6 +3904,12 @@ socialEventsServer user =
                 (validateStoredTicketOrderStatus (Just (eventTicketOrderStatus order)))
         when (oldStatus `elem` ["cancelled", "refunded"] && newStatus == "paid") $
             throwError err400{errBody = "Closed orders cannot be moved back to paid"}
+        when (oldStatus /= "paid" && newStatus == "paid") $
+            throwError
+                err409
+                    { errBody =
+                        "Ticket payment can only be confirmed by verified provider processing"
+                    }
         let buyerOwnPendingCancellation =
                 eventTicketOrderBuyerPartyId order == Just currentPartyId
                     && oldStatus == "pending"
@@ -6634,15 +6727,21 @@ ticketOrderInventoryAdjustment quantity oldStatus newStatus =
             Just "paid" -> quantity
             _ -> 0
 
-{- | Buyers can directly issue only tiers whose persisted price is exactly
-zero. Event managers retain manual paid issuance for box-office workflows.
+{- | Direct issuance is limited to tiers whose authoritative price is exactly
+zero. A manager is not payment evidence: priced tickets must use a verified
+provider checkout or a separately implemented dual-controlled manual-payment
+workflow.
 -}
 validateDirectTicketOrderPricing :: Bool -> Int -> Either ServerError ()
-validateDirectTicketOrderPricing isManager authoritativeTierPriceCents
+validateDirectTicketOrderPricing _ authoritativeTierPriceCents
     | authoritativeTierPriceCents < 0 =
         Left err500{errBody = "Stored ticket tier price is invalid"}
-    | not isManager && authoritativeTierPriceCents > 0 =
-        Left err403{errBody = "Paid ticket tiers must be purchased through Stripe"}
+    | authoritativeTierPriceCents > 0 =
+        Left
+            err409
+                { errBody =
+                    "Priced ticket orders require a server-verified checkout"
+                }
     | otherwise = Right ()
 
 validateTicketPurchaseEventEligibility :: Maybe T.Text -> Bool -> Either ServerError ()

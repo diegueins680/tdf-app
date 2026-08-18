@@ -8164,7 +8164,7 @@
       "reviewed": true
     },
     {
-      "id": "63736faef843a8d30bc9",
+      "id": "74d655c8b11863c1b891",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -8301,6 +8301,86 @@
       "priority": "P3-retain",
       "risk": "Editable settlement states could bypass independent review, reconciliation, or immutable evidence rules.",
       "justification": "Rental deposit settlement statuses are the exhaustive dual-control state machine enforced by database triggers and typed server validation.",
+      "reviewed": true
+    },
+    {
+      "id": "c0b15ba801b39d727d28",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unknown course payment state could falsely confirm enrollment or obscure a refund, dispute, or chargeback.",
+      "justification": "The OpenAPI values mirror the exhaustive course payment-evidence protocol enforced by the backend and database; amounts, products, and provider capabilities remain persisted configuration.",
+      "reviewed": true
+    },
+    {
+      "id": "3c06fde6238c5e490724",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unknown course fulfillment state could issue an enrollment without a valid seat hold or verified payment gate.",
+      "justification": "The OpenAPI values mirror the closed course fulfillment state machine; cohort capacity, products, schedules, and active enrollment policies remain database-managed.",
+      "reviewed": true
+    },
+    {
+      "id": "05af1b5d2c8239cd665a",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unknown collection mode could bypass the full-payment or deposit accounting algorithms.",
+      "justification": "Full and deposit are the currently implemented collection algorithms; each cohort's amount, percentage, installments, and enabled method remain versioned database policy.",
+      "reviewed": true
+    },
+    {
+      "id": "a9c4286c1f55cfeeba40",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Unknown course-policy lifecycle states could activate commercial terms that have not passed approval.",
+      "justification": "Policy lifecycle values are the closed approval protocol; course prices, seat holds, refund terms, deposit settings, and active versions remain database-managed.",
+      "reviewed": true
+    },
+    {
+      "id": "9a73ba48bf9417a6838a",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Editable course fulfillment states could bypass atomic capacity, transfer, cancellation, or terminal-state guards.",
+      "justification": "Course fulfillment states are the exhaustive transition protocol enforced by Haskell and PostgreSQL; cohort capacity, schedules, and policies remain persisted business data.",
+      "reviewed": true
+    },
+    {
+      "id": "94facbb6055554cd4f17",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unknown course payment state could falsely enroll a customer or lose refund and dispute evidence.",
+      "justification": "Course payment states form the exhaustive financial evidence protocol; immutable amounts, provider references, products, and capabilities remain persisted and audited.",
+      "reviewed": true
+    },
+    {
+      "id": "9889e8ccbb9910642729",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unknown balance state could misstate a student's remaining liability or settlement evidence.",
+      "justification": "Balance states form the exhaustive course accounting protocol; balance amounts, due dates, collection methods, and waiver evidence remain immutable persisted records.",
+      "reviewed": true
+    },
+    {
+      "id": "611cd4ca2cbad146577d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Unknown audit actor types would make course enrollment and payment transition provenance ambiguous.",
+      "justification": "Actor types are the closed course audit-event protocol; actor identities, permissions, provider evidence, and customer lookup records remain persisted and role-checked.",
       "reviewed": true
     }
   ]

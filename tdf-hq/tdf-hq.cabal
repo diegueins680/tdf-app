@@ -56,6 +56,7 @@ executable tdf-hq-exe
     TDF.CampaignAutomation
     TDF.Commerce.CheckoutStore
     TDF.Commerce.CourseCheckout
+    TDF.Commerce.EventTickets
     TDF.Commerce.MarketplaceSales
     TDF.Commerce.MarketplaceRentals
     TDF.Commerce.MarketplaceOperations
@@ -273,6 +274,7 @@ test-suite tdf-hq-test
     TDF.CampaignAutomation
     TDF.Commerce.CheckoutStore
     TDF.Commerce.CourseCheckout
+    TDF.Commerce.EventTickets
     TDF.Commerce.MarketplaceSales
     TDF.Commerce.MarketplaceRentals
     TDF.Commerce.MarketplaceOperations

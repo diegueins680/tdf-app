@@ -1,6 +1,6 @@
 # Revenue platform implementation status
 
-Date: 2026-08-14
+Date: 2026-08-18
 
 Branch: `feat/unified-revenue-platform-20260813`
 
@@ -113,6 +113,15 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   payout approval requires separation of duties.
 - The historical Domo browser formula is preserved as an inactive, reviewable server rate version.
   The public page no longer presents its local arithmetic as an authoritative quote or deposit.
+- Public course registration now creates an atomic 15-minute seat hold and one canonical checkout
+  from an approved active immutable policy. Datafast and PayPal actions use the shared attempt,
+  binding, verification, receipt, ledger, and secure guest-lookup contracts. A registration becomes
+  enrolled only after verified payment; checkout creation and browser return remain unpaid.
+- Priced event tickets can no longer be issued through the manager direct-order shortcut or generic
+  status update. The signed Stripe webhook now also requires matching succeeded status, amount,
+  currency, ticket order, event, and stored PaymentIntent evidence before issuing QR tickets. The
+  provider-neutral ticket price/fee and fulfillment state machine is specified and property-tested;
+  its public checkout runtime remains the next gated implementation step.
 - Fourteen bilingual distribution-product benchmark rows cover single/EP/album, catalog management,
   a non-renewing monthly domain product, and add-ons. They are inactive; an independent market and
   margin review is required before activation.
@@ -166,13 +175,13 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
 
 The following requested domains remain future phases and must not be represented as complete:
 
-- Wiring the canonical checkout aggregate into courses, Domo accepted quotes, public tickets, tips,
+- Wiring the canonical checkout aggregate into Domo accepted quotes, public tickets, tips,
   memberships, provider services, and verified donations.
 - Marketplace carrier integrations, approved-return shipping, and sale/provider refund execution;
   payable rental extensions, automated late-fee charging, and non-zero-deposit provider refund
   execution; booking balance collection,
   refunds, rescheduling/no-show/overtime operator APIs and notifications;
-  atomic course seats; and guest ticket issuance through Datafast/PayPal.
+  guest ticket issuance through Datafast/PayPal.
 - Mixing/mastering private object-store multipart upload, malware scanning, engineer workflow,
   deliverable version history, revision billing, notifications, and non-PayPal refund adapters.
 - Public event detail/storefront, distribution onboarding/release wizard, staff QC consoles,

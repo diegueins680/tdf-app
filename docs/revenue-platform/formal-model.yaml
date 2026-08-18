@@ -115,6 +115,26 @@ state_machines:
       - failed provider attempts expire and release allocations at the original hold deadline
       - payment first verified after allocation expiry creates a reconciliation exception and cannot silently reconfirm fulfillment
       - balance due completion no show overtime cancellation and dispute remain explicit fulfillment states
+  event_ticket_fulfillment:
+    initial: seat_held
+    transitions:
+      seat_held: [issued, cancelled, expired]
+      issued: [transfer_requested, checked_in, cancelled, refunded]
+      transfer_requested: [issued, transferred, cancelled]
+      transferred: [transfer_requested, checked_in, refunded]
+      checked_in: []
+      cancelled: []
+      refunded: []
+      expired: []
+    invariants:
+      - quantity unit price promotion buyer fee organizer fee tax currency and terms are server calculated and immutable per order
+      - buyer and organizer fee allocations are distinct and organizer payable never exceeds net face value
+      - a manager identity browser return or provider resource id is not payment evidence
+      - seat_held to issued requires verified payment or an explicit zero-price entitlement
+      - verified payment never implies issuance transfer check-in attendance organizer settlement or payout
+      - provider succeeded status amount currency merchant order event environment and resource match immutable bindings
+      - active seat holds cannot exceed tier or event capacity and expiration releases inventory exactly once
+      - QR material is created only for issued tickets and remains customer scoped
   quote:
     initial: draft
     transitions:
@@ -219,6 +239,9 @@ idempotency:
     - service_booking(booking_id, checkout_client_request_key)
     - service_booking_policy(service_offering_id, policy_version)
     - service_booking_active_range(resource_id, utc_time_range)
+    - event_ticket_order(event_id, client_request_key)
+    - event_ticket_policy(event_id, policy_version)
+    - event_ticket_hold(tier_id, order_id, expires_at)
     - provider_order(provider, merchant_account, provider_order_id)
     - provider_resource(provider, merchant_account, provider_resource_id)
     - provider_event(provider, merchant_account, provider_event_id)

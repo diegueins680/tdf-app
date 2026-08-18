@@ -102,6 +102,7 @@ import TDF.CampaignAutomation
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
 import qualified TDF.Commerce.CheckoutStore as CheckoutStore
 import qualified TDF.Commerce.CourseCheckout as CourseCheckout
+import qualified TDF.Commerce.EventTickets as EventTickets
 import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
 import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
 import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
@@ -405,6 +406,9 @@ import TDF.Server.SocialEventsHandlers (
     parseStripeRefundResponse,
     parseStripeWebhookEventEnvelope,
     verifyAndDecodeStripeWebhook,
+    StripeTicketPaymentEvidence (..),
+    parseStripeTicketPaymentEvidence,
+    validateStripeTicketPaymentEvidence,
     parseStripeWebhookMarketplaceOrderId,
     parseStripeWebhookPaymentIntentId,
     canRecoverMarketplaceStripeOrder,
@@ -1443,6 +1447,69 @@ main = hspec $ do
                   , CourseCheckout.EnrollmentExpired
                   ]
 
+    describe "event ticket pricing and fulfillment invariants" $ do
+        it "snapshots buyer and organizer fee allocations in integer minor units" $ do
+            EventTickets.calculateTicketPrice 2500 2 0 200 200 0
+              `shouldBe` Right EventTickets.TicketPriceBreakdown
+                { EventTickets.tpbGrossFaceValueMinor = 5000
+                , EventTickets.tpbDiscountMinor = 0
+                , EventTickets.tpbNetFaceValueMinor = 5000
+                , EventTickets.tpbBuyerFeeMinor = 100
+                , EventTickets.tpbOrganizerFeeMinor = 100
+                , EventTickets.tpbTaxMinor = 0
+                , EventTickets.tpbCheckoutTotalMinor = 5100
+                , EventTickets.tpbOrganizerPayableMinor = 4900
+                , EventTickets.tpbPlatformFeeMinor = 200
+                }
+
+        it "rejects quantity, discount, fee, tax, and overflow tampering" $ do
+            EventTickets.calculateTicketPrice 2500 0 0 200 200 0 `shouldSatisfy` isLeft
+            EventTickets.calculateTicketPrice 2500 101 0 200 200 0 `shouldSatisfy` isLeft
+            EventTickets.calculateTicketPrice 2500 1 2501 200 200 0 `shouldSatisfy` isLeft
+            EventTickets.calculateTicketPrice 2500 1 0 10001 200 0 `shouldSatisfy` isLeft
+            EventTickets.calculateTicketPrice maxBound 2 0 200 200 0 `shouldSatisfy` isLeft
+
+        it "cannot issue a held ticket from an unverified browser or provider return" $ do
+            EventTickets.validateTicketFulfillmentTransition
+              EventTickets.TicketPaymentPending
+              EventTickets.TicketSeatHeld
+              EventTickets.TicketIssued
+              `shouldSatisfy` isLeft
+            EventTickets.validateTicketFulfillmentTransition
+              EventTickets.TicketPaymentVerified
+              EventTickets.TicketSeatHeld
+              EventTickets.TicketIssued
+              `shouldBe` Right ()
+            EventTickets.validateTicketFulfillmentTransition
+              EventTickets.TicketPaymentVerified
+              EventTickets.TicketSeatHeld
+              EventTickets.TicketCheckedIn
+              `shouldSatisfy` isLeft
+
+        it "keeps checked-in, refunded, cancelled, and expired tickets terminal" $
+            QC.property $ \(QC.NonNegative rawState) ->
+              let states =
+                    [ EventTickets.TicketSeatHeld
+                    , EventTickets.TicketIssued
+                    , EventTickets.TicketTransferRequested
+                    , EventTickets.TicketTransferred
+                    , EventTickets.TicketCheckedIn
+                    , EventTickets.TicketCancelled
+                    , EventTickets.TicketRefunded
+                    , EventTickets.TicketExpired
+                    ]
+                  candidate = states !! (rawState `mod` length states)
+                  closed terminal = candidate == terminal
+                    || isLeft
+                        (EventTickets.validateTicketFulfillmentTransition
+                          EventTickets.TicketPaymentVerified terminal candidate)
+              in all closed
+                  [ EventTickets.TicketCheckedIn
+                  , EventTickets.TicketCancelled
+                  , EventTickets.TicketRefunded
+                  , EventTickets.TicketExpired
+                  ]
+
     describe "provider-neutral checkout state machine" $ do
         let verifiedPayment = Commerce.PaymentVerification
                 { Commerce.pvCheckoutEnvironment = Commerce.ProviderProduction
@@ -1975,6 +2042,26 @@ main = hspec $ do
                     Nothing
             lookup "Idempotency-Key" (HTTP.requestHeaders request) `shouldBe` Nothing
 
+        it "binds mobile customer PaymentIntents to the same nested ticket context" $ do
+            request <-
+                Stripe.buildPaymentIntentForCustomerRequest
+                    (stripeTestConfig "whsec_test")
+                    (Just "ticket-order-party_123-request_123")
+                    "cus_123"
+                    5100
+                    "USD"
+                    "Tickets for event 12"
+                    (Just "{\"order_id\":\"41\",\"event_id\":\"12\"}")
+            lookup "Idempotency-Key" (HTTP.requestHeaders request)
+                `shouldBe` Just "ticket-order-party_123-request_123"
+            case HTTP.requestBody request of
+                HTTP.RequestBodyBS body -> do
+                    body `shouldSatisfy` BS.isInfixOf "customer=cus_123"
+                    body `shouldSatisfy` BS.isInfixOf "metadata[tdf_context]="
+                    body `shouldSatisfy` BS.isInfixOf "%22order_id%22%3a%2241%22"
+                    body `shouldNotSatisfy` BS.isInfixOf "&metadata="
+                _ -> expectationFailure "Expected a strict customer PaymentIntent form body"
+
         it "rejects unsafe idempotency keys before allocating an HTTP manager" $ do
             Stripe.createPaymentIntentWithIdempotencyKey
                 (stripeTestConfig "whsec_test")
@@ -2301,6 +2388,51 @@ main = hspec $ do
                 `shouldBe` Right ("evt_123", "payment_intent.succeeded")
             parseStripeWebhookPaymentIntentId webhookPayload
                 `shouldBe` Just "pi_123"
+
+        it "requires complete immutable ticket evidence before a signed webhook can issue tickets" $ do
+            let ticketPayload amount currency orderId eventId status =
+                    A.object
+                        [ "data"
+                            .= A.object
+                                [ "object"
+                                    .= A.object
+                                        [ "id" .= ("pi_ticket_123" :: Text)
+                                        , "status" .= (status :: Text)
+                                        , "amount_received" .= (amount :: Int)
+                                        , "currency" .= (currency :: Text)
+                                        , "metadata"
+                                            .= A.object
+                                                [ "tdf_context"
+                                                    .= ( TE.decodeUtf8 . BL.toStrict . A.encode $
+                                                            A.object
+                                                                [ "order_id" .= (orderId :: Text)
+                                                                , "event_id" .= (eventId :: Text)
+                                                                ]
+                                                       )
+                                                ]
+                                        ]
+                                ]
+                        ]
+                expectedEvidence =
+                    StripeTicketPaymentEvidence
+                        { stpePaymentIntentId = "pi_ticket_123"
+                        , stpeStatus = "succeeded"
+                        , stpeAmountReceived = 5100
+                        , stpeCurrency = "USD"
+                        , stpeOrderId = "41"
+                        , stpeEventId = "12"
+                        }
+                validPayload = ticketPayload 5100 "usd" "41" "12" "succeeded"
+            parseStripeTicketPaymentEvidence validPayload `shouldBe` Right expectedEvidence
+            validateStripeTicketPaymentEvidence "41" "12" "pi_ticket_123" 5100 "USD" expectedEvidence
+                `shouldBe` Right ()
+            validateStripeTicketPaymentEvidence "41" "12" "pi_ticket_123" 5000 "USD" expectedEvidence
+                `shouldBe` Left "Stripe ticket amount does not match the immutable order total"
+            validateStripeTicketPaymentEvidence "41" "99" "pi_ticket_123" 5100 "USD" expectedEvidence
+                `shouldBe` Left "Stripe ticket event metadata does not match the stored event"
+            parseStripeTicketPaymentEvidence
+                (A.object ["data" .= A.object ["object" .= A.object ["id" .= ("pi_ticket_123" :: Text)] ]])
+                `shouldBe` Left "Stripe ticket payment evidence is incomplete"
 
         it "recovers marketplace order ids from Stripe metadata context" $ do
             let webhookPayload =
@@ -10601,19 +10733,21 @@ main = hspec $ do
             ticketOrderInventoryAdjustment 2 "paid" "paid" `shouldBe` 0
 
     describe "direct ticket order pricing policy" $ do
-        it "allows buyers to claim free tiers and managers to issue paid tiers" $ do
+        it "allows only zero-priced direct issuance" $ do
             case validateDirectTicketOrderPricing False 0 of
                 Right () -> pure ()
                 Left err -> expectationFailure ("Expected free tier to be allowed: " <> show err)
             case validateDirectTicketOrderPricing True 2500 of
-                Right () -> pure ()
-                Left err -> expectationFailure ("Expected manager issuance to be allowed: " <> show err)
+                Left err -> do
+                    errHTTPCode err `shouldBe` 409
+                    BL.unpack (errBody err) `shouldContain` "server-verified checkout"
+                Right () -> expectationFailure "Expected manager identity not to count as payment evidence"
 
-        it "requires non-managers to buy paid tiers through Stripe" $
+        it "requires all priced direct orders to use a verified checkout" $
             case validateDirectTicketOrderPricing False 1 of
                 Left err -> do
-                    errHTTPCode err `shouldBe` 403
-                    BL.unpack (errBody err) `shouldContain` "must be purchased through Stripe"
+                    errHTTPCode err `shouldBe` 409
+                    BL.unpack (errBody err) `shouldContain` "server-verified checkout"
                 Right () -> expectationFailure "Expected direct paid issuance to be rejected"
 
     describe "ticket purchase event eligibility" $ do
