@@ -29,7 +29,10 @@ jest.unstable_mockModule('../api/directory', () => ({
     addFavorite: jest.fn(async () => undefined),
   },
 }));
-jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () => ({ session: null }) }));
+jest.unstable_mockModule('../session/SessionContext', () => ({
+  getStoredSessionToken: () => null,
+  useSession: () => ({ session: null }),
+}));
 jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: jest.fn() }));
 jest.unstable_mockModule('../components/directory/OpenStreetMapResults', () => ({ default: () => <div>Mapa OSM aproximado</div> }));
 jest.unstable_mockModule('../analytics/posthog', () => ({ getAnalyticsClient: () => ({ capture: jest.fn() }) }));
