@@ -50,6 +50,21 @@ test('backend image packages the tested artifact instead of recompiling Haskell'
   assert.doesNotMatch(runtimeDockerfile, /stack (?:--[^\n]+ )?build/);
 });
 
+test('backend image receives deterministic, non-empty release metadata', async () => {
+  const workflow = await source('.github/workflows/build.yml');
+  assert.match(workflow, /id: image-metadata/);
+  assert.match(workflow, /git show -s --format=%ct "\$GITHUB_SHA"/);
+  assert.match(workflow, /new Date\(Number\(process\.argv\[1\]\) \* 1000\)\.toISOString\(\)/);
+  assert.match(workflow, /BUILD_TIME=\$\{\{ steps\.image-metadata\.outputs\.build_time \}\}/);
+  assert.doesNotMatch(workflow, /github\.event\.head_commit\.timestamp|github\.run_started_at/);
+
+  const runtimeDockerfile = await source('tdf-hq/Dockerfile.runtime');
+  assert.match(runtimeDockerfile, /ARG SOURCE_COMMIT\nARG BUILD_TIME\n/);
+  assert.match(runtimeDockerfile, /grep -Eq '\^\[0-9a-f\]\{40\}\$'/);
+  assert.match(runtimeDockerfile, /grep -Eq '\^\[0-9\]\{4\}.*T.*Z\$'/);
+  assert.doesNotMatch(runtimeDockerfile, /ARG SOURCE_COMMIT=(?:dev|unknown)|ARG BUILD_TIME=(?:dev|unknown)/);
+});
+
 test('source Dockerfile introduces changing release metadata after compilation', async () => {
   const dockerfile = await source('tdf-hq/Dockerfile');
   const builder = dockerfile.slice(0, dockerfile.indexOf('FROM debian:bookworm-slim'));

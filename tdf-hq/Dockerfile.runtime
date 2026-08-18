@@ -22,9 +22,12 @@ RUN chmod 0755 /app/tdf-hq-exe && \
     ! grep -q 'not found' /tmp/tdf-hq-ldd.txt
 
 # Keep volatile release metadata after the reusable runtime and binary layers.
-ARG SOURCE_COMMIT=dev
-ARG BUILD_TIME=unknown
-RUN printf '%s\n' "$SOURCE_COMMIT" > /app/COMMIT && \
+ARG SOURCE_COMMIT
+ARG BUILD_TIME
+RUN set -eu; \
+    printf '%s' "$SOURCE_COMMIT" | grep -Eq '^[0-9a-f]{40}$'; \
+    printf '%s' "$BUILD_TIME" | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'; \
+    printf '%s\n' "$SOURCE_COMMIT" > /app/COMMIT; \
     printf '%s\n' "$BUILD_TIME" > /app/BUILD_TIME
 
 ENV SOURCE_COMMIT=${SOURCE_COMMIT}
