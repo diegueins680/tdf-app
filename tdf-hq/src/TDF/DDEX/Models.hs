@@ -233,6 +233,7 @@ DdexExport
 DdexPartner
   name Text
   dpid Text Maybe
+  allowedVersions [Text] sql=allowed_versions sqltype=text[] default='{"4.3.2"}' MigrationOnly
   rulesJson Text Maybe  -- JSONB
   namingConvention Text Maybe
   isActive Bool
