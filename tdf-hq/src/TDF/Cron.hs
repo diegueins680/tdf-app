@@ -90,13 +90,12 @@ import           TDF.Services.EventDiscovery
   , DiscoveredVenue(..)
   , EventDiscoveryCity(..)
   , beginEventDiscoveryRun
-  , countImportedDiscoveryEvents
+  , discoveredEventFitsPilotLimit
   , failEventDiscoveryRun
   , fetchBuenPlanEvents
   , fetchStructuredFeedEvents
   , fetchTicketmasterEventsForCity
   , finishEventDiscoveryRun
-  , isDiscoveredEventKnown
   , loadSubscribedDiscoveryCities
   , reconcileProviderEvents
   , reconcileImportedEvents
@@ -740,18 +739,14 @@ runEventDiscoveryOnce Env{..} = do
 
     syncOne now totals event = do
       let autoPublish = eventDiscoveryAutoPublish envConfig
-      known <-
+      withinPilotLimit <-
         if autoPublish
           then pure True
           else
-            isDiscoveredEventKnown
+            discoveredEventFitsPilotLimit
               envPool
-              (discoveredEventProvider event)
-              (discoveredEventExternalId event)
-      withinPilotLimit <-
-        if autoPublish || known
-          then pure True
-          else (< eventDiscoveryPilotLimit envConfig) <$> countImportedDiscoveryEvents envPool
+              (eventDiscoveryPilotLimit envConfig)
+              event
       if not withinPilotLimit
         then do
           LogBuf.addLog

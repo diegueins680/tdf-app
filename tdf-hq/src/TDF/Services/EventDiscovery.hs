@@ -23,6 +23,7 @@ module TDF.Services.EventDiscovery
   , normalizeUserCities
   , reconcileImportedEvents
   , reconcileProviderEvents
+  , discoveredEventFitsPilotLimit
   , countImportedDiscoveryEvents
   , isDiscoveredEventKnown
   , syncDiscoveredEvent
@@ -749,7 +750,7 @@ decodeBuenPlanPage configuredDefault cities now endTime body =
     Right decoded
       | buenPlanRawEventCount decoded > 0 && null decodedEvents ->
           Left "Buen Plan returned no usable event records"
-      | not (null targetedEvents) && null normalized ->
+      | not (null targetedEventsInWindow) && null normalized ->
           Left "Buen Plan returned targeted records but none were usable"
       | otherwise -> Right (buenPlanPageCount (buenPlanMeta decoded), normalized)
       where
@@ -766,6 +767,10 @@ decodeBuenPlanPage configuredDefault cities now endTime body =
                   )
             )
             decodedEvents
+        targetedEventsInWindow =
+          filter
+            (\event -> buenPlanEventStart event >= now && buenPlanEventStart event <= endTime)
+            targetedEvents
         normalized =
           mapMaybe
             (normalizeBuenPlanEvent configuredDefault cities now endTime)
@@ -1644,14 +1649,42 @@ isDiscoveredEventKnown pool provider externalId =
     pool
 
 countImportedDiscoveryEvents :: ConnectionPool -> IO Int
-countImportedDiscoveryEvents pool = do
+countImportedDiscoveryEvents pool =
+  runSqlPool countImportedDiscoveryEventsDb pool
+
+-- | A draft refresh fits the pilot when it updates a known source, attaches a
+-- new source to an existing canonical event, or creates a canonical event
+-- while capacity remains. This keeps the limit defined in canonical events,
+-- not provider reference IDs.
+discoveredEventFitsPilotLimit ::
+  ConnectionPool ->
+  Int ->
+  DiscoveredEvent ->
+  IO Bool
+discoveredEventFitsPilotLimit pool pilotLimit event =
+  runSqlPool fits pool
+  where
+    fits = do
+      existingRef <-
+        getBy
+          ( Social.UniqueExternalEventRef
+              (discoveredEventProvider event)
+              (discoveredEventExternalId event)
+          )
+      case existingRef of
+        Just _ -> pure True
+        Nothing -> do
+          mergeCandidate <- findCanonicalEventCandidate event
+          case mergeCandidate of
+            Just _ -> pure True
+            Nothing -> (< max 0 pilotLimit) <$> countImportedDiscoveryEventsDb
+
+countImportedDiscoveryEventsDb :: SqlPersistT IO Int
+countImportedDiscoveryEventsDb = do
   rows <-
-    runSqlPool
-      ( rawSql
-          "SELECT COUNT(DISTINCT event_id) FROM external_event_ref"
-          [] :: SqlPersistT IO [Single Int]
-      )
-      pool
+    rawSql
+      "SELECT COUNT(DISTINCT event_id) FROM external_event_ref"
+      []
   pure $ case rows of
     [Single total] -> total
     _ -> 0

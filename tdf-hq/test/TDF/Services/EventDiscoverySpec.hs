@@ -27,6 +27,7 @@ import TDF.Services.EventDiscovery
   , buildTicketmasterRequestUrl
   , countImportedDiscoveryEvents
   , decodeBuenPlanResponse
+  , discoveredEventFitsPilotLimit
   , normalizeTicketmasterResponse
   , normalizeUserCities
   , failEventDiscoveryRun
@@ -133,6 +134,17 @@ spec = do
               (addUTCTime (90 * 86400) now)
               "{\"data\":[{\"title\":\"Missing required fields\"}],\"meta\":{\"pageCount\":1}}"
       result `shouldBe` Left "Buen Plan returned no usable event records"
+
+    it "keeps an expired targeted page usable so pagination can continue" $ do
+      let now = fixtureTime 10 0
+          result =
+            decodeBuenPlanResponse
+              "USD"
+              [EventDiscoveryCity "Quito" "EC" (Just "America/Guayaquil")]
+              now
+              (addUTCTime (90 * 86400) now)
+              buenPlanExpiredFixture
+      result `shouldBe` Right []
 
   describe "Ticketmaster event normalization" $ do
     it "creates a complete graph while ignoring malformed provider records and other cities" $ do
@@ -318,6 +330,38 @@ spec = do
               Social.socialEventMetadata row
                 `shouldSatisfy` maybe False (T.isInfixOf "\"isPublic\":false")
 
+    it "allows a new provider reference to merge when the canonical pilot is full" $ do
+      event <- case eitherDecode ticketmasterFixture of
+        Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"
+        Right response ->
+          case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
+            [normalized] -> pure normalized
+            other -> expectationFailure ("Expected one normalized event, got " <> show other) >> fail "invalid normalized fixture"
+      pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+      runSqlPool initializeEventDiscoverySchema pool
+
+      discoveredEventFitsPilotLimit pool 1 event `shouldReturn` True
+      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 5) event
+      let sameCanonicalEvent =
+            event
+              { discoveredEventProvider = "buenplan"
+              , discoveredEventExternalId = "bp-event-1"
+              , discoveredEventArtists = []
+              , discoveredEventTicketUrl = Just "https://www.buenplan.com.ec/event/festival-sonoro"
+              }
+          distinctEvent =
+            sameCanonicalEvent
+              { discoveredEventExternalId = "bp-distinct-event"
+              , discoveredEventTitle = "Festival completamente diferente"
+              , discoveredEventStart = addUTCTime (4 * 60 * 60) (discoveredEventStart event)
+              , discoveredEventEnd = addUTCTime (4 * 60 * 60) (discoveredEventEnd event)
+              }
+
+      discoveredEventFitsPilotLimit pool 1 sameCanonicalEvent `shouldReturn` True
+      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 10) sameCanonicalEvent
+      countImportedDiscoveryEvents pool `shouldReturn` 1
+      discoveredEventFitsPilotLimit pool 1 distinctEvent `shouldReturn` False
+
     it "preserves a subscribed city's configured timezone for imported events and venues" $ do
       event <- case eitherDecode ticketmasterFixture of
         Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"
@@ -432,6 +476,15 @@ buenPlanFixture =
     <> "\"url\":\"festival-sonoro-guayaquil\",\"startDate\":\"2026-08-23T00:00:00.000Z\","
     <> "\"timeZone\":\"America/Guayaquil\",\"currency\":\"USD\",\"sellActive\":true},"
     <> "{\"title\":\"Malformed item\"}],\"meta\":{\"pageCount\":1}}"
+
+buenPlanExpiredFixture :: BL8.ByteString
+buenPlanExpiredFixture =
+  "{\"data\":[{"
+    <> "\"id\":\"bp-expired-quito\",\"title\":\"Festival pasado - Quito\","
+    <> "\"description\":\"Una fecha anterior en Quito.\","
+    <> "\"url\":\"festival-pasado-quito\",\"startDate\":\"2026-07-22T00:00:00.000Z\","
+    <> "\"timeZone\":\"America/Guayaquil\",\"currency\":\"USD\",\"sellActive\":false"
+    <> "}],\"meta\":{\"pageCount\":2}}"
 
 ticketmasterFixtureWithStatus :: BL8.ByteString -> BL8.ByteString
 ticketmasterFixtureWithStatus sourceStatus =
