@@ -461,6 +461,31 @@ spec = describe "social event handler helpers" $ do
                 expectationFailure
                     ("Expected hidden pilot list to succeed, got: " <> show err)
 
+        paginatedListResult <-
+            runHandler $
+                runReaderT
+                    ( socialEventListHandlerFor
+                        ordinaryUser
+                        Nothing
+                        Nothing
+                        (Just "2025-01-01T00:00:00Z")
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        (Just 1)
+                        (Just 0)
+                    )
+                    env
+        case paginatedListResult of
+            Right [event] -> eventId event `shouldBe` Just "14"
+            Right events ->
+                expectationFailure
+                    ("Expected filtered and paginated list to contain only the public canonical event, got: " <> show events)
+            Left err ->
+                expectationFailure
+                    ("Expected filtered and paginated pilot list to succeed, got: " <> show err)
+
         getResult <-
             runHandler $
                 runReaderT

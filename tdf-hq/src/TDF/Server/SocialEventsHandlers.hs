@@ -152,14 +152,22 @@ import Servant.Multipart (FileData (..))
 import Database.Persist
 import Database.Persist.Sql
     ( ConnectionPool
+    , FilterTablePrefix (PrefixTableName)
     , Single (..)
     , SqlBackend
     , SqlPersistT
+    , filterClauseWithVals
     , fromSqlKey
+    , orderClause
     , rawSql
     , runSqlPool
     , toSqlKey
     , updateWhereCount
+    )
+import Database.Persist.SqlBackend
+    ( getConnLimitOffset
+    , getEscapedRawName
+    , getRDBMS
     )
 import Database.PostgreSQL.Simple (SqlError (..))
 
@@ -1867,10 +1875,6 @@ socialEventsServer user =
                 if null eventIds
                     then pure [SocialEventId ==. toSqlKey 0]
                     else pure [SocialEventId <-. eventIds]
-        hiddenImportedEventIds <-
-            if hasStrictAdminAccess user
-                then pure []
-                else liftIO $ runSqlPool loadHiddenImportedEventIds envPool
         let filters =
                 startFilter
                     ++ cityFilter
@@ -1878,14 +1882,18 @@ socialEventsServer user =
                     ++ artistFilter
                     ++ maybe [] (\eventTypeUuid -> [SocialEventEventTypeId ==. Just eventTypeUuid]) eventTypeFilter
                     ++ maybe [] (\stateUuid -> [SocialEventWorkflowStateId ==. Just stateUuid]) workflowStateFilter
-                    ++ if null hiddenImportedEventIds
-                        then []
-                        else [SocialEventId /<-. hiddenImportedEventIds]
         let dateOrder =
                 case mStartAfter of
                     Just _ -> Asc SocialEventStartTime
                     Nothing -> Desc SocialEventStartTime
-        rows <- liftIO $ runSqlPool (selectList filters [dateOrder, LimitTo limit, OffsetBy offset]) envPool
+        rows <-
+            liftIO $
+                runSqlPool
+                    ( if hasStrictAdminAccess user
+                        then selectList filters [dateOrder, LimitTo limit, OffsetBy offset]
+                        else selectVisibleSocialEvents filters dateOrder limit offset
+                    )
+                    envPool
         forM rows $ \(Entity eid eventRow) -> do
             artists <- loadEventArtists envPool eid
             sources <- liftIO (loadExternalEventSources envPool eid)
@@ -8217,20 +8225,79 @@ loadExternalEventSources pool eventKey =
         )
         pool
 
-loadHiddenImportedEventIds :: SqlPersistT IO [SocialEventId]
-loadHiddenImportedEventIds = do
-    rows <-
-        rawSql
-            "SELECT DISTINCT social_event.id, social_event.metadata\
-            \ FROM social_event\
-            \ INNER JOIN external_event_ref\
-            \ ON external_event_ref.event_id=social_event.id"
-            []
-    pure
-        [ eventKey
-        | (Single eventKey, Single metadata) <- rows
-        , importedEventMetadataHidden metadata
-        ]
+selectVisibleSocialEvents ::
+    [Filter SocialEvent] ->
+    SelectOpt SocialEvent ->
+    Int ->
+    Int ->
+    SqlPersistT IO [Entity SocialEvent]
+selectVisibleSocialEvents filters dateOrder limit offset = do
+    backend <- ask :: SqlPersistT IO SqlBackend
+    eventTable <- getEscapedRawName "social_event"
+    externalRefTable <- getEscapedRawName "external_event_ref"
+    eventIdField <- getEscapedRawName "id"
+    eventMetadataField <- getEscapedRawName "metadata"
+    externalRefEventIdField <- getEscapedRawName "event_id"
+    backendName <- T.toCaseFold <$> getRDBMS
+    let (baseFilterClause, filterValues) =
+            filterClauseWithVals (Just PrefixTableName) backend filters
+        eventIdColumn = eventTable <> "." <> eventIdField
+        eventMetadataColumn =
+            eventTable <> "." <> eventMetadataField
+        externalRefEventIdColumn =
+            externalRefTable <> "." <> externalRefEventIdField
+        visibilityClause =
+            "(NOT EXISTS (SELECT 1 FROM "
+                <> externalRefTable
+                <> " WHERE "
+                <> externalRefEventIdColumn
+                <> "="
+                <> eventIdColumn
+                <> ") OR "
+                <> visibleImportedMetadataClause backendName eventMetadataColumn
+                <> ")"
+        combinedFilterClause
+            | T.null baseFilterClause = " WHERE " <> visibilityClause
+            | otherwise = baseFilterClause <> " AND " <> visibilityClause
+        orderedQuery =
+            "SELECT ?? FROM "
+                <> eventTable
+                <> combinedFilterClause
+                <> orderClause (Just PrefixTableName) backend [dateOrder]
+    query <- getConnLimitOffset (limit, offset) orderedQuery
+    rawSql query filterValues
+
+visibleImportedMetadataClause :: T.Text -> T.Text -> T.Text
+visibleImportedMetadataClause backendName metadataColumn
+    | "postgres" `T.isInfixOf` backendName =
+        "CASE WHEN "
+            <> metadataColumn
+            <> " IS NULL THEN TRUE WHEN pg_input_is_valid("
+            <> metadataColumn
+            <> ", 'jsonb') THEN CASE WHEN jsonb_typeof(("
+            <> metadataColumn
+            <> ")::jsonb) <> 'object' THEN FALSE WHEN NOT (("
+            <> metadataColumn
+            <> ")::jsonb ? 'isPublic') THEN TRUE WHEN jsonb_typeof(("
+            <> metadataColumn
+            <> ")::jsonb -> 'isPublic') = 'null' THEN TRUE WHEN jsonb_typeof(("
+            <> metadataColumn
+            <> ")::jsonb -> 'isPublic') = 'boolean' THEN (("
+            <> metadataColumn
+            <> ")::jsonb ->> 'isPublic')::boolean ELSE FALSE END ELSE FALSE END"
+    | "sqlite" `T.isInfixOf` backendName =
+        "CASE WHEN "
+            <> metadataColumn
+            <> " IS NULL THEN 1 WHEN json_valid("
+            <> metadataColumn
+            <> ") AND json_type("
+            <> metadataColumn
+            <> ", '$') = 'object' THEN CASE WHEN json_type("
+            <> metadataColumn
+            <> ", '$.isPublic') IS NULL OR json_type("
+            <> metadataColumn
+            <> ", '$.isPublic') IN ('null', 'true') THEN 1 ELSE 0 END ELSE 0 END"
+    | otherwise = "1=0"
 
 isImportedEventHidden :: SocialEventId -> SqlPersistT IO Bool
 isImportedEventHidden eventKey = do
