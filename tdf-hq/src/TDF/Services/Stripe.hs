@@ -12,6 +12,7 @@ module TDF.Services.Stripe
   , createPaymentIntentWithIdempotencyKey
   , createPaymentIntentForCustomer
   , createPaymentIntentForCustomerWithIdempotencyKey
+  , buildPaymentIntentForCustomerRequest
   , createPaymentIntentForTip
   , buildPaymentIntentRequest
   , buildRetrievePaymentIntentRequest
@@ -356,27 +357,15 @@ createPaymentIntentForCustomerRequest
   -> IO (Either Text Value)
 createPaymentIntentForCustomerRequest cfg mIdempotencyKey customerId amountCents currency description mMetadata =
   withStripeManager $ \manager -> do
-    let url = "https://api.stripe.com/v1/payment_intents"
-        body = BS8.intercalate "&"
-          [ "amount=" <> BS8.pack (show amountCents)
-          , "currency=" <> TE.encodeUtf8 (T.toLower currency)
-          , "customer=" <> urlEncode (TE.encodeUtf8 customerId)
-          , "description=" <> urlEncode (TE.encodeUtf8 description)
-          , "automatic_payment_methods[enabled]=true"
-          ] <> maybe "" (\meta -> "&metadata=" <> urlEncode (TE.encodeUtf8 meta)) mMetadata
-
-    initialRequest <- parseRequest url
-    let idempotencyHeaders =
-          maybe [] (\key -> [("Idempotency-Key", TE.encodeUtf8 key)]) mIdempotencyKey
-        request = initialRequest
-          { method = "POST"
-          , requestHeaders =
-              [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
-              , ("Content-Type", "application/x-www-form-urlencoded")
-              , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
-              ] <> idempotencyHeaders
-          , requestBody = RequestBodyBS body
-          }
+    request <-
+      buildPaymentIntentForCustomerRequest
+        cfg
+        mIdempotencyKey
+        customerId
+        amountCents
+        currency
+        description
+        mMetadata
 
     response <- httpLbs request manager
     let status = statusCode (responseStatus response)
@@ -388,6 +377,39 @@ createPaymentIntentForCustomerRequest cfg mIdempotencyKey customerId amountCents
         bodyLBS
         "Failed to parse Stripe PaymentIntent response"
         "Stripe API error"
+
+-- | Construct a customer-bound PaymentIntent request without network I/O.
+-- Ticket checkout contract tests use this boundary to prove that mobile and
+-- web intents carry the same nested immutable metadata snapshot.
+buildPaymentIntentForCustomerRequest
+  :: StripeConfig
+  -> Maybe Text
+  -> Text
+  -> Int
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> IO Request
+buildPaymentIntentForCustomerRequest cfg mIdempotencyKey customerId amountCents currency description mMetadata = do
+  initialRequest <- parseRequest "https://api.stripe.com/v1/payment_intents"
+  let body = BS8.intercalate "&"
+        [ "amount=" <> BS8.pack (show amountCents)
+        , "currency=" <> TE.encodeUtf8 (T.toLower currency)
+        , "customer=" <> urlEncode (TE.encodeUtf8 customerId)
+        , "description=" <> urlEncode (TE.encodeUtf8 description)
+        , "automatic_payment_methods[enabled]=true"
+        ] <> maybe "" (\meta -> "&metadata[tdf_context]=" <> urlEncode (TE.encodeUtf8 meta)) mMetadata
+      idempotencyHeaders =
+        maybe [] (\key -> [("Idempotency-Key", TE.encodeUtf8 key)]) mIdempotencyKey
+  pure initialRequest
+    { method = "POST"
+    , requestHeaders =
+        [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
+        , ("Content-Type", "application/x-www-form-urlencoded")
+        , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
+        ] <> idempotencyHeaders
+    , requestBody = RequestBodyBS body
+    }
 
 -- | Create a Stripe Checkout Session in @subscription@ mode.
 --

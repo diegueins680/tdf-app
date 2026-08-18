@@ -290,6 +290,24 @@ jobs:
       - name: Test the production release contract
         run: npm run test:production-release
 
+      - name: Rehearse service-storefront checkout runtime migration
+        run: ./scripts/test-service-storefront-checkout-runtime-migration.sh
+
+      - name: Rehearse checkout event and refund runtime migration
+        run: ./scripts/test-checkout-event-refund-runtime-migration.sh
+
+      - name: Rehearse provider event operations migration
+        run: ./scripts/test-provider-event-operations-migration.sh
+
+      - name: Rehearse service booking checkout runtime migration
+        run: ./scripts/test-service-booking-checkout-runtime-migration.sh
+
+      - name: Rehearse course checkout runtime migration
+        run: ./scripts/test-course-checkout-runtime-migration.sh
+
+      - name: Rehearse marketplace customer operations and deposit settlement migration
+        run: ./scripts/test-marketplace-operations-migration.sh
+
       - name: Create production baseline fixture
         run: |
           psql "$PGURL" -v ON_ERROR_STOP=1 -f scripts/__tests__/fixtures/production-schema-20260814.sql

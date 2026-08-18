@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Marketplace } from '../api/marketplace';
+import { Marketplace, loadMarketplaceLookupToken } from '../api/marketplace';
 import type { MarketplaceOrderDTO } from '../api/types';
 import { getOrderStatusMeta, isPaidOrderStatus } from '../utils/marketplace';
 
@@ -35,8 +35,14 @@ export default function DatafastReturnPage() {
         setMessage('Faltan datos de la transacción.');
         return;
       }
+      const lookupToken = loadMarketplaceLookupToken(orderId);
+      if (!lookupToken) {
+        setStatus('error');
+        setMessage('Falta el acceso seguro de esta orden. Vuelve a la misma pestaña donde iniciaste el pago o contacta soporte.');
+        return;
+      }
       try {
-        const dto = await Marketplace.confirmDatafastPayment(orderId, resourcePath);
+        const dto = await Marketplace.confirmDatafastPayment(orderId, resourcePath, lookupToken);
         setOrder(dto);
         if (isPaidOrderStatus(dto.moStatus)) {
           setStatus('success');

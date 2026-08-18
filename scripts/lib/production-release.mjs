@@ -558,6 +558,36 @@ BEGIN
   ) NOT IN (0, 3) THEN
     RAISE EXCEPTION 'Feature discovery tables are partially present';
   END IF;
+  IF (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name IN (
+        'marketplace_sale_order_runtime', 'marketplace_sale_fulfillment_event'
+      )
+  ) NOT IN (0, 2) THEN
+    RAISE EXCEPTION 'Marketplace sale checkout runtime tables are partially present';
+  END IF;
+  IF (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name IN (
+        'service_booking_commerce_policy', 'service_booking_commerce_policy_history',
+        'service_booking_checkout_runtime', 'service_booking_resource_allocation',
+        'service_booking_event'
+      )
+  ) NOT IN (0, 5) THEN
+    RAISE EXCEPTION 'Service booking checkout runtime tables are partially present';
+  END IF;
+  IF (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name IN (
+        'course_checkout_policy', 'course_checkout_policy_history',
+        'course_registration_checkout_runtime', 'course_enrollment_event'
+      )
+  ) NOT IN (0, 4) THEN
+    RAISE EXCEPTION 'Course checkout runtime tables are partially present';
+  END IF;
 END
 $preflight$;
 ROLLBACK;
@@ -569,6 +599,7 @@ export function buildSchemaVerificationSql(options = {}) {
   return `${header}DO $verify$
 DECLARE
   campaign_table TEXT;
+  commerce_table TEXT;
   catalog_table TEXT;
   cutover_code TEXT;
   discovery_table TEXT;
@@ -1464,6 +1495,546 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'ddex_document does not match the inbox runtime schema';
   END IF;
+  FOREACH commerce_table IN ARRAY ARRAY[
+    'commerce_checkout_session',
+    'commerce_checkout_line_item',
+    'commerce_payment_attempt',
+    'commerce_provider_binding',
+    'commerce_provider_event_inbox',
+    'commerce_refund',
+    'commerce_refund_allocation',
+    'commerce_refund_reason_code',
+    'commerce_reconciliation_exception',
+    'commerce_manual_payment_evidence',
+    'commerce_receipt',
+    'commerce_ledger_transaction',
+    'commerce_ledger_entry'
+  ] LOOP
+    IF to_regclass('public.' || commerce_table) IS NULL THEN
+      RAISE EXCEPTION 'Commerce relation public.% is missing', commerce_table;
+    END IF;
+  END LOOP;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'commerce_manual_payment_evidence'
+      AND column_name = 'submitted_by'
+      AND data_type = 'bigint'
+      AND is_nullable = 'YES'
+  ) OR to_regclass('public.commerce_manual_payment_evidence_review_report') IS NULL THEN
+    RAISE EXCEPTION 'Manual payment evidence review schema is missing or invalid';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.commerce_manual_payment_evidence'::regclass
+      AND conname = 'fk_commerce_manual_evidence_submitted_by'
+      AND contype = 'f'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.commerce_manual_payment_evidence'::regclass
+      AND tgname = 'trg_commerce_validate_manual_payment_evidence'
+      AND tgenabled = 'O'
+  ) THEN
+    RAISE EXCEPTION 'Manual payment evidence identity or transition controls are missing';
+  END IF;
+
+  IF (
+    SELECT count(*) FROM revenue_feature_flag
+    WHERE flag_key IN ('checkout.bank_transfer','checkout.cash','checkout.pos')
+      AND environment = 'production'
+      AND enabled
+  ) <> 3 THEN
+    RAISE EXCEPTION 'Manual settlement capability flags are missing or disabled';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'service_storefront_order'
+      AND column_name = 'checkout_id'
+      AND data_type = 'uuid'
+      AND is_nullable = 'YES'
+  ) THEN
+    RAISE EXCEPTION 'service_storefront_order.checkout_id is missing or invalid';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.service_storefront_order'::regclass
+      AND conname = 'fk_service_storefront_order_checkout'
+      AND contype = 'f'
+      AND convalidated
+      AND pg_get_constraintdef(oid) ILIKE '%FOREIGN KEY (checkout_id) REFERENCES commerce_checkout_session(id) ON DELETE RESTRICT%'
+  ) THEN
+    RAISE EXCEPTION 'service storefront canonical checkout foreign key is missing or invalid';
+  END IF;
+
+  IF to_regclass('public.service_storefront_checkout_backfill_report') IS NULL
+     OR to_regclass('public.uq_service_storefront_order_checkout') IS NULL
+     OR to_regclass('public.uq_commerce_manual_evidence_attempt') IS NULL
+     OR to_regclass('public.uq_commerce_succeeded_attempt_checkout') IS NULL
+     OR to_regclass('public.uq_commerce_active_payment_receipt_checkout') IS NULL
+     OR to_regclass('public.uq_commerce_open_reconciliation_fingerprint') IS NULL THEN
+    RAISE EXCEPTION 'Service storefront checkout runtime view or indexes are incomplete';
+  END IF;
+
+  IF to_regclass('public.marketplace_sale_order_runtime') IS NULL
+     OR to_regclass('public.marketplace_sale_fulfillment_event') IS NULL
+     OR to_regclass('public.marketplace_sale_checkout_backfill_report') IS NULL THEN
+    RAISE EXCEPTION 'Marketplace sale checkout runtime relations are missing';
+  END IF;
+
+  IF to_regclass('public.marketplace_rental_listing_terms') IS NULL
+     OR to_regclass('public.marketplace_rental_cart_selection') IS NULL
+     OR to_regclass('public.marketplace_rental_listing_terms_history') IS NULL
+     OR to_regclass('public.marketplace_rental_order_runtime') IS NULL
+     OR to_regclass('public.marketplace_rental_event') IS NULL
+     OR to_regclass('public.marketplace_order_checkout_runtime') IS NULL THEN
+    RAISE EXCEPTION 'Marketplace rental checkout runtime relations are missing';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('marketplace_sale_order_runtime', 'order_id', 'uuid', 'NO'),
+        ('marketplace_sale_order_runtime', 'checkout_id', 'uuid', 'NO'),
+        ('marketplace_sale_order_runtime', 'lookup_token_hash', 'text', 'NO'),
+        ('marketplace_sale_order_runtime', 'create_idempotency_key', 'text', 'NO'),
+        ('marketplace_sale_order_runtime', 'create_request_sha256', 'text', 'NO'),
+        ('marketplace_sale_order_runtime', 'fulfillment_method', 'text', 'NO'),
+        ('marketplace_sale_order_runtime', 'fulfillment_status', 'text', 'NO'),
+        ('marketplace_sale_order_runtime', 'recipient_name', 'text', 'NO'),
+        ('marketplace_sale_order_runtime', 'recipient_phone', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'address_line_1', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'address_line_2', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'city', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'province', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'postal_code', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'country_code', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'carrier', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'tracking_reference', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'hold_expires_at', 'timestamp with time zone', 'NO'),
+        ('marketplace_sale_order_runtime', 'delivered_at', 'timestamp with time zone', 'YES'),
+        ('marketplace_sale_order_runtime', 'returned_at', 'timestamp with time zone', 'YES'),
+        ('marketplace_sale_order_runtime', 'created_at', 'timestamp with time zone', 'NO'),
+        ('marketplace_sale_order_runtime', 'updated_at', 'timestamp with time zone', 'NO'),
+        ('marketplace_sale_fulfillment_event', 'id', 'bigint', 'NO'),
+        ('marketplace_sale_fulfillment_event', 'order_id', 'uuid', 'NO'),
+        ('marketplace_sale_fulfillment_event', 'from_status', 'text', 'YES'),
+        ('marketplace_sale_fulfillment_event', 'to_status', 'text', 'NO'),
+        ('marketplace_sale_fulfillment_event', 'actor_type', 'text', 'NO'),
+        ('marketplace_sale_fulfillment_event', 'actor_id', 'text', 'YES'),
+        ('marketplace_sale_fulfillment_event', 'reason_code', 'text', 'YES'),
+        ('marketplace_sale_fulfillment_event', 'notes', 'text', 'YES'),
+        ('marketplace_sale_fulfillment_event', 'created_at', 'timestamp with time zone', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Marketplace sale checkout runtime columns are missing or invalid';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('marketplace_rental_listing_terms', 'listing_id', 'uuid', 'NO'),
+        ('marketplace_rental_listing_terms', 'daily_rate_usd_cents', 'bigint', 'NO'),
+        ('marketplace_rental_listing_terms', 'security_deposit_usd_cents', 'bigint', 'NO'),
+        ('marketplace_rental_listing_terms', 'terms_version', 'text', 'NO'),
+        ('marketplace_rental_listing_terms', 'active', 'boolean', 'NO'),
+        ('marketplace_rental_listing_terms', 'approved_at', 'timestamp with time zone', 'YES'),
+        ('marketplace_rental_cart_selection', 'cart_item_id', 'uuid', 'NO'),
+        ('marketplace_rental_cart_selection', 'start_date', 'date', 'NO'),
+        ('marketplace_rental_cart_selection', 'end_date', 'date', 'NO'),
+        ('marketplace_rental_order_runtime', 'order_id', 'uuid', 'NO'),
+        ('marketplace_rental_order_runtime', 'checkout_id', 'uuid', 'NO'),
+        ('marketplace_rental_order_runtime', 'asset_id', 'uuid', 'NO'),
+        ('marketplace_rental_order_runtime', 'rental_status', 'text', 'NO'),
+        ('marketplace_rental_order_runtime', 'deposit_status', 'text', 'NO'),
+        ('marketplace_rental_order_runtime', 'rental_charge_usd_cents', 'bigint', 'NO'),
+        ('marketplace_rental_order_runtime', 'security_deposit_usd_cents', 'bigint', 'NO'),
+        ('marketplace_rental_order_runtime', 'identity_document_type', 'text', 'NO'),
+        ('marketplace_rental_order_runtime', 'identity_document_last4', 'text', 'NO'),
+        ('marketplace_rental_order_runtime', 'condition_out', 'text', 'YES'),
+        ('marketplace_rental_order_runtime', 'condition_in', 'text', 'YES'),
+        ('marketplace_rental_event', 'order_id', 'uuid', 'NO'),
+        ('marketplace_rental_event', 'to_status', 'text', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Marketplace rental checkout runtime columns are missing or invalid';
+  END IF;
+
+  IF to_regclass('public.marketplace_sale_order_runtime_pkey') IS NULL
+     OR to_regclass('public.marketplace_sale_order_runtime_checkout_id_key') IS NULL
+     OR to_regclass('public.marketplace_sale_order_runtime_lookup_token_hash_key') IS NULL
+     OR to_regclass('public.marketplace_sale_order_runtime_create_idempotency_key_key') IS NULL
+     OR to_regclass('public.idx_marketplace_sale_runtime_status') IS NULL
+     OR to_regclass('public.idx_marketplace_sale_fulfillment_event_order') IS NULL THEN
+    RAISE EXCEPTION 'Marketplace sale checkout runtime indexes are incomplete';
+  END IF;
+
+  IF to_regclass('public.marketplace_rental_order_runtime_pkey') IS NULL
+     OR to_regclass('public.marketplace_rental_order_runtime_checkout_id_key') IS NULL
+     OR to_regclass('public.marketplace_rental_order_runtime_lookup_token_hash_key') IS NULL
+     OR to_regclass('public.marketplace_rental_order_runtime_create_idempotency_key_key') IS NULL
+     OR to_regclass('public.idx_marketplace_rental_terms_active') IS NULL
+     OR to_regclass('public.idx_marketplace_rental_terms_history') IS NULL
+     OR to_regclass('public.idx_marketplace_rental_runtime_status') IS NULL
+     OR to_regclass('public.idx_marketplace_rental_event_order') IS NULL
+     OR NOT EXISTS (
+       SELECT 1 FROM pg_constraint
+       WHERE conrelid = 'public.marketplace_rental_order_runtime'::regclass
+         AND contype = 'x'
+         AND convalidated
+     ) THEN
+    RAISE EXCEPTION 'Marketplace rental uniqueness, date-exclusion, or runtime indexes are incomplete';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('marketplace_sale_order_runtime', 'trg_marketplace_validate_sale_runtime'),
+      ('marketplace_sale_order_runtime', 'trg_marketplace_validate_fulfillment_transition'),
+      ('marketplace_sale_order_runtime', 'trg_marketplace_record_fulfillment_transition'),
+      ('marketplace_rental_listing_terms', 'trg_marketplace_validate_rental_terms'),
+      ('marketplace_rental_listing_terms', 'trg_marketplace_record_rental_terms_history'),
+      ('marketplace_rental_order_runtime', 'trg_marketplace_validate_rental_runtime'),
+      ('marketplace_rental_order_runtime', 'trg_marketplace_validate_rental_transition'),
+      ('marketplace_rental_order_runtime', 'trg_marketplace_record_rental_transition'),
+      ('commerce_checkout_session', 'trg_marketplace_sync_verified_checkout'),
+      ('marketplace_order', 'trg_marketplace_protect_canonical_payment_state')
+    ) AS expected(table_name, trigger_name)
+    LEFT JOIN pg_trigger AS actual
+      ON actual.tgrelid = ('public.' || expected.table_name)::regclass
+     AND actual.tgname = expected.trigger_name
+     AND actual.tgenabled = 'O'
+    WHERE actual.oid IS NULL
+  ) THEN
+    RAISE EXCEPTION 'Marketplace sale checkout invariant triggers are missing or disabled';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('commerce.marketplace_sales'),
+      ('commerce.marketplace_rentals')
+    ) AS expected(flag_key)
+    LEFT JOIN revenue_feature_flag AS flag
+      ON flag.flag_key = expected.flag_key AND flag.environment = 'production'
+    WHERE flag.flag_key IS NULL OR NOT flag.enabled
+  ) THEN
+    RAISE EXCEPTION 'Production marketplace sales and rentals capability gates must exist enabled';
+  END IF;
+
+  IF to_regclass('public.service_booking_commerce_policy') IS NULL
+     OR to_regclass('public.service_booking_commerce_policy_history') IS NULL
+     OR to_regclass('public.service_booking_checkout_runtime') IS NULL
+     OR to_regclass('public.service_booking_resource_allocation') IS NULL
+     OR to_regclass('public.service_booking_event') IS NULL THEN
+    RAISE EXCEPTION 'Service booking checkout runtime relations are missing';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('service_booking_commerce_policy', 'service_offering_id', 'uuid', 'NO'),
+        ('service_booking_commerce_policy', 'policy_version', 'text', 'NO'),
+        ('service_booking_commerce_policy', 'rate_minor', 'bigint', 'NO'),
+        ('service_booking_commerce_policy', 'tax_bps', 'integer', 'NO'),
+        ('service_booking_commerce_policy', 'deposit_bps', 'integer', 'NO'),
+        ('service_booking_commerce_policy', 'approval_status', 'text', 'NO'),
+        ('service_booking_checkout_runtime', 'booking_id', 'bigint', 'NO'),
+        ('service_booking_checkout_runtime', 'checkout_id', 'uuid', 'NO'),
+        ('service_booking_checkout_runtime', 'lookup_token_hash', 'text', 'NO'),
+        ('service_booking_checkout_runtime', 'create_idempotency_key', 'text', 'NO'),
+        ('service_booking_checkout_runtime', 'fulfillment_status', 'text', 'NO'),
+        ('service_booking_checkout_runtime', 'deposit_status', 'text', 'NO'),
+        ('service_booking_checkout_runtime', 'total_minor', 'bigint', 'NO'),
+        ('service_booking_checkout_runtime', 'deposit_minor', 'bigint', 'NO'),
+        ('service_booking_checkout_runtime', 'balance_minor', 'bigint', 'NO'),
+        ('service_booking_resource_allocation', 'booking_id', 'bigint', 'NO'),
+        ('service_booking_resource_allocation', 'resource_id', 'bigint', 'NO'),
+        ('service_booking_resource_allocation', 'starts_at', 'timestamp with time zone', 'NO'),
+        ('service_booking_resource_allocation', 'ends_at', 'timestamp with time zone', 'NO'),
+        ('service_booking_event', 'booking_id', 'bigint', 'NO'),
+        ('service_booking_event', 'to_status', 'text', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Service booking checkout runtime columns are missing or invalid';
+  END IF;
+
+  IF to_regclass('public.uq_service_booking_active_policy') IS NULL
+     OR to_regclass('public.idx_service_booking_runtime_status') IS NULL
+     OR to_regclass('public.idx_service_booking_allocation_window') IS NULL
+     OR to_regclass('public.idx_service_booking_event_booking') IS NULL
+     OR NOT EXISTS (
+       SELECT 1 FROM pg_constraint
+       WHERE conrelid = 'public.service_booking_resource_allocation'::regclass
+         AND contype = 'x'
+         AND convalidated
+     ) THEN
+    RAISE EXCEPTION 'Service booking policy, runtime, or resource exclusion indexes are incomplete';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('service_booking_commerce_policy', 'trg_service_booking_validate_policy'),
+      ('service_booking_commerce_policy', 'trg_service_booking_policy_history'),
+      ('service_booking_checkout_runtime', 'trg_service_booking_validate_runtime'),
+      ('service_booking_checkout_runtime', 'trg_service_booking_validate_transition'),
+      ('service_booking_checkout_runtime', 'trg_service_booking_record_transition'),
+      ('booking_resource', 'trg_service_booking_allocate_resource'),
+      ('booking', 'trg_service_booking_sync_legacy_allocation'),
+      ('commerce_checkout_session', 'trg_service_booking_require_verified_payment'),
+      ('commerce_checkout_session', 'trg_service_booking_sync_checkout')
+    ) AS expected(table_name, trigger_name)
+    LEFT JOIN pg_trigger AS actual
+      ON actual.tgrelid = ('public.' || expected.table_name)::regclass
+     AND actual.tgname = expected.trigger_name
+     AND actual.tgenabled = 'O'
+    WHERE actual.oid IS NULL
+  ) THEN
+    RAISE EXCEPTION 'Service booking invariant triggers are missing or disabled';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_proc
+    WHERE oid = to_regprocedure('public.service_booking_expire_holds(timestamp with time zone)')
+      AND strpos(pg_get_functiondef(oid), '''failed''') > 0
+  ) THEN
+    RAISE EXCEPTION 'Service booking hold expiry must release failed provider attempts';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM revenue_feature_flag
+    WHERE flag_key = 'commerce.service_bookings'
+      AND environment = 'production'
+      AND NOT enabled
+  ) THEN
+    RAISE EXCEPTION 'Production service booking capability gate must exist disabled';
+  END IF;
+
+  IF to_regclass('public.course_checkout_policy') IS NULL
+     OR to_regclass('public.course_checkout_policy_history') IS NULL
+     OR to_regclass('public.course_registration_checkout_runtime') IS NULL
+     OR to_regclass('public.course_enrollment_event') IS NULL THEN
+    RAISE EXCEPTION 'Course checkout runtime relations are missing';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('course_checkout_policy', 'id', 'uuid', 'NO'),
+        ('course_checkout_policy', 'course_id', 'bigint', 'NO'),
+        ('course_checkout_policy', 'policy_version', 'text', 'NO'),
+        ('course_checkout_policy', 'currency', 'text', 'NO'),
+        ('course_checkout_policy', 'price_minor', 'bigint', 'NO'),
+        ('course_checkout_policy', 'approval_status', 'text', 'NO'),
+        ('course_checkout_policy', 'active', 'boolean', 'NO'),
+        ('course_checkout_policy_history', 'id', 'bigint', 'NO'),
+        ('course_checkout_policy_history', 'policy_id', 'uuid', 'NO'),
+        ('course_registration_checkout_runtime', 'registration_id', 'bigint', 'NO'),
+        ('course_registration_checkout_runtime', 'course_id', 'bigint', 'NO'),
+        ('course_registration_checkout_runtime', 'checkout_id', 'uuid', 'NO'),
+        ('course_registration_checkout_runtime', 'policy_id', 'uuid', 'NO'),
+        ('course_registration_checkout_runtime', 'lookup_token_hash', 'text', 'NO'),
+        ('course_registration_checkout_runtime', 'create_idempotency_key', 'text', 'NO'),
+        ('course_registration_checkout_runtime', 'enrollment_status', 'text', 'NO'),
+        ('course_registration_checkout_runtime', 'payment_status', 'text', 'NO'),
+        ('course_registration_checkout_runtime', 'total_minor', 'bigint', 'NO'),
+        ('course_registration_checkout_runtime', 'due_now_minor', 'bigint', 'NO'),
+        ('course_registration_checkout_runtime', 'balance_minor', 'bigint', 'NO'),
+        ('course_registration_checkout_runtime', 'hold_expires_at', 'timestamp with time zone', 'NO'),
+        ('course_enrollment_event', 'registration_id', 'bigint', 'NO'),
+        ('course_enrollment_event', 'to_status', 'text', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Course checkout runtime columns are missing or invalid';
+  END IF;
+
+  IF to_regclass('public.uq_course_checkout_active_policy') IS NULL
+     OR to_regclass('public.course_registration_checkout_runtime_pkey') IS NULL
+     OR to_regclass('public.course_registration_checkout_runtime_checkout_id_key') IS NULL
+     OR to_regclass('public.course_registration_checkout_runtime_lookup_token_hash_key') IS NULL
+     OR to_regclass('public.course_registration_checkout_runtime_create_idempotency_key_key') IS NULL
+     OR to_regclass('public.idx_course_registration_runtime_capacity') IS NULL
+     OR to_regclass('public.idx_course_registration_runtime_payment') IS NULL
+     OR to_regclass('public.idx_course_enrollment_event_registration') IS NULL THEN
+    RAISE EXCEPTION 'Course checkout policy, lookup, capacity, or event indexes are incomplete';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('course_checkout_policy', 'trg_course_checkout_validate_policy'),
+      ('course_checkout_policy', 'trg_course_checkout_policy_history'),
+      ('course_registration_checkout_runtime', 'trg_course_checkout_validate_runtime'),
+      ('commerce_checkout_session', 'trg_course_checkout_require_verified_payment'),
+      ('commerce_checkout_session', 'trg_course_checkout_sync_verified_payment'),
+      ('course_registration', 'trg_course_registration_require_canonical_payment')
+    ) AS expected(table_name, trigger_name)
+    LEFT JOIN pg_trigger AS actual
+      ON actual.tgrelid = ('public.' || expected.table_name)::regclass
+     AND actual.tgname = expected.trigger_name
+     AND actual.tgenabled = 'O'
+    WHERE actual.oid IS NULL
+  ) THEN
+    RAISE EXCEPTION 'Course checkout invariant triggers are missing or disabled';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_proc
+    WHERE oid = to_regprocedure(
+      'public.course_checkout_expire_holds(timestamp with time zone,bigint)'
+    )
+      AND strpos(pg_get_functiondef(oid), 'target_course_id') > 0
+      AND strpos(pg_get_functiondef(oid), '''failed''') > 0
+  ) THEN
+    RAISE EXCEPTION 'Course hold expiry must be course-scoped and release failed provider attempts';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('commerce.courses'),
+      ('commerce.course_recurring_billing')
+    ) AS expected(flag_key)
+    LEFT JOIN revenue_feature_flag AS flag
+      ON flag.flag_key = expected.flag_key AND flag.environment = 'production'
+    WHERE flag.flag_key IS NULL OR flag.enabled
+  ) THEN
+    RAISE EXCEPTION 'Production course checkout and recurring billing gates must exist disabled';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('commerce_provider_event_inbox', 'checkout_id', 'uuid', 'YES'),
+        ('commerce_provider_event_inbox', 'payment_attempt_id', 'uuid', 'YES'),
+        ('commerce_provider_event_inbox', 'refund_id', 'uuid', 'YES'),
+        ('commerce_provider_event_inbox', 'provider_resource_id', 'text', 'YES'),
+        ('commerce_provider_event_inbox', 'processing_started_at', 'timestamp with time zone', 'YES'),
+        ('commerce_provider_event_inbox', 'last_attempt_at', 'timestamp with time zone', 'YES'),
+        ('commerce_refund', 'provider', 'text', 'YES'),
+        ('commerce_refund', 'environment', 'text', 'YES'),
+        ('commerce_refund', 'merchant_account_ref', 'text', 'YES'),
+        ('commerce_refund', 'failure_code', 'text', 'YES'),
+        ('commerce_refund', 'failure_summary', 'text', 'YES'),
+        ('commerce_refund', 'updated_at', 'timestamp with time zone', 'NO'),
+        ('commerce_refund_reason_code', 'reason_code', 'text', 'NO'),
+        ('commerce_refund_reason_code', 'name_es', 'text', 'NO'),
+        ('commerce_refund_reason_code', 'name_en', 'text', 'NO'),
+        ('commerce_refund_reason_code', 'active', 'boolean', 'NO'),
+        ('commerce_refund_reason_code', 'requires_note', 'boolean', 'NO'),
+        ('commerce_receipt', 'refund_id', 'uuid', 'YES')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Provider event/refund runtime columns are missing or invalid';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('commerce_provider_event_inbox', 'fk_commerce_provider_event_checkout', 'f', 'FOREIGN KEY (checkout_id) REFERENCES commerce_checkout_session(id) ON DELETE RESTRICT'),
+        ('commerce_provider_event_inbox', 'fk_commerce_provider_event_attempt', 'f', 'FOREIGN KEY (payment_attempt_id) REFERENCES commerce_payment_attempt(id) ON DELETE RESTRICT'),
+        ('commerce_provider_event_inbox', 'fk_commerce_provider_event_refund', 'f', 'FOREIGN KEY (refund_id) REFERENCES commerce_refund(id) ON DELETE RESTRICT'),
+        ('commerce_refund', 'ck_commerce_refund_provider', 'c', 'CHECK (((provider IS NULL) OR (provider = ANY (ARRAY[''datafast''::text, ''paypal''::text, ''stripe''::text, ''bank_transfer''::text, ''cash''::text, ''pos''::text]))))'),
+        ('commerce_refund', 'ck_commerce_refund_environment', 'c', 'CHECK (((environment IS NULL) OR (environment = ANY (ARRAY[''sandbox''::text, ''production''::text]))))'),
+        ('commerce_receipt', 'fk_commerce_receipt_refund', 'f', 'FOREIGN KEY (refund_id) REFERENCES commerce_refund(id) ON DELETE RESTRICT')
+    ) AS expected(table_name, constraint_name, constraint_type, definition)
+    LEFT JOIN pg_constraint AS actual
+      ON actual.conrelid = ('public.' || expected.table_name)::regclass
+     AND actual.conname = expected.constraint_name
+     AND actual.contype = expected.constraint_type::"char"
+    WHERE actual.oid IS NULL
+       OR NOT actual.convalidated
+       OR replace(pg_get_constraintdef(actual.oid), 'public.', '') <> expected.definition
+  ) THEN
+    RAISE EXCEPTION 'Provider event/refund constraints are missing or invalid';
+  END IF;
+
+  IF to_regclass('public.idx_commerce_provider_event_work') IS NULL
+     OR to_regclass('public.idx_commerce_provider_event_resource') IS NULL
+     OR to_regclass('public.idx_commerce_refund_checkout_status') IS NULL
+     OR to_regclass('public.uq_commerce_credit_note_refund') IS NULL THEN
+    RAISE EXCEPTION 'Provider event/refund runtime indexes are incomplete';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.commerce_refund'::regclass
+      AND tgname = 'trg_commerce_validate_refund_write' AND tgenabled = 'O'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.commerce_refund_allocation'::regclass
+      AND tgname = 'trg_commerce_refund_allocation_immutable' AND tgenabled = 'O'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.commerce_receipt'::regclass
+      AND tgname = 'trg_commerce_validate_credit_note' AND tgenabled = 'O'
+  ) THEN
+    RAISE EXCEPTION 'Provider refund invariant triggers are missing or disabled';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('checkout.paypal.webhooks'),
+      ('checkout.paypal.refunds'),
+      ('checkout.datafast.webhooks'),
+      ('checkout.datafast.refunds')
+    ) AS expected(flag_key)
+    LEFT JOIN revenue_feature_flag AS flag
+      ON flag.flag_key = expected.flag_key AND flag.environment = 'production'
+    WHERE flag.flag_key IS NULL OR flag.enabled
+  ) THEN
+    RAISE EXCEPTION 'Production provider event/refund capability gates must exist disabled';
+  END IF;
+
   IF EXISTS (
     SELECT 1 FROM ddex_document
     WHERE standard_version_id IS NULL

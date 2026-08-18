@@ -22,6 +22,7 @@ const ChatKitPage = lazy(() => import('../pages/ChatKitPage'));
 const ChatPage = lazy(() => import('../pages/ChatPage'));
 const ClassesPage = lazy(() => import('../pages/ClassesPage'));
 const CmsAdminPage = lazy(() => import('../pages/CmsAdminPage'));
+const CommerceProviderEventsPage = lazy(() => import('../pages/CommerceProviderEventsPage'));
 const CompaniesPage = lazy(() => import('../pages/CompaniesPage'));
 const CourseBuilderPage = lazy(() => import('../pages/CourseBuilderPage'));
 const CourseRegistrationsAdminPage = lazy(() => import('../pages/CourseRegistrationsAdminPage'));
@@ -132,6 +133,7 @@ export function renderProtectedRoutes() {
         <Route path="/practicas" element={<InternshipsPage />} />
         <Route path="/practicas/tareas/:taskId" element={<InternTaskDetailPage />} />
         <Route path="/admin/diagnosticos" element={<AdminDiagnosticsPage />} />
+        <Route path="/admin/commerce/provider-events" element={<CommerceProviderEventsPage />} />
         <Route path="/admin/artistas-enriquecimiento" element={<ArtistEnrichmentReviewPage />} />
         <Route path="/admin/artists/enrichment" element={<ArtistEnrichmentReviewPage />} />
         <Route path="/herramientas/chatkit" element={<ChatKitPage />} />

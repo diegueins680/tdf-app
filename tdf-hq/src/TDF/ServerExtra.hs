@@ -630,6 +630,7 @@ assetStatusToText Active = "active"
 assetStatusToText Booked = "booked"
 assetStatusToText OutForMaintenance = "out_for_maintenance"
 assetStatusToText Retired = "retired"
+assetStatusToText Sold = "sold"
 
 sanitizePublicAssetDTO :: AssetDTO -> AssetDTO
 sanitizePublicAssetDTO dto =
@@ -3170,6 +3171,10 @@ validateAssetCheckoutStatus OutForMaintenance =
 validateAssetCheckoutStatus Retired =
   Left err409
     { errBody = "Asset is retired and cannot be checked out"
+    }
+validateAssetCheckoutStatus Sold =
+  Left err409
+    { errBody = "Asset has been sold and cannot be checked out"
     }
 
 parseSessionStatus :: Text -> Maybe SessionStatus

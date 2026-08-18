@@ -313,10 +313,9 @@ VITE_INSTAGRAM_OAUTH_PROVIDER=facebook
 VITE_INSTAGRAM_SCOPES=instagram_basic,instagram_manage_messages,instagram_business_basic,instagram_business_manage_messages,pages_show_list,pages_read_engagement
 ```
 
-Optional for demo mode:
-```env
-VITE_API_DEMO_TOKEN=your-demo-token
-```
+Bearer credentials must never be configured as `VITE_*` variables because Vite embeds them in
+the public browser bundle. Use authenticated sessions for staff access and the purpose-built
+public APIs for guest flows.
 
 **Important:** The `VITE_PAYPAL_CLIENT_ID` must be set in Cloudflare Pages environment variables for PayPal buttons to appear in the Marketplace. This is separate from the Fly secret since the UI is built and served by Cloudflare Pages.
 

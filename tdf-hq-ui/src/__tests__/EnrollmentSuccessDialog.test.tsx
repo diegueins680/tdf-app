@@ -21,9 +21,9 @@ describe('EnrollmentSuccessDialog', () => {
       await flushPromises();
     });
 
-    expect(document.body.textContent).toContain('¡Inscripción confirmada!');
+    expect(document.body.textContent).toContain('Solicitud recibida');
     expect(document.body.textContent).toContain(
-      'Felicitaciones, tu inscripción fue recibida exitosamente. Bienvenido a TDF Records!',
+      'Recibimos tu solicitud. Revisa el estado de pago y del cupo antes de considerarlo confirmado.',
     );
 
     await act(async () => { root.unmount(); });
@@ -59,7 +59,7 @@ describe('EnrollmentSuccessDialog', () => {
       await flushPromises();
     });
 
-    expect(document.body.textContent).not.toContain('¡Inscripción confirmada!');
+    expect(document.body.textContent).not.toContain('Solicitud recibida');
 
     await act(async () => { root.unmount(); });
     document.body.removeChild(container);

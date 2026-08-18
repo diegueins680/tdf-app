@@ -3,17 +3,27 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import type { CourseMetadata, CourseRegistrationRequest } from '../api/courses';
+import type {
+  CourseCheckoutResponse,
+  CourseMetadata,
+  CourseRegistrationRequest,
+} from '../api/courses';
 
 const getMetadataMock = jest.fn<(slug: string) => Promise<CourseMetadata>>();
 const registerMock = jest.fn<
-  (slug: string, payload: CourseRegistrationRequest) => Promise<{ id: number; status: string }>
+  (slug: string, payload: CourseRegistrationRequest, idempotencyKey: string) => Promise<CourseCheckoutResponse>
+>();
+const getCheckoutMock = jest.fn<
+  (slug: string, registrationId: number, lookupToken: string) => Promise<CourseCheckoutResponse>
 >();
 
 jest.unstable_mockModule('../api/courses', () => ({
   Courses: {
     getMetadata: (slug: string) => getMetadataMock(slug),
-    register: (slug: string, payload: CourseRegistrationRequest) => registerMock(slug, payload),
+    register: (slug: string, payload: CourseRegistrationRequest, idempotencyKey: string) =>
+      registerMock(slug, payload, idempotencyKey),
+    getCheckout: (slug: string, registrationId: number, lookupToken: string) =>
+      getCheckoutMock(slug, registrationId, lookupToken),
   },
 }));
 
@@ -88,6 +98,20 @@ const buildMetadata = (overrides: Partial<CourseMetadata> = {}): CourseMetadata 
   ...overrides,
 } as CourseMetadata);
 
+const buildLeadResponse = (overrides: Partial<CourseCheckoutResponse> = {}): CourseCheckoutResponse => ({
+  registrationId: 7,
+  courseSlug: 'bateria-guillermo-diaz-abr-2026',
+  checkoutId: null,
+  lookupToken: null,
+  paymentStatus: 'not_started',
+  fulfillmentStatus: 'lead_received',
+  holdExpiresAt: null,
+  quote: null,
+  paymentMethods: [],
+  checkoutAvailable: false,
+  ...overrides,
+});
+
 const renderPage = async (container: HTMLElement, initialEntry: string) => {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -100,6 +124,7 @@ const renderPage = async (container: HTMLElement, initialEntry: string) => {
         <MemoryRouter initialEntries={[initialEntry]}>
           <Routes>
             <Route path="/curso/:slug" element={<CourseProductionLandingPage />} />
+            <Route path="/curso/:slug/orden/:registrationId" element={<CourseProductionLandingPage />} />
           </Routes>
         </MemoryRouter>
       </QueryClientProvider>,
@@ -158,8 +183,10 @@ describe('CourseProductionLandingPage', () => {
   beforeEach(() => {
     getMetadataMock.mockReset();
     registerMock.mockReset();
+    getCheckoutMock.mockReset();
     getMetadataMock.mockResolvedValue(buildMetadata());
-    registerMock.mockResolvedValue({ id: 7, status: 'pending_payment' });
+    registerMock.mockResolvedValue(buildLeadResponse());
+    getCheckoutMock.mockResolvedValue(buildLeadResponse());
   });
 
   it('loads a generic course slug and renders the instructor, photo, and pensum from metadata', async () => {
@@ -198,6 +225,12 @@ describe('CourseProductionLandingPage', () => {
       await setInputValue(inputs[1], 'ana@example.com');
       await setInputValue(inputs[2], '+593999001122');
       if (textarea) await setInputValue(textarea, 'Instagram');
+      const terms = container.querySelector<HTMLInputElement>('input[type="checkbox"]');
+      if (!terms) throw new Error('Expected terms checkbox');
+      await act(async () => {
+        terms.click();
+        await flushPromises();
+      });
 
       const form = container.querySelector('form');
       if (!form) throw new Error('Registration form not found');
@@ -208,22 +241,27 @@ describe('CourseProductionLandingPage', () => {
       });
 
       await waitForExpectation(() => {
-        expect(registerMock).toHaveBeenCalledWith('bateria-guillermo-diaz-abr-2026', {
-          fullName: 'Ana Torres',
-          email: 'ana@example.com',
-          phoneE164: '+593999001122',
-          source: 'landing',
-          howHeard: 'Instagram',
-          utm: { source: 'ig', medium: undefined, campaign: undefined, content: undefined },
-        });
+        expect(registerMock).toHaveBeenCalledWith(
+          'bateria-guillermo-diaz-abr-2026',
+          {
+            fullName: 'Ana Torres',
+            email: 'ana@example.com',
+            phoneE164: '+593999001122',
+            source: 'landing',
+            howHeard: 'Instagram',
+            utm: { source: 'ig', medium: undefined, campaign: undefined, content: undefined },
+            termsAccepted: true,
+          },
+          expect.stringMatching(/^course-checkout-/),
+        );
       });
     } finally {
       await cleanup();
     }
   });
 
-  it('keeps the completed registration state visible after a delayed submit resolves', async () => {
-    const pendingRegistration = createDeferred<{ id: number; status: string }>();
+  it('keeps the honest lead-received state visible after a delayed submit resolves', async () => {
+    const pendingRegistration = createDeferred<CourseCheckoutResponse>();
     registerMock.mockReturnValueOnce(pendingRegistration.promise);
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -238,6 +276,12 @@ describe('CourseProductionLandingPage', () => {
       if (!inputs[0] || !inputs[1]) throw new Error('Expected registration inputs');
       await setInputValue(inputs[0], 'Ana Torres');
       await setInputValue(inputs[1], 'ana@example.com');
+      const terms = container.querySelector<HTMLInputElement>('input[type="checkbox"]');
+      if (!terms) throw new Error('Expected terms checkbox');
+      await act(async () => {
+        terms.click();
+        await flushPromises();
+      });
 
       const form = container.querySelector('form');
       if (!form) throw new Error('Registration form not found');
@@ -252,13 +296,54 @@ describe('CourseProductionLandingPage', () => {
       });
 
       await act(async () => {
-        pendingRegistration.resolve({ id: 7, status: 'pending_payment' });
+        pendingRegistration.resolve(buildLeadResponse());
         await flushPromises();
       });
 
       await waitForExpectation(() => {
         expect(text(container)).toContain('Inscripcion recibida');
         expect(text(container)).toContain('Inscripción recibida');
+        expect(text(container)).toContain('no está habilitado y no se reservó ni pagó un cupo');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('does not show received, held, or paid states after the registration API fails', async () => {
+    registerMock.mockRejectedValueOnce(new Error('provider unavailable'));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/curso/bateria-guillermo-diaz-abr-2026');
+
+    try {
+      await waitForExpectation(() => {
+        expect(text(container)).toContain('Reserva tu cupo');
+      });
+
+      const inputs = Array.from(container.querySelectorAll<HTMLInputElement>('input'));
+      if (!inputs[0] || !inputs[1]) throw new Error('Expected registration inputs');
+      await setInputValue(inputs[0], 'Ana Torres');
+      await setInputValue(inputs[1], 'ana@example.com');
+      const terms = container.querySelector<HTMLInputElement>('input[type="checkbox"]');
+      if (!terms) throw new Error('Expected terms checkbox');
+      await act(async () => {
+        terms.click();
+        await flushPromises();
+      });
+
+      const form = container.querySelector('form');
+      if (!form) throw new Error('Registration form not found');
+      await act(async () => {
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(text(container)).toContain('No pudimos registrar tu inscripción');
+        expect(text(container)).not.toContain('Inscripcion recibida');
+        expect(text(container)).not.toContain('Cupo retenido temporalmente');
+        expect(text(container)).not.toContain('Pago verificado');
       });
     } finally {
       await cleanup();

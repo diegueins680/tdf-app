@@ -59,6 +59,7 @@ import TDF.Config (
     supportedCurrencies,
     supportedLocales,
   )
+import TDF.Commerce.ProviderEventWorker (startProviderEventWorker)
 import TDF.Cors (corsPolicy)
 import TDF.CampaignAutomation (startCampaignAutomationJob)
 import qualified TDF.CMS.Models as CMS
@@ -175,6 +176,7 @@ runBootServer = do
         startSocialAutoReplyJob env
         startCampaignAutomationJob env
         startOperationsWorker env
+        startProviderEventWorker env
 
   serverResult <- newEmptyMVar
   _ <-
