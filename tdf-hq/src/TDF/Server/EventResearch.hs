@@ -54,6 +54,10 @@ import TDF.API.EventResearchAPI
 import TDF.Auth (AuthedUser (..), hasStrictAdminAccess)
 import TDF.DB (Env (..))
 import TDF.DTO.EventResearchDTO
+import TDF.EventResearch.Identity
+    ( normalizeResearchEntityText
+    , researchEntityExternalId
+    )
 import TDF.Models.SocialEventsModels hiding (eventResearchCandidateContentHash)
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.SocialEventLifecycle as EventLifecycle
@@ -355,12 +359,7 @@ distinctEntityNames =
     nubBy (\left right -> normalizeEntityText left == normalizeEntityText right)
 
 normalizeEntityText :: T.Text -> T.Text
-normalizeEntityText =
-    T.unwords
-        . T.words
-        . T.map (\ch -> if isAlphaNum ch then ch else ' ')
-        . T.toCaseFold
-        . T.strip
+normalizeEntityText = normalizeResearchEntityText
 
 uniquePriceCurrency :: [MaterializationPrice] -> Either T.Text (Maybe T.Text)
 uniquePriceCurrency prices = do
@@ -956,11 +955,6 @@ eventResearchMaterializationDedupeKey :: EventResearchCandidateId -> SocialEvent
 eventResearchMaterializationDedupeKey candidateId eventId =
     sha256Text . BL.fromStrict . TE.encodeUtf8 $
         T.intercalate ":" ["materialized", renderKey candidateId, renderKey eventId]
-
-researchEntityExternalId :: T.Text -> [T.Text] -> T.Text
-researchEntityExternalId entityType parts =
-    "event-research:" <> entityType <> ":"
-        <> T.take 40 (sha256Text (BL.fromStrict (TE.encodeUtf8 (T.intercalate "|" (map normalizeEntityText parts)))))
 
 conflict :: T.Text -> ServerError
 conflict message = err409{errBody = BL.fromStrict (TE.encodeUtf8 message)}

@@ -7,7 +7,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL8
 import Control.Monad.Logger (runNoLoggingT)
 import Data.Pool (destroyAllResources)
 import Data.Time (UTCTime(..), addUTCTime, fromGregorian, secondsToDiffTime)
-import Database.Persist (Entity(..), Filter, count, get, getBy, update, (=.))
+import Database.Persist (Entity(..), Filter, count, get, getBy, insert, update, (=.))
 import Database.Persist.Sql (SqlPersistT, rawExecute, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePool)
 import Test.Hspec
@@ -17,6 +17,7 @@ import Data.Maybe (isJust, isNothing)
 import qualified Data.Text as T
 import qualified Data.UUID as UUID
 
+import TDF.EventResearch.Identity (researchEntityExternalId)
 import TDF.Services.EventDiscovery
   ( DiscoveredArtist(..)
   , DiscoveredEvent(..)
@@ -293,6 +294,114 @@ spec = do
           metadata `shouldSatisfy` T.isInfixOf "\"isPublic\":false"
       (UUID.toText <$> (Social.socialEventWorkflowStateId =<< importedEventAfterReconcile))
         `shouldBe` Just "00000000-0000-4000-8000-000000000237"
+
+    it "reconciles materialization entity aliases with real provider ids" $ do
+      event <- case eitherDecode ticketmasterFixture of
+        Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"
+        Right response ->
+          case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
+            [normalized] -> pure normalized
+            other -> expectationFailure ("Expected one normalized event, got " <> show other) >> fail "invalid normalized fixture"
+      pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+      runSqlPool initializeEventDiscoverySchema pool
+
+      artist <- case discoveredEventArtists event of
+        [value] -> pure value
+        other -> expectationFailure ("Expected one normalized artist, got " <> show other) >> fail "invalid normalized fixture"
+      let now = fixtureTime 10 2
+          venue = discoveredEventVenue event
+          materializedVenueExternalId =
+            researchEntityExternalId
+              "venue"
+              [ discoveredVenueName venue
+              , discoveredVenueCity venue
+              , maybe "" id (discoveredVenueCountryCode venue)
+              ]
+          materializedArtistExternalId =
+            researchEntityExternalId "artist" [discoveredArtistName artist]
+      (materializedVenueId, materializedArtistId) <-
+        runSqlPool
+          ( do
+              venueId <-
+                insert
+                  Social.Venue
+                    { Social.venueName = discoveredVenueName venue
+                    , Social.venueAddress = discoveredVenueAddress venue
+                    , Social.venueCity = Just (discoveredVenueCity venue)
+                    , Social.venueCountry = discoveredVenueCountry venue
+                    , Social.venueCountryCode = discoveredVenueCountryCode venue
+                    , Social.venueCountryId = Nothing
+                    , Social.venueCityId = Nothing
+                    , Social.venueTimezone = discoveredVenueTimeZone venue
+                    , Social.venueLatitude = discoveredVenueLatitude venue
+                    , Social.venueLongitude = discoveredVenueLongitude venue
+                    , Social.venueCapacity = Nothing
+                    , Social.venueContact = Nothing
+                    , Social.venueCreatedAt = now
+                    , Social.venueUpdatedAt = now
+                    }
+              _ <-
+                insert
+                  Social.ExternalVenueRef
+                    { Social.externalVenueRefProvider = discoveredEventProvider event
+                    , Social.externalVenueRefExternalId = materializedVenueExternalId
+                    , Social.externalVenueRefVenueId = venueId
+                    , Social.externalVenueRefLastSeenAt = now
+                    }
+              artistId <-
+                insert
+                  Social.ArtistProfile
+                    { Social.artistProfilePartyId = Nothing
+                    , Social.artistProfileName = discoveredArtistName artist
+                    , Social.artistProfileBio = Nothing
+                    , Social.artistProfileAvatarUrl = Nothing
+                    , Social.artistProfileGenres = Nothing
+                    , Social.artistProfileSocialLinks = Nothing
+                    , Social.artistProfileCountryCode = Nothing
+                    , Social.artistProfileCountryId = Nothing
+                    , Social.artistProfileCreatedAt = now
+                    , Social.artistProfileUpdatedAt = now
+                    }
+              _ <-
+                insert
+                  Social.ExternalArtistRef
+                    { Social.externalArtistRefProvider = discoveredEventProvider event
+                    , Social.externalArtistRefExternalId = materializedArtistExternalId
+                    , Social.externalArtistRefArtistId = artistId
+                    , Social.externalArtistRefLastSeenAt = now
+                    }
+              pure (venueId, artistId)
+          )
+          pool
+
+      stats <- syncDiscoveredEvent pool (fixtureTime 10 5) event
+
+      discoveryVenuesCreated stats `shouldBe` 0
+      discoveryArtistsCreated stats `shouldBe` 0
+      runSqlPool (count ([] :: [Filter Social.Venue])) pool `shouldReturn` 1
+      runSqlPool (count ([] :: [Filter Social.ArtistProfile])) pool `shouldReturn` 1
+      actualVenueRef <-
+        runSqlPool
+          ( getBy
+              ( Social.UniqueExternalVenueRef
+                  (discoveredEventProvider event)
+                  (discoveredVenueExternalId venue)
+              )
+          )
+          pool
+      actualArtistRef <-
+        runSqlPool
+          ( getBy
+              ( Social.UniqueExternalArtistRef
+                  (discoveredEventProvider event)
+                  (discoveredArtistExternalId artist)
+              )
+          )
+          pool
+      (Social.externalVenueRefVenueId . entityVal <$> actualVenueRef)
+        `shouldBe` Just materializedVenueId
+      (Social.externalArtistRefArtistId . entityVal <$> actualArtistRef)
+        `shouldBe` Just materializedArtistId
 
     it "keeps pilot imports private, idempotent, capped-countable, and timezone-explicit" $ do
       event <- case eitherDecode ticketmasterFixture of
