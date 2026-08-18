@@ -38,6 +38,14 @@ const record = (value: unknown): Record<string, unknown> | undefined =>
   typeof value === 'object' && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : undefined;
 const rows = (value: unknown): Record<string, unknown>[] =>
   Array.isArray(value) ? value.filter((item): item is Record<string, unknown> => Boolean(record(item))) : [];
+const absoluteUrl = (value: string | undefined, origin: string): string | undefined => {
+  if (!value) return undefined;
+  try {
+    return new URL(value, origin).toString();
+  } catch {
+    return undefined;
+  }
+};
 
 export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }) {
   const params = useParams();
@@ -57,11 +65,13 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
   const value = detail.data ?? {};
   const title = text(value['name']) ?? text(value['title']) ?? 'Directorio musical';
   const description = text(value['bio']) ?? text(value['description']) ?? text(value['creditsSummary']) ?? 'Perfil público en TDF.';
-  const profileImageEntry = kind === 'profile'
-    ? rows(value['portfolio']).find((item) => text(item['itemType']) === 'image')
+  const absoluteProfileImage = kind === 'profile'
+    ? rows(value['portfolio'])
+        .filter((item) => text(item['itemType']) === 'image')
+        .flatMap((item) => [text(item['thumbnailUrl']), text(item['url'])])
+        .map((url) => absoluteUrl(url, window.location.origin))
+        .find((url): url is string => Boolean(url))
     : undefined;
-  const profileImage = text(profileImageEntry?.['thumbnailUrl']) ?? text(profileImageEntry?.['url']);
-  const absoluteProfileImage = profileImage ? new URL(profileImage, window.location.origin).toString() : undefined;
   const canonicalPath = text(value['canonicalUrl']) ?? location.pathname;
   const canonical = `${window.location.origin}${canonicalPath}`;
   const categoryCode = text(record(value['category'])?.['code']);
