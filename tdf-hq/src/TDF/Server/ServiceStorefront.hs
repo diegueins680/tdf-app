@@ -37,6 +37,8 @@ module TDF.Server.ServiceStorefront
   , paypalWebhookResourceId
   , validatePaypalWebhookHeaders
   , validatePaypalWebhookCaptureBinding
+  , paypalWebhookDomainSupported
+  , paypalCaptureRequiresReconciliation
   , buildPaypalWebhookVerificationBody
   , parsePaypalRefundOutcome
   , processPaypalWebhookEventIO
@@ -84,10 +86,12 @@ import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
 import qualified TDF.Commerce.RefundStore as Refund
 import           TDF.Config (defaultCurrency, defaultLocale, supportedCurrencies)
-import           TDF.DB (ConnectionPool, Env(..))
+import           TDF.DB (Env(..))
 import           TDF.Internationalization (formatMinorUnitsDecimal, formatMoney, normalizeCurrencyCode)
+import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.ModelsExtra as ME
 import           TDF.DTO.SocialEventsDTO (StripePaymentIntentDTO(..))
+import qualified TDF.Server.SocialEventsHandlers as SocialEvents
 
 type AppM = ReaderT Env Handler
 
@@ -842,17 +846,17 @@ processPaypalWebhookEvent
   -> UTCTime
   -> AppM PaypalEventProcessResult
 processPaypalWebhookEvent environment merchantRef envelope now = do
-  Env{..} <- ask
-  liftIO $ processPaypalWebhookEventIO envPool environment merchantRef envelope now
+  env <- ask
+  liftIO $ processPaypalWebhookEventIO env environment merchantRef envelope now
 
 processPaypalWebhookEventIO
-  :: ConnectionPool
+  :: Env
   -> Checkout.CheckoutEnvironment
   -> Text
   -> PaypalWebhookEnvelope
   -> UTCTime
   -> IO PaypalEventProcessResult
-processPaypalWebhookEventIO envPool environment merchantRef envelope now =
+processPaypalWebhookEventIO env@Env{envPool = pool} environment merchantRef envelope now =
   case pweEventType envelope of
     "PAYMENT.CAPTURE.COMPLETED" -> processCompletedCapture
     "PAYMENT.CAPTURE.REFUNDED" -> processExternalCaptureChange
@@ -864,7 +868,7 @@ processPaypalWebhookEventIO envPool environment merchantRef envelope now =
     processCompletedCapture = case parsePaypalWebhookCapture envelope of
       Left message -> pure (PaypalEventPermanentFailure message Nothing Nothing Nothing)
       Right capture -> do
-        result <- tryAny $ flip runSqlPool envPool $ do
+        result <- tryAny $ flip runSqlPool pool $ do
           mCaptureBound <- loadBoundPaypalCapture
             environment merchantRef (pwcCaptureId capture)
           mBound <- case mCaptureBound of
@@ -872,94 +876,120 @@ processPaypalWebhookEventIO envPool environment merchantRef envelope now =
             Nothing -> loadBoundPaypalOrder
               environment merchantRef (pwcPaypalOrderId capture)
           case mBound of
-            Nothing -> pure PaypalEventIgnored
+            Nothing -> pure (PaypalEventIgnored, Nothing)
             Just bound -> case validatePaypalWebhookCaptureBinding merchantRef bound capture of
               Left message -> do
                 recordPaypalWebhookMismatch environment (pweCreatedAt envelope) bound capture message
                 pure (PaypalEventPermanentFailure message
-                  (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing)
+                  (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing, Nothing)
               Right () -> do
-                let checkout = Checkout.CheckoutReference (bpcCheckoutId bound)
-                    attempt = Checkout.PaymentAttemptReference (bpcAttemptId bound)
-                    correlationId = "paypal-webhook:" <> pweEventId envelope
-                binding <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
-                  { Checkout.pbcAttempt = attempt
-                  , Checkout.pbcCheckout = checkout
-                  , Checkout.pbcProvider = Checkout.ProviderPayPal
-                  , Checkout.pbcEnvironment = environment
-                  , Checkout.pbcMerchantRef = merchantRef
-                  , Checkout.pbcResourceType = "capture"
-                  , Checkout.pbcProviderResource = pwcCaptureId capture
-                  , Checkout.pbcResourcePath = Just
-                      ("/v2/checkout/orders/" <> pwcPaypalOrderId capture <> "/capture")
-                  , Checkout.pbcOrderReference = bpcDomainOrderId bound
-                  , Checkout.pbcAmountMinor = bpcExpectedAmount bound
-                  , Checkout.pbcCurrency = bpcCurrency bound
-                  , Checkout.pbcStage = Checkout.AttemptProcessing
-                  , Checkout.pbcOccurredAt = pweCreatedAt envelope
-                  , Checkout.pbcCorrelationId = correlationId
-                  }
-                case binding of
-                  Left message -> do
-                    recordPaypalWebhookMismatch environment (pweCreatedAt envelope) bound capture message
-                    pure (PaypalEventPermanentFailure message
-                      (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing)
-                  Right () -> do
-                    verified <- Checkout.recordVerifiedPayment Checkout.VerifiedPayment
-                      { Checkout.vpAttempt = attempt
-                      , Checkout.vpCheckout = checkout
-                      , Checkout.vpProvider = Checkout.ProviderPayPal
-                      , Checkout.vpEnvironment = environment
-                      , Checkout.vpMerchantRef = merchantRef
-                      , Checkout.vpResourceType = "capture"
-                      , Checkout.vpProviderResource = pwcCaptureId capture
-                      , Checkout.vpProviderResourcePath = Just
+                reconciled <- reconcileLatePaypalCapture environment merchantRef now bound capture
+                if reconciled
+                  then pure (PaypalEventProcessed
+                    (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing, Nothing)
+                  else do
+                    let checkout = Checkout.CheckoutReference (bpcCheckoutId bound)
+                        attempt = Checkout.PaymentAttemptReference (bpcAttemptId bound)
+                        correlationId = "paypal-webhook:" <> pweEventId envelope
+                    binding <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
+                      { Checkout.pbcAttempt = attempt
+                      , Checkout.pbcCheckout = checkout
+                      , Checkout.pbcProvider = Checkout.ProviderPayPal
+                      , Checkout.pbcEnvironment = environment
+                      , Checkout.pbcMerchantRef = merchantRef
+                      , Checkout.pbcResourceType = "capture"
+                      , Checkout.pbcProviderResource = pwcCaptureId capture
+                      , Checkout.pbcResourcePath = Just
                           ("/v2/checkout/orders/" <> pwcPaypalOrderId capture <> "/capture")
-                      , Checkout.vpOrderReference = bpcDomainOrderId bound
-                      , Checkout.vpAmountMinor = bpcExpectedAmount bound
-                      , Checkout.vpCurrency = bpcCurrency bound
-                      , Checkout.vpEvidence = "signature_verified_webhook"
-                      , Checkout.vpOccurredAt = pweCreatedAt envelope
-                      , Checkout.vpCorrelationId = correlationId
+                      , Checkout.pbcOrderReference = bpcDomainOrderId bound
+                      , Checkout.pbcAmountMinor = bpcExpectedAmount bound
+                      , Checkout.pbcCurrency = bpcCurrency bound
+                      , Checkout.pbcStage = Checkout.AttemptProcessing
+                      , Checkout.pbcOccurredAt = pweCreatedAt envelope
+                      , Checkout.pbcCorrelationId = correlationId
                       }
-                    case verified of
+                    case binding of
                       Left message -> do
                         recordPaypalWebhookMismatch environment (pweCreatedAt envelope) bound capture message
                         pure (PaypalEventPermanentFailure message
-                          (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing)
-                      Right newlyPaid -> do
-                        when (newlyPaid && bpcDomainType bound == "mixing_mastering") $ do
-                          rawExecute
-                            "UPDATE service_storefront_order SET status = 'paid',\
-                            \ paypal_capture_id = ?, paid_at = COALESCE(paid_at, ?), updated_at = ?\
-                            \ WHERE id = ?::uuid AND checkout_id = ?::uuid\
-                            \ AND paypal_order_id = ?"
-                            [ PersistText (pwcCaptureId capture)
-                            , PersistUTCTime (pweCreatedAt envelope)
-                            , PersistUTCTime now
-                            , PersistText (bpcDomainOrderId bound)
-                            , PersistText (bpcCheckoutId bound)
-                            , PersistText (pwcPaypalOrderId capture)
-                            ]
-                          rawExecute
-                            "INSERT INTO service_storefront_order_status_change\
-                            \ (order_id, status, notes, changed_by, created_at)\
-                            \ VALUES (?::uuid, 'paid',\
-                            \ 'PayPal capture completed through a signature-verified webhook',\
-                            \ 'paypal_signature_verified_webhook', ?)"
-                            [ PersistText (bpcDomainOrderId bound)
-                            , PersistUTCTime now
-                            ]
-                        pure (PaypalEventProcessed
-                          (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing)
-        pure $ case result of
-          Left _ -> PaypalEventRetry "PayPal capture event database processing failed"
-          Right outcome -> outcome
+                          (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing, Nothing)
+                      Right () -> do
+                        verified <- Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+                          { Checkout.vpAttempt = attempt
+                          , Checkout.vpCheckout = checkout
+                          , Checkout.vpProvider = Checkout.ProviderPayPal
+                          , Checkout.vpEnvironment = environment
+                          , Checkout.vpMerchantRef = merchantRef
+                          , Checkout.vpResourceType = "capture"
+                          , Checkout.vpProviderResource = pwcCaptureId capture
+                          , Checkout.vpProviderResourcePath = Just
+                              ("/v2/checkout/orders/" <> pwcPaypalOrderId capture <> "/capture")
+                          , Checkout.vpOrderReference = bpcDomainOrderId bound
+                          , Checkout.vpAmountMinor = bpcExpectedAmount bound
+                          , Checkout.vpCurrency = bpcCurrency bound
+                          , Checkout.vpEvidence = "signature_verified_webhook"
+                          , Checkout.vpOccurredAt = pweCreatedAt envelope
+                          , Checkout.vpCorrelationId = correlationId
+                          }
+                        case verified of
+                          Left message -> do
+                            recordPaypalWebhookMismatch environment (pweCreatedAt envelope) bound capture message
+                            pure (PaypalEventPermanentFailure message
+                              (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing, Nothing)
+                          Right newlyPaid -> do
+                            when (newlyPaid && bpcDomainType bound == "mixing_mastering") $ do
+                              rawExecute
+                                "UPDATE service_storefront_order SET status = 'paid',\
+                                \ paypal_capture_id = ?, paid_at = COALESCE(paid_at, ?), updated_at = ?\
+                                \ WHERE id = ?::uuid AND checkout_id = ?::uuid\
+                                \ AND paypal_order_id = ?"
+                                [ PersistText (pwcCaptureId capture)
+                                , PersistUTCTime (pweCreatedAt envelope)
+                                , PersistUTCTime now
+                                , PersistText (bpcDomainOrderId bound)
+                                , PersistText (bpcCheckoutId bound)
+                                , PersistText (pwcPaypalOrderId capture)
+                                ]
+                              rawExecute
+                                "INSERT INTO service_storefront_order_status_change\
+                                \ (order_id, status, notes, changed_by, created_at)\
+                                \ VALUES (?::uuid, 'paid',\
+                                \ 'PayPal capture completed through a signature-verified webhook',\
+                                \ 'paypal_signature_verified_webhook', ?)"
+                                [ PersistText (bpcDomainOrderId bound)
+                                , PersistUTCTime now
+                                ]
+                            confirmation <- if bpcDomainType bound == "event_ticket_order"
+                              then do
+                                orderKey <- maybe
+                                  (fail "Event ticket PayPal binding has an invalid order reference")
+                                  pure
+                                  (fromPathPiece (bpcDomainOrderId bound)
+                                    :: Maybe SM.EventTicketOrderId)
+                                (order, ticketCodes, newlyIssued) <-
+                                  SocialEvents.finalizePaidTicketOrder now orderKey
+                                pure $ if newlyIssued
+                                  then Just (order, ticketCodes)
+                                  else Nothing
+                              else pure Nothing
+                            pure (PaypalEventProcessed
+                              (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing,
+                              confirmation)
+        case result of
+          Left _ -> pure (PaypalEventRetry "PayPal capture event database processing failed")
+          Right (outcome, mConfirmation) -> do
+            case mConfirmation of
+              Just (order, ticketCodes) -> do
+                _ <- tryAny $
+                  SocialEvents.sendTicketConfirmationForOrderIO env order ticketCodes
+                pure ()
+              Nothing -> pure ()
+            pure outcome
 
     processExternalCaptureChange exceptionType =
       case parsePaypalWebhookCapture envelope of
         Left _ -> do
-          result <- tryAny $ flip runSqlPool envPool $
+          result <- tryAny $ flip runSqlPool pool $
             Checkout.recordReconciliationException
               Checkout.ProviderPayPal environment merchantRef exceptionType
               ("provider-event:" <> pweEventId envelope)
@@ -969,7 +999,7 @@ processPaypalWebhookEventIO envPool environment merchantRef envelope now =
             Left _ -> PaypalEventRetry "Malformed PayPal refund or reversal event could not be recorded"
             Right () -> PaypalEventProcessed Nothing Nothing Nothing
         Right capture -> do
-          result <- tryAny $ flip runSqlPool envPool $ do
+          result <- tryAny $ flip runSqlPool pool $ do
             mBound <- loadBoundPaypalCapture environment merchantRef (pwcCaptureId capture)
             case mBound of
               Nothing -> pure PaypalEventIgnored
@@ -985,6 +1015,68 @@ processPaypalWebhookEventIO envPool environment merchantRef envelope now =
           pure $ case result of
             Left _ -> PaypalEventRetry "PayPal refund or reversal event database processing failed"
             Right outcome -> outcome
+
+paypalWebhookDomainTypes :: [Text]
+paypalWebhookDomainTypes =
+  [ "mixing_mastering"
+  , "marketplace_sale"
+  , "marketplace_rental"
+  , "service_booking"
+  , "course_registration"
+  , "event_ticket_order"
+  ]
+
+paypalWebhookDomainSupported :: Text -> Bool
+paypalWebhookDomainSupported domainType = domainType `elem` paypalWebhookDomainTypes
+
+paypalCaptureRequiresReconciliation
+  :: UTCTime
+  -> Text
+  -> Maybe UTCTime
+  -> Bool
+paypalCaptureRequiresReconciliation now checkoutStatus expiresAt =
+  checkoutStatus `notElem`
+    ["holding", "awaiting_payment", "processing", "failed", "paid"]
+  || (checkoutStatus /= "paid" && maybe False (<= now) expiresAt)
+
+reconcileLatePaypalCapture
+  :: Checkout.CheckoutEnvironment
+  -> Text
+  -> UTCTime
+  -> BoundPaypalCapture
+  -> PaypalWebhookCapture
+  -> SqlPersistT IO Bool
+reconcileLatePaypalCapture environment merchantRef now bound capture = do
+  rows <- (rawSql
+    "SELECT status, expires_at FROM commerce_checkout_session\
+    \ WHERE id = ?::uuid FOR UPDATE"
+    [PersistText (bpcCheckoutId bound)]
+    :: SqlPersistT IO [(Single Text, Single (Maybe UTCTime))])
+  (checkoutStatus, expiresAt) <- case rows of
+    [(Single status, Single deadline)] -> pure (status, deadline)
+    _ -> fail "PayPal capture binding has no unique canonical checkout"
+  if not (paypalCaptureRequiresReconciliation now checkoutStatus expiresAt)
+    then pure False
+    else do
+      let holdExpired = checkoutStatus /= "paid" && maybe False (<= now) expiresAt
+          exceptionType
+            | holdExpired && bpcDomainType bound == "event_ticket_order" =
+                "payment_after_ticket_hold_expiry"
+            | holdExpired && bpcDomainType bound == "course_registration" =
+                "payment_after_course_hold_expiry"
+            | holdExpired = "payment_after_checkout_expiry"
+            | otherwise = "payment_after_terminal_checkout"
+      when holdExpired $ rawExecute
+        "UPDATE commerce_checkout_session SET status = 'expired', updated_at = ?\
+        \ WHERE id = ?::uuid\
+        \ AND status IN ('holding','awaiting_payment','processing','failed')"
+        [PersistUTCTime now, PersistText (bpcCheckoutId bound)]
+      Checkout.recordReconciliationException
+        Checkout.ProviderPayPal environment merchantRef exceptionType
+        (bpcDomainOrderId bound) (pwcCaptureId capture)
+        (bpcExpectedAmount bound) (Just (bpcExpectedAmount bound))
+        (bpcCurrency bound) now
+      pure True
 
 loadBoundPaypalOrder
   :: Checkout.CheckoutEnvironment
@@ -1013,6 +1105,7 @@ loadBoundPaypalCaptureBy
   -> Text
   -> SqlPersistT IO (Maybe BoundPaypalCapture)
 loadBoundPaypalCaptureBy bindingPredicate environment merchantRef providerResource = do
+  let domainPlaceholders = T.intercalate "," (replicate (length paypalWebhookDomainTypes) "?")
   rows <- (rawSql
     ("SELECT checkout.id::text, attempt.id::text, checkout.domain_type, checkout.domain_order_id,\
      \ checkout.total_minor, checkout.currency, attempt.merchant_account_ref,\
@@ -1026,13 +1119,14 @@ loadBoundPaypalCaptureBy bindingPredicate environment merchantRef providerResour
      \  AND order_binding.merchant_account_ref = attempt.merchant_account_ref\
      \  AND order_binding.merchant_reference = checkout.domain_order_id\
      \  AND order_binding.resource_type = 'order'\
-     \ WHERE checkout.domain_type IN ('mixing_mastering','marketplace_sale','marketplace_rental','service_booking')\
+     \ WHERE checkout.domain_type IN (" <> domainPlaceholders <> ")\
      \ AND attempt.provider = 'paypal' AND attempt.environment = ?\
      \ AND attempt.merchant_account_ref = ? AND " <> bindingPredicate)
-    [ PersistText (Checkout.checkoutEnvironmentText environment)
-    , PersistText merchantRef
-    , PersistText providerResource
-    ] :: SqlPersistT IO
+    (map PersistText paypalWebhookDomainTypes <>
+      [ PersistText (Checkout.checkoutEnvironmentText environment)
+      , PersistText merchantRef
+      , PersistText providerResource
+      ]) :: SqlPersistT IO
       [( Single Text, Single Text, Single Text, Single Text, Single Int64
        , Single Text, Single Text, Single Text
        )])

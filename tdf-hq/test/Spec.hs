@@ -1070,6 +1070,30 @@ main = hspec $ do
               "MERCHANT" bound capture { ServiceStorefront.pwcPaypalOrderId = "ORDER-2" }
               `shouldSatisfy` isLeft
 
+        it "correlates asynchronous PayPal captures for course and ticket checkouts" $ do
+            ServiceStorefront.paypalWebhookDomainSupported "course_registration"
+              `shouldBe` True
+            ServiceStorefront.paypalWebhookDomainSupported "event_ticket_order"
+              `shouldBe` True
+            ServiceStorefront.paypalWebhookDomainSupported "unsupported_checkout"
+              `shouldBe` False
+
+        it "reconciles late captures without reviving expired ticket holds" $ do
+            let now = UTCTime (fromGregorian 2026 8 18)
+                  (secondsToDiffTime (17 * 60 * 60))
+                expiredAt = addUTCTime (-1) now
+                futureExpiry = addUTCTime 1 now
+            ServiceStorefront.paypalCaptureRequiresReconciliation
+              now "processing" (Just expiredAt) `shouldBe` True
+            ServiceStorefront.paypalCaptureRequiresReconciliation
+              now "processing" (Just futureExpiry) `shouldBe` False
+            ServiceStorefront.paypalCaptureRequiresReconciliation
+              now "expired" (Just futureExpiry) `shouldBe` True
+            ServiceStorefront.paypalCaptureRequiresReconciliation
+              now "cancelled" Nothing `shouldBe` True
+            ServiceStorefront.paypalCaptureRequiresReconciliation
+              now "paid" (Just expiredAt) `shouldBe` False
+
         it "builds stable PayPal request IDs within the provider length limit" $ do
             let first = ServiceStorefront.paypalRequestId
                   "capture" "PAYPAL-ORDER-WITH-A-LONG-PROVIDER-REFERENCE-0001"
