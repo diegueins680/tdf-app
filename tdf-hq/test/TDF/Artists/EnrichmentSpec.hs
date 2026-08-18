@@ -5,10 +5,12 @@ module TDF.Artists.EnrichmentSpec (spec) where
 import Control.Exception (SomeException, try)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Logger (runNoLoggingT)
+import Data.Int (Int64)
 import Data.Text (Text)
 import Data.Time (UTCTime(..), fromGregorian, secondsToDiffTime)
-import Database.Persist (Entity(..), Filter, getBy, insert, selectList, (==.))
-import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
+import Database.Persist (Entity(..), Filter, getBy, insert, selectList, toPersistValue, (==.))
+import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql,
+                             runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Test.Hspec
 
@@ -121,6 +123,38 @@ spec = describe "artist enrichment identity policy" $ do
     artistInventoryReferenceSocialArtistId promoted `shouldBe` Just 7
     artistInventoryReferenceArtistPartyId rediscovered `shouldBe` Just (toSqlKey 42)
     artistInventoryReferenceSocialArtistId rediscovered `shouldBe` Just 7
+
+  it "preserves a revoked artist role for an existing profile" $ do
+    pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+    (approved, roleStates) <- runSqlPool (do
+      createReviewSchema
+      insertArtistProfileWithRevokedRole 42
+      inventoryId <- insert (mkInventory "event_artist" "revoked-existing" "Revoked Artist")
+      candidateId <- insert
+        (mkIdentityCandidate inventoryId (toSqlKey 42) "candidate-revoked-existing")
+      approvedResult <- decideArtistIdentityCandidate (toSqlKey 1) (fromSqlKey candidateId)
+        ArtistEnrichmentDecision
+          { aedDecision = "approve", aedEditedValue = Nothing, aedNote = Nothing }
+      states <- rawSql "SELECT active FROM party_security_role WHERE party_id=?"
+        [toPersistValue (42 :: Int64)]
+      pure (approvedResult, states)) pool
+    aicStatus approved `shouldBe` "approved"
+    roleStates `shouldBe` [Single False]
+
+  it "refuses to create a profile when the artist role was revoked" $ do
+    pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+    result <- try
+      (runSqlPool (do
+        createReviewSchema
+        insertPartyWithRevokedRole 43
+        inventoryId <- insert (mkInventory "event_artist" "revoked-new" "Revoked New Artist")
+        candidateId <- insert
+          (mkIdentityCandidate inventoryId (toSqlKey 43) "candidate-revoked-new")
+        decideArtistIdentityCandidate (toSqlKey 1) (fromSqlKey candidateId)
+          ArtistEnrichmentDecision
+            { aedDecision = "approve", aedEditedValue = Nothing, aedNote = Nothing }) pool)
+      :: IO (Either SomeException ArtistIdentityCandidateDTO)
+    result `shouldSatisfy` either (const True) (const False)
 
   it "holds explicit bracketed test references for obsolete review before punctuation normalization" $ do
     pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
@@ -342,6 +376,37 @@ createInventorySchema =
 
 fixedTime :: UTCTime
 fixedTime = UTCTime (fromGregorian 2026 8 5) (secondsToDiffTime 0)
+
+insertArtistProfileWithRevokedRole :: MonadIO m => Int64 -> SqlPersistT m ()
+insertArtistProfileWithRevokedRole partyId = do
+  insertPartyWithRevokedRole partyId
+  rawExecute
+    "INSERT INTO artist_profile (artist_party_id, slug, created_at) VALUES (?, ?, ?)"
+    [ toPersistValue partyId
+    , toPersistValue ("revoked-artist" :: Text)
+    , toPersistValue fixedTime
+    ]
+
+insertPartyWithRevokedRole :: MonadIO m => Int64 -> SqlPersistT m ()
+insertPartyWithRevokedRole partyId = do
+  rawExecute
+    "INSERT INTO party (id, display_name, is_org, created_at) VALUES (?, ?, ?, ?)"
+    [ toPersistValue partyId
+    , toPersistValue ("Revoked Artist" :: Text)
+    , toPersistValue True
+    , toPersistValue fixedTime
+    ]
+  rawExecute
+    "INSERT INTO party_security_role (id, party_id, role_id, approval_mode, active, created_at, revoked_at, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    [ toPersistValue ("00000000-0000-4000-8000-000000000999" :: Text)
+    , toPersistValue partyId
+    , toPersistValue ("00000000-0000-4000-8000-000000000404" :: Text)
+    , toPersistValue ("normal" :: Text)
+    , toPersistValue False
+    , toPersistValue fixedTime
+    , toPersistValue fixedTime
+    , toPersistValue (2 :: Int)
+    ]
 
 externalClaim :: ArtistEnrichmentRunUpdate
 externalClaim = ArtistEnrichmentRunUpdate

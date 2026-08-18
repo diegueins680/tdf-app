@@ -485,20 +485,21 @@ ensureCoreArtistProfile artistName now = do
 
 ensureArtistProfileForParty :: PartyId -> Text -> UTCTime -> SqlPersistT IO ()
 ensureArtistProfileForParty partyId artistName now = do
-  roleResult <- applySecurityRoleAssignmentPolicy
-    "live-session.artist-profile.artist"
-    partyId
-    False
-    Nothing
-    "artist-enrichment"
-    ("artist-enrichment:" <> intKeyText partyId)
-    now
-  case roleResult of
-    Left message -> liftIO . ioError . userError $ T.unpack message
-    Right _ -> pure ()
-  slug <- uniqueSlug partyId artistName
   existing <- getBy (UniqueArtistProfile partyId)
-  when (isNothing existing) $ insert_ ArtistProfile
+  when (isNothing existing) $ do
+    roleResult <- applySecurityRoleAssignmentPolicy
+      "live-session.artist-profile.artist"
+      partyId
+      False
+      Nothing
+      "artist-enrichment"
+      ("artist-enrichment:" <> intKeyText partyId)
+      now
+    case roleResult of
+      Left message -> liftIO . ioError . userError $ T.unpack message
+      Right _ -> pure ()
+    slug <- uniqueSlug partyId artistName
+    insert_ ArtistProfile
       { artistProfileArtistPartyId = partyId
       , artistProfileSlug = Just slug
       , artistProfileBio = Nothing
