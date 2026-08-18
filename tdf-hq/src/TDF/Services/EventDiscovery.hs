@@ -1723,7 +1723,7 @@ reconcileImportedEvents pool now activeCities =
         case maybeEvent of
           Nothing -> pure 0
           Just eventRow
-            | Social.socialEventEndTime eventRow < now -> do
+            | maybe False (< now) (Social.socialEventEndTime eventRow) -> do
                 updateImportedLifecycle eventKey eventRow "completed" False
                 pure 1
             | not (eventCoveredBySubscription eventKey refs) -> do
@@ -1885,7 +1885,7 @@ refreshCanonicalVisibility now eventKey = do
             case sortOn (negate . fst) activeRefs of
               (_, ref) : _ -> Just ref
               [] -> Nothing
-          ended = Social.socialEventEndTime eventRow < now
+          ended = maybe False (< now) (Social.socialEventEndTime eventRow)
           isPublic = not ended && maybe False (const True) bestActiveRef
           status
             | ended = "completed"
@@ -1975,7 +1975,7 @@ syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
               , Social.SocialEventVenueId =. Just venueKey
               , Social.SocialEventTimezone =. importedEventTimeZone discoveredEventVenue
               , Social.SocialEventStartTime =. discoveredEventStart
-              , Social.SocialEventEndTime =. discoveredEventEnd
+              , Social.SocialEventEndTime =. Just discoveredEventEnd
               , Social.SocialEventPriceCents =. discoveredEventPriceCents
               , Social.SocialEventEventTypeId =. Just eventTypeUuid
               , Social.SocialEventWorkflowStateId =. Just workflowStateId
@@ -2014,7 +2014,7 @@ syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
                     , Social.SocialEventVenueId =. Just venueKey
                     , Social.SocialEventTimezone =. importedEventTimeZone discoveredEventVenue
                     , Social.SocialEventStartTime =. discoveredEventStart
-                    , Social.SocialEventEndTime =. discoveredEventEnd
+                    , Social.SocialEventEndTime =. Just discoveredEventEnd
                     , Social.SocialEventPriceCents =. discoveredEventPriceCents
                     , Social.SocialEventEventTypeId =. Just eventTypeUuid
                     , Social.SocialEventWorkflowStateId =. Just workflowStateId
@@ -2035,7 +2035,7 @@ syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
                     , Social.socialEventEventTypeId = Just eventTypeUuid
                     , Social.socialEventWorkflowStateId = Just workflowStateId
                     , Social.socialEventStartTime = discoveredEventStart
-                    , Social.socialEventEndTime = discoveredEventEnd
+                    , Social.socialEventEndTime = Just discoveredEventEnd
                     , Social.socialEventPriceCents = discoveredEventPriceCents
                     , Social.socialEventCurrencyId = Nothing
                     , Social.socialEventCapacity = Nothing
