@@ -210,6 +210,11 @@
       "id": "2026-08-18_ddex_partner_legacy_compatibility",
       "path": "tdf-hq/sql/2026-08-18_ddex_partner_legacy_compatibility.sql",
       "introducedBy": "d0f7b80957610014fd436009247be3fc9e0904a0"
+    },
+    {
+      "id": "2026-08-18_music_directory_profile_images",
+      "path": "tdf-hq/sql/2026-08-18_music_directory_profile_images.sql",
+      "introducedBy": "f1665e92c8db9d86a890c7d3e61173de0ca8226d"
     }
   ]
 }

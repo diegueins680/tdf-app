@@ -100,6 +100,11 @@ psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-16_music_directory_verified_re
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-16_music_directory_verified_reviews_rollback.sql" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-18_music_directory_profile_images.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-18_music_directory_profile_images.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-18_music_directory_profile_images_rollback.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-18_music_directory_profile_images.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-18_music_directory_profile_images.sql" >/dev/null
 
 psql_exec <<'SQL' >/dev/null
 INSERT INTO party(display_name,is_org,created_at)
@@ -120,6 +125,8 @@ manager_count=$(psql_exec -Atc "SELECT count(*) FROM directory_profile_manager m
 test "$manager_count" = "0"
 legacy_link_count=$(psql_exec -Atc "SELECT count(*) FROM directory_legacy_link link JOIN directory_profile profile ON profile.id=link.profile_id WHERE profile.slug='synthetic-directory-fixture' AND link.source_url='/artistas/synthetic-directory-fixture';")
 test "$legacy_link_count" = "1"
+profile_image_url=$(psql_exec -Atc "SELECT image_url FROM directory_search_document WHERE entity_kind='profile' AND slug='synthetic-directory-fixture';")
+test "$profile_image_url" = "/media/synthetic-directory-fixture.webp"
 
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-14_music_directory_backfill_rollback.sql" >/dev/null
 rolled_back=$(psql_exec -Atc "SELECT count(*) FROM directory_profile WHERE slug='synthetic-directory-fixture';")
