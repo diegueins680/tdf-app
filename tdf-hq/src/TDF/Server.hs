@@ -180,6 +180,7 @@ import           TDF.Server.ServiceStorefront (serviceStorefrontPublicServer, se
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Server.CourseCheckout as CourseCheckoutServer
+import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
 import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
 import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
 import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
@@ -715,6 +716,7 @@ server env =
   :<|> fanPublicServer
   :<|> artistPublicServer
   :<|> coursesPublicServer
+  :<|> EventTicketCheckoutServer.publicEventTicketsServer
   :<|> instagramWebhookServer
   :<|> facebookWebhookServer
   :<|> whatsappHooksServer

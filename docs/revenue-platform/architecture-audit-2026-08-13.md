@@ -57,6 +57,15 @@ of safe unpaid candidates versus records requiring evidence-preserving reconcili
 no backfill. Production Datafast/PayPal remain disabled, and signed event ingestion, refunds and
 sandbox proof remain later work.
 
+Subsequent independently testable slices link equipment sales, dated rentals, studio/DJ deposits,
+courses, and public event tickets to the same canonical checkout without moving their fulfillment
+into the checkout aggregate. Public event tickets now have a customer-safe storefront and
+capability-protected tracker; an approved policy is the price/tax/fee authority, event/tier/promotion
+holds are atomic and expiring, Datafast/PayPal require immutable server verification, and ticket
+issuance remains separate. Organizer proceeds post to a payable liability and settlement is
+disabled. These deltas do not rewrite the baseline findings below; current endpoint and rollout
+truth is maintained in the endpoint inventory and implementation-status record.
+
 ## Validated known findings
 
 1. `MixingMasteringPage.tsx` sends Datafast, PayPal, and bank transfer through the same
@@ -137,6 +146,7 @@ Existing server payment variables are `DATAFAST_ENTITY_ID`, `DATAFAST_BEARER_TOK
 `DATAFAST_USER_DATA2`, `DATAFAST_VERSIONDF`, `DATAFAST_ENV`, `COMMERCE_CHECKOUT_ENV`,
 `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_ENV`, `PAYPAL_MERCHANT_ID`,
 `PAYPAL_WEBHOOK_ID`, `COMMERCE_EVENT_ENCRYPTION_KEY`,
+`COMMERCE_LOOKUP_TOKEN_SECRET`,
 `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, and `STRIPE_WEBHOOK_SECRET`.
 Frontend/mobile public configuration includes `VITE_API_BASE`, `EXPO_PUBLIC_API_BASE`, Stripe
 publishable/merchant identifiers, and `VITE_CARDANO_ADDRESS`. Browser bearer configuration was
@@ -216,6 +226,9 @@ The accepted ADRs are:
 - [ADR-0108](../adr/0108-marketplace-rental-dates-deposits-and-custody.md): dated rental holds, condition evidence, and truthful deposit due states.
 - [ADR-0109](../adr/0109-service-booking-deposits-and-shared-calendar.md): approved service quotes, one exclusion-backed booking calendar, and separate deposit/fulfillment states.
 - [ADR-0110](../adr/0110-marketplace-customer-requests-and-deposit-settlement.md): scoped customer-operation requests, quote-only rental extensions, and independently verified manual deposit-liability settlement.
+- [ADR-0111](../adr/0111-course-seat-holds-and-verified-enrollment.md): authoritative course policy, atomic seat holds, and enrollment only after verified payment.
+- [ADR-0112](../adr/0112-ticket-payment-evidence-and-seat-holds.md): ticket payment evidence, expiring capacity holds, and separate issuance.
+- [ADR-0113](../adr/0113-public-event-ticket-checkout-and-organizer-liability.md): guest ticket checkout, provider binding, and organizer payable liability.
 
 ## Feature flags and phased rollout
 
@@ -228,12 +241,13 @@ production capability:
   `checkout.paypal.refunds`, `checkout.datafast.webhooks`, `checkout.datafast.refunds`,
   `checkout.provider_event_worker`, `commerce.mixing_mastering`, `commerce.marketplace_sales`,
   `commerce.marketplace_rentals`, `commerce.marketplace_manual_deposit_settlement`, and
-  `commerce.service_bookings`, `commerce.courses`, and `commerce.course_recurring_billing`; the
-  marketplace domain rows and dual-control manual deposit settlement are enabled, while service
-  bookings and courses default disabled pending policy approval and credentialed sandbox
-  verification; booking/course Datafast and PayPal actions are implemented but production provider
-  execution remains independently disabled, and automatic course renewal remains disabled pending
-  a verified recurring merchant capability; planned keys must use
+  `commerce.service_bookings`, `commerce.courses`, `commerce.course_recurring_billing`,
+  `commerce.event_tickets`, and `commerce.event_ticket_settlements`; the marketplace domain rows and
+  dual-control manual deposit settlement are enabled, while service bookings, courses, public event
+  tickets, and organizer settlement default disabled pending policy approval and credentialed
+  sandbox/settlement evidence; booking/course/ticket Datafast and PayPal actions are implemented but
+  production provider execution remains independently disabled, and automatic course renewal
+  remains disabled pending a verified recurring merchant capability; planned keys must use
   the same registry rather than introducing an untracked environment-only bypass;
 - domains: `COMMERCE_MIXING_ENABLED`, `COMMERCE_EQUIPMENT_SALES_ENABLED`,
   `COMMERCE_RENTALS_ENABLED`, `COMMERCE_BOOKINGS_ENABLED`, `COMMERCE_DOMO_ENABLED`,

@@ -140,6 +140,21 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
               <Divider />
               <Typography sx={{ whiteSpace: 'pre-wrap', fontSize: '1.08rem', lineHeight: 1.75 }}>{description}</Typography>
 
+              {kind === 'event' && (
+                <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
+                  <Typography variant="h5" fontWeight={800}>Entradas del evento</Typography>
+                  <Typography color="text.secondary" mt={1}>Consulta disponibilidad y paga como invitado con un checkout verificado por el servidor.</Typography>
+                  <Button
+                    component={RouterLink}
+                    to={`/eventos/${encodeURIComponent(identifier)}/entradas`}
+                    variant="contained"
+                    sx={{ mt: 2 }}
+                  >
+                    Ver entradas
+                  </Button>
+                </Paper>
+              )}
+
               {(professions.length > 0 || instruments.length > 0 || genres.length > 0) && (
                 <Stack spacing={2}>
                   {professions.length > 0 && <TagSection title="Profesiones" values={professions.map((item) => text(item['name']) ?? text(item['code']) ?? '').filter(Boolean)} />}

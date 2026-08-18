@@ -119,9 +119,22 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   enrolled only after verified payment; checkout creation and browser return remain unpaid.
 - Priced event tickets can no longer be issued through the manager direct-order shortcut or generic
   status update. The signed Stripe webhook now also requires matching succeeded status, amount,
-  currency, ticket order, event, and stored PaymentIntent evidence before issuing QR tickets. The
-  provider-neutral ticket price/fee and fulfillment state machine is specified and property-tested;
-  its public checkout runtime remains the next gated implementation step.
+  currency, ticket order, event, and stored PaymentIntent evidence before issuing QR tickets.
+- Public event ticket checkout now links the existing domain order to one canonical checkout and
+  snapshots an approved policy, tier, promotion, quantity, price, buyer/organizer fee split, tax,
+  currency and terms. Event capacity, tier inventory and promotion claims are reserved atomically,
+  rate-limited by a server-keyed pseudonymous buyer identity, and released exactly once on expiry.
+  Later tier-price edits cannot mutate or strand the accepted snapshot. Datafast and PayPal actions
+  use immutable provider bindings and secure guest lookup capabilities; late payment after hold
+  expiry opens reconciliation instead of issuing a ticket.
+- Ticket issuance is separately serialized and can happen only after verified payment. Duplicate
+  provider callbacks cannot create a second `issued` audit, promotion redemption, ticket batch or
+  confirmation. The ledger credits only TDF's snapshotted fees as platform revenue and records
+  organizer proceeds as a payable liability; it does not claim that settlement occurred.
+- The bilingual public routes `/eventos/:eventId/entradas` and
+  `/eventos/:eventId/orden/:orderId` show only server-calculated totals and truthful independent
+  payment/fulfillment states. A provider return is not success and ticket codes remain absent until
+  the server returns `paid` plus `issued`.
 - Fourteen bilingual distribution-product benchmark rows cover single/EP/album, catalog management,
   a non-renewing monthly domain product, and add-ons. They are inactive; an independent market and
   margin review is required before activation.
@@ -129,9 +142,9 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   accessible bilingual discovery. They disclose whether a path is checkout, request-only, private
   pilot, or unavailable and do not display invented distribution prices.
 - OpenAPI, generated web types, and the mobile generated client are synchronized for the service
-  storefront and marketplace public checkout, webhook, tracking, fulfillment, refund,
-  reconciliation, provider-event operations, booking deposit provider actions, and administration
-  contracts.
+  storefront, marketplace, courses and public event-ticket checkout, webhook, tracking,
+  fulfillment, refund, reconciliation, provider-event operations, booking deposit provider actions,
+  and administration contracts.
 
 ## Explicitly feature-disabled
 
@@ -143,6 +156,12 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   disabled; each offering also requires one approved active policy. Datafast create/status and
   PayPal create/capture actions now use canonical immutable bindings, but remain unavailable in
   production until their rail flags, merchant configuration, and sandbox evidence are verified.
+- Canonical public event tickets through `commerce.event_tickets`. Production starts disabled and
+  every event also requires an explicitly approved active policy. The migrated two-percent buyer /
+  two-percent organizer allocation is an inactive draft only. Datafast/PayPal production execution
+  remains independently disabled pending sandbox verification and named reconciliation ownership.
+  Organizer settlement remains disabled through `commerce.event_ticket_settlements`; a payable
+  ledger entry is not a payout.
 - The marketplace sale and rental domain rows, `commerce.marketplace_sales` and
   `commerce.marketplace_rentals`, are enabled by the additive rollout migration. This exposes the
   truthful domain workflows while Datafast/PayPal production execution remains independently off.
@@ -175,17 +194,17 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
 
 The following requested domains remain future phases and must not be represented as complete:
 
-- Wiring the canonical checkout aggregate into Domo accepted quotes, public tickets, tips,
-  memberships, provider services, and verified donations.
+- Wiring the canonical checkout aggregate into Domo accepted quotes, tips, memberships, provider
+  services, and verified donations.
 - Marketplace carrier integrations, approved-return shipping, and sale/provider refund execution;
   payable rental extensions, automated late-fee charging, and non-zero-deposit provider refund
-  execution; booking balance collection,
-  refunds, rescheduling/no-show/overtime operator APIs and notifications;
-  guest ticket issuance through Datafast/PayPal.
+  execution; booking balance collection, refunds, rescheduling/no-show/overtime operator APIs and
+  notifications; public event refunds, waitlist promotion, transfer acceptance, and organizer
+  settlement execution; public-ticket mailbox verification and verified-email order recovery.
 - Mixing/mastering private object-store multipart upload, malware scanning, engineer workflow,
   deliverable version history, revision billing, notifications, and non-PayPal refund adapters.
-- Public event detail/storefront, distribution onboarding/release wizard, staff QC consoles,
-  customer catalog/submission tracking, statement UI, and reconciliation-exception assignment dashboard.
+- A public event index, distribution onboarding/release wizard, staff QC consoles, customer
+  catalog/submission tracking, statement UI, and reconciliation-exception assignment dashboard.
 - DDEX import-plan generation/resolution/commit, ERN rendering/download, partner transport,
   acknowledgement ingestion, correction/takedown execution, DSR parsing, royalty allocation jobs,
   statement generation, or settlements. Their schemas and gates do not equal runtime completion.
@@ -223,14 +242,23 @@ infer payment, approve a deposit, or activate public checkout. Any overlapping a
 booking fails the migration for explicit operator review. The rollback works before canonical
 booking links exist and refuses after material runtime data exists.
 
+The public-ticket migration creates inactive per-event policy drafts from existing paid tiers but
+does not approve fees, activate checkout, create orders, reserve seats, or classify historical
+payments. Runtime links are created only by the new public checkout. Hold expiry releases tier and
+promotion reservations exactly once. Rollback succeeds before an approved policy or material
+checkout/payment/fulfillment record exists and otherwise refuses evidence loss. The local migration
+rehearsal used a disposable PostgreSQL 16 database because the Docker daemon stalled; no production
+or staging data was read or modified.
+
 ## Release conclusion
 
 This branch is suitable for a draft review and an isolated migration/application staging exercise.
 It is not production-ready and does not satisfy the full multi-phase definition of done. Three
 low-risk domains—mixing/mastering, equipment sales, and dated equipment rentals—are wired into the
-canonical checkout/receipt/ledger model, and studio/DJ bookings now have canonical deposit checkout
-plus Datafast/PayPal actions behind independent gates. The next safe external step is credentialed
+canonical checkout/receipt/ledger model; studio/DJ bookings have canonical deposit checkout; and
+public event tickets have atomic seat holds, guest Datafast/PayPal actions, truthful tracking and
+organizer-payable accounting behind independent gates. The next safe external step is credentialed
 Datafast and PayPal sandbox checkout/capture/webhook/reconciliation evidence for these domains.
-Booking production policy activation, Datafast refund/callback work, balance collection, and
-non-zero rental-deposit settlement remain blocked on verified merchant capabilities and operational
-approval.
+Booking/ticket production policy activation, organizer settlement, Datafast refund/callback work,
+balance collection, and non-zero rental-deposit provider settlement remain blocked on verified
+merchant capabilities and operational approval.

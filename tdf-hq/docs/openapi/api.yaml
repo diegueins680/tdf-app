@@ -5154,6 +5154,138 @@ paths:
   /directory/admin/moderation/{caseId}/decisions: { $ref: './directory.yaml#/paths/~1directory~1admin~1moderation~1{caseId}~1decisions' }
   /directory/admin/merges: { $ref: './directory.yaml#/paths/~1directory~1admin~1merges' }
 
+  /public/events/{eventId}/tickets:
+    get:
+      tags: [Public event tickets]
+      summary: Read the payable ticket storefront for one public event
+      description: Returns server-authoritative active tiers and availability. Zero-price entitlements use a separate staff-controlled flow and are not exposed as payable tiers.
+      operationId: getPublicEventTicketStorefront
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicEventId'
+      responses:
+        '200':
+          description: Public event ticket storefront
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicEventTicketStorefront' } } }
+        '404': { description: Event is not publicly eligible for ticket purchase }
+        '503': { description: Checkout environment is not configured }
+  /public/events/{eventId}/ticket-orders:
+    post:
+      tags: [Public event tickets]
+      summary: Atomically hold ticket inventory and create an immutable guest checkout
+      description: Price, discounts, fee allocation, tax, terms version, capacity, and hold expiry are calculated by the server. This operation never marks payment successful or issues a ticket.
+      operationId: createPublicEventTicketCheckout
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicEventId'
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, minLength: 16, maxLength: 128 }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PublicEventTicketCheckoutRequest' } } }
+      responses:
+        '201':
+          description: Guest ticket order with a temporary inventory hold; lookupToken is returned only on creation
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicEventTicketCheckout' } } }
+        '400': { description: Invalid buyer, quantity, promotion, or terms input }
+        '404': { description: Event or tier is not public }
+        '409': { description: Capacity, inventory, promotion, policy, or idempotency conflict }
+        '503': { description: Event ticket checkout is disabled }
+  /public/events/{eventId}/ticket-orders/{orderId}:
+    get:
+      tags: [Public event tickets]
+      summary: Track a guest ticket order using its unguessable lookup token
+      operationId: getPublicEventTicketCheckout
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicEventId'
+        - $ref: '#/components/parameters/PublicEventTicketOrderId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+      responses:
+        '200':
+          description: Customer-safe payment and fulfillment state; ticket references appear only after issuance
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicEventTicketCheckout' } } }
+        '404': { description: Order not found or lookup token does not match }
+  /public/events/{eventId}/ticket-orders/{orderId}/datafast/checkout:
+    post:
+      tags: [Public event tickets]
+      summary: Create or recover the ticket order's bound Datafast checkout
+      operationId: createPublicEventTicketDatafastCheckout
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicEventId'
+        - $ref: '#/components/parameters/PublicEventTicketOrderId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+      responses:
+        '200':
+          description: Bound Datafast hosted checkout
+          content: { application/json: { schema: { $ref: '#/components/schemas/DatafastCheckout' } } }
+        '404': { description: Order not found or lookup token does not match }
+        '409': { description: Hold expired, order paid, or another online rail is active }
+        '503': { description: Datafast or event ticket checkout is disabled }
+  /public/events/{eventId}/ticket-orders/{orderId}/datafast/status:
+    get:
+      tags: [Public event tickets]
+      summary: Verify a bound Datafast ticket payment server-to-server
+      description: A browser return is not payment evidence. Amount, currency, merchant, internal order, checkout ID, and exact stored resource path must match before payment can be recorded and tickets issued.
+      operationId: confirmPublicEventTicketDatafastStatus
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicEventId'
+        - $ref: '#/components/parameters/PublicEventTicketOrderId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+        - name: resourcePath
+          in: query
+          required: true
+          schema: { type: string, pattern: '^/v1/checkouts/[A-Za-z0-9._-]+/payment$' }
+      responses:
+        '200':
+          description: Current server-verified checkout state
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicEventTicketCheckout' } } }
+        '404': { description: Order not found or lookup token does not match }
+        '409': { description: Resource binding mismatch or payment arrived after hold expiry }
+        '502': { description: Provider status or immutable payment fields could not be verified }
+  /public/events/{eventId}/ticket-orders/{orderId}/paypal/create:
+    post:
+      tags: [Public event tickets]
+      summary: Create or recover the ticket order's bound PayPal order
+      operationId: createPublicEventTicketPaypalOrder
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicEventId'
+        - $ref: '#/components/parameters/PublicEventTicketOrderId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+      responses:
+        '200':
+          description: Bound PayPal order awaiting customer approval
+          content: { application/json: { schema: { $ref: '#/components/schemas/PaypalCreate' } } }
+        '404': { description: Order not found or lookup token does not match }
+        '409': { description: Hold expired, order paid, or another online rail is active }
+        '503': { description: PayPal or event ticket checkout is disabled }
+  /public/events/{eventId}/ticket-orders/{orderId}/paypal/capture:
+    post:
+      tags: [Public event tickets]
+      summary: Capture and verify the exact bound PayPal ticket order
+      description: Approval in the browser is not success. TDF captures server-to-server and verifies capture status, amount, currency, payee merchant, internal order, and provider binding before payment and ticket issuance transitions.
+      operationId: capturePublicEventTicketPaypalOrder
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicEventId'
+        - $ref: '#/components/parameters/PublicEventTicketOrderId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PublicEventTicketPaypalCaptureRequest' } } }
+      responses:
+        '200':
+          description: Current server-verified checkout and fulfillment state
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicEventTicketCheckout' } } }
+        '404': { description: Order not found or lookup token does not match }
+        '409': { description: Provider binding mismatch or payment arrived after hold expiry }
+        '502': { description: PayPal capture or immutable payment fields could not be verified }
+
 security:
   - bearerAuth: [ ]
 
@@ -5164,6 +5296,22 @@ components:
       scheme: bearer
       bearerFormat: JWT
   parameters:
+    PublicEventId:
+      name: eventId
+      in: path
+      required: true
+      schema: { type: integer, format: int64, minimum: 1 }
+    PublicEventTicketOrderId:
+      name: orderId
+      in: path
+      required: true
+      schema: { type: integer, format: int64, minimum: 1 }
+    PublicOrderLookupToken:
+      name: X-Order-Lookup-Token
+      in: header
+      required: true
+      description: Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders.
+      schema: { type: string, minLength: 32, writeOnly: true }
     PublicBookingId:
       name: bookingId
       in: path
@@ -5272,6 +5420,109 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    PublicEventTicketTier:
+      type: object
+      additionalProperties: false
+      required: [tierId, code, name, unitPriceMinor, currency, remaining, transfersAllowed]
+      properties:
+        tierId: { type: integer, format: int64, minimum: 1 }
+        code: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        unitPriceMinor: { type: integer, format: int64, minimum: 1 }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        remaining: { type: integer, minimum: 0 }
+        salesStart: { type: string, format: date-time, nullable: true }
+        salesEnd: { type: string, format: date-time, nullable: true }
+        transfersAllowed: { type: boolean }
+    PublicEventTicketStorefront:
+      type: object
+      additionalProperties: false
+      required: [eventId, title, startsAt, endsAt, tiers, checkoutAvailable]
+      properties:
+        eventId: { type: integer, format: int64, minimum: 1 }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }
+        timezone: { type: string, nullable: true }
+        venueName: { type: string, nullable: true }
+        venueAddress: { type: string, nullable: true }
+        tiers:
+          type: array
+          items: { $ref: '#/components/schemas/PublicEventTicketTier' }
+        checkoutAvailable: { type: boolean }
+        unavailableReason: { type: string, nullable: true }
+    PublicEventTicketCheckoutRequest:
+      type: object
+      additionalProperties: false
+      required: [tierId, quantity, buyerName, buyerEmail, termsAccepted]
+      properties:
+        tierId: { type: integer, format: int64, minimum: 1 }
+        quantity: { type: integer, minimum: 1, maximum: 100 }
+        buyerName: { type: string, minLength: 1, maxLength: 160 }
+        buyerEmail: { type: string, format: email, maxLength: 254 }
+        buyerPhone: { type: string, minLength: 1, maxLength: 24 }
+        promoCode: { type: string, minLength: 1, maxLength: 50, pattern: '^[A-Za-z0-9-]+$' }
+        termsAccepted: { type: boolean, enum: [true] }
+    PublicEventTicketQuote:
+      type: object
+      additionalProperties: false
+      required: [policyVersion, currency, quantity, unitPriceMinor, grossFaceValueMinor, discountMinor, netFaceValueMinor, buyerPlatformFeeMinor, organizerPlatformFeeMinor, taxMinor, checkoutTotalMinor, organizerPayableMinor, platformFeeMinor, termsVersion]
+      properties:
+        policyVersion: { type: string }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        quantity: { type: integer, minimum: 1, maximum: 100 }
+        unitPriceMinor: { type: integer, format: int64, minimum: 1 }
+        grossFaceValueMinor: { type: integer, format: int64, minimum: 1 }
+        discountMinor: { type: integer, format: int64, minimum: 0 }
+        netFaceValueMinor: { type: integer, format: int64, minimum: 0 }
+        buyerPlatformFeeMinor: { type: integer, format: int64, minimum: 0 }
+        organizerPlatformFeeMinor: { type: integer, format: int64, minimum: 0 }
+        taxMinor: { type: integer, format: int64, minimum: 0 }
+        checkoutTotalMinor: { type: integer, format: int64, minimum: 1 }
+        organizerPayableMinor: { type: integer, format: int64, minimum: 0 }
+        platformFeeMinor: { type: integer, format: int64, minimum: 0 }
+        termsVersion: { type: string }
+    PublicEventTicket:
+      type: object
+      additionalProperties: false
+      required: [ticketId, ticketCode, status]
+      properties:
+        ticketId: { type: integer, format: int64, minimum: 1 }
+        ticketCode: { type: string }
+        status: { type: string }
+        holderName: { type: string, nullable: true }
+    PublicEventTicketCheckout:
+      type: object
+      additionalProperties: false
+      required: [orderId, eventId, checkoutId, paymentStatus, fulfillmentStatus, holdExpiresAt, quote, paymentMethods, tickets]
+      properties:
+        orderId: { type: integer, format: int64, minimum: 1 }
+        eventId: { type: integer, format: int64, minimum: 1 }
+        checkoutId: { type: string, format: uuid }
+        lookupToken: { type: string, nullable: true, writeOnly: true }
+        paymentStatus:
+          type: string
+          enum: [holding, awaiting_payment, processing, paid, failed, cancelled, expired, partially_refunded, refunded, disputed, chargeback]
+        fulfillmentStatus:
+          type: string
+          enum: [seat_held, issued, transfer_requested, transferred, checked_in, cancelled, refunded, expired]
+        holdExpiresAt: { type: string, format: date-time }
+        quote: { $ref: '#/components/schemas/PublicEventTicketQuote' }
+        paymentMethods:
+          type: array
+          items: { type: string, enum: [datafast, paypal] }
+        tickets:
+          type: array
+          description: Empty until fulfillment issues tickets after verified payment.
+          items: { $ref: '#/components/schemas/PublicEventTicket' }
+    PublicEventTicketPaypalCaptureRequest:
+      type: object
+      additionalProperties: false
+      required: [paypalOrderId]
+      properties:
+        paypalOrderId: { type: string, minLength: 6, maxLength: 80, pattern: '^[A-Za-z0-9_-]+$' }
     BookingResource:
       type: object
       required: [brRoomId, brRoomName, brRole]

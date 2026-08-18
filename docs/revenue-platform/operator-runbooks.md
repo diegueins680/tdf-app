@@ -98,6 +98,39 @@ matches the evidence, and the terminal deposit state is correct before closing t
 `commerce.marketplace_manual_deposit_settlement` if evidence storage, separation of duties, or
 ledger reconciliation is unavailable.
 
+## Public event ticket hold payment or issuance mismatch
+
+Disable `commerce.event_tickets` for the affected environment to stop new guest holds without
+changing existing orders. If one provider is unhealthy, disable only that provider rail as well.
+Do not edit `quantity_sold`, promotion counters, the order status, or the ticket runtime by hand.
+
+For every incident compare the event and tier, approved policy/version, immutable checkout line,
+buyer/organizer fee snapshot, hold expiry, provider attempt and binding, payment evidence, runtime
+fulfillment history, issued ticket rows, promotion redemption, receipt, ledger transaction and
+reconciliation exception under one correlation/order ID.
+
+- A browser return or PayPal approval with no verified provider evidence remains `processing` or
+  `awaiting_payment`. Do not issue tickets.
+- An expired unpaid hold must release event/tier capacity and its reserved promotion claim exactly
+  once. Re-run the idempotent expiry function rather than editing counters.
+- A payment first verified after expiry is a reconciliation incident. Do not silently recreate the
+  hold or issue over capacity; assign customer support and finance to refund or rebook through an
+  approved compensating workflow.
+- A paid runtime with no tickets is an issuance incident. Confirm the runtime-row lock is clear and
+  that no `issued` audit or ticket batch already exists before using an audited retry path. Never
+  delete the uniqueness evidence to force another issue.
+- Ticket rows without verified canonical payment are a severity-one integrity incident: stop
+  check-in for the affected order and preserve all evidence.
+- Organizer proceeds posted to `liability.event_organizer_payable` are not settlement. Keep
+  `commerce.event_ticket_settlements` disabled until the approved dual-control evidence workflow is
+  available; never mark a payable settled from a bank promise or spreadsheet note.
+
+Before a TDF-owned staging pilot, approve exactly one event policy, verify capacity and sale windows,
+exercise Datafast and PayPal sandbox create/return/capture paths, prove replay and late-payment
+handling, reconcile checkout/receipt/ledger/provider totals to zero variance, run the rollback gate,
+name the webhook and customer-support owners, and verify both domain/provider kill switches. This
+does not authorize a production charge or organizer settlement.
+
 ## Distribution dead letter or release-date risk
 
 Stop retries if the package/profile/checksum may be wrong. Verify immutable release version,

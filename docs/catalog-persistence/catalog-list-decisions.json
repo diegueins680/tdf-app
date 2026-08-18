@@ -8184,7 +8184,7 @@
       "reviewed": true
     },
     {
-      "id": "8e4154527f710782dc3b",
+      "id": "222f3f5f19fc61420901",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
@@ -8421,6 +8421,46 @@
       "priority": "P3-retain",
       "risk": "Unknown ticket audit actor types would make payment, issuance, transfer, and settlement provenance ambiguous.",
       "justification": "Actor types are the closed ticket audit-event protocol; actor identities, authorization, provider evidence, and guest capabilities remain persisted and checked separately.",
+      "reviewed": true
+    },
+    {
+      "id": "eee96a6fcf0ab03491a5",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "commerce_provider, commerce_provider_capability, commerce_domain_provider",
+      "priority": "P3-consumer",
+      "risk": "A stale storefront fixture could normalize offering a disabled, unsupported, or wrong-environment payment rail.",
+      "justification": "The test values are consumer fixtures for provider methods advertised by the server from persisted environment and domain capabilities; they are not frontend authority.",
+      "reviewed": true
+    },
+    {
+      "id": "b49e7cbf2d277aeb3533",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Renaming a typed ticket client operation without its server contract would break secure guest lookup or provider request dispatch.",
+      "justification": "These values are methods of the typed public-ticket HTTP client and are implementation mechanics, not selectable or reportable domain values.",
+      "reviewed": true
+    },
+    {
+      "id": "371a887fe24756ca53a1",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unknown ticket payment state could falsely issue admission or obscure refund, dispute, and chargeback evidence in generated clients.",
+      "justification": "The OpenAPI values mirror the exhaustive ticket financial-evidence protocol enforced by Haskell and PostgreSQL; prices, provider resources, and capabilities remain persisted.",
+      "reviewed": true
+    },
+    {
+      "id": "79372a40585aff06153c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Editable generated-client fulfillment values could bypass verified issuance, transfer, check-in, refund, or terminal-state guards.",
+      "justification": "The OpenAPI values mirror the exhaustive ticket fulfillment protocol enforced by state-machine code and database transitions; commercial event configuration remains persisted.",
       "reviewed": true
     }
   ]

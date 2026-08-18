@@ -31,6 +31,7 @@ const MusicMakerPage = lazy(() => import('../pages/MusicMakerPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 const PublicBookingPage = lazy(() => import('../pages/PublicBookingPage'));
 const PublicBookingOrderTrackingPage = lazy(() => import('../pages/PublicBookingOrderTrackingPage'));
+const PublicEventTicketsPage = lazy(() => import('../pages/PublicEventTicketsPage'));
 const PublicWhatsAppConsentPage = lazy(() => import('../pages/PublicWhatsAppConsentPage'));
 const PublicWhatsAppConsentSuccessPage = lazy(() => import('../pages/PublicWhatsAppConsentSuccessPage'));
 const RecordsPublicPage = lazy(() => import('../pages/RecordsPublicPage'));
@@ -55,6 +56,8 @@ export function renderPublicRoutes() {
       <Route path="/directorio/:slug" element={<PublicBranding><DirectoryPublicDetailPage kind="profile" /></PublicBranding>} />
       <Route path="/clasificados/:slug" element={<PublicBranding><DirectoryPublicDetailPage kind="classified" /></PublicBranding>} />
       <Route path="/eventos/:eventId" element={<PublicBranding><DirectoryPublicDetailPage kind="event" /></PublicBranding>} />
+      <Route path="/eventos/:eventId/entradas" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />
+      <Route path="/eventos/:eventId/orden/:orderId" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />
       <Route path="/venues/:venueId" element={<PublicBranding><DirectoryPublicDetailPage kind="venue" /></PublicBranding>} />
       <Route path="/fans" element={<PublicBranding><FanHubPage /></PublicBranding>} />
       <Route path="/fans/clubs/:artistId" element={<PublicBranding><FanClubPage /></PublicBranding>} />

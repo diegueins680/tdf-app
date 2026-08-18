@@ -4500,10 +4500,240 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/events/{eventId}/tickets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the payable ticket storefront for one public event
+         * @description Returns server-authoritative active tiers and availability. Zero-price entitlements use a separate staff-controlled flow and are not exposed as payable tiers.
+         */
+        get: operations["getPublicEventTicketStorefront"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Atomically hold ticket inventory and create an immutable guest checkout
+         * @description Price, discounts, fee allocation, tax, terms version, capacity, and hold expiry are calculated by the server. This operation never marks payment successful or issues a ticket.
+         */
+        post: operations["createPublicEventTicketCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Track a guest ticket order using its unguessable lookup token */
+        get: operations["getPublicEventTicketCheckout"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders/{orderId}/datafast/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover the ticket order's bound Datafast checkout */
+        post: operations["createPublicEventTicketDatafastCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders/{orderId}/datafast/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify a bound Datafast ticket payment server-to-server
+         * @description A browser return is not payment evidence. Amount, currency, merchant, internal order, checkout ID, and exact stored resource path must match before payment can be recorded and tickets issued.
+         */
+        get: operations["confirmPublicEventTicketDatafastStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders/{orderId}/paypal/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover the ticket order's bound PayPal order */
+        post: operations["createPublicEventTicketPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders/{orderId}/paypal/capture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Capture and verify the exact bound PayPal ticket order
+         * @description Approval in the browser is not success. TDF captures server-to-server and verifies capture status, amount, currency, payee merchant, internal order, and provider binding before payment and ticket issuance transitions.
+         */
+        post: operations["capturePublicEventTicketPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        PublicEventTicketTier: {
+            /** Format: int64 */
+            tierId: number;
+            code: string;
+            name: string;
+            description?: string | null;
+            /** Format: int64 */
+            unitPriceMinor: number;
+            currency: string;
+            remaining: number;
+            /** Format: date-time */
+            salesStart?: string | null;
+            /** Format: date-time */
+            salesEnd?: string | null;
+            transfersAllowed: boolean;
+        };
+        PublicEventTicketStorefront: {
+            /** Format: int64 */
+            eventId: number;
+            title: string;
+            description?: string | null;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string;
+            timezone?: string | null;
+            venueName?: string | null;
+            venueAddress?: string | null;
+            tiers: components["schemas"]["PublicEventTicketTier"][];
+            checkoutAvailable: boolean;
+            unavailableReason?: string | null;
+        };
+        PublicEventTicketCheckoutRequest: {
+            /** Format: int64 */
+            tierId: number;
+            quantity: number;
+            buyerName: string;
+            /** Format: email */
+            buyerEmail: string;
+            buyerPhone?: string;
+            promoCode?: string;
+            /** @enum {boolean} */
+            termsAccepted: true;
+        };
+        PublicEventTicketQuote: {
+            policyVersion: string;
+            currency: string;
+            quantity: number;
+            /** Format: int64 */
+            unitPriceMinor: number;
+            /** Format: int64 */
+            grossFaceValueMinor: number;
+            /** Format: int64 */
+            discountMinor: number;
+            /** Format: int64 */
+            netFaceValueMinor: number;
+            /** Format: int64 */
+            buyerPlatformFeeMinor: number;
+            /** Format: int64 */
+            organizerPlatformFeeMinor: number;
+            /** Format: int64 */
+            taxMinor: number;
+            /** Format: int64 */
+            checkoutTotalMinor: number;
+            /** Format: int64 */
+            organizerPayableMinor: number;
+            /** Format: int64 */
+            platformFeeMinor: number;
+            termsVersion: string;
+        };
+        PublicEventTicket: {
+            /** Format: int64 */
+            ticketId: number;
+            ticketCode: string;
+            status: string;
+            holderName?: string | null;
+        };
+        PublicEventTicketCheckout: {
+            /** Format: int64 */
+            orderId: number;
+            /** Format: int64 */
+            eventId: number;
+            /** Format: uuid */
+            checkoutId: string;
+            lookupToken?: string | null;
+            /** @enum {string} */
+            paymentStatus: "holding" | "awaiting_payment" | "processing" | "paid" | "failed" | "cancelled" | "expired" | "partially_refunded" | "refunded" | "disputed" | "chargeback";
+            /** @enum {string} */
+            fulfillmentStatus: "seat_held" | "issued" | "transfer_requested" | "transferred" | "checked_in" | "cancelled" | "refunded" | "expired";
+            /** Format: date-time */
+            holdExpiresAt: string;
+            quote: components["schemas"]["PublicEventTicketQuote"];
+            paymentMethods: ("datafast" | "paypal")[];
+            /** @description Empty until fulfillment issues tickets after verified payment. */
+            tickets: components["schemas"]["PublicEventTicket"][];
+        };
+        PublicEventTicketPaypalCaptureRequest: {
+            paypalOrderId: string;
+        };
         BookingResource: {
             brRoomId: string;
             brRoomName: string;
@@ -8512,6 +8742,10 @@ export interface components {
         };
     };
     parameters: {
+        PublicEventId: number;
+        PublicEventTicketOrderId: number;
+        /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+        PublicOrderLookupToken: string;
         PublicBookingId: number;
         CatalogCode: string;
         /** @description Immutable canonical UUID of a persisted catalog item. */
@@ -17207,6 +17441,325 @@ export interface operations {
         responses: {
             /** @description Non-destructive */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicEventTicketStorefront: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public event ticket storefront */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicEventTicketStorefront"];
+                };
+            };
+            /** @description Event is not publicly eligible for ticket purchase */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Checkout environment is not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicEventTicketCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicEventTicketCheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Guest ticket order with a temporary inventory hold; lookupToken is returned only on creation */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicEventTicketCheckout"];
+                };
+            };
+            /** @description Invalid buyer */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event or tier is not public */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Capacity */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event ticket checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicEventTicketCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+                orderId: components["parameters"]["PublicEventTicketOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Customer-safe payment and fulfillment state; ticket references appear only after issuance */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicEventTicketCheckout"];
+                };
+            };
+            /** @description Order not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicEventTicketDatafastCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+                orderId: components["parameters"]["PublicEventTicketOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound Datafast hosted checkout */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatafastCheckout"];
+                };
+            };
+            /** @description Order not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hold expired */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast or event ticket checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmPublicEventTicketDatafastStatus: {
+        parameters: {
+            query: {
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+                orderId: components["parameters"]["PublicEventTicketOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current server-verified checkout state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicEventTicketCheckout"];
+                };
+            };
+            /** @description Order not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource binding mismatch or payment arrived after hold expiry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider status or immutable payment fields could not be verified */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicEventTicketPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+                orderId: components["parameters"]["PublicEventTicketOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound PayPal order awaiting customer approval */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaypalCreate"];
+                };
+            };
+            /** @description Order not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hold expired */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal or event ticket checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    capturePublicEventTicketPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+                orderId: components["parameters"]["PublicEventTicketOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicEventTicketPaypalCaptureRequest"];
+            };
+        };
+        responses: {
+            /** @description Current server-verified checkout and fulfillment state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicEventTicketCheckout"];
+                };
+            };
+            /** @description Order not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider binding mismatch or payment arrived after hold expiry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal capture or immutable payment fields could not be verified */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };

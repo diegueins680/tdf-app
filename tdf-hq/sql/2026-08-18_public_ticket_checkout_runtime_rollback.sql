@@ -27,6 +27,7 @@ DROP TRIGGER IF EXISTS trg_event_ticket_order_require_canonical_payment
 DROP FUNCTION IF EXISTS event_ticket_order_require_canonical_payment();
 DROP FUNCTION IF EXISTS event_ticket_checkout_sync_payment_and_hold();
 DROP FUNCTION IF EXISTS event_ticket_checkout_require_verified_payment();
+DROP FUNCTION IF EXISTS event_ticket_checkout_expire_holds(TIMESTAMPTZ, BIGINT, BIGINT);
 DROP FUNCTION IF EXISTS event_ticket_checkout_expire_holds(TIMESTAMPTZ, BIGINT);
 
 DROP TRIGGER IF EXISTS trg_event_ticket_checkout_validate_runtime
@@ -40,6 +41,7 @@ DROP TRIGGER IF EXISTS trg_event_ticket_checkout_validate_policy
 DROP FUNCTION IF EXISTS event_ticket_checkout_validate_policy();
 
 DROP TABLE IF EXISTS event_ticket_fulfillment_event;
+DROP TABLE IF EXISTS event_ticket_checkout_rate_limit;
 DROP TABLE IF EXISTS event_ticket_checkout_runtime;
 DROP TABLE IF EXISTS event_ticket_checkout_policy_history;
 DROP TABLE IF EXISTS event_ticket_checkout_policy;

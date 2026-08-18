@@ -103,6 +103,7 @@ import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
 import qualified TDF.Commerce.CheckoutStore as CheckoutStore
 import qualified TDF.Commerce.CourseCheckout as CourseCheckout
 import qualified TDF.Commerce.EventTickets as EventTickets
+import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
 import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
 import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
 import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
@@ -111,6 +112,7 @@ import qualified TDF.Commerce.ProviderEventStore as ProviderEventStore
 import qualified TDF.Commerce.ProviderEventWorker as ProviderEventWorker
 import qualified TDF.Commerce.RefundStore as RefundStore
 import qualified TDF.Commerce.StateMachine as Commerce
+import qualified TDF.Routes.EventTickets as EventTicketRoutes
 import qualified TDF.Distribution.StateMachine as Distribution
 import qualified TDF.Catalog.CountryReferenceSeed as CountrySeed
 import qualified TDF.Catalog.RecordsSpec as CatalogRecordsSpec
@@ -1448,6 +1450,42 @@ main = hspec $ do
                   ]
 
     describe "event ticket pricing and fulfillment invariants" $ do
+        it "derives stable unguessable lookup capabilities from a server-only key" $ do
+            let secret = BS.replicate 32 0x5a
+                first = EventTicketCheckoutServer.deriveTicketLookupToken
+                  secret "event-ticket-checkout-00000001" 41
+                replay = EventTicketCheckoutServer.deriveTicketLookupToken
+                  secret "event-ticket-checkout-00000001" 41
+                otherOrder = EventTicketCheckoutServer.deriveTicketLookupToken
+                  secret "event-ticket-checkout-00000002" 41
+                otherEvent = EventTicketCheckoutServer.deriveTicketLookupToken
+                  secret "event-ticket-checkout-00000001" 42
+            first `shouldBe` replay
+            first `shouldSatisfy` either (const False) ((== 64) . Data.Text.length)
+            otherOrder `shouldNotBe` first
+            otherEvent `shouldNotBe` first
+            EventTicketCheckoutServer.deriveTicketLookupToken
+              (BS.replicate 31 0x5a) "event-ticket-checkout-00000001" 41
+              `shouldSatisfy` isLeft
+
+        it "accepts an explicit public checkout request with optional fields omitted" $ do
+            let payload =
+                  "{\"tierId\":7,\"quantity\":2,\"buyerName\":\"Ana Rivera\",\"buyerEmail\":\"ana@example.com\",\"termsAccepted\":true}"
+            (eitherDecode payload :: Either String EventTicketRoutes.PublicEventTicketCheckoutRequest)
+              `shouldSatisfy` isRight
+
+        it "rejects null public checkout optionals instead of treating them as omitted" $ do
+            let payload =
+                  "{\"tierId\":7,\"quantity\":2,\"buyerName\":\"Ana Rivera\",\"buyerEmail\":\"ana@example.com\",\"buyerPhone\":null,\"termsAccepted\":true}"
+            (eitherDecode payload :: Either String EventTicketRoutes.PublicEventTicketCheckoutRequest)
+              `shouldSatisfy` isLeft
+
+        it "rejects unknown public checkout fields before server pricing" $ do
+            let payload =
+                  "{\"tierId\":7,\"quantity\":2,\"buyerName\":\"Ana Rivera\",\"buyerEmail\":\"ana@example.com\",\"termsAccepted\":true,\"totalMinor\":1}"
+            (eitherDecode payload :: Either String EventTicketRoutes.PublicEventTicketCheckoutRequest)
+              `shouldSatisfy` isLeft
+
         it "snapshots buyer and organizer fee allocations in integer minor units" $ do
             EventTickets.calculateTicketPrice 2500 2 0 200 200 0
               `shouldBe` Right EventTickets.TicketPriceBreakdown

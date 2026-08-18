@@ -183,6 +183,14 @@ if psql_exec -c "UPDATE commerce_checkout_session SET status='paid', paid_minor=
   echo "Ticket checkout became paid without provider evidence" >&2
   exit 1
 fi
+if psql_exec -c "UPDATE event_ticket_checkout_runtime SET fulfillment_status='issued' WHERE order_id=1;" >/dev/null 2>&1; then
+  echo "Ticket runtime issued admission without verified checkout payment" >&2
+  exit 1
+fi
+if psql_exec -c "UPDATE event_ticket_checkout_runtime SET hold_expires_at=hold_expires_at + INTERVAL '1 hour' WHERE order_id=1;" >/dev/null 2>&1; then
+  echo "Ticket runtime mutated its immutable checkout snapshot" >&2
+  exit 1
+fi
 
 psql_exec -c "
   INSERT INTO commerce_payment_attempt(
@@ -206,10 +214,31 @@ psql_exec -c "
   UPDATE event_ticket_order SET status='paid' WHERE id=1;
   UPDATE event_ticket_checkout_runtime
     SET fulfillment_status='issued', issued_at=NOW() WHERE order_id=1;
+  INSERT INTO event_ticket_fulfillment_event(
+    order_id, from_status, to_status, actor_type, reason_code
+  ) VALUES (1, 'seat_held', 'issued', 'provider', 'verified_payment');
 " >/dev/null
 
 assert_equal "$(psql_exec -Atc "SELECT payment_status || ':' || fulfillment_status FROM event_ticket_checkout_runtime WHERE order_id=1;")" \
   "paid:issued" "Verified payment remains distinct from explicit ticket issuance"
+
+if psql_exec -c "INSERT INTO event_ticket_fulfillment_event(order_id, from_status, to_status, actor_type, reason_code) VALUES (1, 'seat_held', 'issued', 'provider', 'duplicate_callback');" >/dev/null 2>&1; then
+  echo "Duplicate provider callback recorded a second ticket issuance" >&2
+  exit 1
+fi
+
+psql_exec -c "
+  INSERT INTO event_ticket_checkout_rate_limit(scope, subject_hash, window_started_at)
+  VALUES ('event:1:checkout', repeat('a', 64), date_trunc('hour', NOW()))
+  ON CONFLICT (scope, subject_hash, window_started_at)
+  DO UPDATE SET request_count=event_ticket_checkout_rate_limit.request_count + 1;
+  INSERT INTO event_ticket_checkout_rate_limit(scope, subject_hash, window_started_at)
+  VALUES ('event:1:checkout', repeat('a', 64), date_trunc('hour', NOW()))
+  ON CONFLICT (scope, subject_hash, window_started_at)
+  DO UPDATE SET request_count=event_ticket_checkout_rate_limit.request_count + 1;
+" >/dev/null
+assert_equal "$(psql_exec -Atc "SELECT request_count FROM event_ticket_checkout_rate_limit WHERE scope='event:1:checkout';")" \
+  "2" "Guest checkout rate limiting is atomic"
 
 psql_exec -c "
   INSERT INTO promo_code(id, current_redemptions) VALUES (1, 1);
@@ -242,6 +271,7 @@ psql_exec -c "
     1, 'USD', 2500, 2500, 0, 2500, 200, 50, 200, 50, 0, 0,
     2550, 2450, 100, 1, 'ticket-terms-v1', NOW(), NOW() + INTERVAL '10 minutes'
   );
+  UPDATE event_ticket_tier SET price_cents=2600 WHERE id=1;
   SELECT event_ticket_checkout_expire_holds(NOW() + INTERVAL '11 minutes');
   SELECT event_ticket_checkout_expire_holds(NOW() + INTERVAL '12 minutes');
 " >/dev/null

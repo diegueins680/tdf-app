@@ -42,6 +42,7 @@
   PAYPAL_MERCHANT_ID=...
   PAYPAL_WEBHOOK_ID=...
   COMMERCE_EVENT_ENCRYPTION_KEY=... # independent 32+ character secret-manager value
+  COMMERCE_LOOKUP_TOKEN_SECRET=... # independent 32+ byte guest-capability HMAC key
   ```
 
 ### Webhooks

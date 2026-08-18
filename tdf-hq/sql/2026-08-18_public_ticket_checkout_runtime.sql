@@ -118,6 +118,25 @@ CREATE TABLE IF NOT EXISTS event_ticket_fulfillment_event (
 CREATE INDEX IF NOT EXISTS idx_event_ticket_fulfillment_event_order
   ON event_ticket_fulfillment_event(order_id, created_at, id);
 
+-- A verified order is issued at most once. The runtime row lock is the primary
+-- serialization boundary; this partial index is the database backstop against
+-- duplicated callback/retry fulfillment.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_event_ticket_fulfillment_event_issued
+  ON event_ticket_fulfillment_event(order_id, to_status)
+  WHERE to_status = 'issued';
+
+CREATE TABLE IF NOT EXISTS event_ticket_checkout_rate_limit (
+  scope TEXT NOT NULL CHECK (length(btrim(scope)) BETWEEN 1 AND 120),
+  subject_hash TEXT NOT NULL CHECK (subject_hash ~ '^[0-9a-f]{64}$'),
+  window_started_at TIMESTAMPTZ NOT NULL,
+  request_count INTEGER NOT NULL DEFAULT 1 CHECK (request_count > 0),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (scope, subject_hash, window_started_at)
+);
+
+CREATE INDEX IF NOT EXISTS idx_event_ticket_checkout_rate_limit_cleanup
+  ON event_ticket_checkout_rate_limit(window_started_at);
+
 CREATE OR REPLACE FUNCTION event_ticket_checkout_validate_policy()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
@@ -182,46 +201,86 @@ DECLARE
   ticket_tier event_ticket_tier%ROWTYPE;
   policy event_ticket_checkout_policy%ROWTYPE;
 BEGIN
-  SELECT * INTO checkout FROM commerce_checkout_session WHERE id = NEW.checkout_id;
-  SELECT * INTO ticket_order FROM event_ticket_order WHERE id = NEW.order_id;
-  SELECT * INTO ticket_tier FROM event_ticket_tier WHERE id = NEW.tier_id;
-  SELECT * INTO policy FROM event_ticket_checkout_policy WHERE id = NEW.policy_id;
-  IF checkout.id IS NULL OR ticket_order.id IS NULL OR ticket_tier.id IS NULL OR policy.id IS NULL THEN
-    RAISE EXCEPTION 'Event ticket checkout runtime references missing canonical records';
-  END IF;
-  IF checkout.domain_type <> 'event_ticket_order'
-     OR checkout.domain_order_id <> NEW.order_id::text
-     OR checkout.total_minor <> NEW.checkout_total_minor
-     OR checkout.currency <> NEW.currency THEN
-    RAISE EXCEPTION 'Event ticket runtime does not match immutable checkout amount and identity';
-  END IF;
-  IF ticket_order.event_id <> NEW.event_id
-     OR ticket_order.tier_id <> NEW.tier_id
-     OR ticket_order.quantity <> NEW.quantity
-     OR ticket_order.amount_cents <> NEW.checkout_total_minor
-     OR upper(ticket_order.currency) <> NEW.currency
-     OR ticket_order.promo_code_id IS DISTINCT FROM NEW.promo_code_id
-     OR ticket_tier.event_id <> NEW.event_id
-     OR ticket_tier.price_cents <> NEW.unit_price_minor
-     OR upper(ticket_tier.currency) <> NEW.currency THEN
-    RAISE EXCEPTION 'Event ticket runtime does not match immutable order and tier snapshots';
-  END IF;
-  IF policy.event_id <> NEW.event_id
-     OR policy.policy_version <> NEW.policy_version
-     OR policy.currency <> NEW.currency
-     OR policy.buyer_fee_bps <> NEW.buyer_fee_bps
-     OR policy.organizer_fee_bps <> NEW.organizer_fee_bps
-     OR policy.tax_bps <> NEW.tax_bps
-     OR policy.terms_version <> NEW.terms_version THEN
-    RAISE EXCEPTION 'Event ticket runtime does not match the approved policy snapshot';
-  END IF;
-  IF TG_OP = 'INSERT' AND (
-       policy.approval_status <> 'approved'
+  IF TG_OP = 'UPDATE' THEN
+    IF ROW(
+      NEW.order_id, NEW.event_id, NEW.tier_id, NEW.checkout_id, NEW.policy_id,
+      NEW.policy_version, NEW.lookup_token_hash, NEW.create_idempotency_key,
+      NEW.create_request_sha256, NEW.quantity, NEW.currency, NEW.unit_price_minor,
+      NEW.gross_face_value_minor, NEW.discount_minor, NEW.net_face_value_minor,
+      NEW.buyer_fee_bps, NEW.buyer_fee_minor, NEW.organizer_fee_bps,
+      NEW.organizer_fee_minor, NEW.tax_bps, NEW.tax_minor, NEW.checkout_total_minor,
+      NEW.organizer_payable_minor, NEW.platform_fee_minor, NEW.promo_code_id,
+      NEW.terms_version, NEW.terms_accepted_at, NEW.hold_expires_at, NEW.created_at
+    ) IS DISTINCT FROM ROW(
+      OLD.order_id, OLD.event_id, OLD.tier_id, OLD.checkout_id, OLD.policy_id,
+      OLD.policy_version, OLD.lookup_token_hash, OLD.create_idempotency_key,
+      OLD.create_request_sha256, OLD.quantity, OLD.currency, OLD.unit_price_minor,
+      OLD.gross_face_value_minor, OLD.discount_minor, OLD.net_face_value_minor,
+      OLD.buyer_fee_bps, OLD.buyer_fee_minor, OLD.organizer_fee_bps,
+      OLD.organizer_fee_minor, OLD.tax_bps, OLD.tax_minor, OLD.checkout_total_minor,
+      OLD.organizer_payable_minor, OLD.platform_fee_minor, OLD.promo_code_id,
+      OLD.terms_version, OLD.terms_accepted_at, OLD.hold_expires_at, OLD.created_at
+    ) THEN
+      RAISE EXCEPTION 'Event ticket checkout snapshot is immutable after creation';
+    END IF;
+  ELSE
+    SELECT * INTO checkout FROM commerce_checkout_session WHERE id = NEW.checkout_id;
+    SELECT * INTO ticket_order FROM event_ticket_order WHERE id = NEW.order_id;
+    SELECT * INTO ticket_tier FROM event_ticket_tier WHERE id = NEW.tier_id;
+    SELECT * INTO policy FROM event_ticket_checkout_policy WHERE id = NEW.policy_id;
+    IF checkout.id IS NULL OR ticket_order.id IS NULL OR ticket_tier.id IS NULL OR policy.id IS NULL THEN
+      RAISE EXCEPTION 'Event ticket checkout runtime references missing canonical records';
+    END IF;
+    IF checkout.domain_type <> 'event_ticket_order'
+       OR checkout.domain_order_id <> NEW.order_id::text
+       OR checkout.total_minor <> NEW.checkout_total_minor
+       OR checkout.currency <> NEW.currency THEN
+      RAISE EXCEPTION 'Event ticket runtime does not match immutable checkout amount and identity';
+    END IF;
+    IF ticket_order.event_id <> NEW.event_id
+       OR ticket_order.tier_id <> NEW.tier_id
+       OR ticket_order.quantity <> NEW.quantity
+       OR ticket_order.amount_cents <> NEW.checkout_total_minor
+       OR upper(ticket_order.currency) <> NEW.currency
+       OR ticket_order.promo_code_id IS DISTINCT FROM NEW.promo_code_id
+       OR ticket_tier.event_id <> NEW.event_id
+       OR ticket_tier.price_cents <> NEW.unit_price_minor
+       OR upper(ticket_tier.currency) <> NEW.currency THEN
+      RAISE EXCEPTION 'Event ticket runtime does not match immutable order and tier snapshots';
+    END IF;
+    IF policy.event_id <> NEW.event_id
+       OR policy.policy_version <> NEW.policy_version
+       OR policy.currency <> NEW.currency
+       OR policy.buyer_fee_bps <> NEW.buyer_fee_bps
+       OR policy.organizer_fee_bps <> NEW.organizer_fee_bps
+       OR policy.tax_bps <> NEW.tax_bps
+       OR policy.terms_version <> NEW.terms_version THEN
+      RAISE EXCEPTION 'Event ticket runtime does not match the approved policy snapshot';
+    END IF;
+    IF policy.approval_status <> 'approved'
        OR NOT policy.active
        OR policy.approved_at IS NULL
-       OR policy.approved_by IS NULL
+       OR policy.approved_by IS NULL THEN
+      RAISE EXCEPTION 'New event ticket checkout requires an approved active policy';
+    END IF;
+  END IF;
+  IF TG_OP = 'UPDATE'
+     AND NEW.payment_status = 'paid'
+     AND OLD.payment_status <> 'paid'
+     AND NOT EXISTS (
+       SELECT 1 FROM commerce_checkout_session
+       WHERE id = NEW.checkout_id AND status = 'paid'
      ) THEN
-    RAISE EXCEPTION 'New event ticket checkout requires an approved active policy';
+    RAISE EXCEPTION 'Event ticket runtime cannot become paid before canonical verified payment';
+  END IF;
+  IF TG_OP = 'UPDATE'
+     AND NEW.fulfillment_status = 'issued'
+     AND OLD.fulfillment_status <> 'issued'
+     AND NOT EXISTS (
+       SELECT 1 FROM commerce_checkout_session
+       WHERE id = NEW.checkout_id AND status = 'paid'
+     ) THEN
+    RAISE EXCEPTION 'Event ticket cannot be issued before canonical verified payment';
   END IF;
   IF NEW.fulfillment_status = 'seat_held' AND NEW.hold_expires_at <= NOW() THEN
     RAISE EXCEPTION 'Event ticket seat hold must expire in the future';
@@ -376,9 +435,11 @@ CREATE TRIGGER trg_event_ticket_order_require_canonical_payment
   BEFORE UPDATE OF status ON event_ticket_order
   FOR EACH ROW EXECUTE FUNCTION event_ticket_order_require_canonical_payment();
 
+DROP FUNCTION IF EXISTS event_ticket_checkout_expire_holds(TIMESTAMPTZ, BIGINT);
 CREATE OR REPLACE FUNCTION event_ticket_checkout_expire_holds(
   at_time TIMESTAMPTZ DEFAULT NOW(),
-  target_tier_id BIGINT DEFAULT NULL
+  target_tier_id BIGINT DEFAULT NULL,
+  target_event_id BIGINT DEFAULT NULL
 )
 RETURNS INTEGER LANGUAGE plpgsql AS $$
 DECLARE expired_count INTEGER;
@@ -393,6 +454,7 @@ BEGIN
         AND runtime.fulfillment_status = 'seat_held'
         AND runtime.hold_expires_at <= at_time
         AND (target_tier_id IS NULL OR runtime.tier_id = target_tier_id)
+        AND (target_event_id IS NULL OR runtime.event_id = target_event_id)
       RETURNING checkout.id
   ) SELECT count(*) INTO expired_count FROM expired;
   RETURN expired_count;

@@ -2239,7 +2239,7 @@
     {
       "id": "social.ticket-checkout",
       "parentId": "social.event.detail",
-      "webRoute": null,
+      "webRoute": "/eventos/:eventId/entradas",
       "routeType": "contextual",
       "classification": "record-detail-contextual-action",
       "label": { "es": "Comprar entrada", "en": "Buy ticket" },
@@ -2248,15 +2248,43 @@
       "navigationGroup": "people",
       "icon": "ticket",
       "breadcrumb": ["social", "social.events", "social.event.detail"],
-      "permissions": { "discover": {}, "view": {}, "create": { "recordScope": "self" } },
+      "requiredAuth": "public",
+      "permissions": { "discover": {}, "view": {}, "create": {} },
       "routeAction": "create",
+      "maturity": "beta",
       "favoriteEligible": false,
       "pinEligible": false,
       "recentBehavior": "record",
-      "mobilePresentation": { "kind": "native-contextual", "destination": "/ticketCheckout", "documentedException": null },
+      "mobilePresentation": { "kind": "native-contextual", "destination": "/ticketCheckout", "documentedException": "Native ticket checkout remains authenticated until it adopts the generated guest capability-token contract." },
       "apiScopes": [
+        { "pathPrefix": "/public/events", "pathContains": "/ticket-orders", "methods": { "GET": "view", "POST": "create" } },
         { "pathPrefix": "/social-events/events", "pathContains": "/ticket-orders", "methods": { "POST": "create" } },
         { "pathPrefix": "/social-events/stripe/create-payment-intent", "methods": { "POST": "create" } }
+      ]
+    },
+    {
+      "id": "social.ticket-order-public",
+      "parentId": "social.ticket-checkout",
+      "webRoute": "/eventos/:eventId/orden/:orderId",
+      "routeType": "contextual",
+      "classification": "record-detail-contextual-action",
+      "label": { "es": "Seguimiento de entrada", "en": "Ticket order tracking" },
+      "synonyms": { "es": ["estado de entrada", "orden de boletos"], "en": ["ticket status", "ticket order"] },
+      "keywords": ["ticket", "order", "tracking", "payment"],
+      "description": { "es": "Seguimiento público protegido por una capacidad pseudoaleatoria con clave guardada en el dispositivo.", "en": "Public tracking protected by a server-keyed pseudorandom capability retained on the device." },
+      "navigationGroup": "people",
+      "icon": "ticket",
+      "breadcrumb": ["social", "social.events", "social.event.detail", "social.ticket-checkout"],
+      "requiredAuth": "public",
+      "permissions": { "discover": {}, "view": { "recordScope": "guest-capability" } },
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "record",
+      "maturity": "beta",
+      "accessRequestEligible": false,
+      "mobilePresentation": { "kind": "web-only", "destination": null, "documentedException": "The guest lookup token is intentionally device-scoped; mobile has generated API types but no equivalent secure ticket tracker yet." },
+      "apiScopes": [
+        { "pathPrefix": "/public/events", "pathContains": "/ticket-orders", "methods": { "GET": "view" } }
       ]
     },
     {
@@ -2609,6 +2637,7 @@
       "icon": "school",
       "breadcrumb": [],
       "requiredAuth": "public",
+      "permissions": { "discover": {}, "view": {}, "submit": {} },
       "favoriteEligible": false,
       "pinEligible": false,
       "recentBehavior": "record",
