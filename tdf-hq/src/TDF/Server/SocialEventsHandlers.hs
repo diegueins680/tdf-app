@@ -4668,7 +4668,7 @@ socialEventsServer user =
     createRefundRequest eventIdStr orderIdStr RefundRequestDTO{..} = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseVisibleEventKey eventIdStr
+        eventKey <- parseKeyOr400 "event" eventIdStr
         orderKey <- parseKeyOr400 "ticket order" orderIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
@@ -4679,7 +4679,9 @@ socialEventsServer user =
         when (eventTicketOrderStatus order /= "paid") $
             throwError err400{errBody = "Only paid orders can be refunded"}
         let manager = isEventManager currentPartyId eventVal
-        when (not manager && eventTicketOrderBuyerPartyId order /= Just currentPartyId) $
+            ownsOrder = eventTicketOrderBuyerPartyId order == Just currentPartyId
+        unless (manager || ownsOrder) $ do
+            requireEventVisibleToUser eventKey
             throwError err403{errBody = "You can only request refunds for your own orders"}
         mExisting <-
             liftIO $
@@ -4721,7 +4723,7 @@ socialEventsServer user =
     listRefunds :: T.Text -> AppM [RefundDTO]
     listRefunds eventIdStr = do
         Env{..} <- ask
-        eventKey <- parseVisibleEventKey eventIdStr
+        eventKey <- parseKeyOr400 "event" eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         let manager = isEventManager currentPartyId eventVal
@@ -4737,6 +4739,8 @@ socialEventsServer user =
                         runSqlPool
                             (selectList [EventTicketOrderEventId ==. eventKey, EventTicketOrderBuyerPartyId ==. Just currentPartyId] [])
                             envPool
+        when (not manager && null orders) $
+            requireEventVisibleToUser eventKey
         let orderIds = map entityKey orders
             orderCurrencies =
                 Map.fromList
