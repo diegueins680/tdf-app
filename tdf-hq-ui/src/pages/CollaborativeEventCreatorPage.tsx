@@ -75,11 +75,11 @@ const loadDraft = (): CollaborativeEventDraft => {
     return {
       ...initial,
       ...stored,
-      durationMinutes: DURATION_OPTIONS.some(
-        ({ value }) => value === stored.durationMinutes,
-      )
-        ? stored.durationMinutes ?? initial.durationMinutes
-        : initial.durationMinutes,
+      durationMinutes: stored.durationMinutes === null
+        ? null
+        : DURATION_OPTIONS.some(({ value }) => value === stored.durationMinutes)
+          ? stored.durationMinutes ?? initial.durationMinutes
+          : initial.durationMinutes,
       collaborators: Array.isArray(stored.collaborators)
         ? stored.collaborators.filter(
             (collaborator): collaborator is EventCollaboratorDraft =>
@@ -103,6 +103,9 @@ const partyLabel = (party: PartyDTO) =>
 const eventDateLabel = (draft: CollaborativeEventDraft) => {
   const start = DateTime.fromFormat(draft.startAt, LOCAL_DATE_TIME_FORMAT);
   if (!start.isValid) return 'Fecha por definir';
+  if (draft.durationMinutes === null) {
+    return `${start.setLocale('es').toFormat("ccc d LLL · HH:mm")} · fin por confirmar`;
+  }
   const end = start.plus({ minutes: draft.durationMinutes });
   return `${start.setLocale('es').toFormat("ccc d LLL · HH:mm")}–${end.toFormat('HH:mm')}`;
 };
@@ -469,14 +472,15 @@ export default function CollaborativeEventCreatorPage() {
                     />
                     <TextField
                       select
-                      label="Duración"
-                      value={draft.durationMinutes}
+                      label="Duración (opcional)"
+                      value={draft.durationMinutes ?? ''}
                       onChange={(event) => updateDraft(
                         'durationMinutes',
-                        Number(event.target.value),
+                        event.target.value === '' ? null : Number(event.target.value),
                       )}
                       sx={{ flex: 1, minWidth: 150 }}
                     >
+                      <MenuItem value="">Fin por confirmar</MenuItem>
                       {DURATION_OPTIONS.map((option) => (
                         <MenuItem key={option.value} value={option.value}>
                           {option.label}

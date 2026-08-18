@@ -46,6 +46,10 @@ curl -sS "${API_BASE}/social-events/events?city=Quito&event_type_id=11111111-111
 
 ### Create Event
 
+`eventEnd` is optional. Omit it or send `null` when the official end or
+duration is not confirmed; the API does not infer a duration. When supplied,
+the end must be after `eventStart`.
+
 ```bash
 curl -sS -X POST "${API_BASE}/social-events/events" \
   "${AUTH[@]}" \

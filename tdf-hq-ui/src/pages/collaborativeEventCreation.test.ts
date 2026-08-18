@@ -39,7 +39,7 @@ describe('collaborative event creation', () => {
     const { eventStart, eventEnd, ...payload } =
       buildCollaborativeEventPayload(draft());
     const start = DateTime.fromISO(eventStart);
-    const end = DateTime.fromISO(eventEnd);
+    const end = DateTime.fromISO(eventEnd!);
 
     expect(payload).toEqual({
       eventTitle: 'TDF Summer Session',
@@ -59,6 +59,16 @@ describe('collaborative event creation', () => {
       '2026-07-28T11:00',
     );
     expect(end.diff(start, 'minutes').minutes).toBe(120);
+  });
+
+  it('does not invent an end when the official duration is unknown', () => {
+    const payload = buildCollaborativeEventPayload({
+      ...draft(),
+      durationMinutes: null,
+    });
+
+    expect(payload.eventEnd).toBeNull();
+    expect(payload.eventStart).toBeTruthy();
   });
 
   it('accepts comma decimals and rejects ambiguous prices', () => {

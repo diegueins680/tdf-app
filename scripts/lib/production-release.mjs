@@ -656,6 +656,30 @@ BEGIN
     RAISE EXCEPTION 'A canonical catalog consumer UUID reference is missing or invalid';
   END IF;
 
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'social_event'
+      AND column_name = 'end_time'
+      AND data_type = 'timestamp with time zone'
+      AND is_nullable = 'YES'
+  ) THEN
+    RAISE EXCEPTION 'social_event.end_time must allow an unconfirmed end';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'public.social_event'::regclass
+      AND conname = 'social_event_time_order'
+      AND contype = 'c'
+      AND convalidated
+      AND pg_get_constraintdef(oid) ILIKE '%end_time IS NULL%'
+      AND pg_get_constraintdef(oid) ILIKE '%start_time < end_time%'
+  ) THEN
+    RAISE EXCEPTION 'social_event_time_order is missing or invalid';
+  END IF;
+
   IF EXISTS (
     SELECT 1 FROM catalog_backfill_run
     WHERE NOT dry_run AND status <> 'completed'
