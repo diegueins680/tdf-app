@@ -12,7 +12,7 @@ import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
 import qualified Data.UUID as UUID
-import Database.Persist (Entity (..), get, getJust, insert, insertKey)
+import Database.Persist (Entity (..), get, insert, insertKey)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (Handler, ServerError (errBody, errHTTPCode), (:<|>) (..))
@@ -335,6 +335,12 @@ spec = describe "social event handler helpers" $ do
             malformedEventKey = toSqlKey 15
             unsupportedMetadataEventKey :: SocialEventId
             unsupportedMetadataEventKey = toSqlKey 16
+            decimalBudgetEventKey :: SocialEventId
+            decimalBudgetEventKey = toSqlKey 17
+            exponentBudgetEventKey :: SocialEventId
+            exponentBudgetEventKey = toSqlKey 18
+            fractionalBudgetEventKey :: SocialEventId
+            fractionalBudgetEventKey = toSqlKey 19
             hiddenTierKey :: EventTicketTierId
             hiddenTierKey = toSqlKey 21
             publicTierKey :: EventTicketTierId
@@ -436,11 +442,35 @@ spec = describe "social event handler helpers" $ do
                         , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
                         }
                     )
+                insertKey
+                    decimalBudgetEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Decimal integral budget" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true,\"budgetCents\":1.0}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
+                insertKey
+                    exponentBudgetEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Exponent integral budget" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true,\"budgetCents\":1e0}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
+                insertKey
+                    fractionalBudgetEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Fractional budget" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true,\"budgetCents\":1.5}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
                 _ <- insert (sourceRef "ticketmaster" "pilot-private-13" hiddenEventKey "missing" "https://tickets.example.com/private-pilot")
                 _ <- insert (sourceRef "ticketmaster" "public-14" publicEventKey "on_sale" "https://tickets.example.com/public")
                 _ <- insert (sourceRef "buenplan" "draft-merge-14" publicEventKey "draft:on_sale" "https://tickets.example.com/draft-option")
                 _ <- insert (sourceRef "ticketmaster" "malformed-15" malformedEventKey "on_sale" "https://tickets.example.com/malformed")
                 _ <- insert (sourceRef "ticketmaster" "unsupported-16" unsupportedMetadataEventKey "on_sale" "https://tickets.example.com/unsupported")
+                _ <- insert (sourceRef "ticketmaster" "decimal-budget-17" decimalBudgetEventKey "on_sale" "https://tickets.example.com/decimal-budget")
+                _ <- insert (sourceRef "ticketmaster" "exponent-budget-18" exponentBudgetEventKey "on_sale" "https://tickets.example.com/exponent-budget")
+                _ <- insert (sourceRef "ticketmaster" "fractional-budget-19" fractionalBudgetEventKey "on_sale" "https://tickets.example.com/fractional-budget")
                 insertKey hiddenTierKey (ticketTier hiddenEventKey "hidden-tier" "Hidden tier")
                 insertKey publicTierKey (ticketTier publicEventKey "public-tier" "Public tier")
                 insertKey
@@ -514,13 +544,12 @@ spec = describe "social event handler helpers" $ do
                     )
                     env
         case listResult of
-            Right [event] -> eventId event `shouldBe` Just "14"
             Right events ->
-                expectationFailure
-                    ("Expected only the public canonical event, got: " <> show events)
+                map eventId events
+                    `shouldMatchList` [Just "14", Just "17", Just "18"]
             Left err ->
                 expectationFailure
-                    ("Expected hidden pilot list to succeed, got: " <> show err)
+                    ("Expected canonical public event list to succeed, got: " <> show err)
 
         paginatedListResult <-
             runHandler $
@@ -539,7 +568,8 @@ spec = describe "social event handler helpers" $ do
                     )
                     env
         case paginatedListResult of
-            Right [event] -> eventId event `shouldBe` Just "14"
+            Right [event] ->
+                eventId event `shouldSatisfy` (`elem` [Just "14", Just "17", Just "18"])
             Right events ->
                 expectationFailure
                     ("Expected filtered and paginated list to contain only the public canonical event, got: " <> show events)
@@ -584,6 +614,32 @@ spec = describe "social event handler helpers" $ do
                     (socialEventGetHandlerFor ordinaryUser "16")
                     env
         assertHiddenEventRoute "unsupported imported metadata" unsupportedMetadataGetResult
+
+        mapM_
+            ( \eventIdText -> do
+                integralBudgetGetResult <-
+                    runHandler $
+                        runReaderT
+                            (socialEventGetHandlerFor ordinaryUser eventIdText)
+                            env
+                case integralBudgetGetResult of
+                    Right event -> eventId event `shouldBe` Just eventIdText
+                    Left err ->
+                        expectationFailure
+                            ( "Expected integral JSON budget event "
+                                <> T.unpack eventIdText
+                                <> " to remain visible, got: "
+                                <> show err
+                            )
+            )
+            ["17", "18"]
+
+        fractionalBudgetGetResult <-
+            runHandler $
+                runReaderT
+                    (socialEventGetHandlerFor ordinaryUser "19")
+                    env
+        assertHiddenEventRoute "fractional imported budget metadata" fractionalBudgetGetResult
 
         let ( stripeHandler
                 , createRefundHandler

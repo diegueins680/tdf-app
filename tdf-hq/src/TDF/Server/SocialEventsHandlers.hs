@@ -8336,7 +8336,7 @@ sqliteVisibleImportedMetadataClause metadataColumn =
         <> sqliteOptionalMetadataType metadataColumn "ticketUrl" "text"
         <> sqliteOptionalMetadataType metadataColumn "imageUrl" "text"
         <> sqliteOptionalMetadataType metadataColumn "currency" "text"
-        <> sqliteOptionalMetadataType metadataColumn "budgetCents" "integer"
+        <> sqliteOptionalIntegralMetadataType metadataColumn "budgetCents"
         <> " AND (json_type("
         <> metadataColumn
         <> ",'$.isPublic') IS NULL OR json_type("
@@ -8357,6 +8357,32 @@ sqliteOptionalMetadataType metadataColumn fieldName expectedType =
         <> "') IN ('null','"
         <> expectedType
         <> "'))"
+
+sqliteOptionalIntegralMetadataType :: T.Text -> T.Text -> T.Text
+sqliteOptionalIntegralMetadataType metadataColumn fieldName =
+    " AND ("
+        <> fieldType
+        <> " IS NULL OR "
+        <> fieldType
+        <> "='null' OR ("
+        <> fieldType
+        <> " IN ('integer','real') AND (typeof("
+        <> fieldValue
+        <> ")='integer' OR (typeof("
+        <> fieldValue
+        <> ")='real' AND "
+        <> fieldValue
+        <> ">-9223372036854775808.0 AND "
+        <> fieldValue
+        <> "<9223372036854775808.0 AND "
+        <> fieldValue
+        <> "=CAST("
+        <> fieldValue
+        <> " AS INTEGER)))))"
+  where
+    fieldPath = "'$." <> fieldName <> "'"
+    fieldType = "json_type(" <> metadataColumn <> "," <> fieldPath <> ")"
+    fieldValue = "json_extract(" <> metadataColumn <> "," <> fieldPath <> ")"
 
 postgresVisibleImportedMetadataClause :: T.Text -> T.Text
 postgresVisibleImportedMetadataClause metadataColumn =
@@ -8379,17 +8405,7 @@ postgresVisibleImportedMetadataClause metadataColumn =
         <> postgresOptionalMetadataType jsonMetadata "ticketUrl" "string"
         <> postgresOptionalMetadataType jsonMetadata "imageUrl" "string"
         <> postgresOptionalMetadataType jsonMetadata "currency" "string"
-        <> " AND (jsonb_typeof("
-        <> jsonMetadata
-        <> "->'budgetCents') IS NULL OR jsonb_typeof("
-        <> jsonMetadata
-        <> "->'budgetCents')='null' OR (jsonb_typeof("
-        <> jsonMetadata
-        <> "->'budgetCents')='number' AND "
-        <> jsonMetadata
-        <> "->>'budgetCents' ~ '^-?[0-9]+$' AND ("
-        <> jsonMetadata
-        <> "->>'budgetCents')::numeric BETWEEN -9223372036854775808 AND 9223372036854775807))"
+        <> postgresOptionalIntegralMetadataType jsonMetadata "budgetCents"
         <> " AND (jsonb_typeof("
         <> jsonMetadata
         <> "->'isPublic') IS NULL OR jsonb_typeof("
@@ -8414,6 +8430,26 @@ postgresOptionalMetadataType jsonMetadata fieldName expectedType =
         <> "') IN ('null','"
         <> expectedType
         <> "'))"
+
+postgresOptionalIntegralMetadataType :: T.Text -> T.Text -> T.Text
+postgresOptionalIntegralMetadataType jsonMetadata fieldName =
+    " AND ("
+        <> fieldType
+        <> " IS NULL OR "
+        <> fieldType
+        <> "='null' OR CASE WHEN "
+        <> fieldType
+        <> "='number' THEN "
+        <> numericValue
+        <> "=trunc("
+        <> numericValue
+        <> ") AND "
+        <> numericValue
+        <> " BETWEEN -9223372036854775808 AND 9223372036854775807 ELSE FALSE END)"
+  where
+    fieldValue = jsonMetadata <> "->'" <> fieldName <> "'"
+    fieldType = "jsonb_typeof(" <> fieldValue <> ")"
+    numericValue = "(" <> jsonMetadata <> "->>'" <> fieldName <> "')::numeric"
 
 isImportedEventHidden :: SocialEventId -> SqlPersistT IO Bool
 isImportedEventHidden eventKey = do
