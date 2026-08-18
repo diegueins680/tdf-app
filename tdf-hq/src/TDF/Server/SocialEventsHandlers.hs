@@ -4668,18 +4668,30 @@ socialEventsServer user =
     createRefundRequest eventIdStr orderIdStr RefundRequestDTO{..} = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        eventKey <- parseVisibleEventKey eventIdStr
+        -- Buyers must retain the refund lifecycle after an imported event is
+        -- delisted, especially when the upstream provider cancelled it.
+        eventKey <- parseKeyOr400 "event" eventIdStr
         orderKey <- parseKeyOr400 "ticket order" orderIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         mOrder <- liftIO $ runSqlPool (get orderKey) envPool
+        let manager = isEventManager currentPartyId eventVal
+            ownsEventOrder =
+                maybe
+                    False
+                    ( \order ->
+                        eventTicketOrderEventId order == eventKey
+                            && eventTicketOrderBuyerPartyId order == Just currentPartyId
+                    )
+                    mOrder
+        unless (manager || ownsEventOrder) $
+            requireEventVisibleToUser eventKey
         order <- maybe (throwError err404{errBody = "Ticket order not found"}) pure mOrder
         when (eventTicketOrderEventId order /= eventKey) $
             throwError err400{errBody = "Ticket order does not belong to this event"}
         when (eventTicketOrderStatus order /= "paid") $
             throwError err400{errBody = "Only paid orders can be refunded"}
-        let manager = isEventManager currentPartyId eventVal
-        when (not manager && eventTicketOrderBuyerPartyId order /= Just currentPartyId) $
+        unless (manager || eventTicketOrderBuyerPartyId order == Just currentPartyId) $
             throwError err403{errBody = "You can only request refunds for your own orders"}
         mExisting <-
             liftIO $
@@ -4721,7 +4733,7 @@ socialEventsServer user =
     listRefunds :: T.Text -> AppM [RefundDTO]
     listRefunds eventIdStr = do
         Env{..} <- ask
-        eventKey <- parseVisibleEventKey eventIdStr
+        eventKey <- parseKeyOr400 "event" eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         let manager = isEventManager currentPartyId eventVal
@@ -4737,6 +4749,8 @@ socialEventsServer user =
                         runSqlPool
                             (selectList [EventTicketOrderEventId ==. eventKey, EventTicketOrderBuyerPartyId ==. Just currentPartyId] [])
                             envPool
+        when (not manager && null orders) $
+            requireEventVisibleToUser eventKey
         let orderIds = map entityKey orders
             orderCurrencies =
                 Map.fromList
