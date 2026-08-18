@@ -260,6 +260,11 @@
       "id": "2026-08-16_music_directory_verified_reviews",
       "path": "tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql",
       "introducedBy": "657198a14cb2a6bc20279ee47ffd5696144a74ba"
+    },
+    {
+      "id": "2026-08-17_marketplace_customer_requests_and_deposit_settlement",
+      "path": "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
+      "introducedBy": "583c91e82aa2d05860b338d0c2695b9c4d0df434"
     }
   ]
 }
