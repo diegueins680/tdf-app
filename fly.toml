@@ -10,6 +10,8 @@ primary_region = "gru"
   DEFAULT_LOCALE = "es"
   # Production schema changes are applied once by the guarded release lane.
   RUN_MIGRATIONS = "false"
+  # Apply only checksum-pinned SQL from production-migrations.json at startup.
+  AUTO_APPLY_PRODUCTION_MIGRATIONS = "true"
   # Enable only after the discovery schema and release have been verified.
   EVENT_DISCOVERY_ENABLED = "false"
   # Daily full-platform artist discovery. External research/media is scheduled

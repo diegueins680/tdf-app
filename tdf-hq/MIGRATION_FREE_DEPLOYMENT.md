@@ -1,5 +1,12 @@
 # Migration-Free Database Deployment
 
+> Historical development guide. Production now uses the checksum-pinned SQL
+> runner documented in
+> [`docs/automatic-production-migrations.md`](../docs/automatic-production-migrations.md).
+> It keeps `RUN_MIGRATIONS=false` and enables
+> `AUTO_APPLY_PRODUCTION_MIGRATIONS=true`; Persistent-inferred DDL is never the
+> production schema authority.
+
 ## Summary
 
 This guide provides a complete solution for deploying TDF Records without runtime database migrations. The schema is pre-initialized using SQL scripts, avoiding ALTER TABLE operations and deployment failures.

@@ -85,7 +85,22 @@ RUN set -eu; \
     fi; \
     printf '%s\n' "$BUILD_TS" > /app/BUILD_TIME
 
-# -------- Stage 2: slim runtime ----------
+# -------- Stage 2: render reviewed migration bundle ----------
+FROM node:22-bookworm-slim AS migration-bundle
+ARG SOURCE_COMMIT=dev
+WORKDIR /repo
+COPY scripts/production-migrations.json scripts/production-migrations.json
+COPY scripts/render-production-migration-batch.mjs scripts/render-production-migration-batch.mjs
+COPY scripts/lib/production-release.mjs scripts/lib/production-release.mjs
+COPY tdf-hq/sql tdf-hq/sql
+RUN set -eu; \
+    case "$SOURCE_COMMIT" in \
+      [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) migration_source_commit="$SOURCE_COMMIT" ;; \
+      *) migration_source_commit=0000000000000000000000000000000000000000 ;; \
+    esac; \
+    SOURCE_COMMIT="$migration_source_commit" node scripts/render-production-migration-batch.mjs > /production-migrations.sql
+
+# -------- Stage 3: slim runtime ----------
 FROM debian:bookworm-slim
 ARG DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
@@ -95,7 +110,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get -o Acquire::AllowInsecureRepositories=true -o Acquire::Check-Valid-Until=false update && \
     apt-get -o Acquire::AllowInsecureRepositories=true --allow-unauthenticated install -y --no-install-recommends \
-    libpq5 ca-certificates tzdata libxml2-utils && \
+    libpq5 postgresql-client ca-certificates tzdata libxml2-utils && \
     rm -rf /var/lib/apt/lists/*
 
 ARG SOURCE_COMMIT=dev
@@ -108,14 +123,18 @@ COPY --from=builder /app/docs /app/docs
 COPY --from=builder /app/COMMIT /app/COMMIT
 COPY --from=builder /app/BUILD_TIME /app/BUILD_TIME
 COPY --from=builder /app/assets /app/assets
+COPY --from=migration-bundle /production-migrations.sql /app/production-migrations.sql
+COPY tdf-hq/production-entrypoint.sh /app/production-entrypoint.sh
 
 # Render provides PORT; map it to the app's APP_PORT
 ENV APP_PORT=8080
 # Production Docker/Fly deploys use the pre-initialized schema path.
 ENV RUN_MIGRATIONS=false
+ENV AUTO_APPLY_PRODUCTION_MIGRATIONS=true
 
 # Non-root user for better security
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+RUN chmod 0755 /app/production-entrypoint.sh && \
+    useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
-CMD ["/bin/sh","-c","APP_PORT=${PORT:-8080} /app/tdf-hq-exe"]
+CMD ["/app/production-entrypoint.sh"]

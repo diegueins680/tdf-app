@@ -47,6 +47,10 @@ test('backend image packages the tested artifact instead of recompiling Haskell'
 
   const runtimeDockerfile = await source('tdf-hq/Dockerfile.runtime');
   assert.match(runtimeDockerfile, /COPY tdf-hq\/\.release\/tdf-hq-exe/);
+  assert.match(runtimeDockerfile, /production-migrations\.sql/);
+  assert.match(runtimeDockerfile, /production-entrypoint\.sh/);
+  assert.match(runtimeDockerfile, /ENV AUTO_APPLY_PRODUCTION_MIGRATIONS=true/);
+  assert.match(runtimeDockerfile, /postgresql-client/);
   assert.doesNotMatch(runtimeDockerfile, /stack (?:--[^\n]+ )?build/);
 });
 
