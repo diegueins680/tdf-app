@@ -43,7 +43,7 @@ The final command transcript is summarized here after the branch-wide verificati
 | Web production build | `npm run build --workspace=tdf-hq-ui` | Pass after current-main synchronization: 12,390 modules; bundle/secret gate 5 preloads and 407,515 gzip bytes |
 | Release/CI contracts | `npm run test:production-release`; `npm run test:ci-pipeline` | Pass: 39 + 12 tests |
 | Prior registered production batch | Restore schema-only fixture plus three synthetic published Records rows; read-only preflight; render/apply twice; schema verification before and after the rerun on PostgreSQL 17 | Pass before current-main synchronization: all 49/49 then-registered migrations were recorded, the exact second run skipped all 49 entries idempotently, marketplace sales/rentals and reviewed manual methods remained enabled, Datafast/PayPal and service bookings remained disabled, active booking policies and provider bindings remained zero |
-| Current merged migration manifest | JSON uniqueness/immutability contracts plus dedicated PostgreSQL 17 rehearsals for the three current-main additions | Pass: 52 unique manifest entries; event-research ingestion passed seed, pilot-cap, idempotency, replacement, rollback and reapply checks; music-directory migrations passed restart, backfill, rollback/reapply, privacy, claim, verified-review, alert, merge, search-volume, taxonomy, invitation, blocking and expiry checks. A new aggregate 52-entry snapshot apply remains a required staging exercise. |
+| Current merged migration manifest | JSON uniqueness/immutability contracts, dedicated PostgreSQL 17 rehearsals for the three current-main additions, and the isolated PostgreSQL 16 marketplace-operations rehearsal | Pass: 53 unique manifest entries; event-research ingestion passed seed, pilot-cap, idempotency, replacement, rollback and reapply checks; music-directory migrations passed restart, backfill, rollback/reapply, privacy, claim, verified-review, alert, merge, search-volume, taxonomy, invitation, blocking and expiry checks; marketplace operations passed the evidence and accounting gates listed above. A new aggregate 53-entry snapshot apply remains a required staging exercise. |
 | OpenAPI/generated clients | `npm run generate:api` for web and mobile | Pass: canonical service-storefront, marketplace sale/rental, customer request/review, manual deposit settlement, booking checkout, Datafast/PayPal actions, manual-evidence submission, protected finance projection, independent review, and music-directory contracts generated for both clients; mobile contract is committed at `f59730b` |
 | Mobile type safety | `npm run typecheck:mobile` | Pass |
 | Mobile regression | `npm run test:mobile -- --runInBand` | Pass after current-main synchronization: 51 suites, 264 tests, zero failures |
@@ -137,9 +137,9 @@ reconciliation work rather than fabricated payment. After synchronizing current 
 verification passed 2,360 backend examples, 155 web suites/1,622 tests, 51 mobile suites/264 tests,
 the three marketplace/manual database rehearsals, the event-research and music-directory migration
 rehearsals, production UI build, feature-registry audit, release/CI contracts, formal audit and
-catalog-authority audit. The merged manifest contains 52 unique immutable entries; the earlier
+catalog-authority audit. The merged manifest contains 53 unique immutable entries; the earlier
 49-entry aggregate apply evidence remains valid for that exact revision, while an aggregate
-52-entry snapshot apply is explicitly still required in staging. No external provider call, manual
+53-entry snapshot apply is explicitly still required in staging. No external provider call, manual
 payment approval, inventory handoff, deposit refund, staging deployment or production mutation
 occurred.
 
