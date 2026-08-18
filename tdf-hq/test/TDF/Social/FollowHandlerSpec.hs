@@ -12,7 +12,7 @@ import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
 import qualified Data.UUID as UUID
-import Database.Persist (Entity (..), get, getJust, insert, insertKey)
+import Database.Persist (Entity (..), get, insert, insertKey)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (Handler, ServerError (errBody, errHTTPCode), (:<|>) (..))
@@ -51,6 +51,7 @@ import TDF.DTO.SocialEventsDTO
     , TicketTransferDTO
     )
 import TDF.Auth (AuthedUser (..), modulesForRoles)
+import qualified TDF.Config as Config
 import TDF.DB (Env (..))
 import TDF.Models (Party (..), RoleEnum (Fan))
 import TDF.Models.SocialEventsModels
@@ -324,6 +325,7 @@ spec = describe "social event handler helpers" $ do
             (validateSocialEventsListFilter "name" (Just ("DJ" <> T.singleton (chr 0x202E))))
 
     it "uses canonical visibility for imported events across read and mutation routes" $ do
+        cfg <- Config.loadConfig
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
         runSqlPool initializeSocialSchema pool
         now <- getCurrentTime
@@ -331,12 +333,34 @@ spec = describe "social event handler helpers" $ do
             hiddenEventKey = toSqlKey 13
             publicEventKey :: SocialEventId
             publicEventKey = toSqlKey 14
+            malformedEventKey :: SocialEventId
+            malformedEventKey = toSqlKey 15
+            unsupportedMetadataEventKey :: SocialEventId
+            unsupportedMetadataEventKey = toSqlKey 16
+            decimalBudgetEventKey :: SocialEventId
+            decimalBudgetEventKey = toSqlKey 17
+            exponentBudgetEventKey :: SocialEventId
+            exponentBudgetEventKey = toSqlKey 18
+            fractionalBudgetEventKey :: SocialEventId
+            fractionalBudgetEventKey = toSqlKey 19
+            roundedFractionalBudgetEventKey :: SocialEventId
+            roundedFractionalBudgetEventKey = toSqlKey 20
+            maximumBudgetEventKey :: SocialEventId
+            maximumBudgetEventKey = toSqlKey 21
+            minimumBudgetEventKey :: SocialEventId
+            minimumBudgetEventKey = toSqlKey 22
+            duplicateVisibilityEventKey :: SocialEventId
+            duplicateVisibilityEventKey = toSqlKey 23
             hiddenTierKey :: EventTicketTierId
             hiddenTierKey = toSqlKey 21
+            publicTierKey :: EventTicketTierId
+            publicTierKey = toSqlKey 22
             hiddenOrderKey :: EventTicketOrderId
-            hiddenOrderKey = toSqlKey 99
-            mismatchedOrderKey :: EventTicketOrderId
-            mismatchedOrderKey = toSqlKey 100
+            hiddenOrderKey = toSqlKey 51
+            foreignOrderKey :: EventTicketOrderId
+            foreignOrderKey = toSqlKey 52
+            pendingHiddenOrderKey :: EventTicketOrderId
+            pendingHiddenOrderKey = toSqlKey 53
             hiddenTicketKey :: EventTicketId
             hiddenTicketKey = toSqlKey 31
             hiddenTransferKey :: TicketTransferId
@@ -355,6 +379,49 @@ spec = describe "social event handler helpers" $ do
                     , externalEventRefMissingRuns = if sourceStatus == "missing" then 2 else 0
                     , externalEventRefSourceStatus = sourceStatus
                     }
+            ticketTier eventKey code name =
+                EventTicketTier
+                    { eventTicketTierEventId = eventKey
+                    , eventTicketTierCode = code
+                    , eventTicketTierName = name
+                    , eventTicketTierDescription = Nothing
+                    , eventTicketTierPriceCents = 1000
+                    , eventTicketTierCurrency = "USD"
+                    , eventTicketTierCurrencyId = Nothing
+                    , eventTicketTierQuantityTotal = 10
+                    , eventTicketTierQuantitySold = 0
+                    , eventTicketTierSalesStart = Nothing
+                    , eventTicketTierSalesEnd = Nothing
+                    , eventTicketTierIsActive = True
+                    , eventTicketTierPosition = Nothing
+                    , eventTicketTierEnableWaitlist = False
+                    , eventTicketTierAllowTransfers = True
+                    , eventTicketTierRefundPolicy = "full"
+                    , eventTicketTierRefundDeadline = Nothing
+                    , eventTicketTierCreatedAt = now
+                    , eventTicketTierUpdatedAt = now
+                    }
+            ticketOrder eventKey tierKey buyerId buyerName buyerEmail status =
+                EventTicketOrder
+                    { eventTicketOrderEventId = eventKey
+                    , eventTicketOrderTierId = tierKey
+                    , eventTicketOrderBuyerPartyId = Just buyerId
+                    , eventTicketOrderBuyerName = Just buyerName
+                    , eventTicketOrderBuyerEmail = Just buyerEmail
+                    , eventTicketOrderQuantity = 1
+                    , eventTicketOrderAmountCents = 1000
+                    , eventTicketOrderCurrency = "USD"
+                    , eventTicketOrderStatus = status
+                    , eventTicketOrderMetadata = Nothing
+                    , eventTicketOrderCheckoutIdempotencyKey = Nothing
+                    , eventTicketOrderPurchasedAt = now
+                    , eventTicketOrderStripePaymentIntentId = Nothing
+                    , eventTicketOrderPromoCodeId = Nothing
+                    , eventTicketOrderOriginalAmountCents = Nothing
+                    , eventTicketOrderPaymentMethod = Just "stripe"
+                    , eventTicketOrderCreatedAt = now
+                    , eventTicketOrderUpdatedAt = now
+                    }
         runSqlPool
             ( do
                 insertKey
@@ -371,62 +438,92 @@ spec = describe "social event handler helpers" $ do
                         , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
                         }
                     )
+                insertKey
+                    malformedEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Malformed imported event" now)
+                        { socialEventMetadata = Just "not-json"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
+                insertKey
+                    unsupportedMetadataEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Unsupported imported metadata" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true,\"unexpected\":1}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
+                insertKey
+                    decimalBudgetEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Decimal integral budget" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true,\"budgetCents\":1.0}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
+                insertKey
+                    exponentBudgetEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Exponent integral budget" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true,\"budgetCents\":1e0}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
+                insertKey
+                    fractionalBudgetEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Fractional budget" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true,\"budgetCents\":1.5}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
+                insertKey
+                    roundedFractionalBudgetEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Rounded fractional budget" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true,\"budgetCents\":9007199254740992.5}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
+                insertKey
+                    maximumBudgetEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Maximum integral budget" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true,\"currency\":\"USD\",\"budgetCents\":9223372036854775807.0}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
+                insertKey
+                    minimumBudgetEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Minimum integral budget" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true,\"currency\":\"USD\",\"budgetCents\":-9223372036854775808.0}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
+                insertKey
+                    duplicateVisibilityEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Duplicate visibility metadata" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true,\"\\u0069sPublic\":false}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
                 _ <- insert (sourceRef "ticketmaster" "pilot-private-13" hiddenEventKey "missing" "https://tickets.example.com/private-pilot")
                 _ <- insert (sourceRef "ticketmaster" "public-14" publicEventKey "on_sale" "https://tickets.example.com/public")
                 _ <- insert (sourceRef "buenplan" "draft-merge-14" publicEventKey "draft:on_sale" "https://tickets.example.com/draft-option")
-                insertKey
-                    hiddenTierKey
-                    EventTicketTier
-                        { eventTicketTierEventId = hiddenEventKey
-                        , eventTicketTierCode = "hidden-tier"
-                        , eventTicketTierName = "Hidden tier"
-                        , eventTicketTierDescription = Nothing
-                        , eventTicketTierPriceCents = 1000
-                        , eventTicketTierCurrency = "USD"
-                        , eventTicketTierCurrencyId = Nothing
-                        , eventTicketTierQuantityTotal = 10
-                        , eventTicketTierQuantitySold = 0
-                        , eventTicketTierSalesStart = Nothing
-                        , eventTicketTierSalesEnd = Nothing
-                        , eventTicketTierIsActive = True
-                        , eventTicketTierPosition = Nothing
-                        , eventTicketTierEnableWaitlist = False
-                        , eventTicketTierAllowTransfers = True
-                        , eventTicketTierRefundPolicy = "full"
-                        , eventTicketTierRefundDeadline = Nothing
-                        , eventTicketTierCreatedAt = now
-                        , eventTicketTierUpdatedAt = now
-                        }
+                _ <- insert (sourceRef "ticketmaster" "malformed-15" malformedEventKey "on_sale" "https://tickets.example.com/malformed")
+                _ <- insert (sourceRef "ticketmaster" "unsupported-16" unsupportedMetadataEventKey "on_sale" "https://tickets.example.com/unsupported")
+                _ <- insert (sourceRef "ticketmaster" "decimal-budget-17" decimalBudgetEventKey "on_sale" "https://tickets.example.com/decimal-budget")
+                _ <- insert (sourceRef "ticketmaster" "exponent-budget-18" exponentBudgetEventKey "on_sale" "https://tickets.example.com/exponent-budget")
+                _ <- insert (sourceRef "ticketmaster" "fractional-budget-19" fractionalBudgetEventKey "on_sale" "https://tickets.example.com/fractional-budget")
+                _ <- insert (sourceRef "ticketmaster" "rounded-fractional-budget-20" roundedFractionalBudgetEventKey "on_sale" "https://tickets.example.com/rounded-fractional-budget")
+                _ <- insert (sourceRef "ticketmaster" "maximum-budget-21" maximumBudgetEventKey "on_sale" "https://tickets.example.com/maximum-budget")
+                _ <- insert (sourceRef "ticketmaster" "minimum-budget-22" minimumBudgetEventKey "on_sale" "https://tickets.example.com/minimum-budget")
+                _ <- insert (sourceRef "ticketmaster" "duplicate-visibility-23" duplicateVisibilityEventKey "on_sale" "https://tickets.example.com/duplicate-visibility")
+                insertKey hiddenTierKey (ticketTier hiddenEventKey "hidden-tier" "Hidden tier")
+                insertKey publicTierKey (ticketTier publicEventKey "public-tier" "Public tier")
                 insertKey
                     hiddenOrderKey
-                    EventTicketOrder
-                        { eventTicketOrderEventId = hiddenEventKey
-                        , eventTicketOrderTierId = hiddenTierKey
-                        , eventTicketOrderBuyerPartyId = Just "2"
-                        , eventTicketOrderBuyerName = Just "Refund owner"
-                        , eventTicketOrderBuyerEmail = Just "owner@example.com"
-                        , eventTicketOrderQuantity = 1
-                        , eventTicketOrderAmountCents = 1000
-                        , eventTicketOrderCurrency = "USD"
-                        , eventTicketOrderStatus = "paid"
-                        , eventTicketOrderMetadata = Nothing
-                        , eventTicketOrderCheckoutIdempotencyKey = Just "hidden-refund-order"
-                        , eventTicketOrderPurchasedAt = now
-                        , eventTicketOrderStripePaymentIntentId = Just "pi_hidden_refund"
-                        , eventTicketOrderPromoCodeId = Nothing
-                        , eventTicketOrderOriginalAmountCents = Just 1000
-                        , eventTicketOrderPaymentMethod = Just "stripe"
-                        , eventTicketOrderCreatedAt = now
-                        , eventTicketOrderUpdatedAt = now
-                        }
-                hiddenOrder <- getJust hiddenOrderKey
-                insertKey mismatchedOrderKey $
-                    hiddenOrder
-                        { eventTicketOrderEventId = publicEventKey
-                        , eventTicketOrderBuyerPartyId = Just "3"
-                        , eventTicketOrderCheckoutIdempotencyKey = Just "mismatched-refund-order"
-                        , eventTicketOrderStripePaymentIntentId = Just "pi_mismatched_refund"
-                        }
+                    (ticketOrder hiddenEventKey hiddenTierKey "2" "Refund buyer" "refund-buyer@example.com" "paid")
+                insertKey
+                    foreignOrderKey
+                    (ticketOrder publicEventKey publicTierKey "3" "Other buyer" "other-buyer@example.com" "paid")
+                insertKey
+                    pendingHiddenOrderKey
+                    (ticketOrder hiddenEventKey hiddenTierKey "3" "Other buyer" "other-buyer@example.com" "pending")
                 insertKey
                     hiddenTicketKey
                     EventTicket
@@ -469,7 +566,7 @@ spec = describe "social event handler helpers" $ do
         let env =
                 Env
                     { envPool = pool
-                    , envConfig = error "envConfig should be unused by hidden pilot draft tests"
+                    , envConfig = cfg
                     }
             ordinaryUser = socialEventUser 2
         listResult <-
@@ -489,13 +586,12 @@ spec = describe "social event handler helpers" $ do
                     )
                     env
         case listResult of
-            Right [event] -> eventId event `shouldBe` Just "14"
             Right events ->
-                expectationFailure
-                    ("Expected only the public canonical event, got: " <> show events)
+                map eventId events
+                    `shouldMatchList` [Just "14", Just "17", Just "18", Just "21", Just "22"]
             Left err ->
                 expectationFailure
-                    ("Expected hidden pilot list to succeed, got: " <> show err)
+                    ("Expected canonical public event list to succeed, got: " <> show err)
 
         paginatedListResult <-
             runHandler $
@@ -514,7 +610,8 @@ spec = describe "social event handler helpers" $ do
                     )
                     env
         case paginatedListResult of
-            Right [event] -> eventId event `shouldBe` Just "14"
+            Right [event] ->
+                eventId event `shouldSatisfy` (`elem` [Just "14", Just "17", Just "18", Just "21", Just "22"])
             Right events ->
                 expectationFailure
                     ("Expected filtered and paginated list to contain only the public canonical event, got: " <> show events)
@@ -546,6 +643,127 @@ spec = describe "social event handler helpers" $ do
                 expectationFailure
                     ("Expected the canonical event with an active public source to remain visible, got: " <> show err)
 
+        malformedGetResult <-
+            runHandler $
+                runReaderT
+                    (socialEventGetHandlerFor ordinaryUser "15")
+                    env
+        assertHiddenEventRoute "malformed imported event" malformedGetResult
+
+        unsupportedMetadataGetResult <-
+            runHandler $
+                runReaderT
+                    (socialEventGetHandlerFor ordinaryUser "16")
+                    env
+        assertHiddenEventRoute "unsupported imported metadata" unsupportedMetadataGetResult
+
+        mapM_
+            ( \eventIdText -> do
+                integralBudgetGetResult <-
+                    runHandler $
+                        runReaderT
+                            (socialEventGetHandlerFor ordinaryUser eventIdText)
+                            env
+                case integralBudgetGetResult of
+                    Right event -> eventId event `shouldBe` Just eventIdText
+                    Left err ->
+                        expectationFailure
+                            ( "Expected integral JSON budget event "
+                                <> T.unpack eventIdText
+                                <> " to remain visible, got: "
+                                <> show err
+                            )
+            )
+            ["17", "18", "21", "22"]
+
+        fractionalBudgetGetResult <-
+            runHandler $
+                runReaderT
+                    (socialEventGetHandlerFor ordinaryUser "19")
+                    env
+        assertHiddenEventRoute "fractional imported budget metadata" fractionalBudgetGetResult
+
+        roundedFractionalBudgetGetResult <-
+            runHandler $
+                runReaderT
+                    (socialEventGetHandlerFor ordinaryUser "20")
+                    env
+        assertHiddenEventRoute "large fractional imported budget metadata" roundedFractionalBudgetGetResult
+
+        duplicateVisibilityGetResult <-
+            runHandler $
+                runReaderT
+                    (socialEventGetHandlerFor ordinaryUser "23")
+                    env
+        assertHiddenEventRoute "duplicate imported visibility metadata" duplicateVisibilityGetResult
+
+        let ( stripeHandler
+                , createRefundHandler
+                , listRefundsHandler
+                , acceptTransferHandler
+                , cancelTransferHandler
+                ) =
+                socialEventIndirectTicketHandlersFor ordinaryUser
+        refundResult <-
+            runHandler $
+                runReaderT
+                    (createRefundHandler "13" "51" (RefundRequestDTO (Just "Provider cancellation") Nothing))
+                    env
+        case refundResult of
+            Right refund -> do
+                refundOrderId refund `shouldBe` "51"
+                refundStatus refund `shouldBe` "pending"
+            Left err ->
+                expectationFailure
+                    ("Expected the hidden-event buyer to retain refund access, got: " <> show err)
+
+        refundListResult <-
+            runHandler $
+                runReaderT
+                    (listRefundsHandler "13")
+                    env
+        case refundListResult of
+            Right [refund] -> refundOrderId refund `shouldBe` "51"
+            Right refunds ->
+                expectationFailure
+                    ("Expected the buyer's hidden-event refund, got: " <> show refunds)
+            Left err ->
+                expectationFailure
+                    ("Expected the hidden-event buyer to list refunds, got: " <> show err)
+
+        let (_, otherBuyerCreateRefund, otherBuyerListRefunds, _, _) =
+                socialEventIndirectTicketHandlersFor (socialEventUser 3)
+        unauthorizedRefundResult <-
+            runHandler $
+                runReaderT
+                    (otherBuyerCreateRefund "13" "51" (RefundRequestDTO Nothing Nothing))
+                    env
+        assertHiddenEventRoute "another buyer's refund" unauthorizedRefundResult
+        missingOrderRefundResult <-
+            runHandler $
+                runReaderT
+                    (otherBuyerCreateRefund "13" "999" (RefundRequestDTO Nothing Nothing))
+                    env
+        assertHiddenEventRoute "missing hidden-event order" missingOrderRefundResult
+        foreignOrderRefundResult <-
+            runHandler $
+                runReaderT
+                    (otherBuyerCreateRefund "13" "52" (RefundRequestDTO Nothing Nothing))
+                    env
+        assertHiddenEventRoute "another event's order" foreignOrderRefundResult
+        pendingOrderRefundResult <-
+            runHandler $
+                runReaderT
+                    (otherBuyerCreateRefund "13" "53" (RefundRequestDTO Nothing Nothing))
+                    env
+        assertHiddenEventRoute "pending hidden-event order" pendingOrderRefundResult
+        unauthorizedRefundListResult <-
+            runHandler $
+                runReaderT
+                    (otherBuyerListRefunds "13")
+                    env
+        assertHiddenEventRoute "another buyer's refund list" unauthorizedRefundListResult
+
         rsvpResult <-
             runHandler $
                 runReaderT
@@ -571,13 +789,6 @@ spec = describe "social event handler helpers" $ do
                     env
         assertHiddenEventRoute "moment" momentResult
 
-        let ( stripeHandler
-                , createRefundHandler
-                , listRefundsHandler
-                , acceptTransferHandler
-                , cancelTransferHandler
-                ) =
-                socialEventIndirectTicketHandlersFor ordinaryUser
         stripeResult <-
             runHandler $
                 runReaderT
@@ -605,72 +816,6 @@ spec = describe "social event handler helpers" $ do
                     (cancelTransferHandler "41")
                     env
         assertHiddenEventRoute "transfer cancellation" cancelTransferResult
-
-        refundResult <-
-            runHandler $
-                runReaderT
-                    ( createRefundHandler
-                        "13"
-                        "99"
-                        (RefundRequestDTO (Just "Provider cancellation") Nothing)
-                    )
-                    env
-        case refundResult of
-            Right refund -> do
-                refundOrderId refund `shouldBe` "99"
-                refundStatus refund `shouldBe` "pending"
-            Left err ->
-                expectationFailure
-                    ("Expected hidden-event owner refund to succeed, got: " <> show err)
-
-        refundListResult <-
-            runHandler $
-                runReaderT (listRefundsHandler "13") env
-        case refundListResult of
-            Right [refund] -> refundOrderId refund `shouldBe` "99"
-            Right refunds ->
-                expectationFailure
-                    ("Expected the hidden-event owner refund, got: " <> show refunds)
-            Left err ->
-                expectationFailure
-                    ("Expected hidden-event owner refunds to remain visible, got: " <> show err)
-
-        let (_, unauthorizedRefundHandler, unauthorizedRefundListHandler, _, _) =
-                socialEventIndirectTicketHandlersFor (socialEventUser 3)
-        unauthorizedRefundResult <-
-            runHandler $
-                runReaderT
-                    ( unauthorizedRefundHandler
-                        "13"
-                        "99"
-                        (RefundRequestDTO (Just "Not my order") Nothing)
-                    )
-                    env
-        assertHiddenEventRoute "unauthorized refund" unauthorizedRefundResult
-        missingOrderRefundResult <-
-            runHandler $
-                runReaderT
-                    ( unauthorizedRefundHandler
-                        "13"
-                        "999"
-                        (RefundRequestDTO (Just "Missing order probe") Nothing)
-                    )
-                    env
-        assertHiddenEventRoute "missing-order refund probe" missingOrderRefundResult
-        mismatchedOrderRefundResult <-
-            runHandler $
-                runReaderT
-                    ( unauthorizedRefundHandler
-                        "13"
-                        "100"
-                        (RefundRequestDTO (Just "Mismatched order probe") Nothing)
-                    )
-                    env
-        assertHiddenEventRoute "mismatched-order refund probe" mismatchedOrderRefundResult
-        unauthorizedRefundListResult <-
-            runHandler $
-                runReaderT (unauthorizedRefundListHandler "13") env
-        assertHiddenEventRoute "unauthorized refund list" unauthorizedRefundListResult
 
         (transferAfter, ticketAfter) <-
             runSqlPool
