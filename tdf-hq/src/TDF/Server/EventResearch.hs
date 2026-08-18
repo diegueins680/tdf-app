@@ -312,14 +312,15 @@ materializationAvailabilitySourceStatus (Just raw) =
         "available" -> Right "on_sale"
         "confirmed" -> Right "on_sale"
         "partially_sold_out" -> Right "on_sale"
-        "sold_out" -> Right "sold_out"
-        "soldout" -> Right "sold_out"
+        "sold_out" -> soldOutReviewRequired
+        "soldout" -> soldOutReviewRequired
         "cancelled" -> reviewRequired
         "canceled" -> reviewRequired
         "postponed" -> reviewRequired
         value -> Left ("unsupported event availability requires review: " <> value)
   where
     reviewRequired = Left "cancelled or postponed candidates require review before materialization"
+    soldOutReviewRequired = Left "sold-out candidates require review because the event lifecycle has no public sold-out state"
 
 candidateDTOToWrite :: EventResearchCandidateDTO -> EventResearchCandidateWriteDTO
 candidateDTOToWrite EventResearchCandidateDTO{..} =
@@ -493,23 +494,24 @@ createOrLinkMaterializedEvent organizerPartyId candidateEntity@(Entity _ candida
             case venueResult of
                 Left serverError -> pure (Left serverError)
                 Right venueId -> do
-                    duplicateResult <- findMaterializationDuplicate candidate validated venueId
-                    case duplicateResult of
+                    artistsResult <- resolveMaterializationArtists candidate validated now
+                    case artistsResult of
                         Left serverError -> pure (Left serverError)
-                        Right (Just eventId) -> do
-                            suitable <- existingEventCanSatisfy request eventId
-                            if not suitable
-                                then pure (Left (conflict "a matching event exists but has manual visibility or workflow state"))
-                                else do
-                                    insertedRef <- insertMaterializationEventRef candidate request validated eventId now
-                                    if insertedRef
-                                        then linkCandidateAndRespond candidateEntity materializationRunId eventId False now
-                                        else pure (Left (conflict "the provider event was materialized concurrently"))
-                        Right Nothing -> do
-                            artistsResult <- resolveMaterializationArtists candidate validated now
-                            case artistsResult of
+                        Right artistIds -> do
+                            duplicateResult <- findMaterializationDuplicate candidate validated venueId
+                            case duplicateResult of
                                 Left serverError -> pure (Left serverError)
-                                Right artistIds -> do
+                                Right (Just eventId) -> do
+                                    suitable <- existingEventCanSatisfy request eventId
+                                    if not suitable
+                                        then pure (Left (conflict "a matching event exists but has manual visibility or workflow state"))
+                                        else do
+                                            attachMaterializationArtists eventId artistIds
+                                            insertedRef <- insertMaterializationEventRef candidate request validated eventId now
+                                            if insertedRef
+                                                then linkCandidateAndRespond candidateEntity materializationRunId eventId False now
+                                                else pure (Left (conflict "the provider event was materialized concurrently"))
+                                Right Nothing -> do
                                     let metadata = materializationEventMetadata candidate request validated
                                     eventId <-
                                         insert
@@ -530,13 +532,17 @@ createOrLinkMaterializedEvent organizerPartyId candidateEntity@(Entity _ candida
                                                 , socialEventCreatedAt = now
                                                 , socialEventUpdatedAt = now
                                                 }
-                                    forM_ artistIds $ \artistId -> do
-                                        _ <- insertUnique (EventArtist eventId artistId Nothing)
-                                        pure ()
+                                    attachMaterializationArtists eventId artistIds
                                     insertedRef <- insertMaterializationEventRef candidate request validated eventId now
                                     if insertedRef
                                         then linkCandidateAndRespond candidateEntity materializationRunId eventId True now
                                         else pure (Left (conflict "the provider event was materialized concurrently"))
+
+attachMaterializationArtists :: SocialEventId -> [ArtistProfileId] -> SqlPersistT IO ()
+attachMaterializationArtists eventId artistIds =
+    forM_ artistIds $ \artistId -> do
+        _ <- insertUnique (EventArtist eventId artistId Nothing)
+        pure ()
 
 resolveMaterializationEventType :: UTCTime -> T.Text -> SqlPersistT IO (Either ServerError UUID)
 resolveMaterializationEventType now eventTypeCode = do

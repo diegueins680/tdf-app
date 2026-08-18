@@ -148,7 +148,7 @@ spec = do
                 publishRequest
                 materializationCandidate
                     { erCandidatePayload = materializationPayloadWithAvailability "sold_out" }
-                `shouldSatisfy` isRight
+                `shouldSatisfy` isLeft
             validateEventResearchMaterialization
                 True
                 publishRequest
@@ -164,12 +164,11 @@ spec = do
 
         it "marks unpublished provider references as drafts" $ do
             materializationEventRefSourceStatus False "on_sale" `shouldBe` "draft:on_sale"
-            materializationEventRefSourceStatus True "sold_out" `shouldBe` "sold_out"
+            materializationEventRefSourceStatus True "on_sale" `shouldBe` "on_sale"
 
-        it "preserves sold-out workflow state only for published events" $ do
+        it "uses only valid materialization workflow states" $ do
             materializationWorkflowStateCode True "on_sale" `shouldBe` "on_sale"
-            materializationWorkflowStateCode True "sold_out" `shouldBe` "sold_out"
-            materializationWorkflowStateCode False "sold_out" `shouldBe` "planning"
+            materializationWorkflowStateCode False "on_sale" `shouldBe` "planning"
 
         it "uses a stable candidate/event audit dedupe key" $ do
             let candidateId = toSqlKey 7 :: EventResearchCandidateId
