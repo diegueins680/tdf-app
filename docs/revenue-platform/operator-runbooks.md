@@ -131,6 +131,37 @@ handling, reconcile checkout/receipt/ledger/provider totals to zero variance, ru
 name the webhook and customer-support owners, and verify both domain/provider kill switches. This
 does not authorize a production charge or organizer settlement.
 
+## Domo quote, date-hold, or deposit mismatch
+
+Disable `commerce.domo_quotes` or `domo.checkout` for the affected environment without changing
+existing quotes. If one provider is unhealthy, disable only that provider initiation flag. Never
+activate or edit the preserved historical rate card to repair an in-flight quote.
+
+Compare the independently approved product/review, immutable pricing-rules hash, quote and line
+snapshots, Domo runtime timezone, exclusion-constrained date window, generic reservation hold,
+accepted terms version, canonical `domo-quote:<quote-id>` checkout/provider merchant reference,
+provider attempt/binding, receipt, ledger transaction, and
+reconciliation exception under the same Domo and checkout IDs.
+
+- A created quote is only a temporary date hold. `sent`, `viewed`, or `accepted` does not mean paid.
+- A browser return or PayPal approval remains `processing`/`deposit_due` until exact server-side
+  provider verification succeeds.
+- A verified initial deposit may advance only to `deposit_paid` and `date_reserved`; do not mark the
+  event in progress, completed, balance-paid, or delivered.
+- Expire unpaid holds through `domo_quote_expire_holds`; do not delete competing or historical rows.
+- Payment verified after expiry is a reconciliation incident. Do not silently reclaim a date that
+  another customer may hold; operations and finance must resolve refund or rebooking through an
+  approved compensating workflow. Confirm the late evidence retained the exact provider
+  payment/capture ID while checkout and venue states stayed terminal.
+- A mismatch in amount, currency, merchant, environment, quote, checkout, or provider resource is
+  not a tolerable rounding difference. Stop the transition and preserve redacted evidence.
+
+Before any production enablement, approve exactly one current Domo rate card and versioned policy
+through independent roles, rehearse overlapping-hold contention and expiry, exercise Datafast and
+PayPal sandbox create/return/capture paths, confirm late-payment reconciliation, reconcile receipt
+and ledger totals to zero variance, test the emergency flags, and name venue-calendar, customer
+support, and finance owners.
+
 ## Distribution dead letter or release-date risk
 
 Stop retries if the package/profile/checksum may be wrong. Verify immutable release version,

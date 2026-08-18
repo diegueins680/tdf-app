@@ -11,6 +11,7 @@ const DatafastReturnPage = lazy(() => import('../pages/DatafastReturnPage'));
 const DonationPage = lazy(() => import('../pages/DonationPage'));
 const DistributionLandingPage = lazy(() => import('../pages/DistributionLandingPage'));
 const DomoVenuePage = lazy(() => import('../pages/DomoVenuePage'));
+const DomoQuoteCheckoutPage = lazy(() => import('../pages/DomoQuoteCheckoutPage'));
 const DirectorySearchPage = lazy(() => import('../pages/DirectorySearchPage'));
 const DirectoryPublicDetailPage = lazy(() => import('../pages/DirectoryPublicDetailPage'));
 const FanClubPage = lazy(() => import('../pages/FanClubPage'));
@@ -92,6 +93,7 @@ export function renderPublicRoutes() {
       <Route path="/dj-booth" element={<PublicBranding><PublicBookingPage preset="dj-booth" /></PublicBranding>} />
       <Route path="/reservar/dj-booth" element={<Navigate to="/dj-booth" replace />} />
       <Route path="/domo-del-pululahua" element={<PublicBranding><DomoVenuePage /></PublicBranding>} />
+      <Route path="/domo-del-pululahua/cotizaciones/:quoteId" element={<PublicBranding><DomoQuoteCheckoutPage /></PublicBranding>} />
       <Route path="/venues/domo-del-pululahua" element={<Navigate to="/domo-del-pululahua" replace />} />
       <Route path="/login" element={<PublicBranding showHeader showLoginButton={false}><LoginPage /></PublicBranding>} />
       <Route path="/reset" element={<PublicBranding showHeader showLoginButton={false}><ResetPasswordPage /></PublicBranding>} />

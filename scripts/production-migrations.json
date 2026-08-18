@@ -287,6 +287,11 @@
       "introducedBy": "313c8f96950dba0fd1706f08ce4d0e971002ca80"
     },
     {
+      "id": "2026-08-18_domo_quote_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-18_domo_quote_checkout_runtime.sql",
+      "introducedBy": "431293245e1bf4a392efa927fcdd12b5172b2f1a"
+    },
+    {
       "id": "2026-08-18_music_directory_profile_images",
       "path": "tdf-hq/sql/2026-08-18_music_directory_profile_images.sql",
       "introducedBy": "f1665e92c8db9d86a890c7d3e61173de0ca8226d"

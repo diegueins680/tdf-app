@@ -5314,6 +5314,143 @@ paths:
         '409': { description: Provider binding mismatch or payment arrived after hold expiry }
         '502': { description: PayPal capture or immutable payment fields could not be verified }
 
+  /public/domo:
+    get:
+      tags: [Public Domo quotes]
+      summary: Read the authoritative Domo quote capability and approved rate-card limits
+      description: Prices are intentionally omitted. A payable quote is calculated only by the server from exactly one independently approved active rate-card version.
+      operationId: getPublicDomoStorefront
+      security: []
+      responses:
+        '200':
+          description: Public Domo quote capability; checkoutAvailable remains false until all environment and rate-card gates pass
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicDomoStorefront' } } }
+  /public/domo/quotes:
+    post:
+      tags: [Public Domo quotes]
+      summary: Calculate an immutable Domo quote and atomically hold the requested date
+      description: Guest count, duration, add-ons, tax, deposit, balance, policy, rate-card version, and hold expiry are server-authoritative. Creation starts in holding state and never means acceptance or payment.
+      operationId: createPublicDomoQuote
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PublicDomoQuoteCreateRequest' } } }
+      responses:
+        '201':
+          description: Immutable quote and temporary date hold; lookupToken is returned only on creation
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicDomoQuote' } } }
+        '400': { description: Customer or event input is invalid under the approved rate-card policy }
+        '409': { description: Requested venue window is already held or reserved, or the idempotency key conflicts }
+        '503': { description: Authoritative Domo quotes or an approved active rate card are unavailable }
+  /public/domo/quotes/{quoteId}:
+    get:
+      tags: [Public Domo quotes]
+      summary: Track a customer-safe Domo quote using its unguessable lookup token
+      operationId: getPublicDomoQuote
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+      responses:
+        '200':
+          description: Current quote, payment, and venue-fulfillment state
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicDomoQuote' } } }
+        '404': { description: Quote not found or lookup token does not match }
+  /public/domo/quotes/{quoteId}/accept:
+    post:
+      tags: [Public Domo quotes]
+      summary: Accept the exact versioned Domo quote and open its deposit checkout
+      description: Acceptance records the terms version and changes payment from holding to awaiting_payment; it never records payment.
+      operationId: acceptPublicDomoQuote
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PublicDomoQuoteAcceptRequest' } } }
+      responses:
+        '200':
+          description: Accepted quote awaiting a separately verified deposit
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicDomoQuote' } } }
+        '404': { description: Quote not found or lookup token does not match }
+        '409': { description: Quote hold expired or quote cannot be accepted in its current state }
+  /public/domo/quotes/{quoteId}/datafast/checkout:
+    post:
+      tags: [Public Domo quotes]
+      summary: Create or recover the deposit checkout's strongly bound Datafast resource
+      operationId: createPublicDomoDatafastCheckout
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+      responses:
+        '200':
+          description: Bound Datafast hosted checkout
+          content: { application/json: { schema: { $ref: '#/components/schemas/DatafastCheckout' } } }
+        '404': { description: Quote not found or lookup token does not match }
+        '409': { description: Quote is unaccepted, expired, paid, or bound to another online rail }
+        '503': { description: Datafast or Domo checkout is disabled }
+  /public/domo/quotes/{quoteId}/datafast/status:
+    get:
+      tags: [Public Domo quotes]
+      summary: Verify a bound Datafast Domo deposit server-to-server
+      description: A browser return is not payment evidence. Amount, currency, merchant, quote, checkout, environment, and exact stored resource path must match before the deposit and date-reserved transitions.
+      operationId: confirmPublicDomoDatafastStatus
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+        - name: resourcePath
+          in: query
+          required: true
+          schema: { type: string, pattern: '^/v1/checkouts/[A-Za-z0-9._-]+/payment$' }
+      responses:
+        '200':
+          description: Current server-verified quote, checkout, and venue state
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicDomoQuote' } } }
+        '404': { description: Quote not found or lookup token does not match }
+        '409': { description: Provider binding mismatch or verified payment arrived after hold expiry }
+        '502': { description: Provider status or immutable payment fields could not be verified }
+  /public/domo/quotes/{quoteId}/paypal/create:
+    post:
+      tags: [Public Domo quotes]
+      summary: Create or recover the deposit checkout's bound PayPal order
+      operationId: createPublicDomoPaypalOrder
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+      responses:
+        '200':
+          description: Bound PayPal order awaiting customer approval
+          content: { application/json: { schema: { $ref: '#/components/schemas/PaypalCreate' } } }
+        '404': { description: Quote not found or lookup token does not match }
+        '409': { description: Quote is unaccepted, expired, paid, or bound to another online rail }
+        '503': { description: PayPal or Domo checkout is disabled }
+  /public/domo/quotes/{quoteId}/paypal/capture:
+    post:
+      tags: [Public Domo quotes]
+      summary: Capture and verify the exact bound PayPal Domo deposit
+      description: Browser approval is not success. TDF captures server-to-server and verifies capture status, amount, currency, payee merchant, quote, checkout, environment, and provider binding before recording the deposit and reserving the date.
+      operationId: capturePublicDomoPaypalOrder
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PublicDomoPaypalCaptureRequest' } } }
+      responses:
+        '200':
+          description: Current server-verified quote, checkout, and venue state
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicDomoQuote' } } }
+        '404': { description: Quote not found or lookup token does not match }
+        '409': { description: Provider binding mismatch or verified payment arrived after hold expiry }
+        '502': { description: PayPal capture or immutable payment fields could not be verified }
+
 security:
   - bearerAuth: [ ]
 
@@ -5334,6 +5471,12 @@ components:
       in: path
       required: true
       schema: { type: integer, format: int64, minimum: 1 }
+    PublicDomoQuoteId:
+      name: quoteId
+      in: path
+      required: true
+      description: Immutable canonical UUID of the Domo quote runtime.
+      schema: { type: string, format: uuid }
     PublicOrderLookupToken:
       name: X-Order-Lookup-Token
       in: header
@@ -5448,6 +5591,103 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    PublicDomoStorefront:
+      type: object
+      additionalProperties: false
+      required: [checkoutAvailable, eventTypes, timezone]
+      properties:
+        checkoutAvailable: { type: boolean }
+        unavailableReason: { type: string, nullable: true }
+        rateCardVersion: { type: string, nullable: true }
+        currency: { type: string, minLength: 3, maxLength: 3, nullable: true }
+        eventTypes:
+          type: array
+          items: { type: string, minLength: 1 }
+        maximumGuests: { type: integer, minimum: 1, nullable: true }
+        maximumDurationHours: { type: integer, minimum: 1, nullable: true }
+        maximumSetupHours: { type: integer, minimum: 0, nullable: true }
+        quoteHoldMinutes: { type: integer, minimum: 1, nullable: true }
+        timezone: { type: string, minLength: 1 }
+    PublicDomoQuoteCreateRequest:
+      type: object
+      additionalProperties: false
+      required: [customerName, customerEmail, eventType, guests, startsAt, durationHours, setupHours, catering, production, transport]
+      properties:
+        customerName: { type: string, minLength: 1, maxLength: 160 }
+        customerEmail: { type: string, format: email, maxLength: 254 }
+        customerPhone: { type: string, minLength: 1, maxLength: 24 }
+        eventType: { type: string, minLength: 1, maxLength: 80 }
+        guests: { type: integer, minimum: 1 }
+        startsAt: { type: string, format: date-time }
+        durationHours: { type: integer, minimum: 1 }
+        setupHours: { type: integer, minimum: 0 }
+        catering: { type: boolean }
+        production: { type: boolean }
+        transport: { type: boolean }
+        notes: { type: string, minLength: 1, maxLength: 4000 }
+    PublicDomoQuoteAcceptRequest:
+      type: object
+      additionalProperties: false
+      required: [termsAccepted]
+      properties:
+        termsAccepted: { type: boolean, enum: [true] }
+    PublicDomoQuoteLine:
+      type: object
+      additionalProperties: false
+      required: [code, description, quantity, unitAmountMinor, subtotalMinor]
+      properties:
+        code: { type: string }
+        description: { type: string }
+        quantity: { type: integer, minimum: 1 }
+        unitAmountMinor: { type: integer, format: int64, minimum: 0 }
+        subtotalMinor: { type: integer, format: int64, minimum: 0 }
+    PublicDomoQuote:
+      type: object
+      additionalProperties: false
+      required: [quoteId, checkoutId, quoteStatus, paymentStatus, fulfillmentStatus, rateCardVersion, currency, eventType, guests, startsAt, endsAt, setupStartsAt, lines, subtotalMinor, taxMinor, totalMinor, depositMinor, balanceMinor, timezone, termsVersion, holdExpiresAt, paymentMethods]
+      properties:
+        quoteId: { type: string, format: uuid }
+        checkoutId: { type: string, format: uuid }
+        lookupToken: { type: string, nullable: true, writeOnly: true }
+        quoteStatus:
+          type: string
+          enum: [draft, sent, viewed, accepted, deposit_due, deposit_paid, in_progress, balance_due, completed, cancelled, expired]
+        paymentStatus:
+          type: string
+          enum: [holding, awaiting_payment, processing, paid, failed, cancelled, expired, partially_refunded, refunded, disputed, chargeback]
+        fulfillmentStatus:
+          type: string
+          enum: [date_held, date_reserved, in_progress, balance_due, completed, cancelled, expired]
+        rateCardVersion: { type: string }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        eventType: { type: string }
+        guests: { type: integer, minimum: 1 }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }
+        setupStartsAt: { type: string, format: date-time }
+        lines:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/PublicDomoQuoteLine' }
+        subtotalMinor: { type: integer, format: int64, minimum: 1 }
+        taxMinor: { type: integer, format: int64, minimum: 0 }
+        totalMinor: { type: integer, format: int64, minimum: 1 }
+        depositMinor: { type: integer, format: int64, minimum: 1 }
+        balanceMinor: { type: integer, format: int64, minimum: 0 }
+        timezone: { type: string, minLength: 1 }
+        termsVersion: { type: string }
+        holdExpiresAt: { type: string, format: date-time }
+        termsAcceptedAt: { type: string, format: date-time, nullable: true }
+        depositPaidAt: { type: string, format: date-time, nullable: true }
+        paymentMethods:
+          type: array
+          items: { type: string, enum: [datafast, paypal] }
+    PublicDomoPaypalCaptureRequest:
+      type: object
+      additionalProperties: false
+      required: [paypalOrderId]
+      properties:
+        paypalOrderId: { type: string, minLength: 6, maxLength: 80, pattern: '^[A-Za-z0-9_-]+$' }
     PublicEventTicketTier:
       type: object
       additionalProperties: false

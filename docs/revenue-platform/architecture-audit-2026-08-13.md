@@ -229,6 +229,16 @@ The accepted ADRs are:
 - [ADR-0111](../adr/0111-course-seat-holds-and-verified-enrollment.md): authoritative course policy, atomic seat holds, and enrollment only after verified payment.
 - [ADR-0112](../adr/0112-ticket-payment-evidence-and-seat-holds.md): ticket payment evidence, expiring capacity holds, and separate issuance.
 - [ADR-0113](../adr/0113-public-event-ticket-checkout-and-organizer-liability.md): guest ticket checkout, provider binding, and organizer payable liability.
+- [ADR-0114](../adr/0114-domo-authoritative-quotes-and-deposit-gate.md): approved server quotes,
+  exclusion-constrained venue holds, accepted terms and verified deposits without implied event
+  completion.
+
+The numbered findings above preserve the audited starting evidence. On the feature branch, finding
+6 is remediated at the public/runtime boundary: the browser formula is gone, the historical values
+remain an inactive review candidate, and an approved server rate can create an immutable quote,
+atomic date hold, explicit acceptance and verified Datafast/PayPal deposit. Production stays gated
+because no rate has been approved and the admin comparison/approval, balance/change-order,
+refund/cancellation, verified-email recovery and sandbox-operational controls remain incomplete.
 
 ## Feature flags and phased rollout
 
@@ -242,7 +252,8 @@ production capability:
   `checkout.provider_event_worker`, `commerce.mixing_mastering`, `commerce.marketplace_sales`,
   `commerce.marketplace_rentals`, `commerce.marketplace_manual_deposit_settlement`, and
   `commerce.service_bookings`, `commerce.courses`, `commerce.course_recurring_billing`,
-  `commerce.event_tickets`, and `commerce.event_ticket_settlements`; the marketplace domain rows and
+  `commerce.event_tickets`, `commerce.event_ticket_settlements`, `commerce.domo_quotes`,
+  `domo.authoritative_quotes`, and `domo.checkout`; the marketplace domain rows and
   dual-control manual deposit settlement are enabled, while service bookings, courses, public event
   tickets, and organizer settlement default disabled pending policy approval and credentialed
   sandbox/settlement evidence; booking/course/ticket Datafast and PayPal actions are implemented but
