@@ -334,7 +334,7 @@ function SidebarSearch(props: SidebarSearchProps) {
 
   return (
     <Stack spacing={2} sx={{ px: 2.5, pt: 3, pb: 2, flexShrink: 0 }}>
-      <Typography variant="caption" sx={{ color: 'text.disabled', letterSpacing: 2 }}>
+      <Typography variant="caption" sx={{ color: 'text.secondary', letterSpacing: 2 }}>
         MENÚ
       </Typography>
       <TextField
@@ -390,13 +390,13 @@ function SectionCaption(props: SectionCaptionProps) {
   const { label, icon } = props;
 
   return (
-    <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0, color: 'text.disabled' }}>
+    <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0, color: 'text.secondary' }}>
       {icon ? (
         <Box component="span" aria-hidden="true" sx={{ display: 'inline-flex' }}>
           {icon}
         </Box>
       ) : null}
-      <Typography variant="caption" sx={{ color: 'text.disabled', letterSpacing: 1 }}>
+      <Typography variant="caption" sx={{ color: 'text.secondary', letterSpacing: 1 }}>
         {label}
       </Typography>
     </Stack>

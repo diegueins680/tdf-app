@@ -37,7 +37,7 @@ export default function ApiStatusChip() {
   const refreshingStatus = isFetching && hasStatus;
   const label = refreshingStatus ? 'API: actualizando...' : `API: ${healthy ? 'online' : 'offline'}`;
   const chipColor = refreshingStatus ? 'info' : healthy ? 'success' : 'warning';
-  const chipVariant = refreshingStatus || !healthy ? 'outlined' : 'filled';
+  const chipVariant = refreshingStatus ? 'outlined' : 'filled';
 
   return (
     <Chip
@@ -53,7 +53,7 @@ export default function ApiStatusChip() {
       color={chipColor}
       size="small"
       variant={chipVariant}
-      sx={!refreshingStatus && !healthy ? { color: '#7a4100', borderColor: '#9a5200' } : undefined}
+      sx={!refreshingStatus && !healthy ? { color: '#000000', bgcolor: '#ffffff', border: '1px solid #000000' } : undefined}
     />
   );
 }
