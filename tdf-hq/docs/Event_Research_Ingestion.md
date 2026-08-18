@@ -22,6 +22,14 @@ This workflow stores evidence-backed web research separately from published soci
 
 The content hash excludes run identity, verification timestamp, and evidence consultation timestamps. A later verification of unchanged source content is recorded as `verified`; a changed normalized payload is recorded as `updated`, with before and after values.
 
+## Materialization after pilot approval
+
+`POST /social-events/event-research/candidates/{candidateId}/materialize` is the only supported bridge from a research candidate to a social event. Start a dedicated research run and send its id with `{"erMaterializationRunId":"3","erMaterializationPublish":true}` only for an explicitly approved pilot candidate that is still `high` confidence and `draft`, has official-sale evidence, a confirmed start, venue, city, timezone, event type, and at least one lineup artist. `event_end_unconfirmed` is the sole permitted publication blocker; the event end remains null instead of being inferred. The first write requires the supplied run to remain `running`; checkpoint and close it after each confirmed batch.
+
+The operation locks the pilot and candidate, resolves or creates provider-linked venue and artist entities, reuses an unambiguous matching event when present, inserts the provider event reference, links the candidate, and appends the `materialized` audit change in one transaction. Provider/external identity and the candidate/event audit key make retries return the existing link. Once linked, replays do not overwrite event fields, so later manual edits are preserved.
+
+Ambiguous entity matches, broken references, unapproved pilots, medium/low confidence, review candidates, unknown blockers, cancellations, and postponements return a conflict without committing partial entities. Image metadata is copied only when the candidate payload explicitly marks permission as `confirmed`; price tiers are not synthesized when capacity or tier quantities are unknown.
+
 ## Confidence
 
 `high` is accepted only when the start time, venue, city, direct purchase URL, and an `official_sale` evidence item are present. End times remain optional unless the official source confirms them. `medium` and `low` candidates may preserve incomplete or contradictory information in review, but still require an official HTTPS source and at least one evidence item containing the primary source URL.
