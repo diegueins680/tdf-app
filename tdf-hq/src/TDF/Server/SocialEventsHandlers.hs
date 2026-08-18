@@ -152,6 +152,7 @@ import Servant.Multipart (FileData (..))
 import Database.Persist
 import Database.Persist.Sql
     ( ConnectionPool
+    , FilterTablePrefix (PrefixTableName)
     , Single (..)
     , SqlBackend
     , SqlPersistT
@@ -163,7 +164,11 @@ import Database.Persist.Sql
     , toSqlKey
     , updateWhereCount
     )
-import Database.Persist.SqlBackend.Internal (connRDBMS)
+import Database.Persist.SqlBackend
+    ( getConnLimitOffset
+    , getEscapedRawName
+    , getRDBMS
+    )
 import Database.PostgreSQL.Simple (SqlError (..))
 
 import Crypto.Hash.Algorithms (SHA256)
@@ -1886,7 +1891,7 @@ socialEventsServer user =
                 runSqlPool
                     ( if hasStrictAdminAccess user
                         then selectList filters [dateOrder, LimitTo limit, OffsetBy offset]
-                        else selectVisibleEventList filters dateOrder limit offset
+                        else selectVisibleSocialEvents filters dateOrder limit offset
                     )
                     envPool
         forM rows $ \(Entity eid eventRow) -> do
@@ -8220,100 +8225,158 @@ loadExternalEventSources pool eventKey =
         )
         pool
 
-selectVisibleEventList ::
+selectVisibleSocialEvents ::
     [Filter SocialEvent] ->
     SelectOpt SocialEvent ->
     Int ->
     Int ->
     SqlPersistT IO [Entity SocialEvent]
-selectVisibleEventList filters dateOrder limit offset = do
-    backend <- ask
-    let (filterSql, filterValues) = filterClauseWithVals Nothing backend filters
-        visibilityJoin
-            | T.null filterSql = " WHERE "
-            | otherwise = " AND "
-        sql =
-            "SELECT ?? FROM social_event"
-                <> filterSql
-                <> visibilityJoin
-                <> importedEventVisibilitySql (connRDBMS backend)
-                <> orderClause Nothing backend [dateOrder]
-                <> " LIMIT ? OFFSET ?"
-    rawSql sql (filterValues ++ [toPersistValue limit, toPersistValue offset])
+selectVisibleSocialEvents filters dateOrder limit offset = do
+    backend <- ask :: SqlPersistT IO SqlBackend
+    eventTable <- getEscapedRawName "social_event"
+    externalRefTable <- getEscapedRawName "external_event_ref"
+    eventIdField <- getEscapedRawName "id"
+    eventMetadataField <- getEscapedRawName "metadata"
+    externalRefEventIdField <- getEscapedRawName "event_id"
+    backendName <- T.toCaseFold <$> getRDBMS
+    let (baseFilterClause, filterValues) =
+            filterClauseWithVals (Just PrefixTableName) backend filters
+        eventIdColumn = eventTable <> "." <> eventIdField
+        eventMetadataColumn =
+            eventTable <> "." <> eventMetadataField
+        externalRefEventIdColumn =
+            externalRefTable <> "." <> externalRefEventIdField
+        visibilityClause =
+            "(NOT EXISTS (SELECT 1 FROM "
+                <> externalRefTable
+                <> " WHERE "
+                <> externalRefEventIdColumn
+                <> "="
+                <> eventIdColumn
+                <> ") OR "
+                <> visibleImportedMetadataClause backendName eventMetadataColumn
+                <> ")"
+        combinedFilterClause
+            | T.null baseFilterClause = " WHERE " <> visibilityClause
+            | otherwise = baseFilterClause <> " AND " <> visibilityClause
+        orderedQuery =
+            "SELECT ?? FROM "
+                <> eventTable
+                <> combinedFilterClause
+                <> orderClause (Just PrefixTableName) backend [dateOrder]
+    query <- getConnLimitOffset (limit, offset) orderedQuery
+    rawSql query filterValues
 
 -- Keep the imported-event visibility predicate correlated with each candidate
 -- row. This avoids expanding the complete retained import history into a NOT IN
 -- parameter list on every page request. Both supported databases validate the
--- canonical metadata before reading isPublic so malformed metadata fails closed.
-importedEventVisibilitySql :: T.Text -> T.Text
-importedEventVisibilitySql rawBackend
-    | "sqlite" `T.isInfixOf` backend = sqliteImportedEventVisibilitySql
-    | "postgres" `T.isInfixOf` backend = postgresImportedEventVisibilitySql
-    | otherwise = noImportedEventVisibilitySql
+-- complete canonical metadata shape before reading isPublic, so malformed or
+-- unsupported metadata fails closed.
+visibleImportedMetadataClause :: T.Text -> T.Text -> T.Text
+visibleImportedMetadataClause backendName metadataColumn
+    | "postgres" `T.isInfixOf` backendName = postgresVisibleImportedMetadataClause metadataColumn
+    | "sqlite" `T.isInfixOf` backendName = sqliteVisibleImportedMetadataClause metadataColumn
+    | otherwise = "1=0"
+
+sqliteVisibleImportedMetadataClause :: T.Text -> T.Text
+sqliteVisibleImportedMetadataClause metadataColumn =
+    "CASE"
+        <> " WHEN "
+        <> metadataColumn
+        <> " IS NULL OR trim("
+        <> metadataColumn
+        <> ")='' THEN 1"
+        <> " WHEN NOT json_valid("
+        <> metadataColumn
+        <> ") THEN 0"
+        <> " ELSE json_type("
+        <> metadataColumn
+        <> ")='object'"
+        <> " AND NOT EXISTS (SELECT 1 FROM json_each("
+        <> metadataColumn
+        <> ") AS metadata_field WHERE metadata_field.key"
+        <> " NOT IN ('ticketUrl','imageUrl','isPublic','currency','budgetCents'))"
+        <> sqliteOptionalMetadataType metadataColumn "ticketUrl" "text"
+        <> sqliteOptionalMetadataType metadataColumn "imageUrl" "text"
+        <> sqliteOptionalMetadataType metadataColumn "currency" "text"
+        <> sqliteOptionalMetadataType metadataColumn "budgetCents" "integer"
+        <> " AND (json_type("
+        <> metadataColumn
+        <> ",'$.isPublic') IS NULL OR json_type("
+        <> metadataColumn
+        <> ",'$.isPublic') IN ('null','true'))"
+        <> " END"
+
+sqliteOptionalMetadataType :: T.Text -> T.Text -> T.Text -> T.Text
+sqliteOptionalMetadataType metadataColumn fieldName expectedType =
+    " AND (json_type("
+        <> metadataColumn
+        <> ",'$."
+        <> fieldName
+        <> "') IS NULL OR json_type("
+        <> metadataColumn
+        <> ",'$."
+        <> fieldName
+        <> "') IN ('null','"
+        <> expectedType
+        <> "'))"
+
+postgresVisibleImportedMetadataClause :: T.Text -> T.Text
+postgresVisibleImportedMetadataClause metadataColumn =
+    "CASE"
+        <> " WHEN "
+        <> metadataColumn
+        <> " IS NULL OR btrim("
+        <> metadataColumn
+        <> ")='' THEN TRUE"
+        <> " WHEN NOT pg_input_is_valid("
+        <> metadataColumn
+        <> ",'jsonb') THEN FALSE"
+        <> " ELSE jsonb_typeof("
+        <> jsonMetadata
+        <> ")='object'"
+        <> " AND NOT EXISTS (SELECT 1 FROM jsonb_object_keys("
+        <> jsonMetadata
+        <> ") AS metadata_key WHERE metadata_key"
+        <> " NOT IN ('ticketUrl','imageUrl','isPublic','currency','budgetCents'))"
+        <> postgresOptionalMetadataType jsonMetadata "ticketUrl" "string"
+        <> postgresOptionalMetadataType jsonMetadata "imageUrl" "string"
+        <> postgresOptionalMetadataType jsonMetadata "currency" "string"
+        <> " AND (jsonb_typeof("
+        <> jsonMetadata
+        <> "->'budgetCents') IS NULL OR jsonb_typeof("
+        <> jsonMetadata
+        <> "->'budgetCents')='null' OR (jsonb_typeof("
+        <> jsonMetadata
+        <> "->'budgetCents')='number' AND "
+        <> jsonMetadata
+        <> "->>'budgetCents' ~ '^-?[0-9]+$' AND ("
+        <> jsonMetadata
+        <> "->>'budgetCents')::numeric BETWEEN -9223372036854775808 AND 9223372036854775807))"
+        <> " AND (jsonb_typeof("
+        <> jsonMetadata
+        <> "->'isPublic') IS NULL OR jsonb_typeof("
+        <> jsonMetadata
+        <> "->'isPublic')='null' OR "
+        <> jsonMetadata
+        <> "->'isPublic'='true'::jsonb)"
+        <> " END"
   where
-    backend = T.toCaseFold rawBackend
+    jsonMetadata = "(" <> metadataColumn <> ")::jsonb"
 
-noImportedEventVisibilitySql :: T.Text
-noImportedEventVisibilitySql =
-    "NOT EXISTS (\
-    \ SELECT 1 FROM external_event_ref\
-    \ WHERE external_event_ref.event_id=social_event.id\
-    \)"
-
-sqliteImportedEventVisibilitySql :: T.Text
-sqliteImportedEventVisibilitySql =
-    "(NOT EXISTS (\
-    \ SELECT 1 FROM external_event_ref\
-    \ WHERE external_event_ref.event_id=social_event.id\
-    \) OR CASE\
-    \ WHEN social_event.metadata IS NULL OR trim(social_event.metadata)='' THEN 1\
-    \ WHEN NOT json_valid(social_event.metadata) THEN 0\
-    \ ELSE json_type(social_event.metadata)='object'\
-    \ AND NOT EXISTS (\
-    \  SELECT 1 FROM json_each(social_event.metadata) AS metadata_field\
-    \  WHERE metadata_field.key NOT IN ('ticketUrl','imageUrl','isPublic','currency','budgetCents')\
-    \ )\
-    \ AND (json_type(social_event.metadata,'$.ticketUrl') IS NULL\
-    \      OR json_type(social_event.metadata,'$.ticketUrl') IN ('null','text'))\
-    \ AND (json_type(social_event.metadata,'$.imageUrl') IS NULL\
-    \      OR json_type(social_event.metadata,'$.imageUrl') IN ('null','text'))\
-    \ AND (json_type(social_event.metadata,'$.currency') IS NULL\
-    \      OR json_type(social_event.metadata,'$.currency') IN ('null','text'))\
-    \ AND (json_type(social_event.metadata,'$.budgetCents') IS NULL\
-    \      OR json_type(social_event.metadata,'$.budgetCents') IN ('null','integer'))\
-    \ AND (json_type(social_event.metadata,'$.isPublic') IS NULL\
-    \      OR json_type(social_event.metadata,'$.isPublic') IN ('null','true'))\
-    \ END)"
-
-postgresImportedEventVisibilitySql :: T.Text
-postgresImportedEventVisibilitySql =
-    "(NOT EXISTS (\
-    \ SELECT 1 FROM external_event_ref\
-    \ WHERE external_event_ref.event_id=social_event.id\
-    \) OR CASE\
-    \ WHEN social_event.metadata IS NULL OR btrim(social_event.metadata)='' THEN TRUE\
-    \ WHEN NOT pg_input_is_valid(social_event.metadata,'jsonb') THEN FALSE\
-    \ ELSE jsonb_typeof(social_event.metadata::jsonb)='object'\
-    \ AND NOT EXISTS (\
-    \  SELECT 1 FROM jsonb_object_keys(social_event.metadata::jsonb) AS metadata_key\
-    \  WHERE metadata_key NOT IN ('ticketUrl','imageUrl','isPublic','currency','budgetCents')\
-    \ )\
-    \ AND (jsonb_typeof(social_event.metadata::jsonb->'ticketUrl') IS NULL\
-    \      OR jsonb_typeof(social_event.metadata::jsonb->'ticketUrl') IN ('null','string'))\
-    \ AND (jsonb_typeof(social_event.metadata::jsonb->'imageUrl') IS NULL\
-    \      OR jsonb_typeof(social_event.metadata::jsonb->'imageUrl') IN ('null','string'))\
-    \ AND (jsonb_typeof(social_event.metadata::jsonb->'currency') IS NULL\
-    \      OR jsonb_typeof(social_event.metadata::jsonb->'currency') IN ('null','string'))\
-    \ AND (jsonb_typeof(social_event.metadata::jsonb->'budgetCents') IS NULL\
-    \      OR jsonb_typeof(social_event.metadata::jsonb->'budgetCents')='null'\
-    \      OR (jsonb_typeof(social_event.metadata::jsonb->'budgetCents')='number'\
-    \          AND social_event.metadata::jsonb->>'budgetCents' ~ '^-?[0-9]+$'\
-    \          AND (social_event.metadata::jsonb->>'budgetCents')::numeric\
-    \              BETWEEN -9223372036854775808 AND 9223372036854775807))\
-    \ AND (jsonb_typeof(social_event.metadata::jsonb->'isPublic') IS NULL\
-    \      OR jsonb_typeof(social_event.metadata::jsonb->'isPublic')='null'\
-    \      OR social_event.metadata::jsonb->'isPublic'='true'::jsonb)\
-    \ END)"
+postgresOptionalMetadataType :: T.Text -> T.Text -> T.Text -> T.Text
+postgresOptionalMetadataType jsonMetadata fieldName expectedType =
+    " AND (jsonb_typeof("
+        <> jsonMetadata
+        <> "->'"
+        <> fieldName
+        <> "') IS NULL OR jsonb_typeof("
+        <> jsonMetadata
+        <> "->'"
+        <> fieldName
+        <> "') IN ('null','"
+        <> expectedType
+        <> "'))"
 
 isImportedEventHidden :: SocialEventId -> SqlPersistT IO Bool
 isImportedEventHidden eventKey = do

@@ -331,6 +331,8 @@ spec = describe "social event handler helpers" $ do
             publicEventKey = toSqlKey 14
             malformedEventKey :: SocialEventId
             malformedEventKey = toSqlKey 15
+            unsupportedMetadataEventKey :: SocialEventId
+            unsupportedMetadataEventKey = toSqlKey 16
             hiddenTierKey :: EventTicketTierId
             hiddenTierKey = toSqlKey 21
             hiddenTicketKey :: EventTicketId
@@ -374,10 +376,18 @@ spec = describe "social event handler helpers" $ do
                         , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
                         }
                     )
+                insertKey
+                    unsupportedMetadataEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Unsupported imported metadata" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true,\"unexpected\":1}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
                 _ <- insert (sourceRef "ticketmaster" "pilot-private-13" hiddenEventKey "missing" "https://tickets.example.com/private-pilot")
                 _ <- insert (sourceRef "ticketmaster" "public-14" publicEventKey "on_sale" "https://tickets.example.com/public")
                 _ <- insert (sourceRef "buenplan" "draft-merge-14" publicEventKey "draft:on_sale" "https://tickets.example.com/draft-option")
                 _ <- insert (sourceRef "ticketmaster" "malformed-15" malformedEventKey "on_sale" "https://tickets.example.com/malformed")
+                _ <- insert (sourceRef "ticketmaster" "unsupported-16" unsupportedMetadataEventKey "on_sale" "https://tickets.example.com/unsupported")
                 insertKey
                     hiddenTierKey
                     EventTicketTier
@@ -471,6 +481,31 @@ spec = describe "social event handler helpers" $ do
                 expectationFailure
                     ("Expected hidden pilot list to succeed, got: " <> show err)
 
+        paginatedListResult <-
+            runHandler $
+                runReaderT
+                    ( socialEventListHandlerFor
+                        ordinaryUser
+                        Nothing
+                        Nothing
+                        (Just "2025-01-01T00:00:00Z")
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        (Just 1)
+                        (Just 0)
+                    )
+                    env
+        case paginatedListResult of
+            Right [event] -> eventId event `shouldBe` Just "14"
+            Right events ->
+                expectationFailure
+                    ("Expected filtered and paginated list to contain only the public canonical event, got: " <> show events)
+            Left err ->
+                expectationFailure
+                    ("Expected filtered and paginated pilot list to succeed, got: " <> show err)
+
         getResult <-
             runHandler $
                 runReaderT
@@ -501,6 +536,13 @@ spec = describe "social event handler helpers" $ do
                     (socialEventGetHandlerFor ordinaryUser "15")
                     env
         assertHiddenEventRoute "malformed imported event" malformedGetResult
+
+        unsupportedMetadataGetResult <-
+            runHandler $
+                runReaderT
+                    (socialEventGetHandlerFor ordinaryUser "16")
+                    env
+        assertHiddenEventRoute "unsupported imported metadata" unsupportedMetadataGetResult
 
         rsvpResult <-
             runHandler $
