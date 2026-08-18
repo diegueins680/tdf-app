@@ -129,7 +129,7 @@ describe('MarketplaceOrderTrackingPage manual payments', () => {
     const input = container.querySelector<HTMLInputElement>('input');
     expect(input).not.toBeNull();
     await act(async () => {
-      setInputValue(input as HTMLInputElement, 'BANK-REFERENCE-1');
+      setInputValue(input!, 'BANK-REFERENCE-1');
     });
     const submit = Array.from(container.querySelectorAll('button')).find((button) =>
       button.textContent?.includes('Enviar evidencia'),

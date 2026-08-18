@@ -132,7 +132,7 @@ const createPublicCheckoutMock = jest.fn<
       depositBps: number;
       termsVersion: string;
     };
-    paymentMethods: Array<'datafast' | 'paypal' | 'bank_transfer'>;
+    paymentMethods: ('datafast' | 'paypal' | 'bank_transfer')[];
     manualPayment?: {
       paymentMethod: 'bank_transfer';
       status: 'awaiting_evidence' | 'submitted' | 'under_review' | 'approved' | 'rejected';

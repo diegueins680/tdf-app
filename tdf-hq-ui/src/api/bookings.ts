@@ -71,7 +71,7 @@ export interface PublicBookingCheckoutDTO {
   fulfillmentStatus: string;
   holdExpiresAt: string;
   quote: PublicBookingQuoteDTO;
-  paymentMethods: Array<'datafast' | 'paypal' | 'bank_transfer'>;
+  paymentMethods: ('datafast' | 'paypal' | 'bank_transfer')[];
   manualPayment?: PublicBookingManualPaymentDTO | null;
 }
 

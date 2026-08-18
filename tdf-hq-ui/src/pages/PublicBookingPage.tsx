@@ -787,7 +787,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
           pbcTermsAccepted: true,
         };
         const fingerprint = JSON.stringify(checkoutPayload);
-        if (!checkoutIdempotency.current || checkoutIdempotency.current.fingerprint !== fingerprint) {
+        if (checkoutIdempotency.current?.fingerprint !== fingerprint) {
           checkoutIdempotency.current = { fingerprint, key: createBookingIdempotencyKey() };
         }
         const checkout = await Bookings.createPublicCheckout(
@@ -857,7 +857,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     return map;
   }, [services]);
   const estimatePriceLabel = useMemo(() => {
-    if (authoritativeQuote && authoritativeQuote.durationMinutes === normalizeDurationMinutes(form.durationMinutes)) {
+    if (authoritativeQuote?.durationMinutes === normalizeDurationMinutes(form.durationMinutes)) {
       return `${formatMinorAmount(authoritativeQuote.currency, authoritativeQuote.totalMinor)} total · depósito ${formatMinorAmount(authoritativeQuote.currency, authoritativeQuote.depositMinor)}`;
     }
     const svc = services.find((service) => service.id === form.serviceOfferingId);
