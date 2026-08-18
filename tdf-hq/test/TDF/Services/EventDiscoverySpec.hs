@@ -318,6 +318,45 @@ spec = do
               Social.socialEventMetadata row
                 `shouldSatisfy` maybe False (T.isInfixOf "\"isPublic\":false")
 
+    it "preserves a subscribed city's configured timezone for imported events and venues" $ do
+      event <- case eitherDecode ticketmasterFixture of
+        Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"
+        Right response ->
+          case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
+            [normalized] ->
+              pure
+                normalized
+                  { discoveredEventVenue =
+                      (discoveredEventVenue normalized)
+                        { discoveredVenueTimeZone = Just "Pacific/Galapagos"
+                        }
+                  }
+            other ->
+              expectationFailure ("Expected one normalized event, got " <> show other)
+                >> fail "invalid normalized fixture"
+      pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+      runSqlPool initializeEventDiscoverySchema pool
+
+      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 5) event
+      importedRef <-
+        runSqlPool
+          (getBy (Social.UniqueExternalEventRef "ticketmaster" "tm-event-1"))
+          pool
+      case importedRef of
+        Nothing -> expectationFailure "Expected a persisted draft source reference"
+        Just (Entity _ ref) -> do
+          importedEvent <- runSqlPool (get (Social.externalEventRefEventId ref)) pool
+          case importedEvent of
+            Nothing -> expectationFailure "Expected a persisted draft event"
+            Just row -> do
+              Social.socialEventTimezone row `shouldBe` Just "Pacific/Galapagos"
+              case Social.socialEventVenueId row of
+                Nothing -> expectationFailure "Expected a persisted draft venue"
+                Just venueKey -> do
+                  importedVenue <- runSqlPool (get venueKey) pool
+                  Social.venueTimezone <$> importedVenue
+                    `shouldBe` Just (Just "Pacific/Galapagos")
+
     it "rejects an unknown provider event type before writing any event graph rows" $ do
       event <- case eitherDecode ticketmasterFixture of
         Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"

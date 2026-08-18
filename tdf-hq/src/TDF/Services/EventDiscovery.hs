@@ -124,6 +124,7 @@ data DiscoveredVenue = DiscoveredVenue
   , discoveredVenueCity :: Text
   , discoveredVenueCountry :: Maybe Text
   , discoveredVenueCountryCode :: Maybe Text
+  , discoveredVenueTimeZone :: Maybe Text
   , discoveredVenueLatitude :: Maybe Double
   , discoveredVenueLongitude :: Maybe Double
   , discoveredVenuePhone :: Maybe Text
@@ -704,6 +705,7 @@ normalizeBuenPlanEvent configuredDefault cities now endTime BuenPlanEvent{..} = 
             , discoveredVenueCountry = Nothing
             , discoveredVenueCountryCode =
                 Just (eventDiscoveryCityCountryCode city)
+            , discoveredVenueTimeZone = eventDiscoveryCityTimeZone city
             , discoveredVenueLatitude = Nothing
             , discoveredVenueLongitude = Nothing
             , discoveredVenuePhone = Nothing
@@ -1022,6 +1024,7 @@ normalizeStructuredEvent cfg sourceKey city now StructuredFeedEvent{..} = do
             , discoveredVenueCountry = Nothing
             , discoveredVenueCountryCode =
                 Just (eventDiscoveryCityCountryCode city)
+            , discoveredVenueTimeZone = eventDiscoveryCityTimeZone city
             , discoveredVenueLatitude = Nothing
             , discoveredVenueLongitude = Nothing
             , discoveredVenuePhone = Nothing
@@ -1264,6 +1267,7 @@ fetchTicketmasterEventsForCity cfg apiKey city now =
                       (discoveredEventVenue event)
                         { discoveredVenueCountryCode =
                             Just (eventDiscoveryCityCountryCode city)
+                        , discoveredVenueTimeZone = eventDiscoveryCityTimeZone city
                         }
                   }
             )
@@ -1455,6 +1459,7 @@ normalizeTicketmasterVenue requestedCity TicketmasterVenue{..} = do
       , discoveredVenueCountry =
           ticketmasterVenueCountry >>= cleanSingleLine 120 . namedValue
       , discoveredVenueCountryCode = Nothing
+      , discoveredVenueTimeZone = Nothing
       , discoveredVenueLatitude = latitude
       , discoveredVenueLongitude = longitude
       , discoveredVenuePhone =
@@ -2196,7 +2201,10 @@ upsertDiscoveredVenue provider now DiscoveredVenue{..} = do
         , Social.VenueCountry =. discoveredVenueCountry
         , Social.VenueCountryCode =. discoveredVenueCountryCode
         , Social.VenueTimezone =.
-            importedVenueTimeZone discoveredVenueCountryCode discoveredVenueCountry
+            importedVenueTimeZone
+              discoveredVenueTimeZone
+              discoveredVenueCountryCode
+              discoveredVenueCountry
         , Social.VenueLatitude =. discoveredVenueLatitude
         , Social.VenueLongitude =. discoveredVenueLongitude
         , Social.VenueContact =. contact
@@ -2216,7 +2224,10 @@ upsertDiscoveredVenue provider now DiscoveredVenue{..} = do
             , Social.venueCountryId = Nothing
             , Social.venueCityId = Nothing
             , Social.venueTimezone =
-                importedVenueTimeZone discoveredVenueCountryCode discoveredVenueCountry
+                importedVenueTimeZone
+                  discoveredVenueTimeZone
+                  discoveredVenueCountryCode
+                  discoveredVenueCountry
             , Social.venueLatitude = discoveredVenueLatitude
             , Social.venueLongitude = discoveredVenueLongitude
             , Social.venueCapacity = Nothing
@@ -2330,16 +2341,22 @@ encodeEventMetadataForImport autoPublish DiscoveredEvent{..} =
 importedEventTimeZone :: DiscoveredVenue -> Maybe Text
 importedEventTimeZone venue =
   importedVenueTimeZone
+    (discoveredVenueTimeZone venue)
     (discoveredVenueCountryCode venue)
     (discoveredVenueCountry venue)
 
-importedVenueTimeZone :: Maybe Text -> Maybe Text -> Maybe Text
-importedVenueTimeZone countryCode countryName
-  | normalizeCountry countryCode == Just "ec"
-      || normalizeCountry countryName == Just "ecuador" =
-      Just "America/Guayaquil"
-  | otherwise = Nothing
+importedVenueTimeZone :: Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text
+importedVenueTimeZone configuredTimeZone countryCode countryName =
+  normalizeTimeZone configuredTimeZone <|> inferredTimeZone
   where
+    inferredTimeZone
+      | normalizeCountry countryCode == Just "ec"
+          || normalizeCountry countryName == Just "ecuador" =
+          Just "America/Guayaquil"
+      | otherwise = Nothing
+    normalizeTimeZone rawTimeZone = do
+      timeZone <- T.strip <$> rawTimeZone
+      if T.null timeZone then Nothing else Just timeZone
     normalizeCountry = fmap (T.toCaseFold . T.strip)
 
 resolvePublishedEventTypeId :: UTCTime -> Text -> SqlPersistT IO UUID
