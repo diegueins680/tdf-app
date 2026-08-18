@@ -7713,8 +7713,62 @@ decodeStoredEventMetadata (Just raw)
     | T.null (T.strip raw) = Right emptyEventMetadata
     | otherwise =
         case Aeson.eitherDecodeStrict' (TE.encodeUtf8 raw) of
-            Right metadata -> Right metadata
+            Right metadata ->
+                case duplicateTopLevelJsonKeys raw of
+                    [] -> Right metadata
+                    duplicates ->
+                        Left
+                            ( "Stored event metadata contains duplicate fields: "
+                                <> T.intercalate ", " duplicates
+                            )
             Left err -> Left (storedEventMetadataDecodeError err)
+
+duplicateTopLevelJsonKeys :: T.Text -> [T.Text]
+duplicateTopLevelJsonKeys raw =
+    nub
+        [ key
+        | key <- keys
+        , length (filter (== key) keys) > 1
+        ]
+  where
+    keys = topLevelJsonObjectKeys (T.unpack raw)
+
+-- Aeson intentionally materializes objects as a key map, so duplicate key
+-- spelling is no longer observable after decoding. Scan only the already
+-- validated top-level object syntax and decode each key literal with Aeson so
+-- escaped spellings compare exactly as the object decoder sees them.
+topLevelJsonObjectKeys :: String -> [T.Text]
+topLevelJsonObjectKeys = reverse . go (0 :: Int) False []
+  where
+    go _ _ keys [] = keys
+    go depth expectsKey keys ('"' : rest) =
+        let (literal, remaining) = takeJsonStringLiteral rest
+            decodedKey =
+                Aeson.eitherDecodeStrict' (TE.encodeUtf8 (T.pack literal))
+                    :: Either String T.Text
+            nextKeys =
+                case (depth == 1 && expectsKey, decodedKey) of
+                    (True, Right key) -> key : keys
+                    _ -> keys
+         in go depth False nextKeys remaining
+    go depth _ keys ('{' : rest) =
+        go (depth + 1) (depth == 0) keys rest
+    go depth expectsKey keys ('[' : rest) =
+        go (depth + 1) expectsKey keys rest
+    go depth expectsKey keys ('}' : rest) =
+        go (max 0 (depth - 1)) expectsKey keys rest
+    go depth expectsKey keys (']' : rest) =
+        go (max 0 (depth - 1)) expectsKey keys rest
+    go 1 _ keys (',' : rest) = go 1 True keys rest
+    go depth expectsKey keys (_ : rest) = go depth expectsKey keys rest
+
+    takeJsonStringLiteral = consume ['"'] False
+      where
+        consume acc _ [] = (reverse acc, [])
+        consume acc True (char : rest) = consume (char : acc) False rest
+        consume acc False ('\\' : rest) = consume ('\\' : acc) True rest
+        consume acc False ('"' : rest) = (reverse ('"' : acc), rest)
+        consume acc False (char : rest) = consume (char : acc) False rest
 
 storedEventMetadataDecodeError :: String -> T.Text
 storedEventMetadataDecodeError rawError =
@@ -8333,6 +8387,11 @@ sqliteVisibleImportedMetadataClause metadataColumn =
         <> metadataColumn
         <> ") AS metadata_field WHERE metadata_field.key"
         <> " NOT IN ('ticketUrl','imageUrl','isPublic','currency','budgetCents'))"
+        <> " AND (SELECT count(*) FROM json_each("
+        <> metadataColumn
+        <> "))=(SELECT count(DISTINCT metadata_field.key) FROM json_each("
+        <> metadataColumn
+        <> ") AS metadata_field)"
         <> sqliteOptionalMetadataType metadataColumn "ticketUrl" "text"
         <> sqliteOptionalMetadataType metadataColumn "imageUrl" "text"
         <> sqliteOptionalMetadataType metadataColumn "currency" "text"
@@ -8367,76 +8426,42 @@ sqliteOptionalIntegralMetadataType metadataColumn fieldName =
         <> "='null' OR ("
         <> fieldType
         <> " IN ('integer','real') AND "
-        <> sqliteJsonNumberIsIntegral metadataColumn fieldName
-        <> " AND (typeof("
-        <> fieldValue
-        <> ")='integer' OR (typeof("
-        <> fieldValue
-        <> ")='real' AND "
-        <> fieldValue
-        <> ">-9223372036854775808.0 AND "
-        <> fieldValue
-        <> "<9223372036854775808.0 AND "
-        <> fieldValue
-        <> "=CAST("
-        <> fieldValue
-        <> " AS INTEGER)))))"
+        <> sqliteJsonNumberFitsInt64 metadataColumn fieldName
+        <> "))"
   where
     fieldPath = "'$." <> fieldName <> "'"
     fieldType = "json_type(" <> metadataColumn <> "," <> fieldPath <> ")"
-    fieldValue = "json_extract(" <> metadataColumn <> "," <> fieldPath <> ")"
 
--- json_extract represents JSON real numbers as binary doubles, so comparing
--- the extracted value with an integer cast can turn a large fraction into an
--- apparent integer. Inspect the original JSON number token to enforce exact
--- decimal integrality before applying the Int64 range check above.
-sqliteJsonNumberIsIntegral :: T.Text -> T.Text -> T.Text
-sqliteJsonNumberIsIntegral metadataColumn fieldName =
-    "("
-        <> coefficient
-        <> " NOT GLOB '*[1-9]*' OR ("
-        <> decimalScale
-        <> "<=0 OR "
-        <> decimalScale
-        <> "<=length("
-        <> coefficient
-        <> ")-length(rtrim("
-        <> coefficient
-        <> ",'0'))))"
+-- SQLite exposes JSON real numbers as binary doubles, which cannot distinguish
+-- every Int64 or preserve large fractional tokens. Parse the original JSON
+-- number text into a decimal coefficient and scale so visibility follows
+-- Aeson's exact Int decoder at both fractional and 64-bit boundaries.
+sqliteJsonNumberFitsInt64 :: T.Text -> T.Text -> T.Text
+sqliteJsonNumberFitsInt64 metadataColumn fieldName =
+    "EXISTS (WITH number_token(value) AS (SELECT lower("
+        <> metadataColumn
+        <> "->"
+        <> fieldPath
+        <> ")), number_parts(value,mantissa,exponent_value) AS (SELECT value,"
+        <> "CASE WHEN instr(value,'e')=0 THEN value ELSE substr(value,1,instr(value,'e')-1) END,"
+        <> "CASE WHEN instr(value,'e')=0 THEN 0 ELSE CAST(substr(value,instr(value,'e')+1) AS INTEGER) END"
+        <> " FROM number_token), scaled_number(value,coefficient,decimal_scale) AS (SELECT value,"
+        <> "replace(ltrim(mantissa,'-'),'.',''),"
+        <> "(CASE WHEN instr(ltrim(mantissa,'-'),'.')=0 THEN 0 ELSE length(ltrim(mantissa,'-'))"
+        <> "-instr(ltrim(mantissa,'-'),'.') END)-exponent_value FROM number_parts),"
+        <> " integral_number(value,coefficient,decimal_scale,significant_coefficient) AS (SELECT value,"
+        <> "coefficient,decimal_scale,ltrim(coefficient,'0') FROM scaled_number),"
+        <> " bounded_number(value,significant_coefficient,integer_digit_count,integer_digits,max_abs) AS (SELECT value,"
+        <> "significant_coefficient,length(significant_coefficient)-decimal_scale,"
+        <> "CASE WHEN decimal_scale>=0 THEN substr(significant_coefficient,1,length(significant_coefficient)-decimal_scale)"
+        <> " ELSE significant_coefficient||substr('0000000000000000000',1,-decimal_scale) END,"
+        <> "CASE WHEN substr(value,1,1)='-' THEN '9223372036854775808' ELSE '9223372036854775807' END"
+        <> " FROM integral_number WHERE significant_coefficient='' OR decimal_scale<=0 OR decimal_scale"
+        <> "<=length(coefficient)-length(rtrim(coefficient,'0'))) SELECT 1 FROM bounded_number"
+        <> " WHERE significant_coefficient='' OR integer_digit_count<19 OR (integer_digit_count=19"
+        <> " AND integer_digits<=max_abs COLLATE BINARY))"
   where
     fieldPath = "'$." <> fieldName <> "'"
-    numberToken = "lower(" <> metadataColumn <> "->" <> fieldPath <> ")"
-    exponentMarker = "instr(" <> numberToken <> ",'e')"
-    mantissa =
-        "(CASE WHEN "
-            <> exponentMarker
-            <> "=0 THEN "
-            <> numberToken
-            <> " ELSE substr("
-            <> numberToken
-            <> ",1,"
-            <> exponentMarker
-            <> "-1) END)"
-    unsignedMantissa = "ltrim(" <> mantissa <> ",'-')"
-    decimalMarker = "instr(" <> unsignedMantissa <> ",'.')"
-    fractionLength =
-        "(CASE WHEN "
-            <> decimalMarker
-            <> "=0 THEN 0 ELSE length("
-            <> unsignedMantissa
-            <> ")-"
-            <> decimalMarker
-            <> " END)"
-    exponentValue =
-        "(CASE WHEN "
-            <> exponentMarker
-            <> "=0 THEN 0 ELSE CAST(substr("
-            <> numberToken
-            <> ","
-            <> exponentMarker
-            <> "+1) AS INTEGER) END)"
-    decimalScale = "(" <> fractionLength <> "-" <> exponentValue <> ")"
-    coefficient = "replace(" <> unsignedMantissa <> ",'.','')"
 
 postgresVisibleImportedMetadataClause :: T.Text -> T.Text
 postgresVisibleImportedMetadataClause metadataColumn =

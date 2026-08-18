@@ -51,6 +51,7 @@ import TDF.DTO.SocialEventsDTO
     , TicketTransferDTO
     )
 import TDF.Auth (AuthedUser (..), modulesForRoles)
+import qualified TDF.Config as Config
 import TDF.DB (Env (..))
 import TDF.Models (Party (..), RoleEnum (Fan))
 import TDF.Models.SocialEventsModels
@@ -324,6 +325,7 @@ spec = describe "social event handler helpers" $ do
             (validateSocialEventsListFilter "name" (Just ("DJ" <> T.singleton (chr 0x202E))))
 
     it "uses canonical visibility for imported events across read and mutation routes" $ do
+        cfg <- Config.loadConfig
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
         runSqlPool initializeSocialSchema pool
         now <- getCurrentTime
@@ -343,6 +345,12 @@ spec = describe "social event handler helpers" $ do
             fractionalBudgetEventKey = toSqlKey 19
             roundedFractionalBudgetEventKey :: SocialEventId
             roundedFractionalBudgetEventKey = toSqlKey 20
+            maximumBudgetEventKey :: SocialEventId
+            maximumBudgetEventKey = toSqlKey 21
+            minimumBudgetEventKey :: SocialEventId
+            minimumBudgetEventKey = toSqlKey 22
+            duplicateVisibilityEventKey :: SocialEventId
+            duplicateVisibilityEventKey = toSqlKey 23
             hiddenTierKey :: EventTicketTierId
             hiddenTierKey = toSqlKey 21
             publicTierKey :: EventTicketTierId
@@ -472,6 +480,27 @@ spec = describe "social event handler helpers" $ do
                         , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
                         }
                     )
+                insertKey
+                    maximumBudgetEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Maximum integral budget" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true,\"currency\":\"USD\",\"budgetCents\":9223372036854775807.0}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
+                insertKey
+                    minimumBudgetEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Minimum integral budget" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true,\"currency\":\"USD\",\"budgetCents\":-9223372036854775808.0}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
+                insertKey
+                    duplicateVisibilityEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Duplicate visibility metadata" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true,\"\\u0069sPublic\":false}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
                 _ <- insert (sourceRef "ticketmaster" "pilot-private-13" hiddenEventKey "missing" "https://tickets.example.com/private-pilot")
                 _ <- insert (sourceRef "ticketmaster" "public-14" publicEventKey "on_sale" "https://tickets.example.com/public")
                 _ <- insert (sourceRef "buenplan" "draft-merge-14" publicEventKey "draft:on_sale" "https://tickets.example.com/draft-option")
@@ -481,6 +510,9 @@ spec = describe "social event handler helpers" $ do
                 _ <- insert (sourceRef "ticketmaster" "exponent-budget-18" exponentBudgetEventKey "on_sale" "https://tickets.example.com/exponent-budget")
                 _ <- insert (sourceRef "ticketmaster" "fractional-budget-19" fractionalBudgetEventKey "on_sale" "https://tickets.example.com/fractional-budget")
                 _ <- insert (sourceRef "ticketmaster" "rounded-fractional-budget-20" roundedFractionalBudgetEventKey "on_sale" "https://tickets.example.com/rounded-fractional-budget")
+                _ <- insert (sourceRef "ticketmaster" "maximum-budget-21" maximumBudgetEventKey "on_sale" "https://tickets.example.com/maximum-budget")
+                _ <- insert (sourceRef "ticketmaster" "minimum-budget-22" minimumBudgetEventKey "on_sale" "https://tickets.example.com/minimum-budget")
+                _ <- insert (sourceRef "ticketmaster" "duplicate-visibility-23" duplicateVisibilityEventKey "on_sale" "https://tickets.example.com/duplicate-visibility")
                 insertKey hiddenTierKey (ticketTier hiddenEventKey "hidden-tier" "Hidden tier")
                 insertKey publicTierKey (ticketTier publicEventKey "public-tier" "Public tier")
                 insertKey
@@ -534,7 +566,7 @@ spec = describe "social event handler helpers" $ do
         let env =
                 Env
                     { envPool = pool
-                    , envConfig = error "envConfig should be unused by hidden pilot draft tests"
+                    , envConfig = cfg
                     }
             ordinaryUser = socialEventUser 2
         listResult <-
@@ -556,7 +588,7 @@ spec = describe "social event handler helpers" $ do
         case listResult of
             Right events ->
                 map eventId events
-                    `shouldMatchList` [Just "14", Just "17", Just "18"]
+                    `shouldMatchList` [Just "14", Just "17", Just "18", Just "21", Just "22"]
             Left err ->
                 expectationFailure
                     ("Expected canonical public event list to succeed, got: " <> show err)
@@ -579,7 +611,7 @@ spec = describe "social event handler helpers" $ do
                     env
         case paginatedListResult of
             Right [event] ->
-                eventId event `shouldSatisfy` (`elem` [Just "14", Just "17", Just "18"])
+                eventId event `shouldSatisfy` (`elem` [Just "14", Just "17", Just "18", Just "21", Just "22"])
             Right events ->
                 expectationFailure
                     ("Expected filtered and paginated list to contain only the public canonical event, got: " <> show events)
@@ -642,7 +674,7 @@ spec = describe "social event handler helpers" $ do
                                 <> show err
                             )
             )
-            ["17", "18"]
+            ["17", "18", "21", "22"]
 
         fractionalBudgetGetResult <-
             runHandler $
@@ -657,6 +689,13 @@ spec = describe "social event handler helpers" $ do
                     (socialEventGetHandlerFor ordinaryUser "20")
                     env
         assertHiddenEventRoute "large fractional imported budget metadata" roundedFractionalBudgetGetResult
+
+        duplicateVisibilityGetResult <-
+            runHandler $
+                runReaderT
+                    (socialEventGetHandlerFor ordinaryUser "23")
+                    env
+        assertHiddenEventRoute "duplicate imported visibility metadata" duplicateVisibilityGetResult
 
         let ( stripeHandler
                 , createRefundHandler
