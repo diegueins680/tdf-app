@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
 import { createServer } from 'node:http';
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, normalize, resolve } from 'node:path';
+
+import { writeMusicDirectoryVisualArtifacts } from './music-directory-visual-artifacts.mjs';
 
 const playwrightModule = process.env.TDF_PLAYWRIGHT_MODULE ?? '/app/node_modules/playwright/index.mjs';
 const { chromium } = await import(playwrightModule);
@@ -453,9 +455,13 @@ try {
   await mobileEditorContext.close();
   }
 
-  writeFileSync(join(outputDir, 'accessibility-results.json'), `${JSON.stringify(accessibility, null, 2)}\n`);
-  writeFileSync(join(outputDir, 'browser-errors.json'), `${JSON.stringify(browserErrors, null, 2)}\n`);
-  console.log(JSON.stringify({ screenshots: captureAll ? 8 : 1, accessibility, browserErrors }, null, 2));
+  const artifacts = writeMusicDirectoryVisualArtifacts({
+    outputDir,
+    captureScope,
+    accessibility,
+    browserErrors,
+  });
+  console.log(JSON.stringify({ screenshots: captureAll ? 8 : 1, artifacts, accessibility, browserErrors }, null, 2));
 } catch (error) {
   console.error('[visuals] capture failed before browser cleanup', error);
   throw error;
