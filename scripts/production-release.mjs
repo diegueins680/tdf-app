@@ -44,13 +44,15 @@ const productionProfile = Object.freeze({
 });
 const stagedRuntimeEnv = Object.freeze({
   RUN_MIGRATIONS: 'false',
+  AUTO_APPLY_PRODUCTION_MIGRATIONS: 'true',
   EVENT_DISCOVERY_ENABLED: 'false',
   DEFAULT_LOCALE: 'es',
 });
 const readRuntimeEnvCommand = [
   "sh -lc '",
-  'printf "RUN_MIGRATIONS=%s\\nEVENT_DISCOVERY_ENABLED=%s\\nDEFAULT_LOCALE=%s\\n" ',
+  'printf "RUN_MIGRATIONS=%s\\nAUTO_APPLY_PRODUCTION_MIGRATIONS=%s\\nEVENT_DISCOVERY_ENABLED=%s\\nDEFAULT_LOCALE=%s\\n" ',
   '"${RUN_MIGRATIONS-__UNSET__}" ',
+  '"${AUTO_APPLY_PRODUCTION_MIGRATIONS-__UNSET__}" ',
   '"${EVENT_DISCOVERY_ENABLED-__UNSET__}" ',
   '"${DEFAULT_LOCALE-__UNSET__}"',
   "'",
@@ -301,8 +303,13 @@ async function readEffectiveRuntimeEnv(app, machines) {
   }));
 }
 
-function runtimeEnvBlockers(rows) {
+function runtimeEnvBlockers(rows, options = {}) {
   return rows.flatMap(({ machineId, values }) => Object.entries(stagedRuntimeEnv)
+    .filter(([name]) => !(
+      options.allowUnavailableAutomaticRunner === true
+      && name === 'AUTO_APPLY_PRODUCTION_MIGRATIONS'
+      && [undefined, '__UNSET__', 'false'].includes(values[name])
+    ))
     .filter(([name, expected]) => values[name] !== expected)
     .map(([name, expected]) => {
       const actual = values[name] === '__UNSET__' || values[name] === undefined
@@ -355,6 +362,9 @@ async function verifyImageExists(image, sha) {
   if (imageEnv.RUN_MIGRATIONS !== 'false') {
     throw new Error(`Image ${image} does not default RUN_MIGRATIONS=false.`);
   }
+  if (imageEnv.AUTO_APPLY_PRODUCTION_MIGRATIONS !== 'true') {
+    throw new Error(`Image ${image} does not enable the reviewed production migration runner.`);
+  }
   const acceptableDigests = new Set([digest]);
   for (const manifest of metadata.manifest?.manifests ?? []) {
     if (manifest.platform?.os === 'linux'
@@ -378,7 +388,7 @@ async function remotePreflight(context) {
   const machines = await readMachines(context.app);
   const runtimeEnv = await readEffectiveRuntimeEnv(context.app, machines);
   const secrets = await readSecretNames(context.app);
-  const blockers = runtimeEnvBlockers(runtimeEnv);
+  const blockers = runtimeEnvBlockers(runtimeEnv, { allowUnavailableAutomaticRunner: true });
   for (const machine of machines) {
     const check = await smokeMachine(context, machine.id, null);
     machine.releaseSnapshot = {
@@ -528,6 +538,7 @@ function deployArgs(context, selector, machineId, image = context.image, sha = c
     '--env', `SOURCE_COMMIT=${sha}`,
     '--env', `GIT_SHA=${sha}`,
     '--env', 'RUN_MIGRATIONS=false',
+    '--env', 'AUTO_APPLY_PRODUCTION_MIGRATIONS=true',
     '--env', 'EVENT_DISCOVERY_ENABLED=false',
     '--strategy', 'rolling',
     '--max-unavailable', '1',
@@ -564,6 +575,7 @@ async function rollbackMachine(context, machine) {
     '--env', `SOURCE_COMMIT=${sha}`,
     '--env', `GIT_SHA=${sha}`,
     '--env', 'RUN_MIGRATIONS=false',
+    '--env', 'AUTO_APPLY_PRODUCTION_MIGRATIONS=true',
     '--env', 'EVENT_DISCOVERY_ENABLED=false',
     '--yes',
   ]);

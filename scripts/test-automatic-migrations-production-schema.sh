@@ -6,6 +6,7 @@ database_url="${TDF_AUTOMIG_TEST_DATABASE_URL:?Set TDF_AUTOMIG_TEST_DATABASE_URL
 server_bin="${TDF_AUTOMIG_SERVER_BIN:?Set TDF_AUTOMIG_SERVER_BIN to the candidate backend executable}"
 server_port="${TDF_AUTOMIG_SERVER_PORT:-18881}"
 server_log="${TMPDIR:-/tmp}/tdf-automatic-migrations-${$}.log"
+migration_sql="${TMPDIR:-/tmp}/tdf-production-migrations-${$}.sql"
 server_pid=""
 
 stop_server() {
@@ -16,7 +17,11 @@ stop_server() {
   wait "${server_pid}" >/dev/null 2>&1 || true
   server_pid=""
 }
-trap stop_server EXIT INT TERM
+cleanup() {
+  stop_server
+  rm -f "${migration_sql}"
+}
+trap cleanup EXIT INT TERM
 
 if [ ! -x "${server_bin}" ]; then
   echo "Candidate backend executable is missing or not executable: ${server_bin}" >&2
@@ -35,31 +40,20 @@ psql "${database_url}" -X -v ON_ERROR_STOP=1 \
   -f "${repo_root}/scripts/__tests__/fixtures/catalog-production-source-fixture.sql" >/dev/null
 SOURCE_COMMIT="${GITHUB_SHA:-0000000000000000000000000000000000000000}" \
   node "${repo_root}/scripts/render-production-migration-batch.mjs" \
-  | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
-
-expected_migrations="$(node -p "require('${repo_root}/scripts/production-migrations.json').migrations.length")"
-applied_migrations="$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM public.tdf_schema_migration;')"
-test "${applied_migrations}" = "${expected_migrations}"
-
-db_host="$(node -e 'const url=new URL(process.argv[1]); process.stdout.write(url.hostname)' "${database_url}")"
-db_port="$(node -e 'const url=new URL(process.argv[1]); process.stdout.write(url.port || "5432")' "${database_url}")"
-db_user="$(node -e 'const url=new URL(process.argv[1]); process.stdout.write(decodeURIComponent(url.username))' "${database_url}")"
-db_pass="$(node -e 'const url=new URL(process.argv[1]); process.stdout.write(decodeURIComponent(url.password))' "${database_url}")"
-db_name="$(node -e 'const url=new URL(process.argv[1]); process.stdout.write(decodeURIComponent(url.pathname.slice(1)))' "${database_url}")"
+  > "${migration_sql}"
 
 start_and_verify() {
   : > "${server_log}"
-  DB_HOST="${db_host}" \
-  DB_PORT="${db_port}" \
-  DB_USER="${db_user}" \
-  DB_PASS="${db_pass}" \
-  DB_NAME="${db_name}" \
+  DATABASE_URL="${database_url}" \
   APP_PORT="${server_port}" \
-  RUN_MIGRATIONS=true \
+  RUN_MIGRATIONS=false \
+  AUTO_APPLY_PRODUCTION_MIGRATIONS=true \
   RESET_DB=false \
   SEED_DB=false \
   EVENT_DISCOVERY_ENABLED=false \
-  "${server_bin}" >"${server_log}" 2>&1 &
+  TDF_SERVER_BIN="${server_bin}" \
+  TDF_PRODUCTION_MIGRATIONS_SQL="${migration_sql}" \
+  "${repo_root}/tdf-hq/production-entrypoint.sh" >"${server_log}" 2>&1 &
   server_pid=$!
 
   for _ in $(seq 1 180); do
@@ -81,6 +75,9 @@ start_and_verify() {
 }
 
 start_and_verify
+expected_migrations="$(node -p "require('${repo_root}/scripts/production-migrations.json').migrations.length")"
+applied_migrations="$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM public.tdf_schema_migration;')"
+test "${applied_migrations}" = "${expected_migrations}"
 node "${repo_root}/scripts/render-production-schema-verification.mjs" \
   | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
 

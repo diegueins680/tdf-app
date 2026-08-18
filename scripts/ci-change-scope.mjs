@@ -27,6 +27,10 @@ function affectsContracts(file) {
 
 function affectsMigrations(file) {
   return isPathOrChild(file, 'tdf-hq/sql')
+    || file === 'tdf-hq/production-entrypoint.sh'
+    || file === 'tdf-hq/Dockerfile'
+    || file === 'tdf-hq/Dockerfile.runtime'
+    || file === 'fly.toml'
     || file === 'scripts/production-migrations.json'
     || file === 'scripts/production-release.mjs'
     || file === 'scripts/lib/production-release.mjs'
