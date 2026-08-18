@@ -1793,9 +1793,12 @@ reconcileProviderEvents pool now provider targetCities seenExternalIds =
           else do
             let nextMissing = Social.externalEventRefMissingRuns ref + 1
                 nextStatus =
-                  if nextMissing >= 2
-                    then "missing"
-                    else Social.externalEventRefSourceStatus ref
+                  if isMaterializationDraftSourceStatus (Social.externalEventRefSourceStatus ref)
+                    then Social.externalEventRefSourceStatus ref
+                    else
+                      if nextMissing >= 2
+                        then "missing"
+                        else Social.externalEventRefSourceStatus ref
             update
               refKey
               [ Social.ExternalEventRefMissingRuns =. nextMissing

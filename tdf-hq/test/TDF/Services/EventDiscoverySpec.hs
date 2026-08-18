@@ -357,6 +357,23 @@ spec = do
             )
             pool
           _ <-
+            reconcileProviderEvents
+              pool
+              (fixtureTime 10 6)
+              "ticketmaster"
+              [EventDiscoveryCity "Quito" "EC" (Just "America/Guayaquil")]
+              []
+          _ <-
+            reconcileProviderEvents
+              pool
+              (fixtureTime 10 7)
+              "ticketmaster"
+              [EventDiscoveryCity "Quito" "EC" (Just "America/Guayaquil")]
+              []
+          heldAfterMisses <- runSqlPool (get refId) pool
+          Social.externalEventRefSourceStatus <$> heldAfterMisses
+            `shouldBe` Just "materialization_draft:on_sale"
+          _ <-
             syncDiscoveredEvent
               pool
               (fixtureTime 10 10)
