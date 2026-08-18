@@ -7332,6 +7332,56 @@
       "risk": "Omitting a compiled model group can let an unsafe inferred schema change bypass the global startup preflight.",
       "justification": "These labels identify the exhaustive compiled Persistent migration groups checked before startup writes; they are execution boundaries, not selectable business data, roles, permissions, labels, or assignments.",
       "reviewed": true
+    },
+    {
+      "id": "f600d35941975d573f6e",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Contract assertions can silently stop covering a sensitive field when the closed DTO changes.",
+      "justification": "These are wire-field names asserted by a contract privacy test, not user-selectable geographic values; countries, subdivisions, cities and metropolitan areas remain database-authoritative.",
+      "reviewed": true
+    },
+    {
+      "id": "317b1912f8642a98c451",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "city_reference, DirectoryTaxonomies.cities",
+      "priority": "P3-consumer",
+      "risk": "A form test could be mistaken for a client-side city authority.",
+      "justification": "Quito and Cuenca are synthetic opaque IDs in a unit-test fixture only; the production selector and payload always consume the database-backed city taxonomy.",
+      "reviewed": true
+    },
+    {
+      "id": "8c6cd021a46302ff21bd",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unknown subject discriminator could create a Party with incorrect ownership, authorization, URL or reconciliation semantics.",
+      "justification": "Profile kinds are closed wire and storage discriminants implemented by subject/Party reconciliation; public professions, services, instruments, genres and editorial labels remain persisted catalogs.",
+      "reviewed": true
+    },
+    {
+      "id": "61de129c2d466a70fd79",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Adding an undeclared update constructor could make omission destructive or replacement ambiguous.",
+      "justification": "Preserve and replace are the exhaustive constructors of an internal update algebra used to test writer semantics, not business or editorial options.",
+      "reviewed": true
+    },
+    {
+      "id": "929988ea9cf22625c461",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "city_reference, DirectoryTaxonomies.cities",
+      "priority": "P3-consumer",
+      "risk": "A mobile form test could be mistaken for a client-side city authority.",
+      "justification": "Quito and Cuenca are synthetic opaque IDs in a unit-test fixture only; the production mobile selector and payload always consume the database-backed city taxonomy.",
+      "reviewed": true
     }
   ]
 }

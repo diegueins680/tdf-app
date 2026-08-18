@@ -85,6 +85,22 @@ idiomas, equipo, disponibilidad, modalidad, viajes, enlaces, reputación y verif
 relaciones a profesiones, instrumentos, géneros, servicios, idiomas y ciudades son conjuntos sin
 duplicados.
 
+El editor autenticado web y móvil permite crear o editar esos atributos, elegir varias profesiones,
+describir experiencia y tarifa por profesión, indicar dominio de instrumentos e idiomas y seleccionar
+varias ciudades con exactamente una ubicación principal. Áreas regionales o nacionales preexistentes
+que el selector todavía no edita se conservan al guardar. El contrato conserva compatibilidad con writers
+anteriores: omitir un campo enriquecido en `PUT` conserva su valor; string/array vacío lo limpia y
+`clearRates=true` elimina explícitamente el rango. La respuesta privada solo está disponible a
+managers activos y contiene los IDs/detalles necesarios para reconstruir el formulario sin consultar
+`Party`. Cada actualización registra una auditoría sin copiar biografía, créditos, URLs ni demás
+contenido del perfil a los metadatos operativos.
+
+Portafolio y enlaces usan DTO cerrados y URLs HTTP(S) sin credenciales embebidas o rutas same-origin
+seguras para media histórica. El writer de áreas
+de servicio no acepta dirección o coordenadas; el backend deriva el punto público del centroide
+catalogado de la ciudad. Cambiar entre un perfil personal y organizacional exige reconciliación
+auditada y no se permite como una edición ordinaria.
+
 Estados públicos: `draft`, `pending_review`, `published`, `paused`, `archived`, `suspended`,
 `merged`. Solo `published`, visible y no suspendido se indexa. Archivar/suspender retira anuncios
 dependientes y documentos de búsqueda en la misma transacción.

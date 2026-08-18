@@ -7,6 +7,7 @@ module TDF.Directory.Policy
   , InvitationStatus(..)
   , DirectoryCapability(..)
   , PublicProfession(..)
+  , ProfileFieldUpdate(..)
   , allowedProfileTransition
   , allowedClassifiedTransition
   , allowedApplicationTransition
@@ -17,6 +18,9 @@ module TDF.Directory.Policy
   , applicationVisibleTo
   , verifiedReviewEligible
   , minorMayPublishOrRespond
+  , applyProfileFieldUpdate
+  , detailIdsMatch
+  , serviceAreaPrimaryValid
   ) where
 
 import Data.Set (Set)
@@ -62,6 +66,9 @@ data DirectoryCapability = ViewPrivate | Edit | Publish | Contact | Manage
 
 -- Deliberately distinct from Auth.RoleEnum and security permissions.
 newtype PublicProfession = PublicProfession Text
+  deriving (Eq, Ord, Show)
+
+data ProfileFieldUpdate a = PreserveProfileField | ReplaceProfileField a
   deriving (Eq, Ord, Show)
 
 allowedClassifiedTransition :: ClassifiedStatus -> ClassifiedStatus -> Bool
@@ -146,3 +153,17 @@ verifiedReviewEligible interactionStatus verified authorManaged author subject p
 
 minorMayPublishOrRespond :: Text -> Bool
 minorMayPublishOrRespond assurance = assurance `elem` ["adult_attested", "adult_verified", "guardian_approved"]
+
+applyProfileFieldUpdate :: a -> ProfileFieldUpdate a -> a
+applyProfileFieldUpdate current PreserveProfileField = current
+applyProfileFieldUpdate _ (ReplaceProfileField next) = next
+
+detailIdsMatch :: Ord a => [a] -> [a] -> Bool
+detailIdsMatch ids detailIds =
+  length ids == Set.size (Set.fromList ids)
+    && length detailIds == Set.size (Set.fromList detailIds)
+    && Set.fromList ids == Set.fromList detailIds
+
+serviceAreaPrimaryValid :: [Bool] -> Bool
+serviceAreaPrimaryValid primaryFlags =
+  null primaryFlags || length (filter id primaryFlags) == 1

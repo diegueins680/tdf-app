@@ -9,6 +9,14 @@
 - procedencia, correlation ID, conteos y revisión de ambigüedades;
 - writers antiguos permanecen válidos durante el dual-read.
 
+## Extensión del writer enriquecido (2026-08-17)
+
+No requiere DDL ni backfill: el esquema incremental del directorio ya contenía todas las columnas y
+tablas normalizadas. El despliegue es compatible en orden backend -> clientes porque los campos
+nuevos son optativos y los campos históricos permanecen obligatorios. El rollback consiste en
+revertir backend/clientes; los datos enriquecidos permanecen preservados y los writers antiguos no
+los borran al omitirlos.
+
 ## Etapas
 
 1. **Expand:** extensiones opcionales seguras (`unaccent`, `pg_trgm`), catálogos nuevos, perfiles,

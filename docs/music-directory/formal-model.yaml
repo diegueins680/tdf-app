@@ -128,8 +128,19 @@ invariants:
   I15_no_public_sensitive_data:
     statement: No public endpoint returns PII, credentials, tokens, private evidence, moderation notes or administrative fields.
     enforcement: DTO allowlists, OpenAPI schema audit and endpoint tests
+  I16_rich_profile_update_intent:
+    statement: Omitted rich fields preserve prior values, explicit empty values clear only their field, membership details equal their ID sets, and an explicit nonempty service-area set has exactly one primary location.
+    enforcement: closed writer DTO, handler preconditions, relational primary keys and PostgreSQL/API compatibility tests
 
 preconditions:
+  update_profile:
+    - caller is authenticated and has an active edit grant over the exact profile
+    - public professions remain data and are never consulted for authorization
+    - professionDetails and instrumentDetails contain the same unique IDs as their canonical ID arrays
+    - rate maximum is not below minimum and any rate has a catalog currency
+    - portfolio and links contain only bounded HTTP(S) URLs without embedded credentials or safe same-origin paths
+    - an explicit nonempty serviceAreas collection has unique scopes and exactly one primary
+    - every service area references one active and internally consistent country/subdivision/city/metropolitan hierarchy
   publish_profile:
     - caller has profile.publish grant
     - profile is complete enough for its type
@@ -170,6 +181,13 @@ preconditions:
     - idempotency scope is unused or payload-identical and the daily rate limit permits the request
 
 postconditions:
+  update_profile:
+    - omitted rich fields and omitted language/service-area collections retain their previous values
+    - explicit empty strings/collections and clearRates affect only the requested data
+    - the private response is scoped through the active manager grant
+    - the public projection contains no Party PII, private coordinates, exact address or manager capability
+    - one audit event records field-level update intent without copying profile content into audit metadata
+    - search completeness and the profile search document are refreshed
   publish_classified:
     - status is published
     - published_at is set once
