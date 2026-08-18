@@ -90,6 +90,8 @@ data AppConfig = AppConfig
   , stripePublishableKey :: Maybe Text
   , stripeWebhookSecret :: Maybe Text
   , eventDiscoveryEnabled :: Bool
+  , eventDiscoveryAutoPublish :: Bool
+  , eventDiscoveryPilotLimit :: Int
   , ticketmasterApiKey :: Maybe Text
   , ticketmasterApiBase :: Text
   , eventDiscoveryLookaheadDays :: Int
@@ -779,6 +781,8 @@ loadConfig = do
   stripePublishableKeyEnv <- lookupEnv "STRIPE_PUBLISHABLE_KEY"
   stripeWebhookSecretEnv <- lookupEnv "STRIPE_WEBHOOK_SECRET"
   eventDiscoveryEnabledEnv <- lookupEnv "EVENT_DISCOVERY_ENABLED"
+  eventDiscoveryAutoPublishEnv <- lookupEnv "EVENT_DISCOVERY_AUTO_PUBLISH"
+  eventDiscoveryPilotLimitEnv <- lookupEnv "EVENT_DISCOVERY_PILOT_LIMIT"
   ticketmasterApiKeyEnv <- lookupEnv "TICKETMASTER_API_KEY"
   ticketmasterApiBaseEnv <- lookupEnv "TICKETMASTER_API_BASE"
   eventDiscoveryLookaheadDaysEnv <- lookupEnv "EVENT_DISCOVERY_LOOKAHEAD_DAYS"
@@ -844,6 +848,18 @@ loadConfig = do
       "EVENT_DISCOVERY_ENABLED"
       True
       eventDiscoveryEnabledEnv
+  eventDiscoveryAutoPublishVal <-
+    validateStartupBooleanFlag
+      "EVENT_DISCOVERY_AUTO_PUBLISH"
+      False
+      eventDiscoveryAutoPublishEnv
+  eventDiscoveryPilotLimitVal <-
+    validateBoundedIntEnv
+      "EVENT_DISCOVERY_PILOT_LIMIT"
+      20
+      1
+      1000
+      eventDiscoveryPilotLimitEnv
   ticketmasterApiKeyVal <- validateTicketmasterApiKey ticketmasterApiKeyEnv
   ticketmasterApiBaseVal <-
     validateConfiguredApiBaseUrl
@@ -1030,6 +1046,8 @@ loadConfig = do
     , stripePublishableKey = fmap T.pack stripePublishableKeyEnv
     , stripeWebhookSecret = fmap T.pack stripeWebhookSecretEnv
     , eventDiscoveryEnabled = eventDiscoveryEnabledVal
+    , eventDiscoveryAutoPublish = eventDiscoveryAutoPublishVal
+    , eventDiscoveryPilotLimit = eventDiscoveryPilotLimitVal
     , ticketmasterApiKey = ticketmasterApiKeyVal
     , ticketmasterApiBase = ticketmasterApiBaseVal
     , eventDiscoveryLookaheadDays = eventDiscoveryLookaheadDaysVal

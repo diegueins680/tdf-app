@@ -311,6 +311,84 @@ spec = describe "social event handler helpers" $ do
             "name must not contain control characters or hidden formatting characters"
             (validateSocialEventsListFilter "name" (Just ("DJ" <> T.singleton (chr 0x202E))))
 
+    it "hides imported pilot drafts from ordinary event list and get handlers" $ do
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let eventKey :: SocialEventId
+            eventKey = toSqlKey 13
+        runSqlPool
+            ( do
+                insertKey
+                    eventKey
+                    ( (seedSocialEvent "system:event-discovery" "Private pilot event" now)
+                        { socialEventMetadata = Just "{\"isPublic\":false}"
+                        }
+                    )
+                _ <-
+                    insert
+                        ExternalEventRef
+                            { externalEventRefProvider = "ticketmaster"
+                            , externalEventRefExternalId = "pilot-private-13"
+                            , externalEventRefEventId = eventKey
+                            , externalEventRefCity = "Quito"
+                            , externalEventRefCountryCode = Just "EC"
+                            , externalEventRefSourceUrl =
+                                Just "https://tickets.example.com/private-pilot"
+                            , externalEventRefPriceCents = Nothing
+                            , externalEventRefCurrency = Just "USD"
+                            , externalEventRefLastSeenAt = now
+                            , externalEventRefMissingRuns = 0
+                            , externalEventRefSourceStatus = "draft:on_sale"
+                            }
+                pure ()
+            )
+            pool
+
+        let env =
+                Env
+                    { envPool = pool
+                    , envConfig = error "envConfig should be unused by hidden pilot draft tests"
+                    }
+            ordinaryUser = socialEventUser 2
+        listResult <-
+            runHandler $
+                runReaderT
+                    ( socialEventListHandlerFor
+                        ordinaryUser
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                    )
+                    env
+        case listResult of
+            Right [] -> pure ()
+            Right events ->
+                expectationFailure
+                    ("Expected pilot drafts to be hidden from event lists, got: " <> show events)
+            Left err ->
+                expectationFailure
+                    ("Expected hidden pilot list to succeed, got: " <> show err)
+
+        getResult <-
+            runHandler $
+                runReaderT
+                    (socialEventGetHandlerFor ordinaryUser "13")
+                    env
+        case getResult of
+            Left err -> do
+                errHTTPCode err `shouldBe` 404
+                BL8.unpack (errBody err) `shouldContain` "Event not found"
+            Right event ->
+                expectationFailure
+                    ("Expected direct pilot draft access to be hidden, got: " <> show event)
+
     it "rejects punctuation-only ticket buyer names before creating ticket orders" $ do
         validateTicketPurchaseBuyerName Nothing `shouldBe` Right Nothing
         validateTicketPurchaseBuyerName (Just "  Diego Saa  ")
@@ -597,6 +675,24 @@ socialEventUpdateHandlerFor user =
                     :<|> _deleteEvent ->
                     updateEventHandler
 
+socialEventListHandlerFor
+    :: AuthedUser
+    -> Maybe T.Text
+    -> Maybe T.Text
+    -> Maybe T.Text
+    -> Maybe T.Text
+    -> Maybe T.Text
+    -> Maybe T.Text
+    -> Maybe T.Text
+    -> Maybe Int
+    -> Maybe Int
+    -> ReaderT Env Handler [EventDTO]
+socialEventListHandlerFor user =
+    case socialEventsServer user of
+        eventsServer :<|> _ ->
+            case eventsServer of
+                listEventsHandler :<|> _ -> listEventsHandler
+
 socialEventGetHandlerFor
     :: AuthedUser
     -> T.Text
@@ -824,6 +920,25 @@ initializeSocialSchema = do
         \\"created_at\" TIMESTAMP NOT NULL,\
         \PRIMARY KEY (\"artist_id\", \"genre_id\"),\
         \FOREIGN KEY(\"artist_id\") REFERENCES \"social_artist_profile\"(\"id\") ON DELETE CASCADE\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"venue\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"name\" VARCHAR NOT NULL,\
+        \\"address\" VARCHAR NULL,\
+        \\"city\" VARCHAR NULL,\
+        \\"country\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
+        \\"city_id\" VARCHAR NULL,\
+        \\"timezone\" VARCHAR NULL,\
+        \\"latitude\" REAL NULL,\
+        \\"longitude\" REAL NULL,\
+        \\"capacity\" INTEGER NULL,\
+        \\"contact\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL\
         \)"
         []
     rawExecute

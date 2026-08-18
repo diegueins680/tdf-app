@@ -18,11 +18,16 @@ module TDF.Services.EventDiscovery
   , finishEventDiscoveryRun
   , loadActiveUserCities
   , loadSubscribedDiscoveryCities
+  , decodeBuenPlanResponse
   , normalizeTicketmasterResponse
   , normalizeUserCities
   , reconcileImportedEvents
   , reconcileProviderEvents
+  , discoveredEventFitsPilotLimit
+  , countImportedDiscoveryEvents
+  , isDiscoveredEventKnown
   , syncDiscoveredEvent
+  , syncDiscoveredEventDraft
   ) where
 
 import Control.Applicative ((<|>))
@@ -56,14 +61,14 @@ import Data.Char
 import Data.Function (on)
 import Data.List (maximumBy, nubBy, sortOn)
 import qualified Data.Map.Strict as Map
-import Data.Maybe (catMaybes, fromMaybe, listToMaybe, mapMaybe)
+import Data.Maybe (catMaybes, fromMaybe, isJust, listToMaybe, mapMaybe)
 import Data.Ord (comparing)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Data.Time (UTCTime, addUTCTime, diffUTCTime, utctDay)
-import Data.Time.Format (defaultTimeLocale, parseTimeM)
-import Data.Time.Format.ISO8601 (iso8601ParseM, iso8601Show)
+import Data.Time.Format (defaultTimeLocale, formatTime, parseTimeM)
+import Data.Time.Format.ISO8601 (iso8601ParseM)
 import Data.UUID (UUID)
 import Database.Persist
   ( Entity(..)
@@ -120,6 +125,7 @@ data DiscoveredVenue = DiscoveredVenue
   , discoveredVenueCity :: Text
   , discoveredVenueCountry :: Maybe Text
   , discoveredVenueCountryCode :: Maybe Text
+  , discoveredVenueTimeZone :: Maybe Text
   , discoveredVenueLatitude :: Maybe Double
   , discoveredVenueLongitude :: Maybe Double
   , discoveredVenuePhone :: Maybe Text
@@ -559,13 +565,16 @@ instance FromJSON BuenPlanMeta where
 
 data BuenPlanResponse = BuenPlanResponse
   { buenPlanEvents :: [BuenPlanEvent]
+  , buenPlanRawEventCount :: Int
   , buenPlanMeta :: BuenPlanMeta
   }
 
 instance FromJSON BuenPlanResponse where
-  parseJSON = withObject "BuenPlanResponse" $ \o ->
+  parseJSON = withObject "BuenPlanResponse" $ \o -> do
+    rawEvents <- o .:? "data" .!= []
     BuenPlanResponse
-      <$> (decodeValidProviderItems <$> (o .:? "data" .!= []))
+      <$> pure (decodeValidProviderItems rawEvents)
+      <*> pure (length rawEvents)
       <*> o .: "meta"
 
 buenPlanApiBase :: Text
@@ -619,18 +628,20 @@ fetchBuenPlanEvents cfg cities now
                           if BL.length body > 25 * 1024 * 1024
                             then pure (Left "Buen Plan response exceeded the 25 MB safety limit")
                             else
-                              case eitherDecode body of
-                                Left _ -> pure (Left "Buen Plan returned an invalid event response")
-                                Right decoded -> do
-                                  let normalized =
-                                        mapMaybe
-                                          (normalizeBuenPlanEvent (defaultCurrency cfg) providerCities now endTime)
-                                          (buenPlanEvents decoded)
-                                      nextCollected = collected ++ normalized
-                                      pageCount = buenPlanPageCount (buenPlanMeta decoded)
-                                  if pageNumber >= pageCount
-                                    then pure (Right nextCollected)
-                                    else fetchPage (pageNumber + 1) nextCollected
+                              case
+                                  decodeBuenPlanPage
+                                    (defaultCurrency cfg)
+                                    providerCities
+                                    now
+                                    endTime
+                                    body
+                                of
+                                  Left err -> pure (Left err)
+                                  Right (pageCount, normalized) -> do
+                                    let nextCollected = collected ++ normalized
+                                    if pageNumber >= pageCount
+                                      then pure (Right nextCollected)
+                                      else fetchPage (pageNumber + 1) nextCollected
 
     buildBuenPlanRequestUrl pageNumber =
       T.unpack
@@ -658,8 +669,8 @@ normalizeBuenPlanEvent configuredDefault cities now endTime BuenPlanEvent{..} = 
   externalId <- cleanIdentifier buenPlanEventId
   title <- cleanSingleLine 160 buenPlanEventTitle
   whenMaybe (buenPlanEventStart < now || buenPlanEventStart > endTime) Nothing
-  city <- matchBuenPlanCity cities title buenPlanEventDescription
   slug <- cleanIdentifier buenPlanEventSlug
+  city <- matchBuenPlanCity cities title slug buenPlanEventDescription
   let description = buenPlanEventDescription >>= cleanMultiline 5000
       venueName =
         fromMaybe
@@ -695,6 +706,7 @@ normalizeBuenPlanEvent configuredDefault cities now endTime BuenPlanEvent{..} = 
             , discoveredVenueCountry = Nothing
             , discoveredVenueCountryCode =
                 Just (eventDiscoveryCityCountryCode city)
+            , discoveredVenueTimeZone = eventDiscoveryCityTimeZone city
             , discoveredVenueLatitude = Nothing
             , discoveredVenueLongitude = Nothing
             , discoveredVenuePhone = Nothing
@@ -715,23 +727,78 @@ normalizeBuenPlanEvent configuredDefault cities now endTime BuenPlanEvent{..} = 
       , discoveredEventStatus = status
       }
 
+decodeBuenPlanResponse ::
+  Text ->
+  [EventDiscoveryCity] ->
+  UTCTime ->
+  UTCTime ->
+  BL.ByteString ->
+  Either Text [DiscoveredEvent]
+decodeBuenPlanResponse configuredDefault cities now endTime =
+  fmap snd . decodeBuenPlanPage configuredDefault cities now endTime
+
+decodeBuenPlanPage ::
+  Text ->
+  [EventDiscoveryCity] ->
+  UTCTime ->
+  UTCTime ->
+  BL.ByteString ->
+  Either Text (Int, [DiscoveredEvent])
+decodeBuenPlanPage configuredDefault cities now endTime body =
+  case eitherDecode body of
+    Left _ -> Left "Buen Plan returned an invalid event response"
+    Right decoded
+      | buenPlanRawEventCount decoded > 0 && null decodedEvents ->
+          Left "Buen Plan returned no usable event records"
+      | not (null targetedEventsInWindow) && null normalized ->
+          Left "Buen Plan returned targeted records but none were usable"
+      | otherwise -> Right (buenPlanPageCount (buenPlanMeta decoded), normalized)
+      where
+        decodedEvents = buenPlanEvents decoded
+        targetedEvents =
+          filter
+            ( \event ->
+                isJust
+                  ( matchBuenPlanCity
+                      cities
+                      (buenPlanEventTitle event)
+                      (buenPlanEventSlug event)
+                      (buenPlanEventDescription event)
+                  )
+            )
+            decodedEvents
+        targetedEventsInWindow =
+          filter
+            (\event -> buenPlanEventStart event >= now && buenPlanEventStart event <= endTime)
+            targetedEvents
+        normalized =
+          mapMaybe
+            (normalizeBuenPlanEvent configuredDefault cities now endTime)
+            decodedEvents
+
 matchBuenPlanCity ::
   [EventDiscoveryCity] ->
   Text ->
+  Text ->
   Maybe Text ->
   Maybe EventDiscoveryCity
-matchBuenPlanCity cities title description =
-  listToMaybe
-    ( sortOn
-        (negate . T.length . eventDiscoveryCityName)
-        [ city
-        | city <- cities
-        , normalizeEventText (eventDiscoveryCityName city)
-            `T.isInfixOf` searchable
-        ]
-    )
+matchBuenPlanCity cities title slug description =
+  findCity explicitSearchable <|> findCity locationSearchable
   where
-    searchable = normalizeEventText (title <> " " <> fromMaybe "" description)
+    explicitSearchable = normalizeEventText (title <> " " <> slug)
+    locationSearchable =
+      normalizeEventText
+        (fromMaybe "" (description >>= extractBuenPlanVenueName))
+    findCity searchable =
+      listToMaybe
+        ( sortOn
+            (negate . T.length . eventDiscoveryCityName)
+            [ city
+            | city <- cities
+            , normalizeEventText (eventDiscoveryCityName city)
+                `T.isInfixOf` searchable
+            ]
+        )
     normalizeEventText =
       T.unwords
         . T.words
@@ -962,6 +1029,7 @@ normalizeStructuredEvent cfg sourceKey city now StructuredFeedEvent{..} = do
             , discoveredVenueCountry = Nothing
             , discoveredVenueCountryCode =
                 Just (eventDiscoveryCityCountryCode city)
+            , discoveredVenueTimeZone = eventDiscoveryCityTimeZone city
             , discoveredVenueLatitude = Nothing
             , discoveredVenueLongitude = Nothing
             , discoveredVenuePhone = Nothing
@@ -1158,8 +1226,8 @@ buildTicketmasterRequestUrl apiBase countryCode apiKey city startsAt endsAt page
     queryPairs =
       [ ("apikey", TE.encodeUtf8 apiKey)
       , ("city", TE.encodeUtf8 city)
-      , ("startDateTime", TE.encodeUtf8 (T.pack (iso8601Show startsAt)))
-      , ("endDateTime", TE.encodeUtf8 (T.pack (iso8601Show endsAt)))
+      , ("startDateTime", TE.encodeUtf8 (formatTicketmasterUtc startsAt))
+      , ("endDateTime", TE.encodeUtf8 (formatTicketmasterUtc endsAt))
       , ("includeTBA", "no")
       , ("includeTBD", "no")
       , ("includeTest", "no")
@@ -1169,6 +1237,10 @@ buildTicketmasterRequestUrl apiBase countryCode apiKey city startsAt endsAt page
       ]
         ++ maybe [] (\country -> [("countryCode", TE.encodeUtf8 country)]) countryCode
     query = TE.decodeUtf8 (renderSimpleQuery True queryPairs)
+
+formatTicketmasterUtc :: UTCTime -> Text
+formatTicketmasterUtc =
+  T.pack . formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ"
 
 fetchTicketmasterEvents ::
   AppConfig ->
@@ -1200,6 +1272,7 @@ fetchTicketmasterEventsForCity cfg apiKey city now =
                       (discoveredEventVenue event)
                         { discoveredVenueCountryCode =
                             Just (eventDiscoveryCityCountryCode city)
+                        , discoveredVenueTimeZone = eventDiscoveryCityTimeZone city
                         }
                   }
             )
@@ -1391,6 +1464,7 @@ normalizeTicketmasterVenue requestedCity TicketmasterVenue{..} = do
       , discoveredVenueCountry =
           ticketmasterVenueCountry >>= cleanSingleLine 120 . namedValue
       , discoveredVenueCountryCode = Nothing
+      , discoveredVenueTimeZone = Nothing
       , discoveredVenueLatitude = latitude
       , discoveredVenueLongitude = longitude
       , discoveredVenuePhone =
@@ -1560,7 +1634,60 @@ joinDescription parts =
 
 syncDiscoveredEvent :: ConnectionPool -> UTCTime -> DiscoveredEvent -> IO DiscoverySyncStats
 syncDiscoveredEvent pool now event =
-  runSqlPool (syncDiscoveredEventDb now event) pool
+  runSqlPool (syncDiscoveredEventDb True now event) pool
+
+-- | Persist or refresh an imported event without making it publicly listable.
+-- Re-ingesting the same provider/external ID updates the existing graph.
+syncDiscoveredEventDraft :: ConnectionPool -> UTCTime -> DiscoveredEvent -> IO DiscoverySyncStats
+syncDiscoveredEventDraft pool now event =
+  runSqlPool (syncDiscoveredEventDb False now event) pool
+
+isDiscoveredEventKnown :: ConnectionPool -> Text -> Text -> IO Bool
+isDiscoveredEventKnown pool provider externalId =
+  runSqlPool
+    (maybe False (const True) <$> getBy (Social.UniqueExternalEventRef provider externalId))
+    pool
+
+countImportedDiscoveryEvents :: ConnectionPool -> IO Int
+countImportedDiscoveryEvents pool =
+  runSqlPool countImportedDiscoveryEventsDb pool
+
+-- | A draft refresh fits the pilot when it updates a known source, attaches a
+-- new source to an existing canonical event, or creates a canonical event
+-- while capacity remains. This keeps the limit defined in canonical events,
+-- not provider reference IDs.
+discoveredEventFitsPilotLimit ::
+  ConnectionPool ->
+  Int ->
+  DiscoveredEvent ->
+  IO Bool
+discoveredEventFitsPilotLimit pool pilotLimit event =
+  runSqlPool fits pool
+  where
+    fits = do
+      existingRef <-
+        getBy
+          ( Social.UniqueExternalEventRef
+              (discoveredEventProvider event)
+              (discoveredEventExternalId event)
+          )
+      case existingRef of
+        Just _ -> pure True
+        Nothing -> do
+          mergeCandidate <- findCanonicalEventCandidate event
+          case mergeCandidate of
+            Just _ -> pure True
+            Nothing -> (< max 0 pilotLimit) <$> countImportedDiscoveryEventsDb
+
+countImportedDiscoveryEventsDb :: SqlPersistT IO Int
+countImportedDiscoveryEventsDb = do
+  rows <-
+    rawSql
+      "SELECT COUNT(DISTINCT event_id) FROM external_event_ref"
+      []
+  pure $ case rows of
+    [Single total] -> total
+    _ -> 0
 
 -- | Keep imported lifecycle state aligned with the current subscription scope.
 -- Past imports complete automatically; future imports leave the public feed as
@@ -1750,6 +1877,10 @@ refreshCanonicalVisibility now eventKey = do
             | (priority, Entity _ ref) <- rankedRefs
             , sourceRefIsActive ref
             ]
+          hasDraftRef =
+            any
+              (isDraftSourceStatus . Social.externalEventRefSourceStatus . entityVal)
+              refs
           bestActiveRef =
             case sortOn (negate . fst) activeRefs of
               (_, ref) : _ -> Just ref
@@ -1758,6 +1889,7 @@ refreshCanonicalVisibility now eventKey = do
           isPublic = not ended && maybe False (const True) bestActiveRef
           status
             | ended = "completed"
+            | null activeRefs && hasDraftRef = "planning"
             | otherwise =
                 maybe
                   "unavailable"
@@ -1779,6 +1911,7 @@ refreshCanonicalVisibility now eventKey = do
 sourceRefIsActive :: Social.ExternalEventRef -> Bool
 sourceRefIsActive ref =
   Social.externalEventRefMissingRuns ref < 2
+    && not (isDraftSourceStatus (Social.externalEventRefSourceStatus ref))
     && normalizedStatus
       `notElem`
         [ "cancelled"
@@ -1792,6 +1925,9 @@ sourceRefIsActive ref =
     normalizedStatus =
       T.toCaseFold (T.strip (Social.externalEventRefSourceStatus ref))
 
+isDraftSourceStatus :: Text -> Bool
+isDraftSourceStatus = T.isPrefixOf "draft:" . T.toCaseFold . T.strip
+
 normalizeImportedSourceStatus :: Text -> Text
 normalizeImportedSourceStatus rawStatus
   | normalized `elem` ["onsale", "on_sale", "confirmed"] = "on_sale"
@@ -1800,10 +1936,12 @@ normalizeImportedSourceStatus rawStatus
   where
     normalized = T.toCaseFold (T.strip rawStatus)
 
-syncDiscoveredEventDb :: UTCTime -> DiscoveredEvent -> SqlPersistT IO DiscoverySyncStats
-syncDiscoveredEventDb now DiscoveredEvent{..} = do
+syncDiscoveredEventDb :: Bool -> UTCTime -> DiscoveredEvent -> SqlPersistT IO DiscoverySyncStats
+syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
   eventTypeUuid <- resolvePublishedEventTypeId now discoveredEventType
-  workflowStateId <- EventLifecycle.resolveActiveSocialEventStateId discoveredEventStatus
+  workflowStateId <-
+    EventLifecycle.resolveActiveSocialEventStateId
+      (if autoPublish then discoveredEventStatus else "planning")
   (venueKey, venueCreated) <-
     upsertDiscoveredVenue discoveredEventProvider now discoveredEventVenue
   artistResults <-
@@ -1812,7 +1950,11 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
       (upsertDiscoveredArtist discoveredEventProvider now)
   let artistKeys = map fst artistResults
       artistsCreated = length (filter snd artistResults)
-      metadata = encodeEventMetadataForImport DiscoveredEvent{..}
+      metadata = encodeEventMetadataForImport autoPublish DiscoveredEvent{..}
+      sourceStatus =
+        if autoPublish
+          then discoveredEventStatus
+          else "draft:" <> discoveredEventStatus
   existingRef <-
     getBy
       (Social.UniqueExternalEventRef discoveredEventProvider discoveredEventExternalId)
@@ -1821,7 +1963,9 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
       Just (Entity refKey ref) -> do
         let existingEventKey = Social.externalEventRefEventId ref
         shouldReplace <-
-          providerShouldReplaceCanonical discoveredEventProvider existingEventKey
+          if autoPublish
+            then providerShouldReplaceCanonical discoveredEventProvider existingEventKey
+            else draftMayReplaceCanonical existingEventKey
         if shouldReplace
           then
             update
@@ -1829,6 +1973,7 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
               [ Social.SocialEventTitle =. discoveredEventTitle
               , Social.SocialEventDescription =. discoveredEventDescription
               , Social.SocialEventVenueId =. Just venueKey
+              , Social.SocialEventTimezone =. importedEventTimeZone discoveredEventVenue
               , Social.SocialEventStartTime =. discoveredEventStart
               , Social.SocialEventEndTime =. discoveredEventEnd
               , Social.SocialEventPriceCents =. discoveredEventPriceCents
@@ -1848,7 +1993,7 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
           , Social.ExternalEventRefCurrency =. Just discoveredEventCurrency
           , Social.ExternalEventRefLastSeenAt =. now
           , Social.ExternalEventRefMissingRuns =. 0
-          , Social.ExternalEventRefSourceStatus =. discoveredEventStatus
+          , Social.ExternalEventRefSourceStatus =. sourceStatus
           ]
         pure (existingEventKey, False)
       Nothing -> do
@@ -1856,7 +2001,10 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
         (newEventKey, created) <-
           case mergeCandidate of
             Just candidateKey -> do
-              shouldReplace <- providerShouldReplaceCanonical discoveredEventProvider candidateKey
+              shouldReplace <-
+                if autoPublish
+                  then providerShouldReplaceCanonical discoveredEventProvider candidateKey
+                  else draftMayReplaceCanonical candidateKey
               if shouldReplace
                 then
                   update
@@ -1864,6 +2012,7 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
                     [ Social.SocialEventTitle =. discoveredEventTitle
                     , Social.SocialEventDescription =. discoveredEventDescription
                     , Social.SocialEventVenueId =. Just venueKey
+                    , Social.SocialEventTimezone =. importedEventTimeZone discoveredEventVenue
                     , Social.SocialEventStartTime =. discoveredEventStart
                     , Social.SocialEventEndTime =. discoveredEventEnd
                     , Social.SocialEventPriceCents =. discoveredEventPriceCents
@@ -1882,7 +2031,7 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
                     , Social.socialEventTitle = discoveredEventTitle
                     , Social.socialEventDescription = discoveredEventDescription
                     , Social.socialEventVenueId = Just venueKey
-                    , Social.socialEventTimezone = Nothing
+                    , Social.socialEventTimezone = importedEventTimeZone discoveredEventVenue
                     , Social.socialEventEventTypeId = Just eventTypeUuid
                     , Social.socialEventWorkflowStateId = Just workflowStateId
                     , Social.socialEventStartTime = discoveredEventStart
@@ -1909,7 +2058,7 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
               , Social.externalEventRefCurrency = Just discoveredEventCurrency
               , Social.externalEventRefLastSeenAt = now
               , Social.externalEventRefMissingRuns = 0
-              , Social.externalEventRefSourceStatus = discoveredEventStatus
+              , Social.externalEventRefSourceStatus = sourceStatus
               }
         pure (newEventKey, created)
   forM_ artistKeys $ \artistKey -> do
@@ -2007,6 +2156,17 @@ providerShouldReplaceCanonical provider eventKey = do
     forM refs (eventSourcePriority . Social.externalEventRefProvider . entityVal)
   pure (null existingPriorities || newPriority >= maximum existingPriorities)
 
+draftMayReplaceCanonical ::
+  Social.SocialEventId ->
+  SqlPersistT IO Bool
+draftMayReplaceCanonical eventKey = do
+  refs <- selectList [Social.ExternalEventRefEventId ==. eventKey] []
+  pure $
+    null refs
+      || all
+        (isDraftSourceStatus . Social.externalEventRefSourceStatus . entityVal)
+        refs
+
 eventSourcePriority :: Text -> SqlPersistT IO Int
 eventSourcePriority provider = do
   source <- getBy (Social.UniqueEventDiscoverySource provider)
@@ -2073,6 +2233,11 @@ upsertDiscoveredVenue provider now DiscoveredVenue{..} = do
         , Social.VenueCity =. Just discoveredVenueCity
         , Social.VenueCountry =. discoveredVenueCountry
         , Social.VenueCountryCode =. discoveredVenueCountryCode
+        , Social.VenueTimezone =.
+            importedVenueTimeZone
+              discoveredVenueTimeZone
+              discoveredVenueCountryCode
+              discoveredVenueCountry
         , Social.VenueLatitude =. discoveredVenueLatitude
         , Social.VenueLongitude =. discoveredVenueLongitude
         , Social.VenueContact =. contact
@@ -2091,7 +2256,11 @@ upsertDiscoveredVenue provider now DiscoveredVenue{..} = do
             , Social.venueCountryCode = discoveredVenueCountryCode
             , Social.venueCountryId = Nothing
             , Social.venueCityId = Nothing
-            , Social.venueTimezone = Nothing
+            , Social.venueTimezone =
+                importedVenueTimeZone
+                  discoveredVenueTimeZone
+                  discoveredVenueCountryCode
+                  discoveredVenueCountry
             , Social.venueLatitude = discoveredVenueLatitude
             , Social.venueLongitude = discoveredVenueLongitude
             , Social.venueCapacity = Nothing
@@ -2187,19 +2356,41 @@ encodeVenueContact phone website state postalCode imageUrl
           , "imageUrl" .= imageUrl
           ]
 
-encodeEventMetadataForImport :: DiscoveredEvent -> Maybe Text
-encodeEventMetadataForImport DiscoveredEvent{..} =
+encodeEventMetadataForImport :: Bool -> DiscoveredEvent -> Maybe Text
+encodeEventMetadataForImport autoPublish DiscoveredEvent{..} =
   Just . TE.decodeUtf8 . BL.toStrict . encode $
     object
       [ "ticketUrl" .= discoveredEventTicketUrl
       , "imageUrl" .= discoveredEventImageUrl
       , "isPublic" .=
-          ( discoveredEventStatus
+          ( autoPublish
+              && discoveredEventStatus
               `notElem` ["cancelled", "canceled", "completed", "missing"]
           )
       , "currency" .= discoveredEventCurrency
       , "budgetCents" .= (Nothing :: Maybe Int)
       ]
+
+importedEventTimeZone :: DiscoveredVenue -> Maybe Text
+importedEventTimeZone venue =
+  importedVenueTimeZone
+    (discoveredVenueTimeZone venue)
+    (discoveredVenueCountryCode venue)
+    (discoveredVenueCountry venue)
+
+importedVenueTimeZone :: Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text
+importedVenueTimeZone configuredTimeZone countryCode countryName =
+  normalizeTimeZone configuredTimeZone <|> inferredTimeZone
+  where
+    inferredTimeZone
+      | normalizeCountry countryCode == Just "ec"
+          || normalizeCountry countryName == Just "ecuador" =
+          Just "America/Guayaquil"
+      | otherwise = Nothing
+    normalizeTimeZone rawTimeZone = do
+      timeZone <- T.strip <$> rawTimeZone
+      if T.null timeZone then Nothing else Just timeZone
+    normalizeCountry = fmap (T.toCaseFold . T.strip)
 
 resolvePublishedEventTypeId :: UTCTime -> Text -> SqlPersistT IO UUID
 resolvePublishedEventTypeId now eventTypeCode = do
