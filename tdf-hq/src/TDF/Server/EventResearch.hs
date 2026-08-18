@@ -10,6 +10,7 @@ module TDF.Server.EventResearch
     , validateEventResearchMaterialization
     , eventResearchCandidateContentHash
     , eventResearchMaterializationDedupeKey
+    , materializationEventRefSourceStatus
     ) where
 
 import Control.Exception (SomeException, displayException, try)
@@ -279,9 +280,7 @@ validateEventResearchMaterialization pilotApproved _request candidate = do
         unsupportedBlockers = filter (/= "event_end_unconfirmed") blockers
     unless (null unsupportedBlockers)
         (Left ("candidate still has publication blockers: " <> T.intercalate ", " unsupportedBlockers))
-    let availability = T.toLower . T.strip <$> payload.mpAvailability
-    when (availability `elem` map Just ["cancelled", "canceled", "postponed"])
-        (Left "cancelled or postponed candidates require review before materialization")
+    sourceStatus <- materializationAvailabilitySourceStatus payload.mpAvailability
     currency <- uniquePriceCurrency payload.mpPrices
     imageUrl <- usableMaterializationImage payload.mpImage
     pure
@@ -296,12 +295,30 @@ validateEventResearchMaterialization pilotApproved _request candidate = do
             , vmCoordinates = payload.mpCoordinates
             , vmImageUrl = imageUrl
             , vmCurrency = currency
-            , vmSourceStatus = if availability == Just "sold_out" then "sold_out" else "on_sale"
+            , vmSourceStatus = sourceStatus
             }
   where
     validateCoordinates MaterializationCoordinates{..} = do
         unless (mcLatitude >= -90 && mcLatitude <= 90) (Left "venue latitude is out of range")
         unless (mcLongitude >= -180 && mcLongitude <= 180) (Left "venue longitude is out of range")
+
+materializationAvailabilitySourceStatus :: Maybe T.Text -> Either T.Text T.Text
+materializationAvailabilitySourceStatus Nothing = Right "on_sale"
+materializationAvailabilitySourceStatus (Just raw) =
+    case T.toLower (T.strip raw) of
+        "on_sale" -> Right "on_sale"
+        "onsale" -> Right "on_sale"
+        "available" -> Right "on_sale"
+        "confirmed" -> Right "on_sale"
+        "partially_sold_out" -> Right "on_sale"
+        "sold_out" -> Right "sold_out"
+        "soldout" -> Right "sold_out"
+        "cancelled" -> reviewRequired
+        "canceled" -> reviewRequired
+        "postponed" -> reviewRequired
+        value -> Left ("unsupported event availability requires review: " <> value)
+  where
+    reviewRequired = Left "cancelled or postponed candidates require review before materialization"
 
 candidateDTOToWrite :: EventResearchCandidateDTO -> EventResearchCandidateWriteDTO
 candidateDTOToWrite EventResearchCandidateDTO{..} =
@@ -400,7 +417,11 @@ materializeCandidateDb organizerPartyId candidateId materializationRunId request
                 [] -> pure (Left err404{errBody = "Event research candidate not found"})
                 [candidateEntity@(Entity _ lockedCandidate)] ->
                     case eventResearchCandidateEventId lockedCandidate of
-                        Just eventId -> linkCandidateAndRespond candidateEntity materializationRunId eventId False now
+                        Just eventId -> do
+                            suitable <- existingEventCanSatisfy request eventId
+                            if suitable
+                                then linkCandidateAndRespond candidateEntity materializationRunId eventId False now
+                                else pure (Left (conflict "the linked event does not satisfy the requested publication state"))
                         Nothing -> materializeUnlinkedCandidate organizerPartyId (eventResearchPilotControlApproved control) materializationRunId candidateEntity request now
                 _ -> pure (Left err500{errBody = "Event research candidate identity is ambiguous"})
         _ -> pure (Left err500{errBody = "Event research pilot control identity is ambiguous"})
@@ -479,7 +500,7 @@ createOrLinkMaterializedEvent organizerPartyId candidateEntity@(Entity _ candida
                             if not suitable
                                 then pure (Left (conflict "a matching event exists but has manual visibility or workflow state"))
                                 else do
-                                    insertedRef <- insertMaterializationEventRef candidate validated eventId now
+                                    insertedRef <- insertMaterializationEventRef candidate request validated eventId now
                                     if insertedRef
                                         then linkCandidateAndRespond candidateEntity materializationRunId eventId False now
                                         else pure (Left (conflict "the provider event was materialized concurrently"))
@@ -511,7 +532,7 @@ createOrLinkMaterializedEvent organizerPartyId candidateEntity@(Entity _ candida
                                     forM_ artistIds $ \artistId -> do
                                         _ <- insertUnique (EventArtist eventId artistId Nothing)
                                         pure ()
-                                    insertedRef <- insertMaterializationEventRef candidate validated eventId now
+                                    insertedRef <- insertMaterializationEventRef candidate request validated eventId now
                                     if insertedRef
                                         then linkCandidateAndRespond candidateEntity materializationRunId eventId True now
                                         else pure (Left (conflict "the provider event was materialized concurrently"))
@@ -667,11 +688,12 @@ mapMaybeM action values = mapMaybe id <$> traverse action values
 
 insertMaterializationEventRef
     :: EventResearchCandidate
+    -> EventResearchMaterializationRequestDTO
     -> ValidatedMaterialization
     -> SocialEventId
     -> UTCTime
     -> SqlPersistT IO Bool
-insertMaterializationEventRef candidate validated eventId now =
+insertMaterializationEventRef candidate request validated eventId now =
     isJust
         <$> insertUnique
             ExternalEventRef
@@ -685,8 +707,14 @@ insertMaterializationEventRef candidate validated eventId now =
                 , externalEventRefCurrency = validated.vmCurrency
                 , externalEventRefLastSeenAt = now
                 , externalEventRefMissingRuns = 0
-                , externalEventRefSourceStatus = validated.vmSourceStatus
+                , externalEventRefSourceStatus =
+                    materializationEventRefSourceStatus request.erMaterializationPublish validated.vmSourceStatus
                 }
+
+materializationEventRefSourceStatus :: Bool -> T.Text -> T.Text
+materializationEventRefSourceStatus publish sourceStatus
+    | publish = sourceStatus
+    | otherwise = "draft:" <> sourceStatus
 
 materializationEventMetadata
     :: EventResearchCandidate

@@ -136,6 +136,36 @@ spec = do
                     }
                 `shouldSatisfy` isLeft
 
+        it "accepts only explicit sale availability states" $ do
+            validateEventResearchMaterialization
+                True
+                publishRequest
+                materializationCandidate
+                    { erCandidatePayload = materializationPayloadWithAvailability "partially_sold_out" }
+                `shouldSatisfy` isRight
+            validateEventResearchMaterialization
+                True
+                publishRequest
+                materializationCandidate
+                    { erCandidatePayload = materializationPayloadWithAvailability "sold_out" }
+                `shouldSatisfy` isRight
+            validateEventResearchMaterialization
+                True
+                publishRequest
+                materializationCandidate
+                    { erCandidatePayload = materializationPayloadWithAvailability "off_sale" }
+                `shouldSatisfy` isLeft
+            validateEventResearchMaterialization
+                True
+                publishRequest
+                materializationCandidate
+                    { erCandidatePayload = materializationPayloadWithAvailability "unavailable" }
+                `shouldSatisfy` isLeft
+
+        it "marks unpublished provider references as drafts" $ do
+            materializationEventRefSourceStatus False "on_sale" `shouldBe` "draft:on_sale"
+            materializationEventRefSourceStatus True "sold_out" `shouldBe` "sold_out"
+
         it "uses a stable candidate/event audit dedupe key" $ do
             let candidateId = toSqlKey 7 :: EventResearchCandidateId
                 eventId = toSqlKey 11 :: SocialEventId
@@ -255,6 +285,15 @@ materializationPayload blockers =
         [ "eventType" .= ("concert" :: String)
         , "lineup" .= ["Artista oficial" :: String]
         , "publicationBlockers" .= blockers
+        ]
+
+materializationPayloadWithAvailability :: String -> Value
+materializationPayloadWithAvailability availability =
+    object
+        [ "eventType" .= ("concert" :: String)
+        , "lineup" .= ["Artista oficial" :: String]
+        , "availability" .= availability
+        , "publicationBlockers" .= ["event_end_unconfirmed" :: String]
         ]
 
 webSource :: DiscoverySourceWriteDTO
