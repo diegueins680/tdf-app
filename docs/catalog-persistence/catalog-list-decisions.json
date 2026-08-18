@@ -8382,6 +8382,46 @@
       "risk": "Unknown audit actor types would make course enrollment and payment transition provenance ambiguous.",
       "justification": "Actor types are the closed course audit-event protocol; actor identities, permissions, provider evidence, and customer lookup records remain persisted and role-checked.",
       "reviewed": true
+    },
+    {
+      "id": "3f307a07b889d2829e7a",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Unknown ticket-policy lifecycle states could activate unapproved fee, tax, refund, or transfer terms.",
+      "justification": "Policy lifecycle values are the closed approval protocol; event fees, taxes, hold duration, terms, and active versions remain database-managed.",
+      "reviewed": true
+    },
+    {
+      "id": "2dd1831ab63300307414",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Editable ticket fulfillment states could bypass verified issuance, transfer, check-in, refund, or terminal-state guards.",
+      "justification": "Ticket fulfillment values are the exhaustive protocol enforced by state-machine code and database transitions; event and tier commercial configuration remains persisted.",
+      "reviewed": true
+    },
+    {
+      "id": "46925f49241abc029a45",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unknown ticket payment state could falsely issue admission or obscure a refund, dispute, or chargeback.",
+      "justification": "Ticket payment values form the exhaustive financial-evidence protocol; immutable amounts, provider resources, event policies, and capabilities remain persisted and audited.",
+      "reviewed": true
+    },
+    {
+      "id": "abf8941e408d6b5a0dc2",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Unknown ticket audit actor types would make payment, issuance, transfer, and settlement provenance ambiguous.",
+      "justification": "Actor types are the closed ticket audit-event protocol; actor identities, authorization, provider evidence, and guest capabilities remain persisted and checked separately.",
+      "reviewed": true
     }
   ]
 }

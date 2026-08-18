@@ -778,6 +778,11 @@ capabilityEnabledForEnvironment CheckoutProduction flagKey = do
 postPaymentLedger :: VerifiedPayment -> SqlPersistT IO ()
 postPaymentLedger VerifiedPayment{..} = do
   ledgerId <- liftIO (toText <$> nextRandom)
+  domainRows <- (rawSql
+    "SELECT domain_type FROM commerce_checkout_session WHERE id = ?::uuid"
+    [PersistText (checkoutReferenceId vpCheckout)]
+    :: SqlPersistT IO [Single Text])
+  let eventTicketCheckout = domainRows == [Single "event_ticket_order"]
   rawExecute
     "INSERT INTO commerce_ledger_transaction (\
     \ id, transaction_type, source_type, source_id, status, effective_at,\
@@ -798,18 +803,29 @@ postPaymentLedger VerifiedPayment{..} = do
     , PersistText ("cash." <> paymentProviderText vpProvider)
     , PersistText (checkoutReferenceId vpCheckout)
     ]
-  rawExecute
-    "INSERT INTO commerce_ledger_entry (\
-    \ transaction_id, account_code, domain_type, domain_id, currency, amount_minor, memo\
-    \) SELECT ?::uuid, 'revenue.' || domain_type, domain_type, domain_order_id,\
-    \ currency,\
-    \ -CASE WHEN domain_type = 'marketplace_rental' THEN COALESCE((\
-    \   SELECT rental_charge_usd_cents FROM marketplace_rental_order_runtime\
-    \   WHERE order_id::text = domain_order_id\
-    \ ), total_minor) ELSE total_minor END,\
-    \ 'Revenue recognized on verified payment'\
-    \ FROM commerce_checkout_session WHERE id = ?::uuid"
-    [PersistText ledgerId, PersistText (checkoutReferenceId vpCheckout)]
+  if eventTicketCheckout
+    then rawExecute
+      "INSERT INTO commerce_ledger_entry (\
+      \ transaction_id, account_code, domain_type, domain_id, currency, amount_minor, memo\
+      \) SELECT ?::uuid, 'revenue.event_ticket_order', checkout.domain_type,\
+      \ checkout.domain_order_id, checkout.currency, -runtime.platform_fee_minor,\
+      \ 'Ticket platform fees recognized on verified payment'\
+      \ FROM commerce_checkout_session checkout\
+      \ JOIN event_ticket_checkout_runtime runtime ON runtime.checkout_id = checkout.id\
+      \ WHERE checkout.id = ?::uuid"
+      [PersistText ledgerId, PersistText (checkoutReferenceId vpCheckout)]
+    else rawExecute
+      "INSERT INTO commerce_ledger_entry (\
+      \ transaction_id, account_code, domain_type, domain_id, currency, amount_minor, memo\
+      \) SELECT ?::uuid, 'revenue.' || domain_type, domain_type, domain_order_id,\
+      \ currency,\
+      \ -CASE WHEN domain_type = 'marketplace_rental' THEN COALESCE((\
+      \   SELECT rental_charge_usd_cents FROM marketplace_rental_order_runtime\
+      \   WHERE order_id::text = domain_order_id\
+      \ ), total_minor) ELSE total_minor END,\
+      \ 'Revenue recognized on verified payment'\
+      \ FROM commerce_checkout_session WHERE id = ?::uuid"
+      [PersistText ledgerId, PersistText (checkoutReferenceId vpCheckout)]
   rawExecute
     "INSERT INTO commerce_ledger_entry (\
     \ transaction_id, account_code, domain_type, domain_id, currency, amount_minor, memo\
@@ -821,6 +837,29 @@ postPaymentLedger VerifiedPayment{..} = do
     \   ON runtime.checkout_id = checkout.id\
     \ WHERE checkout.id = ?::uuid AND runtime.security_deposit_usd_cents > 0"
     [PersistText ledgerId, PersistText (checkoutReferenceId vpCheckout)]
+  when eventTicketCheckout $ do
+    rawExecute
+      "INSERT INTO commerce_ledger_entry (\
+      \ transaction_id, account_code, domain_type, domain_id, currency, amount_minor, memo\
+      \) SELECT ?::uuid, 'liability.event_organizer_payable', checkout.domain_type,\
+      \ checkout.domain_order_id, checkout.currency, -runtime.organizer_payable_minor,\
+      \ 'Organizer proceeds accrued; not yet settled'\
+      \ FROM commerce_checkout_session checkout\
+      \ JOIN event_ticket_checkout_runtime runtime\
+      \   ON runtime.checkout_id = checkout.id\
+      \ WHERE checkout.id = ?::uuid AND runtime.organizer_payable_minor > 0"
+      [PersistText ledgerId, PersistText (checkoutReferenceId vpCheckout)]
+    rawExecute
+      "INSERT INTO commerce_ledger_entry (\
+      \ transaction_id, account_code, domain_type, domain_id, currency, amount_minor, memo\
+      \) SELECT ?::uuid, 'liability.sales_tax', checkout.domain_type,\
+      \ checkout.domain_order_id, checkout.currency, -runtime.tax_minor,\
+      \ 'Ticket tax collected pending configured invoicing and remittance'\
+      \ FROM commerce_checkout_session checkout\
+      \ JOIN event_ticket_checkout_runtime runtime\
+      \   ON runtime.checkout_id = checkout.id\
+      \ WHERE checkout.id = ?::uuid AND runtime.tax_minor > 0"
+      [PersistText ledgerId, PersistText (checkoutReferenceId vpCheckout)]
   rawExecute
     "UPDATE commerce_ledger_transaction SET status = 'posted' WHERE id = ?::uuid"
     [PersistText ledgerId]
