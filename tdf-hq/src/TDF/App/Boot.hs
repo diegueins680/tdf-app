@@ -9,7 +9,7 @@ module TDF.App.Boot
 
 import Control.Concurrent (forkFinally, newEmptyMVar, putMVar, takeMVar, threadDelay)
 import Control.Exception (SomeException, displayException, handle, throwIO, try)
-import Control.Monad (forM_, unless, when)
+import Control.Monad (forM, forM_, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString.Char8 as BS
 import Data.IORef (newIORef, readIORef, writeIORef)
@@ -20,8 +20,10 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time.Clock (getCurrentTime)
 import Database.Persist.Sql (
+    Migration,
     Single (..),
     SqlPersistT,
+    parseMigration,
     rawExecute,
     rawSql,
     runMigration,
@@ -214,6 +216,11 @@ resetSchema = do
 
 runAllMigrations :: AppConfig -> SqlPersistT IO ()
 runAllMigrations cfg = do
+  -- Persistent rejects unsafe statements inside each individual migration,
+  -- but by then earlier migration groups may already have run. Parse every
+  -- model plan first so an incompatible retained column aborts startup before
+  -- any schema or seed write is attempted.
+  validateAutomaticMigrationPlans
   ensureExtensionInstalled "pgcrypto"
   vectorAvailable <- hasVectorExtension
   if vectorAvailable
@@ -288,6 +295,35 @@ runAllMigrations cfg = do
   ensureInternationalColumns
   restoreLegacyPartyRoles legacyRoles
   validateSecurityRegistry
+
+automaticMigrationPlans :: [(Text, Migration)]
+automaticMigrationPlans =
+  [ ("core", migrateAll)
+  , ("cms", CMS.migrateCMS)
+  , ("catalog-governance", Catalog.migrateCatalogGovernance)
+  , ("catalog-security", Catalog.migrateCatalogSecurity)
+  , ("catalog-references", Catalog.migrateCatalogReferences)
+  , ("catalog-domains", Catalog.migrateCatalogDomains)
+  , ("ddex", Ddex.migrateDdex)
+  , ("operations", migrateExtra)
+  , ("social-events", migrateSocialEvents)
+  , ("trials", migrateTrials)
+  ]
+
+validateAutomaticMigrationPlans :: SqlPersistT IO ()
+validateAutomaticMigrationPlans = do
+  parsed <- forM automaticMigrationPlans $ \(component, migration) -> do
+    result <- parseMigration migration
+    pure (component, result)
+  let unsafeStatements =
+        [ component <> ": " <> statement
+        | (component, Left statements) <- parsed
+        , statement <- statements
+        ]
+  unless (null unsafeStatements) $
+    liftIO . ioError . userError . T.unpack $
+      "Automatic migration preflight rejected unsafe schema changes before execution:\n"
+        <> T.unlines unsafeStatements
 
 syncRegionalDeploymentEnablement :: AppConfig -> SqlPersistT IO ()
 syncRegionalDeploymentEnablement cfg = do

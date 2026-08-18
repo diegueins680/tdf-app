@@ -61,6 +61,7 @@
     "generate:feature-audit-reports": "node scripts/generate-feature-audit-reports.mjs",
     "test:feature-migrations": "sh scripts/test-feature-migrations.sh",
     "test:social-event-optional-end-migration": "sh scripts/test-social-event-optional-end-migration.sh",
+    "test:ddex-partner-legacy-compatibility": "bash scripts/test-ddex-partner-legacy-compatibility.sh",
     "release:backend:plan": "node scripts/production-release.mjs plan",
     "release:backend:preflight": "node scripts/production-release.mjs preflight",
     "release:backend": "node scripts/production-release.mjs release",
