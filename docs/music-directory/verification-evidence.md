@@ -83,8 +83,10 @@ docker run --rm -v "$PWD:/workspace" --entrypoint node PLAYWRIGHT_IMAGE \
 
 `PLAYWRIGHT_IMAGE` debe ser una imagen revisada que contenga Playwright y Chromium 1219. Las pruebas
 pueden limitarse con `TDF_DIRECTORY_CAPTURE_SCOPE=web-managed` o `mobile-managed`; para una instalación
-local existente se pueden definir `TDF_PLAYWRIGHT_MODULE` y `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. El script
-siembra `synthetic-visual-token` exclusivamente en el almacenamiento del origen local y todas sus
-solicitudes autenticadas se interceptan con fixtures: no es un token de TDF ni sale del navegador.
+local existente se pueden definir `TDF_PLAYWRIGHT_MODULE` y `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. Cada
+scope parcial escribe `accessibility-results-<scope>.json` y `browser-errors-<scope>.json`; nunca
+reemplaza los agregados producidos por `all`. El script siembra `synthetic-visual-token`
+exclusivamente en el almacenamiento del origen local y todas sus solicitudes autenticadas se
+interceptan con fixtures: no es un token de TDF ni sale del navegador.
 Las pruebas de negocio con dos cuentas reales, entrega por proveedores, binarios iOS/Android y
 revisión con VoiceOver/TalkBack permanecen como gates de release, no como éxitos simulados.
