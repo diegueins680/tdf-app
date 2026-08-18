@@ -146,7 +146,9 @@ describe('ApiStatusChip', () => {
         expect(container.textContent).toContain('API: offline');
         expect(container.textContent).not.toContain('API: online');
         expect(container.textContent).not.toContain('API: actualizando...');
-        expect(container.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBeNull();
+        const offlineChip = container.querySelector('[role="status"]');
+        expect(offlineChip?.getAttribute('aria-busy')).toBeNull();
+        expect(offlineChip?.className).toContain('MuiChip-filled');
       });
     } finally {
       unmount();

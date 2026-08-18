@@ -46,6 +46,17 @@ test('schema model changes run backend and migration checks', () => {
   });
 });
 
+test('production migration runner changes run backend and migration checks', () => {
+  assert.deepEqual(classifyChangedFiles(['tdf-hq/production-entrypoint.sh']), {
+    repo: true,
+    ui: false,
+    mobile: false,
+    backend: true,
+    contracts: false,
+    migrations: true,
+  });
+});
+
 test('root dependency changes cover every JavaScript consumer', () => {
   assert.deepEqual(classifyChangedFiles(['package-lock.json']), {
     repo: true,

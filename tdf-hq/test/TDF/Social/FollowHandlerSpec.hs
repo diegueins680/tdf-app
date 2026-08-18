@@ -12,7 +12,7 @@ import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
 import qualified Data.UUID as UUID
-import Database.Persist (Entity (..), get, insert, insertKey)
+import Database.Persist (Entity (..), get, getJust, insert, insertKey)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (Handler, ServerError (errBody, errHTTPCode), (:<|>) (..))
@@ -585,8 +585,13 @@ spec = describe "social event handler helpers" $ do
                     env
         assertHiddenEventRoute "unsupported imported metadata" unsupportedMetadataGetResult
 
-        let (createRefundHandler, listRefundsHandler) =
-                socialEventRefundHandlersFor ordinaryUser
+        let ( stripeHandler
+                , createRefundHandler
+                , listRefundsHandler
+                , acceptTransferHandler
+                , cancelTransferHandler
+                ) =
+                socialEventIndirectTicketHandlersFor ordinaryUser
         refundResult <-
             runHandler $
                 runReaderT
@@ -614,14 +619,20 @@ spec = describe "social event handler helpers" $ do
                 expectationFailure
                     ("Expected the hidden-event buyer to list refunds, got: " <> show err)
 
-        let (otherBuyerCreateRefund, otherBuyerListRefunds) =
-                socialEventRefundHandlersFor (socialEventUser 3)
+        let (_, otherBuyerCreateRefund, otherBuyerListRefunds, _, _) =
+                socialEventIndirectTicketHandlersFor (socialEventUser 3)
         unauthorizedRefundResult <-
             runHandler $
                 runReaderT
                     (otherBuyerCreateRefund "13" "51" (RefundRequestDTO Nothing Nothing))
                     env
         assertHiddenEventRoute "another buyer's refund" unauthorizedRefundResult
+        missingOrderRefundResult <-
+            runHandler $
+                runReaderT
+                    (otherBuyerCreateRefund "13" "999" (RefundRequestDTO Nothing Nothing))
+                    env
+        assertHiddenEventRoute "missing hidden-event order" missingOrderRefundResult
         foreignOrderRefundResult <-
             runHandler $
                 runReaderT
@@ -666,8 +677,6 @@ spec = describe "social event handler helpers" $ do
                     env
         assertHiddenEventRoute "moment" momentResult
 
-        let (stripeHandler, acceptTransferHandler, cancelTransferHandler) =
-                socialEventIndirectTicketHandlersFor ordinaryUser
         stripeResult <-
             runHandler $
                 runReaderT
@@ -1080,6 +1089,8 @@ socialEventMomentCreateHandlerFor user =
 socialEventIndirectTicketHandlersFor
     :: AuthedUser
     -> ( TicketPurchaseWithPromoDTO -> ReaderT Env Handler StripePaymentIntentDTO
+       , T.Text -> T.Text -> RefundRequestDTO -> ReaderT Env Handler RefundDTO
+       , T.Text -> ReaderT Env Handler [RefundDTO]
        , T.Text -> ReaderT Env Handler TicketDTO
        , T.Text -> ReaderT Env Handler TicketTransferDTO
        )
@@ -1111,8 +1122,8 @@ socialEventIndirectTicketHandlersFor user =
                     :<|> _updatePromoCode
                     :<|> _validatePromoCode
                     :<|> createStripePaymentIntentHandler
-                    :<|> _createRefundRequest
-                    :<|> _listRefunds
+                    :<|> createRefundRequestHandler
+                    :<|> listRefundsHandler
                     :<|> _approveRefund
                     :<|> _rejectRefund
                     :<|> _createTransfer
@@ -1121,49 +1132,11 @@ socialEventIndirectTicketHandlersFor user =
                     :<|> cancelTransferHandler
                     :<|> _remainingTicketHandlers ->
                         ( createStripePaymentIntentHandler
+                        , createRefundRequestHandler
+                        , listRefundsHandler
                         , acceptTransferHandler
                         , cancelTransferHandler
                         )
-
-socialEventRefundHandlersFor
-    :: AuthedUser
-    -> ( T.Text -> T.Text -> RefundRequestDTO -> ReaderT Env Handler RefundDTO
-       , T.Text -> ReaderT Env Handler [RefundDTO]
-       )
-socialEventRefundHandlersFor user =
-    case socialEventsServer user of
-        _events
-            :<|> _cities
-            :<|> _sources
-            :<|> _research
-            :<|> _venues
-            :<|> _artists
-            :<|> _rsvps
-            :<|> _invitations
-            :<|> _moments
-            :<|> _liveBroadcasts
-            :<|> ticketsServer
-            :<|> _ -> case ticketsServer of
-                _listTicketTiers
-                    :<|> _createTicketTier
-                    :<|> _updateTicketTier
-                    :<|> _listMyTicketOrders
-                    :<|> _listTicketOrders
-                    :<|> _createTicketOrder
-                    :<|> _updateTicketOrderStatus
-                    :<|> _listTickets
-                    :<|> _checkInTicket
-                    :<|> _listPromoCodes
-                    :<|> _createPromoCode
-                    :<|> _updatePromoCode
-                    :<|> _validatePromoCode
-                    :<|> _createStripePaymentIntent
-                    :<|> createRefundRequestHandler
-                    :<|> listRefundsHandler
-                    :<|> _approveRefund
-                    :<|> _rejectRefund
-                    :<|> _remainingTicketHandlers ->
-                        (createRefundRequestHandler, listRefundsHandler)
 
 artistGetHandlerFor
     :: AuthedUser
@@ -1444,13 +1417,48 @@ initializeSocialSchema = do
         "CREATE TABLE IF NOT EXISTS \"event_ticket_tier\" (\"id\" INTEGER PRIMARY KEY,\"event_id\" INTEGER NOT NULL,\"code\" VARCHAR NOT NULL,\"name\" VARCHAR NOT NULL,\"description\" VARCHAR NULL,\"price_cents\" INTEGER NOT NULL,\"currency\" VARCHAR NOT NULL,\"currency_id\" VARCHAR NULL,\"quantity_total\" INTEGER NOT NULL,\"quantity_sold\" INTEGER NOT NULL,\"sales_start\" TIMESTAMP NULL,\"sales_end\" TIMESTAMP NULL,\"is_active\" BOOLEAN NOT NULL,\"position\" INTEGER NULL,\"enable_waitlist\" BOOLEAN NOT NULL,\"allow_transfers\" BOOLEAN NOT NULL,\"refund_policy\" VARCHAR NOT NULL,\"refund_deadline\" TIMESTAMP NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL,UNIQUE (\"event_id\",\"code\"))"
         []
     rawExecute
-        "CREATE TABLE IF NOT EXISTS \"event_ticket_order\" (\"id\" INTEGER PRIMARY KEY,\"event_id\" INTEGER NOT NULL,\"tier_id\" INTEGER NOT NULL,\"buyer_party_id\" VARCHAR NULL,\"buyer_name\" VARCHAR NULL,\"buyer_email\" VARCHAR NULL,\"quantity\" INTEGER NOT NULL,\"amount_cents\" INTEGER NOT NULL,\"currency\" VARCHAR NOT NULL,\"status\" VARCHAR NOT NULL,\"metadata\" VARCHAR NULL,\"checkout_idempotency_key\" VARCHAR NULL,\"purchased_at\" TIMESTAMP NOT NULL,\"stripe_payment_intent_id\" VARCHAR NULL,\"promo_code_id\" INTEGER NULL,\"original_amount_cents\" INTEGER NULL,\"payment_method\" VARCHAR NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL)"
-        []
-    rawExecute
-        "CREATE TABLE IF NOT EXISTS \"ticket_refund_request\" (\"id\" INTEGER PRIMARY KEY,\"order_id\" INTEGER NOT NULL,\"requested_by_party_id\" VARCHAR NULL,\"reason\" VARCHAR NULL,\"amount_cents\" INTEGER NOT NULL,\"status\" VARCHAR NOT NULL,\"approved_by_party_id\" VARCHAR NULL,\"approved_at\" TIMESTAMP NULL,\"rejection_reason\" VARCHAR NULL,\"stripe_refund_id\" VARCHAR NULL,\"processed_at\" TIMESTAMP NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL)"
+        "CREATE TABLE IF NOT EXISTS \"event_ticket_order\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"event_id\" INTEGER NOT NULL,\
+        \\"tier_id\" INTEGER NOT NULL,\
+        \\"buyer_party_id\" VARCHAR NULL,\
+        \\"buyer_name\" VARCHAR NULL,\
+        \\"buyer_email\" VARCHAR NULL,\
+        \\"quantity\" INTEGER NOT NULL,\
+        \\"amount_cents\" INTEGER NOT NULL,\
+        \\"currency\" VARCHAR NOT NULL,\
+        \\"status\" VARCHAR NOT NULL,\
+        \\"metadata\" VARCHAR NULL,\
+        \\"checkout_idempotency_key\" VARCHAR NULL,\
+        \\"purchased_at\" TIMESTAMP NOT NULL,\
+        \\"stripe_payment_intent_id\" VARCHAR NULL,\
+        \\"promo_code_id\" INTEGER NULL,\
+        \\"original_amount_cents\" INTEGER NULL,\
+        \\"payment_method\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL,\
+        \UNIQUE (\"buyer_party_id\", \"checkout_idempotency_key\")\
+        \)"
         []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"event_ticket\" (\"id\" INTEGER PRIMARY KEY,\"event_id\" INTEGER NOT NULL,\"tier_ref_id\" INTEGER NOT NULL,\"order_ref_id\" INTEGER NOT NULL,\"holder_name\" VARCHAR NULL,\"holder_email\" VARCHAR NULL,\"code\" VARCHAR NOT NULL,\"status\" VARCHAR NOT NULL,\"checked_in_at\" TIMESTAMP NULL,\"current_holder_party_id\" VARCHAR NULL,\"current_holder_email\" VARCHAR NULL,\"current_holder_name\" VARCHAR NULL,\"original_holder_party_id\" VARCHAR NULL,\"transfer_history\" VARCHAR NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL,UNIQUE (\"code\"))"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"ticket_refund_request\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"order_id\" INTEGER NOT NULL,\
+        \\"requested_by_party_id\" VARCHAR NULL,\
+        \\"reason\" VARCHAR NULL,\
+        \\"amount_cents\" INTEGER NOT NULL,\
+        \\"status\" VARCHAR NOT NULL,\
+        \\"approved_by_party_id\" VARCHAR NULL,\
+        \\"approved_at\" TIMESTAMP NULL,\
+        \\"rejection_reason\" VARCHAR NULL,\
+        \\"stripe_refund_id\" VARCHAR NULL,\
+        \\"processed_at\" TIMESTAMP NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL\
+        \)"
         []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"ticket_transfer\" (\"id\" INTEGER PRIMARY KEY,\"ticket_id\" INTEGER NOT NULL,\"from_party_id\" VARCHAR NULL,\"to_party_id\" VARCHAR NULL,\"to_email\" VARCHAR NULL,\"to_name\" VARCHAR NULL,\"status\" VARCHAR NOT NULL,\"transfer_code\" VARCHAR NOT NULL,\"message\" VARCHAR NULL,\"expires_at\" TIMESTAMP NULL,\"accepted_at\" TIMESTAMP NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL,UNIQUE (\"transfer_code\"))"

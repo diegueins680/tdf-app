@@ -4668,6 +4668,8 @@ socialEventsServer user =
     createRefundRequest eventIdStr orderIdStr RefundRequestDTO{..} = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
+        -- Buyers must retain the refund lifecycle after an imported event is
+        -- delisted, especially when the upstream provider cancelled it.
         eventKey <- parseKeyOr400 "event" eventIdStr
         orderKey <- parseKeyOr400 "ticket order" orderIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool

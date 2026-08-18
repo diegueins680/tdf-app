@@ -4,7 +4,7 @@
     "path": "/buscar",
     "violations": [],
     "passes": 29,
-    "incomplete": 2
+    "incomplete": 1
   },
   {
     "name": "web-desktop-search-map",
@@ -18,14 +18,21 @@
     "path": "/directorio/perfil-sintetico-bajista",
     "violations": [],
     "passes": 24,
-    "incomplete": 1
+    "incomplete": 0
+  },
+  {
+    "name": "web-desktop-profile-editor",
+    "path": "/mis-clasificados",
+    "violations": [],
+    "passes": 25,
+    "incomplete": 2
   },
   {
     "name": "web-mobile-search",
     "path": "/buscar",
     "violations": [],
     "passes": 30,
-    "incomplete": 2
+    "incomplete": 1
   },
   {
     "name": "mobile-expo-directory",
@@ -33,5 +40,12 @@
     "violations": [],
     "passes": 27,
     "incomplete": 2
+  },
+  {
+    "name": "mobile-expo-profile-editor",
+    "path": "/directory/manage",
+    "violations": [],
+    "passes": 22,
+    "incomplete": 0
   }
 ]
