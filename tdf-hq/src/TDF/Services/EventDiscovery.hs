@@ -21,6 +21,7 @@ module TDF.Services.EventDiscovery
   , decodeBuenPlanResponse
   , normalizeTicketmasterResponse
   , normalizeUserCities
+  , publishedEventTypeLookupParams
   , reconcileImportedEvents
   , reconcileProviderEvents
   , discoveredEventFitsPilotLimit
@@ -72,6 +73,7 @@ import Data.Time.Format.ISO8601 (iso8601ParseM)
 import Data.UUID (UUID)
 import Database.Persist
   ( Entity(..)
+  , PersistValue
   , SelectOpt(LimitTo)
   , deleteWhere
   , get
@@ -2564,10 +2566,19 @@ resolvePublishedEventTypeId :: UTCTime -> Text -> SqlPersistT IO UUID
 resolvePublishedEventTypeId now eventTypeCode = do
   rows <- rawSql
     "SELECT item.id FROM event_type item JOIN catalog_definition catalog ON catalog.id=item.catalog_id AND catalog.code='event-types' AND catalog.active=TRUE JOIN workflow_state state ON state.id=item.workflow_state_id AND state.workflow_id=catalog.workflow_id AND state.code='published' AND state.active=TRUE WHERE lower(trim(?)) IN (lower(item.code), lower(item.name_es), lower(item.name_en), lower(COALESCE(item.current_slug,''))) AND item.active=TRUE AND item.deprecated_at IS NULL AND (item.effective_from IS NULL OR item.effective_from<=?) AND (item.effective_until IS NULL OR item.effective_until>=?) ORDER BY item.id LIMIT 2"
-    [toPersistValue eventTypeCode, toPersistValue (utctDay now)]
+    (publishedEventTypeLookupParams now eventTypeCode)
   case rows of
     [Single eventTypeUuid] -> pure eventTypeUuid
     [] -> liftIO . ioError . userError $
       "Event discovery type is not an active published catalog item: " <> T.unpack eventTypeCode
     _ -> liftIO . ioError . userError $
       "Event discovery type resolves to multiple catalog items: " <> T.unpack eventTypeCode
+
+-- Keep the PostgreSQL bindings aligned with the three placeholders in the
+-- lookup query: code, effective-from date, and effective-until date.
+publishedEventTypeLookupParams :: UTCTime -> Text -> [PersistValue]
+publishedEventTypeLookupParams now eventTypeCode =
+  [ toPersistValue eventTypeCode
+  , toPersistValue (utctDay now)
+  , toPersistValue (utctDay now)
+  ]

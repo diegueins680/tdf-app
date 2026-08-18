@@ -6,8 +6,8 @@ import Data.Aeson (eitherDecode)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Control.Monad.Logger (runNoLoggingT)
 import Data.Pool (destroyAllResources)
-import Data.Time (UTCTime(..), addUTCTime, fromGregorian, secondsToDiffTime)
-import Database.Persist (Entity(..), Filter, count, get, getBy, update, (=.))
+import Data.Time (UTCTime(..), addUTCTime, fromGregorian, secondsToDiffTime, utctDay)
+import Database.Persist (Entity(..), Filter, count, get, getBy, toPersistValue, update, (=.))
 import Database.Persist.Sql (SqlPersistT, rawExecute, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePool)
 import Test.Hspec
@@ -30,6 +30,7 @@ import TDF.Services.EventDiscovery
   , discoveredEventFitsPilotLimit
   , normalizeTicketmasterResponse
   , normalizeUserCities
+  , publishedEventTypeLookupParams
   , failEventDiscoveryRun
   , finishEventDiscoveryRun
   , isDiscoveredEventKnown
@@ -42,6 +43,16 @@ import qualified TDF.Models.SocialEventsModels as Social
 
 spec :: Spec
 spec = do
+  describe "event discovery event-type lookup" $ do
+    it "binds both effective-date placeholders for PostgreSQL" $ do
+      let now = fixtureTime 10 0
+      publishedEventTypeLookupParams now "other"
+        `shouldBe`
+          [ toPersistValue ("other" :: T.Text)
+          , toPersistValue (utctDay now)
+          , toPersistValue (utctDay now)
+          ]
+
   describe "event discovery user-city targeting" $ do
     it "normalizes, deduplicates, and rejects unsafe profile cities" $ do
       normalizeUserCities
