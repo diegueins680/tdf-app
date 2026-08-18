@@ -52,6 +52,7 @@ start_and_verify() {
   SEED_DB=false \
   DEFAULT_LOCALE=es \
   EVENT_DISCOVERY_ENABLED=false \
+  DEFAULT_LOCALE=es \
   TDF_SERVER_BIN="${server_bin}" \
   TDF_PRODUCTION_MIGRATIONS_SQL="${migration_sql}" \
   "${repo_root}/tdf-hq/production-entrypoint.sh" >"${server_log}" 2>&1 &
