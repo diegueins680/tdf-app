@@ -120,6 +120,15 @@ test "$ipv6_image_url" = "https://[::1]/profile.webp"
 test "$malformed_authority_fallback" = "https://images.example.test/fallback.webp"
 test "$malformed_bracket_fallback" = "/assets/serve/directory/fallback.webp"
 
+unicode_image_url=$(psql_exec -Atc "SELECT directory_profile_primary_image_url('[{\"kind\":\"image\",\"url\":\"https://música.example/profile.webp\"}]'::jsonb);")
+ipv6_image_url=$(psql_exec -Atc "SELECT directory_profile_primary_image_url('[{\"kind\":\"image\",\"url\":\"https://[::1]/profile.webp\"}]'::jsonb);")
+malformed_authority_fallback=$(psql_exec -Atc "SELECT directory_profile_primary_image_url('[{\"kind\":\"image\",\"thumbnailUrl\":\"http://%\",\"url\":\"https://images.example.test/fallback.webp\"}]'::jsonb);")
+malformed_bracket_fallback=$(psql_exec -Atc "SELECT directory_profile_primary_image_url('[{\"kind\":\"image\",\"thumbnailUrl\":\"http://[\",\"url\":\"/assets/serve/directory/fallback.webp\"}]'::jsonb);")
+test "$unicode_image_url" = "https://música.example/profile.webp"
+test "$ipv6_image_url" = "https://[::1]/profile.webp"
+test "$malformed_authority_fallback" = "https://images.example.test/fallback.webp"
+test "$malformed_bracket_fallback" = "/assets/serve/directory/fallback.webp"
+
 psql_exec <<'SQL' >/dev/null
 INSERT INTO party(display_name,is_org,created_at)
 VALUES ('Synthetic directory migration fixture',FALSE,now());
