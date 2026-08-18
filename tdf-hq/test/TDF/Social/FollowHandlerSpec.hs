@@ -329,6 +329,8 @@ spec = describe "social event handler helpers" $ do
             hiddenEventKey = toSqlKey 13
             publicEventKey :: SocialEventId
             publicEventKey = toSqlKey 14
+            malformedEventKey :: SocialEventId
+            malformedEventKey = toSqlKey 15
             hiddenTierKey :: EventTicketTierId
             hiddenTierKey = toSqlKey 21
             hiddenTicketKey :: EventTicketId
@@ -365,9 +367,17 @@ spec = describe "social event handler helpers" $ do
                         , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
                         }
                     )
+                insertKey
+                    malformedEventKey
+                    ( (seedSocialEvent "system:event-discovery" "Malformed imported event" now)
+                        { socialEventMetadata = Just "not-json"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
                 _ <- insert (sourceRef "ticketmaster" "pilot-private-13" hiddenEventKey "missing" "https://tickets.example.com/private-pilot")
                 _ <- insert (sourceRef "ticketmaster" "public-14" publicEventKey "on_sale" "https://tickets.example.com/public")
                 _ <- insert (sourceRef "buenplan" "draft-merge-14" publicEventKey "draft:on_sale" "https://tickets.example.com/draft-option")
+                _ <- insert (sourceRef "ticketmaster" "malformed-15" malformedEventKey "on_sale" "https://tickets.example.com/malformed")
                 insertKey
                     hiddenTierKey
                     EventTicketTier
@@ -484,6 +494,13 @@ spec = describe "social event handler helpers" $ do
             Left err ->
                 expectationFailure
                     ("Expected the canonical event with an active public source to remain visible, got: " <> show err)
+
+        malformedGetResult <-
+            runHandler $
+                runReaderT
+                    (socialEventGetHandlerFor ordinaryUser "15")
+                    env
+        assertHiddenEventRoute "malformed imported event" malformedGetResult
 
         rsvpResult <-
             runHandler $

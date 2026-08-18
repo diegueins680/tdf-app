@@ -155,12 +155,15 @@ import Database.Persist.Sql
     , Single (..)
     , SqlBackend
     , SqlPersistT
+    , filterClauseWithVals
     , fromSqlKey
+    , orderClause
     , rawSql
     , runSqlPool
     , toSqlKey
     , updateWhereCount
     )
+import Database.Persist.SqlBackend.Internal (connRDBMS)
 import Database.PostgreSQL.Simple (SqlError (..))
 
 import Crypto.Hash.Algorithms (SHA256)
@@ -1867,10 +1870,6 @@ socialEventsServer user =
                 if null eventIds
                     then pure [SocialEventId ==. toSqlKey 0]
                     else pure [SocialEventId <-. eventIds]
-        hiddenImportedEventIds <-
-            if hasStrictAdminAccess user
-                then pure []
-                else liftIO $ runSqlPool loadHiddenImportedEventIds envPool
         let filters =
                 startFilter
                     ++ cityFilter
@@ -1878,14 +1877,18 @@ socialEventsServer user =
                     ++ artistFilter
                     ++ maybe [] (\eventTypeUuid -> [SocialEventEventTypeId ==. Just eventTypeUuid]) eventTypeFilter
                     ++ maybe [] (\stateUuid -> [SocialEventWorkflowStateId ==. Just stateUuid]) workflowStateFilter
-                    ++ if null hiddenImportedEventIds
-                        then []
-                        else [SocialEventId /<-. hiddenImportedEventIds]
         let dateOrder =
                 case mStartAfter of
                     Just _ -> Asc SocialEventStartTime
                     Nothing -> Desc SocialEventStartTime
-        rows <- liftIO $ runSqlPool (selectList filters [dateOrder, LimitTo limit, OffsetBy offset]) envPool
+        rows <-
+            liftIO $
+                runSqlPool
+                    ( if hasStrictAdminAccess user
+                        then selectList filters [dateOrder, LimitTo limit, OffsetBy offset]
+                        else selectVisibleEventList filters dateOrder limit offset
+                    )
+                    envPool
         forM rows $ \(Entity eid eventRow) -> do
             artists <- loadEventArtists envPool eid
             sources <- liftIO (loadExternalEventSources envPool eid)
@@ -8217,20 +8220,100 @@ loadExternalEventSources pool eventKey =
         )
         pool
 
-loadHiddenImportedEventIds :: SqlPersistT IO [SocialEventId]
-loadHiddenImportedEventIds = do
-    rows <-
-        rawSql
-            "SELECT DISTINCT social_event.id, social_event.metadata\
-            \ FROM social_event\
-            \ INNER JOIN external_event_ref\
-            \ ON external_event_ref.event_id=social_event.id"
-            []
-    pure
-        [ eventKey
-        | (Single eventKey, Single metadata) <- rows
-        , importedEventMetadataHidden metadata
-        ]
+selectVisibleEventList ::
+    [Filter SocialEvent] ->
+    SelectOpt SocialEvent ->
+    Int ->
+    Int ->
+    SqlPersistT IO [Entity SocialEvent]
+selectVisibleEventList filters dateOrder limit offset = do
+    backend <- ask
+    let (filterSql, filterValues) = filterClauseWithVals Nothing backend filters
+        visibilityJoin
+            | T.null filterSql = " WHERE "
+            | otherwise = " AND "
+        sql =
+            "SELECT ?? FROM social_event"
+                <> filterSql
+                <> visibilityJoin
+                <> importedEventVisibilitySql (connRDBMS backend)
+                <> orderClause Nothing backend [dateOrder]
+                <> " LIMIT ? OFFSET ?"
+    rawSql sql (filterValues ++ [toPersistValue limit, toPersistValue offset])
+
+-- Keep the imported-event visibility predicate correlated with each candidate
+-- row. This avoids expanding the complete retained import history into a NOT IN
+-- parameter list on every page request. Both supported databases validate the
+-- canonical metadata before reading isPublic so malformed metadata fails closed.
+importedEventVisibilitySql :: T.Text -> T.Text
+importedEventVisibilitySql rawBackend
+    | "sqlite" `T.isInfixOf` backend = sqliteImportedEventVisibilitySql
+    | "postgres" `T.isInfixOf` backend = postgresImportedEventVisibilitySql
+    | otherwise = noImportedEventVisibilitySql
+  where
+    backend = T.toCaseFold rawBackend
+
+noImportedEventVisibilitySql :: T.Text
+noImportedEventVisibilitySql =
+    "NOT EXISTS (\
+    \ SELECT 1 FROM external_event_ref\
+    \ WHERE external_event_ref.event_id=social_event.id\
+    \)"
+
+sqliteImportedEventVisibilitySql :: T.Text
+sqliteImportedEventVisibilitySql =
+    "(NOT EXISTS (\
+    \ SELECT 1 FROM external_event_ref\
+    \ WHERE external_event_ref.event_id=social_event.id\
+    \) OR CASE\
+    \ WHEN social_event.metadata IS NULL OR trim(social_event.metadata)='' THEN 1\
+    \ WHEN NOT json_valid(social_event.metadata) THEN 0\
+    \ ELSE json_type(social_event.metadata)='object'\
+    \ AND NOT EXISTS (\
+    \  SELECT 1 FROM json_each(social_event.metadata) AS metadata_field\
+    \  WHERE metadata_field.key NOT IN ('ticketUrl','imageUrl','isPublic','currency','budgetCents')\
+    \ )\
+    \ AND (json_type(social_event.metadata,'$.ticketUrl') IS NULL\
+    \      OR json_type(social_event.metadata,'$.ticketUrl') IN ('null','text'))\
+    \ AND (json_type(social_event.metadata,'$.imageUrl') IS NULL\
+    \      OR json_type(social_event.metadata,'$.imageUrl') IN ('null','text'))\
+    \ AND (json_type(social_event.metadata,'$.currency') IS NULL\
+    \      OR json_type(social_event.metadata,'$.currency') IN ('null','text'))\
+    \ AND (json_type(social_event.metadata,'$.budgetCents') IS NULL\
+    \      OR json_type(social_event.metadata,'$.budgetCents') IN ('null','integer'))\
+    \ AND (json_type(social_event.metadata,'$.isPublic') IS NULL\
+    \      OR json_type(social_event.metadata,'$.isPublic') IN ('null','true'))\
+    \ END)"
+
+postgresImportedEventVisibilitySql :: T.Text
+postgresImportedEventVisibilitySql =
+    "(NOT EXISTS (\
+    \ SELECT 1 FROM external_event_ref\
+    \ WHERE external_event_ref.event_id=social_event.id\
+    \) OR CASE\
+    \ WHEN social_event.metadata IS NULL OR btrim(social_event.metadata)='' THEN TRUE\
+    \ WHEN NOT pg_input_is_valid(social_event.metadata,'jsonb') THEN FALSE\
+    \ ELSE jsonb_typeof(social_event.metadata::jsonb)='object'\
+    \ AND NOT EXISTS (\
+    \  SELECT 1 FROM jsonb_object_keys(social_event.metadata::jsonb) AS metadata_key\
+    \  WHERE metadata_key NOT IN ('ticketUrl','imageUrl','isPublic','currency','budgetCents')\
+    \ )\
+    \ AND (jsonb_typeof(social_event.metadata::jsonb->'ticketUrl') IS NULL\
+    \      OR jsonb_typeof(social_event.metadata::jsonb->'ticketUrl') IN ('null','string'))\
+    \ AND (jsonb_typeof(social_event.metadata::jsonb->'imageUrl') IS NULL\
+    \      OR jsonb_typeof(social_event.metadata::jsonb->'imageUrl') IN ('null','string'))\
+    \ AND (jsonb_typeof(social_event.metadata::jsonb->'currency') IS NULL\
+    \      OR jsonb_typeof(social_event.metadata::jsonb->'currency') IN ('null','string'))\
+    \ AND (jsonb_typeof(social_event.metadata::jsonb->'budgetCents') IS NULL\
+    \      OR jsonb_typeof(social_event.metadata::jsonb->'budgetCents')='null'\
+    \      OR (jsonb_typeof(social_event.metadata::jsonb->'budgetCents')='number'\
+    \          AND social_event.metadata::jsonb->>'budgetCents' ~ '^-?[0-9]+$'\
+    \          AND (social_event.metadata::jsonb->>'budgetCents')::numeric\
+    \              BETWEEN -9223372036854775808 AND 9223372036854775807))\
+    \ AND (jsonb_typeof(social_event.metadata::jsonb->'isPublic') IS NULL\
+    \      OR jsonb_typeof(social_event.metadata::jsonb->'isPublic')='null'\
+    \      OR social_event.metadata::jsonb->'isPublic'='true'::jsonb)\
+    \ END)"
 
 isImportedEventHidden :: SocialEventId -> SqlPersistT IO Bool
 isImportedEventHidden eventKey = do
