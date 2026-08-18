@@ -7,9 +7,18 @@ import { DateTime } from 'luxon';
 import { MemoryRouter } from 'react-router-dom';
 import type { ServiceCatalogDTO } from '../api/types';
 
+jest.setTimeout(15_000);
+
 interface CreatePublicPayload {
   pbServiceOfferingId: string;
   pbResourceIds?: string[] | null;
+}
+
+interface CreatePublicCheckoutPayload {
+  pbcServiceOfferingId: string;
+  pbcDurationMinutes: number;
+  pbcTermsAccepted: boolean;
+  pbcResourceIds?: string[] | null;
 }
 
 interface PublicRoomItem {
@@ -94,6 +103,73 @@ const defaultPublicServices: PublicServiceCatalogItem[] = [
 const createPublicMock = jest.fn<(payload: CreatePublicPayload) => Promise<{ bookingId: number }>>(
   () => Promise.resolve({ bookingId: 123 }),
 );
+const createPublicCheckoutMock = jest.fn<
+  (payload: CreatePublicCheckoutPayload, idempotencyKey: string) => Promise<{
+    booking: {
+      bookingId: number;
+      title: string;
+      startsAt: string;
+      endsAt: string;
+      status: string;
+      serviceOfferingId: string;
+      serviceType: string;
+      resources: [];
+    };
+    checkoutId: string;
+    lookupToken: string;
+    paymentStatus: string;
+    fulfillmentStatus: string;
+    holdExpiresAt: string;
+    quote: {
+      policyVersion: string;
+      currency: string;
+      durationMinutes: number;
+      subtotalMinor: number;
+      taxMinor: number;
+      totalMinor: number;
+      depositMinor: number;
+      balanceMinor: number;
+      depositBps: number;
+      termsVersion: string;
+    };
+    paymentMethods: ('datafast' | 'paypal' | 'bank_transfer')[];
+    manualPayment?: {
+      paymentMethod: 'bank_transfer';
+      status: 'awaiting_evidence' | 'submitted' | 'under_review' | 'approved' | 'rejected';
+      submittedAt?: string | null;
+    } | null;
+  }>
+>(() => Promise.resolve({
+  booking: {
+    bookingId: 456,
+    title: 'Grabacion de banda',
+    startsAt: '2030-01-01T17:00:00Z',
+    endsAt: '2030-01-01T19:00:00Z',
+    status: 'Tentative',
+    serviceOfferingId: BAND_RECORDING_ID,
+    serviceType: 'Grabacion de banda',
+    resources: [],
+  },
+  checkoutId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  lookupToken: 'lookup-secret',
+  paymentStatus: 'awaiting_payment',
+  fulfillmentStatus: 'on_hold',
+  holdExpiresAt: '2030-01-01T16:15:00Z',
+  quote: {
+    policyVersion: 'studio-v1',
+    currency: 'USD',
+    durationMinutes: 120,
+    subtotalMinor: 20000,
+    taxMinor: 3000,
+    totalMinor: 23000,
+    depositMinor: 11500,
+    balanceMinor: 11500,
+    depositBps: 5000,
+    termsVersion: 'studio-terms-v1',
+  },
+  paymentMethods: [],
+}));
+const storePublicBookingLookupTokenMock = jest.fn();
 const logoutMock = jest.fn();
 const listPublicServicesMock = jest.fn<() => Promise<PublicServiceCatalogItem[]>>(
   () => Promise.resolve([]),
@@ -109,8 +185,16 @@ const listPublicRoomsMock = jest.fn<() => Promise<PublicRoomItem[]>>(
 );
 
 jest.unstable_mockModule('../api/bookings', () => ({
+  loadPublicBookingLookupToken: () => 'lookup-secret',
+  storePublicBookingLookupToken: storePublicBookingLookupTokenMock,
   Bookings: {
     createPublic: createPublicMock,
+    createPublicCheckout: createPublicCheckoutMock,
+    createPublicDatafastCheckout: jest.fn(),
+    createPublicPaypalOrder: jest.fn(),
+    capturePublicPaypalOrder: jest.fn(),
+    selectPublicManualPayment: jest.fn(),
+    submitPublicManualEvidence: jest.fn(),
   },
 }));
 
@@ -243,6 +327,8 @@ describe('PublicBookingPage', () => {
 
   beforeEach(() => {
     createPublicMock.mockClear();
+    createPublicCheckoutMock.mockClear();
+    storePublicBookingLookupTokenMock.mockClear();
     listPublicServicesMock.mockReset();
     listPublicServicesMock.mockResolvedValue(defaultPublicServices);
     listPublicEngineersMock.mockReset();
@@ -340,6 +426,91 @@ describe('PublicBookingPage', () => {
       pbServiceOfferingId: BAND_RECORDING_ID,
       pbResourceIds: null,
     });
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
+  it('creates an idempotent deposit checkout only from an authoritative server quote', async () => {
+    globalThis.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          available: true,
+          quote: {
+            policyVersion: 'studio-v1',
+            currency: 'USD',
+            durationMinutes: 120,
+            subtotalMinor: 20000,
+            taxMinor: 3000,
+            totalMinor: 23000,
+            depositMinor: 11500,
+            balanceMinor: 11500,
+            depositBps: 5000,
+            termsVersion: 'studio-terms-v1',
+          },
+        }),
+      }),
+    ) as unknown as typeof fetch;
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Nombre completo'), 'Checkout Test');
+      setInputValue(getInputByLabel(container, 'Correo'), 'checkout@example.com');
+      clickButtonByText(container, 'Continuar');
+      await flushPromises();
+    });
+
+    await act(async () => {
+      const userZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
+      const desiredStudio = DateTime.fromObject(
+        { year: 2030, month: 1, day: 1, hour: 12, minute: 0 },
+        { zone: 'America/Guayaquil' },
+      );
+      setInputValue(
+        getInputByLabel(container, 'Fecha y hora'),
+        desiredStudio.setZone(userZone).toFormat("yyyy-MM-dd'T'HH:mm"),
+      );
+      setInputValue(getInputByLabel(container, 'Duración (min)'), '120');
+      clickCheckboxNearText(container, 'Asignar ingeniero después');
+      await flushPromises();
+    });
+
+    await act(async () => {
+      clickButtonByText(container, 'Revisar reserva');
+      await flushPromises();
+    });
+
+    expect(container.textContent).toContain('Precio autorizado: USD 230.00 total · depósito USD 115.00');
+    const termsCheckbox = container.querySelector<HTMLInputElement>(
+      'input[aria-label="Aceptar precio y política de reserva"]',
+    );
+    if (!termsCheckbox) throw new Error('Terms checkbox not found');
+
+    await act(async () => {
+      termsCheckbox.click();
+      await flushPromises();
+      submitBookingForm(container);
+      await flushPromises();
+    });
+
+    expect(createPublicMock).not.toHaveBeenCalled();
+    expect(createPublicCheckoutMock).toHaveBeenCalledTimes(1);
+    const [payload, idempotencyKey] = createPublicCheckoutMock.mock.calls[0] ?? [];
+    expect(payload).toMatchObject({
+      pbcServiceOfferingId: BAND_RECORDING_ID,
+      pbcDurationMinutes: 120,
+      pbcTermsAccepted: true,
+      pbcResourceIds: null,
+    });
+    expect(idempotencyKey).toMatch(/^service-booking-/);
+    expect(storePublicBookingLookupTokenMock).toHaveBeenCalledWith(456, 'lookup-secret');
+    expect(container.textContent).toContain('Orden creada · depósito pendiente');
+    expect(container.textContent).toContain('todavía no está pagado ni confirmado');
+    expect(container.textContent).not.toContain('Pago confirmado');
 
     await cleanup();
     document.body.removeChild(container);

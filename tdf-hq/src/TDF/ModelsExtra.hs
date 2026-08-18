@@ -37,7 +37,7 @@ import           TDF.Catalog.Models
 import           TDF.Models         (ArtistProfileId, InvoiceId, PartyId, ServiceKind)
 import           TDF.UUIDInstances  ()
 
-data AssetStatus = Active | Booked | OutForMaintenance | Retired
+data AssetStatus = Active | Booked | OutForMaintenance | Retired | Sold
   deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
 derivePersistField "AssetStatus"
 
@@ -930,6 +930,7 @@ ServiceStorefrontOrder
     lookupTokenHash       Text Maybe
     createIdempotencyKey  Text Maybe
     createRequestSha256   Text Maybe
+    checkoutId            UUID Maybe
     paidAt                UTCTime Maybe
     genre                 Text Maybe
     songCount             Int default=1

@@ -16,6 +16,7 @@ import {
 const PUBLIC_NAV_ITEMS = [
   { label: 'Buscar', to: '/buscar' },
   { label: 'TDF', to: '/tdf' },
+  { label: 'Servicios', to: '/comercio' },
   { label: 'Comunidad', to: '/fans' },
   { label: 'Tienda', to: '/marketplace' },
   { label: 'Domo', to: '/domo-del-pululahua' },

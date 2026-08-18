@@ -375,10 +375,133 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Create course registration
-         * @description Stores a registration for the specified course. Landing submissions use source=landing and include UTM tags.
+         * Create course registration and seat hold
+         * @description Creates an idempotent canonical checkout and atomic expiring seat hold when course commerce is enabled. When the production domain gate is disabled, it preserves the legacy lead without claiming a seat or payment.
          */
         post: operations["createCourseRegistration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/courses/{slug}/registrations/{registrationId}": {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        /**
+         * Track a course checkout and enrollment
+         * @description Returns customer-safe payment and enrollment states. Invalid identifiers and lookup tokens share the same not-found response.
+         */
+        get: operations["getCourseCheckout"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/courses/{slug}/registrations/{registrationId}/datafast/checkout": {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a bound Datafast course checkout */
+        post: operations["createCourseDatafastCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/courses/{slug}/registrations/{registrationId}/datafast/status": {
+        parameters: {
+            query: {
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        /**
+         * Verify Datafast status server to server
+         * @description A browser return never marks payment paid; the server binds and verifies resource path, order, amount, currency, merchant, and environment.
+         */
+        get: operations["confirmCourseDatafastStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/courses/{slug}/registrations/{registrationId}/paypal/create": {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a bound PayPal course order */
+        post: operations["createCoursePaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/courses/{slug}/registrations/{registrationId}/paypal/capture": {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Capture and verify a bound PayPal course order */
+        post: operations["captureCoursePaypalOrder"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2687,6 +2810,1171 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/marketplace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List public equipment sale and rental listings */
+        get: operations["listMarketplaceItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/{listingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                listingId: components["parameters"]["MarketplaceListingId"];
+            };
+            cookie?: never;
+        };
+        /** Read one public equipment listing */
+        get: operations["getMarketplaceItem"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/{listingId}/rental-terms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                listingId: components["parameters"]["MarketplaceListingId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace and approve the active server-side rental rate and terms
+         * @description Operations-only full replacement. Public rental checkout is available only while the terms record is active and approved; existing orders retain immutable price and terms-version snapshots.
+         */
+        put: operations["updateMarketplaceRentalTerms"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/cart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a guest marketplace cart */
+        post: operations["createMarketplaceCart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/cart/{cartId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        /** Read a guest marketplace cart */
+        get: operations["getMarketplaceCart"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/cart/{cartId}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add, replace, or remove one unique sale or dated rental asset
+         * @description Sale and rental assets use separate carts. Rentals require both inclusive dates and an approved active server-side terms version; quantities greater than one are rejected.
+         */
+        post: operations["upsertMarketplaceCartItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/cart/{cartId}/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an unpaid manual-payment marketplace order and atomic asset hold
+         * @description The Idempotency-Key binds an immutable sale or dated-rental checkout snapshot. Rental terms and identity fields are required for rentals; the full document number is validated and discarded. Selecting bank transfer never confirms payment.
+         */
+        post: operations["checkoutMarketplaceCart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/cart/{cartId}/stripe/payment-intent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Marketplace Stripe rail (fail-closed compatibility endpoint)
+         * @description This endpoint cannot create a payment until Stripe is connected to the canonical verified-payment runtime.
+         */
+        post: operations["createMarketplaceStripePaymentIntent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/cart/{cartId}/datafast/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover a canonical Datafast sale or rental checkout */
+        post: operations["createMarketplaceDatafastCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/datafast/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify a marketplace Datafast resource server-to-server
+         * @description Browser return parameters never mark an order paid. Amount, currency, merchant transaction, environment, order, and stored resource are verified first.
+         */
+        get: operations["confirmMarketplaceDatafastStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/cart/{cartId}/paypal/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover a canonical PayPal sale or rental order */
+        post: operations["createMarketplacePaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/paypal/capture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Capture and verify an approved marketplace PayPal order
+         * @description Capture is idempotent and cannot change payment state until amount, currency, merchant, internal order, environment, and capture resource all match.
+         */
+        post: operations["captureMarketplacePaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List marketplace orders for authorized operations staff */
+        get: operations["listMarketplaceOrders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        /** Track a guest marketplace order */
+        get: operations["getMarketplaceOrder"];
+        /**
+         * Update legacy marketplace order metadata
+         * @description Canonical sale orders cannot be marked paid through this endpoint; payment is provider-verified only.
+         */
+        put: operations["updateMarketplaceOrder"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/manual-payment/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit customer bank-transfer evidence without marking the order paid
+         * @description Requires the scoped guest lookup token. The reference is private finance evidence and remains submitted or under review until an independent staff member verifies it.
+         */
+        post: operations["submitMarketplaceManualEvidence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        /** List customer requests for a securely tracked marketplace order */
+        get: operations["listMarketplaceCustomerRequests"];
+        put?: never;
+        /**
+         * Submit an idempotent marketplace customer request
+         * @description Submitting a request never changes payment state. Staff review is required before supported cancellation, return, or dispute transitions. Rental extensions require a separate availability check, versioned quote, and payable change order and cannot be directly approved.
+         */
+        post: operations["submitMarketplaceCustomerRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/commerce": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        /** Read protected marketplace checkout and manual-payment evidence */
+        get: operations["getMarketplaceCommerce"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/manual-payment/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Independently approve or reject marketplace manual-payment evidence
+         * @description The reviewer must differ from the submitter. Approval verifies the active hold and immutable order, checkout, attempt, amount, currency, environment and evidence bindings before atomically posting payment, receipt and ledger entries. Payment never implies fulfillment or custody transfer.
+         */
+        post: operations["reviewMarketplaceManualPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/fulfillment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Apply a validated physical-fulfillment transition
+         * @description Payment is a separate state machine. Delivery and pickup transitions update asset custody only through database-enforced transitions.
+         */
+        put: operations["updateMarketplaceFulfillment"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/rental": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Apply a validated rental custody or inspection transition
+         * @description Payment, physical custody, and refundable-deposit settlement remain separate. Condition reports are required at handoff and return; a proposed deduction creates a due state and never fabricates a refund.
+         */
+        put: operations["updateMarketplaceRental"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/customer-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        /** List protected customer-operation requests for staff review */
+        get: operations["listMarketplaceCustomerRequestsAdmin"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/customer-requests/{requestId}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Review a marketplace customer request
+         * @description Approval atomically applies only the supported domain transition. Payment is never changed. Rental extensions cannot be directly approved.
+         */
+        post: operations["reviewMarketplaceCustomerRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/deposit-settlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        /** List rental-deposit settlement evidence */
+        get: operations["listMarketplaceDepositSettlements"];
+        put?: never;
+        /**
+         * Submit evidence for a manual rental-deposit settlement
+         * @description Amount, currency, deposit, and approved deduction are loaded from the canonical checkout and rental snapshot. Submission does not claim a provider refund and requires independent staff verification.
+         */
+        post: operations["submitMarketplaceDepositSettlement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/deposit-settlements/{settlementId}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+                settlementId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Independently verify or reject rental-deposit settlement evidence
+         * @description Verification posts a balanced liability settlement, updates the returned-funds total, and issues a manual credit-note reference. It does not call or claim a provider refund.
+         */
+        post: operations["reviewMarketplaceDepositSettlement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active mixing and mastering packages */
+        get: operations["listServiceStorefrontPackages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/{packageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packageId: components["parameters"]["ServiceStorefrontPackageId"];
+            };
+            cookie?: never;
+        };
+        /** Read one active service package */
+        get: operations["getServiceStorefrontPackage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an unpaid service order from authoritative package pricing
+         * @description The Idempotency-Key prevents duplicate orders. The response contains a lookup token only when the order is first created.
+         */
+        post: operations["createServiceStorefrontOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        /** Track a service order with its unguessable lookup token */
+        get: operations["getServiceStorefrontOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderId}/stripe/payment-intent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an optional Stripe payment intent
+         * @description This rail is capability-gated and is not an Ecuador-critical dependency.
+         */
+        post: operations["createServiceStorefrontStripePaymentIntent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderId}/datafast/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover a Datafast checkout resource */
+        post: operations["createServiceStorefrontDatafastCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/datafast/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify a Datafast resource server-to-server
+         * @description A browser return alone never marks the order paid. The server verifies resource, amount, currency, merchant, and internal order binding.
+         */
+        get: operations["confirmServiceStorefrontDatafastStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderId}/paypal/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover a PayPal order */
+        post: operations["createServiceStorefrontPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/paypal/capture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Capture and verify an approved PayPal order
+         * @description The internal order and PayPal resource are rebound and verified server-to-server before payment state changes.
+         */
+        post: operations["captureServiceStorefrontPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/paypal/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive a PayPal webhook into the encrypted idempotent event inbox
+         * @description All PayPal transmission headers and the exact raw event are verified with PayPal before a production event may affect payment state.
+         */
+        post: operations["receiveServiceStorefrontPaypalWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderId}/manual-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Select a manual payment method without confirming payment */
+        post: operations["selectServiceStorefrontManualPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderId}/revision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request a service-order revision */
+        post: operations["createServiceStorefrontRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List service orders for operations */
+        get: operations["adminListServiceStorefrontOrders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Apply a validated service fulfillment transition */
+        put: operations["adminUpdateServiceStorefrontOrder"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/packages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all service packages */
+        get: operations["adminListServiceStorefrontPackages"];
+        put?: never;
+        /** Create a versioned service package */
+        post: operations["adminCreateServiceStorefrontPackage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/packages/{packageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packageId: components["parameters"]["ServiceStorefrontPackageId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Update a service package */
+        put: operations["adminUpdateServiceStorefrontPackage"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/orders/{orderId}/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        /** List immutable refund requests for an order */
+        get: operations["adminListServiceStorefrontRefunds"];
+        put?: never;
+        /**
+         * Request a full or partial refund
+         * @description The amount defaults to the server-calculated unreserved captured balance. Requesting does not contact the provider.
+         */
+        post: operations["adminRequestServiceStorefrontRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/refunds/{refundId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Independently approve and submit a PayPal refund
+         * @description The approver must differ from the requester. Success is recorded only after PayPal returns an exact completed refund.
+         */
+        post: operations["adminApproveServiceStorefrontRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/orders/{orderId}/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Compare an order binding with the provider without changing payment state */
+        post: operations["adminReconcileServiceStorefrontOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/commerce/provider-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List redacted provider-event inbox records
+         * @description Strict-admin operational view. Encrypted payloads and merchant-account references are never returned.
+         */
+        get: operations["adminListCommerceProviderEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/commerce/provider-events/{eventId}/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Requeue one dead-letter provider event with immutable operator evidence
+         * @description Requeueing does not mark an order paid. The bounded worker reprocesses only the original signature-verified encrypted payload.
+         */
+        post: operations["adminReplayCommerceProviderEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check authoritative room availability and approved booking price
+         * @description Availability is advisory until checkout atomically creates the exclusion-backed hold. Quote is omitted when no approved active commerce policy exists.
+         */
+        get: operations["getPublicBookingAvailability"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an honest unpaid tentative booking
+         * @description Compatibility path used when no approved payable-booking policy is active. It never reports payment or confirmation.
+         */
+        post: operations["createPublicTentativeBooking"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a canonical confirmation-deposit checkout and atomic resource hold
+         * @description Requires an approved versioned policy. The response is awaiting_payment; creating it does not mean the deposit is paid or the session confirmed.
+         */
+        post: operations["createPublicBookingCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read customer-safe booking checkout status
+         * @description Unknown orders and invalid lookup tokens return the same response to resist enumeration.
+         */
+        get: operations["getPublicBookingCheckout"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}/datafast/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create or replay the booking deposit's bound Datafast checkout
+         * @description Requires the scoped guest lookup capability. Creating a hosted checkout never marks the deposit paid or confirms fulfillment.
+         */
+        post: operations["createPublicBookingDatafastCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}/datafast/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify the booking deposit against Datafast server-to-server
+         * @description A browser return is not payment evidence. The supplied path must exactly match the stored checkout binding; only the server-held merchant credential queries Datafast.
+         */
+        get: operations["confirmPublicBookingDatafastStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}/paypal/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create or replay the booking deposit's bound PayPal order
+         * @description Uses an immutable provider request ID and does not mark the booking paid.
+         */
+        post: operations["createPublicBookingPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}/paypal/capture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Capture and server-verify the booking deposit's bound PayPal order
+         * @description Browser approval alone is not success. The server validates order, merchant, amount, currency, capture ID, and internal booking reference before payment transition.
+         */
+        post: operations["capturePublicBookingPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}/manual-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Select a manual bank-transfer attempt
+         * @description Selection creates awaiting-evidence state only. It never confirms payment or fulfillment and is blocked while an online payment attempt is active.
+         */
+        post: operations["selectPublicBookingManualPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}/manual-payment/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit a bank-transfer reference for independent review
+         * @description The customer reference is immutable during review and cannot mark the checkout paid. Amount and currency come exclusively from the stored checkout.
+         */
+        post: operations["submitPublicBookingManualEvidence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/{bookingId}/commerce": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read protected booking commerce and manual-evidence details */
+        get: operations["getServiceBookingCommerce"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/{bookingId}/manual-payment/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Independently approve or reject manual-payment evidence
+         * @description The reviewer must differ from the submitter. Approval atomically verifies immutable bindings, posts the ledger and receipt, and confirms the deposit only while the booking hold remains active.
+         */
+        post: operations["reviewServiceBookingManualPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/directory/search": {
         parameters: {
             query?: never;
@@ -3232,10 +4520,991 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/events/{eventId}/tickets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the payable ticket storefront for one public event
+         * @description Returns server-authoritative active tiers and availability. Zero-price entitlements use a separate staff-controlled flow and are not exposed as payable tiers.
+         */
+        get: operations["getPublicEventTicketStorefront"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Atomically hold ticket inventory and create an immutable guest checkout
+         * @description Price, discounts, fee allocation, tax, terms version, capacity, and hold expiry are calculated by the server. This operation never marks payment successful or issues a ticket.
+         */
+        post: operations["createPublicEventTicketCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Track a guest ticket order using its unguessable lookup token */
+        get: operations["getPublicEventTicketCheckout"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders/{orderId}/datafast/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover the ticket order's bound Datafast checkout */
+        post: operations["createPublicEventTicketDatafastCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders/{orderId}/datafast/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify a bound Datafast ticket payment server-to-server
+         * @description A browser return is not payment evidence. Amount, currency, merchant, internal order, checkout ID, and exact stored resource path must match before payment can be recorded and tickets issued.
+         */
+        get: operations["confirmPublicEventTicketDatafastStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders/{orderId}/paypal/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover the ticket order's bound PayPal order */
+        post: operations["createPublicEventTicketPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders/{orderId}/paypal/capture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Capture and verify the exact bound PayPal ticket order
+         * @description Approval in the browser is not success. TDF captures server-to-server and verifies capture status, amount, currency, payee merchant, internal order, and provider binding before payment and ticket issuance transitions.
+         */
+        post: operations["capturePublicEventTicketPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        PublicEventTicketTier: {
+            /** Format: int64 */
+            tierId: number;
+            code: string;
+            name: string;
+            description?: string | null;
+            /** Format: int64 */
+            unitPriceMinor: number;
+            currency: string;
+            remaining: number;
+            /** Format: date-time */
+            salesStart?: string | null;
+            /** Format: date-time */
+            salesEnd?: string | null;
+            transfersAllowed: boolean;
+        };
+        PublicEventTicketStorefront: {
+            /** Format: int64 */
+            eventId: number;
+            title: string;
+            description?: string | null;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string | null;
+            timezone?: string | null;
+            venueName?: string | null;
+            venueAddress?: string | null;
+            tiers: components["schemas"]["PublicEventTicketTier"][];
+            checkoutAvailable: boolean;
+            unavailableReason?: string | null;
+        };
+        PublicEventTicketCheckoutRequest: {
+            /** Format: int64 */
+            tierId: number;
+            quantity: number;
+            buyerName: string;
+            /** Format: email */
+            buyerEmail: string;
+            buyerPhone?: string;
+            promoCode?: string;
+            /** @enum {boolean} */
+            termsAccepted: true;
+        };
+        PublicEventTicketQuote: {
+            policyVersion: string;
+            currency: string;
+            quantity: number;
+            /** Format: int64 */
+            unitPriceMinor: number;
+            /** Format: int64 */
+            grossFaceValueMinor: number;
+            /** Format: int64 */
+            discountMinor: number;
+            /** Format: int64 */
+            netFaceValueMinor: number;
+            /** Format: int64 */
+            buyerPlatformFeeMinor: number;
+            /** Format: int64 */
+            organizerPlatformFeeMinor: number;
+            /** Format: int64 */
+            taxMinor: number;
+            /** Format: int64 */
+            checkoutTotalMinor: number;
+            /** Format: int64 */
+            organizerPayableMinor: number;
+            /** Format: int64 */
+            platformFeeMinor: number;
+            termsVersion: string;
+        };
+        PublicEventTicket: {
+            /** Format: int64 */
+            ticketId: number;
+            ticketCode: string;
+            status: string;
+            holderName?: string | null;
+        };
+        PublicEventTicketCheckout: {
+            /** Format: int64 */
+            orderId: number;
+            /** Format: int64 */
+            eventId: number;
+            /** Format: uuid */
+            checkoutId: string;
+            lookupToken?: string | null;
+            /** @enum {string} */
+            paymentStatus: "holding" | "awaiting_payment" | "processing" | "paid" | "failed" | "cancelled" | "expired" | "partially_refunded" | "refunded" | "disputed" | "chargeback";
+            /** @enum {string} */
+            fulfillmentStatus: "seat_held" | "issued" | "transfer_requested" | "transferred" | "checked_in" | "cancelled" | "refunded" | "expired";
+            /** Format: date-time */
+            holdExpiresAt: string;
+            quote: components["schemas"]["PublicEventTicketQuote"];
+            paymentMethods: ("datafast" | "paypal")[];
+            /** @description Empty until fulfillment issues tickets after verified payment. */
+            tickets: components["schemas"]["PublicEventTicket"][];
+        };
+        PublicEventTicketPaypalCaptureRequest: {
+            paypalOrderId: string;
+        };
+        BookingResource: {
+            brRoomId: string;
+            brRoomName: string;
+            brRole: string;
+        };
+        Booking: {
+            /** Format: int64 */
+            bookingId: number;
+            title: string;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string;
+            status: string;
+            notes?: string | null;
+            /** Format: int64 */
+            partyId?: number | null;
+            /** Format: int64 */
+            engineerPartyId?: number | null;
+            engineerName?: string | null;
+            /** Format: uuid */
+            serviceOfferingId?: string | null;
+            serviceType?: string | null;
+            /** Format: int64 */
+            serviceOrderId?: number | null;
+            serviceOrderTitle?: string | null;
+            customerName?: string | null;
+            partyDisplayName?: string | null;
+            resources: components["schemas"]["BookingResource"][];
+        };
+        PublicBookingCreate: {
+            pbFullName: string;
+            /** Format: email */
+            pbEmail: string;
+            pbPhone?: string | null;
+            /** Format: uuid */
+            pbServiceOfferingId: string;
+            /** Format: date-time */
+            pbStartsAt: string;
+            pbDurationMinutes?: number;
+            pbNotes?: string | null;
+            /** Format: int64 */
+            pbEngineerPartyId?: number | null;
+            pbEngineerName?: string | null;
+            pbResourceIds?: string[] | null;
+        };
+        PublicBookingCheckoutCreate: {
+            pbcFullName: string;
+            /** Format: email */
+            pbcEmail: string;
+            pbcPhone?: string | null;
+            /** Format: uuid */
+            pbcServiceOfferingId: string;
+            /** Format: date-time */
+            pbcStartsAt: string;
+            pbcDurationMinutes: number;
+            pbcNotes?: string | null;
+            /** Format: int64 */
+            pbcEngineerPartyId?: number | null;
+            pbcEngineerName?: string | null;
+            pbcResourceIds?: string[] | null;
+            /** @enum {boolean} */
+            pbcTermsAccepted: true;
+        };
+        PublicBookingQuote: {
+            policyVersion: string;
+            currency: string;
+            durationMinutes: number;
+            /** Format: int64 */
+            subtotalMinor: number;
+            /** Format: int64 */
+            taxMinor: number;
+            /** Format: int64 */
+            totalMinor: number;
+            /** Format: int64 */
+            depositMinor: number;
+            /** Format: int64 */
+            balanceMinor: number;
+            depositBps: number;
+            termsVersion: string;
+        };
+        PublicBookingAvailability: {
+            available: boolean;
+            reason: string | null;
+            /** Format: uuid */
+            serviceOfferingId: string;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string;
+            resourceIds: string[];
+            resourceNames: string[];
+            quote: components["schemas"]["PublicBookingQuote"] | null;
+        };
+        PublicBookingCheckout: {
+            booking: components["schemas"]["Booking"];
+            /** Format: uuid */
+            checkoutId: string;
+            /** @description Returned only by creation; subsequent status responses return null. */
+            lookupToken: string | null;
+            /** @enum {string} */
+            paymentStatus: "awaiting_payment" | "processing" | "paid" | "failed" | "cancelled" | "expired" | "partially_refunded" | "refunded" | "disputed" | "chargeback";
+            /** @enum {string} */
+            fulfillmentStatus: "on_hold" | "confirmed" | "scheduled" | "in_progress" | "balance_due" | "completed" | "reschedule_requested" | "cancellation_requested" | "cancelled" | "no_show" | "overtime_review" | "disputed" | "expired";
+            /** Format: date-time */
+            holdExpiresAt: string;
+            quote: components["schemas"]["PublicBookingQuote"];
+            /** @description Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown. */
+            paymentMethods: ("datafast" | "paypal" | "bank_transfer")[];
+            manualPayment: components["schemas"]["PublicBookingManualPayment"] | null;
+        };
+        PublicBookingManualPaymentCreate: {
+            /** @enum {string} */
+            paymentMethod: "bank_transfer";
+        };
+        PublicBookingManualEvidenceCreate: {
+            customerReference: string;
+        };
+        PublicBookingManualPayment: {
+            /** @enum {string} */
+            paymentMethod: "bank_transfer" | "cash" | "pos";
+            /** @enum {string} */
+            status: "awaiting_evidence" | "submitted" | "under_review" | "approved" | "rejected";
+            /** Format: date-time */
+            submittedAt: string | null;
+        };
+        ServiceBookingManualReview: {
+            /** @enum {string} */
+            action: "approve" | "reject";
+            reviewNotes: string;
+        };
+        ServiceBookingManualEvidence: {
+            /** Format: uuid */
+            evidenceId: string;
+            /** @enum {string} */
+            paymentMethod: "bank_transfer" | "cash" | "pos";
+            /** @enum {string} */
+            status: "awaiting_evidence" | "submitted" | "under_review" | "approved" | "rejected";
+            customerReference: string | null;
+            /** Format: int64 */
+            submittedAmountMinor: number | null;
+            currency: string | null;
+            /** Format: int64 */
+            submittedBy: number | null;
+            /** Format: date-time */
+            submittedAt: string | null;
+            /** Format: int64 */
+            reviewedBy: number | null;
+            /** Format: date-time */
+            reviewedAt: string | null;
+            reviewNotes: string | null;
+        };
+        ServiceBookingCommerce: {
+            /** Format: int64 */
+            bookingId: number;
+            /** Format: uuid */
+            checkoutId: string;
+            paymentStatus: string;
+            fulfillmentStatus: string;
+            /** Format: int64 */
+            depositMinor: number;
+            currency: string;
+            /** Format: date-time */
+            holdExpiresAt: string;
+            manualEvidence: components["schemas"]["ServiceBookingManualEvidence"] | null;
+        };
+        PublicBookingPaypalCapture: {
+            paypalOrderId: string;
+        };
+        MarketplaceItem: {
+            /** Format: uuid */
+            miListingId: string;
+            /** Format: uuid */
+            miAssetId: string;
+            miTitle: string;
+            /** @enum {string} */
+            miPurpose: "sale" | "rent";
+            miCategory: string;
+            miBrand: string | null;
+            miModel: string | null;
+            /** Format: uri */
+            miPhotoUrl: string | null;
+            miStatus: string | null;
+            miCondition: string | null;
+            /** @description Authoritative unit price in integer minor units. */
+            miPriceUsdCents: number;
+            miPriceDisplay: string;
+            miMarkupPct: number;
+            miCurrency: string;
+            miRentalWeeklyPriceUsdCents: number | null;
+            miRentalWeeklyPriceDisplay: string | null;
+            miRentalSecurityDepositUsdCents: number | null;
+            miRentalSecurityDepositDisplay: string | null;
+            miRentalMinDays: number | null;
+            miRentalMaxDays: number | null;
+            miRentalLateFeeUsdCents: number | null;
+            miRentalLateFeeDisplay: string | null;
+            miRentalCancellationWindowHours: number | null;
+            /** @description Only present when an approved active rate/terms version permits public rental checkout. */
+            miRentalTermsVersion: string | null;
+            miRentalTermsSummary: string | null;
+            miRentalTimezone: string | null;
+        };
+        MarketplaceCartItem: {
+            /** Format: uuid */
+            mciListingId: string;
+            mciTitle: string;
+            mciCategory: string;
+            mciBrand: string | null;
+            mciModel: string | null;
+            mciQuantity: number;
+            mciUnitPriceUsdCents: number;
+            mciSubtotalCents: number;
+            mciUnitPriceDisplay: string;
+            mciSubtotalDisplay: string;
+            /** @enum {string} */
+            mciPurpose: "sale" | "rent";
+            /** Format: date */
+            mciRentalStartDate: string | null;
+            /** Format: date */
+            mciRentalEndDate: string | null;
+            mciRentalDurationDays: number | null;
+            mciRentalChargeCents: number | null;
+            mciRentalChargeDisplay: string | null;
+            mciSecurityDepositCents: number | null;
+            mciSecurityDepositDisplay: string | null;
+        };
+        MarketplaceCart: {
+            /** Format: uuid */
+            mcCartId: string;
+            mcItems: components["schemas"]["MarketplaceCartItem"][];
+            mcCurrency: string;
+            mcSubtotalCents: number;
+            mcSubtotalDisplay: string;
+        };
+        MarketplaceCartItemUpdate: {
+            /** Format: uuid */
+            mciuListingId: string;
+            /** @description Zero removes the item; one selects the unique physical asset. */
+            mciuQuantity: number;
+            /**
+             * Format: date
+             * @description Inclusive rental start; must be supplied together with the end date.
+             */
+            mciuRentalStartDate?: string;
+            /**
+             * Format: date
+             * @description Inclusive rental end; must be supplied together with the start date.
+             */
+            mciuRentalEndDate?: string;
+        };
+        MarketplaceShippingAddress: {
+            msaAddressLine1: string;
+            msaAddressLine2?: string;
+            msaCity: string;
+            msaProvince: string;
+            msaPostalCode?: string;
+            msaCountryCode: string;
+        };
+        MarketplaceCheckoutRequest: {
+            mcrBuyerName: string;
+            /** Format: email */
+            mcrBuyerEmail: string;
+            mcrBuyerPhone?: string;
+            /**
+             * @default pickup
+             * @enum {string}
+             */
+            mcrFulfillmentMethod: "pickup" | "local_delivery" | "shipping";
+            mcrShippingAddress?: components["schemas"]["MarketplaceShippingAddress"];
+            /** @description Must be true for a rental and omitted for a sale. */
+            mcrRentalTermsAccepted?: boolean;
+            /**
+             * @description Required for a rental and omitted for a sale.
+             * @enum {string}
+             */
+            mcrIdentityDocumentType?: "cedula" | "passport" | "ruc";
+            /** @description Validated for rental handoff and discarded after retaining only its type and last four characters. */
+            mcrIdentityDocumentNumber?: string;
+        };
+        MarketplaceOrderItem: {
+            /** Format: uuid */
+            moiListingId: string;
+            moiTitle: string;
+            moiQuantity: number;
+            moiUnitPriceUsdCents: number;
+            moiSubtotalCents: number;
+            moiUnitPriceDisplay: string;
+            moiSubtotalDisplay: string;
+        };
+        /** @description State code followed by its UTC transition timestamp. */
+        MarketplaceStateHistoryEntry: (string)[];
+        MarketplaceOrder: {
+            /** Format: uuid */
+            moOrderId: string;
+            /** Format: uuid */
+            moCartId: string | null;
+            moCurrency: string;
+            moTotalUsdCents: number;
+            moTotalDisplay: string;
+            /** @description Domain payment projection; fulfillment status is separate. */
+            moStatus: string;
+            moStatusHistory: components["schemas"]["MarketplaceStateHistoryEntry"][];
+            moBuyerName: string;
+            /** @description Valid email for staff responses; intentionally blank in redacted guest tracking responses. */
+            moBuyerEmail: string;
+            moBuyerPhone: string | null;
+            /** @enum {string|null} */
+            moPaymentProvider: "datafast" | "paypal" | "stripe" | "bank_transfer" | "cash" | "pos" | null;
+            moPaypalOrderId: string | null;
+            /** Format: email */
+            moPaypalPayerEmail: string | null;
+            /** Format: date-time */
+            moPaidAt: string | null;
+            /** @description Returned only when the order is first created. */
+            moLookupToken: string | null;
+            moCheckoutStatus: string | null;
+            /**
+             * @description Customer-safe evidence state; approved still requires the canonical checkout to report paid before payment is confirmed.
+             * @enum {string|null}
+             */
+            moManualPaymentStatus: "awaiting_evidence" | "submitted" | "under_review" | "approved" | "rejected" | "requires_reconciliation" | null;
+            /** Format: date-time */
+            moManualPaymentSubmittedAt: string | null;
+            /** @enum {string|null} */
+            moFulfillmentMethod: "pickup" | "local_delivery" | "shipping" | null;
+            /** @enum {string|null} */
+            moFulfillmentStatus: "on_hold" | "ready_to_fulfill" | "picking" | "ready_for_pickup" | "shipped" | "delivered" | "cancellation_requested" | "cancelled" | "return_requested" | "return_authorized" | "return_in_transit" | "returned" | "closed" | "expired" | null;
+            /** Format: date-time */
+            moHoldExpiresAt: string | null;
+            moTrackingReference: string | null;
+            moFulfillmentHistory: components["schemas"]["MarketplaceStateHistoryEntry"][];
+            /** @enum {string|null} */
+            moOrderKind: "sale" | "rental" | null;
+            /** Format: date */
+            moRentalStartDate: string | null;
+            /** Format: date */
+            moRentalEndDate: string | null;
+            moRentalDurationDays: number | null;
+            moRentalChargeUsdCents: number | null;
+            /** @description Refundable deposit collected separately from the rental charge. */
+            moSecurityDepositUsdCents: number | null;
+            /** @enum {string|null} */
+            moDepositStatus: "awaiting_payment" | "collected" | "inspection_pending" | "deduction_proposed" | "refund_due" | "partial_refund_due" | "refunded" | "partially_refunded" | "forfeited" | "disputed" | null;
+            moDepositDeductionUsdCents: number | null;
+            moRentalTermsVersion: string | null;
+            moRentalTimezone: string | null;
+            moConditionOut: string | null;
+            moConditionIn: string | null;
+            /** Format: date-time */
+            moCreatedAt: string;
+            /** Format: date-time */
+            moUpdatedAt: string;
+            moItems: components["schemas"]["MarketplaceOrderItem"][];
+        };
+        MarketplaceManualEvidenceSubmit: {
+            mmesCustomerReference: string;
+        };
+        MarketplaceManualPaymentReview: {
+            /** @enum {string} */
+            mmprAction: "approve" | "reject";
+            mmprReviewNotes: string;
+        };
+        MarketplaceCustomerRequestSubmit: {
+            /** @enum {string} */
+            mcrsRequestType: "sale_cancellation" | "sale_return" | "rental_cancellation" | "rental_extension" | "rental_dispute";
+            mcrsReason: string;
+            /** Format: date */
+            mcrsRequestedEndDate?: string;
+            mcrsEvidenceUrl?: string;
+        };
+        MarketplaceCustomerRequestReview: {
+            /** @enum {string} */
+            mcrrAction: "approve" | "reject" | "needs_quote";
+            mcrrReviewNotes: string;
+        };
+        MarketplaceCustomerRequest: {
+            /** Format: uuid */
+            mcrRequestId: string;
+            /** Format: uuid */
+            mcrOrderId: string;
+            /** @enum {string} */
+            mcrOrderKind: "sale" | "rental";
+            /** @enum {string} */
+            mcrRequestType: "sale_cancellation" | "sale_return" | "rental_cancellation" | "rental_extension" | "rental_dispute";
+            /** @enum {string} */
+            mcrStatus: "submitted" | "needs_quote" | "approved" | "rejected";
+            mcrReason: string;
+            /** Format: date */
+            mcrRequestedEndDate: string | null;
+            mcrEvidenceUrl: string | null;
+            /** Format: date-time */
+            mcrRequestedAt: string;
+            /** Format: date-time */
+            mcrReviewedAt: string | null;
+            mcrReviewNotes: string | null;
+        };
+        MarketplaceDepositSettlementSubmit: {
+            /** @enum {string} */
+            mdssSettlementMethod: "bank_transfer" | "cash" | "pos" | "forfeiture";
+            mdssExternalReference: string;
+            mdssEvidenceUrl: string;
+        };
+        MarketplaceDepositSettlementReview: {
+            /** @enum {string} */
+            mdsrAction: "approve" | "reject" | "requires_reconciliation";
+            mdsrReviewNotes: string;
+        };
+        MarketplaceDepositSettlement: {
+            /** Format: uuid */
+            mdsSettlementId: string;
+            /** Format: uuid */
+            mdsOrderId: string;
+            /** Format: uuid */
+            mdsCheckoutId: string;
+            mdsCurrency: string;
+            /** Format: int64 */
+            mdsDepositAmountMinor: number;
+            /** Format: int64 */
+            mdsDeductionAmountMinor: number;
+            /** Format: int64 */
+            mdsRefundAmountMinor: number;
+            /** @enum {string} */
+            mdsSettlementMethod: "bank_transfer" | "cash" | "pos" | "forfeiture";
+            mdsExternalReference: string;
+            mdsEvidenceUrl: string;
+            /** @enum {string} */
+            mdsStatus: "submitted" | "verified" | "rejected" | "requires_reconciliation";
+            /** Format: int64 */
+            mdsSubmittedBy: number;
+            /** Format: date-time */
+            mdsSubmittedAt: string;
+            /** Format: int64 */
+            mdsReviewedBy: number | null;
+            /** Format: date-time */
+            mdsReviewedAt: string | null;
+            mdsReviewNotes: string | null;
+        };
+        MarketplaceManualEvidence: {
+            /** Format: uuid */
+            mmeEvidenceId: string;
+            /** @enum {string} */
+            mmePaymentMethod: "bank_transfer" | "cash" | "pos";
+            /** @enum {string} */
+            mmeStatus: "awaiting_evidence" | "submitted" | "under_review" | "approved" | "rejected";
+            mmeCustomerReference: string | null;
+            /** Format: int64 */
+            mmeSubmittedAmountMinor: number | null;
+            mmeCurrency: string | null;
+            /** Format: int64 */
+            mmeSubmittedBy: number | null;
+            /** Format: date-time */
+            mmeSubmittedAt: string | null;
+            /** Format: int64 */
+            mmeReviewedBy: number | null;
+            /** Format: date-time */
+            mmeReviewedAt: string | null;
+            mmeReviewNotes: string | null;
+        };
+        MarketplaceCommerce: {
+            /** Format: uuid */
+            mpcOrderId: string;
+            /** Format: uuid */
+            mpcCheckoutId: string;
+            mpcPaymentStatus: string;
+            /** Format: date-time */
+            mpcHoldExpiresAt: string;
+            /** @enum {string} */
+            mpcOrderKind: "sale" | "rental";
+            mpcManualEvidence: components["schemas"]["MarketplaceManualEvidence"] | null;
+        };
+        MarketplacePaypalCapture: {
+            /** Format: uuid */
+            pcCaptureOrderId: string;
+            pcCapturePaypalId: string;
+        };
+        MarketplaceOrderUpdate: {
+            mouStatus?: string;
+            mouPaymentProvider?: string | null;
+            /** Format: date-time */
+            mouPaidAt?: string | null;
+        };
+        MarketplaceFulfillmentUpdate: {
+            /** @enum {string} */
+            mfuStatus: "on_hold" | "ready_to_fulfill" | "picking" | "ready_for_pickup" | "shipped" | "delivered" | "cancellation_requested" | "cancelled" | "return_requested" | "return_authorized" | "return_in_transit" | "returned" | "closed" | "expired";
+            mfuCarrier?: string;
+            mfuTrackingReference?: string;
+            mfuReasonCode?: string;
+            mfuNotes?: string;
+        };
+        MarketplaceRentalUpdate: {
+            /** @enum {string} */
+            mruStatus: "on_hold" | "confirmed" | "ready_for_handoff" | "checked_out" | "return_due" | "returned_pending_inspection" | "damage_review" | "deposit_refund_due" | "closed" | "cancellation_requested" | "cancelled" | "no_show" | "lost" | "disputed" | "expired";
+            mruConditionOut?: string;
+            mruConditionIn?: string;
+            /** Format: uri */
+            mruEvidenceUrl?: string;
+            mruDepositDeductionUsdCents?: number;
+            mruReasonCode?: string;
+            mruNotes?: string;
+        };
+        MarketplaceRentalTermsUpdate: {
+            mrtuDailyRateUsdCents: number;
+            mrtuWeeklyRateUsdCents: number | null;
+            mrtuSecurityDepositUsdCents: number;
+            mrtuLateFeeUsdCents: number;
+            mrtuMinDays: number;
+            mrtuMaxDays: number;
+            mrtuCancellationWindowHours: number;
+            /** @enum {string} */
+            mrtuTimezone: "America/Guayaquil";
+            mrtuTermsVersion: string;
+            mrtuTermsSummary: string;
+            mrtuActive: boolean;
+        };
+        ServiceStorefrontPackage: {
+            /** Format: uuid */
+            sspId: string;
+            /** @enum {string} */
+            sspServiceKind: "Mixing" | "Mastering" | "Bundle";
+            sspTier: string;
+            sspName: string;
+            sspDescription: string | null;
+            /** @description Authoritative price per song in integer minor units. */
+            sspPriceUsdCents: number;
+            sspCurrency: string;
+            sspMinSongCount: number;
+            sspMaxSongCount: number;
+            sspTurnaroundDays: number;
+            sspRevisionCount: number;
+            sspDeliverables: string[] | null;
+            sspFeatures: string[] | null;
+            sspActive: boolean;
+            sspSortOrder: number;
+        };
+        ServiceStorefrontPackageCreate: {
+            /** @enum {string} */
+            sspcServiceKind: "Mixing" | "Mastering" | "Bundle";
+            sspcTier: string;
+            sspcName: string;
+            sspcDescription?: string | null;
+            sspcPriceUsdCents: number;
+            sspcCurrency?: string | null;
+            sspcMinSongCount?: number | null;
+            sspcMaxSongCount?: number | null;
+            sspcTurnaroundDays?: number | null;
+            sspcRevisionCount?: number | null;
+            sspcDeliverables?: string[] | null;
+            sspcFeatures?: string[] | null;
+            sspcSortOrder?: number | null;
+        };
+        ServiceStorefrontPackageUpdate: {
+            sspuName?: string | null;
+            sspuDescription?: string | null;
+            sspuPriceUsdCents?: number | null;
+            sspuMinSongCount?: number | null;
+            sspuMaxSongCount?: number | null;
+            sspuTurnaroundDays?: number | null;
+            sspuRevisionCount?: number | null;
+            sspuDeliverables?: string[] | null;
+            sspuFeatures?: string[] | null;
+            sspuActive?: boolean | null;
+            sspuSortOrder?: number | null;
+        };
+        ServiceStorefrontOrderCreate: {
+            /** Format: uuid */
+            ssocPackageId: string;
+            ssocBuyerName: string;
+            /** Format: email */
+            ssocBuyerEmail: string;
+            ssocBuyerPhone?: string | null;
+            ssocArtistName?: string | null;
+            ssocGenre?: string | null;
+            ssocSongCount?: number | null;
+            ssocNotes?: string | null;
+            /** Format: uri */
+            ssocReferenceTrackUrl?: string | null;
+            /** Format: date */
+            ssocDeadline?: string | null;
+        };
+        ServiceStorefrontOrder: {
+            /** Format: uuid */
+            ssoId: string;
+            ssoOrderNumber: string;
+            ssoBuyerName: string;
+            /** Format: email */
+            ssoBuyerEmail: string;
+            ssoBuyerPhone: string | null;
+            ssoArtistName: string | null;
+            /** Format: uuid */
+            ssoPackageId: string;
+            ssoServiceKind: string;
+            ssoTier: string;
+            ssoPriceUsdCents: number;
+            ssoCurrency: string;
+            ssoStatus: string;
+            ssoPaymentProvider: string | null;
+            ssoLookupToken: string | null;
+            /** Format: date-time */
+            ssoPaidAt: string | null;
+            ssoGenre: string | null;
+            ssoSongCount: number;
+            ssoNotes: string | null;
+            /** Format: uri */
+            ssoReferenceTrackUrl: string | null;
+            /** Format: date */
+            ssoDeadline: string | null;
+            /** Format: uri */
+            ssoDeliverablesUrl: string | null;
+            /** Format: date-time */
+            ssoCreatedAt: string;
+            /** Format: date-time */
+            ssoUpdatedAt: string;
+        };
+        ServiceStorefrontOrderUpdate: {
+            ssouStatus?: string | null;
+            /** Format: uri */
+            ssouDeliverablesUrl?: string | null;
+            ssouNotes?: string | null;
+        };
+        ServiceStorefrontPaypalCapture: {
+            pcCaptureOrderId: string;
+            pcCapturePaypalId: string;
+        };
+        ServiceStorefrontManualPaymentCreate: {
+            /** @enum {string} */
+            ssmPaymentMethod: "bank_transfer" | "cash" | "pos";
+        };
+        ServiceStorefrontRevisionCreate: {
+            ssrcFeedback: string;
+        };
+        ServiceStorefrontRevision: {
+            /** Format: uuid */
+            ssrId: string;
+            /** Format: uuid */
+            ssrOrderId: string;
+            ssrRevisionNumber: number;
+            ssrFeedback: string;
+            ssrStatus: string;
+            /** Format: date-time */
+            ssrCreatedAt: string;
+            /** Format: date-time */
+            ssrCompletedAt: string | null;
+        };
+        ServiceStorefrontRefundCreate: {
+            ssrfcAmountUsdCents?: number | null;
+            ssrfcReasonCode: string;
+        };
+        ServiceStorefrontRefund: {
+            /** Format: uuid */
+            ssrfId: string;
+            /** Format: uuid */
+            ssrfOrderId: string;
+            /** @enum {string} */
+            ssrfProvider: "paypal" | "datafast" | "stripe";
+            ssrfProviderRefundId: string | null;
+            /** @enum {string} */
+            ssrfStatus: "requested" | "approved" | "processing" | "succeeded" | "failed" | "cancelled";
+            ssrfAmountUsdCents: number;
+            ssrfCurrency: string;
+            ssrfReasonCode: string;
+            /** Format: int64 */
+            ssrfRequestedBy: number;
+            /** Format: int64 */
+            ssrfApprovedBy: number | null;
+            /** Format: date-time */
+            ssrfCreatedAt: string;
+            /** Format: date-time */
+            ssrfCompletedAt: string | null;
+        };
+        ServiceStorefrontReconciliation: {
+            /** Format: uuid */
+            ssrecOrderId: string;
+            ssrecProvider: string;
+            ssrecProviderReference: string;
+            ssrecExpectedAmount: number;
+            ssrecActualAmount: number | null;
+            ssrecCurrency: string;
+            ssrecMatched: boolean;
+            /** Format: date-time */
+            ssrecCheckedAt: string;
+        };
+        CommerceProviderEvent: {
+            /** Format: uuid */
+            cpeId: string;
+            /** @enum {string} */
+            cpeProvider: "paypal" | "datafast" | "stripe" | "bank_transfer" | "cash" | "pos" | "cardano";
+            /** @enum {string} */
+            cpeEnvironment: "sandbox" | "production";
+            cpeProviderEventId: string;
+            cpeEventType: string;
+            cpeProviderResourceId: string | null;
+            /** @enum {string} */
+            cpeStatus: "pending" | "processing" | "processed" | "retry" | "dead_letter" | "ignored";
+            cpeAttemptCount: number;
+            /** Format: uuid */
+            cpeCheckoutId: string | null;
+            /** Format: uuid */
+            cpePaymentAttemptId: string | null;
+            /** Format: uuid */
+            cpeRefundId: string | null;
+            /** Format: date-time */
+            cpeReceivedAt: string;
+            /** Format: date-time */
+            cpeProviderCreatedAt: string | null;
+            /** Format: date-time */
+            cpeProcessingStartedAt: string | null;
+            /** Format: date-time */
+            cpeLastAttemptAt: string | null;
+            /** Format: date-time */
+            cpeNextAttemptAt: string | null;
+            /** Format: date-time */
+            cpeProcessedAt: string | null;
+            cpeErrorSummary: string | null;
+        };
+        CommerceProviderEventReplayCreate: {
+            cperReason: string;
+        };
+        DatafastCheckout: {
+            dcOrderId: string;
+            dcCheckoutId: string;
+            /** Format: uri */
+            dcWidgetUrl: string;
+            dcAmount: string;
+            dcCurrency: string;
+            /** @description Returned only when the guest order is first created. */
+            dcLookupToken: string | null;
+        };
+        PaypalCreate: {
+            pcOrderId: string;
+            pcPaypalOrderId: string;
+            /** Format: uri */
+            pcApprovalUrl: string | null;
+            /** @description Returned only when the guest order is first created. */
+            pcLookupToken: string | null;
+        };
+        PaymentSheetParams: {
+            psCustomerId: string;
+            psEphemeralKeySecret: string;
+            psPaymentIntentClientSecret: string;
+            psPublishableKey: string;
+        };
+        StripePaymentIntent: {
+            spiClientSecret: string;
+            spiOrderId: string;
+            spiAmountCents: number;
+            spiCurrency: string;
+            spiPaymentSheet: components["schemas"]["PaymentSheetParams"] | null;
+            /** @description Returned only when the guest order is first created. */
+            spiLookupToken: string | null;
+        };
         DdexStandardVersion: {
             /** Format: uuid */
             ddexStandardVersionId: string;
@@ -5254,12 +7523,51 @@ export interface components {
             source: string;
             howHeard?: string | null;
             utm?: components["schemas"]["UTMTags"];
+            /** @description Must be true to create a canonical payable seat hold. Omitted only for non-checkout legacy intake such as WhatsApp leads. */
+            termsAccepted?: boolean | null;
         };
         CourseRegistrationResponse: {
             /** Format: int64 */
             id?: number;
             /** @enum {string} */
             status?: "pending_payment" | "paid" | "cancelled";
+        };
+        CourseCheckoutQuote: {
+            policyVersion: string;
+            currency: string;
+            /** Format: int64 */
+            subtotalMinor: number;
+            /** Format: int64 */
+            taxMinor: number;
+            /** Format: int64 */
+            totalMinor: number;
+            /** Format: int64 */
+            dueNowMinor: number;
+            /** Format: int64 */
+            balanceMinor: number;
+            /** @enum {string} */
+            paymentSchedule: "full" | "deposit";
+            termsVersion: string;
+        };
+        CourseCheckoutResponse: {
+            /** Format: int64 */
+            registrationId: number;
+            courseSlug: string;
+            /** Format: uuid */
+            checkoutId: string | null;
+            lookupToken: string | null;
+            /** @enum {string} */
+            paymentStatus: "not_started" | "awaiting_payment" | "processing" | "paid" | "failed" | "cancelled" | "expired" | "partially_refunded" | "refunded" | "disputed" | "chargeback";
+            /** @enum {string} */
+            fulfillmentStatus: "lead_received" | "seat_held" | "enrolled" | "waitlisted" | "transfer_requested" | "transferred" | "cancelled" | "completed" | "expired";
+            /** Format: date-time */
+            holdExpiresAt: string | null;
+            quote: components["schemas"]["CourseCheckoutQuote"] | null;
+            paymentMethods: ("datafast" | "paypal")[];
+            checkoutAvailable: boolean;
+        };
+        CoursePaypalCaptureRequest: {
+            paypalOrderId: string;
         };
         CourseRegistrationStatusUpdate: {
             /** @enum {string} */
@@ -6605,6 +8913,11 @@ export interface components {
         };
     };
     parameters: {
+        PublicEventId: number;
+        PublicEventTicketOrderId: number;
+        /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+        PublicOrderLookupToken: string;
+        PublicBookingId: number;
         CatalogCode: string;
         /** @description Immutable canonical UUID of a persisted catalog item. */
         CatalogItemId: string;
@@ -6619,12 +8932,23 @@ export interface components {
         DdexDocumentId: number;
         DdexImportPlanId: number;
         DdexExportId: number;
+        MarketplaceListingId: string;
+        MarketplaceCartId: string;
+        /** @description Canonical marketplace sale or rental order UUID. */
+        MarketplaceOrderId: string;
+        ServiceStorefrontPackageId: string;
+        /** @description Public order number or canonical UUID accepted by the service storefront. */
+        ServiceStorefrontOrderId: string;
+        /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+        OrderLookupToken: string;
+        /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+        IdempotencyKey: string;
         SearchQuery: string;
         /** @description Opaque stable keyset cursor */
         Cursor: string;
         Limit: number;
         Slug: string;
-        IdempotencyKey: string;
+        "parameters-IdempotencyKey": string;
         ProfileId: string;
         ClassifiedId: string;
         TargetKind: components["schemas"]["DirectoryEntityType"];
@@ -7323,7 +9647,10 @@ export interface operations {
     createCourseRegistration: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 slug: string;
             };
@@ -7335,13 +9662,13 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Registration stored */
+            /** @description Registration checkout or honest gated lead state */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CourseRegistrationResponse"];
+                    "application/json": components["schemas"]["CourseCheckoutResponse"];
                 };
             };
             /** @description Invalid payload */
@@ -7353,6 +9680,247 @@ export interface operations {
             };
             /** @description Course not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No approved active policy, duplicate attendee, or no seat remains */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Checkout domain or provider configuration unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getCourseCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Course checkout state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseCheckoutResponse"];
+                };
+            };
+            /** @description Course order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createCourseDatafastCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Hosted Datafast checkout resource */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatafastCheckout"];
+                };
+            };
+            /** @description Course order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hold expired */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast or course checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmCourseDatafastStatus: {
+        parameters: {
+            query: {
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Verified or still-pending checkout state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseCheckoutResponse"];
+                };
+            };
+            /** @description Course order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Binding mismatch or expired hold */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider response failed verification */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createCoursePaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description PayPal order awaiting customer approval */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaypalCreate"];
+                };
+            };
+            /** @description Course order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hold expired */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal or course checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    captureCoursePaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CoursePaypalCaptureRequest"];
+            };
+        };
+        responses: {
+            /** @description Verified or still-processing checkout state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseCheckoutResponse"];
+                };
+            };
+            /** @description Course order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Binding mismatch or expired hold */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider capture failed verification */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -11504,6 +14072,2663 @@ export interface operations {
             };
         };
     };
+    listMarketplaceItems: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active public listings with authoritative server prices */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceItem"][];
+                };
+            };
+        };
+    };
+    getMarketplaceItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                listingId: components["parameters"]["MarketplaceListingId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public listing */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceItem"];
+                };
+            };
+            /** @description Listing not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateMarketplaceRentalTerms: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                listingId: components["parameters"]["MarketplaceListingId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceRentalTermsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated public listing projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceItem"];
+                };
+            };
+            /** @description Invalid price */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Listing not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Listing is not an active rental listing */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createMarketplaceCart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Empty cart */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCart"];
+                };
+            };
+        };
+    };
+    getMarketplaceCart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current cart snapshot */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCart"];
+                };
+            };
+            /** @description Cart not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    upsertMarketplaceCartItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceCartItemUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated cart with server-calculated totals */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCart"];
+                };
+            };
+            /** @description Invalid listing */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Cart or listing not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Asset is no longer available */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    checkoutMarketplaceCart: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceCheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Created or idempotently recovered order awaiting manual confirmation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"];
+                };
+            };
+            /** @description Invalid buyer */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency conflict or asset is already held */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Public request rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The matching marketplace sales or rentals capability is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createMarketplaceStripePaymentIntent: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceCheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Stripe marketplace checkout is disabled; use Datafast or PayPal */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createMarketplaceDatafastCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceCheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Bound hosted checkout and one-time guest lookup token */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatafastCheckout"];
+                };
+            };
+            /** @description Invalid cart */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast did not create a verifiable checkout resource */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast or the matching marketplace capability is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmMarketplaceDatafastStatus: {
+        parameters: {
+            query: {
+                orderId: string;
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current payment and separate fulfillment state after server verification */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider evidence conflicts with the immutable checkout */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast status could not be verified */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createMarketplacePaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceCheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Bound PayPal order, approval URL, and one-time guest lookup token */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaypalCreate"];
+                };
+            };
+            /** @description Invalid cart */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal did not create an order */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal or the matching marketplace capability is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    captureMarketplacePaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplacePaypalCapture"];
+            };
+        };
+        responses: {
+            /** @description Current payment and separate fulfillment state after server verification */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider evidence conflicts with the immutable checkout */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Capture or server verification failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMarketplaceOrders: {
+        parameters: {
+            query?: {
+                status?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Orders with payment and fulfillment state kept distinct */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"][];
+                };
+            };
+            /** @description Operations access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMarketplaceOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Customer-safe order state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateMarketplaceOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceOrderUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"];
+                };
+            };
+            /** @description Operations access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Direct paid transition is prohibited for canonical orders */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitMarketplaceManualEvidence: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceManualEvidenceSubmit"];
+            };
+        };
+        responses: {
+            /** @description Customer-safe order with truthful manual-review status */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"];
+                };
+            };
+            /** @description Invalid transfer reference */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Evidence conflicts with the immutable checkout or is already under review */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMarketplaceCustomerRequests: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Customer-safe cancellation, return, extension, and dispute requests */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCustomerRequest"][];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitMarketplaceCustomerRequest: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceCustomerRequestSubmit"];
+            };
+        };
+        responses: {
+            /** @description Persisted request with truthful review state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCustomerRequest"];
+                };
+            };
+            /** @description Invalid request type */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order state changed or a matching request is already pending */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMarketplaceCommerce: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Protected finance projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCommerce"];
+                };
+            };
+            /** @description Invoicing access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Historical or ambiguous checkout requires reconciliation */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reviewMarketplaceManualPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceManualPaymentReview"];
+            };
+        };
+        responses: {
+            /** @description Current protected commerce projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCommerce"];
+                };
+            };
+            /** @description Invalid action or review notes */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invoicing access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Separation-of-duties */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateMarketplaceFulfillment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceFulfillmentUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated fulfillment state and immutable history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"];
+                };
+            };
+            /** @description Invalid transition payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Canonical sale order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transition is invalid or payment is not verified */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateMarketplaceRental: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceRentalUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated rental state and immutable history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"];
+                };
+            };
+            /** @description Invalid transition or condition/deposit payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Canonical rental order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMarketplaceCustomerRequestsAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Requests and review evidence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCustomerRequest"][];
+                };
+            };
+            /** @description Operations access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reviewMarketplaceCustomerRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceCustomerRequestReview"];
+            };
+        };
+        responses: {
+            /** @description Reviewed request */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCustomerRequest"];
+                };
+            };
+            /** @description Invalid action or review notes */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request or domain state changed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMarketplaceDepositSettlements: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Immutable manual settlement evidence and review state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceDepositSettlement"][];
+                };
+            };
+            /** @description Operations and invoicing access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitMarketplaceDepositSettlement: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceDepositSettlementSubmit"];
+            };
+        };
+        responses: {
+            /** @description Submitted settlement evidence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceDepositSettlement"];
+                };
+            };
+            /** @description Invalid manual method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations and invoicing access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Deposit snapshot */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Manual deposit settlement is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reviewMarketplaceDepositSettlement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+                settlementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceDepositSettlementReview"];
+            };
+        };
+        responses: {
+            /** @description Reviewed settlement evidence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceDepositSettlement"];
+                };
+            };
+            /** @description Invalid action or review notes */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations and invoicing access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Separation-of-duties */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listServiceStorefrontPackages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active packages ordered by their configured sort order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontPackage"][];
+                };
+            };
+        };
+    };
+    getServiceStorefrontPackage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packageId: components["parameters"]["ServiceStorefrontPackageId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Package pricing and fulfillment policy */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontPackage"];
+                };
+            };
+            /** @description Package not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createServiceStorefrontOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontOrderCreate"];
+            };
+        };
+        responses: {
+            /** @description Created or idempotently recovered unpaid order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Invalid buyer */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency-key payload conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Public request rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getServiceStorefrontOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Customer-safe order state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createServiceStorefrontStripePaymentIntent: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Hosted or tokenized payment-intent parameters */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripePaymentIntent"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stripe capability is disabled */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createServiceStorefrontDatafastCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound Datafast hosted checkout resource */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatafastCheckout"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Existing provider binding conflicts with the order snapshot */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast rejected or did not create the resource */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmServiceStorefrontDatafastStatus: {
+        parameters: {
+            query: {
+                orderId: string;
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current order state after provider verification */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider evidence did not match the immutable order snapshot */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast status could not be verified */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createServiceStorefrontPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound PayPal order and approval URL */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaypalCreate"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Existing provider binding conflicts with the order snapshot */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal rejected or did not create the order */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    captureServiceStorefrontPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontPaypalCapture"];
+            };
+        };
+        responses: {
+            /** @description Current order state after server verification */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider evidence did not match the immutable order snapshot */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Capture or server verification failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    receiveServiceStorefrontPaypalWebhook: {
+        parameters: {
+            query?: never;
+            header: {
+                "PayPal-Transmission-Id": string;
+                "PayPal-Transmission-Time": string;
+                "PayPal-Cert-Url": string;
+                "PayPal-Auth-Algo": string;
+                "PayPal-Transmission-Sig": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Event was verified and processed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Required signature header or event envelope is invalid */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal signature verification failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider event identifier conflicts with different raw evidence */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Webhook capability is disabled for this environment */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    selectServiceStorefrontManualPayment: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontManualPaymentCreate"];
+            };
+        };
+        responses: {
+            /** @description Order remains awaiting manual confirmation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Unsupported manual payment method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createServiceStorefrontRevision: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontRevisionCreate"];
+            };
+        };
+        responses: {
+            /** @description Persisted revision request */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontRevision"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order state does not permit a revision */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListServiceStorefrontOrders: {
+        parameters: {
+            query?: {
+                status?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Matching service orders */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"][];
+                };
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminUpdateServiceStorefrontOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontOrderUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated service order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid state transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListServiceStorefrontPackages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active and inactive packages */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontPackage"][];
+                };
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminCreateServiceStorefrontPackage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontPackageCreate"];
+            };
+        };
+        responses: {
+            /** @description Created package */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontPackage"];
+                };
+            };
+            /** @description Invalid pricing or quantity policy */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminUpdateServiceStorefrontPackage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packageId: components["parameters"]["ServiceStorefrontPackageId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontPackageUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated package */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontPackage"];
+                };
+            };
+            /** @description Invalid pricing or quantity policy */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Package not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListServiceStorefrontRefunds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Refund history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontRefund"][];
+                };
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminRequestServiceStorefrontRefund: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontRefundCreate"];
+            };
+        };
+        responses: {
+            /** @description Requested refund awaiting independent approval */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontRefund"];
+                };
+            };
+            /** @description Invalid amount or reason */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Paid order or capture binding not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Amount exceeds the unreserved captured balance or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminApproveServiceStorefrontRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current truthful refund state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontRefund"];
+                };
+            };
+            /** @description Strict Admin role required or separation of duties failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Refund not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid state or provider evidence mismatch */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Refund capability is disabled for this environment */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal request failed; refund remains processing or failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminReconcileServiceStorefrontOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Read-only provider comparison; mismatches create an operator exception */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontReconciliation"];
+                };
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order or provider binding not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider reconciliation capability is unavailable */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider status could not be read */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListCommerceProviderEvents: {
+        parameters: {
+            query?: {
+                status?: "pending" | "processing" | "processed" | "retry" | "dead_letter" | "ignored";
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redacted provider-event records ordered newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommerceProviderEvent"][];
+                };
+            };
+            /** @description Invalid filter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminReplayCommerceProviderEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommerceProviderEventReplayCreate"];
+            };
+        };
+        responses: {
+            /** @description Event moved from dead_letter to retry with an immutable action record */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommerceProviderEvent"];
+                };
+            };
+            /** @description Invalid event ID or replay reason */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider event not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event is not currently dead-lettered */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicBookingAvailability: {
+        parameters: {
+            query: {
+                serviceOfferingId: string;
+                startsAt: string;
+                durationMinutes: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Availability and optional server-authoritative quote */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingAvailability"];
+                };
+            };
+            /** @description Invalid schedule input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Service offering is not selectable */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicTentativeBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicBookingCreate"];
+            };
+        };
+        responses: {
+            /** @description Tentative booking created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"];
+                };
+            };
+            /** @description Resource was reserved by another request */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid service relationship */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicBookingCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicBookingCheckoutCreate"];
+            };
+        };
+        responses: {
+            /** @description Canonical checkout and temporary resource hold */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingCheckout"];
+                };
+            };
+            /** @description Idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Domain checkout is disabled in this environment */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicBookingCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Order-Lookup-Token": string;
+            };
+            path: {
+                bookingId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current payment and separate fulfillment state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingCheckout"];
+                };
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicBookingDatafastCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound Datafast hosted-checkout resource */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatafastCheckout"];
+                };
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Expired/already-paid booking or immutable provider-binding conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Booking domain or Datafast rail is disabled/misconfigured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmPublicBookingDatafastStatus: {
+        parameters: {
+            query: {
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current server-verified payment and separate fulfillment state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingCheckout"];
+                };
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Binding conflict or verified late payment requires staff reconciliation */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider failure or amount/currency/reference mismatch */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicBookingPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound PayPal Orders v2 resource */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaypalCreate"];
+                };
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Expired/already-paid booking or immutable provider-binding conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Booking domain or PayPal rail is disabled/misconfigured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    capturePublicBookingPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicBookingPaypalCapture"];
+            };
+        };
+        responses: {
+            /** @description Current server-verified payment and separate fulfillment state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingCheckout"];
+                };
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Expired booking or PayPal order/binding conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider failure or amount/currency/reference mismatch */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    selectPublicBookingManualPayment: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicBookingManualPaymentCreate"];
+            };
+        };
+        responses: {
+            /** @description Awaiting-evidence checkout state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingCheckout"];
+                };
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Expired booking or another payment rail is active */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Manual bank transfer is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitPublicBookingManualEvidence: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicBookingManualEvidenceCreate"];
+            };
+        };
+        responses: {
+            /** @description Evidence submitted; payment remains unconfirmed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingCheckout"];
+                };
+            };
+            /** @description Invalid reference */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Manual payment was not selected or different evidence is already under review */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getServiceBookingCommerce: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Booking payment and separate fulfillment projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceBookingCommerce"];
+                };
+            };
+            /** @description Invoicing access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Canonical booking commerce order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reviewServiceBookingManualPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceBookingManualReview"];
+            };
+        };
+        responses: {
+            /** @description Current truthful booking commerce state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceBookingCommerce"];
+                };
+            };
+            /** @description Invalid action or review notes */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invoicing access required or separation of duties failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Canonical booking commerce order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Evidence */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     searchDirectory: {
         parameters: {
             query?: {
@@ -11755,7 +16980,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
             };
             path?: never;
             cookie?: never;
@@ -11853,7 +17078,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
             };
             path?: never;
             cookie?: never;
@@ -11925,7 +17150,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
             };
             path: {
                 classifiedId: components["parameters"]["ClassifiedId"];
@@ -11997,7 +17222,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
             };
             path?: never;
             cookie?: never;
@@ -12047,7 +17272,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
             };
             path?: never;
             cookie?: never;
@@ -12093,7 +17318,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
             };
             path?: never;
             cookie?: never;
@@ -12208,7 +17433,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
             };
             path?: never;
             cookie?: never;
@@ -12232,7 +17457,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
             };
             path?: never;
             cookie?: never;
@@ -12256,7 +17481,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
             };
             path?: never;
             cookie?: never;
@@ -12280,7 +17505,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
             };
             path?: never;
             cookie?: never;
@@ -12406,7 +17631,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
             };
             path: {
                 caseId: string;
@@ -12432,7 +17657,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
             };
             path?: never;
             cookie?: never;
@@ -12445,6 +17670,325 @@ export interface operations {
         responses: {
             /** @description Non-destructive */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicEventTicketStorefront: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public event ticket storefront */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicEventTicketStorefront"];
+                };
+            };
+            /** @description Event is not publicly eligible for ticket purchase */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Checkout environment is not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicEventTicketCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicEventTicketCheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Guest ticket order with a temporary inventory hold; lookupToken is returned only on creation */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicEventTicketCheckout"];
+                };
+            };
+            /** @description Invalid buyer */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event or tier is not public */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Capacity */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event ticket checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicEventTicketCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+                orderId: components["parameters"]["PublicEventTicketOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Customer-safe payment and fulfillment state; ticket references appear only after issuance */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicEventTicketCheckout"];
+                };
+            };
+            /** @description Order not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicEventTicketDatafastCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+                orderId: components["parameters"]["PublicEventTicketOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound Datafast hosted checkout */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatafastCheckout"];
+                };
+            };
+            /** @description Order not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hold expired */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast or event ticket checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmPublicEventTicketDatafastStatus: {
+        parameters: {
+            query: {
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+                orderId: components["parameters"]["PublicEventTicketOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current server-verified checkout state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicEventTicketCheckout"];
+                };
+            };
+            /** @description Order not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource binding mismatch or payment arrived after hold expiry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider status or immutable payment fields could not be verified */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicEventTicketPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+                orderId: components["parameters"]["PublicEventTicketOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound PayPal order awaiting customer approval */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaypalCreate"];
+                };
+            };
+            /** @description Order not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hold expired */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal or event ticket checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    capturePublicEventTicketPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+                orderId: components["parameters"]["PublicEventTicketOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicEventTicketPaypalCaptureRequest"];
+            };
+        };
+        responses: {
+            /** @description Current server-verified checkout and fulfillment state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicEventTicketCheckout"];
+                };
+            };
+            /** @description Order not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider binding mismatch or payment arrived after hold expiry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal capture or immutable payment fields could not be verified */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -1,5 +1,6 @@
 import { del, get, patch, post } from './client';
 import type { components } from './generated/types';
+import type { DatafastCheckoutDTO, PaypalCreateDTO } from './types';
 
 export type CourseMetadata = components['schemas']['CourseMetadata'] & {
   remaining?: number | null;
@@ -9,7 +10,9 @@ export type CourseMetadata = components['schemas']['CourseMetadata'] & {
   instructorBio?: string | null;
   instructorAvatarUrl?: string | null;
 };
-export type CourseRegistrationRequest = components['schemas']['CourseRegistrationRequest'];
+export type CourseRegistrationRequest = components['schemas']['CourseRegistrationRequest'] & {
+  termsAccepted?: boolean | null;
+};
 export type CourseRegistrationResponse = components['schemas']['CourseRegistrationResponse'];
 export type CourseRegistrationStatusUpdate = components['schemas']['CourseRegistrationStatusUpdate'];
 
@@ -158,6 +161,31 @@ export interface CourseCohortOptionDTO {
   ccTitle?: string | null;
 }
 
+export interface CourseCheckoutQuote {
+  policyVersion: string;
+  currency: string;
+  subtotalMinor: number;
+  taxMinor: number;
+  totalMinor: number;
+  dueNowMinor: number;
+  balanceMinor: number;
+  paymentSchedule: 'full' | 'deposit';
+  termsVersion: string;
+}
+
+export interface CourseCheckoutResponse {
+  registrationId: number;
+  courseSlug: string;
+  checkoutId?: string | null;
+  lookupToken?: string | null;
+  paymentStatus: string;
+  fulfillmentStatus: string;
+  holdExpiresAt?: string | null;
+  quote?: CourseCheckoutQuote | null;
+  paymentMethods: ('datafast' | 'paypal')[];
+  checkoutAvailable: boolean;
+}
+
 const courseBase = (slug: string) => `/public/courses/${slug}`;
 
 const requirePositiveInteger = (value: number, field: string): number => {
@@ -180,12 +208,61 @@ const setTrimmedParam = (search: URLSearchParams, key: string, value?: string): 
   if (trimmed) search.set(key, trimmed);
 };
 
+const lookupHeaders = (lookupToken: string): RequestInit => ({
+  headers: { 'X-Order-Lookup-Token': lookupToken },
+});
+
 export const Courses = {
   upsert: (payload: CourseUpsert) => post<CourseMetadata>('/admin/courses', payload),
   listCohorts: () => get<CourseCohortOptionDTO[]>('/admin/courses/cohorts'),
   getMetadata: (slug: string) => get<CourseMetadata>(courseBase(normalizeCourseSlug(slug))),
-  register: (slug: string, payload: CourseRegistrationRequest) =>
-    post<CourseRegistrationResponse>(`${courseBase(normalizeCourseSlug(slug))}/registrations`, payload),
+  register: (slug: string, payload: CourseRegistrationRequest, idempotencyKey?: string) => {
+    const path = `${courseBase(normalizeCourseSlug(slug))}/registrations`;
+    return idempotencyKey
+      ? post<CourseCheckoutResponse>(path, payload, {
+        headers: { 'Idempotency-Key': idempotencyKey },
+      })
+      : post<CourseCheckoutResponse>(path, payload);
+  },
+  getCheckout: (slug: string, registrationId: number, lookupToken: string) =>
+    get<CourseCheckoutResponse>(
+      `${courseBase(normalizeCourseSlug(slug))}/registrations/${requirePositiveInteger(registrationId, 'registrationId')}`,
+      lookupHeaders(lookupToken),
+    ),
+  createDatafastCheckout: (slug: string, registrationId: number, lookupToken: string) =>
+    post<DatafastCheckoutDTO>(
+      `${courseBase(normalizeCourseSlug(slug))}/registrations/${requirePositiveInteger(registrationId, 'registrationId')}/datafast/checkout`,
+      {},
+      lookupHeaders(lookupToken),
+    ),
+  confirmDatafastStatus: (
+    slug: string,
+    registrationId: number,
+    resourcePath: string,
+    lookupToken: string,
+  ) => {
+    const search = new URLSearchParams({ resourcePath });
+    return get<CourseCheckoutResponse>(
+      `${courseBase(normalizeCourseSlug(slug))}/registrations/${requirePositiveInteger(registrationId, 'registrationId')}/datafast/status?${search.toString()}`,
+      lookupHeaders(lookupToken),
+    );
+  },
+  createPaypalOrder: (slug: string, registrationId: number, lookupToken: string) =>
+    post<PaypalCreateDTO>(
+      `${courseBase(normalizeCourseSlug(slug))}/registrations/${requirePositiveInteger(registrationId, 'registrationId')}/paypal/create`,
+      {},
+      lookupHeaders(lookupToken),
+    ),
+  capturePaypalOrder: (
+    slug: string,
+    registrationId: number,
+    paypalOrderId: string,
+    lookupToken: string,
+  ) => post<CourseCheckoutResponse>(
+    `${courseBase(normalizeCourseSlug(slug))}/registrations/${requirePositiveInteger(registrationId, 'registrationId')}/paypal/capture`,
+    { paypalOrderId },
+    lookupHeaders(lookupToken),
+  ),
   updateStatus: (slug: string, registrationId: number, payload: CourseRegistrationStatusUpdate) =>
     patch<CourseRegistrationResponse>(
       `/admin/courses/${normalizeCourseSlug(slug)}/registrations/${requirePositiveInteger(registrationId, 'registrationId')}/status`,

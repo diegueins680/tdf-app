@@ -3,17 +3,36 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
-import type { MarketplaceOrderDTO, MarketplaceOrderUpdatePayload } from '../api/types';
+import type {
+  MarketplaceFulfillmentUpdatePayload,
+  MarketplaceOrderDTO,
+  MarketplaceOrderUpdatePayload,
+  MarketplaceRentalUpdatePayload,
+} from '../api/types';
 
 const listOrdersMock = jest.fn<(params?: { status?: string; limit?: number; offset?: number }) => Promise<MarketplaceOrderDTO[]>>();
 const updateOrderMock = jest.fn<
   (orderId: string, payload: MarketplaceOrderUpdatePayload) => Promise<MarketplaceOrderDTO>
 >();
+const updateFulfillmentMock = jest.fn<
+  (orderId: string, payload: MarketplaceFulfillmentUpdatePayload) => Promise<MarketplaceOrderDTO>
+>();
+const updateRentalMock = jest.fn<
+  (orderId: string, payload: MarketplaceRentalUpdatePayload) => Promise<MarketplaceOrderDTO>
+>();
 
 jest.unstable_mockModule('../api/marketplace', () => ({
+  getMarketplaceDepositIdempotencyKey: () => 'marketplace-deposit-idempotency-0001',
+  clearMarketplaceDepositIdempotencyKey: jest.fn(),
   Marketplace: {
     listOrders: (params?: { status?: string; limit?: number; offset?: number }) => listOrdersMock(params),
     updateOrder: (orderId: string, payload: MarketplaceOrderUpdatePayload) => updateOrderMock(orderId, payload),
+    updateFulfillment: (orderId: string, payload: MarketplaceFulfillmentUpdatePayload) => (
+      updateFulfillmentMock(orderId, payload)
+    ),
+    updateRental: (orderId: string, payload: MarketplaceRentalUpdatePayload) => (
+      updateRentalMock(orderId, payload)
+    ),
   },
 }));
 
@@ -177,6 +196,28 @@ const setInputValue = async (input: HTMLInputElement, value: string) => {
   });
 };
 
+const setTextareaValue = async (textarea: HTMLTextAreaElement, value: string) => {
+  const valueSetter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+  if (!valueSetter) throw new Error('HTMLTextAreaElement value setter not found');
+
+  await act(async () => {
+    valueSetter.call(textarea, value);
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    textarea.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushPromises();
+  });
+};
+
+const getTextareaByLabel = (root: ParentNode, labelText: string) => {
+  const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
+    (element) => (element.textContent ?? '').replace('*', '').trim() === labelText,
+  );
+  if (!label?.htmlFor) throw new Error(`Label not found: ${labelText}`);
+  const textarea = label.ownerDocument.getElementById(label.htmlFor);
+  if (!(textarea instanceof HTMLTextAreaElement)) throw new Error(`Textarea not found for label: ${labelText}`);
+  return textarea;
+};
+
 const clickActionByText = async (root: ParentNode, labelText: string) => {
   const action = queryActionByText(root, labelText);
   if (!(action instanceof HTMLElement)) {
@@ -319,8 +360,12 @@ describe('MarketplaceOrdersPage', () => {
   beforeEach(() => {
     listOrdersMock.mockReset();
     updateOrderMock.mockReset();
+    updateFulfillmentMock.mockReset();
+    updateRentalMock.mockReset();
     listOrdersMock.mockResolvedValue([buildOrder()]);
     updateOrderMock.mockResolvedValue(buildOrder({ moStatus: 'paid', moPaidAt: '2030-01-01T13:00:00.000Z' }));
+    updateFulfillmentMock.mockResolvedValue(buildOrder());
+    updateRentalMock.mockResolvedValue(buildOrder());
   });
 
   it('replaces the first-order empty view with one guided state instead of list-only filter and export chrome', async () => {
@@ -2551,6 +2596,133 @@ describe('MarketplaceOrdersPage', () => {
         expect(orderCells.map((cell) => cell.textContent ?? '').join(' ')).not.toContain('USD');
         expect(container.textContent).toContain('$100.00');
         expect(container.textContent).toContain('$80.00');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps canonical payment read-only and applies only an allowed fulfillment transition', async () => {
+    const runtimeOrder = buildOrder({
+      moOrderId: 'order-1',
+      moStatus: 'paid',
+      moPaidAt: '2030-01-01T13:00:00.000Z',
+      moCheckoutStatus: 'paid',
+      moFulfillmentMethod: 'pickup',
+      moFulfillmentStatus: 'ready_to_fulfill',
+      moHoldExpiresAt: '2030-01-01T12:15:00.000Z',
+      moTrackingReference: null,
+      moFulfillmentHistory: [['ready_to_fulfill', '2030-01-01T13:00:00.000Z']],
+    });
+    const updatedRuntimeOrder: MarketplaceOrderDTO = {
+      ...runtimeOrder,
+      moFulfillmentStatus: 'picking',
+      moFulfillmentHistory: [
+        ...(runtimeOrder.moFulfillmentHistory ?? []),
+        ['picking', '2030-01-01T13:10:00.000Z'],
+      ],
+    };
+    listOrdersMock.mockResolvedValueOnce([runtimeOrder]).mockResolvedValue([updatedRuntimeOrder]);
+    updateFulfillmentMock.mockResolvedValue(updatedRuntimeOrder);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+      });
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Gestionar entrega');
+        expect(document.body.textContent).toContain('Lista para preparar');
+        expect(document.body.textContent).toContain('El pago y la entrega son estados separados.');
+        expect(countLabelsByText(document.body, 'Nuevo estado')).toBe(0);
+        expect(countLabelsByText(document.body, 'Proveedor de pago')).toBe(0);
+        expect(queryActionByText(document.body, 'Marcar pagado ahora')).toBeNull();
+      });
+
+      await selectOptionByLabel(document.body, 'Siguiente estado de entrega', 'En preparación');
+      await setInputValue(getInputByLabel(document.body, 'Código de motivo'), 'warehouse_pick');
+      await setTextareaValue(getTextareaByLabel(document.body, 'Notas de operación'), 'Operador inició la preparación.');
+      await clickActionByText(document.body, 'Guardar transición de entrega');
+
+      await waitForExpectation(() => {
+        expect(updateFulfillmentMock).toHaveBeenCalledTimes(1);
+        expect(updateFulfillmentMock).toHaveBeenCalledWith('order-1', {
+          mfuStatus: 'picking',
+          mfuReasonCode: 'warehouse_pick',
+          mfuNotes: 'Operador inició la preparación.',
+        });
+        expect(updateOrderMock).not.toHaveBeenCalled();
+        expect(document.body.textContent).toContain('En preparación');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('requires a condition report before transferring rental custody', async () => {
+    const rentalOrder = buildOrder({
+      moOrderKind: 'rental',
+      moStatus: 'paid',
+      moPaidAt: '2030-01-01T13:00:00.000Z',
+      moCheckoutStatus: 'paid',
+      moFulfillmentMethod: 'pickup',
+      moFulfillmentStatus: 'ready_for_handoff',
+      moRentalStartDate: '2030-01-10',
+      moRentalEndDate: '2030-01-12',
+      moRentalDurationDays: 3,
+      moRentalChargeUsdCents: 30000,
+      moSecurityDepositUsdCents: 5000,
+      moDepositStatus: 'collected',
+      moDepositDeductionUsdCents: 0,
+      moRentalTermsVersion: 'rental-v1',
+      moRentalTimezone: 'America/Guayaquil',
+      moFulfillmentHistory: [['ready_for_handoff', '2030-01-01T13:00:00.000Z']],
+    });
+    const checkedOutOrder = {
+      ...rentalOrder,
+      moFulfillmentStatus: 'checked_out',
+      moConditionOut: 'Consola operativa; dos rayones preexistentes documentados.',
+      moFulfillmentHistory: [
+        ...(rentalOrder.moFulfillmentHistory ?? []),
+        ['checked_out', '2030-01-10T14:00:00.000Z'] as [string, string],
+      ],
+    };
+    listOrdersMock.mockResolvedValueOnce([rentalOrder]).mockResolvedValue([checkedOutOrder]);
+    updateRentalMock.mockResolvedValue(checkedOutOrder);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => expect(queryActionByText(container, 'Abrir orden')).not.toBeNull());
+      await clickFirstOrderRow(container);
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Gestionar renta');
+        expect(document.body.textContent).toContain('Pago, custodia y depósito son estados separados.');
+        expect(countLabelsByText(document.body, 'Proveedor de pago')).toBe(0);
+      });
+
+      await selectOptionByLabel(document.body, 'Siguiente estado de renta', 'En custodia del cliente');
+      expect(queryActionByText(document.body, 'Guardar transición de renta')?.hasAttribute('disabled')).toBe(true);
+      await setTextareaValue(
+        getTextareaByLabel(document.body, 'Condición al entregar'),
+        'Consola operativa; dos rayones preexistentes documentados.',
+      );
+      await clickActionByText(document.body, 'Guardar transición de renta');
+
+      await waitForExpectation(() => {
+        expect(updateRentalMock).toHaveBeenCalledWith('order-1', {
+          mruStatus: 'checked_out',
+          mruConditionOut: 'Consola operativa; dos rayones preexistentes documentados.',
+        });
+        expect(updateFulfillmentMock).not.toHaveBeenCalled();
+        expect(updateOrderMock).not.toHaveBeenCalled();
       });
     } finally {
       await cleanup();

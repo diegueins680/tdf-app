@@ -187,6 +187,66 @@
       "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39"
     },
     {
+      "id": "2026-08-13_unified_checkout_core",
+      "path": "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
+      "introducedBy": "c79d22d3e150d9a492ee5eafad7e3052426e0c2b"
+    },
+    {
+      "id": "2026-08-13_distribution_accounting_core",
+      "path": "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
+      "introducedBy": "9c4a621e62073d263989fde9bf51ef5b16107e55"
+    },
+    {
+      "id": "2026-08-13_versioned_revenue_products",
+      "path": "tdf-hq/sql/2026-08-13_versioned_revenue_products.sql",
+      "introducedBy": "62a9cfaed413a50fe80c88ee834325648da6324d"
+    },
+    {
+      "id": "2026-08-13_distribution_product_seeds",
+      "path": "tdf-hq/sql/2026-08-13_distribution_product_seeds.sql",
+      "introducedBy": "b43065808494a7ed9e94ce8e6a87dcb33d25c96f"
+    },
+    {
+      "id": "2026-08-14_service_storefront_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-14_service_storefront_checkout_runtime.sql",
+      "introducedBy": "b52f48534ec196b03223f2f5203cf35f98a68278"
+    },
+    {
+      "id": "2026-08-14_checkout_event_refund_runtime",
+      "path": "tdf-hq/sql/2026-08-14_checkout_event_refund_runtime.sql",
+      "introducedBy": "df8b615cf4780d450550db6a93bb94a1fc21e968"
+    },
+    {
+      "id": "2026-08-14_provider_event_operations",
+      "path": "tdf-hq/sql/2026-08-14_provider_event_operations.sql",
+      "introducedBy": "1f992718f5fe3ce8493f4508ab23424a46ebdc6c"
+    },
+    {
+      "id": "2026-08-15_marketplace_sale_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-15_marketplace_sale_checkout_runtime.sql",
+      "introducedBy": "4ca1dfcf4a38d0defa1079b3193f29e5a4c61301"
+    },
+    {
+      "id": "2026-08-15_marketplace_rental_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql",
+      "introducedBy": "66bce4ef0d97ca00b8167c2fc898bb15ad9f5917"
+    },
+    {
+      "id": "2026-08-16_service_booking_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql",
+      "introducedBy": "a69c29f28f5e026e90885d6c0bb1280e07011f79"
+    },
+    {
+      "id": "2026-08-17_service_booking_provider_actions",
+      "path": "tdf-hq/sql/2026-08-17_service_booking_provider_actions.sql",
+      "introducedBy": "8553147dc3e41fc56aea2c12eb70c203e65a2c48"
+    },
+    {
+      "id": "2026-08-17_service_booking_manual_payments",
+      "path": "tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql",
+      "introducedBy": "973ab7495ac01ae0e52702719bd236e6e85f2656"
+    },
+    {
       "id": "2026-08-16_event_research_ingestion",
       "path": "tdf-hq/sql/2026-08-16_event_research_ingestion.sql",
       "introducedBy": "6198311849a0e12d7e44499051a88188b1ef3fd9"
@@ -202,6 +262,16 @@
       "introducedBy": "657198a14cb2a6bc20279ee47ffd5696144a74ba"
     },
     {
+      "id": "2026-08-17_marketplace_customer_requests_and_deposit_settlement",
+      "path": "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
+      "introducedBy": "583c91e82aa2d05860b338d0c2695b9c4d0df434"
+    },
+    {
+      "id": "2026-08-17_course_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-17_course_checkout_runtime.sql",
+      "introducedBy": "ae4b2317c0d450453dc20758e03d9942b6683a28"
+    },
+    {
       "id": "2026-08-17_social_event_optional_end",
       "path": "tdf-hq/sql/2026-08-17_social_event_optional_end.sql",
       "introducedBy": "c48f388938eecd92272f377f02c673ac784461be"
@@ -210,6 +280,11 @@
       "id": "2026-08-18_ddex_partner_legacy_compatibility",
       "path": "tdf-hq/sql/2026-08-18_ddex_partner_legacy_compatibility.sql",
       "introducedBy": "d0f7b80957610014fd436009247be3fc9e0904a0"
+    },
+    {
+      "id": "2026-08-18_public_ticket_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql",
+      "introducedBy": "313c8f96950dba0fd1706f08ce4d0e971002ca80"
     },
     {
       "id": "2026-08-18_music_directory_profile_images",

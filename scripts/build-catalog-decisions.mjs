@@ -62,6 +62,29 @@ function isServiceStorefrontOrderStatus(candidate) {
     && candidate.name === 'status';
 }
 
+function isMarketplaceRuntimeDiscriminant(candidate) {
+  if (candidate.file.endsWith('/TDF/ModelsExtra.hs') && candidate.name === 'AssetStatus') {
+    return true;
+  }
+  if (candidate.file.endsWith('/2026-08-15_marketplace_sale_checkout_runtime.sql')) {
+    const signatures = [
+      ['pickup', 'local_delivery', 'shipping'],
+      ['system', 'operator', 'provider', 'customer'],
+    ];
+    if (signatures.some((signature) => (
+      signature.length === candidate.values.length
+      && signature.every((value) => candidate.values.includes(value))
+    ))) return true;
+    return candidate.values.includes('on_hold') && candidate.values.includes('delivered');
+  }
+  return /(?:FULFILLMENT|Fulfillment|mfuStatus|moFulfillmentStatus)/.test(candidate.name)
+    && (
+      candidate.values.includes('pickup')
+      || candidate.values.includes('on_hold')
+      || candidate.values.includes('ready_to_fulfill')
+    );
+}
+
 function technicalRule(candidate) {
   const value = context(candidate);
   const lowerName = candidate.name.toLowerCase();
@@ -72,6 +95,9 @@ function technicalRule(candidate) {
     && candidate.name === 'migrations'
   ) {
     return 'Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.';
+  }
+  if (isMarketplaceRuntimeDiscriminant(candidate)) {
+    return 'Marketplace fulfillment, custody, and actor discriminants form a closed state-machine and audit protocol enforced across code, OpenAPI, and database constraints; making them editable would weaken transition correctness.';
   }
   if (
     candidate.file.endsWith('/TDF/App/Boot.hs')

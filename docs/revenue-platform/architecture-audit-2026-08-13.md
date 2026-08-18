@@ -41,6 +41,31 @@ The complete endpoint/surface mapping, including auth, pricing, tax, idempotency
 payment state, fulfillment, refunds, reconciliation, and public access, is in
 [`endpoint-inventory.csv`](endpoint-inventory.csv).
 
+## Implemented delta after the audited baseline
+
+The first domain-linked runtime slice now covers new mixing/mastering orders. Order creation and its
+immutable canonical checkout snapshot are one transaction. Datafast/PayPal operations persist
+idempotent attempts and immutable resource bindings; only server verification with matching
+environment, merchant, internal order, provider resource, amount and currency can post payment.
+Posting creates one balanced ledger transaction and one receipt while fulfillment remains separate.
+Manual selection remains under review. Provider mismatches create reconciliation exceptions, strict
+Admin is required for service administration, and the generic admin update cannot set financial
+states.
+
+Historical service orders are not silently linked. The migration exposes a read-only classification
+of safe unpaid candidates versus records requiring evidence-preserving reconciliation; it performs
+no backfill. Production Datafast/PayPal remain disabled, and signed event ingestion, refunds and
+sandbox proof remain later work.
+
+Subsequent independently testable slices link equipment sales, dated rentals, studio/DJ deposits,
+courses, and public event tickets to the same canonical checkout without moving their fulfillment
+into the checkout aggregate. Public event tickets now have a customer-safe storefront and
+capability-protected tracker; an approved policy is the price/tax/fee authority, event/tier/promotion
+holds are atomic and expiring, Datafast/PayPal require immutable server verification, and ticket
+issuance remains separate. Organizer proceeds post to a payable liability and settlement is
+disabled. These deltas do not rewrite the baseline findings below; current endpoint and rollout
+truth is maintained in the endpoint inventory and implementation-status record.
+
 ## Validated known findings
 
 1. `MixingMasteringPage.tsx` sends Datafast, PayPal, and bank transfer through the same
@@ -118,14 +143,17 @@ The enforceable transition tables and invariants are in [`formal-model.yaml`](fo
 
 Existing server payment variables are `DATAFAST_ENTITY_ID`, `DATAFAST_BEARER_TOKEN`,
 `DATAFAST_BASE_URL`, `DATAFAST_TEST_MODE`, `DATAFAST_MID`, `DATAFAST_TID`, `DATAFAST_PSERV`,
-`DATAFAST_USER_DATA2`, `DATAFAST_VERSIONDF`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`,
-`PAYPAL_ENV`, `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, and `STRIPE_WEBHOOK_SECRET`.
+`DATAFAST_USER_DATA2`, `DATAFAST_VERSIONDF`, `DATAFAST_ENV`, `COMMERCE_CHECKOUT_ENV`,
+`PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_ENV`, `PAYPAL_MERCHANT_ID`,
+`PAYPAL_WEBHOOK_ID`, `COMMERCE_EVENT_ENCRYPTION_KEY`,
+`COMMERCE_LOOKUP_TOKEN_SECRET`,
+`STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, and `STRIPE_WEBHOOK_SECRET`.
 Frontend/mobile public configuration includes `VITE_API_BASE`, `EXPO_PUBLIC_API_BASE`, Stripe
-publishable/merchant identifiers, `VITE_CARDANO_ADDRESS`, and the unsafe legacy
-`VITE_PUBLIC_BOOKING_TOKEN`/`VITE_API_DEMO_TOKEN` pair.
+publishable/merchant identifiers, and `VITE_CARDANO_ADDRESS`. Browser bearer configuration was
+removed in Phase 0 and must not be reintroduced.
 
-Missing explicit boundaries to add are provider enabled/mode variables, PayPal webhook ID, Datafast
-notification verification/capability configuration, private object-storage bucket/region/endpoint
+Missing explicit boundaries to add are Datafast notification verification/capability configuration,
+private object-storage bucket/region/endpoint
 and credential references, malware-scanner configuration, signed-link keys, per-partner credential
 references, DDEX mode, and payout enable/approval gates. Secret values belong in the deployment
 secret manager only. Provider payloads, access tokens, raw card data, protected asset URLs, KYC/tax
@@ -194,20 +222,41 @@ The accepted ADRs are:
 - [ADR-0104](../adr/0104-immutable-financial-ledger.md): immutable double-entry finance and manual payout gate.
 - [ADR-0105](../adr/0105-private-versioned-assets.md): private, checksummed, immutable asset versions.
 - [ADR-0106](../adr/0106-partner-profiled-ddex.md): partner-profiled DDEX with evidence-based status.
+- [ADR-0107](../adr/0107-marketplace-sale-holds-and-custody.md): unique-asset sale holds and separate physical custody.
+- [ADR-0108](../adr/0108-marketplace-rental-dates-deposits-and-custody.md): dated rental holds, condition evidence, and truthful deposit due states.
+- [ADR-0109](../adr/0109-service-booking-deposits-and-shared-calendar.md): approved service quotes, one exclusion-backed booking calendar, and separate deposit/fulfillment states.
+- [ADR-0110](../adr/0110-marketplace-customer-requests-and-deposit-settlement.md): scoped customer-operation requests, quote-only rental extensions, and independently verified manual deposit-liability settlement.
+- [ADR-0111](../adr/0111-course-seat-holds-and-verified-enrollment.md): authoritative course policy, atomic seat holds, and enrollment only after verified payment.
+- [ADR-0112](../adr/0112-ticket-payment-evidence-and-seat-holds.md): ticket payment evidence, expiring capacity holds, and separate issuance.
+- [ADR-0113](../adr/0113-public-event-ticket-checkout-and-organizer-liability.md): guest ticket checkout, provider binding, and organizer payable liability.
 
 ## Feature flags and phased rollout
 
-Every flag is independently killable. New flags default `false` outside local/test unless stated:
+Every flag is independently killable. The canonical runtime flags are rows in
+`revenue_feature_flag`, keyed by environment; production rows default to disabled. Environment
+variables select immutable sandbox/production configuration but do not override a disabled
+production capability:
 
-- providers: `CHECKOUT_DATAFAST_ENABLED`, `CHECKOUT_PAYPAL_ENABLED`,
-  `CHECKOUT_STRIPE_ENABLED`, `MANUAL_PAYMENT_ENABLED`, `CARDANO_VERIFICATION_ENABLED`;
+- implemented keys: `checkout.datafast`, `checkout.paypal`, `checkout.paypal.webhooks`,
+  `checkout.paypal.refunds`, `checkout.datafast.webhooks`, `checkout.datafast.refunds`,
+  `checkout.provider_event_worker`, `commerce.mixing_mastering`, `commerce.marketplace_sales`,
+  `commerce.marketplace_rentals`, `commerce.marketplace_manual_deposit_settlement`, and
+  `commerce.service_bookings`, `commerce.courses`, `commerce.course_recurring_billing`,
+  `commerce.event_tickets`, and `commerce.event_ticket_settlements`; the marketplace domain rows and
+  dual-control manual deposit settlement are enabled, while service bookings, courses, public event
+  tickets, and organizer settlement default disabled pending policy approval and credentialed
+  sandbox/settlement evidence; booking/course/ticket Datafast and PayPal actions are implemented but
+  production provider execution remains independently disabled, and automatic course renewal
+  remains disabled pending a verified recurring merchant capability; planned keys must use
+  the same registry rather than introducing an untracked environment-only bypass;
 - domains: `COMMERCE_MIXING_ENABLED`, `COMMERCE_EQUIPMENT_SALES_ENABLED`,
   `COMMERCE_RENTALS_ENABLED`, `COMMERCE_BOOKINGS_ENABLED`, `COMMERCE_DOMO_ENABLED`,
   `COMMERCE_COURSES_ENABLED`, `COMMERCE_TICKETS_ENABLED`, `COMMERCE_TIPS_ENABLED`,
   `COMMERCE_MEMBERSHIPS_ENABLED`, `COMMERCE_PROVIDER_SERVICES_ENABLED`,
   `COMMERCE_DISTRIBUTION_ENABLED`;
-- operations: `PROVIDER_EVENTS_ENABLED`, `REFUNDS_ENABLED`, `RECONCILIATION_ENABLED`,
-  `PRIVATE_ASSETS_ENABLED`, `SRI_INVOICING_ENABLED`;
+- operations: provider-event execution uses the canonical environment-scoped
+  `checkout.provider_event_worker` row; planned reconciliation, private-asset, and SRI-invoicing
+  capabilities must also use registry rows rather than environment-only bypasses;
 - distribution: `DDEX_IMPORT_ENABLED`, `DDEX_EXPORT_ENABLED`, `DDEX_DELIVERY_ENABLED`,
   `DDEX_TAKEDOWN_ENABLED`, `ROYALTY_INGEST_ENABLED`, `STATEMENTS_ENABLED`,
   `AUTOMATIC_PAYOUTS_ENABLED`, plus a recipient-specific flag.
