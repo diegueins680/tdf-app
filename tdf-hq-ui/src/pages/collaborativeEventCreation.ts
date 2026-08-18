@@ -19,7 +19,7 @@ export interface CollaborativeEventDraft {
   title: string;
   description: string;
   startAt: string;
-  durationMinutes: number;
+  durationMinutes: number | null;
   venueId: string;
   eventTypeId: string;
   price: string;
@@ -121,20 +121,23 @@ export function buildCollaborativeEventPayload(
   if (title.length > 200) {
     throw new Error('El nombre del evento debe tener 200 caracteres o menos.');
   }
-  if (
+  if (draft.durationMinutes !== null && (
     !Number.isSafeInteger(draft.durationMinutes)
     || draft.durationMinutes <= 0
     || draft.durationMinutes > MAX_DURATION_MINUTES
-  ) {
+  )) {
     throw new Error('Selecciona una duración válida.');
   }
 
   const start = DateTime.fromFormat(draft.startAt, LOCAL_DATE_TIME_FORMAT);
   if (!start.isValid) throw new Error('Selecciona una fecha y hora válidas.');
-  const end = start.plus({ minutes: draft.durationMinutes });
   const startIso = start.toUTC().toISO();
-  const endIso = end.toUTC().toISO();
-  if (!startIso || !endIso) throw new Error('No se pudo interpretar la fecha del evento.');
+  const endIso = draft.durationMinutes === null
+    ? null
+    : start.plus({ minutes: draft.durationMinutes }).toUTC().toISO();
+  if (!startIso || (draft.durationMinutes !== null && !endIso)) {
+    throw new Error('No se pudo interpretar la fecha del evento.');
+  }
   const eventTypeId = draft.eventTypeId.trim();
   if (!eventTypeId) throw new Error('Selecciona un tipo de evento publicado.');
 

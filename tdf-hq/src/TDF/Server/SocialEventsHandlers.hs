@@ -79,6 +79,7 @@ module TDF.Server.SocialEventsHandlers (
     isImageUpload,
     validateEventImageUploadSize,
     validateEventTitleInput,
+    validateEventTimeRange,
     validateArtistName,
     validateSocialEventsFeatureAction,
     validateArtistProfileCreateParty,
@@ -149,7 +150,17 @@ import Servant.Multipart (FileData (..))
 -- Pull in full Persistent surface so TH-generated field constructors
 -- (EventRsvpEventId, SocialEventStartTime, etc.) are available.
 import Database.Persist
-import Database.Persist.Sql (ConnectionPool, SqlBackend, SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey, updateWhereCount)
+import Database.Persist.Sql
+    ( ConnectionPool
+    , Single (..)
+    , SqlBackend
+    , SqlPersistT
+    , fromSqlKey
+    , rawSql
+    , runSqlPool
+    , toSqlKey
+    , updateWhereCount
+    )
 import Database.PostgreSQL.Simple (SqlError (..))
 
 import Crypto.Hash.Algorithms (SHA256)
@@ -1843,6 +1854,10 @@ socialEventsServer user =
                 if null eventIds
                     then pure [SocialEventId ==. toSqlKey 0]
                     else pure [SocialEventId <-. eventIds]
+        hiddenPilotDraftIds <-
+            if hasStrictAdminAccess user
+                then pure []
+                else liftIO $ runSqlPool loadPilotDraftEventIds envPool
         let filters =
                 startFilter
                     ++ cityFilter
@@ -1850,6 +1865,9 @@ socialEventsServer user =
                     ++ artistFilter
                     ++ maybe [] (\eventTypeUuid -> [SocialEventEventTypeId ==. Just eventTypeUuid]) eventTypeFilter
                     ++ maybe [] (\stateUuid -> [SocialEventWorkflowStateId ==. Just stateUuid]) workflowStateFilter
+                    ++ if null hiddenPilotDraftIds
+                        then []
+                        else [SocialEventId /<-. hiddenPilotDraftIds]
         let dateOrder =
                 case mStartAfter of
                     Just _ -> Asc SocialEventStartTime
@@ -2166,7 +2184,7 @@ socialEventsServer user =
         Env{..} <- ask
         now <- liftIO getCurrentTime
         titleVal <- either throwError pure (validateEventTitleInput (eventTitle dto))
-        when (eventStart dto >= eventEnd dto) $ throwError err400{errBody = "start time must be before end time"}
+        either throwError pure (validateEventTimeRange (eventStart dto) (eventEnd dto))
         timezoneVal <- traverse (either throwError pure . validateEventTimeZone) (eventTimezone dto)
         either throwError pure $
             validateEventCreateUpdateDimensions
@@ -2264,6 +2282,9 @@ socialEventsServer user =
     getEvent rawId = do
         Env{..} <- ask
         eventKey <- parseKeyOr400 "event" rawId
+        when (not (hasStrictAdminAccess user)) $ do
+            pilotDraft <- liftIO $ runSqlPool (isPilotDraftEvent eventKey) envPool
+            when pilotDraft $ throwError err404{errBody = "Event not found"}
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         case mEvent of
             Nothing -> throwError err404{errBody = "Event not found"}
@@ -2289,7 +2310,7 @@ socialEventsServer user =
             liftIO (runSqlPool (loadSelectableEventTypeId now requestedEventTypeId) envPool)
                 >>= either throwError pure
         titleVal <- either throwError pure (validateEventTitleInput (eventTitle dto))
-        when (eventStart dto >= eventEnd dto) $ throwError err400{errBody = "start time must be before end time"}
+        either throwError pure (validateEventTimeRange (eventStart dto) (eventEnd dto))
         timezoneVal <- traverse (either throwError pure . validateEventTimeZone) (eventTimezone dto)
         either throwError pure $
             validateEventCreateUpdateDimensions
@@ -7057,6 +7078,14 @@ validateEventTitleInput rawTitle
   where
     titleVal = T.strip rawTitle
 
+-- An event may legitimately have no confirmed end yet. When an end is
+-- supplied, keep the invariant strict instead of deriving a duration.
+validateEventTimeRange :: UTCTime -> Maybe UTCTime -> Either ServerError ()
+validateEventTimeRange _ Nothing = Right ()
+validateEventTimeRange startTime (Just endTime)
+    | startTime < endTime = Right ()
+    | otherwise = Left err400{errBody = "start time must be before end time"}
+
 maxEventTitleChars :: Int
 maxEventTitleChars = 160
 
@@ -8170,6 +8199,26 @@ loadExternalEventSources pool eventKey =
             pure (map snd (sortOn (negate . fst) ranked))
         )
         pool
+
+loadPilotDraftEventIds :: SqlPersistT IO [SocialEventId]
+loadPilotDraftEventIds = do
+    rows <-
+        rawSql
+            "SELECT DISTINCT event_id FROM external_event_ref\
+            \ WHERE lower(trim(source_status)) LIKE 'draft:%'"
+            []
+    pure [eventKey | Single eventKey <- rows]
+
+isPilotDraftEvent :: SocialEventId -> SqlPersistT IO Bool
+isPilotDraftEvent eventKey = do
+    rows <-
+        rawSql
+            "SELECT event_id FROM external_event_ref\
+            \ WHERE event_id=?\
+            \ AND lower(trim(source_status)) LIKE 'draft:%'\
+            \ LIMIT 1"
+            [toPersistValue eventKey]
+    pure (not (null (rows :: [Single SocialEventId])))
 
 eventEntityToDTO :: T.Text -> SocialEventId -> SocialEvent -> [ArtistDTO] -> SqlPersistT IO (Either ServerError EventDTO)
 eventEntityToDTO configuredDefault eid eventRow artists = do

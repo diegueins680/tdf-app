@@ -90,6 +90,7 @@ import           TDF.Services.EventDiscovery
   , DiscoveredVenue(..)
   , EventDiscoveryCity(..)
   , beginEventDiscoveryRun
+  , discoveredEventFitsPilotLimit
   , failEventDiscoveryRun
   , fetchBuenPlanEvents
   , fetchStructuredFeedEvents
@@ -99,6 +100,7 @@ import           TDF.Services.EventDiscovery
   , reconcileProviderEvents
   , reconcileImportedEvents
   , syncDiscoveredEvent
+  , syncDiscoveredEventDraft
   )
 import           TDF.Services.EventLogisticsRoutes
   ( RouteEstimateInput(..)
@@ -122,6 +124,8 @@ import qualified TDF.Trials.Models       as Trials
 import           TDF.Config
   ( AppConfig
   , eventDiscoveryEnabled
+  , eventDiscoveryAutoPublish
+  , eventDiscoveryPilotLimit
   , instagramAppToken
   , ticketmasterApiKey
   , eventLogisticsRecheckEnabled
@@ -734,18 +738,43 @@ runEventDiscoveryOnce Env{..} = do
             _ -> pure (Left "Venue feed requires both feed URL and city")
 
     syncOne now totals event = do
-      synced <- tryNonAsync (syncDiscoveredEvent envPool now event)
-      case synced of
-        Left err -> do
+      let autoPublish = eventDiscoveryAutoPublish envConfig
+      withinPilotLimit <-
+        if autoPublish
+          then pure True
+          else
+            discoveredEventFitsPilotLimit
+              envPool
+              (eventDiscoveryPilotLimit envConfig)
+              event
+      if not withinPilotLimit
+        then do
           LogBuf.addLog
-            LogBuf.LogError
-            ( "[Cron][EventDiscovery] Failed to persist an event for "
-                <> discoveredVenueCity (discoveredEventVenue event)
-                <> ": "
-                <> T.pack (displayException err)
+            LogBuf.LogInfo
+            ( "[Cron][EventDiscovery] Pilot limit reached; deferred new event "
+                <> discoveredEventProvider event
+                <> ":"
+                <> discoveredEventExternalId event
+                <> "."
             )
-          pure totals
-        Right stats -> pure (addDiscoveryStats totals stats)
+          pure totals { discoveryEventsSeen = discoveryEventsSeen totals + 1 }
+        else do
+          let syncAction =
+                if autoPublish
+                  then syncDiscoveredEvent envPool now event
+                  else syncDiscoveredEventDraft envPool now event
+          synced <- tryNonAsync syncAction
+          case synced of
+            Left err -> do
+              LogBuf.addLog
+                LogBuf.LogError
+                ( "[Cron][EventDiscovery] Failed to persist an event for "
+                    <> discoveredVenueCity (discoveredEventVenue event)
+                    <> ": "
+                    <> T.pack (displayException err)
+                )
+              pure totals
+            Right stats -> pure (addDiscoveryStats totals stats)
 
     markSourceFailure sourceKey finishedAt errText =
       runSqlPool

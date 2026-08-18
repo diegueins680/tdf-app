@@ -3747,8 +3747,11 @@ export interface components {
             eventDescription?: string | null;
             /** Format: date-time */
             eventStart: string;
-            /** Format: date-time */
-            eventEnd: string;
+            /**
+             * Format: date-time
+             * @description Optional confirmed end. Omit it or send null when no official end or duration is known; clients must not infer one.
+             */
+            eventEnd?: string | null;
             /** @example America/Guayaquil */
             eventTimezone?: string | null;
             eventVenueId?: string | null;

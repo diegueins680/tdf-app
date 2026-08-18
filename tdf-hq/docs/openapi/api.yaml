@@ -4496,7 +4496,7 @@ components:
     SocialEvent:
       type: object
       additionalProperties: false
-      required: [eventTitle, eventStart, eventEnd, eventTypeId, eventArtists]
+      required: [eventTitle, eventStart, eventTypeId, eventArtists]
       properties:
         eventId:
           type: string
@@ -4515,6 +4515,8 @@ components:
         eventEnd:
           type: string
           format: date-time
+          nullable: true
+          description: Optional confirmed end. Omit it or send null when no official end or duration is known; clients must not infer one.
         eventTimezone:
           type: string
           nullable: true

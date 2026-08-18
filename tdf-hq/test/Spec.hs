@@ -410,6 +410,7 @@ import TDF.Server.SocialEventsHandlers (
     ticketOrderAccountingEntriesEither,
     findTicketForCheckIn,
     validateEventTitleInput,
+    validateEventTimeRange,
     validateOptionalTicketBuyerPartyId,
     validateTicketPurchaseBuyerName,
     validateTicketPurchaseBuyerEmail,
@@ -9340,6 +9341,23 @@ main = hspec $ do
                 "hidden formatting characters"
                 ("Noche" <> Data.Text.singleton '\x202E' <> "TDF")
 
+    describe "validateEventTimeRange" $ do
+        let start = UTCTime (fromGregorian 2026 8 17) (secondsToDiffTime 3600)
+
+        it "accepts an event without a confirmed end" $
+            validateEventTimeRange start Nothing `shouldBe` Right ()
+
+        it "accepts a confirmed end after the start" $
+            validateEventTimeRange start (Just (addUTCTime 3600 start)) `shouldBe` Right ()
+
+        it "rejects an end at or before the start" $ do
+            forM_ [start, addUTCTime (-1) start] $ \invalidEnd ->
+                case validateEventTimeRange start (Just invalidEnd) of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` "start time must be before end time"
+                    Right () -> expectationFailure "Expected invalid event time range to be rejected"
+
     describe "validateEventCreateUpdateDimensions" $ do
         it "accepts omitted, free, and finite non-negative event pricing dimensions" $ do
             validateEventCreateUpdateDimensions Nothing Nothing Nothing `shouldBe` Right ()
@@ -10155,7 +10173,7 @@ main = hspec $ do
                                 , socialEventDescription = Nothing
                                 , socialEventVenueId = Nothing
                                 , socialEventStartTime = now
-                                , socialEventEndTime = addUTCTime 3600 now
+                                , socialEventEndTime = Just (addUTCTime 3600 now)
                                 , socialEventPriceCents = Nothing
                                 , socialEventCapacity = Nothing
                                 , socialEventMetadata = Nothing
@@ -10174,7 +10192,7 @@ main = hspec $ do
                                 , socialEventDescription = Nothing
                                 , socialEventVenueId = Nothing
                                 , socialEventStartTime = now
-                                , socialEventEndTime = addUTCTime 5400 now
+                                , socialEventEndTime = Just (addUTCTime 5400 now)
                                 , socialEventPriceCents = Nothing
                                 , socialEventCapacity = Nothing
                                 , socialEventMetadata = Nothing

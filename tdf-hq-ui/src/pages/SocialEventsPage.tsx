@@ -1240,7 +1240,8 @@ export default function SocialEventsPage() {
                               {event.eventTitle}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
-                              {formatDate(event.eventStart)} - {formatDate(event.eventEnd)}
+                              {formatDate(event.eventStart)}
+                              {event.eventEnd ? ` - ${formatDate(event.eventEnd)}` : ' · fin por confirmar'}
                             </Typography>
                             {event.eventVenueId && (
                               <Typography variant="caption" color="text.secondary" display="block">
@@ -1366,7 +1367,7 @@ export default function SocialEventsPage() {
                       <Stack direction="row" spacing={1} alignItems="center">
                         <Chip icon={<CalendarMonthIcon />} label={formatDate(ev.eventStart)} size="small" />
                         <Typography variant="caption" color="text.secondary">
-                          Termina {formatDate(ev.eventEnd)}
+                          {ev.eventEnd ? `Termina ${formatDate(ev.eventEnd)}` : 'Fin por confirmar'}
                         </Typography>
                       </Stack>
                       <Stack direction="row" spacing={1} flexWrap="wrap">

@@ -200,6 +200,11 @@
       "id": "2026-08-16_music_directory_verified_reviews",
       "path": "tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql",
       "introducedBy": "657198a14cb2a6bc20279ee47ffd5696144a74ba"
+    },
+    {
+      "id": "2026-08-17_social_event_optional_end",
+      "path": "tdf-hq/sql/2026-08-17_social_event_optional_end.sql",
+      "introducedBy": "c48f388938eecd92272f377f02c673ac784461be"
     }
   ]
 }
