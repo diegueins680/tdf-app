@@ -11,6 +11,7 @@ module TDF.Server.EventResearch
     , eventResearchCandidateContentHash
     , eventResearchMaterializationDedupeKey
     , materializationEventRefSourceStatus
+    , materializationVenueCountryMatches
     , materializationWorkflowStateCode
     ) where
 
@@ -579,49 +580,73 @@ resolveMaterializationVenue candidate validated now = do
     case existingRef of
         Just (Entity _ ref) -> do
             venue <- get (externalVenueRefVenueId ref)
-            pure $ maybe (Left (storedDataError "stored venue reference is broken")) (const (Right (externalVenueRefVenueId ref))) venue
+            pure $ case venue of
+                Nothing -> Left (storedDataError "stored venue reference is broken")
+                Just venueRow
+                    | materializationVenueCountryMatches
+                        (eventResearchCandidateCountryCode candidate)
+                        (venueCountryCode venueRow) -> Right (externalVenueRefVenueId ref)
+                    | otherwise -> Left (conflict "stored venue reference country does not match the candidate")
         Nothing -> do
             venues <- selectList [] []
-            let matches =
+            let sameNameAndCity (Entity _ venue) =
+                    normalizeEntityText (venueName venue) == normalizeEntityText validated.vmVenueName
+                        && maybe False ((== normalizeEntityText validated.vmCity) . normalizeEntityText) (venueCity venue)
+                matches =
                     filter
-                        (\(Entity _ venue) ->
-                            normalizeEntityText (venueName venue) == normalizeEntityText validated.vmVenueName
-                                && maybe False ((== normalizeEntityText validated.vmCity) . normalizeEntityText) (venueCity venue)
-                                && maybe True ((== eventResearchCandidateCountryCode candidate) . T.toUpper . T.strip) (venueCountryCode venue)
+                        ( \entity@(Entity _ venue) ->
+                            sameNameAndCity entity
+                                && materializationVenueCountryMatches
+                                    (eventResearchCandidateCountryCode candidate)
+                                    (venueCountryCode venue)
+                        )
+                        venues
+                countryUnknownMatches =
+                    filter
+                        ( \entity@(Entity _ venue) ->
+                            sameNameAndCity entity
+                                && maybe True (T.null . T.strip) (venueCountryCode venue)
                         )
                         venues
             case matches of
                 [Entity venueId _] -> do
                     _ <- insertUnique (ExternalVenueRef provider externalId venueId now)
                     pure (Right venueId)
-                [] -> do
-                    let (latitude, longitude) =
-                            maybe (Nothing, Nothing) (\coords -> (Just coords.mcLatitude, Just coords.mcLongitude)) validated.vmCoordinates
-                        contact =
-                            fmap
-                                (\province -> encodeJson (Aeson.object ["state" Aeson..= province]))
-                                (eventResearchCandidateProvince candidate)
-                    venueId <-
-                        insert
-                            Venue
-                                { venueName = validated.vmVenueName
-                                , venueAddress = validated.vmAddress
-                                , venueCity = Just validated.vmCity
-                                , venueCountry = Nothing
-                                , venueCountryCode = Just (eventResearchCandidateCountryCode candidate)
-                                , venueCountryId = Nothing
-                                , venueCityId = Nothing
-                                , venueTimezone = Just (eventResearchCandidateTimezone candidate)
-                                , venueLatitude = latitude
-                                , venueLongitude = longitude
-                                , venueCapacity = Nothing
-                                , venueContact = contact
-                                , venueCreatedAt = now
-                                , venueUpdatedAt = now
-                                }
-                    inserted <- insertUnique (ExternalVenueRef provider externalId venueId now)
-                    pure $ maybe (Left (conflict "venue identity was created concurrently")) (const (Right venueId)) inserted
+                []
+                    | not (null countryUnknownMatches) ->
+                        pure (Left (conflict "venue identity is ambiguous because an existing venue has no confirmed country"))
+                    | otherwise -> do
+                        let (latitude, longitude) =
+                                maybe (Nothing, Nothing) (\coords -> (Just coords.mcLatitude, Just coords.mcLongitude)) validated.vmCoordinates
+                            contact =
+                                fmap
+                                    (\province -> encodeJson (Aeson.object ["state" Aeson..= province]))
+                                    (eventResearchCandidateProvince candidate)
+                        venueId <-
+                            insert
+                                Venue
+                                    { venueName = validated.vmVenueName
+                                    , venueAddress = validated.vmAddress
+                                    , venueCity = Just validated.vmCity
+                                    , venueCountry = Nothing
+                                    , venueCountryCode = Just (eventResearchCandidateCountryCode candidate)
+                                    , venueCountryId = Nothing
+                                    , venueCityId = Nothing
+                                    , venueTimezone = Just (eventResearchCandidateTimezone candidate)
+                                    , venueLatitude = latitude
+                                    , venueLongitude = longitude
+                                    , venueCapacity = Nothing
+                                    , venueContact = contact
+                                    , venueCreatedAt = now
+                                    , venueUpdatedAt = now
+                                    }
+                        inserted <- insertUnique (ExternalVenueRef provider externalId venueId now)
+                        pure $ maybe (Left (conflict "venue identity was created concurrently")) (const (Right venueId)) inserted
                 _ -> pure (Left (conflict "venue identity is ambiguous"))
+
+materializationVenueCountryMatches :: T.Text -> Maybe T.Text -> Bool
+materializationVenueCountryMatches candidateCountryCode =
+    maybe False ((== T.toUpper (T.strip candidateCountryCode)) . T.toUpper . T.strip)
 
 resolveMaterializationArtists
     :: EventResearchCandidate
@@ -712,7 +737,8 @@ insertMaterializationEventRef
     -> SocialEventId
     -> UTCTime
     -> SqlPersistT IO Bool
-insertMaterializationEventRef candidate request validated eventId now =
+insertMaterializationEventRef candidate request validated eventId now = do
+    eventAlreadyPublished <- materializedEventIsPublished eventId
     isJust
         <$> insertUnique
             ExternalEventRef
@@ -727,12 +753,15 @@ insertMaterializationEventRef candidate request validated eventId now =
                 , externalEventRefLastSeenAt = now
                 , externalEventRefMissingRuns = 0
                 , externalEventRefSourceStatus =
-                    materializationEventRefSourceStatus request.erMaterializationPublish validated.vmSourceStatus
+                    materializationEventRefSourceStatus
+                        request.erMaterializationPublish
+                        eventAlreadyPublished
+                        validated.vmSourceStatus
                 }
 
-materializationEventRefSourceStatus :: Bool -> T.Text -> T.Text
-materializationEventRefSourceStatus publish sourceStatus
-    | publish = sourceStatus
+materializationEventRefSourceStatus :: Bool -> Bool -> T.Text -> T.Text
+materializationEventRefSourceStatus publish eventAlreadyPublished sourceStatus
+    | publish || eventAlreadyPublished = sourceStatus
     | otherwise = "materialization_draft:" <> sourceStatus
 
 releaseMaterializationPublicationHold :: EventResearchCandidate -> SocialEventId -> SqlPersistT IO ()

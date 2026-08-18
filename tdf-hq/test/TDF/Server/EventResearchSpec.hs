@@ -162,9 +162,16 @@ spec = do
                     { erCandidatePayload = materializationPayloadWithAvailability "unavailable" }
                 `shouldSatisfy` isLeft
 
-        it "marks unpublished provider references as drafts" $ do
-            materializationEventRefSourceStatus False "on_sale" `shouldBe` "materialization_draft:on_sale"
-            materializationEventRefSourceStatus True "on_sale" `shouldBe` "on_sale"
+        it "holds only unpublished references attached to private events" $ do
+            materializationEventRefSourceStatus False False "on_sale" `shouldBe` "materialization_draft:on_sale"
+            materializationEventRefSourceStatus False True "on_sale" `shouldBe` "on_sale"
+            materializationEventRefSourceStatus True False "on_sale" `shouldBe` "on_sale"
+
+        it "requires a confirmed matching country before reusing a venue" $ do
+            materializationVenueCountryMatches "EC" (Just "ec") `shouldBe` True
+            materializationVenueCountryMatches "EC" Nothing `shouldBe` False
+            materializationVenueCountryMatches "EC" (Just "") `shouldBe` False
+            materializationVenueCountryMatches "EC" (Just "CO") `shouldBe` False
 
         it "uses only valid materialization workflow states" $ do
             materializationWorkflowStateCode True "on_sale" `shouldBe` "on_sale"
