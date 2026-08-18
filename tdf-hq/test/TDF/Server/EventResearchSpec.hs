@@ -163,7 +163,7 @@ spec = do
                 `shouldSatisfy` isLeft
 
         it "marks unpublished provider references as drafts" $ do
-            materializationEventRefSourceStatus False "on_sale" `shouldBe` "draft:on_sale"
+            materializationEventRefSourceStatus False "on_sale" `shouldBe` "materialization_draft:on_sale"
             materializationEventRefSourceStatus True "on_sale" `shouldBe` "on_sale"
 
         it "uses only valid materialization workflow states" $ do

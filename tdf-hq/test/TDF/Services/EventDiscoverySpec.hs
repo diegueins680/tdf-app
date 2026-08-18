@@ -7,7 +7,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL8
 import Control.Monad.Logger (runNoLoggingT)
 import Data.Pool (destroyAllResources)
 import Data.Time (UTCTime(..), addUTCTime, fromGregorian, secondsToDiffTime)
-import Database.Persist (Entity(..), Filter, count, get, getBy)
+import Database.Persist (Entity(..), Filter, count, get, getBy, update, (=.))
 import Database.Persist.Sql (SqlPersistT, rawExecute, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePool)
 import Test.Hspec
@@ -329,6 +329,53 @@ spec = do
                 `shouldBe` Just "00000000-0000-4000-8000-000000000231"
               Social.socialEventMetadata row
                 `shouldSatisfy` maybe False (T.isInfixOf "\"isPublic\":false")
+
+    it "preserves materialization publication holds across auto-publish refreshes" $ do
+      event <- case eitherDecode ticketmasterFixture of
+        Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"
+        Right response ->
+          case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
+            [normalized] -> pure normalized
+            other -> expectationFailure ("Expected one normalized event, got " <> show other) >> fail "invalid normalized fixture"
+      pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+      runSqlPool initializeEventDiscoverySchema pool
+
+      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 5) event
+      heldRef <-
+        runSqlPool
+          (getBy (Social.UniqueExternalEventRef "ticketmaster" "tm-event-1"))
+          pool
+      case heldRef of
+        Nothing -> expectationFailure "Expected a persisted source reference"
+        Just (Entity refId ref) -> do
+          runSqlPool
+            ( do
+                update refId [Social.ExternalEventRefSourceStatus =. "materialization_draft:on_sale"]
+                update
+                  (Social.externalEventRefEventId ref)
+                  [Social.SocialEventTitle =. "Corrección manual"]
+            )
+            pool
+          _ <-
+            syncDiscoveredEvent
+              pool
+              (fixtureTime 10 10)
+              event
+                { discoveredEventTitle = "Título nuevo del proveedor"
+                , discoveredEventArtists =
+                    discoveredEventArtists event
+                      <> [DiscoveredArtist "tm-artist-2" "Artista del refresh" [] Nothing]
+                }
+          refreshedRef <- runSqlPool (get refId) pool
+          Social.externalEventRefSourceStatus <$> refreshedRef
+            `shouldBe` Just "materialization_draft:on_sale"
+          heldEvent <- runSqlPool (get (Social.externalEventRefEventId ref)) pool
+          Social.socialEventTitle <$> heldEvent `shouldBe` Just "Corrección manual"
+          (UUID.toText <$> (Social.socialEventWorkflowStateId =<< heldEvent))
+            `shouldBe` Just "00000000-0000-4000-8000-000000000231"
+          (Social.socialEventMetadata =<< heldEvent)
+            `shouldSatisfy` maybe False (T.isInfixOf "\"isPublic\":false")
+          runSqlPool (count ([] :: [Filter Social.EventArtist])) pool `shouldReturn` 1
 
     it "allows a new provider reference to merge when the canonical pilot is full" $ do
       event <- case eitherDecode ticketmasterFixture of

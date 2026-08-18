@@ -32,7 +32,7 @@ module TDF.Services.EventDiscovery
 
 import Control.Applicative ((<|>))
 import Control.Exception (try)
-import Control.Monad (forM, forM_)
+import Control.Monad (forM, forM_, unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Concurrent (threadDelay)
 import Data.Aeson
@@ -1872,11 +1872,18 @@ refreshCanonicalVisibility now eventKey = do
         forM refs $ \entity@(Entity _ ref) -> do
           priority <- eventSourcePriority (Social.externalEventRefProvider ref)
           pure (priority, entity)
-      let activeRefs =
-            [ (priority, ref)
-            | (priority, Entity _ ref) <- rankedRefs
-            , sourceRefIsActive ref
-            ]
+      let hasMaterializationPublicationHold =
+            any
+              (isMaterializationDraftSourceStatus . Social.externalEventRefSourceStatus . entityVal)
+              refs
+          activeRefs =
+            if hasMaterializationPublicationHold
+              then []
+              else
+                [ (priority, ref)
+                | (priority, Entity _ ref) <- rankedRefs
+                , sourceRefIsActive ref
+                ]
           hasDraftRef =
             any
               (isDraftSourceStatus . Social.externalEventRefSourceStatus . entityVal)
@@ -1926,7 +1933,14 @@ sourceRefIsActive ref =
       T.toCaseFold (T.strip (Social.externalEventRefSourceStatus ref))
 
 isDraftSourceStatus :: Text -> Bool
-isDraftSourceStatus = T.isPrefixOf "draft:" . T.toCaseFold . T.strip
+isDraftSourceStatus rawStatus =
+  let normalized = T.toCaseFold (T.strip rawStatus)
+   in T.isPrefixOf "draft:" normalized
+        || T.isPrefixOf "materialization_draft:" normalized
+
+isMaterializationDraftSourceStatus :: Text -> Bool
+isMaterializationDraftSourceStatus =
+  T.isPrefixOf "materialization_draft:" . T.toCaseFold . T.strip
 
 normalizeImportedSourceStatus :: Text -> Text
 normalizeImportedSourceStatus rawStatus
@@ -1939,9 +1953,21 @@ normalizeImportedSourceStatus rawStatus
 syncDiscoveredEventDb :: Bool -> UTCTime -> DiscoveredEvent -> SqlPersistT IO DiscoverySyncStats
 syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
   eventTypeUuid <- resolvePublishedEventTypeId now discoveredEventType
+  existingRef <-
+    getBy
+      (Social.UniqueExternalEventRef discoveredEventProvider discoveredEventExternalId)
+  let materializationPublicationHeld =
+        maybe
+          False
+          ( isMaterializationDraftSourceStatus
+              . Social.externalEventRefSourceStatus
+              . entityVal
+          )
+          existingRef
+      effectiveAutoPublish = autoPublish && not materializationPublicationHeld
   workflowStateId <-
     EventLifecycle.resolveActiveSocialEventStateId
-      (if autoPublish then discoveredEventStatus else "planning")
+      (if effectiveAutoPublish then discoveredEventStatus else "planning")
   (venueKey, venueCreated) <-
     upsertDiscoveredVenue discoveredEventProvider now discoveredEventVenue
   artistResults <-
@@ -1950,22 +1976,25 @@ syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
       (upsertDiscoveredArtist discoveredEventProvider now)
   let artistKeys = map fst artistResults
       artistsCreated = length (filter snd artistResults)
-      metadata = encodeEventMetadataForImport autoPublish DiscoveredEvent{..}
+      metadata = encodeEventMetadataForImport effectiveAutoPublish DiscoveredEvent{..}
       sourceStatus =
-        if autoPublish
-          then discoveredEventStatus
-          else "draft:" <> discoveredEventStatus
-  existingRef <-
-    getBy
-      (Social.UniqueExternalEventRef discoveredEventProvider discoveredEventExternalId)
+        if materializationPublicationHeld
+          then "materialization_draft:" <> discoveredEventStatus
+          else
+            if effectiveAutoPublish
+              then discoveredEventStatus
+              else "draft:" <> discoveredEventStatus
   (eventKey, eventCreated) <-
     case existingRef of
       Just (Entity refKey ref) -> do
         let existingEventKey = Social.externalEventRefEventId ref
         shouldReplace <-
-          if autoPublish
-            then providerShouldReplaceCanonical discoveredEventProvider existingEventKey
-            else draftMayReplaceCanonical existingEventKey
+          if materializationPublicationHeld
+            then pure False
+            else
+              if effectiveAutoPublish
+                then providerShouldReplaceCanonical discoveredEventProvider existingEventKey
+                else draftMayReplaceCanonical existingEventKey
         if shouldReplace
           then
             update
@@ -2002,7 +2031,7 @@ syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
           case mergeCandidate of
             Just candidateKey -> do
               shouldReplace <-
-                if autoPublish
+                if effectiveAutoPublish
                   then providerShouldReplaceCanonical discoveredEventProvider candidateKey
                   else draftMayReplaceCanonical candidateKey
               if shouldReplace
@@ -2061,9 +2090,10 @@ syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
               , Social.externalEventRefSourceStatus = sourceStatus
               }
         pure (newEventKey, created)
-  forM_ artistKeys $ \artistKey -> do
-    _ <- insertUnique (Social.EventArtist eventKey artistKey Nothing)
-    pure ()
+  unless materializationPublicationHeld $
+    forM_ artistKeys $ \artistKey -> do
+      _ <- insertUnique (Social.EventArtist eventKey artistKey Nothing)
+      pure ()
   pure
     emptyDiscoverySyncStats
       { discoveryEventsSeen = 1
@@ -2154,18 +2184,30 @@ providerShouldReplaceCanonical provider eventKey = do
   refs <- selectList [Social.ExternalEventRefEventId ==. eventKey] []
   existingPriorities <-
     forM refs (eventSourcePriority . Social.externalEventRefProvider . entityVal)
-  pure (null existingPriorities || newPriority >= maximum existingPriorities)
+  let hasMaterializationPublicationHold =
+        any
+          (isMaterializationDraftSourceStatus . Social.externalEventRefSourceStatus . entityVal)
+          refs
+  pure $
+    not hasMaterializationPublicationHold
+      && (null existingPriorities || newPriority >= maximum existingPriorities)
 
 draftMayReplaceCanonical ::
   Social.SocialEventId ->
   SqlPersistT IO Bool
 draftMayReplaceCanonical eventKey = do
   refs <- selectList [Social.ExternalEventRefEventId ==. eventKey] []
+  let hasMaterializationPublicationHold =
+        any
+          (isMaterializationDraftSourceStatus . Social.externalEventRefSourceStatus . entityVal)
+          refs
   pure $
-    null refs
-      || all
-        (isDraftSourceStatus . Social.externalEventRefSourceStatus . entityVal)
-        refs
+    not hasMaterializationPublicationHold
+      && ( null refs
+            || all
+              (isDraftSourceStatus . Social.externalEventRefSourceStatus . entityVal)
+              refs
+         )
 
 eventSourcePriority :: Text -> SqlPersistT IO Int
 eventSourcePriority provider = do

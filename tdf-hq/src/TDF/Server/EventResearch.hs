@@ -422,7 +422,10 @@ materializeCandidateDb organizerPartyId candidateId materializationRunId request
                         Just eventId -> do
                             suitable <- existingEventCanSatisfy request eventId
                             if suitable
-                                then linkCandidateAndRespond candidateEntity materializationRunId eventId False now
+                                then do
+                                    when request.erMaterializationPublish $
+                                        releaseMaterializationPublicationHold lockedCandidate eventId
+                                    linkCandidateAndRespond candidateEntity materializationRunId eventId False now
                                 else pure (Left (conflict "the linked event does not satisfy the requested publication state"))
                         Nothing -> materializeUnlinkedCandidate organizerPartyId (eventResearchPilotControlApproved control) materializationRunId candidateEntity request now
                 _ -> pure (Left err500{errBody = "Event research candidate identity is ambiguous"})
@@ -455,9 +458,18 @@ materializeUnlinkedCandidate organizerPartyId pilotApproved materializationRunId
                                     )
                             case existingRef of
                                 Just (Entity _ ref) -> do
-                                    suitable <- existingEventCanSatisfy request (externalEventRefEventId ref)
+                                    let eventId = externalEventRefEventId ref
+                                    suitable <- existingEventCanSatisfy request eventId
                                     if suitable
-                                        then linkCandidateAndRespond candidateEntity materializationRunId (externalEventRefEventId ref) False now
+                                        then do
+                                            artistsResult <- resolveMaterializationArtists candidate validated now
+                                            case artistsResult of
+                                                Left serverError -> pure (Left serverError)
+                                                Right artistIds -> do
+                                                    attachMaterializationArtists eventId artistIds
+                                                    when request.erMaterializationPublish $
+                                                        releaseMaterializationPublicationHold candidate eventId
+                                                    linkCandidateAndRespond candidateEntity materializationRunId eventId False now
                                         else pure (Left (conflict "the existing provider event is not safely publishable"))
                                 Nothing -> createOrLinkMaterializedEvent organizerPartyId candidateEntity materializationRunId request validated now
 
@@ -721,7 +733,25 @@ insertMaterializationEventRef candidate request validated eventId now =
 materializationEventRefSourceStatus :: Bool -> T.Text -> T.Text
 materializationEventRefSourceStatus publish sourceStatus
     | publish = sourceStatus
-    | otherwise = "draft:" <> sourceStatus
+    | otherwise = "materialization_draft:" <> sourceStatus
+
+releaseMaterializationPublicationHold :: EventResearchCandidate -> SocialEventId -> SqlPersistT IO ()
+releaseMaterializationPublicationHold candidate eventId = do
+    existingRef <-
+        getBy
+            ( UniqueExternalEventRef
+                (eventResearchCandidateProvider candidate)
+                (eventResearchCandidateExternalId candidate)
+            )
+    case existingRef of
+        Just (Entity refId ref)
+            | externalEventRefEventId ref == eventId
+            , Just activeStatus <-
+                T.stripPrefix
+                    "materialization_draft:"
+                    (T.toCaseFold (T.strip (externalEventRefSourceStatus ref))) ->
+                update refId [ExternalEventRefSourceStatus =. activeStatus]
+        _ -> pure ()
 
 materializationWorkflowStateCode :: Bool -> T.Text -> T.Text
 materializationWorkflowStateCode publish sourceStatus
