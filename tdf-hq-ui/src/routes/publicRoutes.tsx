@@ -73,6 +73,7 @@ export function renderPublicRoutes() {
       <Route path="/oauth/instagram/callback" element={<PublicBranding><InstagramCallbackPage /></PublicBranding>} />
       <Route path="/curso/produccion-musical-dic-2025" element={<Navigate to="/curso/produccion-musical-jun-2026" replace />} />
       <Route path="/curso/produccion-musical-abr-2026" element={<Navigate to="/curso/produccion-musical-jun-2026" replace />} />
+      <Route path="/curso/:slug/orden/:registrationId" element={<PublicBranding><CourseProductionLandingPage /></PublicBranding>} />
       <Route path="/curso/:slug" element={<PublicBranding><CourseProductionLandingPage /></PublicBranding>} />
       <Route path="/inscripcion/:slug" element={<PublicBranding><InscripcionPage /></PublicBranding>} />
       <Route path="/trials" element={<PublicBranding><TrialsPage /></PublicBranding>} />

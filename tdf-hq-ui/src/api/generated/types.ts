@@ -355,10 +355,133 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Create course registration
-         * @description Stores a registration for the specified course. Landing submissions use source=landing and include UTM tags.
+         * Create course registration and seat hold
+         * @description Creates an idempotent canonical checkout and atomic expiring seat hold when course commerce is enabled. When the production domain gate is disabled, it preserves the legacy lead without claiming a seat or payment.
          */
         post: operations["createCourseRegistration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/courses/{slug}/registrations/{registrationId}": {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        /**
+         * Track a course checkout and enrollment
+         * @description Returns customer-safe payment and enrollment states. Invalid identifiers and lookup tokens share the same not-found response.
+         */
+        get: operations["getCourseCheckout"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/courses/{slug}/registrations/{registrationId}/datafast/checkout": {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a bound Datafast course checkout */
+        post: operations["createCourseDatafastCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/courses/{slug}/registrations/{registrationId}/datafast/status": {
+        parameters: {
+            query: {
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        /**
+         * Verify Datafast status server to server
+         * @description A browser return never marks payment paid; the server binds and verifies resource path, order, amount, currency, merchant, and environment.
+         */
+        get: operations["confirmCourseDatafastStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/courses/{slug}/registrations/{registrationId}/paypal/create": {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a bound PayPal course order */
+        post: operations["createCoursePaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/courses/{slug}/registrations/{registrationId}/paypal/capture": {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Capture and verify a bound PayPal course order */
+        post: operations["captureCoursePaypalOrder"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7131,12 +7254,51 @@ export interface components {
             source: string;
             howHeard?: string | null;
             utm?: components["schemas"]["UTMTags"];
+            /** @description Must be true to create a canonical payable seat hold. Omitted only for non-checkout legacy intake such as WhatsApp leads. */
+            termsAccepted?: boolean | null;
         };
         CourseRegistrationResponse: {
             /** Format: int64 */
             id?: number;
             /** @enum {string} */
             status?: "pending_payment" | "paid" | "cancelled";
+        };
+        CourseCheckoutQuote: {
+            policyVersion: string;
+            currency: string;
+            /** Format: int64 */
+            subtotalMinor: number;
+            /** Format: int64 */
+            taxMinor: number;
+            /** Format: int64 */
+            totalMinor: number;
+            /** Format: int64 */
+            dueNowMinor: number;
+            /** Format: int64 */
+            balanceMinor: number;
+            /** @enum {string} */
+            paymentSchedule: "full" | "deposit";
+            termsVersion: string;
+        };
+        CourseCheckoutResponse: {
+            /** Format: int64 */
+            registrationId: number;
+            courseSlug: string;
+            /** Format: uuid */
+            checkoutId: string | null;
+            lookupToken: string | null;
+            /** @enum {string} */
+            paymentStatus: "not_started" | "awaiting_payment" | "processing" | "paid" | "failed" | "cancelled" | "expired" | "partially_refunded" | "refunded" | "disputed" | "chargeback";
+            /** @enum {string} */
+            fulfillmentStatus: "lead_received" | "seat_held" | "enrolled" | "waitlisted" | "transfer_requested" | "transferred" | "cancelled" | "completed" | "expired";
+            /** Format: date-time */
+            holdExpiresAt: string | null;
+            quote: components["schemas"]["CourseCheckoutQuote"] | null;
+            paymentMethods: ("datafast" | "paypal")[];
+            checkoutAvailable: boolean;
+        };
+        CoursePaypalCaptureRequest: {
+            paypalOrderId: string;
         };
         CourseRegistrationStatusUpdate: {
             /** @enum {string} */
@@ -9026,7 +9188,10 @@ export interface operations {
     createCourseRegistration: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 slug: string;
             };
@@ -9038,13 +9203,13 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Registration stored */
+            /** @description Registration checkout or honest gated lead state */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CourseRegistrationResponse"];
+                    "application/json": components["schemas"]["CourseCheckoutResponse"];
                 };
             };
             /** @description Invalid payload */
@@ -9056,6 +9221,247 @@ export interface operations {
             };
             /** @description Course not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No approved active policy, duplicate attendee, or no seat remains */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Checkout domain or provider configuration unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getCourseCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Course checkout state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseCheckoutResponse"];
+                };
+            };
+            /** @description Course order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createCourseDatafastCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Hosted Datafast checkout resource */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatafastCheckout"];
+                };
+            };
+            /** @description Course order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hold expired */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast or course checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmCourseDatafastStatus: {
+        parameters: {
+            query: {
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Verified or still-pending checkout state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseCheckoutResponse"];
+                };
+            };
+            /** @description Course order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Binding mismatch or expired hold */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider response failed verification */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createCoursePaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description PayPal order awaiting customer approval */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaypalCreate"];
+                };
+            };
+            /** @description Course order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hold expired */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal or course checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    captureCoursePaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CoursePaypalCaptureRequest"];
+            };
+        };
+        responses: {
+            /** @description Verified or still-processing checkout state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseCheckoutResponse"];
+                };
+            };
+            /** @description Course order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Binding mismatch or expired hold */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider capture failed verification */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };

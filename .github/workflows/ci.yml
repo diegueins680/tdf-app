@@ -284,6 +284,9 @@ jobs:
       - name: Rehearse service booking checkout runtime migration
         run: ./scripts/test-service-booking-checkout-runtime-migration.sh
 
+      - name: Rehearse course checkout runtime migration
+        run: ./scripts/test-course-checkout-runtime-migration.sh
+
       - name: Rehearse marketplace customer operations and deposit settlement migration
         run: ./scripts/test-marketplace-operations-migration.sh
 

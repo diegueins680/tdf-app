@@ -179,6 +179,7 @@ import           TDF.ServerLiveSessions (liveSessionsServer)
 import           TDF.Server.ServiceStorefront (serviceStorefrontPublicServer, serviceStorefrontAdminServer)
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Server.CourseCheckout as CourseCheckoutServer
 import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
 import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
 import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
@@ -1348,6 +1349,12 @@ createCoursePaymentIntent
 createCoursePaymentIntent rawSlug regIdRaw req = do
   Env{..} <- ask
   Entity regKey reg <- fetchCourseRegistrationEntity rawSlug regIdRaw
+  canonicalRuntime <- runDB (rawSql
+    "SELECT EXISTS (SELECT 1 FROM course_registration_checkout_runtime WHERE registration_id = ?)"
+    [toPersistValue regKey] :: SqlPersistT IO [Single Bool])
+  when (canonicalRuntime == [Single True]) $
+    throwError err503
+      { errBody = "Stripe course checkout is disabled until it uses the canonical verified-payment adapter; use an offered Datafast or PayPal method" }
   when (ME.courseRegistrationStatus reg /= "pending_payment") $
     throwError err400 { errBody = "Registration is not awaiting payment" }
   when (isJust (ME.courseRegistrationStripePaymentIntentId reg)) $
@@ -1467,6 +1474,12 @@ createCourseCheckoutSession
 createCourseCheckoutSession rawSlug regIdRaw req = do
   Env{..} <- ask
   Entity regKey reg <- fetchCourseRegistrationEntity rawSlug regIdRaw
+  canonicalRuntime <- runDB (rawSql
+    "SELECT EXISTS (SELECT 1 FROM course_registration_checkout_runtime WHERE registration_id = ?)"
+    [toPersistValue regKey] :: SqlPersistT IO [Single Bool])
+  when (canonicalRuntime == [Single True]) $
+    throwError err503
+      { errBody = "Automatic course renewal is disabled until a canonical provider capability is verified" }
   when (ME.courseRegistrationStatus reg /= "pending_payment") $
     throwError err400 { errBody = "Registration is not awaiting payment" }
   when (isJust (ME.courseRegistrationStripeSubscriptionId reg)) $
@@ -1539,11 +1552,23 @@ coursesPublicServer :: ServerT CoursesPublicAPI AppM
 coursesPublicServer =
        courseMetadataH
   :<|> registrationH
+  :<|> registrationStatusH
+  :<|> datafastCheckoutH
+  :<|> datafastStatusH
+  :<|> paypalCreateH
+  :<|> paypalCaptureH
   :<|> paymentIntentH
   :<|> checkoutSessionH
   where
     courseMetadataH slug = loadCourseMetadata slug
-    registrationH slug payload = createOrUpdateRegistration slug payload
+    registrationH slug idempotencyKey payload =
+      CourseCheckoutServer.createCourseCheckoutRegistration
+        createOrUpdateRegistration slug idempotencyKey payload
+    registrationStatusH = CourseCheckoutServer.getPublicCourseCheckout
+    datafastCheckoutH = CourseCheckoutServer.createPublicCourseDatafastCheckout
+    datafastStatusH = CourseCheckoutServer.confirmPublicCourseDatafastStatus
+    paypalCreateH = CourseCheckoutServer.createPublicCoursePaypalOrder
+    paypalCaptureH = CourseCheckoutServer.capturePublicCoursePaypalOrder
     paymentIntentH slug regId payload = createCoursePaymentIntent slug regId payload
     checkoutSessionH slug regId payload = createCourseCheckoutSession slug regId payload
 
@@ -1724,6 +1749,7 @@ whatsappWebhookServer =
                   , source = "whatsapp"
                   , howHeard = Just "whatsapp"
                   , utm = Nothing
+                  , termsAccepted = Nothing
                   }
                 let incomingMsg = entityVal incomingEntity
                 (replyTxt, replyRes) <- sendWhatsappReply cfg phone
@@ -5379,7 +5405,8 @@ loadCourseMetadata rawSlug = do
   normalized <- either throwError pure (validateCourseSlug rawSlug)
   Env{..} <- ask
   waEnv <- liftIO loadWhatsAppEnv
-  today <- utctDay <$> liftIO getCurrentTime
+  now <- liftIO getCurrentTime
+  let today = utctDay now
   mProductionMeta <- ensureCurrentProductionCourseMetadata envConfig waEnv today normalized
   mDbMeta <- case mProductionMeta of
     Just _ -> pure Nothing
@@ -5388,12 +5415,26 @@ loadCourseMetadata rawSlug = do
   baseMeta <- maybe (maybe (throwNotFound "Curso no encontrado") pure fallbackMeta) pure (mProductionMeta <|> mDbMeta)
   let Courses.CourseMetadata{ Courses.capacity = baseCapacity } = baseMeta
       countSlug = normalizeSlug (courseMetaSlug baseMeta)
-  countRegs <- runDB $
-    count
-      [ ME.CourseRegistrationCourseSlug ==. countSlug
-      , ME.CourseRegistrationStatus !=. "cancelled"
-      ]
-  let remainingSeats = max 0 (baseCapacity - fromIntegral countRegs)
+  _ <- runDB (rawSql "SELECT course_checkout_expire_holds(?)"
+    [PersistUTCTime now] :: SqlPersistT IO [Single Int])
+  occupiedRows <- runDB (rawSql
+    "SELECT (\
+    \ SELECT count(*) FROM course_registration_checkout_runtime runtime\
+    \ JOIN course course ON course.id = runtime.course_id\
+    \ WHERE course.slug = ? AND (\
+    \   runtime.enrollment_status IN ('enrolled','transfer_requested','completed')\
+    \   OR (runtime.enrollment_status = 'seat_held' AND runtime.hold_expires_at > ?)\
+    \ )) + (\
+    \ SELECT count(*) FROM course_registration registration\
+    \ WHERE registration.course_slug = ? AND registration.status = 'paid'\
+    \ AND NOT EXISTS (SELECT 1 FROM course_registration_checkout_runtime runtime\
+    \   WHERE runtime.registration_id = registration.id))"
+    [PersistText countSlug, PersistUTCTime now, PersistText countSlug]
+    :: SqlPersistT IO [Single Int64])
+  let occupied = case occupiedRows of
+        [Single value] -> value
+        _ -> fromIntegral baseCapacity
+      remainingSeats = max 0 (baseCapacity - fromIntegral occupied)
   pure baseMeta { Courses.remaining = remainingSeats }
 
 loadCourseMetadataFromDB :: AppConfig -> WhatsAppEnv -> Text -> AppM (Maybe CourseMetadata)
@@ -5998,9 +6039,21 @@ updateCourseRegistrationStatus user rawSlug regId CourseRegistrationStatusUpdate
   let regKey = entityKey ent
       reg = entityVal ent
   when (newStatus == "paid") $ do
-    hasReceipt <- registrationHasReceipts regKey
-    unless hasReceipt $
-      throwBadRequest "Debes subir un comprobante de pago antes de marcar esta inscripción como pagada."
+    canonicalStatuses <- runDB (rawSql
+      "SELECT checkout.status FROM course_registration_checkout_runtime runtime\
+      \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+      \ WHERE runtime.registration_id = ?"
+      [toPersistValue regKey] :: SqlPersistT IO [Single Text])
+    case canonicalStatuses of
+      [Single "paid"] -> pure ()
+      [] -> do
+        hasReceipt <- registrationHasReceipts regKey
+        unless hasReceipt $
+          throwBadRequest "Debes subir un comprobante de pago antes de marcar esta inscripción como pagada."
+      [Single _] -> throwError err409
+        { errBody = "La inscripción usa checkout canónico y solo un pago verificado por el servidor puede marcarla como pagada." }
+      _ -> throwError err500
+        { errBody = "El estado de pago canónico de la inscripción es ambiguo." }
   now <- liftIO getCurrentTime
   runDB $ update regKey
     [ ME.CourseRegistrationStatus =. newStatus
@@ -9988,12 +10041,27 @@ listBookings user mBookingId mPartyId mEngineerPartyId = do
 
 courseCalendarBookings :: SqlPersistT IO [BookingDTO]
 courseCalendarBookings = do
+  now <- liftIO getCurrentTime
+  _ <- (rawSql "SELECT course_checkout_expire_holds(?)"
+    [PersistUTCTime now] :: SqlPersistT IO [Single Int])
   courses <- selectList [] []
   fmap concat $ forM courses $ \(Entity courseId course) -> do
-    regCount <- count
-      [ ME.CourseRegistrationCourseSlug ==. Trials.courseSlug course
-      , ME.CourseRegistrationStatus !=. "cancelled"
-      ]
+    occupiedRows <- (rawSql
+      "SELECT (\
+      \ SELECT count(*) FROM course_registration_checkout_runtime runtime\
+      \ WHERE runtime.course_id = ? AND (\
+      \   runtime.enrollment_status IN ('enrolled','transfer_requested','completed')\
+      \   OR (runtime.enrollment_status = 'seat_held' AND runtime.hold_expires_at > ?)\
+      \ )) + (\
+      \ SELECT count(*) FROM course_registration registration\
+      \ WHERE registration.course_slug = ? AND registration.status = 'paid'\
+      \ AND NOT EXISTS (SELECT 1 FROM course_registration_checkout_runtime runtime\
+      \   WHERE runtime.registration_id = registration.id))"
+      [toPersistValue courseId, PersistUTCTime now, PersistText (Trials.courseSlug course)]
+      :: SqlPersistT IO [Single Int64])
+    let regCount = case occupiedRows of
+          [Single value] -> value
+          _ -> fromIntegral (Trials.courseCapacity course)
     sessions <- selectList [Trials.CourseSessionModelCourseId ==. courseId] [Asc Trials.CourseSessionModelOrder, Asc Trials.CourseSessionModelDate]
     let metaTitle = Trials.courseTitle course
         slugVal = Trials.courseSlug course

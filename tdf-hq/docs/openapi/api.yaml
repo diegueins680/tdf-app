@@ -440,10 +440,12 @@ paths:
           type: string
     post:
       tags: [Courses]
-      summary: Create course registration
-      description: Stores a registration for the specified course. Landing submissions use source=landing and include UTM tags.
+      summary: Create course registration and seat hold
+      description: Creates an idempotent canonical checkout and atomic expiring seat hold when course commerce is enabled. When the production domain gate is disabled, it preserves the legacy lead without claiming a seat or payment.
       operationId: createCourseRegistration
       security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -452,15 +454,111 @@ paths:
               $ref: '#/components/schemas/CourseRegistrationRequest'
       responses:
         '201':
-          description: Registration stored
+          description: Registration checkout or honest gated lead state
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CourseRegistrationResponse'
+                $ref: '#/components/schemas/CourseCheckoutResponse'
         '400':
           description: Invalid payload
         '404':
           description: Course not found
+        '409':
+          description: No approved active policy, duplicate attendee, or no seat remains
+        '503':
+          description: Checkout domain or provider configuration unavailable
+  /public/courses/{slug}/registrations/{registrationId}:
+    parameters:
+      - { name: slug, in: path, required: true, schema: { type: string } }
+      - { name: registrationId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      - $ref: '#/components/parameters/OrderLookupToken'
+    get:
+      tags: [Courses]
+      summary: Track a course checkout and enrollment
+      description: Returns customer-safe payment and enrollment states. Invalid identifiers and lookup tokens share the same not-found response.
+      operationId: getCourseCheckout
+      security: [ ]
+      responses:
+        '200':
+          description: Course checkout state
+          content: { application/json: { schema: { $ref: '#/components/schemas/CourseCheckoutResponse' } } }
+        '404': { description: Course order not found }
+  /public/courses/{slug}/registrations/{registrationId}/datafast/checkout:
+    parameters:
+      - { name: slug, in: path, required: true, schema: { type: string } }
+      - { name: registrationId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      - $ref: '#/components/parameters/OrderLookupToken'
+    post:
+      tags: [Courses]
+      summary: Create a bound Datafast course checkout
+      operationId: createCourseDatafastCheckout
+      security: [ ]
+      responses:
+        '200':
+          description: Hosted Datafast checkout resource
+          content: { application/json: { schema: { $ref: '#/components/schemas/DatafastCheckout' } } }
+        '404': { description: Course order not found }
+        '409': { description: Hold expired, paid, or another payment rail is active }
+        '503': { description: Datafast or course checkout is disabled }
+  /public/courses/{slug}/registrations/{registrationId}/datafast/status:
+    parameters:
+      - { name: slug, in: path, required: true, schema: { type: string } }
+      - { name: registrationId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      - $ref: '#/components/parameters/OrderLookupToken'
+      - name: resourcePath
+        in: query
+        required: true
+        schema: { type: string, minLength: 1, maxLength: 512 }
+    get:
+      tags: [Courses]
+      summary: Verify Datafast status server to server
+      description: A browser return never marks payment paid; the server binds and verifies resource path, order, amount, currency, merchant, and environment.
+      operationId: confirmCourseDatafastStatus
+      security: [ ]
+      responses:
+        '200':
+          description: Verified or still-pending checkout state
+          content: { application/json: { schema: { $ref: '#/components/schemas/CourseCheckoutResponse' } } }
+        '404': { description: Course order not found }
+        '409': { description: Binding mismatch or expired hold }
+        '502': { description: Provider response failed verification }
+  /public/courses/{slug}/registrations/{registrationId}/paypal/create:
+    parameters:
+      - { name: slug, in: path, required: true, schema: { type: string } }
+      - { name: registrationId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      - $ref: '#/components/parameters/OrderLookupToken'
+    post:
+      tags: [Courses]
+      summary: Create a bound PayPal course order
+      operationId: createCoursePaypalOrder
+      security: [ ]
+      responses:
+        '200':
+          description: PayPal order awaiting customer approval
+          content: { application/json: { schema: { $ref: '#/components/schemas/PaypalCreate' } } }
+        '404': { description: Course order not found }
+        '409': { description: Hold expired, paid, or another payment rail is active }
+        '503': { description: PayPal or course checkout is disabled }
+  /public/courses/{slug}/registrations/{registrationId}/paypal/capture:
+    parameters:
+      - { name: slug, in: path, required: true, schema: { type: string } }
+      - { name: registrationId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      - $ref: '#/components/parameters/OrderLookupToken'
+    post:
+      tags: [Courses]
+      summary: Capture and verify a bound PayPal course order
+      operationId: captureCoursePaypalOrder
+      security: [ ]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CoursePaypalCaptureRequest' } } }
+      responses:
+        '200':
+          description: Verified or still-processing checkout state
+          content: { application/json: { schema: { $ref: '#/components/schemas/CourseCheckoutResponse' } } }
+        '404': { description: Course order not found }
+        '409': { description: Binding mismatch or expired hold }
+        '502': { description: Provider capture failed verification }
   /webhooks/whatsapp:
     get:
       tags: [Webhooks]
@@ -9337,6 +9435,10 @@ components:
           nullable: true
         utm:
           $ref: '#/components/schemas/UTMTags'
+        termsAccepted:
+          type: boolean
+          nullable: true
+          description: Must be true to create a canonical payable seat hold. Omitted only for non-checkout legacy intake such as WhatsApp leads.
     CourseRegistrationResponse:
       type: object
       properties:
@@ -9346,6 +9448,51 @@ components:
         status:
           type: string
           enum: [pending_payment, paid, cancelled]
+    CourseCheckoutQuote:
+      type: object
+      required: [policyVersion, currency, subtotalMinor, taxMinor, totalMinor, dueNowMinor, balanceMinor, paymentSchedule, termsVersion]
+      properties:
+        policyVersion: { type: string }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        subtotalMinor: { type: integer, format: int64, minimum: 1 }
+        taxMinor: { type: integer, format: int64, minimum: 0 }
+        totalMinor: { type: integer, format: int64, minimum: 1 }
+        dueNowMinor: { type: integer, format: int64, minimum: 1 }
+        balanceMinor: { type: integer, format: int64, minimum: 0 }
+        paymentSchedule: { type: string, enum: [full, deposit] }
+        termsVersion: { type: string }
+    CourseCheckoutResponse:
+      type: object
+      required: [registrationId, courseSlug, checkoutId, lookupToken, paymentStatus, fulfillmentStatus, holdExpiresAt, quote, paymentMethods, checkoutAvailable]
+      properties:
+        registrationId: { type: integer, format: int64, minimum: 1 }
+        courseSlug: { type: string }
+        checkoutId: { type: string, format: uuid, nullable: true }
+        lookupToken: { type: string, nullable: true, writeOnly: true }
+        paymentStatus:
+          type: string
+          enum: [not_started, awaiting_payment, processing, paid, failed, cancelled, expired, partially_refunded, refunded, disputed, chargeback]
+        fulfillmentStatus:
+          type: string
+          enum: [lead_received, seat_held, enrolled, waitlisted, transfer_requested, transferred, cancelled, completed, expired]
+        holdExpiresAt: { type: string, format: date-time, nullable: true }
+        quote:
+          allOf: [{ $ref: '#/components/schemas/CourseCheckoutQuote' }]
+          nullable: true
+        paymentMethods:
+          type: array
+          items: { type: string, enum: [datafast, paypal] }
+        checkoutAvailable: { type: boolean }
+    CoursePaypalCaptureRequest:
+      type: object
+      additionalProperties: false
+      required: [paypalOrderId]
+      properties:
+        paypalOrderId:
+          type: string
+          minLength: 6
+          maxLength: 80
+          pattern: '^[A-Za-z0-9_-]+$'
     CourseRegistrationStatusUpdate:
       type: object
       required: [status]

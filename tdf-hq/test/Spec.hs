@@ -101,6 +101,7 @@ import TDF.CampaignAutomation
       validateCampaignAutomationStatus )
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
 import qualified TDF.Commerce.CheckoutStore as CheckoutStore
+import qualified TDF.Commerce.CourseCheckout as CourseCheckout
 import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
 import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
 import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
@@ -1382,6 +1383,65 @@ main = hspec $ do
                     , ServiceBookings.BookingCancelled
                     , ServiceBookings.BookingExpired
                     ]
+
+    describe "course checkout pricing and enrollment invariants" $ do
+        it "calculates an ordinary full-payment cohort entirely in minor units" $ do
+            CourseCheckout.calculateCoursePrice
+              15000 1200 CourseCheckout.CourseFullPayment 10000
+              `shouldBe` Right CourseCheckout.CoursePriceBreakdown
+                { CourseCheckout.cpbSubtotalMinor = 15000
+                , CourseCheckout.cpbTaxMinor = 1800
+                , CourseCheckout.cpbTotalMinor = 16800
+                , CourseCheckout.cpbDueNowMinor = 16800
+                , CourseCheckout.cpbBalanceMinor = 0
+                }
+
+        it "requires an explicit approved deposit policy instead of silently undercharging" $ do
+            CourseCheckout.calculateCoursePrice
+              15000 0 CourseCheckout.CourseFullPayment 5000
+              `shouldSatisfy` isLeft
+            CourseCheckout.calculateCoursePrice
+              15000 0 CourseCheckout.CourseDeposit 5000
+              `shouldBe` Right CourseCheckout.CoursePriceBreakdown
+                { CourseCheckout.cpbSubtotalMinor = 15000
+                , CourseCheckout.cpbTaxMinor = 0
+                , CourseCheckout.cpbTotalMinor = 15000
+                , CourseCheckout.cpbDueNowMinor = 7500
+                , CourseCheckout.cpbBalanceMinor = 7500
+                }
+
+        it "never equates a seat hold with enrollment or course completion" $ do
+            CourseCheckout.validateCourseEnrollmentTransition
+              CourseCheckout.EnrollmentSeatHeld CourseCheckout.EnrollmentCompleted
+              `shouldSatisfy` isLeft
+            CourseCheckout.validateCourseEnrollmentTransition
+              CourseCheckout.EnrollmentSeatHeld CourseCheckout.EnrollmentEnrolled
+              `shouldBe` Right ()
+            CourseCheckout.validateCourseEnrollmentTransition
+              CourseCheckout.EnrollmentEnrolled CourseCheckout.EnrollmentCompleted
+              `shouldBe` Right ()
+
+        it "keeps cancelled, completed, transferred, and expired seats terminal" $
+            QC.property $ \(QC.NonNegative rawState) ->
+              let states =
+                    [ CourseCheckout.EnrollmentSeatHeld
+                    , CourseCheckout.EnrollmentEnrolled
+                    , CourseCheckout.EnrollmentWaitlisted
+                    , CourseCheckout.EnrollmentTransferRequested
+                    , CourseCheckout.EnrollmentTransferred
+                    , CourseCheckout.EnrollmentCancelled
+                    , CourseCheckout.EnrollmentCompleted
+                    , CourseCheckout.EnrollmentExpired
+                    ]
+                  candidate = states !! (rawState `mod` length states)
+                  closed terminal = candidate == terminal
+                    || isLeft (CourseCheckout.validateCourseEnrollmentTransition terminal candidate)
+              in all closed
+                  [ CourseCheckout.EnrollmentTransferred
+                  , CourseCheckout.EnrollmentCancelled
+                  , CourseCheckout.EnrollmentCompleted
+                  , CourseCheckout.EnrollmentExpired
+                  ]
 
     describe "provider-neutral checkout state machine" $ do
         let verifiedPayment = Commerce.PaymentVerification

@@ -416,15 +416,16 @@ spec = do
     describe "CourseRegistrationRequest FromJSON" $ do
         it "accepts canonical public course registration payloads" $
             case decodeCourseRegistration
-                "{\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phoneE164\":\"+593991234567\",\"source\":\"landing\",\"howHeard\":\"instagram\",\"utm\":{\"source\":\"ig\",\"medium\":\"social\",\"campaign\":\"launch\",\"content\":\"reel\"}}" of
+                "{\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phoneE164\":\"+593991234567\",\"source\":\"landing\",\"howHeard\":\"instagram\",\"utm\":{\"source\":\"ig\",\"medium\":\"social\",\"campaign\":\"launch\",\"content\":\"reel\"},\"termsAccepted\":true}" of
                 Left err ->
                     expectationFailure ("Expected canonical course registration payload to decode, got: " <> err)
-                Right (Courses.CourseRegistrationRequest fullNameVal emailVal phoneVal sourceVal howHeardVal utmVal) -> do
+                Right (Courses.CourseRegistrationRequest fullNameVal emailVal phoneVal sourceVal howHeardVal utmVal termsAcceptedVal) -> do
                     fullNameVal `shouldBe` Just "Ada Lovelace"
                     emailVal `shouldBe` Just "ada@example.com"
                     phoneVal `shouldBe` Just "+593991234567"
                     sourceVal `shouldBe` "landing"
                     howHeardVal `shouldBe` Just "instagram"
+                    termsAcceptedVal `shouldBe` Just True
                     case utmVal of
                         Nothing ->
                             expectationFailure "Expected canonical course registration payload to preserve utm tags"

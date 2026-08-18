@@ -55,6 +55,7 @@ executable tdf-hq-exe
     TDF.Auth
     TDF.CampaignAutomation
     TDF.Commerce.CheckoutStore
+    TDF.Commerce.CourseCheckout
     TDF.Commerce.MarketplaceSales
     TDF.Commerce.MarketplaceRentals
     TDF.Commerce.MarketplaceOperations
@@ -105,6 +106,7 @@ executable tdf-hq-exe
     TDF.Seed
     TDF.Server
     TDF.Server.CommerceOperations
+    TDF.Server.CourseCheckout
     TDF.ServerAuth
     TDF.ServerAdmin
     TDF.Server.SocialDiscovery
@@ -270,6 +272,7 @@ test-suite tdf-hq-test
     TDF.Auth
     TDF.CampaignAutomation
     TDF.Commerce.CheckoutStore
+    TDF.Commerce.CourseCheckout
     TDF.Commerce.MarketplaceSales
     TDF.Commerce.MarketplaceRentals
     TDF.Commerce.MarketplaceOperations
@@ -320,6 +323,7 @@ test-suite tdf-hq-test
     TDF.Server
     TDF.Server.Catalog
     TDF.Server.CommerceOperations
+    TDF.Server.CourseCheckout
     TDF.Server.DDEX
     TDF.Server.Directory
     TDF.Server.ServiceStorefront

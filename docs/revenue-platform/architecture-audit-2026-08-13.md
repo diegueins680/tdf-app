@@ -228,10 +228,12 @@ production capability:
   `checkout.paypal.refunds`, `checkout.datafast.webhooks`, `checkout.datafast.refunds`,
   `checkout.provider_event_worker`, `commerce.mixing_mastering`, `commerce.marketplace_sales`,
   `commerce.marketplace_rentals`, `commerce.marketplace_manual_deposit_settlement`, and
-  `commerce.service_bookings`; the marketplace domain rows and dual-control manual deposit
-  settlement are enabled, while service bookings default disabled pending policy approval
-  and credentialed sandbox verification; booking Datafast/PayPal actions are implemented but
-  production provider execution remains independently disabled; planned keys must use
+  `commerce.service_bookings`, `commerce.courses`, and `commerce.course_recurring_billing`; the
+  marketplace domain rows and dual-control manual deposit settlement are enabled, while service
+  bookings and courses default disabled pending policy approval and credentialed sandbox
+  verification; booking/course Datafast and PayPal actions are implemented but production provider
+  execution remains independently disabled, and automatic course renewal remains disabled pending
+  a verified recurring merchant capability; planned keys must use
   the same registry rather than introducing an untracked environment-only bypass;
 - domains: `COMMERCE_MIXING_ENABLED`, `COMMERCE_EQUIPMENT_SALES_ENABLED`,
   `COMMERCE_RENTALS_ENABLED`, `COMMERCE_BOOKINGS_ENABLED`, `COMMERCE_DOMO_ENABLED`,
