@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 
-const getMock = jest.fn<(path: string) => Promise<unknown>>();
-const postMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
+const getMock = jest.fn<(path: string, init?: RequestInit) => Promise<unknown>>();
+const postMock = jest.fn<(path: string, body: unknown, init?: RequestInit) => Promise<unknown>>();
 const patchMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
 const putMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
 const delMock = jest.fn<(path: string) => Promise<unknown>>();
@@ -251,6 +251,99 @@ describe('API query/id validation', () => {
         pbEngineerPartyId: -3,
       }),
     ).toThrow('pbEngineerPartyId debe ser un entero positivo.');
+  });
+
+  it('uses canonical public booking availability, idempotency, and lookup headers', async () => {
+    const serviceOfferingId = '11111111-1111-4111-8111-111111111111';
+    const startsAt = '2026-03-01T10:00:00Z';
+
+    await Bookings.publicAvailability({ serviceOfferingId, startsAt, durationMinutes: 120 });
+    expect(getMock).toHaveBeenCalledWith(
+      `/bookings/public/availability?serviceOfferingId=${serviceOfferingId}&startsAt=2026-03-01T10%3A00%3A00Z&durationMinutes=120`,
+    );
+
+    const checkoutPayload = {
+      pbcFullName: 'Ana Perez',
+      pbcEmail: 'ana@example.com',
+      pbcPhone: '+593999999999',
+      pbcServiceOfferingId: serviceOfferingId,
+      pbcStartsAt: startsAt,
+      pbcDurationMinutes: 120,
+      pbcEngineerPartyId: 9,
+      pbcResourceIds: null,
+      pbcTermsAccepted: true,
+    };
+    await Bookings.createPublicCheckout(checkoutPayload, 'service-booking-test-key');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/public/checkout',
+      checkoutPayload,
+      { headers: { 'Idempotency-Key': 'service-booking-test-key' } },
+    );
+
+    await Bookings.getPublicCheckout(42, 'lookup-secret');
+    expect(getMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42',
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.createPublicDatafastCheckout(42, 'lookup-secret');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42/datafast/checkout',
+      {},
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.confirmPublicDatafastStatus(
+      42,
+      '/v1/checkouts/provider-checkout/payment',
+      'lookup-secret',
+    );
+    expect(getMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42/datafast/status?resourcePath=%2Fv1%2Fcheckouts%2Fprovider-checkout%2Fpayment',
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.createPublicPaypalOrder(42, 'lookup-secret');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42/paypal/create',
+      {},
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.capturePublicPaypalOrder(42, 'PAYPAL-ORDER-1', 'lookup-secret');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42/paypal/capture',
+      { paypalOrderId: 'PAYPAL-ORDER-1' },
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.selectPublicManualPayment(42, 'lookup-secret');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42/manual-payment',
+      { paymentMethod: 'bank_transfer' },
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.submitPublicManualEvidence(42, 'BANK-REFERENCE-1', 'lookup-secret');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42/manual-payment/evidence',
+      { customerReference: 'BANK-REFERENCE-1' },
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.getCommerce(42);
+    expect(getMock).toHaveBeenCalledWith('/bookings/42/commerce');
+
+    await Bookings.reviewManualPayment(42, 'approve', 'Matched bank statement.');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/42/manual-payment/review',
+      { action: 'approve', reviewNotes: 'Matched bank statement.' },
+    );
+
+    expect(() => Bookings.publicAvailability({ serviceOfferingId, startsAt, durationMinutes: 0 }))
+      .toThrow('durationMinutes debe ser un entero positivo.');
+    expect(() => Bookings.getPublicCheckout(0, 'lookup-secret'))
+      .toThrow('bookingId debe ser un entero positivo.');
   });
 
   it('validates chat ids and sanitizes optional list query params', async () => {

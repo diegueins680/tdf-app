@@ -29,6 +29,7 @@ import qualified Data.Aeson.Key as AKey
 import qualified Data.Aeson.KeyMap as AKM
 import           Data.Time    (UTCTime, Day)
 import           Data.UUID    (UUID)
+import qualified Data.UUID as UUID
 import           Data.Maybe   (fromMaybe)
 import           GHC.Generics (Generic)
 import           Network.HTTP.Media ((//))
@@ -437,6 +438,18 @@ data MarketplaceItemDTO = MarketplaceItemDTO
   , miPriceDisplay   :: Text
   , miMarkupPct      :: Int
   , miCurrency       :: Text
+  , miRentalWeeklyPriceUsdCents :: Maybe Int
+  , miRentalWeeklyPriceDisplay :: Maybe Text
+  , miRentalSecurityDepositUsdCents :: Maybe Int
+  , miRentalSecurityDepositDisplay :: Maybe Text
+  , miRentalMinDays :: Maybe Int
+  , miRentalMaxDays :: Maybe Int
+  , miRentalLateFeeUsdCents :: Maybe Int
+  , miRentalLateFeeDisplay :: Maybe Text
+  , miRentalCancellationWindowHours :: Maybe Int
+  , miRentalTermsVersion :: Maybe Text
+  , miRentalTermsSummary :: Maybe Text
+  , miRentalTimezone :: Maybe Text
   } deriving (Show, Generic)
 
 instance ToJSON MarketplaceItemDTO
@@ -453,6 +466,14 @@ data MarketplaceCartItemDTO = MarketplaceCartItemDTO
   , mciSubtotalCents     :: Int
   , mciUnitPriceDisplay  :: Text
   , mciSubtotalDisplay   :: Text
+  , mciPurpose           :: Text
+  , mciRentalStartDate   :: Maybe Day
+  , mciRentalEndDate     :: Maybe Day
+  , mciRentalDurationDays :: Maybe Int
+  , mciRentalChargeCents :: Maybe Int
+  , mciRentalChargeDisplay :: Maybe Text
+  , mciSecurityDepositCents :: Maybe Int
+  , mciSecurityDepositDisplay :: Maybe Text
   } deriving (Show, Generic)
 
 instance ToJSON MarketplaceCartItemDTO
@@ -472,13 +493,17 @@ instance FromJSON MarketplaceCartDTO
 data MarketplaceCartItemUpdate = MarketplaceCartItemUpdate
   { mciuListingId :: Text
   , mciuQuantity  :: Int
+  , mciuRentalStartDate :: Maybe Day
+  , mciuRentalEndDate :: Maybe Day
   } deriving (Show, Generic)
 
 maxMarketplaceCartItemQuantity :: Int
-maxMarketplaceCartItemQuantity = 99
+maxMarketplaceCartItemQuantity = 1
 
 instance FromJSON MarketplaceCartItemUpdate where
   parseJSON value = do
+    rejectNullOptionalFields "MarketplaceCartItemUpdate"
+      ["mciuRentalStartDate", "mciuRentalEndDate"] value
     payload <- genericParseJSON strictObjectOptions value
     listingId <-
       either fail pure $
@@ -493,12 +518,21 @@ instance FromJSON MarketplaceCartItemUpdate where
               "mciuQuantity must be "
                 <> show maxMarketplaceCartItemQuantity
                 <> " or fewer"
-          else pure payload { mciuListingId = listingId }
+          else case (mciuRentalStartDate payload, mciuRentalEndDate payload) of
+            (Nothing, Nothing) -> pure payload { mciuListingId = listingId }
+            (Just _, Just _) -> pure payload { mciuListingId = listingId }
+            _ -> fail "mciuRentalStartDate and mciuRentalEndDate must be provided together"
 instance ToJSON MarketplaceCartItemUpdate
 
 normalizeMarketplaceCartListingId :: Text -> Either String Text
 normalizeMarketplaceCartListingId rawListingId =
-  normalizeMarketplacePositiveDecimalId "mciuListingId" rawListingId
+  normalizeMarketplaceUuid "mciuListingId" rawListingId
+
+normalizeMarketplaceUuid :: Text -> Text -> Either String Text
+normalizeMarketplaceUuid fieldName rawValue =
+  case UUID.fromText (T.strip rawValue) of
+    Just value -> Right (UUID.toText value)
+    Nothing -> Left (T.unpack fieldName <> " must be a UUID")
 
 normalizeMarketplacePositiveDecimalId :: Text -> Text -> Either String Text
 normalizeMarketplacePositiveDecimalId fieldName rawValue =
@@ -521,11 +555,60 @@ data MarketplaceCheckoutReq = MarketplaceCheckoutReq
   { mcrBuyerName  :: Text
   , mcrBuyerEmail :: Text
   , mcrBuyerPhone :: Maybe Text
+  , mcrFulfillmentMethod :: Maybe Text
+  , mcrShippingAddress :: Maybe MarketplaceShippingAddress
+  , mcrRentalTermsAccepted :: Maybe Bool
+  , mcrIdentityDocumentType :: Maybe Text
+  , mcrIdentityDocumentNumber :: Maybe Text
   } deriving (Show, Generic)
+
+data MarketplaceShippingAddress = MarketplaceShippingAddress
+  { msaAddressLine1 :: Text
+  , msaAddressLine2 :: Maybe Text
+  , msaCity         :: Text
+  , msaProvince     :: Text
+  , msaPostalCode   :: Maybe Text
+  , msaCountryCode  :: Text
+  } deriving (Show, Generic)
+
+instance FromJSON MarketplaceShippingAddress where
+  parseJSON value = do
+    rejectNullOptionalFields "MarketplaceShippingAddress"
+      ["msaAddressLine2", "msaPostalCode"] value
+    address <- genericParseJSON strictObjectOptions value
+    addressLine1 <- requiredAddressField "msaAddressLine1" (msaAddressLine1 address)
+    city <- requiredAddressField "msaCity" (msaCity address)
+    province <- requiredAddressField "msaProvince" (msaProvince address)
+    let country = T.toUpper (T.strip (msaCountryCode address))
+    if T.length country /= 2 || not (T.all isAsciiUpper country)
+      then fail "msaCountryCode must be an ISO 3166-1 alpha-2 code"
+      else pure address
+        { msaAddressLine1 = addressLine1
+        , msaAddressLine2 = normalizeMarketplaceOptionalField (msaAddressLine2 address)
+        , msaCity = city
+        , msaProvince = province
+        , msaPostalCode = normalizeMarketplaceOptionalField (msaPostalCode address)
+        , msaCountryCode = country
+        }
+    where
+      requiredAddressField label rawValue =
+        let normalized = T.strip rawValue
+        in if T.null normalized || T.length normalized > 200
+             then fail (label <> " must contain 1 to 200 characters")
+             else pure normalized
+
+instance ToJSON MarketplaceShippingAddress
 
 instance FromJSON MarketplaceCheckoutReq where
   parseJSON value = do
-    rejectNullOptionalFields "MarketplaceCheckoutReq" ["mcrBuyerPhone"] value
+    rejectNullOptionalFields "MarketplaceCheckoutReq"
+      [ "mcrBuyerPhone"
+      , "mcrFulfillmentMethod"
+      , "mcrShippingAddress"
+      , "mcrRentalTermsAccepted"
+      , "mcrIdentityDocumentType"
+      , "mcrIdentityDocumentNumber"
+      ] value
     payload <- genericParseJSON strictObjectOptions value
     buyerName <- normalizeMarketplaceBuyerNameField (mcrBuyerName payload)
     buyerEmail <- normalizeMarketplaceBuyerEmailField (mcrBuyerEmail payload)
@@ -534,6 +617,9 @@ instance FromJSON MarketplaceCheckoutReq where
       { mcrBuyerName = buyerName
       , mcrBuyerEmail = buyerEmail
       , mcrBuyerPhone = buyerPhone
+      , mcrFulfillmentMethod = normalizeMarketplaceOptionalField (mcrFulfillmentMethod payload)
+      , mcrIdentityDocumentType = normalizeMarketplaceOptionalField (mcrIdentityDocumentType payload)
+      , mcrIdentityDocumentNumber = normalizeMarketplaceOptionalField (mcrIdentityDocumentNumber payload)
       }
 instance ToJSON MarketplaceCheckoutReq
 
@@ -687,6 +773,27 @@ data MarketplaceOrderDTO = MarketplaceOrderDTO
   , moPaypalOrderId :: Maybe Text
   , moPaypalPayerEmail :: Maybe Text
   , moPaidAt        :: Maybe UTCTime
+  , moLookupToken   :: Maybe Text
+  , moCheckoutStatus :: Maybe Text
+  , moManualPaymentStatus :: Maybe Text
+  , moManualPaymentSubmittedAt :: Maybe UTCTime
+  , moFulfillmentMethod :: Maybe Text
+  , moFulfillmentStatus :: Maybe Text
+  , moHoldExpiresAt :: Maybe UTCTime
+  , moTrackingReference :: Maybe Text
+  , moFulfillmentHistory :: [(Text, UTCTime)]
+  , moOrderKind :: Maybe Text
+  , moRentalStartDate :: Maybe Day
+  , moRentalEndDate :: Maybe Day
+  , moRentalDurationDays :: Maybe Int
+  , moRentalChargeUsdCents :: Maybe Int
+  , moSecurityDepositUsdCents :: Maybe Int
+  , moDepositStatus :: Maybe Text
+  , moDepositDeductionUsdCents :: Maybe Int
+  , moRentalTermsVersion :: Maybe Text
+  , moRentalTimezone :: Maybe Text
+  , moConditionOut :: Maybe Text
+  , moConditionIn :: Maybe Text
   , moCreatedAt     :: UTCTime
   , moUpdatedAt     :: UTCTime
   , moItems         :: [MarketplaceOrderItemDTO]
@@ -694,6 +801,133 @@ data MarketplaceOrderDTO = MarketplaceOrderDTO
 
 instance ToJSON MarketplaceOrderDTO
 instance FromJSON MarketplaceOrderDTO
+
+data MarketplaceManualEvidenceSubmit = MarketplaceManualEvidenceSubmit
+  { mmesCustomerReference :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceManualEvidenceSubmit
+instance FromJSON MarketplaceManualEvidenceSubmit where
+  parseJSON = genericParseJSON strictObjectOptions
+
+data MarketplaceManualPaymentReview = MarketplaceManualPaymentReview
+  { mmprAction      :: Text
+  , mmprReviewNotes :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceManualPaymentReview
+instance FromJSON MarketplaceManualPaymentReview where
+  parseJSON = genericParseJSON strictObjectOptions
+
+data MarketplaceCustomerRequestSubmit = MarketplaceCustomerRequestSubmit
+  { mcrsRequestType      :: Text
+  , mcrsReason           :: Text
+  , mcrsRequestedEndDate :: Maybe Day
+  , mcrsEvidenceUrl      :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceCustomerRequestSubmit
+instance FromJSON MarketplaceCustomerRequestSubmit where
+  parseJSON value = do
+    rejectNullOptionalFields "MarketplaceCustomerRequestSubmit"
+      ["mcrsRequestedEndDate", "mcrsEvidenceUrl"] value
+    genericParseJSON strictObjectOptions value
+
+data MarketplaceCustomerRequestReview = MarketplaceCustomerRequestReview
+  { mcrrAction      :: Text
+  , mcrrReviewNotes :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceCustomerRequestReview
+instance FromJSON MarketplaceCustomerRequestReview where
+  parseJSON = genericParseJSON strictObjectOptions
+
+data MarketplaceCustomerRequestDTO = MarketplaceCustomerRequestDTO
+  { mcrRequestId        :: Text
+  , mcrOrderId          :: Text
+  , mcrOrderKind        :: Text
+  , mcrRequestType      :: Text
+  , mcrStatus           :: Text
+  , mcrReason           :: Text
+  , mcrRequestedEndDate :: Maybe Day
+  , mcrEvidenceUrl      :: Maybe Text
+  , mcrRequestedAt      :: UTCTime
+  , mcrReviewedAt       :: Maybe UTCTime
+  , mcrReviewNotes      :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceCustomerRequestDTO
+instance FromJSON MarketplaceCustomerRequestDTO
+
+data MarketplaceDepositSettlementSubmit = MarketplaceDepositSettlementSubmit
+  { mdssSettlementMethod :: Text
+  , mdssExternalReference :: Text
+  , mdssEvidenceUrl       :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceDepositSettlementSubmit
+instance FromJSON MarketplaceDepositSettlementSubmit where
+  parseJSON = genericParseJSON strictObjectOptions
+
+data MarketplaceDepositSettlementReview = MarketplaceDepositSettlementReview
+  { mdsrAction      :: Text
+  , mdsrReviewNotes :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceDepositSettlementReview
+instance FromJSON MarketplaceDepositSettlementReview where
+  parseJSON = genericParseJSON strictObjectOptions
+
+data MarketplaceDepositSettlementDTO = MarketplaceDepositSettlementDTO
+  { mdsSettlementId         :: Text
+  , mdsOrderId              :: Text
+  , mdsCheckoutId           :: Text
+  , mdsCurrency             :: Text
+  , mdsDepositAmountMinor   :: Int64
+  , mdsDeductionAmountMinor :: Int64
+  , mdsRefundAmountMinor    :: Int64
+  , mdsSettlementMethod     :: Text
+  , mdsExternalReference    :: Text
+  , mdsEvidenceUrl          :: Text
+  , mdsStatus               :: Text
+  , mdsSubmittedBy          :: Int64
+  , mdsSubmittedAt          :: UTCTime
+  , mdsReviewedBy           :: Maybe Int64
+  , mdsReviewedAt           :: Maybe UTCTime
+  , mdsReviewNotes          :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceDepositSettlementDTO
+instance FromJSON MarketplaceDepositSettlementDTO
+
+data MarketplaceManualEvidenceDTO = MarketplaceManualEvidenceDTO
+  { mmeEvidenceId           :: Text
+  , mmePaymentMethod        :: Text
+  , mmeStatus               :: Text
+  , mmeCustomerReference    :: Maybe Text
+  , mmeSubmittedAmountMinor :: Maybe Int64
+  , mmeCurrency             :: Maybe Text
+  , mmeSubmittedBy          :: Maybe Int64
+  , mmeSubmittedAt          :: Maybe UTCTime
+  , mmeReviewedBy           :: Maybe Int64
+  , mmeReviewedAt           :: Maybe UTCTime
+  , mmeReviewNotes          :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceManualEvidenceDTO
+instance FromJSON MarketplaceManualEvidenceDTO
+
+data MarketplaceCommerceDTO = MarketplaceCommerceDTO
+  { mpcOrderId       :: Text
+  , mpcCheckoutId    :: Text
+  , mpcPaymentStatus :: Text
+  , mpcHoldExpiresAt :: UTCTime
+  , mpcOrderKind     :: Text
+  , mpcManualEvidence :: Maybe MarketplaceManualEvidenceDTO
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceCommerceDTO
+instance FromJSON MarketplaceCommerceDTO
 
 data MarketplaceOrderUpdate = MarketplaceOrderUpdate
   { mouStatus          :: Maybe Text
@@ -732,12 +966,72 @@ data MarketplaceOrderUpdateParsed = MarketplaceOrderUpdateParsed
 instance FromJSON MarketplaceOrderUpdateParsed where
   parseJSON = genericParseJSON strictObjectOptions
 
+data MarketplaceFulfillmentUpdate = MarketplaceFulfillmentUpdate
+  { mfuStatus :: Text
+  , mfuCarrier :: Maybe Text
+  , mfuTrackingReference :: Maybe Text
+  , mfuReasonCode :: Maybe Text
+  , mfuNotes :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON MarketplaceFulfillmentUpdate where
+  parseJSON value = do
+    rejectNullOptionalFields "MarketplaceFulfillmentUpdate"
+      ["mfuCarrier", "mfuTrackingReference", "mfuReasonCode", "mfuNotes"] value
+    genericParseJSON strictObjectOptions value
+
+instance ToJSON MarketplaceFulfillmentUpdate
+
+data MarketplaceRentalUpdate = MarketplaceRentalUpdate
+  { mruStatus :: Text
+  , mruConditionOut :: Maybe Text
+  , mruConditionIn :: Maybe Text
+  , mruEvidenceUrl :: Maybe Text
+  , mruDepositDeductionUsdCents :: Maybe Int
+  , mruReasonCode :: Maybe Text
+  , mruNotes :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON MarketplaceRentalUpdate where
+  parseJSON value = do
+    rejectNullOptionalFields "MarketplaceRentalUpdate"
+      [ "mruConditionOut"
+      , "mruConditionIn"
+      , "mruEvidenceUrl"
+      , "mruDepositDeductionUsdCents"
+      , "mruReasonCode"
+      , "mruNotes"
+      ] value
+    genericParseJSON strictObjectOptions value
+
+instance ToJSON MarketplaceRentalUpdate
+
+data MarketplaceRentalTermsUpdate = MarketplaceRentalTermsUpdate
+  { mrtuDailyRateUsdCents :: Int
+  , mrtuWeeklyRateUsdCents :: Maybe Int
+  , mrtuSecurityDepositUsdCents :: Int
+  , mrtuLateFeeUsdCents :: Int
+  , mrtuMinDays :: Int
+  , mrtuMaxDays :: Int
+  , mrtuCancellationWindowHours :: Int
+  , mrtuTimezone :: Text
+  , mrtuTermsVersion :: Text
+  , mrtuTermsSummary :: Text
+  , mrtuActive :: Bool
+  } deriving (Show, Generic)
+
+instance FromJSON MarketplaceRentalTermsUpdate where
+  parseJSON = genericParseJSON strictObjectOptions
+
+instance ToJSON MarketplaceRentalTermsUpdate
+
 data DatafastCheckoutDTO = DatafastCheckoutDTO
   { dcOrderId     :: Text
   , dcCheckoutId  :: Text
   , dcWidgetUrl   :: Text
   , dcAmount      :: Text
   , dcCurrency    :: Text
+  , dcLookupToken :: Maybe Text
   } deriving (Show, Generic)
 
 instance ToJSON DatafastCheckoutDTO
@@ -747,6 +1041,7 @@ data PaypalCreateDTO = PaypalCreateDTO
   { pcOrderId       :: Text
   , pcPaypalOrderId :: Text
   , pcApprovalUrl   :: Maybe Text
+  , pcLookupToken   :: Maybe Text
   } deriving (Show, Generic)
 
 instance ToJSON PaypalCreateDTO
@@ -763,7 +1058,7 @@ instance FromJSON PaypalCaptureReq where
     payload <- genericParseJSON strictObjectOptions value
     orderId <-
       either fail pure $
-        normalizeMarketplacePositiveDecimalId
+        normalizeMarketplaceUuid
           "pcCaptureOrderId"
           (pcCaptureOrderId payload)
     paypalId <-

@@ -43,7 +43,7 @@ import           TDF.API.Proposals (ProposalsAPI)
 import           TDF.API.Rooms     (RoomsAPI, RoomsPublicAPI)
 import           TDF.API.Sessions  (SessionsAPI)
 import           TDF.API.Drive     (DriveAPI)
-import           TDF.API.Types     (ArtistTipRequest, ArtistTipResponse, PartyRelatedDTO, RawJSON, UserRoleSummaryDTO)
+import           TDF.API.Types     (ArtistTipRequest, ArtistTipResponse, DatafastCheckoutDTO, PaypalCreateDTO, PartyRelatedDTO, RawJSON, UserRoleSummaryDTO)
 import           TDF.API.Radio     (RadioAPI)
 import           TDF.DTO
 import           TDF.Meta         (MetaAPI)
@@ -51,6 +51,7 @@ import           TDF.Version      (VersionInfo)
 import qualified TDF.ModelsExtra  as ME
 import           TDF.Routes.Academy (AcademyAPI)
 import           TDF.Routes.Courses (CoursesPublicAPI, CoursesAdminAPI, WhatsAppHooksAPI, WhatsAppWebhookAPI)
+import           TDF.Routes.EventTickets (PublicEventTicketsAPI)
 import           TDF.API.LiveSessions (LiveSessionsAPI)
 import           TDF.API.Feedback    (FeedbackAPI)
 import           TDF.API.Calendar    (CalendarAPI)
@@ -64,6 +65,7 @@ import           TDF.Contracts.API (ContractsAPI)
 import           TDF.API.DDEX (DDEXAPI)
 import           TDF.API.Catalog (CatalogAPI, PublicCatalogAPI, SecurityGrantRevisionDTO, SelfFanRoleRequest)
 import           TDF.API.ServiceStorefront (ServiceStorefrontPublicAPI, ServiceStorefrontAdminAPI)
+import           TDF.API.CommerceOperations (CommerceOperationsAPI)
 import           TDF.API.Directory (DirectoryPublicAPI, DirectoryProtectedAPI)
 import           TDF.Operations.API (OperationsAPI)
 
@@ -322,9 +324,53 @@ type BookingAPI =
          :> Get '[JSON] [BookingDTO]
   :<|> ReqBody '[JSON] CreateBookingReq :> Post '[JSON] BookingDTO
   :<|> Capture "bookingId" Int64 :> ReqBody '[JSON] UpdateBookingReq :> Put '[JSON] BookingDTO
+  :<|> Capture "bookingId" Int64 :> "commerce" :> Get '[JSON] ServiceBookingCommerceDTO
+  :<|> Capture "bookingId" Int64 :> "manual-payment" :> "review"
+         :> ReqBody '[JSON] ServiceBookingManualReviewReq
+         :> Post '[JSON] ServiceBookingCommerceDTO
 
 type BookingPublicAPI =
-       "bookings" :> "public" :> ReqBody '[JSON] PublicBookingReq :> Post '[JSON] BookingDTO
+       "bookings" :> "public" :> "availability"
+         :> QueryParam' '[Required] "serviceOfferingId" UUID
+         :> QueryParam' '[Required] "startsAt" UTCTime
+         :> QueryParam' '[Required] "durationMinutes" Int
+         :> Get '[JSON] PublicBookingAvailabilityDTO
+  :<|> "bookings" :> "public" :> ReqBody '[JSON] PublicBookingReq :> Post '[JSON] BookingDTO
+  :<|> "bookings" :> "public" :> "checkout"
+         :> Header "Idempotency-Key" Text
+         :> ReqBody '[JSON] PublicBookingCheckoutReq
+         :> Post '[JSON] PublicBookingCheckoutDTO
+  :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
+         :> Header "X-Order-Lookup-Token" Text
+         :> Get '[JSON] PublicBookingCheckoutDTO
+  :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
+         :> "datafast" :> "checkout"
+         :> Header "X-Order-Lookup-Token" Text
+         :> Post '[JSON] DatafastCheckoutDTO
+  :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
+         :> "datafast" :> "status"
+         :> Header "X-Order-Lookup-Token" Text
+         :> QueryParam' '[Required] "resourcePath" Text
+         :> Get '[JSON] PublicBookingCheckoutDTO
+  :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
+         :> "paypal" :> "create"
+         :> Header "X-Order-Lookup-Token" Text
+         :> Post '[JSON] PaypalCreateDTO
+  :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
+         :> "paypal" :> "capture"
+         :> Header "X-Order-Lookup-Token" Text
+         :> ReqBody '[JSON] PublicBookingPaypalCaptureReq
+         :> Post '[JSON] PublicBookingCheckoutDTO
+  :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
+         :> "manual-payment"
+         :> Header "X-Order-Lookup-Token" Text
+         :> ReqBody '[JSON] PublicBookingManualPaymentReq
+         :> Post '[JSON] PublicBookingCheckoutDTO
+  :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
+         :> "manual-payment" :> "evidence"
+         :> Header "X-Order-Lookup-Token" Text
+         :> ReqBody '[JSON] PublicBookingManualEvidenceReq
+         :> Post '[JSON] PublicBookingCheckoutDTO
 
 type ServiceMarketplaceAPI =
        "service-marketplace" :> "ads" :> Get '[JSON] [ServiceAdDTO]
@@ -553,6 +599,7 @@ type ProtectedAPI =
   :<|> "navigation" :> "preferences" :> NavigationPreferencesAPI
   :<|> DirectoryProtectedAPI
   :<|> OperationsAPI
+  :<|> CommerceOperationsAPI
 
 type API =
        VersionAPI
@@ -567,6 +614,7 @@ type API =
   :<|> "fans" :> FanPublicAPI
   :<|> "artists" :> ArtistPublicAPI
   :<|> CoursesPublicAPI
+  :<|> PublicEventTicketsAPI
   :<|> InstagramWebhookAPI
   :<|> FacebookWebhookAPI
   :<|> WhatsAppHooksAPI
@@ -677,6 +725,147 @@ instance FromJSON PublicBookingReq where
               "pbDurationMinutes must be omitted instead of null "
                 <> "to use the default 60-minute duration"
           _ -> pure ()
+
+data PublicBookingQuoteDTO = PublicBookingQuoteDTO
+  { pbqPolicyVersion   :: Text
+  , pbqCurrency        :: Text
+  , pbqDurationMinutes :: Int
+  , pbqSubtotalMinor   :: Int64
+  , pbqTaxMinor        :: Int64
+  , pbqTotalMinor      :: Int64
+  , pbqDepositMinor    :: Int64
+  , pbqBalanceMinor    :: Int64
+  , pbqDepositBps      :: Int
+  , pbqTermsVersion    :: Text
+  } deriving (Show, Generic)
+instance ToJSON PublicBookingQuoteDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+data PublicBookingAvailabilityDTO = PublicBookingAvailabilityDTO
+  { pbaAvailable         :: Bool
+  , pbaReason            :: Maybe Text
+  , pbaServiceOfferingId :: UUID
+  , pbaStartsAt          :: UTCTime
+  , pbaEndsAt            :: UTCTime
+  , pbaResourceIds       :: [Text]
+  , pbaResourceNames     :: [Text]
+  , pbaQuote             :: Maybe PublicBookingQuoteDTO
+  } deriving (Show, Generic)
+instance ToJSON PublicBookingAvailabilityDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+data PublicBookingCheckoutReq = PublicBookingCheckoutReq
+  { pbcFullName          :: Text
+  , pbcEmail             :: Text
+  , pbcPhone             :: Maybe Text
+  , pbcServiceOfferingId :: UUID
+  , pbcStartsAt          :: UTCTime
+  , pbcDurationMinutes   :: Int
+  , pbcNotes             :: Maybe Text
+  , pbcEngineerPartyId   :: Maybe Int64
+  , pbcEngineerName      :: Maybe Text
+  , pbcResourceIds       :: Maybe [Text]
+  , pbcTermsAccepted     :: Bool
+  } deriving (Show, Generic)
+instance ToJSON PublicBookingCheckoutReq
+instance FromJSON PublicBookingCheckoutReq where
+  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
+
+data PublicBookingCheckoutDTO = PublicBookingCheckoutDTO
+  { pbcBooking           :: BookingDTO
+  , pbcCheckoutId        :: Text
+  , pbcLookupToken       :: Maybe Text
+  , pbcPaymentStatus     :: Text
+  , pbcFulfillmentStatus :: Text
+  , pbcHoldExpiresAt     :: UTCTime
+  , pbcQuote             :: PublicBookingQuoteDTO
+  , pbcPaymentMethods    :: [Text]
+  , pbcManualPayment     :: Maybe PublicBookingManualPaymentDTO
+  } deriving (Show, Generic)
+instance ToJSON PublicBookingCheckoutDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+data PublicBookingPaypalCaptureReq = PublicBookingPaypalCaptureReq
+  { pbpcPaypalOrderId :: Text
+  } deriving (Show, Generic)
+instance ToJSON PublicBookingPaypalCaptureReq where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
+instance FromJSON PublicBookingPaypalCaptureReq where
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 4
+    , rejectUnknownFields = True
+    }
+
+data PublicBookingManualPaymentReq = PublicBookingManualPaymentReq
+  { pbmprPaymentMethod :: Text
+  } deriving (Show, Generic)
+instance ToJSON PublicBookingManualPaymentReq where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 5 }
+instance FromJSON PublicBookingManualPaymentReq where
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 5
+    , rejectUnknownFields = True
+    }
+
+data PublicBookingManualEvidenceReq = PublicBookingManualEvidenceReq
+  { pbmeCustomerReference :: Text
+  } deriving (Show, Generic)
+instance ToJSON PublicBookingManualEvidenceReq where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
+instance FromJSON PublicBookingManualEvidenceReq where
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 4
+    , rejectUnknownFields = True
+    }
+
+data PublicBookingManualPaymentDTO = PublicBookingManualPaymentDTO
+  { pbmpPaymentMethod :: Text
+  , pbmpStatus        :: Text
+  , pbmpSubmittedAt   :: Maybe UTCTime
+  } deriving (Show, Generic)
+instance ToJSON PublicBookingManualPaymentDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
+
+data ServiceBookingManualReviewReq = ServiceBookingManualReviewReq
+  { sbmrAction      :: Text
+  , sbmrReviewNotes :: Text
+  } deriving (Show, Generic)
+instance ToJSON ServiceBookingManualReviewReq where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
+instance FromJSON ServiceBookingManualReviewReq where
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 4
+    , rejectUnknownFields = True
+    }
+
+data ServiceBookingManualEvidenceDTO = ServiceBookingManualEvidenceDTO
+  { sbmeEvidenceId           :: Text
+  , sbmePaymentMethod        :: Text
+  , sbmeStatus               :: Text
+  , sbmeCustomerReference    :: Maybe Text
+  , sbmeSubmittedAmountMinor :: Maybe Int64
+  , sbmeCurrency             :: Maybe Text
+  , sbmeSubmittedBy          :: Maybe Int64
+  , sbmeSubmittedAt          :: Maybe UTCTime
+  , sbmeReviewedBy           :: Maybe Int64
+  , sbmeReviewedAt           :: Maybe UTCTime
+  , sbmeReviewNotes          :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON ServiceBookingManualEvidenceDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
+
+data ServiceBookingCommerceDTO = ServiceBookingCommerceDTO
+  { sbmcBookingId         :: Int64
+  , sbmcCheckoutId        :: Text
+  , sbmcPaymentStatus     :: Text
+  , sbmcFulfillmentStatus :: Text
+  , sbmcDepositMinor      :: Int64
+  , sbmcCurrency          :: Text
+  , sbmcHoldExpiresAt     :: UTCTime
+  , sbmcManualEvidence    :: Maybe ServiceBookingManualEvidenceDTO
+  } deriving (Show, Generic)
+instance ToJSON ServiceBookingCommerceDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
 
 data PublicEngineerDTO = PublicEngineerDTO
   { peId   :: Int64

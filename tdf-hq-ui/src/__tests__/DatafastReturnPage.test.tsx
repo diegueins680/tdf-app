@@ -4,13 +4,17 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import type { MarketplaceOrderDTO } from '../api/types';
 
-const confirmDatafastPaymentMock = jest.fn<(orderId: string, resourcePath: string) => Promise<MarketplaceOrderDTO>>();
+const confirmDatafastPaymentMock = jest.fn<
+  (orderId: string, resourcePath: string, lookupToken: string) => Promise<MarketplaceOrderDTO>
+>();
+const lookupTokenMock = jest.fn<() => string | null>();
 
 jest.unstable_mockModule('../api/marketplace', () => ({
   Marketplace: {
-    confirmDatafastPayment: (orderId: string, resourcePath: string) =>
-      confirmDatafastPaymentMock(orderId, resourcePath),
+    confirmDatafastPayment: (orderId: string, resourcePath: string, lookupToken: string) =>
+      confirmDatafastPaymentMock(orderId, resourcePath, lookupToken),
   },
+  loadMarketplaceLookupToken: () => lookupTokenMock(),
 }));
 
 const { default: DatafastReturnPage } = await import('../pages/DatafastReturnPage');
@@ -64,6 +68,8 @@ describe('DatafastReturnPage', () => {
 
   beforeEach(() => {
     confirmDatafastPaymentMock.mockReset();
+    lookupTokenMock.mockReset();
+    lookupTokenMock.mockReturnValue('secure-lookup-token');
     window.localStorage.clear();
     window.history.pushState({}, '', '/marketplace/pago-datafast?orderId=order-1&resourcePath=resource-1');
   });
@@ -78,7 +84,7 @@ describe('DatafastReturnPage', () => {
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
-    expect(confirmDatafastPaymentMock).toHaveBeenCalledWith('order-1', 'resource-1');
+    expect(confirmDatafastPaymentMock).toHaveBeenCalledWith('order-1', 'resource-1', 'secure-lookup-token');
     expect(container.textContent).toContain('Pago con tarjeta en revisión');
     expect(container.textContent).not.toContain('Pago confirmado. ¡Gracias por tu compra!');
     expect(window.localStorage.getItem('tdf-marketplace-cart-id')).toBe('cart-1');
@@ -103,6 +109,22 @@ describe('DatafastReturnPage', () => {
     expect(window.localStorage.getItem('tdf-marketplace-cart-id')).toBeNull();
     expect(window.localStorage.getItem('tdf-marketplace-cart-meta')).toBeNull();
     expect(window.localStorage.getItem('tdf-marketplace-buyer')).toBeNull();
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
+  it('fails closed without the guest lookup credential and never calls payment confirmation', async () => {
+    lookupTokenMock.mockReturnValue(null);
+    window.localStorage.setItem('tdf-marketplace-cart-id', 'cart-1');
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    expect(confirmDatafastPaymentMock).not.toHaveBeenCalled();
+    expect(container.textContent).toContain('Falta el acceso seguro de esta orden');
+    expect(window.localStorage.getItem('tdf-marketplace-cart-id')).toBe('cart-1');
 
     await cleanup();
     document.body.removeChild(container);

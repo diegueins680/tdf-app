@@ -61,6 +61,52 @@
       "aliases": ["/instagram", "/ig", "/sobre-tdf"]
     },
     {
+      "id": "public.commerce",
+      "parentId": "public.platform",
+      "webRoute": "/comercio",
+      "routeType": "primary",
+      "classification": "primary-destination",
+      "label": { "es": "Servicios TDF", "en": "TDF Services" },
+      "synonyms": { "es": ["comercio", "tienda", "servicios"], "en": ["commerce", "store", "services"] },
+      "keywords": ["commerce", "checkout", "services"],
+      "description": { "es": "Hub público con el estado real de cada oferta comercial.", "en": "Public hub showing the truthful availability of each commercial offer." },
+      "navigationGroup": "people",
+      "icon": "storefront",
+      "breadcrumb": ["public.platform"],
+      "requiredAuth": "public",
+      "globalMenu": false,
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "none",
+      "mobilePresentation": { "kind": "external-web", "destination": "https://tdf-app.pages.dev/comercio", "documentedException": null },
+      "accessRequestEligible": false,
+      "aliases": ["/commerce"]
+    },
+    {
+      "id": "public.distribution",
+      "parentId": "public.commerce",
+      "webRoute": "/distribucion",
+      "routeType": "primary",
+      "classification": "primary-destination",
+      "label": { "es": "Distribución musical", "en": "Music distribution" },
+      "synonyms": { "es": ["distribuir música", "ddex"], "en": ["distribute music", "ddex"] },
+      "keywords": ["distribution", "ddex", "release"],
+      "description": { "es": "Información y acceso al piloto privado de distribución.", "en": "Information and private-pilot access for distribution." },
+      "navigationGroup": "label",
+      "icon": "album",
+      "breadcrumb": ["public.platform", "public.commerce"],
+      "requiredAuth": "public",
+      "featureFlag": "distribution.public_storefront",
+      "maturity": "pilot",
+      "globalMenu": false,
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "none",
+      "mobilePresentation": { "kind": "external-web", "destination": "https://tdf-app.pages.dev/distribucion", "documentedException": "Protected release management remains authenticated." },
+      "accessRequestEligible": false,
+      "aliases": ["/distribution"]
+    },
+    {
       "id": "home",
       "parentId": null,
       "webRoute": "/inicio",
@@ -377,7 +423,11 @@
       "requiredAuth": "public",
       "mobilePresentation": { "kind": "external-web", "destination": null, "documentedException": "Quote intake remains web based." },
       "accessRequestEligible": false,
-      "aliases": ["/services/mixing-mastering", "/mezcla-mastering/pedido/:orderNumber"]
+      "aliases": [
+        "/services/mixing-mastering",
+        "/mezcla-mastering/pago-datafast",
+        "/mezcla-mastering/pedido/:orderNumber"
+      ]
     },
     {
       "id": "bookings.public",
@@ -397,6 +447,27 @@
       "mobilePresentation": { "kind": "native", "destination": "/(tabs)/bookings", "documentedException": null },
       "accessRequestEligible": false,
       "apiScopes": [{ "pathPrefix": "/bookings/public", "methods": { "POST": "create" } }, { "pathPrefix": "/countries", "methods": { "GET": "view" } }, { "pathPrefix": "/engineers", "methods": { "GET": "view" } }]
+    },
+    {
+      "id": "bookings.public-order-tracking",
+      "parentId": "bookings.public",
+      "webRoute": "/reservas/orden/:bookingId",
+      "routeType": "contextual",
+      "classification": "record-detail-contextual-action",
+      "label": { "es": "Seguimiento de reserva", "en": "Booking tracking" },
+      "synonyms": { "es": ["reserva", "pago de reserva"], "en": ["booking", "booking payment"] },
+      "keywords": ["booking", "checkout", "tracking"],
+      "navigationGroup": "people",
+      "icon": "receipt",
+      "breadcrumb": ["bookings.public"],
+      "requiredAuth": "public",
+      "permissions": { "view": {}, "create": {} },
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "record",
+      "mobilePresentation": { "kind": "external-web", "destination": null, "documentedException": "Secure guest tracking links are opened contextually from booking confirmations." },
+      "accessRequestEligible": false,
+      "apiScopes": [{ "pathPrefix": "/bookings/public/orders", "methods": { "GET": "view", "POST": "create" } }]
     },
     {
       "id": "bookings.dj-booth",
@@ -1604,6 +1675,33 @@
       "apiScopes": [{ "pathPrefix": "/admin/social", "methods": { "GET": "view", "POST": "administer" } }, { "pathPrefix": "/admin/email-test", "methods": { "POST": "administer" } }, { "pathPrefix": "/admin/seed", "methods": { "POST": "administer" } }, { "pathPrefix": "/meta/backfill", "methods": { "POST": "administer" } }]
     },
     {
+      "id": "admin.commerce-provider-events",
+      "parentId": "admin.system-status",
+      "webRoute": "/admin/commerce/provider-events",
+      "routeType": "important-submodule",
+      "classification": "important-submodule",
+      "label": { "es": "Eventos de pago", "en": "Payment events" },
+      "synonyms": { "es": ["webhooks de pago", "dead letters de pago"], "en": ["payment webhooks", "payment dead letters"] },
+      "keywords": ["payment", "webhook", "provider-event", "retry", "dead-letter"],
+      "description": { "es": "Revisar el inbox verificado y registrar reintentos auditados.", "en": "Review the verified inbox and record audited retries." },
+      "navigationGroup": "admin",
+      "icon": "payment",
+      "breadcrumb": ["admin.system-status"],
+      "requiredRoles": ["Admin"],
+      "requiredModules": ["Admin"],
+      "permissions": {
+        "discover": { "rolesAny": ["Admin"], "modulesAll": ["Admin"], "strictAdmin": true },
+        "view": { "rolesAny": ["Admin"], "modulesAll": ["Admin"], "strictAdmin": true },
+        "administer": { "rolesAny": ["Admin"], "modulesAll": ["Admin"], "strictAdmin": true }
+      },
+      "recordScope": "verified-provider-event",
+      "maturity": "beta",
+      "globalMenu": true,
+      "accessRequestEligible": false,
+      "mobilePresentation": { "kind": "web-only", "destination": null, "documentedException": "Encrypted payment-event operations require the strict-admin desktop workflow." },
+      "apiScopes": [{ "pathPrefix": "/admin/commerce/provider-events", "methods": { "GET": "view", "POST": "administer" } }]
+    },
+    {
       "id": "admin.artist-enrichment",
       "parentId": "admin.system-status",
       "webRoute": "/admin/artistas-enriquecimiento",
@@ -2141,7 +2239,7 @@
     {
       "id": "social.ticket-checkout",
       "parentId": "social.event.detail",
-      "webRoute": null,
+      "webRoute": "/eventos/:eventId/entradas",
       "routeType": "contextual",
       "classification": "record-detail-contextual-action",
       "label": { "es": "Comprar entrada", "en": "Buy ticket" },
@@ -2150,15 +2248,43 @@
       "navigationGroup": "people",
       "icon": "ticket",
       "breadcrumb": ["social", "social.events", "social.event.detail"],
-      "permissions": { "discover": {}, "view": {}, "create": { "recordScope": "self" } },
+      "requiredAuth": "public",
+      "permissions": { "discover": {}, "view": {}, "create": {} },
       "routeAction": "create",
+      "maturity": "beta",
       "favoriteEligible": false,
       "pinEligible": false,
       "recentBehavior": "record",
-      "mobilePresentation": { "kind": "native-contextual", "destination": "/ticketCheckout", "documentedException": null },
+      "mobilePresentation": { "kind": "native-contextual", "destination": "/ticketCheckout", "documentedException": "Native ticket checkout remains authenticated until it adopts the generated guest capability-token contract." },
       "apiScopes": [
+        { "pathPrefix": "/public/events", "pathContains": "/ticket-orders", "methods": { "GET": "view", "POST": "create" } },
         { "pathPrefix": "/social-events/events", "pathContains": "/ticket-orders", "methods": { "POST": "create" } },
         { "pathPrefix": "/social-events/stripe/create-payment-intent", "methods": { "POST": "create" } }
+      ]
+    },
+    {
+      "id": "social.ticket-order-public",
+      "parentId": "social.ticket-checkout",
+      "webRoute": "/eventos/:eventId/orden/:orderId",
+      "routeType": "contextual",
+      "classification": "record-detail-contextual-action",
+      "label": { "es": "Seguimiento de entrada", "en": "Ticket order tracking" },
+      "synonyms": { "es": ["estado de entrada", "orden de boletos"], "en": ["ticket status", "ticket order"] },
+      "keywords": ["ticket", "order", "tracking", "payment"],
+      "description": { "es": "Seguimiento público protegido por una capacidad pseudoaleatoria con clave guardada en el dispositivo.", "en": "Public tracking protected by a server-keyed pseudorandom capability retained on the device." },
+      "navigationGroup": "people",
+      "icon": "ticket",
+      "breadcrumb": ["social", "social.events", "social.event.detail", "social.ticket-checkout"],
+      "requiredAuth": "public",
+      "permissions": { "discover": {}, "view": { "recordScope": "guest-capability" } },
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "record",
+      "maturity": "beta",
+      "accessRequestEligible": false,
+      "mobilePresentation": { "kind": "web-only", "destination": null, "documentedException": "The guest lookup token is intentionally device-scoped; mobile has generated API types but no equivalent secure ticket tracker yet." },
+      "apiScopes": [
+        { "pathPrefix": "/public/events", "pathContains": "/ticket-orders", "methods": { "GET": "view" } }
       ]
     },
     {
@@ -2511,13 +2637,14 @@
       "icon": "school",
       "breadcrumb": [],
       "requiredAuth": "public",
+      "permissions": { "discover": {}, "view": {}, "submit": {} },
       "favoriteEligible": false,
       "pinEligible": false,
       "recentBehavior": "record",
       "mobilePresentation": { "kind": "external-web", "destination": null, "documentedException": "Public courses are opened from shared links." },
       "accessRequestEligible": false,
-      "aliases": ["/curso/produccion-musical-dic-2025", "/curso/produccion-musical-abr-2026"],
-      "apiScopes": [{ "pathPrefix": "/public/courses", "methods": { "GET": "view" } }, { "pathPrefix": "/academy/microcourse", "methods": { "GET": "view" } }, { "pathPrefix": "/cohorts", "methods": { "GET": "view" } }]
+      "aliases": ["/curso/:slug/orden/:registrationId", "/curso/produccion-musical-dic-2025", "/curso/produccion-musical-abr-2026"],
+      "apiScopes": [{ "pathPrefix": "/public/courses", "methods": { "GET": "view", "POST": "submit" } }, { "pathPrefix": "/academy/microcourse", "methods": { "GET": "view" } }, { "pathPrefix": "/cohorts", "methods": { "GET": "view" } }]
     },
     {
       "id": "technical.course-registration",

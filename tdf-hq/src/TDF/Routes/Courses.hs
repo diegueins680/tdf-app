@@ -11,6 +11,9 @@ module TDF.Routes.Courses
   , UTMTags(..)
   , CourseRegistrationRequest(..)
   , CourseRegistrationResponse(..)
+  , CourseCheckoutQuote(..)
+  , CourseCheckoutResponse(..)
+  , CoursePaypalCaptureRequest(..)
   , CourseRegistrationStatusUpdate(..)
   , CourseRegistrationNotesUpdate(..)
   , CourseRegistrationReceiptCreate(..)
@@ -37,12 +40,13 @@ import           Data.Aeson.Types (Parser)
 import           Data.Int (Int64)
 import           Data.Text (Text)
 import qualified Data.Text as T
-import           Data.Time (Day)
+import           Data.Time (Day, UTCTime)
 import qualified Data.ByteString.Lazy as BL
 import           GHC.Generics (Generic)
 import           Servant
 
 import           TDF.API.Types (RawJSON, rejectNullOptionalFields)
+import qualified TDF.API.Types as APITypes
 import           TDF.WhatsApp.Types (WAMetaWebhook)
 import qualified TDF.DTO
 import           TDF.DTO.SocialEventsDTO (StripePaymentIntentDTO)
@@ -111,13 +115,14 @@ data CourseRegistrationRequest = CourseRegistrationRequest
   , source    :: Text
   , howHeard  :: Maybe Text
   , utm       :: Maybe UTMTags
+  , termsAccepted :: Maybe Bool
   } deriving (Show, Generic)
 
 instance FromJSON CourseRegistrationRequest where
   parseJSON value = do
     rejectNullOptionalFields
       "CourseRegistrationRequest"
-      ["fullName", "email", "phoneE164", "howHeard", "utm"]
+      ["fullName", "email", "phoneE164", "howHeard", "utm", "termsAccepted"]
       value
     genericParseJSON strictObjectOptions value
 instance ToJSON CourseRegistrationRequest
@@ -128,6 +133,45 @@ data CourseRegistrationResponse = CourseRegistrationResponse
   } deriving (Show, Generic)
 
 instance ToJSON CourseRegistrationResponse
+
+data CourseCheckoutQuote = CourseCheckoutQuote
+  { policyVersion  :: Text
+  , currency       :: Text
+  , subtotalMinor  :: Int64
+  , taxMinor       :: Int64
+  , totalMinor     :: Int64
+  , dueNowMinor    :: Int64
+  , balanceMinor   :: Int64
+  , paymentSchedule :: Text
+  , termsVersion   :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON CourseCheckoutQuote
+
+data CourseCheckoutResponse = CourseCheckoutResponse
+  { registrationId   :: Int64
+  , courseSlug       :: Text
+  , checkoutId       :: Maybe Text
+  , lookupToken      :: Maybe Text
+  , paymentStatus    :: Text
+  , fulfillmentStatus :: Text
+  , holdExpiresAt    :: Maybe UTCTime
+  , quote            :: Maybe CourseCheckoutQuote
+  , paymentMethods   :: [Text]
+  , checkoutAvailable :: Bool
+  } deriving (Show, Generic)
+
+instance ToJSON CourseCheckoutResponse
+
+data CoursePaypalCaptureRequest = CoursePaypalCaptureRequest
+  { paypalOrderId :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON CoursePaypalCaptureRequest
+instance FromJSON CoursePaypalCaptureRequest where
+  parseJSON value = do
+    rejectNullOptionalFields "CoursePaypalCaptureRequest" [] value
+    genericParseJSON strictObjectOptions value
 
 data CourseRegistrationStatusUpdate = CourseRegistrationStatusUpdate
   { status :: Text
@@ -433,7 +477,31 @@ instance ToJSON CourseCheckoutSessionResponse
 
 type CoursesPublicAPI =
        "public" :> "courses" :> Capture "slug" Text :> Get '[JSON] CourseMetadata
-  :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> ReqBody '[JSON] CourseRegistrationRequest :> PostCreated '[JSON] CourseRegistrationResponse
+  :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations"
+         :> Header "Idempotency-Key" Text
+         :> ReqBody '[JSON] CourseRegistrationRequest
+         :> PostCreated '[JSON] CourseCheckoutResponse
+  :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64
+         :> Header "X-Order-Lookup-Token" Text
+         :> Get '[JSON] CourseCheckoutResponse
+  :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64
+         :> "datafast" :> "checkout"
+         :> Header "X-Order-Lookup-Token" Text
+         :> Post '[JSON] APITypes.DatafastCheckoutDTO
+  :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64
+         :> "datafast" :> "status"
+         :> Header "X-Order-Lookup-Token" Text
+         :> QueryParam' '[Required] "resourcePath" Text
+         :> Get '[JSON] CourseCheckoutResponse
+  :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64
+         :> "paypal" :> "create"
+         :> Header "X-Order-Lookup-Token" Text
+         :> Post '[JSON] APITypes.PaypalCreateDTO
+  :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64
+         :> "paypal" :> "capture"
+         :> Header "X-Order-Lookup-Token" Text
+         :> ReqBody '[JSON] CoursePaypalCaptureRequest
+         :> Post '[JSON] CourseCheckoutResponse
   :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "payment-intent"
          :> ReqBody '[JSON] CoursePaymentIntentRequest :> Post '[JSON] StripePaymentIntentDTO
   :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "checkout-session"
