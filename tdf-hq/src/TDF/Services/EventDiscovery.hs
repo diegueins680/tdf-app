@@ -108,7 +108,6 @@ import TDF.Config
   , normalizeConfiguredHttpsUrl
   )
 import TDF.DB (ConnectionPool, sharedTlsManager)
-import TDF.EventResearch.Identity (researchEntityExternalId)
 import TDF.Internationalization (currencyDecimalPlaces, currencyDefinition, normalizeCurrencyCode)
 import qualified TDF.Models.SocialEventsModels as Social
 import qualified TDF.SocialEventLifecycle as EventLifecycle
@@ -2262,18 +2261,6 @@ upsertDiscoveredVenue provider now DiscoveredVenue{..} = do
   existingRef <-
     getBy
       (Social.UniqueExternalVenueRef provider discoveredVenueExternalId)
-  materializationRef <-
-    case (existingRef, discoveredVenueCountryCode) of
-      (Nothing, Just countryCode) ->
-        getBy
-          ( Social.UniqueExternalVenueRef
-              provider
-              ( researchEntityExternalId
-                  "venue"
-                  [discoveredVenueName, discoveredVenueCity, countryCode]
-              )
-          )
-      _ -> pure Nothing
   let contact =
         encodeVenueContact
           discoveredVenuePhone
@@ -2281,7 +2268,7 @@ upsertDiscoveredVenue provider now DiscoveredVenue{..} = do
           discoveredVenueState
           discoveredVenuePostalCode
           discoveredVenueImageUrl
-  case existingRef <|> materializationRef of
+  case existingRef of
     Just (Entity refKey ref) -> do
       let venueKey = Social.externalVenueRefVenueId ref
       update
@@ -2302,18 +2289,6 @@ upsertDiscoveredVenue provider now DiscoveredVenue{..} = do
         , Social.VenueUpdatedAt =. now
         ]
       update refKey [Social.ExternalVenueRefLastSeenAt =. now]
-      case existingRef of
-        Nothing -> do
-          _ <-
-            insertUnique
-              Social.ExternalVenueRef
-                { Social.externalVenueRefProvider = provider
-                , Social.externalVenueRefExternalId = discoveredVenueExternalId
-                , Social.externalVenueRefVenueId = venueKey
-                , Social.externalVenueRefLastSeenAt = now
-                }
-          pure ()
-        Just _ -> pure ()
       pure (venueKey, False)
     Nothing -> do
       venueKey <-
@@ -2357,17 +2332,8 @@ upsertDiscoveredArtist provider now DiscoveredArtist{..} = do
   existingRef <-
     getBy
       (Social.UniqueExternalArtistRef provider discoveredArtistExternalId)
-  materializationRef <-
-    case existingRef of
-      Nothing ->
-        getBy
-          ( Social.UniqueExternalArtistRef
-              provider
-              (researchEntityExternalId "artist" [discoveredArtistName])
-          )
-      Just _ -> pure Nothing
   (artistKey, created) <-
-    case existingRef <|> materializationRef of
+    case existingRef of
       Just (Entity refKey ref) -> do
         let existingArtistKey = Social.externalArtistRefArtistId ref
             imageUpdate =
@@ -2381,18 +2347,6 @@ upsertDiscoveredArtist provider now DiscoveredArtist{..} = do
               ++ imageUpdate
           )
         update refKey [Social.ExternalArtistRefLastSeenAt =. now]
-        case existingRef of
-          Nothing -> do
-            _ <-
-              insertUnique
-                Social.ExternalArtistRef
-                  { Social.externalArtistRefProvider = provider
-                  , Social.externalArtistRefExternalId = discoveredArtistExternalId
-                  , Social.externalArtistRefArtistId = existingArtistKey
-                  , Social.externalArtistRefLastSeenAt = now
-                  }
-            pure ()
-          Just _ -> pure ()
         pure (existingArtistKey, False)
       Nothing -> do
         newArtistKey <-
