@@ -105,6 +105,11 @@ psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-18_music_directory_profile_ima
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-18_music_directory_profile_images_rollback.sql" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-18_music_directory_profile_images.sql" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-18_music_directory_profile_images.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-18_music_directory_profile_image_host_compatibility.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-18_music_directory_profile_image_host_compatibility.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-18_music_directory_profile_image_host_compatibility_rollback.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-18_music_directory_profile_image_host_compatibility.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-18_music_directory_profile_image_host_compatibility.sql" >/dev/null
 
 unicode_image_url=$(psql_exec -Atc "SELECT directory_profile_primary_image_url('[{\"kind\":\"image\",\"url\":\"https://música.example/profile.webp\"}]'::jsonb);")
 ipv6_image_url=$(psql_exec -Atc "SELECT directory_profile_primary_image_url('[{\"kind\":\"image\",\"url\":\"https://[::1]/profile.webp\"}]'::jsonb);")
