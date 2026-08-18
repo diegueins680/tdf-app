@@ -7314,13 +7314,23 @@
       "reviewed": true
     },
     {
-      "id": "c856701bb55914b85aee",
+      "id": "a5fe3d85087e2603bd8e",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the ordered manifest can make a production release non-reproducible or apply schema revisions out of order.",
       "justification": "Migration identifiers and ordered immutable script paths are deployment execution mechanics; every applied revision and checksum is persisted independently in the production migration ledger.",
+      "reviewed": true
+    },
+    {
+      "id": "173ec9d5db984ba8e0e8",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Omitting a compiled model group can let an unsafe inferred schema change bypass the global startup preflight.",
+      "justification": "These labels identify the exhaustive compiled Persistent migration groups checked before startup writes; they are execution boundaries, not selectable business data, roles, permissions, labels, or assignments.",
       "reviewed": true
     },
     {

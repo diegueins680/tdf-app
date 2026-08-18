@@ -74,6 +74,13 @@ function technicalRule(candidate) {
     return 'Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.';
   }
   if (
+    candidate.file.endsWith('/TDF/App/Boot.hs')
+    && candidate.kind === 'haskell-list'
+    && candidate.name === 'automaticMigrationPlans'
+  ) {
+    return 'These labels identify the exhaustive compiled Persistent migration groups checked before startup writes; they are execution boundaries, not selectable business data, roles, permissions, labels, or assignments.';
+  }
+  if (
     candidate.file.endsWith('/MixingMasteringPage.test.tsx')
     && candidate.kind === 'object-registry'
     && candidate.name === 'packageDto'

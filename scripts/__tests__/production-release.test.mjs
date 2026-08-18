@@ -34,6 +34,7 @@ primary_region = "gru"
   APP_PORT = "8080"
   DEFAULT_LOCALE = "es"
   RUN_MIGRATIONS = "false"
+  AUTO_APPLY_PRODUCTION_MIGRATIONS = "true"
   EVENT_DISCOVERY_ENABLED = "false"
 
 [deploy]
@@ -442,10 +443,11 @@ test('security emergency readiness parser rejects missing, writable, and malform
   );
 });
 
-test('validateFlyConfig accepts an explicit migration-free staged rolling release', () => {
+test('validateFlyConfig accepts reviewed automatic SQL migrations in a staged rolling release', () => {
   const validation = validateFlyConfig(safeFlyConfig);
 
   assert.equal(validation.runMigrations, false);
+  assert.equal(validation.autoApplyProductionMigrations, true);
   assert.equal(validation.eventDiscoveryEnabled, false);
   assert.equal(validation.healthCheckPath, '/health');
   assert.equal(validation.strategy, 'rolling');
@@ -456,6 +458,18 @@ test('validateFlyConfig fails closed when startup migrations are enabled', () =>
   assert.throws(
     () => validateFlyConfig(safeFlyConfig.replace('RUN_MIGRATIONS = "false"', 'RUN_MIGRATIONS = "true"')),
     /RUN_MIGRATIONS|migration/i,
+  );
+});
+
+test('validateFlyConfig requires the reviewed automatic migration runner', () => {
+  assert.throws(
+    () => validateFlyConfig(
+      safeFlyConfig.replace(
+        'AUTO_APPLY_PRODUCTION_MIGRATIONS = "true"',
+        'AUTO_APPLY_PRODUCTION_MIGRATIONS = "false"',
+      ),
+    ),
+    /AUTO_APPLY_PRODUCTION_MIGRATIONS|reviewed SQL migrations/i,
   );
 });
 
@@ -681,6 +695,7 @@ test('buildReleaseSteps orders schema work before a single-machine canary and fl
   assert.match(canaryCommand, /--only-machines canary-machine(?:\s|$)/);
   assert.match(canaryCommand, new RegExp(`--image ${releaseImage}`));
   assert.match(canaryCommand, /RUN_MIGRATIONS=false/);
+  assert.match(canaryCommand, /AUTO_APPLY_PRODUCTION_MIGRATIONS=true/);
   assert.match(canaryCommand, /EVENT_DISCOVERY_ENABLED=false/);
   assert.doesNotMatch(canaryCommand, /--strategy canary(?:\s|$)/);
 
