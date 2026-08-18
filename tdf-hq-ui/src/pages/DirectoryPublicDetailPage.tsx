@@ -26,6 +26,7 @@ import { useState } from 'react';
 import { Link as RouterLink, useLocation, useParams } from 'react-router-dom';
 
 import { Directory, type DirectoryEntityType, type DirectoryReviewEligibility, type DirectoryReviewPage } from '../api/directory';
+import { API_BASE_URL } from '../api/client';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
@@ -69,7 +70,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
     ? rows(value['portfolio'])
         .filter((item) => text(item['itemType']) === 'image')
         .flatMap((item) => [text(item['thumbnailUrl']), text(item['url'])])
-        .map((url) => absoluteUrl(url, window.location.origin))
+        .map((url) => absoluteUrl(url, API_BASE_URL || window.location.origin))
         .find((url): url is string => Boolean(url))
     : undefined;
   const canonicalPath = text(value['canonicalUrl']) ?? location.pathname;

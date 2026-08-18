@@ -48,6 +48,12 @@ import { getAnalyticsClient } from '../analytics/posthog';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
+import { API_BASE_URL } from '../api/client';
+
+const resolveImageUrl = (value: string | null | undefined): string | undefined => {
+  if (!value) return undefined;
+  try { return new URL(value, API_BASE_URL || window.location.origin).toString(); } catch { return undefined; }
+};
 
 const CITY_STORAGE_KEY = 'tdf.directory.cityId';
 const ENTITY_LABELS: Record<DirectoryEntityType | 'all', string> = {
@@ -341,10 +347,10 @@ function ResultCard({ item, sessionActive, layout }: { item: DirectorySearchItem
         overflow: 'hidden',
       }}
     >
-      {item.imageUrl && (
+      {resolveImageUrl(item.imageUrl) && (
         <CardMedia
           component="img"
-          image={item.imageUrl}
+          image={resolveImageUrl(item.imageUrl)}
           alt={`Foto de ${item.title}`}
           loading="lazy"
           sx={{

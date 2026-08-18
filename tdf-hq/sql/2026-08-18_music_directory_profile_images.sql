@@ -25,8 +25,7 @@ AS $$
     AND strpos(candidate.image_url, chr(92)) = 0
     AND (
       (
-        candidate.image_url ~* '^https{0,1}://[^[:space:][:cntrl:]]+$'
-        AND split_part(candidate.image_url, '/', 3) NOT LIKE '%@%'
+        candidate.image_url ~* '^https{0,1}://[a-z0-9.-]+(:[0-9]+)?(/|$)'
       )
       OR candidate.image_url ~ '^/[^/[:space:][:cntrl:]][^[:space:][:cntrl:]]*$'
     )
