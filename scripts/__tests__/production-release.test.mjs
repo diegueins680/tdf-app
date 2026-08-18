@@ -667,6 +667,17 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     'trg_service_booking_require_verified_payment',
     'service_booking_expire_holds',
     'commerce.service_bookings',
+    'course_checkout_policy',
+    'course_checkout_policy_history',
+    'course_registration_checkout_runtime',
+    'course_enrollment_event',
+    'idx_course_registration_runtime_capacity',
+    'trg_course_checkout_validate_runtime',
+    'trg_course_checkout_require_verified_payment',
+    'trg_course_registration_require_canonical_payment',
+    'course_checkout_expire_holds',
+    'commerce.courses',
+    'commerce.course_recurring_billing',
     'fk_commerce_provider_event_checkout',
     'idx_commerce_provider_event_work',
     'trg_commerce_validate_refund_write',
@@ -695,6 +706,11 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     /service_booking_expire_holds[\s\S]*failed/,
     'schema verification must prove failed booking payment attempts expire',
   );
+  assert.match(
+    sql,
+    /course_checkout_expire_holds[\s\S]*target_course_id[\s\S]*failed/,
+    'schema verification must prove course-scoped failed payment attempt expiry',
+  );
   assert.match(sql, /RAISE\s+EXCEPTION|\\quit/i, 'schema drift must terminate verification');
 });
 
@@ -707,6 +723,7 @@ test('buildSchemaPreflightSql is read-only and accepts unapplied release tables'
   assert.match(sql, /social_sync_account[\s\S]*social_sync_post[\s\S]*social_sync_run/i);
   assert.match(sql, /campaign_automation[\s\S]*campaign_delivery/i);
   assert.match(sql, /feature_access_requests[\s\S]*feature_navigation_preferences/i);
+  assert.match(sql, /course_checkout_policy[\s\S]*course_enrollment_event/i);
   assert.match(sql, /ROLLBACK/i);
   assert.doesNotMatch(sql, /ALTER\s+TABLE|CREATE\s+TABLE|INSERT\s+INTO|UPDATE\s+|DELETE\s+FROM/i);
 });

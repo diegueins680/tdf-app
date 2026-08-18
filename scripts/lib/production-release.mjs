@@ -569,6 +569,16 @@ BEGIN
   ) NOT IN (0, 5) THEN
     RAISE EXCEPTION 'Service booking checkout runtime tables are partially present';
   END IF;
+  IF (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name IN (
+        'course_checkout_policy', 'course_checkout_policy_history',
+        'course_registration_checkout_runtime', 'course_enrollment_event'
+      )
+  ) NOT IN (0, 4) THEN
+    RAISE EXCEPTION 'Course checkout runtime tables are partially present';
+  END IF;
 END
 $preflight$;
 ROLLBACK;
@@ -1795,6 +1805,107 @@ BEGIN
       AND NOT enabled
   ) THEN
     RAISE EXCEPTION 'Production service booking capability gate must exist disabled';
+  END IF;
+
+  IF to_regclass('public.course_checkout_policy') IS NULL
+     OR to_regclass('public.course_checkout_policy_history') IS NULL
+     OR to_regclass('public.course_registration_checkout_runtime') IS NULL
+     OR to_regclass('public.course_enrollment_event') IS NULL THEN
+    RAISE EXCEPTION 'Course checkout runtime relations are missing';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('course_checkout_policy', 'id', 'uuid', 'NO'),
+        ('course_checkout_policy', 'course_id', 'bigint', 'NO'),
+        ('course_checkout_policy', 'policy_version', 'text', 'NO'),
+        ('course_checkout_policy', 'currency', 'text', 'NO'),
+        ('course_checkout_policy', 'price_minor', 'bigint', 'NO'),
+        ('course_checkout_policy', 'approval_status', 'text', 'NO'),
+        ('course_checkout_policy', 'active', 'boolean', 'NO'),
+        ('course_checkout_policy_history', 'id', 'bigint', 'NO'),
+        ('course_checkout_policy_history', 'policy_id', 'uuid', 'NO'),
+        ('course_registration_checkout_runtime', 'registration_id', 'bigint', 'NO'),
+        ('course_registration_checkout_runtime', 'course_id', 'bigint', 'NO'),
+        ('course_registration_checkout_runtime', 'checkout_id', 'uuid', 'NO'),
+        ('course_registration_checkout_runtime', 'policy_id', 'uuid', 'NO'),
+        ('course_registration_checkout_runtime', 'lookup_token_hash', 'text', 'NO'),
+        ('course_registration_checkout_runtime', 'create_idempotency_key', 'text', 'NO'),
+        ('course_registration_checkout_runtime', 'enrollment_status', 'text', 'NO'),
+        ('course_registration_checkout_runtime', 'payment_status', 'text', 'NO'),
+        ('course_registration_checkout_runtime', 'total_minor', 'bigint', 'NO'),
+        ('course_registration_checkout_runtime', 'due_now_minor', 'bigint', 'NO'),
+        ('course_registration_checkout_runtime', 'balance_minor', 'bigint', 'NO'),
+        ('course_registration_checkout_runtime', 'hold_expires_at', 'timestamp with time zone', 'NO'),
+        ('course_enrollment_event', 'registration_id', 'bigint', 'NO'),
+        ('course_enrollment_event', 'to_status', 'text', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Course checkout runtime columns are missing or invalid';
+  END IF;
+
+  IF to_regclass('public.uq_course_checkout_active_policy') IS NULL
+     OR to_regclass('public.course_registration_checkout_runtime_pkey') IS NULL
+     OR to_regclass('public.course_registration_checkout_runtime_checkout_id_key') IS NULL
+     OR to_regclass('public.course_registration_checkout_runtime_lookup_token_hash_key') IS NULL
+     OR to_regclass('public.course_registration_checkout_runtime_create_idempotency_key_key') IS NULL
+     OR to_regclass('public.idx_course_registration_runtime_capacity') IS NULL
+     OR to_regclass('public.idx_course_registration_runtime_payment') IS NULL
+     OR to_regclass('public.idx_course_enrollment_event_registration') IS NULL THEN
+    RAISE EXCEPTION 'Course checkout policy, lookup, capacity, or event indexes are incomplete';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('course_checkout_policy', 'trg_course_checkout_validate_policy'),
+      ('course_checkout_policy', 'trg_course_checkout_policy_history'),
+      ('course_registration_checkout_runtime', 'trg_course_checkout_validate_runtime'),
+      ('commerce_checkout_session', 'trg_course_checkout_require_verified_payment'),
+      ('commerce_checkout_session', 'trg_course_checkout_sync_verified_payment'),
+      ('course_registration', 'trg_course_registration_require_canonical_payment')
+    ) AS expected(table_name, trigger_name)
+    LEFT JOIN pg_trigger AS actual
+      ON actual.tgrelid = ('public.' || expected.table_name)::regclass
+     AND actual.tgname = expected.trigger_name
+     AND actual.tgenabled = 'O'
+    WHERE actual.oid IS NULL
+  ) THEN
+    RAISE EXCEPTION 'Course checkout invariant triggers are missing or disabled';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_proc
+    WHERE oid = to_regprocedure(
+      'public.course_checkout_expire_holds(timestamp with time zone,bigint)'
+    )
+      AND strpos(pg_get_functiondef(oid), 'target_course_id') > 0
+      AND strpos(pg_get_functiondef(oid), '''failed''') > 0
+  ) THEN
+    RAISE EXCEPTION 'Course hold expiry must be course-scoped and release failed provider attempts';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('commerce.courses'),
+      ('commerce.course_recurring_billing')
+    ) AS expected(flag_key)
+    LEFT JOIN revenue_feature_flag AS flag
+      ON flag.flag_key = expected.flag_key AND flag.environment = 'production'
+    WHERE flag.flag_key IS NULL OR flag.enabled
+  ) THEN
+    RAISE EXCEPTION 'Production course checkout and recurring billing gates must exist disabled';
   END IF;
 
   IF EXISTS (

@@ -265,6 +265,11 @@
       "id": "2026-08-17_marketplace_customer_requests_and_deposit_settlement",
       "path": "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
       "introducedBy": "583c91e82aa2d05860b338d0c2695b9c4d0df434"
+    },
+    {
+      "id": "2026-08-17_course_checkout_runtime",
+      "path": "tdf-hq/sql/2026-08-17_course_checkout_runtime.sql",
+      "introducedBy": "ae4b2317c0d450453dc20758e03d9942b6683a28"
     }
   ]
 }
