@@ -12,7 +12,7 @@ import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
 import qualified Data.UUID as UUID
-import Database.Persist (Entity (..), get, insert, insertKey)
+import Database.Persist (Entity (..), get, getJust, insert, insertKey)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (Handler, ServerError (errBody, errHTTPCode), (:<|>) (..))
@@ -335,6 +335,8 @@ spec = describe "social event handler helpers" $ do
             hiddenTierKey = toSqlKey 21
             hiddenOrderKey :: EventTicketOrderId
             hiddenOrderKey = toSqlKey 99
+            mismatchedOrderKey :: EventTicketOrderId
+            mismatchedOrderKey = toSqlKey 100
             hiddenTicketKey :: EventTicketId
             hiddenTicketKey = toSqlKey 31
             hiddenTransferKey :: TicketTransferId
@@ -416,6 +418,14 @@ spec = describe "social event handler helpers" $ do
                         , eventTicketOrderPaymentMethod = Just "stripe"
                         , eventTicketOrderCreatedAt = now
                         , eventTicketOrderUpdatedAt = now
+                        }
+                hiddenOrder <- getJust hiddenOrderKey
+                insertKey mismatchedOrderKey $
+                    hiddenOrder
+                        { eventTicketOrderEventId = publicEventKey
+                        , eventTicketOrderBuyerPartyId = Just "3"
+                        , eventTicketOrderCheckoutIdempotencyKey = Just "mismatched-refund-order"
+                        , eventTicketOrderStripePaymentIntentId = Just "pi_mismatched_refund"
                         }
                 insertKey
                     hiddenTicketKey
@@ -637,6 +647,26 @@ spec = describe "social event handler helpers" $ do
                     )
                     env
         assertHiddenEventRoute "unauthorized refund" unauthorizedRefundResult
+        missingOrderRefundResult <-
+            runHandler $
+                runReaderT
+                    ( unauthorizedRefundHandler
+                        "13"
+                        "999"
+                        (RefundRequestDTO (Just "Missing order probe") Nothing)
+                    )
+                    env
+        assertHiddenEventRoute "missing-order refund probe" missingOrderRefundResult
+        mismatchedOrderRefundResult <-
+            runHandler $
+                runReaderT
+                    ( unauthorizedRefundHandler
+                        "13"
+                        "100"
+                        (RefundRequestDTO (Just "Mismatched order probe") Nothing)
+                    )
+                    env
+        assertHiddenEventRoute "mismatched-order refund probe" mismatchedOrderRefundResult
         unauthorizedRefundListResult <-
             runHandler $
                 runReaderT (unauthorizedRefundListHandler "13") env

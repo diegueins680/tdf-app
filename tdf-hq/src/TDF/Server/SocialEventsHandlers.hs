@@ -4675,15 +4675,23 @@ socialEventsServer user =
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         mOrder <- liftIO $ runSqlPool (get orderKey) envPool
+        let manager = isEventManager currentPartyId eventVal
+            ownsEventOrder =
+                maybe
+                    False
+                    ( \order ->
+                        eventTicketOrderEventId order == eventKey
+                            && eventTicketOrderBuyerPartyId order == Just currentPartyId
+                    )
+                    mOrder
+        unless (manager || ownsEventOrder) $
+            requireEventVisibleToUser eventKey
         order <- maybe (throwError err404{errBody = "Ticket order not found"}) pure mOrder
         when (eventTicketOrderEventId order /= eventKey) $
             throwError err400{errBody = "Ticket order does not belong to this event"}
         when (eventTicketOrderStatus order /= "paid") $
             throwError err400{errBody = "Only paid orders can be refunded"}
-        let manager = isEventManager currentPartyId eventVal
-            ownsOrder = eventTicketOrderBuyerPartyId order == Just currentPartyId
-        unless (manager || ownsOrder) $ do
-            requireEventVisibleToUser eventKey
+        unless (manager || eventTicketOrderBuyerPartyId order == Just currentPartyId) $
             throwError err403{errBody = "You can only request refunds for your own orders"}
         mExisting <-
             liftIO $
