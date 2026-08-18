@@ -215,6 +215,34 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/EventResearchCandidate' }
         '409': { description: Pilot cap reached or a closed run received a material change }
+  /social-events/event-research/candidates/{candidateId}/materialize:
+    post:
+      tags: [Event research]
+      summary: Idempotently materialize an approved high-confidence candidate
+      description: >-
+        Resolves or creates related venue and artist entities, links the provider reference,
+        links the candidate, and appends one immutable audit change in a single transaction.
+        Replays return the existing link without changing manually edited event fields. A
+        missing official event end is allowed; all other publication blockers are rejected.
+      operationId: materializeEventResearchCandidate
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: candidateId, in: path, required: true, schema: { type: string, pattern: '^[1-9][0-9]*$' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventResearchMaterializationRequest' }
+      responses:
+        '200':
+          description: Existing or newly materialized event link
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventResearchMaterialization' }
+        '400': { description: Malformed candidate identifier or request }
+        '403': { description: Strict administrator access is required }
+        '404': { description: Candidate not found }
+        '409': { description: 'Pilot not approved, candidate ineligible, or entity identity ambiguous' }
   /social-events/event-research/changes:
     get:
       tags: [Event research]
@@ -440,10 +468,12 @@ paths:
           type: string
     post:
       tags: [Courses]
-      summary: Create course registration
-      description: Stores a registration for the specified course. Landing submissions use source=landing and include UTM tags.
+      summary: Create course registration and seat hold
+      description: Creates an idempotent canonical checkout and atomic expiring seat hold when course commerce is enabled. When the production domain gate is disabled, it preserves the legacy lead without claiming a seat or payment.
       operationId: createCourseRegistration
       security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -452,15 +482,111 @@ paths:
               $ref: '#/components/schemas/CourseRegistrationRequest'
       responses:
         '201':
-          description: Registration stored
+          description: Registration checkout or honest gated lead state
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CourseRegistrationResponse'
+                $ref: '#/components/schemas/CourseCheckoutResponse'
         '400':
           description: Invalid payload
         '404':
           description: Course not found
+        '409':
+          description: No approved active policy, duplicate attendee, or no seat remains
+        '503':
+          description: Checkout domain or provider configuration unavailable
+  /public/courses/{slug}/registrations/{registrationId}:
+    parameters:
+      - { name: slug, in: path, required: true, schema: { type: string } }
+      - { name: registrationId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      - $ref: '#/components/parameters/OrderLookupToken'
+    get:
+      tags: [Courses]
+      summary: Track a course checkout and enrollment
+      description: Returns customer-safe payment and enrollment states. Invalid identifiers and lookup tokens share the same not-found response.
+      operationId: getCourseCheckout
+      security: [ ]
+      responses:
+        '200':
+          description: Course checkout state
+          content: { application/json: { schema: { $ref: '#/components/schemas/CourseCheckoutResponse' } } }
+        '404': { description: Course order not found }
+  /public/courses/{slug}/registrations/{registrationId}/datafast/checkout:
+    parameters:
+      - { name: slug, in: path, required: true, schema: { type: string } }
+      - { name: registrationId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      - $ref: '#/components/parameters/OrderLookupToken'
+    post:
+      tags: [Courses]
+      summary: Create a bound Datafast course checkout
+      operationId: createCourseDatafastCheckout
+      security: [ ]
+      responses:
+        '200':
+          description: Hosted Datafast checkout resource
+          content: { application/json: { schema: { $ref: '#/components/schemas/DatafastCheckout' } } }
+        '404': { description: Course order not found }
+        '409': { description: Hold expired, paid, or another payment rail is active }
+        '503': { description: Datafast or course checkout is disabled }
+  /public/courses/{slug}/registrations/{registrationId}/datafast/status:
+    parameters:
+      - { name: slug, in: path, required: true, schema: { type: string } }
+      - { name: registrationId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      - $ref: '#/components/parameters/OrderLookupToken'
+      - name: resourcePath
+        in: query
+        required: true
+        schema: { type: string, minLength: 1, maxLength: 512 }
+    get:
+      tags: [Courses]
+      summary: Verify Datafast status server to server
+      description: A browser return never marks payment paid; the server binds and verifies resource path, order, amount, currency, merchant, and environment.
+      operationId: confirmCourseDatafastStatus
+      security: [ ]
+      responses:
+        '200':
+          description: Verified or still-pending checkout state
+          content: { application/json: { schema: { $ref: '#/components/schemas/CourseCheckoutResponse' } } }
+        '404': { description: Course order not found }
+        '409': { description: Binding mismatch or expired hold }
+        '502': { description: Provider response failed verification }
+  /public/courses/{slug}/registrations/{registrationId}/paypal/create:
+    parameters:
+      - { name: slug, in: path, required: true, schema: { type: string } }
+      - { name: registrationId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      - $ref: '#/components/parameters/OrderLookupToken'
+    post:
+      tags: [Courses]
+      summary: Create a bound PayPal course order
+      operationId: createCoursePaypalOrder
+      security: [ ]
+      responses:
+        '200':
+          description: PayPal order awaiting customer approval
+          content: { application/json: { schema: { $ref: '#/components/schemas/PaypalCreate' } } }
+        '404': { description: Course order not found }
+        '409': { description: Hold expired, paid, or another payment rail is active }
+        '503': { description: PayPal or course checkout is disabled }
+  /public/courses/{slug}/registrations/{registrationId}/paypal/capture:
+    parameters:
+      - { name: slug, in: path, required: true, schema: { type: string } }
+      - { name: registrationId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      - $ref: '#/components/parameters/OrderLookupToken'
+    post:
+      tags: [Courses]
+      summary: Capture and verify a bound PayPal course order
+      operationId: captureCoursePaypalOrder
+      security: [ ]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CoursePaypalCaptureRequest' } } }
+      responses:
+        '200':
+          description: Verified or still-processing checkout state
+          content: { application/json: { schema: { $ref: '#/components/schemas/CourseCheckoutResponse' } } }
+        '404': { description: Course order not found }
+        '409': { description: Binding mismatch or expired hold }
+        '502': { description: Provider capture failed verification }
   /webhooks/whatsapp:
     get:
       tags: [Webhooks]
@@ -3715,6 +3841,1312 @@ paths:
         '400': { description: Unknown properties, duplicated IDs, or malformed canonical UUID }
         '403': { description: Missing persisted `catalog.import` capability }
         '422': { description: A supplied standard version is inactive or not detection-enabled }
+  /marketplace:
+    get:
+      tags: [Marketplace]
+      summary: List public equipment sale and rental listings
+      operationId: listMarketplaceItems
+      security: [ ]
+      responses:
+        '200':
+          description: Active public listings with authoritative server prices
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MarketplaceItem' }
+  /marketplace/{listingId}:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceListingId'
+    get:
+      tags: [Marketplace]
+      summary: Read one public equipment listing
+      operationId: getMarketplaceItem
+      security: [ ]
+      responses:
+        '200':
+          description: Public listing
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceItem' }
+        '404': { description: Listing not found }
+  /marketplace/{listingId}/rental-terms:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceListingId'
+    put:
+      tags: [Marketplace administration]
+      summary: Replace and approve the active server-side rental rate and terms
+      description: Operations-only full replacement. Public rental checkout is available only while the terms record is active and approved; existing orders retain immutable price and terms-version snapshots.
+      operationId: updateMarketplaceRentalTerms
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceRentalTermsUpdate' }
+      responses:
+        '200':
+          description: Updated public listing projection
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceItem' }
+        '400': { description: Invalid price, duration, timezone, or terms version }
+        '403': { description: Operations access required }
+        '404': { description: Listing not found }
+        '409': { description: Listing is not an active rental listing }
+  /marketplace/cart:
+    post:
+      tags: [Marketplace]
+      summary: Create a guest marketplace cart
+      operationId: createMarketplaceCart
+      security: [ ]
+      responses:
+        '200':
+          description: Empty cart
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceCart' }
+  /marketplace/cart/{cartId}:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceCartId'
+    get:
+      tags: [Marketplace]
+      summary: Read a guest marketplace cart
+      operationId: getMarketplaceCart
+      security: [ ]
+      responses:
+        '200':
+          description: Current cart snapshot
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceCart' }
+        '404': { description: Cart not found }
+  /marketplace/cart/{cartId}/items:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceCartId'
+    post:
+      tags: [Marketplace]
+      summary: Add, replace, or remove one unique sale or dated rental asset
+      description: Sale and rental assets use separate carts. Rentals require both inclusive dates and an approved active server-side terms version; quantities greater than one are rejected.
+      operationId: upsertMarketplaceCartItem
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceCartItemUpdate' }
+      responses:
+        '200':
+          description: Updated cart with server-calculated totals
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceCart' }
+        '400': { description: Invalid listing, quantity, date range, or rental request }
+        '404': { description: Cart or listing not found }
+        '409': { description: Asset is no longer available }
+  /marketplace/cart/{cartId}/checkout:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceCartId'
+    post:
+      tags: [Marketplace]
+      summary: Create an unpaid manual-payment marketplace order and atomic asset hold
+      description: The Idempotency-Key binds an immutable sale or dated-rental checkout snapshot. Rental terms and identity fields are required for rentals; the full document number is validated and discarded. Selecting bank transfer never confirms payment.
+      operationId: checkoutMarketplaceCart
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceCheckoutRequest' }
+      responses:
+        '200':
+          description: Created or idempotently recovered order awaiting manual confirmation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceOrder' }
+        '400': { description: Invalid buyer, fulfillment, address, or cart snapshot }
+        '409': { description: Idempotency conflict or asset is already held }
+        '429': { description: Public request rate limit exceeded }
+        '503': { description: The matching marketplace sales or rentals capability is disabled }
+  /marketplace/cart/{cartId}/stripe/payment-intent:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceCartId'
+    post:
+      tags: [Marketplace]
+      summary: Marketplace Stripe rail (fail-closed compatibility endpoint)
+      description: This endpoint cannot create a payment until Stripe is connected to the canonical verified-payment runtime.
+      operationId: createMarketplaceStripePaymentIntent
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceCheckoutRequest' }
+      responses:
+        '503': { description: Stripe marketplace checkout is disabled; use Datafast or PayPal }
+  /marketplace/cart/{cartId}/datafast/checkout:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceCartId'
+    post:
+      tags: [Marketplace]
+      summary: Create or recover a canonical Datafast sale or rental checkout
+      operationId: createMarketplaceDatafastCheckout
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceCheckoutRequest' }
+      responses:
+        '200':
+          description: Bound hosted checkout and one-time guest lookup token
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DatafastCheckout' }
+        '400': { description: Invalid cart, buyer, fulfillment, or environment configuration }
+        '409': { description: Idempotency, asset-hold, or provider-binding conflict }
+        '502': { description: Datafast did not create a verifiable checkout resource }
+        '503': { description: Datafast or the matching marketplace capability is disabled }
+  /marketplace/datafast/status:
+    get:
+      tags: [Marketplace]
+      summary: Verify a marketplace Datafast resource server-to-server
+      description: Browser return parameters never mark an order paid. Amount, currency, merchant transaction, environment, order, and stored resource are verified first.
+      operationId: confirmMarketplaceDatafastStatus
+      security: [ ]
+      parameters:
+        - name: orderId
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - name: resourcePath
+          in: query
+          required: true
+          schema: { type: string, minLength: 1 }
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Current payment and separate fulfillment state after server verification
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceOrder' }
+        '404': { description: Order not found or lookup token invalid }
+        '409': { description: Provider evidence conflicts with the immutable checkout }
+        '502': { description: Datafast status could not be verified }
+  /marketplace/cart/{cartId}/paypal/create:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceCartId'
+    post:
+      tags: [Marketplace]
+      summary: Create or recover a canonical PayPal sale or rental order
+      operationId: createMarketplacePaypalOrder
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceCheckoutRequest' }
+      responses:
+        '200':
+          description: Bound PayPal order, approval URL, and one-time guest lookup token
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaypalCreate' }
+        '400': { description: Invalid cart, buyer, fulfillment, or environment configuration }
+        '409': { description: Idempotency, asset-hold, or provider-binding conflict }
+        '502': { description: PayPal did not create an order }
+        '503': { description: PayPal or the matching marketplace capability is disabled }
+  /marketplace/paypal/capture:
+    post:
+      tags: [Marketplace]
+      summary: Capture and verify an approved marketplace PayPal order
+      description: Capture is idempotent and cannot change payment state until amount, currency, merchant, internal order, environment, and capture resource all match.
+      operationId: captureMarketplacePaypalOrder
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplacePaypalCapture' }
+      responses:
+        '200':
+          description: Current payment and separate fulfillment state after server verification
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceOrder' }
+        '404': { description: Order not found or lookup token invalid }
+        '409': { description: Provider evidence conflicts with the immutable checkout }
+        '502': { description: Capture or server verification failed }
+  /marketplace/orders:
+    get:
+      tags: [Marketplace administration]
+      summary: List marketplace orders for authorized operations staff
+      operationId: listMarketplaceOrders
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        '200':
+          description: Orders with payment and fulfillment state kept distinct
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MarketplaceOrder' }
+        '403': { description: Operations access required }
+  /marketplace/orders/{orderId}:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceOrderId'
+    get:
+      tags: [Marketplace]
+      summary: Track a guest marketplace order
+      operationId: getMarketplaceOrder
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Customer-safe order state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceOrder' }
+        '404': { description: Order not found or lookup token invalid }
+    put:
+      tags: [Marketplace administration]
+      summary: Update legacy marketplace order metadata
+      description: Canonical sale orders cannot be marked paid through this endpoint; payment is provider-verified only.
+      operationId: updateMarketplaceOrder
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceOrderUpdate' }
+      responses:
+        '200':
+          description: Updated order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceOrder' }
+        '403': { description: Operations access required }
+        '409': { description: Direct paid transition is prohibited for canonical orders }
+  /marketplace/orders/{orderId}/manual-payment/evidence:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceOrderId'
+    post:
+      tags: [Marketplace]
+      summary: Submit customer bank-transfer evidence without marking the order paid
+      description: Requires the scoped guest lookup token. The reference is private finance evidence and remains submitted or under review until an independent staff member verifies it.
+      operationId: submitMarketplaceManualEvidence
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceManualEvidenceSubmit' }
+      responses:
+        '200':
+          description: Customer-safe order with truthful manual-review status
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceOrder' }
+        '400': { description: Invalid transfer reference }
+        '404': { description: Order not found or lookup token invalid }
+        '409': { description: Evidence conflicts with the immutable checkout or is already under review }
+  /marketplace/orders/{orderId}/requests:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceOrderId'
+    get:
+      tags: [Marketplace]
+      summary: List customer requests for a securely tracked marketplace order
+      operationId: listMarketplaceCustomerRequests
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Customer-safe cancellation, return, extension, and dispute requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MarketplaceCustomerRequest' }
+        '404': { description: Order not found or lookup token invalid }
+    post:
+      tags: [Marketplace]
+      summary: Submit an idempotent marketplace customer request
+      description: Submitting a request never changes payment state. Staff review is required before supported cancellation, return, or dispute transitions. Rental extensions require a separate availability check, versioned quote, and payable change order and cannot be directly approved.
+      operationId: submitMarketplaceCustomerRequest
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceCustomerRequestSubmit' }
+      responses:
+        '200':
+          description: Persisted request with truthful review state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceCustomerRequest' }
+        '400': { description: Invalid request type, reason, date, evidence, or idempotency key }
+        '404': { description: Order not found or lookup token invalid }
+        '409': { description: Order state changed or a matching request is already pending }
+  /marketplace/orders/{orderId}/commerce:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceOrderId'
+    get:
+      tags: [Marketplace administration]
+      summary: Read protected marketplace checkout and manual-payment evidence
+      operationId: getMarketplaceCommerce
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Protected finance projection
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceCommerce' }
+        '403': { description: Invoicing access required }
+        '409': { description: Historical or ambiguous checkout requires reconciliation }
+  /marketplace/orders/{orderId}/manual-payment/review:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceOrderId'
+    post:
+      tags: [Marketplace administration]
+      summary: Independently approve or reject marketplace manual-payment evidence
+      description: The reviewer must differ from the submitter. Approval verifies the active hold and immutable order, checkout, attempt, amount, currency, environment and evidence bindings before atomically posting payment, receipt and ledger entries. Payment never implies fulfillment or custody transfer.
+      operationId: reviewMarketplaceManualPayment
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceManualPaymentReview' }
+      responses:
+        '200':
+          description: Current protected commerce projection
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceCommerce' }
+        '400': { description: Invalid action or review notes }
+        '403': { description: Invoicing access required }
+        '409': { description: Separation-of-duties, hold, evidence, or competing-payment conflict }
+  /marketplace/orders/{orderId}/fulfillment:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceOrderId'
+    put:
+      tags: [Marketplace administration]
+      summary: Apply a validated physical-fulfillment transition
+      description: Payment is a separate state machine. Delivery and pickup transitions update asset custody only through database-enforced transitions.
+      operationId: updateMarketplaceFulfillment
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceFulfillmentUpdate' }
+      responses:
+        '200':
+          description: Updated fulfillment state and immutable history
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceOrder' }
+        '400': { description: Invalid transition payload }
+        '403': { description: Operations access required }
+        '404': { description: Canonical sale order not found }
+        '409': { description: Transition is invalid or payment is not verified }
+  /marketplace/orders/{orderId}/rental:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceOrderId'
+    put:
+      tags: [Marketplace administration]
+      summary: Apply a validated rental custody or inspection transition
+      description: Payment, physical custody, and refundable-deposit settlement remain separate. Condition reports are required at handoff and return; a proposed deduction creates a due state and never fabricates a refund.
+      operationId: updateMarketplaceRental
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceRentalUpdate' }
+      responses:
+        '200':
+          description: Updated rental state and immutable history
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceOrder' }
+        '400': { description: Invalid transition or condition/deposit payload }
+        '403': { description: Operations access required }
+        '404': { description: Canonical rental order not found }
+        '409': { description: Transition, custody, payment, or deposit-settlement precondition failed }
+  /marketplace/orders/{orderId}/customer-requests:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceOrderId'
+    get:
+      tags: [Marketplace administration]
+      summary: List protected customer-operation requests for staff review
+      operationId: listMarketplaceCustomerRequestsAdmin
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Requests and review evidence
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MarketplaceCustomerRequest' }
+        '403': { description: Operations access required }
+  /marketplace/orders/{orderId}/customer-requests/{requestId}/review:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceOrderId'
+      - { name: requestId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Marketplace administration]
+      summary: Review a marketplace customer request
+      description: Approval atomically applies only the supported domain transition. Payment is never changed. Rental extensions cannot be directly approved.
+      operationId: reviewMarketplaceCustomerRequest
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceCustomerRequestReview' }
+      responses:
+        '200':
+          description: Reviewed request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceCustomerRequest' }
+        '400': { description: Invalid action or review notes }
+        '403': { description: Operations access required }
+        '409': { description: Request or domain state changed, or unsafe extension approval attempted }
+  /marketplace/orders/{orderId}/deposit-settlements:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceOrderId'
+    get:
+      tags: [Marketplace administration]
+      summary: List rental-deposit settlement evidence
+      operationId: listMarketplaceDepositSettlements
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Immutable manual settlement evidence and review state
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MarketplaceDepositSettlement' }
+        '403': { description: Operations and invoicing access required }
+    post:
+      tags: [Marketplace administration]
+      summary: Submit evidence for a manual rental-deposit settlement
+      description: Amount, currency, deposit, and approved deduction are loaded from the canonical checkout and rental snapshot. Submission does not claim a provider refund and requires independent staff verification.
+      operationId: submitMarketplaceDepositSettlement
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceDepositSettlementSubmit' }
+      responses:
+        '200':
+          description: Submitted settlement evidence
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceDepositSettlement' }
+        '400': { description: Invalid manual method, external reference, evidence, or idempotency key }
+        '403': { description: Operations and invoicing access required }
+        '409': { description: Deposit snapshot, checkout refund total, or rental state conflict }
+        '503': { description: Manual deposit settlement is disabled }
+  /marketplace/orders/{orderId}/deposit-settlements/{settlementId}/review:
+    parameters:
+      - $ref: '#/components/parameters/MarketplaceOrderId'
+      - { name: settlementId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Marketplace administration]
+      summary: Independently verify or reject rental-deposit settlement evidence
+      description: Verification posts a balanced liability settlement, updates the returned-funds total, and issues a manual credit-note reference. It does not call or claim a provider refund.
+      operationId: reviewMarketplaceDepositSettlement
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarketplaceDepositSettlementReview' }
+      responses:
+        '200':
+          description: Reviewed settlement evidence
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceDepositSettlement' }
+        '400': { description: Invalid action or review notes }
+        '403': { description: Operations and invoicing access required }
+        '409': { description: Separation-of-duties, evidence, checkout, or rental-state conflict }
+  /services/storefront:
+    get:
+      tags: [Service storefront]
+      summary: List active mixing and mastering packages
+      operationId: listServiceStorefrontPackages
+      security: [ ]
+      responses:
+        '200':
+          description: Active packages ordered by their configured sort order
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ServiceStorefrontPackage' }
+  /services/storefront/{packageId}:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontPackageId'
+    get:
+      tags: [Service storefront]
+      summary: Read one active service package
+      operationId: getServiceStorefrontPackage
+      security: [ ]
+      responses:
+        '200':
+          description: Package pricing and fulfillment policy
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontPackage' }
+        '404': { description: Package not found }
+  /services/storefront/order:
+    post:
+      tags: [Service storefront]
+      summary: Create an unpaid service order from authoritative package pricing
+      description: The Idempotency-Key prevents duplicate orders. The response contains a lookup token only when the order is first created.
+      operationId: createServiceStorefrontOrder
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceStorefrontOrderCreate' }
+      responses:
+        '200':
+          description: Created or idempotently recovered unpaid order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontOrder' }
+        '400': { description: Invalid buyer, quantity, or package relationship }
+        '409': { description: Idempotency-key payload conflict }
+        '429': { description: Public request rate limit exceeded }
+  /services/storefront/order/{orderId}:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontOrderId'
+    get:
+      tags: [Service storefront]
+      summary: Track a service order with its unguessable lookup token
+      operationId: getServiceStorefrontOrder
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Customer-safe order state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontOrder' }
+        '404': { description: Order not found or lookup token invalid }
+  /services/storefront/order/{orderId}/stripe/payment-intent:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontOrderId'
+    post:
+      tags: [Service storefront]
+      summary: Create an optional Stripe payment intent
+      description: This rail is capability-gated and is not an Ecuador-critical dependency.
+      operationId: createServiceStorefrontStripePaymentIntent
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Hosted or tokenized payment-intent parameters
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StripePaymentIntent' }
+        '404': { description: Order not found or lookup token invalid }
+        '501': { description: Stripe capability is disabled }
+  /services/storefront/order/{orderId}/datafast/checkout:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontOrderId'
+    post:
+      tags: [Service storefront]
+      summary: Create or recover a Datafast checkout resource
+      operationId: createServiceStorefrontDatafastCheckout
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Bound Datafast hosted checkout resource
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DatafastCheckout' }
+        '404': { description: Order not found or lookup token invalid }
+        '409': { description: Existing provider binding conflicts with the order snapshot }
+        '502': { description: Datafast rejected or did not create the resource }
+  /services/storefront/datafast/status:
+    get:
+      tags: [Service storefront]
+      summary: Verify a Datafast resource server-to-server
+      description: A browser return alone never marks the order paid. The server verifies resource, amount, currency, merchant, and internal order binding.
+      operationId: confirmServiceStorefrontDatafastStatus
+      security: [ ]
+      parameters:
+        - name: orderId
+          in: query
+          required: true
+          schema: { type: string, minLength: 1 }
+        - name: resourcePath
+          in: query
+          required: true
+          schema: { type: string, minLength: 1 }
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Current order state after provider verification
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontOrder' }
+        '404': { description: Order not found or lookup token invalid }
+        '409': { description: Provider evidence did not match the immutable order snapshot }
+        '502': { description: Datafast status could not be verified }
+  /services/storefront/order/{orderId}/paypal/create:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontOrderId'
+    post:
+      tags: [Service storefront]
+      summary: Create or recover a PayPal order
+      operationId: createServiceStorefrontPaypalOrder
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Bound PayPal order and approval URL
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaypalCreate' }
+        '404': { description: Order not found or lookup token invalid }
+        '409': { description: Existing provider binding conflicts with the order snapshot }
+        '502': { description: PayPal rejected or did not create the order }
+  /services/storefront/paypal/capture:
+    post:
+      tags: [Service storefront]
+      summary: Capture and verify an approved PayPal order
+      description: The internal order and PayPal resource are rebound and verified server-to-server before payment state changes.
+      operationId: captureServiceStorefrontPaypalOrder
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceStorefrontPaypalCapture' }
+      responses:
+        '200':
+          description: Current order state after server verification
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontOrder' }
+        '404': { description: Order not found or lookup token invalid }
+        '409': { description: Provider evidence did not match the immutable order snapshot }
+        '502': { description: Capture or server verification failed }
+  /services/storefront/paypal/webhook:
+    post:
+      tags: [Service storefront]
+      summary: Receive a PayPal webhook into the encrypted idempotent event inbox
+      description: All PayPal transmission headers and the exact raw event are verified with PayPal before a production event may affect payment state.
+      operationId: receiveServiceStorefrontPaypalWebhook
+      security: [ ]
+      parameters:
+        - { name: PayPal-Transmission-Id, in: header, required: true, schema: { type: string } }
+        - { name: PayPal-Transmission-Time, in: header, required: true, schema: { type: string, format: date-time } }
+        - { name: PayPal-Cert-Url, in: header, required: true, schema: { type: string, format: uri } }
+        - { name: PayPal-Auth-Algo, in: header, required: true, schema: { type: string } }
+        - { name: PayPal-Transmission-Sig, in: header, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '200': { description: Event was verified and processed, ignored, or durably scheduled for bounded retry }
+        '400': { description: Required signature header or event envelope is invalid }
+        '401': { description: PayPal signature verification failed }
+        '409': { description: Provider event identifier conflicts with different raw evidence }
+        '501': { description: Webhook capability is disabled for this environment }
+  /services/storefront/order/{orderId}/manual-payment:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontOrderId'
+    post:
+      tags: [Service storefront]
+      summary: Select a manual payment method without confirming payment
+      operationId: selectServiceStorefrontManualPayment
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceStorefrontManualPaymentCreate' }
+      responses:
+        '200':
+          description: Order remains awaiting manual confirmation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontOrder' }
+        '400': { description: Unsupported manual payment method }
+        '404': { description: Order not found or lookup token invalid }
+  /services/storefront/order/{orderId}/revision:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontOrderId'
+    post:
+      tags: [Service storefront]
+      summary: Request a service-order revision
+      operationId: createServiceStorefrontRevision
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/OrderLookupToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceStorefrontRevisionCreate' }
+      responses:
+        '200':
+          description: Persisted revision request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontRevision' }
+        '404': { description: Order not found or lookup token invalid }
+        '409': { description: Order state does not permit a revision }
+  /admin/services/storefront/orders:
+    get:
+      tags: [Admin, Service storefront]
+      summary: List service orders for operations
+      operationId: adminListServiceStorefrontOrders
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0 } }
+      responses:
+        '200':
+          description: Matching service orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ServiceStorefrontOrder' }
+        '403': { description: Strict Admin role required }
+  /admin/services/storefront/orders/{orderId}:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontOrderId'
+    put:
+      tags: [Admin, Service storefront]
+      summary: Apply a validated service fulfillment transition
+      operationId: adminUpdateServiceStorefrontOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceStorefrontOrderUpdate' }
+      responses:
+        '200':
+          description: Updated service order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontOrder' }
+        '403': { description: Strict Admin role required }
+        '404': { description: Order not found }
+        '409': { description: Invalid state transition }
+  /admin/services/storefront/packages:
+    get:
+      tags: [Admin, Service storefront]
+      summary: List all service packages
+      operationId: adminListServiceStorefrontPackages
+      responses:
+        '200':
+          description: Active and inactive packages
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ServiceStorefrontPackage' }
+        '403': { description: Strict Admin role required }
+    post:
+      tags: [Admin, Service storefront]
+      summary: Create a versioned service package
+      operationId: adminCreateServiceStorefrontPackage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceStorefrontPackageCreate' }
+      responses:
+        '200':
+          description: Created package
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontPackage' }
+        '400': { description: Invalid pricing or quantity policy }
+        '403': { description: Strict Admin role required }
+  /admin/services/storefront/packages/{packageId}:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontPackageId'
+    put:
+      tags: [Admin, Service storefront]
+      summary: Update a service package
+      operationId: adminUpdateServiceStorefrontPackage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceStorefrontPackageUpdate' }
+      responses:
+        '200':
+          description: Updated package
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontPackage' }
+        '400': { description: Invalid pricing or quantity policy }
+        '403': { description: Strict Admin role required }
+        '404': { description: Package not found }
+  /admin/services/storefront/orders/{orderId}/refunds:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontOrderId'
+    get:
+      tags: [Admin, Service storefront]
+      summary: List immutable refund requests for an order
+      operationId: adminListServiceStorefrontRefunds
+      responses:
+        '200':
+          description: Refund history
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ServiceStorefrontRefund' }
+        '403': { description: Strict Admin role required }
+    post:
+      tags: [Admin, Service storefront]
+      summary: Request a full or partial refund
+      description: The amount defaults to the server-calculated unreserved captured balance. Requesting does not contact the provider.
+      operationId: adminRequestServiceStorefrontRefund
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceStorefrontRefundCreate' }
+      responses:
+        '200':
+          description: Requested refund awaiting independent approval
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontRefund' }
+        '400': { description: Invalid amount or reason }
+        '403': { description: Strict Admin role required }
+        '404': { description: Paid order or capture binding not found }
+        '409': { description: Amount exceeds the unreserved captured balance or idempotency conflict }
+  /admin/services/storefront/refunds/{refundId}/approve:
+    parameters:
+      - name: refundId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [Admin, Service storefront]
+      summary: Independently approve and submit a PayPal refund
+      description: The approver must differ from the requester. Success is recorded only after PayPal returns an exact completed refund.
+      operationId: adminApproveServiceStorefrontRefund
+      responses:
+        '200':
+          description: Current truthful refund state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontRefund' }
+        '403': { description: Strict Admin role required or separation of duties failed }
+        '404': { description: Refund not found }
+        '409': { description: Invalid state or provider evidence mismatch }
+        '501': { description: Refund capability is disabled for this environment }
+        '502': { description: PayPal request failed; refund remains processing or failed }
+  /admin/services/storefront/orders/{orderId}/reconcile:
+    parameters:
+      - $ref: '#/components/parameters/ServiceStorefrontOrderId'
+    post:
+      tags: [Admin, Service storefront]
+      summary: Compare an order binding with the provider without changing payment state
+      operationId: adminReconcileServiceStorefrontOrder
+      responses:
+        '200':
+          description: Read-only provider comparison; mismatches create an operator exception
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceStorefrontReconciliation' }
+        '403': { description: Strict Admin role required }
+        '404': { description: Order or provider binding not found }
+        '501': { description: Provider reconciliation capability is unavailable }
+        '502': { description: Provider status could not be read }
+  /admin/commerce/provider-events:
+    get:
+      tags: [Admin, Commerce operations]
+      summary: List redacted provider-event inbox records
+      description: Strict-admin operational view. Encrypted payloads and merchant-account references are never returned.
+      operationId: adminListCommerceProviderEvents
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pending, processing, processed, retry, dead_letter, ignored]
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: offset
+          in: query
+          required: false
+          schema: { type: integer, minimum: 0, maximum: 10000, default: 0 }
+      responses:
+        '200':
+          description: Redacted provider-event records ordered newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CommerceProviderEvent' }
+        '400': { description: Invalid filter }
+        '403': { description: Strict Admin role required }
+  /admin/commerce/provider-events/{eventId}/replay:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [Admin, Commerce operations]
+      summary: Requeue one dead-letter provider event with immutable operator evidence
+      description: Requeueing does not mark an order paid. The bounded worker reprocesses only the original signature-verified encrypted payload.
+      operationId: adminReplayCommerceProviderEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CommerceProviderEventReplayCreate' }
+      responses:
+        '200':
+          description: Event moved from dead_letter to retry with an immutable action record
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommerceProviderEvent' }
+        '400': { description: Invalid event ID or replay reason }
+        '403': { description: Strict Admin role required }
+        '404': { description: Provider event not found }
+        '409': { description: Event is not currently dead-lettered }
+  /bookings/public/availability:
+    get:
+      tags: [Public bookings]
+      summary: Check authoritative room availability and approved booking price
+      description: Availability is advisory until checkout atomically creates the exclusion-backed hold. Quote is omitted when no approved active commerce policy exists.
+      operationId: getPublicBookingAvailability
+      security: [ ]
+      parameters:
+        - name: serviceOfferingId
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - name: startsAt
+          in: query
+          required: true
+          schema: { type: string, format: date-time }
+        - name: durationMinutes
+          in: query
+          required: true
+          schema: { type: integer, minimum: 30, maximum: 840 }
+      responses:
+        '200':
+          description: Availability and optional server-authoritative quote
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicBookingAvailability' }
+        '400': { description: Invalid schedule input }
+        '422': { description: Service offering is not selectable }
+  /bookings/public:
+    post:
+      tags: [Public bookings]
+      summary: Create an honest unpaid tentative booking
+      description: Compatibility path used when no approved payable-booking policy is active. It never reports payment or confirmation.
+      operationId: createPublicTentativeBooking
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PublicBookingCreate' }
+      responses:
+        '200':
+          description: Tentative booking created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Booking' }
+        '409': { description: Resource was reserved by another request }
+        '422': { description: Invalid service relationship }
+  /bookings/public/checkout:
+    post:
+      tags: [Public bookings, Checkout]
+      summary: Create a canonical confirmation-deposit checkout and atomic resource hold
+      description: Requires an approved versioned policy. The response is awaiting_payment; creating it does not mean the deposit is paid or the session confirmed.
+      operationId: createPublicBookingCheckout
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PublicBookingCheckoutCreate' }
+      responses:
+        '200':
+          description: Canonical checkout and temporary resource hold
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicBookingCheckout' }
+        '409': { description: Idempotency conflict, missing approved policy, or atomic resource contention }
+        '503': { description: Domain checkout is disabled in this environment }
+  /bookings/public/orders/{bookingId}:
+    get:
+      tags: [Public bookings, Checkout]
+      summary: Read customer-safe booking checkout status
+      description: Unknown orders and invalid lookup tokens return the same response to resist enumeration.
+      operationId: getPublicBookingCheckout
+      security: [ ]
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+        - name: X-Order-Lookup-Token
+          in: header
+          required: true
+          schema: { type: string, minLength: 32, writeOnly: true }
+      responses:
+        '200':
+          description: Current payment and separate fulfillment state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicBookingCheckout' }
+        '404': { description: Booking order not found }
+  /bookings/public/orders/{bookingId}/datafast/checkout:
+    post:
+      tags: [Public bookings, Checkout]
+      summary: Create or replay the booking deposit's bound Datafast checkout
+      description: Requires the scoped guest lookup capability. Creating a hosted checkout never marks the deposit paid or confirms fulfillment.
+      operationId: createPublicBookingDatafastCheckout
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/PublicBookingId'
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Bound Datafast hosted-checkout resource
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DatafastCheckout' }
+        '404': { description: Booking order not found }
+        '409': { description: Expired/already-paid booking or immutable provider-binding conflict }
+        '503': { description: Booking domain or Datafast rail is disabled/misconfigured }
+  /bookings/public/orders/{bookingId}/datafast/status:
+    get:
+      tags: [Public bookings, Checkout]
+      summary: Verify the booking deposit against Datafast server-to-server
+      description: A browser return is not payment evidence. The supplied path must exactly match the stored checkout binding; only the server-held merchant credential queries Datafast.
+      operationId: confirmPublicBookingDatafastStatus
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/PublicBookingId'
+        - $ref: '#/components/parameters/OrderLookupToken'
+        - name: resourcePath
+          in: query
+          required: true
+          schema: { type: string, pattern: '^/v1/checkouts/[A-Za-z0-9_.-]+/payment$' }
+      responses:
+        '200':
+          description: Current server-verified payment and separate fulfillment state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicBookingCheckout' }
+        '404': { description: Booking order not found }
+        '409': { description: Binding conflict or verified late payment requires staff reconciliation }
+        '502': { description: Provider failure or amount/currency/reference mismatch }
+  /bookings/public/orders/{bookingId}/paypal/create:
+    post:
+      tags: [Public bookings, Checkout]
+      summary: Create or replay the booking deposit's bound PayPal order
+      description: Uses an immutable provider request ID and does not mark the booking paid.
+      operationId: createPublicBookingPaypalOrder
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/PublicBookingId'
+        - $ref: '#/components/parameters/OrderLookupToken'
+      responses:
+        '200':
+          description: Bound PayPal Orders v2 resource
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaypalCreate' }
+        '404': { description: Booking order not found }
+        '409': { description: Expired/already-paid booking or immutable provider-binding conflict }
+        '503': { description: Booking domain or PayPal rail is disabled/misconfigured }
+  /bookings/public/orders/{bookingId}/paypal/capture:
+    post:
+      tags: [Public bookings, Checkout]
+      summary: Capture and server-verify the booking deposit's bound PayPal order
+      description: Browser approval alone is not success. The server validates order, merchant, amount, currency, capture ID, and internal booking reference before payment transition.
+      operationId: capturePublicBookingPaypalOrder
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/PublicBookingId'
+        - $ref: '#/components/parameters/OrderLookupToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PublicBookingPaypalCapture' }
+      responses:
+        '200':
+          description: Current server-verified payment and separate fulfillment state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicBookingCheckout' }
+        '404': { description: Booking order not found }
+        '409': { description: Expired booking or PayPal order/binding conflict }
+        '502': { description: Provider failure or amount/currency/reference mismatch }
+  /bookings/public/orders/{bookingId}/manual-payment:
+    post:
+      tags: [Public bookings, Checkout]
+      summary: Select a manual bank-transfer attempt
+      description: Selection creates awaiting-evidence state only. It never confirms payment or fulfillment and is blocked while an online payment attempt is active.
+      operationId: selectPublicBookingManualPayment
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/PublicBookingId'
+        - $ref: '#/components/parameters/OrderLookupToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PublicBookingManualPaymentCreate' }
+      responses:
+        '200':
+          description: Awaiting-evidence checkout state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicBookingCheckout' }
+        '404': { description: Booking order not found }
+        '409': { description: Expired booking or another payment rail is active }
+        '503': { description: Manual bank transfer is disabled }
+  /bookings/public/orders/{bookingId}/manual-payment/evidence:
+    post:
+      tags: [Public bookings, Checkout]
+      summary: Submit a bank-transfer reference for independent review
+      description: The customer reference is immutable during review and cannot mark the checkout paid. Amount and currency come exclusively from the stored checkout.
+      operationId: submitPublicBookingManualEvidence
+      security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/PublicBookingId'
+        - $ref: '#/components/parameters/OrderLookupToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PublicBookingManualEvidenceCreate' }
+      responses:
+        '200':
+          description: Evidence submitted; payment remains unconfirmed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicBookingCheckout' }
+        '400': { description: Invalid reference }
+        '404': { description: Booking order not found }
+        '409': { description: Manual payment was not selected or different evidence is already under review }
+  /bookings/{bookingId}/commerce:
+    get:
+      tags: [Bookings, Commerce operations]
+      summary: Read protected booking commerce and manual-evidence details
+      operationId: getServiceBookingCommerce
+      parameters:
+        - $ref: '#/components/parameters/PublicBookingId'
+      responses:
+        '200':
+          description: Booking payment and separate fulfillment projection
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceBookingCommerce' }
+        '403': { description: Invoicing access required }
+        '404': { description: Canonical booking commerce order not found }
+  /bookings/{bookingId}/manual-payment/review:
+    post:
+      tags: [Bookings, Commerce operations]
+      summary: Independently approve or reject manual-payment evidence
+      description: The reviewer must differ from the submitter. Approval atomically verifies immutable bindings, posts the ledger and receipt, and confirms the deposit only while the booking hold remains active.
+      operationId: reviewServiceBookingManualPayment
+      parameters:
+        - $ref: '#/components/parameters/PublicBookingId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceBookingManualReview' }
+      responses:
+        '200':
+          description: Current truthful booking commerce state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceBookingCommerce' }
+        '400': { description: Invalid action or review notes }
+        '403': { description: Invoicing access required or separation of duties failed }
+        '404': { description: Canonical booking commerce order not found }
+        '409': { description: Evidence, checkout, hold, ledger, receipt, or immutable binding conflict }
   /directory/search: { $ref: './directory.yaml#/paths/~1directory~1search' }
   /directory/suggestions: { $ref: './directory.yaml#/paths/~1directory~1suggestions' }
   /directory/taxonomies: { $ref: './directory.yaml#/paths/~1directory~1taxonomies' }
@@ -3750,6 +5182,138 @@ paths:
   /directory/admin/moderation/{caseId}/decisions: { $ref: './directory.yaml#/paths/~1directory~1admin~1moderation~1{caseId}~1decisions' }
   /directory/admin/merges: { $ref: './directory.yaml#/paths/~1directory~1admin~1merges' }
 
+  /public/events/{eventId}/tickets:
+    get:
+      tags: [Public event tickets]
+      summary: Read the payable ticket storefront for one public event
+      description: Returns server-authoritative active tiers and availability. Zero-price entitlements use a separate staff-controlled flow and are not exposed as payable tiers.
+      operationId: getPublicEventTicketStorefront
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicEventId'
+      responses:
+        '200':
+          description: Public event ticket storefront
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicEventTicketStorefront' } } }
+        '404': { description: Event is not publicly eligible for ticket purchase }
+        '503': { description: Checkout environment is not configured }
+  /public/events/{eventId}/ticket-orders:
+    post:
+      tags: [Public event tickets]
+      summary: Atomically hold ticket inventory and create an immutable guest checkout
+      description: Price, discounts, fee allocation, tax, terms version, capacity, and hold expiry are calculated by the server. This operation never marks payment successful or issues a ticket.
+      operationId: createPublicEventTicketCheckout
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicEventId'
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, minLength: 16, maxLength: 128 }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PublicEventTicketCheckoutRequest' } } }
+      responses:
+        '201':
+          description: Guest ticket order with a temporary inventory hold; lookupToken is returned only on creation
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicEventTicketCheckout' } } }
+        '400': { description: Invalid buyer, quantity, promotion, or terms input }
+        '404': { description: Event or tier is not public }
+        '409': { description: Capacity, inventory, promotion, policy, or idempotency conflict }
+        '503': { description: Event ticket checkout is disabled }
+  /public/events/{eventId}/ticket-orders/{orderId}:
+    get:
+      tags: [Public event tickets]
+      summary: Track a guest ticket order using its unguessable lookup token
+      operationId: getPublicEventTicketCheckout
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicEventId'
+        - $ref: '#/components/parameters/PublicEventTicketOrderId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+      responses:
+        '200':
+          description: Customer-safe payment and fulfillment state; ticket references appear only after issuance
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicEventTicketCheckout' } } }
+        '404': { description: Order not found or lookup token does not match }
+  /public/events/{eventId}/ticket-orders/{orderId}/datafast/checkout:
+    post:
+      tags: [Public event tickets]
+      summary: Create or recover the ticket order's bound Datafast checkout
+      operationId: createPublicEventTicketDatafastCheckout
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicEventId'
+        - $ref: '#/components/parameters/PublicEventTicketOrderId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+      responses:
+        '200':
+          description: Bound Datafast hosted checkout
+          content: { application/json: { schema: { $ref: '#/components/schemas/DatafastCheckout' } } }
+        '404': { description: Order not found or lookup token does not match }
+        '409': { description: Hold expired, order paid, or another online rail is active }
+        '503': { description: Datafast or event ticket checkout is disabled }
+  /public/events/{eventId}/ticket-orders/{orderId}/datafast/status:
+    get:
+      tags: [Public event tickets]
+      summary: Verify a bound Datafast ticket payment server-to-server
+      description: A browser return is not payment evidence. Amount, currency, merchant, internal order, checkout ID, and exact stored resource path must match before payment can be recorded and tickets issued.
+      operationId: confirmPublicEventTicketDatafastStatus
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicEventId'
+        - $ref: '#/components/parameters/PublicEventTicketOrderId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+        - name: resourcePath
+          in: query
+          required: true
+          schema: { type: string, pattern: '^/v1/checkouts/[A-Za-z0-9._-]+/payment$' }
+      responses:
+        '200':
+          description: Current server-verified checkout state
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicEventTicketCheckout' } } }
+        '404': { description: Order not found or lookup token does not match }
+        '409': { description: Resource binding mismatch or payment arrived after hold expiry }
+        '502': { description: Provider status or immutable payment fields could not be verified }
+  /public/events/{eventId}/ticket-orders/{orderId}/paypal/create:
+    post:
+      tags: [Public event tickets]
+      summary: Create or recover the ticket order's bound PayPal order
+      operationId: createPublicEventTicketPaypalOrder
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicEventId'
+        - $ref: '#/components/parameters/PublicEventTicketOrderId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+      responses:
+        '200':
+          description: Bound PayPal order awaiting customer approval
+          content: { application/json: { schema: { $ref: '#/components/schemas/PaypalCreate' } } }
+        '404': { description: Order not found or lookup token does not match }
+        '409': { description: Hold expired, order paid, or another online rail is active }
+        '503': { description: PayPal or event ticket checkout is disabled }
+  /public/events/{eventId}/ticket-orders/{orderId}/paypal/capture:
+    post:
+      tags: [Public event tickets]
+      summary: Capture and verify the exact bound PayPal ticket order
+      description: Approval in the browser is not success. TDF captures server-to-server and verifies capture status, amount, currency, payee merchant, internal order, and provider binding before payment and ticket issuance transitions.
+      operationId: capturePublicEventTicketPaypalOrder
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicEventId'
+        - $ref: '#/components/parameters/PublicEventTicketOrderId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PublicEventTicketPaypalCaptureRequest' } } }
+      responses:
+        '200':
+          description: Current server-verified checkout and fulfillment state
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicEventTicketCheckout' } } }
+        '404': { description: Order not found or lookup token does not match }
+        '409': { description: Provider binding mismatch or payment arrived after hold expiry }
+        '502': { description: PayPal capture or immutable payment fields could not be verified }
+
 security:
   - bearerAuth: [ ]
 
@@ -3760,6 +5324,27 @@ components:
       scheme: bearer
       bearerFormat: JWT
   parameters:
+    PublicEventId:
+      name: eventId
+      in: path
+      required: true
+      schema: { type: integer, format: int64, minimum: 1 }
+    PublicEventTicketOrderId:
+      name: orderId
+      in: path
+      required: true
+      schema: { type: integer, format: int64, minimum: 1 }
+    PublicOrderLookupToken:
+      name: X-Order-Lookup-Token
+      in: header
+      required: true
+      description: Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders.
+      schema: { type: string, minLength: 32, writeOnly: true }
+    PublicBookingId:
+      name: bookingId
+      in: path
+      required: true
+      schema: { type: integer, format: int64, minimum: 1 }
     CatalogCode:
       name: catalogCode
       in: path
@@ -3823,7 +5408,904 @@ components:
       in: path
       required: true
       schema: { type: integer, format: int64, minimum: 1 }
+    MarketplaceListingId:
+      name: listingId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    MarketplaceCartId:
+      name: cartId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    MarketplaceOrderId:
+      name: orderId
+      in: path
+      required: true
+      description: Canonical marketplace sale or rental order UUID.
+      schema: { type: string, format: uuid }
+    ServiceStorefrontPackageId:
+      name: packageId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ServiceStorefrontOrderId:
+      name: orderId
+      in: path
+      required: true
+      description: Public order number or canonical UUID accepted by the service storefront.
+      schema: { type: string, minLength: 1 }
+    OrderLookupToken:
+      name: X-Order-Lookup-Token
+      in: header
+      required: true
+      description: Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders.
+      schema: { type: string, minLength: 32, writeOnly: true }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
+      schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    PublicEventTicketTier:
+      type: object
+      additionalProperties: false
+      required: [tierId, code, name, unitPriceMinor, currency, remaining, transfersAllowed]
+      properties:
+        tierId: { type: integer, format: int64, minimum: 1 }
+        code: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        unitPriceMinor: { type: integer, format: int64, minimum: 1 }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        remaining: { type: integer, minimum: 0 }
+        salesStart: { type: string, format: date-time, nullable: true }
+        salesEnd: { type: string, format: date-time, nullable: true }
+        transfersAllowed: { type: boolean }
+    PublicEventTicketStorefront:
+      type: object
+      additionalProperties: false
+      required: [eventId, title, startsAt, endsAt, tiers, checkoutAvailable]
+      properties:
+        eventId: { type: integer, format: int64, minimum: 1 }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time, nullable: true }
+        timezone: { type: string, nullable: true }
+        venueName: { type: string, nullable: true }
+        venueAddress: { type: string, nullable: true }
+        tiers:
+          type: array
+          items: { $ref: '#/components/schemas/PublicEventTicketTier' }
+        checkoutAvailable: { type: boolean }
+        unavailableReason: { type: string, nullable: true }
+    PublicEventTicketCheckoutRequest:
+      type: object
+      additionalProperties: false
+      required: [tierId, quantity, buyerName, buyerEmail, termsAccepted]
+      properties:
+        tierId: { type: integer, format: int64, minimum: 1 }
+        quantity: { type: integer, minimum: 1, maximum: 100 }
+        buyerName: { type: string, minLength: 1, maxLength: 160 }
+        buyerEmail: { type: string, format: email, maxLength: 254 }
+        buyerPhone: { type: string, minLength: 1, maxLength: 24 }
+        promoCode: { type: string, minLength: 1, maxLength: 50, pattern: '^[A-Za-z0-9-]+$' }
+        termsAccepted: { type: boolean, enum: [true] }
+    PublicEventTicketQuote:
+      type: object
+      additionalProperties: false
+      required: [policyVersion, currency, quantity, unitPriceMinor, grossFaceValueMinor, discountMinor, netFaceValueMinor, buyerPlatformFeeMinor, organizerPlatformFeeMinor, taxMinor, checkoutTotalMinor, organizerPayableMinor, platformFeeMinor, termsVersion]
+      properties:
+        policyVersion: { type: string }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        quantity: { type: integer, minimum: 1, maximum: 100 }
+        unitPriceMinor: { type: integer, format: int64, minimum: 1 }
+        grossFaceValueMinor: { type: integer, format: int64, minimum: 1 }
+        discountMinor: { type: integer, format: int64, minimum: 0 }
+        netFaceValueMinor: { type: integer, format: int64, minimum: 0 }
+        buyerPlatformFeeMinor: { type: integer, format: int64, minimum: 0 }
+        organizerPlatformFeeMinor: { type: integer, format: int64, minimum: 0 }
+        taxMinor: { type: integer, format: int64, minimum: 0 }
+        checkoutTotalMinor: { type: integer, format: int64, minimum: 1 }
+        organizerPayableMinor: { type: integer, format: int64, minimum: 0 }
+        platformFeeMinor: { type: integer, format: int64, minimum: 0 }
+        termsVersion: { type: string }
+    PublicEventTicket:
+      type: object
+      additionalProperties: false
+      required: [ticketId, ticketCode, status]
+      properties:
+        ticketId: { type: integer, format: int64, minimum: 1 }
+        ticketCode: { type: string }
+        status: { type: string }
+        holderName: { type: string, nullable: true }
+    PublicEventTicketCheckout:
+      type: object
+      additionalProperties: false
+      required: [orderId, eventId, checkoutId, paymentStatus, fulfillmentStatus, holdExpiresAt, quote, paymentMethods, tickets]
+      properties:
+        orderId: { type: integer, format: int64, minimum: 1 }
+        eventId: { type: integer, format: int64, minimum: 1 }
+        checkoutId: { type: string, format: uuid }
+        lookupToken: { type: string, nullable: true, writeOnly: true }
+        paymentStatus:
+          type: string
+          enum: [holding, awaiting_payment, processing, paid, failed, cancelled, expired, partially_refunded, refunded, disputed, chargeback]
+        fulfillmentStatus:
+          type: string
+          enum: [seat_held, issued, transfer_requested, transferred, checked_in, cancelled, refunded, expired]
+        holdExpiresAt: { type: string, format: date-time }
+        quote: { $ref: '#/components/schemas/PublicEventTicketQuote' }
+        paymentMethods:
+          type: array
+          items: { type: string, enum: [datafast, paypal] }
+        tickets:
+          type: array
+          description: Empty until fulfillment issues tickets after verified payment.
+          items: { $ref: '#/components/schemas/PublicEventTicket' }
+    PublicEventTicketPaypalCaptureRequest:
+      type: object
+      additionalProperties: false
+      required: [paypalOrderId]
+      properties:
+        paypalOrderId: { type: string, minLength: 6, maxLength: 80, pattern: '^[A-Za-z0-9_-]+$' }
+    BookingResource:
+      type: object
+      required: [brRoomId, brRoomName, brRole]
+      properties:
+        brRoomId: { type: string }
+        brRoomName: { type: string }
+        brRole: { type: string }
+    Booking:
+      type: object
+      required: [bookingId, title, startsAt, endsAt, status, resources]
+      properties:
+        bookingId: { type: integer, format: int64 }
+        title: { type: string }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }
+        status: { type: string }
+        notes: { type: string, nullable: true }
+        partyId: { type: integer, format: int64, nullable: true }
+        engineerPartyId: { type: integer, format: int64, nullable: true }
+        engineerName: { type: string, nullable: true }
+        serviceOfferingId: { type: string, format: uuid, nullable: true }
+        serviceType: { type: string, nullable: true }
+        serviceOrderId: { type: integer, format: int64, nullable: true }
+        serviceOrderTitle: { type: string, nullable: true }
+        customerName: { type: string, nullable: true }
+        partyDisplayName: { type: string, nullable: true }
+        resources: { type: array, items: { $ref: '#/components/schemas/BookingResource' } }
+    PublicBookingCreate:
+      type: object
+      required: [pbFullName, pbEmail, pbServiceOfferingId, pbStartsAt]
+      properties:
+        pbFullName: { type: string, minLength: 1, maxLength: 160 }
+        pbEmail: { type: string, format: email }
+        pbPhone: { type: string, nullable: true }
+        pbServiceOfferingId: { type: string, format: uuid }
+        pbStartsAt: { type: string, format: date-time }
+        pbDurationMinutes: { type: integer, minimum: 30, maximum: 840 }
+        pbNotes: { type: string, nullable: true, maxLength: 5000 }
+        pbEngineerPartyId: { type: integer, format: int64, nullable: true }
+        pbEngineerName: { type: string, nullable: true }
+        pbResourceIds: { type: array, nullable: true, maxItems: 20, items: { type: string } }
+    PublicBookingCheckoutCreate:
+      type: object
+      required: [pbcFullName, pbcEmail, pbcServiceOfferingId, pbcStartsAt, pbcDurationMinutes, pbcTermsAccepted]
+      properties:
+        pbcFullName: { type: string, minLength: 1, maxLength: 160 }
+        pbcEmail: { type: string, format: email }
+        pbcPhone: { type: string, nullable: true }
+        pbcServiceOfferingId: { type: string, format: uuid }
+        pbcStartsAt: { type: string, format: date-time }
+        pbcDurationMinutes: { type: integer, minimum: 30, maximum: 840 }
+        pbcNotes: { type: string, nullable: true, maxLength: 5000 }
+        pbcEngineerPartyId: { type: integer, format: int64, nullable: true }
+        pbcEngineerName: { type: string, nullable: true }
+        pbcResourceIds: { type: array, nullable: true, maxItems: 20, items: { type: string } }
+        pbcTermsAccepted: { type: boolean, enum: [true] }
+    PublicBookingQuote:
+      type: object
+      required: [policyVersion, currency, durationMinutes, subtotalMinor, taxMinor, totalMinor, depositMinor, balanceMinor, depositBps, termsVersion]
+      properties:
+        policyVersion: { type: string }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        durationMinutes: { type: integer, minimum: 1 }
+        subtotalMinor: { type: integer, format: int64, minimum: 1 }
+        taxMinor: { type: integer, format: int64, minimum: 0 }
+        totalMinor: { type: integer, format: int64, minimum: 1 }
+        depositMinor: { type: integer, format: int64, minimum: 1 }
+        balanceMinor: { type: integer, format: int64, minimum: 0 }
+        depositBps: { type: integer, minimum: 1, maximum: 10000 }
+        termsVersion: { type: string }
+    PublicBookingAvailability:
+      type: object
+      required: [available, reason, serviceOfferingId, startsAt, endsAt, resourceIds, resourceNames, quote]
+      properties:
+        available: { type: boolean }
+        reason: { type: string, nullable: true }
+        serviceOfferingId: { type: string, format: uuid }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }
+        resourceIds: { type: array, items: { type: string } }
+        resourceNames: { type: array, items: { type: string } }
+        quote: { allOf: [{ $ref: '#/components/schemas/PublicBookingQuote' }], nullable: true }
+    PublicBookingCheckout:
+      type: object
+      required: [booking, checkoutId, lookupToken, paymentStatus, fulfillmentStatus, holdExpiresAt, quote, paymentMethods, manualPayment]
+      properties:
+        booking: { $ref: '#/components/schemas/Booking' }
+        checkoutId: { type: string, format: uuid }
+        lookupToken: { type: string, nullable: true, description: Returned only by creation; subsequent status responses return null. }
+        paymentStatus: { type: string, enum: [awaiting_payment, processing, paid, failed, cancelled, expired, partially_refunded, refunded, disputed, chargeback] }
+        fulfillmentStatus: { type: string, enum: [on_hold, confirmed, scheduled, in_progress, balance_due, completed, reschedule_requested, cancellation_requested, cancelled, no_show, overtime_review, disputed, expired] }
+        holdExpiresAt: { type: string, format: date-time }
+        quote: { $ref: '#/components/schemas/PublicBookingQuote' }
+        paymentMethods:
+          type: array
+          description: Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown.
+          uniqueItems: true
+          items: { type: string, enum: [datafast, paypal, bank_transfer] }
+        manualPayment:
+          allOf: [{ $ref: '#/components/schemas/PublicBookingManualPayment' }]
+          nullable: true
+    PublicBookingManualPaymentCreate:
+      type: object
+      additionalProperties: false
+      required: [paymentMethod]
+      properties:
+        paymentMethod: { type: string, enum: [bank_transfer] }
+    PublicBookingManualEvidenceCreate:
+      type: object
+      additionalProperties: false
+      required: [customerReference]
+      properties:
+        customerReference: { type: string, minLength: 3, maxLength: 120 }
+    PublicBookingManualPayment:
+      type: object
+      required: [paymentMethod, status, submittedAt]
+      properties:
+        paymentMethod: { type: string, enum: [bank_transfer, cash, pos] }
+        status: { type: string, enum: [awaiting_evidence, submitted, under_review, approved, rejected] }
+        submittedAt: { type: string, format: date-time, nullable: true }
+    ServiceBookingManualReview:
+      type: object
+      additionalProperties: false
+      required: [action, reviewNotes]
+      properties:
+        action: { type: string, enum: [approve, reject] }
+        reviewNotes: { type: string, minLength: 3, maxLength: 2000 }
+    ServiceBookingManualEvidence:
+      type: object
+      required: [evidenceId, paymentMethod, status, customerReference, submittedAmountMinor, currency, submittedBy, submittedAt, reviewedBy, reviewedAt, reviewNotes]
+      properties:
+        evidenceId: { type: string, format: uuid }
+        paymentMethod: { type: string, enum: [bank_transfer, cash, pos] }
+        status: { type: string, enum: [awaiting_evidence, submitted, under_review, approved, rejected] }
+        customerReference: { type: string, nullable: true }
+        submittedAmountMinor: { type: integer, format: int64, nullable: true }
+        currency: { type: string, nullable: true, minLength: 3, maxLength: 3 }
+        submittedBy: { type: integer, format: int64, nullable: true }
+        submittedAt: { type: string, format: date-time, nullable: true }
+        reviewedBy: { type: integer, format: int64, nullable: true }
+        reviewedAt: { type: string, format: date-time, nullable: true }
+        reviewNotes: { type: string, nullable: true }
+    ServiceBookingCommerce:
+      type: object
+      required: [bookingId, checkoutId, paymentStatus, fulfillmentStatus, depositMinor, currency, holdExpiresAt, manualEvidence]
+      properties:
+        bookingId: { type: integer, format: int64, minimum: 1 }
+        checkoutId: { type: string, format: uuid }
+        paymentStatus: { type: string }
+        fulfillmentStatus: { type: string }
+        depositMinor: { type: integer, format: int64, minimum: 1 }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        holdExpiresAt: { type: string, format: date-time }
+        manualEvidence:
+          allOf: [{ $ref: '#/components/schemas/ServiceBookingManualEvidence' }]
+          nullable: true
+    PublicBookingPaypalCapture:
+      type: object
+      additionalProperties: false
+      required: [paypalOrderId]
+      properties:
+        paypalOrderId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[A-Za-z0-9_-]+$'
+    MarketplaceItem:
+      type: object
+      required: [miListingId, miAssetId, miTitle, miPurpose, miCategory, miBrand, miModel, miPhotoUrl, miStatus, miCondition, miPriceUsdCents, miPriceDisplay, miMarkupPct, miCurrency, miRentalWeeklyPriceUsdCents, miRentalWeeklyPriceDisplay, miRentalSecurityDepositUsdCents, miRentalSecurityDepositDisplay, miRentalMinDays, miRentalMaxDays, miRentalLateFeeUsdCents, miRentalLateFeeDisplay, miRentalCancellationWindowHours, miRentalTermsVersion, miRentalTermsSummary, miRentalTimezone]
+      properties:
+        miListingId: { type: string, format: uuid }
+        miAssetId: { type: string, format: uuid }
+        miTitle: { type: string }
+        miPurpose: { type: string, enum: [sale, rent] }
+        miCategory: { type: string }
+        miBrand: { type: string, nullable: true }
+        miModel: { type: string, nullable: true }
+        miPhotoUrl: { type: string, format: uri, nullable: true }
+        miStatus: { type: string, nullable: true }
+        miCondition: { type: string, nullable: true }
+        miPriceUsdCents: { type: integer, minimum: 0, description: Authoritative unit price in integer minor units. }
+        miPriceDisplay: { type: string }
+        miMarkupPct: { type: integer }
+        miCurrency: { type: string, minLength: 3, maxLength: 3 }
+        miRentalWeeklyPriceUsdCents: { type: integer, minimum: 1, nullable: true }
+        miRentalWeeklyPriceDisplay: { type: string, nullable: true }
+        miRentalSecurityDepositUsdCents: { type: integer, minimum: 0, nullable: true }
+        miRentalSecurityDepositDisplay: { type: string, nullable: true }
+        miRentalMinDays: { type: integer, minimum: 1, nullable: true }
+        miRentalMaxDays: { type: integer, minimum: 1, maximum: 366, nullable: true }
+        miRentalLateFeeUsdCents: { type: integer, minimum: 0, nullable: true }
+        miRentalLateFeeDisplay: { type: string, nullable: true }
+        miRentalCancellationWindowHours: { type: integer, minimum: 0, maximum: 8760, nullable: true }
+        miRentalTermsVersion: { type: string, nullable: true, description: Only present when an approved active rate/terms version permits public rental checkout. }
+        miRentalTermsSummary: { type: string, nullable: true }
+        miRentalTimezone: { type: string, nullable: true }
+    MarketplaceCartItem:
+      type: object
+      required: [mciListingId, mciTitle, mciCategory, mciBrand, mciModel, mciQuantity, mciUnitPriceUsdCents, mciSubtotalCents, mciUnitPriceDisplay, mciSubtotalDisplay, mciPurpose, mciRentalStartDate, mciRentalEndDate, mciRentalDurationDays, mciRentalChargeCents, mciRentalChargeDisplay, mciSecurityDepositCents, mciSecurityDepositDisplay]
+      properties:
+        mciListingId: { type: string, format: uuid }
+        mciTitle: { type: string }
+        mciCategory: { type: string }
+        mciBrand: { type: string, nullable: true }
+        mciModel: { type: string, nullable: true }
+        mciQuantity: { type: integer, minimum: 1, maximum: 1 }
+        mciUnitPriceUsdCents: { type: integer, minimum: 0 }
+        mciSubtotalCents: { type: integer, minimum: 0 }
+        mciUnitPriceDisplay: { type: string }
+        mciSubtotalDisplay: { type: string }
+        mciPurpose: { type: string, enum: [sale, rent] }
+        mciRentalStartDate: { type: string, format: date, nullable: true }
+        mciRentalEndDate: { type: string, format: date, nullable: true }
+        mciRentalDurationDays: { type: integer, minimum: 1, maximum: 366, nullable: true }
+        mciRentalChargeCents: { type: integer, minimum: 1, nullable: true }
+        mciRentalChargeDisplay: { type: string, nullable: true }
+        mciSecurityDepositCents: { type: integer, minimum: 0, nullable: true }
+        mciSecurityDepositDisplay: { type: string, nullable: true }
+    MarketplaceCart:
+      type: object
+      required: [mcCartId, mcItems, mcCurrency, mcSubtotalCents, mcSubtotalDisplay]
+      properties:
+        mcCartId: { type: string, format: uuid }
+        mcItems:
+          type: array
+          items: { $ref: '#/components/schemas/MarketplaceCartItem' }
+        mcCurrency: { type: string, minLength: 3, maxLength: 3 }
+        mcSubtotalCents: { type: integer, minimum: 0 }
+        mcSubtotalDisplay: { type: string }
+    MarketplaceCartItemUpdate:
+      type: object
+      additionalProperties: false
+      required: [mciuListingId, mciuQuantity]
+      properties:
+        mciuListingId: { type: string, format: uuid }
+        mciuQuantity: { type: integer, minimum: 0, maximum: 1, description: Zero removes the item; one selects the unique physical asset. }
+        mciuRentalStartDate: { type: string, format: date, description: Inclusive rental start; must be supplied together with the end date. }
+        mciuRentalEndDate: { type: string, format: date, description: Inclusive rental end; must be supplied together with the start date. }
+    MarketplaceShippingAddress:
+      type: object
+      additionalProperties: false
+      required: [msaAddressLine1, msaCity, msaProvince, msaCountryCode]
+      properties:
+        msaAddressLine1: { type: string, minLength: 1, maxLength: 200 }
+        msaAddressLine2: { type: string, minLength: 1, maxLength: 200 }
+        msaCity: { type: string, minLength: 1, maxLength: 200 }
+        msaProvince: { type: string, minLength: 1, maxLength: 200 }
+        msaPostalCode: { type: string, minLength: 1, maxLength: 40 }
+        msaCountryCode: { type: string, pattern: '^[A-Z]{2}$' }
+    MarketplaceCheckoutRequest:
+      type: object
+      additionalProperties: false
+      required: [mcrBuyerName, mcrBuyerEmail]
+      properties:
+        mcrBuyerName: { type: string, minLength: 1, maxLength: 160 }
+        mcrBuyerEmail: { type: string, format: email, maxLength: 254 }
+        mcrBuyerPhone: { type: string, pattern: '^\+[0-9]{8,15}$' }
+        mcrFulfillmentMethod: { type: string, enum: [pickup, local_delivery, shipping], default: pickup }
+        mcrShippingAddress:
+          $ref: '#/components/schemas/MarketplaceShippingAddress'
+        mcrRentalTermsAccepted: { type: boolean, description: Must be true for a rental and omitted for a sale. }
+        mcrIdentityDocumentType: { type: string, enum: [cedula, passport, ruc], description: Required for a rental and omitted for a sale. }
+        mcrIdentityDocumentNumber: { type: string, minLength: 5, maxLength: 32, writeOnly: true, description: Validated for rental handoff and discarded after retaining only its type and last four characters. }
+    MarketplaceOrderItem:
+      type: object
+      required: [moiListingId, moiTitle, moiQuantity, moiUnitPriceUsdCents, moiSubtotalCents, moiUnitPriceDisplay, moiSubtotalDisplay]
+      properties:
+        moiListingId: { type: string, format: uuid }
+        moiTitle: { type: string }
+        moiQuantity: { type: integer, minimum: 1, maximum: 1 }
+        moiUnitPriceUsdCents: { type: integer, minimum: 0 }
+        moiSubtotalCents: { type: integer, minimum: 0 }
+        moiUnitPriceDisplay: { type: string }
+        moiSubtotalDisplay: { type: string }
+    MarketplaceStateHistoryEntry:
+      type: array
+      minItems: 2
+      maxItems: 2
+      description: State code followed by its UTC transition timestamp.
+      items:
+        oneOf:
+          - { type: string }
+          - { type: string, format: date-time }
+    MarketplaceOrder:
+      type: object
+      required: [moOrderId, moCartId, moCurrency, moTotalUsdCents, moTotalDisplay, moStatus, moStatusHistory, moBuyerName, moBuyerEmail, moBuyerPhone, moPaymentProvider, moPaypalOrderId, moPaypalPayerEmail, moPaidAt, moLookupToken, moCheckoutStatus, moManualPaymentStatus, moManualPaymentSubmittedAt, moFulfillmentMethod, moFulfillmentStatus, moHoldExpiresAt, moTrackingReference, moFulfillmentHistory, moOrderKind, moRentalStartDate, moRentalEndDate, moRentalDurationDays, moRentalChargeUsdCents, moSecurityDepositUsdCents, moDepositStatus, moDepositDeductionUsdCents, moRentalTermsVersion, moRentalTimezone, moConditionOut, moConditionIn, moCreatedAt, moUpdatedAt, moItems]
+      properties:
+        moOrderId: { type: string, format: uuid }
+        moCartId: { type: string, format: uuid, nullable: true }
+        moCurrency: { type: string, minLength: 3, maxLength: 3 }
+        moTotalUsdCents: { type: integer, minimum: 0 }
+        moTotalDisplay: { type: string }
+        moStatus: { type: string, description: Domain payment projection; fulfillment status is separate. }
+        moStatusHistory:
+          type: array
+          items: { $ref: '#/components/schemas/MarketplaceStateHistoryEntry' }
+        moBuyerName: { type: string }
+        moBuyerEmail: { type: string, description: Valid email for staff responses; intentionally blank in redacted guest tracking responses. }
+        moBuyerPhone: { type: string, nullable: true }
+        moPaymentProvider: { type: string, enum: [datafast, paypal, stripe, bank_transfer, cash, pos], nullable: true }
+        moPaypalOrderId: { type: string, nullable: true }
+        moPaypalPayerEmail: { type: string, format: email, nullable: true }
+        moPaidAt: { type: string, format: date-time, nullable: true }
+        moLookupToken: { type: string, nullable: true, writeOnly: true, description: Returned only when the order is first created. }
+        moCheckoutStatus: { type: string, nullable: true }
+        moManualPaymentStatus: { type: string, enum: [awaiting_evidence, submitted, under_review, approved, rejected, requires_reconciliation], nullable: true, description: Customer-safe evidence state; approved still requires the canonical checkout to report paid before payment is confirmed. }
+        moManualPaymentSubmittedAt: { type: string, format: date-time, nullable: true }
+        moFulfillmentMethod: { type: string, enum: [pickup, local_delivery, shipping], nullable: true }
+        moFulfillmentStatus:
+          type: string
+          enum: [on_hold, ready_to_fulfill, picking, ready_for_pickup, shipped, delivered, cancellation_requested, cancelled, return_requested, return_authorized, return_in_transit, returned, closed, expired]
+          nullable: true
+        moHoldExpiresAt: { type: string, format: date-time, nullable: true }
+        moTrackingReference: { type: string, nullable: true }
+        moFulfillmentHistory:
+          type: array
+          items: { $ref: '#/components/schemas/MarketplaceStateHistoryEntry' }
+        moOrderKind: { type: string, enum: [sale, rental], nullable: true }
+        moRentalStartDate: { type: string, format: date, nullable: true }
+        moRentalEndDate: { type: string, format: date, nullable: true }
+        moRentalDurationDays: { type: integer, minimum: 1, maximum: 366, nullable: true }
+        moRentalChargeUsdCents: { type: integer, minimum: 1, nullable: true }
+        moSecurityDepositUsdCents: { type: integer, minimum: 0, nullable: true, description: Refundable deposit collected separately from the rental charge. }
+        moDepositStatus:
+          type: string
+          enum: [awaiting_payment, collected, inspection_pending, deduction_proposed, refund_due, partial_refund_due, refunded, partially_refunded, forfeited, disputed]
+          nullable: true
+        moDepositDeductionUsdCents: { type: integer, minimum: 0, nullable: true }
+        moRentalTermsVersion: { type: string, nullable: true }
+        moRentalTimezone: { type: string, nullable: true }
+        moConditionOut: { type: string, nullable: true }
+        moConditionIn: { type: string, nullable: true }
+        moCreatedAt: { type: string, format: date-time }
+        moUpdatedAt: { type: string, format: date-time }
+        moItems:
+          type: array
+          items: { $ref: '#/components/schemas/MarketplaceOrderItem' }
+    MarketplaceManualEvidenceSubmit:
+      type: object
+      additionalProperties: false
+      required: [mmesCustomerReference]
+      properties:
+        mmesCustomerReference: { type: string, minLength: 3, maxLength: 120 }
+    MarketplaceManualPaymentReview:
+      type: object
+      additionalProperties: false
+      required: [mmprAction, mmprReviewNotes]
+      properties:
+        mmprAction: { type: string, enum: [approve, reject] }
+        mmprReviewNotes: { type: string, minLength: 3, maxLength: 2000 }
+    MarketplaceCustomerRequestSubmit:
+      type: object
+      additionalProperties: false
+      required: [mcrsRequestType, mcrsReason]
+      properties:
+        mcrsRequestType:
+          type: string
+          enum: [sale_cancellation, sale_return, rental_cancellation, rental_extension, rental_dispute]
+        mcrsReason: { type: string, minLength: 3, maxLength: 1000 }
+        mcrsRequestedEndDate: { type: string, format: date }
+        mcrsEvidenceUrl: { type: string, maxLength: 2048 }
+    MarketplaceCustomerRequestReview:
+      type: object
+      additionalProperties: false
+      required: [mcrrAction, mcrrReviewNotes]
+      properties:
+        mcrrAction: { type: string, enum: [approve, reject, needs_quote] }
+        mcrrReviewNotes: { type: string, minLength: 3, maxLength: 1000 }
+    MarketplaceCustomerRequest:
+      type: object
+      required: [mcrRequestId, mcrOrderId, mcrOrderKind, mcrRequestType, mcrStatus, mcrReason, mcrRequestedEndDate, mcrEvidenceUrl, mcrRequestedAt, mcrReviewedAt, mcrReviewNotes]
+      properties:
+        mcrRequestId: { type: string, format: uuid }
+        mcrOrderId: { type: string, format: uuid }
+        mcrOrderKind: { type: string, enum: [sale, rental] }
+        mcrRequestType:
+          type: string
+          enum: [sale_cancellation, sale_return, rental_cancellation, rental_extension, rental_dispute]
+        mcrStatus: { type: string, enum: [submitted, needs_quote, approved, rejected] }
+        mcrReason: { type: string }
+        mcrRequestedEndDate: { type: string, format: date, nullable: true }
+        mcrEvidenceUrl: { type: string, nullable: true }
+        mcrRequestedAt: { type: string, format: date-time }
+        mcrReviewedAt: { type: string, format: date-time, nullable: true }
+        mcrReviewNotes: { type: string, nullable: true }
+    MarketplaceDepositSettlementSubmit:
+      type: object
+      additionalProperties: false
+      required: [mdssSettlementMethod, mdssExternalReference, mdssEvidenceUrl]
+      properties:
+        mdssSettlementMethod: { type: string, enum: [bank_transfer, cash, pos, forfeiture] }
+        mdssExternalReference: { type: string, minLength: 3, maxLength: 160 }
+        mdssEvidenceUrl: { type: string, minLength: 1, maxLength: 2048 }
+    MarketplaceDepositSettlementReview:
+      type: object
+      additionalProperties: false
+      required: [mdsrAction, mdsrReviewNotes]
+      properties:
+        mdsrAction: { type: string, enum: [approve, reject, requires_reconciliation] }
+        mdsrReviewNotes: { type: string, minLength: 3, maxLength: 1000 }
+    MarketplaceDepositSettlement:
+      type: object
+      required: [mdsSettlementId, mdsOrderId, mdsCheckoutId, mdsCurrency, mdsDepositAmountMinor, mdsDeductionAmountMinor, mdsRefundAmountMinor, mdsSettlementMethod, mdsExternalReference, mdsEvidenceUrl, mdsStatus, mdsSubmittedBy, mdsSubmittedAt, mdsReviewedBy, mdsReviewedAt, mdsReviewNotes]
+      properties:
+        mdsSettlementId: { type: string, format: uuid }
+        mdsOrderId: { type: string, format: uuid }
+        mdsCheckoutId: { type: string, format: uuid }
+        mdsCurrency: { type: string, minLength: 3, maxLength: 3 }
+        mdsDepositAmountMinor: { type: integer, format: int64, minimum: 1 }
+        mdsDeductionAmountMinor: { type: integer, format: int64, minimum: 0 }
+        mdsRefundAmountMinor: { type: integer, format: int64, minimum: 0 }
+        mdsSettlementMethod: { type: string, enum: [bank_transfer, cash, pos, forfeiture] }
+        mdsExternalReference: { type: string }
+        mdsEvidenceUrl: { type: string }
+        mdsStatus: { type: string, enum: [submitted, verified, rejected, requires_reconciliation] }
+        mdsSubmittedBy: { type: integer, format: int64 }
+        mdsSubmittedAt: { type: string, format: date-time }
+        mdsReviewedBy: { type: integer, format: int64, nullable: true }
+        mdsReviewedAt: { type: string, format: date-time, nullable: true }
+        mdsReviewNotes: { type: string, nullable: true }
+    MarketplaceManualEvidence:
+      type: object
+      required: [mmeEvidenceId, mmePaymentMethod, mmeStatus, mmeCustomerReference, mmeSubmittedAmountMinor, mmeCurrency, mmeSubmittedBy, mmeSubmittedAt, mmeReviewedBy, mmeReviewedAt, mmeReviewNotes]
+      properties:
+        mmeEvidenceId: { type: string, format: uuid }
+        mmePaymentMethod: { type: string, enum: [bank_transfer, cash, pos] }
+        mmeStatus: { type: string, enum: [awaiting_evidence, submitted, under_review, approved, rejected] }
+        mmeCustomerReference: { type: string, nullable: true }
+        mmeSubmittedAmountMinor: { type: integer, format: int64, nullable: true }
+        mmeCurrency: { type: string, nullable: true, minLength: 3, maxLength: 3 }
+        mmeSubmittedBy: { type: integer, format: int64, nullable: true }
+        mmeSubmittedAt: { type: string, format: date-time, nullable: true }
+        mmeReviewedBy: { type: integer, format: int64, nullable: true }
+        mmeReviewedAt: { type: string, format: date-time, nullable: true }
+        mmeReviewNotes: { type: string, nullable: true }
+    MarketplaceCommerce:
+      type: object
+      required: [mpcOrderId, mpcCheckoutId, mpcPaymentStatus, mpcHoldExpiresAt, mpcOrderKind, mpcManualEvidence]
+      properties:
+        mpcOrderId: { type: string, format: uuid }
+        mpcCheckoutId: { type: string, format: uuid }
+        mpcPaymentStatus: { type: string }
+        mpcHoldExpiresAt: { type: string, format: date-time }
+        mpcOrderKind: { type: string, enum: [sale, rental] }
+        mpcManualEvidence:
+          allOf: [{ $ref: '#/components/schemas/MarketplaceManualEvidence' }]
+          nullable: true
+    MarketplacePaypalCapture:
+      type: object
+      additionalProperties: false
+      required: [pcCaptureOrderId, pcCapturePaypalId]
+      properties:
+        pcCaptureOrderId: { type: string, format: uuid }
+        pcCapturePaypalId: { type: string, minLength: 1, maxLength: 128, pattern: '^[A-Za-z0-9_-]+$' }
+    MarketplaceOrderUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        mouStatus: { type: string }
+        mouPaymentProvider: { type: string, nullable: true }
+        mouPaidAt: { type: string, format: date-time, nullable: true }
+    MarketplaceFulfillmentUpdate:
+      type: object
+      additionalProperties: false
+      required: [mfuStatus]
+      properties:
+        mfuStatus:
+          type: string
+          enum: [on_hold, ready_to_fulfill, picking, ready_for_pickup, shipped, delivered, cancellation_requested, cancelled, return_requested, return_authorized, return_in_transit, returned, closed, expired]
+        mfuCarrier: { type: string, minLength: 1, maxLength: 120 }
+        mfuTrackingReference: { type: string, minLength: 1, maxLength: 160 }
+        mfuReasonCode: { type: string, minLength: 1, maxLength: 80 }
+        mfuNotes: { type: string, minLength: 1, maxLength: 500 }
+    MarketplaceRentalUpdate:
+      type: object
+      additionalProperties: false
+      required: [mruStatus]
+      properties:
+        mruStatus:
+          type: string
+          enum: [on_hold, confirmed, ready_for_handoff, checked_out, return_due, returned_pending_inspection, damage_review, deposit_refund_due, closed, cancellation_requested, cancelled, no_show, lost, disputed, expired]
+        mruConditionOut: { type: string, minLength: 1, maxLength: 1000 }
+        mruConditionIn: { type: string, minLength: 1, maxLength: 1000 }
+        mruEvidenceUrl: { type: string, format: uri, minLength: 1, maxLength: 2048 }
+        mruDepositDeductionUsdCents: { type: integer, minimum: 0 }
+        mruReasonCode: { type: string, minLength: 1, maxLength: 80 }
+        mruNotes: { type: string, minLength: 1, maxLength: 500 }
+    MarketplaceRentalTermsUpdate:
+      type: object
+      additionalProperties: false
+      required: [mrtuDailyRateUsdCents, mrtuWeeklyRateUsdCents, mrtuSecurityDepositUsdCents, mrtuLateFeeUsdCents, mrtuMinDays, mrtuMaxDays, mrtuCancellationWindowHours, mrtuTimezone, mrtuTermsVersion, mrtuTermsSummary, mrtuActive]
+      properties:
+        mrtuDailyRateUsdCents: { type: integer, minimum: 1, maximum: 2147483647 }
+        mrtuWeeklyRateUsdCents: { type: integer, minimum: 1, maximum: 2147483647, nullable: true }
+        mrtuSecurityDepositUsdCents: { type: integer, minimum: 0, maximum: 2147483647 }
+        mrtuLateFeeUsdCents: { type: integer, minimum: 0, maximum: 2147483647 }
+        mrtuMinDays: { type: integer, minimum: 1, maximum: 366 }
+        mrtuMaxDays: { type: integer, minimum: 1, maximum: 366 }
+        mrtuCancellationWindowHours: { type: integer, minimum: 0, maximum: 8760 }
+        mrtuTimezone: { type: string, enum: [America/Guayaquil] }
+        mrtuTermsVersion: { type: string, minLength: 1, maxLength: 80 }
+        mrtuTermsSummary: { type: string, minLength: 1, maxLength: 1000 }
+        mrtuActive: { type: boolean }
+    ServiceStorefrontPackage:
+      type: object
+      required: [sspId, sspServiceKind, sspTier, sspName, sspDescription, sspPriceUsdCents, sspCurrency, sspMinSongCount, sspMaxSongCount, sspTurnaroundDays, sspRevisionCount, sspDeliverables, sspFeatures, sspActive, sspSortOrder]
+      properties:
+        sspId: { type: string, format: uuid }
+        sspServiceKind: { type: string, enum: [Mixing, Mastering, Bundle] }
+        sspTier: { type: string }
+        sspName: { type: string }
+        sspDescription: { type: string, nullable: true }
+        sspPriceUsdCents: { type: integer, minimum: 0, description: Authoritative price per song in integer minor units. }
+        sspCurrency: { type: string, minLength: 3, maxLength: 3 }
+        sspMinSongCount: { type: integer, minimum: 1 }
+        sspMaxSongCount: { type: integer, minimum: 1 }
+        sspTurnaroundDays: { type: integer, minimum: 0 }
+        sspRevisionCount: { type: integer, minimum: 0 }
+        sspDeliverables:
+          type: array
+          nullable: true
+          items: { type: string }
+        sspFeatures:
+          type: array
+          nullable: true
+          items: { type: string }
+        sspActive: { type: boolean }
+        sspSortOrder: { type: integer }
+    ServiceStorefrontPackageCreate:
+      type: object
+      additionalProperties: false
+      required: [sspcServiceKind, sspcTier, sspcName, sspcPriceUsdCents]
+      properties:
+        sspcServiceKind: { type: string, enum: [Mixing, Mastering, Bundle] }
+        sspcTier: { type: string, minLength: 1 }
+        sspcName: { type: string, minLength: 1 }
+        sspcDescription: { type: string, nullable: true }
+        sspcPriceUsdCents: { type: integer, minimum: 0 }
+        sspcCurrency: { type: string, minLength: 3, maxLength: 3, nullable: true }
+        sspcMinSongCount: { type: integer, minimum: 1, nullable: true }
+        sspcMaxSongCount: { type: integer, minimum: 1, nullable: true }
+        sspcTurnaroundDays: { type: integer, minimum: 0, nullable: true }
+        sspcRevisionCount: { type: integer, minimum: 0, nullable: true }
+        sspcDeliverables:
+          type: array
+          nullable: true
+          items: { type: string }
+        sspcFeatures:
+          type: array
+          nullable: true
+          items: { type: string }
+        sspcSortOrder: { type: integer, nullable: true }
+    ServiceStorefrontPackageUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        sspuName: { type: string, nullable: true }
+        sspuDescription: { type: string, nullable: true }
+        sspuPriceUsdCents: { type: integer, minimum: 0, nullable: true }
+        sspuMinSongCount: { type: integer, minimum: 1, nullable: true }
+        sspuMaxSongCount: { type: integer, minimum: 1, nullable: true }
+        sspuTurnaroundDays: { type: integer, minimum: 0, nullable: true }
+        sspuRevisionCount: { type: integer, minimum: 0, nullable: true }
+        sspuDeliverables:
+          type: array
+          nullable: true
+          items: { type: string }
+        sspuFeatures:
+          type: array
+          nullable: true
+          items: { type: string }
+        sspuActive: { type: boolean, nullable: true }
+        sspuSortOrder: { type: integer, nullable: true }
+    ServiceStorefrontOrderCreate:
+      type: object
+      additionalProperties: false
+      required: [ssocPackageId, ssocBuyerName, ssocBuyerEmail]
+      properties:
+        ssocPackageId: { type: string, format: uuid }
+        ssocBuyerName: { type: string, minLength: 1 }
+        ssocBuyerEmail: { type: string, format: email }
+        ssocBuyerPhone: { type: string, nullable: true }
+        ssocArtistName: { type: string, nullable: true }
+        ssocGenre: { type: string, nullable: true }
+        ssocSongCount: { type: integer, minimum: 1, nullable: true }
+        ssocNotes: { type: string, nullable: true }
+        ssocReferenceTrackUrl: { type: string, format: uri, nullable: true }
+        ssocDeadline: { type: string, format: date, nullable: true }
+    ServiceStorefrontOrder:
+      type: object
+      required: [ssoId, ssoOrderNumber, ssoBuyerName, ssoBuyerEmail, ssoBuyerPhone, ssoArtistName, ssoPackageId, ssoServiceKind, ssoTier, ssoPriceUsdCents, ssoCurrency, ssoStatus, ssoPaymentProvider, ssoLookupToken, ssoPaidAt, ssoGenre, ssoSongCount, ssoNotes, ssoReferenceTrackUrl, ssoDeadline, ssoDeliverablesUrl, ssoCreatedAt, ssoUpdatedAt]
+      properties:
+        ssoId: { type: string, format: uuid }
+        ssoOrderNumber: { type: string }
+        ssoBuyerName: { type: string }
+        ssoBuyerEmail: { type: string, format: email }
+        ssoBuyerPhone: { type: string, nullable: true }
+        ssoArtistName: { type: string, nullable: true }
+        ssoPackageId: { type: string, format: uuid }
+        ssoServiceKind: { type: string }
+        ssoTier: { type: string }
+        ssoPriceUsdCents: { type: integer, minimum: 0 }
+        ssoCurrency: { type: string, minLength: 3, maxLength: 3 }
+        ssoStatus: { type: string }
+        ssoPaymentProvider: { type: string, nullable: true }
+        ssoLookupToken: { type: string, nullable: true, writeOnly: true }
+        ssoPaidAt: { type: string, format: date-time, nullable: true }
+        ssoGenre: { type: string, nullable: true }
+        ssoSongCount: { type: integer, minimum: 1 }
+        ssoNotes: { type: string, nullable: true }
+        ssoReferenceTrackUrl: { type: string, format: uri, nullable: true }
+        ssoDeadline: { type: string, format: date, nullable: true }
+        ssoDeliverablesUrl: { type: string, format: uri, nullable: true }
+        ssoCreatedAt: { type: string, format: date-time }
+        ssoUpdatedAt: { type: string, format: date-time }
+    ServiceStorefrontOrderUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        ssouStatus: { type: string, nullable: true }
+        ssouDeliverablesUrl: { type: string, format: uri, nullable: true }
+        ssouNotes: { type: string, nullable: true }
+    ServiceStorefrontPaypalCapture:
+      type: object
+      additionalProperties: false
+      required: [pcCaptureOrderId, pcCapturePaypalId]
+      properties:
+        pcCaptureOrderId: { type: string, minLength: 1 }
+        pcCapturePaypalId: { type: string, minLength: 1 }
+    ServiceStorefrontManualPaymentCreate:
+      type: object
+      additionalProperties: false
+      required: [ssmPaymentMethod]
+      properties:
+        ssmPaymentMethod: { type: string, enum: [bank_transfer, cash, pos] }
+    ServiceStorefrontRevisionCreate:
+      type: object
+      additionalProperties: false
+      required: [ssrcFeedback]
+      properties:
+        ssrcFeedback: { type: string, minLength: 1 }
+    ServiceStorefrontRevision:
+      type: object
+      required: [ssrId, ssrOrderId, ssrRevisionNumber, ssrFeedback, ssrStatus, ssrCreatedAt, ssrCompletedAt]
+      properties:
+        ssrId: { type: string, format: uuid }
+        ssrOrderId: { type: string, format: uuid }
+        ssrRevisionNumber: { type: integer, minimum: 1 }
+        ssrFeedback: { type: string }
+        ssrStatus: { type: string }
+        ssrCreatedAt: { type: string, format: date-time }
+        ssrCompletedAt: { type: string, format: date-time, nullable: true }
+    ServiceStorefrontRefundCreate:
+      type: object
+      additionalProperties: false
+      required: [ssrfcReasonCode]
+      properties:
+        ssrfcAmountUsdCents: { type: integer, minimum: 1, nullable: true }
+        ssrfcReasonCode: { type: string, minLength: 1 }
+    ServiceStorefrontRefund:
+      type: object
+      required: [ssrfId, ssrfOrderId, ssrfProvider, ssrfProviderRefundId, ssrfStatus, ssrfAmountUsdCents, ssrfCurrency, ssrfReasonCode, ssrfRequestedBy, ssrfApprovedBy, ssrfCreatedAt, ssrfCompletedAt]
+      properties:
+        ssrfId: { type: string, format: uuid }
+        ssrfOrderId: { type: string, format: uuid }
+        ssrfProvider: { type: string, enum: [paypal, datafast, stripe] }
+        ssrfProviderRefundId: { type: string, nullable: true }
+        ssrfStatus: { type: string, enum: [requested, approved, processing, succeeded, failed, cancelled] }
+        ssrfAmountUsdCents: { type: integer, minimum: 1 }
+        ssrfCurrency: { type: string, minLength: 3, maxLength: 3 }
+        ssrfReasonCode: { type: string }
+        ssrfRequestedBy: { type: integer, format: int64 }
+        ssrfApprovedBy: { type: integer, format: int64, nullable: true }
+        ssrfCreatedAt: { type: string, format: date-time }
+        ssrfCompletedAt: { type: string, format: date-time, nullable: true }
+    ServiceStorefrontReconciliation:
+      type: object
+      required: [ssrecOrderId, ssrecProvider, ssrecProviderReference, ssrecExpectedAmount, ssrecActualAmount, ssrecCurrency, ssrecMatched, ssrecCheckedAt]
+      properties:
+        ssrecOrderId: { type: string, format: uuid }
+        ssrecProvider: { type: string }
+        ssrecProviderReference: { type: string }
+        ssrecExpectedAmount: { type: integer, minimum: 0 }
+        ssrecActualAmount: { type: integer, minimum: 0, nullable: true }
+        ssrecCurrency: { type: string, minLength: 3, maxLength: 3 }
+        ssrecMatched: { type: boolean }
+        ssrecCheckedAt: { type: string, format: date-time }
+    CommerceProviderEvent:
+      type: object
+      additionalProperties: false
+      required: [cpeId, cpeProvider, cpeEnvironment, cpeProviderEventId, cpeEventType, cpeProviderResourceId, cpeStatus, cpeAttemptCount, cpeCheckoutId, cpePaymentAttemptId, cpeRefundId, cpeReceivedAt, cpeProviderCreatedAt, cpeProcessingStartedAt, cpeLastAttemptAt, cpeNextAttemptAt, cpeProcessedAt, cpeErrorSummary]
+      properties:
+        cpeId: { type: string, format: uuid }
+        cpeProvider: { type: string, enum: [paypal, datafast, stripe, bank_transfer, cash, pos, cardano] }
+        cpeEnvironment: { type: string, enum: [sandbox, production] }
+        cpeProviderEventId: { type: string }
+        cpeEventType: { type: string }
+        cpeProviderResourceId: { type: string, nullable: true }
+        cpeStatus: { type: string, enum: [pending, processing, processed, retry, dead_letter, ignored] }
+        cpeAttemptCount: { type: integer, minimum: 0 }
+        cpeCheckoutId: { type: string, format: uuid, nullable: true }
+        cpePaymentAttemptId: { type: string, format: uuid, nullable: true }
+        cpeRefundId: { type: string, format: uuid, nullable: true }
+        cpeReceivedAt: { type: string, format: date-time }
+        cpeProviderCreatedAt: { type: string, format: date-time, nullable: true }
+        cpeProcessingStartedAt: { type: string, format: date-time, nullable: true }
+        cpeLastAttemptAt: { type: string, format: date-time, nullable: true }
+        cpeNextAttemptAt: { type: string, format: date-time, nullable: true }
+        cpeProcessedAt: { type: string, format: date-time, nullable: true }
+        cpeErrorSummary: { type: string, maxLength: 500, nullable: true }
+    CommerceProviderEventReplayCreate:
+      type: object
+      additionalProperties: false
+      required: [cperReason]
+      properties:
+        cperReason: { type: string, minLength: 8, maxLength: 500 }
+    DatafastCheckout:
+      type: object
+      required: [dcOrderId, dcCheckoutId, dcWidgetUrl, dcAmount, dcCurrency, dcLookupToken]
+      properties:
+        dcOrderId: { type: string }
+        dcCheckoutId: { type: string }
+        dcWidgetUrl: { type: string, format: uri }
+        dcAmount: { type: string, pattern: '^[0-9]+\\.[0-9]{2}$' }
+        dcCurrency: { type: string, minLength: 3, maxLength: 3 }
+        dcLookupToken: { type: string, nullable: true, writeOnly: true, description: Returned only when the guest order is first created. }
+    PaypalCreate:
+      type: object
+      required: [pcOrderId, pcPaypalOrderId, pcApprovalUrl, pcLookupToken]
+      properties:
+        pcOrderId: { type: string }
+        pcPaypalOrderId: { type: string }
+        pcApprovalUrl: { type: string, format: uri, nullable: true }
+        pcLookupToken: { type: string, nullable: true, writeOnly: true, description: Returned only when the guest order is first created. }
+    PaymentSheetParams:
+      type: object
+      required: [psCustomerId, psEphemeralKeySecret, psPaymentIntentClientSecret, psPublishableKey]
+      properties:
+        psCustomerId: { type: string }
+        psEphemeralKeySecret: { type: string, writeOnly: true }
+        psPaymentIntentClientSecret: { type: string, writeOnly: true }
+        psPublishableKey: { type: string }
+    StripePaymentIntent:
+      type: object
+      required: [spiClientSecret, spiOrderId, spiAmountCents, spiCurrency, spiPaymentSheet, spiLookupToken]
+      properties:
+        spiClientSecret: { type: string, writeOnly: true }
+        spiOrderId: { type: string }
+        spiAmountCents: { type: integer, minimum: 0 }
+        spiCurrency: { type: string, minLength: 3, maxLength: 3 }
+        spiPaymentSheet:
+          allOf:
+            - $ref: '#/components/schemas/PaymentSheetParams'
+          nullable: true
+        spiLookupToken: { type: string, nullable: true, writeOnly: true, description: Returned only when the guest order is first created. }
     DdexStandardVersion:
       type: object
       additionalProperties: false
@@ -4476,6 +6958,39 @@ components:
             erCandidateIsPilot: { type: boolean }
             erCandidateCreatedAt: { type: string, format: date-time }
             erCandidateUpdatedAt: { type: string, format: date-time }
+    EventResearchMaterializationRequest:
+      type: object
+      additionalProperties: false
+      required: [erMaterializationRunId, erMaterializationPublish]
+      properties:
+        erMaterializationRunId:
+          type: string
+          pattern: '^[1-9][0-9]*$'
+          description: Open research run that identifies and checkpoints this materialization execution.
+        erMaterializationPublish:
+          type: boolean
+          description: Publish only when the candidate satisfies the approved high-confidence gate.
+    EventResearchMaterialization:
+      type: object
+      additionalProperties: false
+      required:
+        - erMaterializationCandidateId
+        - erMaterializationRunId
+        - erMaterializationEventId
+        - erMaterializationVenueId
+        - erMaterializationArtistIds
+        - erMaterializationChangeId
+        - erMaterializationCreated
+        - erMaterializationPublished
+      properties:
+        erMaterializationRunId: { type: string }
+        erMaterializationCandidateId: { type: string }
+        erMaterializationEventId: { type: string }
+        erMaterializationVenueId: { type: string }
+        erMaterializationArtistIds: { type: array, items: { type: string } }
+        erMaterializationChangeId: { type: string }
+        erMaterializationCreated: { type: boolean }
+        erMaterializationPublished: { type: boolean }
     EventResearchChange:
       type: object
       required: [erChangeId, erChangeRunId, erChangeAction, erChangeSourceUrl, erChangeConfidence, erChangeConsultedAt, erChangeExternalId, erChangeResult, erChangeCreatedAt]
@@ -7234,6 +9749,10 @@ components:
           nullable: true
         utm:
           $ref: '#/components/schemas/UTMTags'
+        termsAccepted:
+          type: boolean
+          nullable: true
+          description: Must be true to create a canonical payable seat hold. Omitted only for non-checkout legacy intake such as WhatsApp leads.
     CourseRegistrationResponse:
       type: object
       properties:
@@ -7243,6 +9762,51 @@ components:
         status:
           type: string
           enum: [pending_payment, paid, cancelled]
+    CourseCheckoutQuote:
+      type: object
+      required: [policyVersion, currency, subtotalMinor, taxMinor, totalMinor, dueNowMinor, balanceMinor, paymentSchedule, termsVersion]
+      properties:
+        policyVersion: { type: string }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        subtotalMinor: { type: integer, format: int64, minimum: 1 }
+        taxMinor: { type: integer, format: int64, minimum: 0 }
+        totalMinor: { type: integer, format: int64, minimum: 1 }
+        dueNowMinor: { type: integer, format: int64, minimum: 1 }
+        balanceMinor: { type: integer, format: int64, minimum: 0 }
+        paymentSchedule: { type: string, enum: [full, deposit] }
+        termsVersion: { type: string }
+    CourseCheckoutResponse:
+      type: object
+      required: [registrationId, courseSlug, checkoutId, lookupToken, paymentStatus, fulfillmentStatus, holdExpiresAt, quote, paymentMethods, checkoutAvailable]
+      properties:
+        registrationId: { type: integer, format: int64, minimum: 1 }
+        courseSlug: { type: string }
+        checkoutId: { type: string, format: uuid, nullable: true }
+        lookupToken: { type: string, nullable: true, writeOnly: true }
+        paymentStatus:
+          type: string
+          enum: [not_started, awaiting_payment, processing, paid, failed, cancelled, expired, partially_refunded, refunded, disputed, chargeback]
+        fulfillmentStatus:
+          type: string
+          enum: [lead_received, seat_held, enrolled, waitlisted, transfer_requested, transferred, cancelled, completed, expired]
+        holdExpiresAt: { type: string, format: date-time, nullable: true }
+        quote:
+          allOf: [{ $ref: '#/components/schemas/CourseCheckoutQuote' }]
+          nullable: true
+        paymentMethods:
+          type: array
+          items: { type: string, enum: [datafast, paypal] }
+        checkoutAvailable: { type: boolean }
+    CoursePaypalCaptureRequest:
+      type: object
+      additionalProperties: false
+      required: [paypalOrderId]
+      properties:
+        paypalOrderId:
+          type: string
+          minLength: 6
+          maxLength: 80
+          pattern: '^[A-Za-z0-9_-]+$'
     CourseRegistrationStatusUpdate:
       type: object
       required: [status]

@@ -84,6 +84,17 @@ export interface EventResearchChange {
   erChangeCreatedAt: string;
 }
 
+export interface EventResearchMaterialization {
+  erMaterializationRunId: string;
+  erMaterializationCandidateId: string;
+  erMaterializationEventId: string;
+  erMaterializationVenueId: string;
+  erMaterializationArtistIds: string[];
+  erMaterializationChangeId: string;
+  erMaterializationCreated: boolean;
+  erMaterializationPublished: boolean;
+}
+
 const queryString = (entries: Record<string, string | number | undefined>) => {
   const params = new URLSearchParams();
   Object.entries(entries).forEach(([key, value]) => {
@@ -117,6 +128,11 @@ export const EventResearchAPI = {
     })}`),
   upsertCandidate: (payload: EventResearchCandidateWrite) =>
     put<EventResearchCandidate>('/social-events/event-research/candidates', payload),
+  materializeCandidate: (candidateId: string, runId: string, publish: boolean) =>
+    post<EventResearchMaterialization>(
+      `/social-events/event-research/candidates/${encodeURIComponent(candidateId)}/materialize`,
+      { erMaterializationRunId: runId, erMaterializationPublish: publish },
+    ),
   listChanges: (filters: { runId?: string; limit?: number } = {}) =>
     get<EventResearchChange[]>(`/social-events/event-research/changes${queryString({
       run_id: filters.runId,

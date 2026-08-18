@@ -9,7 +9,9 @@ module TDF.DDEX.DB
   , updateDocumentStatus
   , findDocumentBySha256
     -- * Validation
+  , insertValidationRun
   , insertValidationIssue
+  , completeValidationRun
   , getLatestValidationRun
   , getValidationReport
     -- * Partners
@@ -32,10 +34,10 @@ import qualified TDF.DDEX.Types as Types
 
 -- | Insert a new DDEX document using canonical persisted relationships.
 -- Legacy string columns remain migration evidence and current writes clear them.
-insertDocument :: Text -> Text -> Text -> Int -> Catalog.DdexStandardVersionId -> Maybe Catalog.DdexMessageTypeId -> Catalog.WorkflowStateId -> Maybe Text -> Int -> Maybe Text -> Maybe Text -> Maybe Text -> SqlPersistT IO DdexDocumentId
+insertDocument :: Text -> Text -> Text -> Int -> Catalog.DdexStandardVersionId -> Maybe Catalog.DdexMessageTypeId -> Catalog.WorkflowStateId -> Maybe Text -> Int -> Maybe Text -> Maybe Text -> Maybe Text -> SqlPersistT IO (Maybe DdexDocumentId)
 insertDocument fileName privateUri sha256 sizeBytes standardVersionId messageTypeId workflowStateId namespace uploadedBy messageId senderId recipientId = do
   now <- liftIO getCurrentTime
-  insert $ DdexDocument
+  insertUnique $ DdexDocument
     { ddexDocumentFileName = fileName
     , ddexDocumentPrivateUri = privateUri
     , ddexDocumentSha256 = sha256
@@ -88,6 +90,27 @@ findDocumentBySha256 sha = do
 -- Validation Operations
 -- ============================================================
 
+insertValidationRun
+  :: DdexDocumentId
+  -> Catalog.WorkflowStateId
+  -> Maybe Text
+  -> Maybe Text
+  -> SqlPersistT IO DdexValidationRunId
+insertValidationRun documentId workflowStateId validatorVersion schemaVersion = do
+  now <- liftIO getCurrentTime
+  insert DdexValidationRun
+    { ddexValidationRunDocumentId = documentId
+    , ddexValidationRunWorkflowStateId = Just workflowStateId
+    , ddexValidationRunValidationResultId = Nothing
+    , ddexValidationRunValidatorVersion = validatorVersion
+    , ddexValidationRunSchemaVersion = schemaVersion
+    , ddexValidationRunStartedAt = now
+    , ddexValidationRunFinishedAt = Nothing
+    , ddexValidationRunResult = Nothing
+    , ddexValidationRunErrorCount = 0
+    , ddexValidationRunWarningCount = 0
+    }
+
 -- | Insert a validation issue
 insertValidationIssue :: DdexValidationRunId -> Types.ValidationSeverity -> Types.ValidationLayer -> Maybe Text -> Maybe Int -> Maybe Int -> Maybe Text -> Text -> Maybe Text -> SqlPersistT IO DdexValidationIssueId
 insertValidationIssue runId severity layer code lineNumber colNumber xpath message suggestion = do
@@ -124,6 +147,25 @@ validationLayerCode Types.LayerXML = "xml"
 validationLayerCode Types.LayerXSD = "xsd"
 validationLayerCode Types.LayerAVS = "avs"
 validationLayerCode Types.LayerBusiness = "business"
+
+completeValidationRun
+  :: DdexValidationRunId
+  -> Catalog.WorkflowStateId
+  -> DdexValidationResultId
+  -> ValidationResultEnum
+  -> Int
+  -> Int
+  -> SqlPersistT IO ()
+completeValidationRun runId workflowStateId resultId result errorCount warningCount = do
+  now <- liftIO getCurrentTime
+  update runId
+    [ DdexValidationRunWorkflowStateId =. Just workflowStateId
+    , DdexValidationRunValidationResultId =. Just resultId
+    , DdexValidationRunFinishedAt =. Just now
+    , DdexValidationRunResult =. Just result
+    , DdexValidationRunErrorCount =. errorCount
+    , DdexValidationRunWarningCount =. warningCount
+    ]
 
 -- | Get latest validation run for a document
 getLatestValidationRun :: DdexDocumentId -> SqlPersistT IO (Maybe (Entity DdexValidationRun))

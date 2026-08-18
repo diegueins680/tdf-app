@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
-import { Bookings } from '../api/bookings';
+import { Bookings, type ServiceBookingCommerceDTO } from '../api/bookings';
 import type { BookingDTO, PartyCreate, PartyDTO, ServiceCatalogDTO } from '../api/types';
 import {
   Typography,
@@ -204,6 +204,7 @@ export default function BookingsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [manualReviewNotes, setManualReviewNotes] = useState('');
   const [title, setTitle] = useState('Bloque de estudio');
   const [notes, setNotes] = useState('');
   const [startInput, setStartInput] = useState('');
@@ -242,6 +243,24 @@ export default function BookingsPage() {
   const [duplicateStartInput, setDuplicateStartInput] = useState('');
   const [roomsManuallyAdjusted, setRoomsManuallyAdjusted] = useState(false);
   const [showOptionalDetails, setShowOptionalDetails] = useState(false);
+  const bookingCommerceQuery = useQuery<ServiceBookingCommerceDTO, Error>({
+    queryKey: ['booking-commerce', editingId],
+    queryFn: () => Bookings.getCommerce(editingId!),
+    enabled: dialogOpen && mode === 'edit' && editingId != null && editingId > 0,
+    retry: false,
+  });
+  const manualReviewMutation = useMutation<
+    ServiceBookingCommerceDTO,
+    Error,
+    'approve' | 'reject'
+  >({
+    mutationFn: (action) => Bookings.reviewManualPayment(editingId!, action, manualReviewNotes),
+    onSuccess: (commerce) => {
+      qc.setQueryData(['booking-commerce', editingId], commerce);
+      setManualReviewNotes('');
+      void qc.invalidateQueries({ queryKey: ['bookings'] });
+    },
+  });
   const defaultService = serviceTypes[0] ?? null;
   const formatServiceLabel = useCallback(
     (svc: ServiceType) => {
@@ -662,6 +681,7 @@ const openDialogForRange = (start: Date, end: Date) => {
     (booking: BookingDTO) => {
       setMode('edit');
       setEditingId(booking.bookingId);
+      setManualReviewNotes('');
       setTitle(booking.title ?? 'Sesión');
       const parsedNotes = extractEngineerFromNotes(booking.notes);
       const engineerFromBooking = booking.engineerName ?? parsedNotes.engineer;
@@ -1337,6 +1357,70 @@ const openDialogForRange = (start: Date, end: Date) => {
               <Typography variant="caption" color="primary">
                 {autoAssignMessage}
               </Typography>
+            )}
+            {bookingCommerceQuery.data && (
+              <Paper variant="outlined" sx={{ p: 2 }}>
+                <Stack spacing={1.25}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+                    <Chip label={`Pago: ${bookingCommerceQuery.data.paymentStatus}`} size="small" />
+                    <Chip label={`Prestación: ${bookingCommerceQuery.data.fulfillmentStatus}`} size="small" />
+                    <Chip
+                      label={`Depósito: ${bookingCommerceQuery.data.currency} ${(bookingCommerceQuery.data.depositMinor / 100).toFixed(2)}`}
+                      size="small"
+                    />
+                  </Stack>
+                  {bookingCommerceQuery.data.manualEvidence && (
+                    <>
+                      <Alert
+                        severity={bookingCommerceQuery.data.manualEvidence.status === 'rejected' ? 'warning' : 'info'}
+                        variant="outlined"
+                      >
+                        Transferencia: <strong>{bookingCommerceQuery.data.manualEvidence.status}</strong>
+                        {bookingCommerceQuery.data.manualEvidence.customerReference
+                          ? <> · Referencia: <strong>{bookingCommerceQuery.data.manualEvidence.customerReference}</strong></>
+                          : null}
+                      </Alert>
+                      {['submitted', 'under_review'].includes(bookingCommerceQuery.data.manualEvidence.status) && (
+                        <>
+                          <TextField
+                            label="Notas de revisión financiera"
+                            value={manualReviewNotes}
+                            onChange={(event) => setManualReviewNotes(event.target.value)}
+                            inputProps={{ maxLength: 2000 }}
+                            helperText="Compara importe, moneda y referencia con el estado bancario. No pegues credenciales ni datos completos de cuenta."
+                            multiline
+                            minRows={2}
+                            fullWidth
+                          />
+                          {manualReviewMutation.isError && (
+                            <Alert severity="error">
+                              No se pudo registrar la decisión. La evidencia y el pago conservaron su estado anterior.
+                            </Alert>
+                          )}
+                          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                            <Button
+                              variant="contained"
+                              color="success"
+                              disabled={manualReviewMutation.isPending || manualReviewNotes.trim().length < 3}
+                              onClick={() => manualReviewMutation.mutate('approve')}
+                            >
+                              Aprobar depósito verificado
+                            </Button>
+                            <Button
+                              variant="outlined"
+                              color="warning"
+                              disabled={manualReviewMutation.isPending || manualReviewNotes.trim().length < 3}
+                              onClick={() => manualReviewMutation.mutate('reject')}
+                            >
+                              Rechazar evidencia
+                            </Button>
+                          </Stack>
+                        </>
+                      )}
+                    </>
+                  )}
+                </Stack>
+              </Paper>
             )}
           </Stack>
         </DialogContent>

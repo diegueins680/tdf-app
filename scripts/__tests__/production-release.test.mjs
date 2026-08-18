@@ -630,6 +630,76 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     'feature_access_requests',
     'feature_access_request_history',
     'feature_navigation_preferences',
+    'commerce_checkout_session',
+    'commerce_payment_attempt',
+    'commerce_provider_binding',
+    'commerce_provider_event_inbox',
+    'commerce_refund',
+    'commerce_refund_allocation',
+    'commerce_refund_reason_code',
+    'commerce_reconciliation_exception',
+    'commerce_manual_payment_evidence',
+    'submitted_by',
+    'commerce_manual_payment_evidence_review_report',
+    'fk_commerce_manual_evidence_submitted_by',
+    'trg_commerce_validate_manual_payment_evidence',
+    'checkout.bank_transfer',
+    'checkout.cash',
+    'checkout.pos',
+    'service_storefront_order',
+    'checkout_id',
+    'fk_service_storefront_order_checkout',
+    'service_storefront_checkout_backfill_report',
+    'uq_commerce_succeeded_attempt_checkout',
+    'marketplace_sale_order_runtime',
+    'marketplace_sale_fulfillment_event',
+    'marketplace_sale_checkout_backfill_report',
+    'marketplace_rental_listing_terms',
+    'marketplace_rental_cart_selection',
+    'marketplace_rental_listing_terms_history',
+    'marketplace_rental_order_runtime',
+    'marketplace_rental_event',
+    'marketplace_order_checkout_runtime',
+    'idx_marketplace_sale_runtime_status',
+    'idx_marketplace_rental_runtime_status',
+    'idx_marketplace_rental_terms_history',
+    'trg_marketplace_validate_sale_runtime',
+    'trg_marketplace_validate_rental_runtime',
+    'trg_marketplace_record_rental_terms_history',
+    'trg_marketplace_validate_rental_transition',
+    'trg_marketplace_record_rental_transition',
+    'trg_marketplace_sync_verified_checkout',
+    'trg_marketplace_protect_canonical_payment_state',
+    'commerce.marketplace_sales',
+    'commerce.marketplace_rentals',
+    'service_booking_commerce_policy',
+    'service_booking_checkout_runtime',
+    'service_booking_resource_allocation',
+    'service_booking_event',
+    'idx_service_booking_runtime_status',
+    'trg_service_booking_validate_runtime',
+    'trg_service_booking_require_verified_payment',
+    'service_booking_expire_holds',
+    'commerce.service_bookings',
+    'course_checkout_policy',
+    'course_checkout_policy_history',
+    'course_registration_checkout_runtime',
+    'course_enrollment_event',
+    'idx_course_registration_runtime_capacity',
+    'trg_course_checkout_validate_runtime',
+    'trg_course_checkout_require_verified_payment',
+    'trg_course_registration_require_canonical_payment',
+    'course_checkout_expire_holds',
+    'commerce.courses',
+    'commerce.course_recurring_billing',
+    'fk_commerce_provider_event_checkout',
+    'idx_commerce_provider_event_work',
+    'trg_commerce_validate_refund_write',
+    'uq_commerce_credit_note_refund',
+    'checkout.paypal.webhooks',
+    'checkout.paypal.refunds',
+    'checkout.datafast.webhooks',
+    'checkout.datafast.refunds',
     'catalog_definition',
     'catalog_backfill_run',
     'security_permission',
@@ -647,6 +717,16 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
   ]) {
     assert.match(sql, new RegExp(requiredObject), `verification must inspect ${requiredObject}`);
   }
+  assert.match(
+    sql,
+    /service_booking_expire_holds[\s\S]*failed/,
+    'schema verification must prove failed booking payment attempts expire',
+  );
+  assert.match(
+    sql,
+    /course_checkout_expire_holds[\s\S]*target_course_id[\s\S]*failed/,
+    'schema verification must prove course-scoped failed payment attempt expiry',
+  );
   assert.match(sql, /RAISE\s+EXCEPTION|\\quit/i, 'schema drift must terminate verification');
   assert.match(sql, /social_event[\s\S]*end_time[\s\S]*is_nullable\s*=\s*'YES'/i);
   assert.match(sql, /social_event_time_order[\s\S]*convalidated/i);
@@ -661,6 +741,7 @@ test('buildSchemaPreflightSql is read-only and accepts unapplied release tables'
   assert.match(sql, /social_sync_account[\s\S]*social_sync_post[\s\S]*social_sync_run/i);
   assert.match(sql, /campaign_automation[\s\S]*campaign_delivery/i);
   assert.match(sql, /feature_access_requests[\s\S]*feature_navigation_preferences/i);
+  assert.match(sql, /course_checkout_policy[\s\S]*course_enrollment_event/i);
   assert.match(sql, /ROLLBACK/i);
   assert.doesNotMatch(sql, /ALTER\s+TABLE|CREATE\s+TABLE|INSERT\s+INTO|UPDATE\s+|DELETE\s+FROM/i);
 });

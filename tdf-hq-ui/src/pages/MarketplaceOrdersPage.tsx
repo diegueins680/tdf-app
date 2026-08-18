@@ -44,8 +44,21 @@ import InventoryIcon from '@mui/icons-material/Inventory';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ClearIcon from '@mui/icons-material/Clear';
-import type { MarketplaceOrderDTO, MarketplaceOrderUpdatePayload } from '../api/types';
-import { Marketplace } from '../api/marketplace';
+import type {
+  MarketplaceFulfillmentUpdatePayload,
+  MarketplaceCommerceDTO,
+  MarketplaceCustomerRequestDTO,
+  MarketplaceDepositSettlementDTO,
+  MarketplaceDepositSettlementSubmitPayload,
+  MarketplaceOrderDTO,
+  MarketplaceOrderUpdatePayload,
+  MarketplaceRentalUpdatePayload,
+} from '../api/types';
+import {
+  Marketplace,
+  clearMarketplaceDepositIdempotencyKey,
+  getMarketplaceDepositIdempotencyKey,
+} from '../api/marketplace';
 import { DateTime } from 'luxon';
 import { Link as RouterLink } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
@@ -75,6 +88,97 @@ const STATUS_PRESETS: { value: string; label: string; color: ChipProps['color'] 
   { value: 'failed', label: 'Falló', color: 'error' },
   { value: 'refunded', label: 'Reembolsado', color: 'default' },
 ];
+
+const FULFILLMENT_STATUS_LABELS: Record<string, string> = {
+  on_hold: 'Reserva activa',
+  ready_to_fulfill: 'Lista para preparar',
+  picking: 'En preparación',
+  ready_for_pickup: 'Lista para retiro',
+  shipped: 'Enviada',
+  delivered: 'Entregada',
+  cancellation_requested: 'Cancelación solicitada',
+  cancelled: 'Cancelada',
+  return_requested: 'Devolución solicitada',
+  return_authorized: 'Devolución autorizada',
+  return_in_transit: 'Devolución en tránsito',
+  returned: 'Devuelta',
+  closed: 'Cerrada',
+  expired: 'Reserva vencida',
+};
+
+const FULFILLMENT_METHOD_LABELS: Record<string, string> = {
+  pickup: 'Retiro',
+  local_delivery: 'Entrega local',
+  shipping: 'Envío',
+};
+
+const RENTAL_STATUS_LABELS: Record<string, string> = {
+  on_hold: 'Reserva con vencimiento',
+  confirmed: 'Renta confirmada',
+  ready_for_handoff: 'Lista para entrega',
+  checked_out: 'En custodia del cliente',
+  return_due: 'Devolución pendiente',
+  returned_pending_inspection: 'Devuelta; inspección pendiente',
+  damage_review: 'Daños en revisión',
+  deposit_refund_due: 'Devolución de depósito pendiente',
+  closed: 'Renta cerrada',
+  cancellation_requested: 'Cancelación solicitada',
+  cancelled: 'Renta cancelada',
+  no_show: 'Cliente no se presentó',
+  lost: 'Activo perdido',
+  disputed: 'Renta disputada',
+  expired: 'Reserva vencida',
+};
+
+const RENTAL_TRANSITIONS: Record<string, string[]> = {
+  on_hold: ['confirmed', 'cancelled', 'expired'],
+  confirmed: ['ready_for_handoff', 'cancellation_requested', 'no_show'],
+  ready_for_handoff: ['checked_out', 'cancellation_requested', 'no_show'],
+  checked_out: ['return_due', 'returned_pending_inspection', 'lost', 'disputed'],
+  return_due: ['returned_pending_inspection', 'lost', 'disputed'],
+  returned_pending_inspection: ['damage_review', 'deposit_refund_due', 'disputed'],
+  damage_review: ['deposit_refund_due', 'disputed'],
+  deposit_refund_due: ['closed', 'disputed'],
+  cancellation_requested: ['cancelled'],
+  no_show: ['cancelled'],
+  lost: ['disputed'],
+  disputed: ['damage_review', 'deposit_refund_due', 'closed'],
+};
+
+const rentalStatusLabel = (value?: string | null) => (
+  value ? RENTAL_STATUS_LABELS[value] ?? value : 'Sin runtime de renta'
+);
+
+const COMMON_FULFILLMENT_TRANSITIONS: Record<string, string[]> = {
+  on_hold: ['ready_to_fulfill', 'cancelled', 'expired'],
+  ready_to_fulfill: ['picking', 'cancellation_requested'],
+  picking: ['cancellation_requested'],
+  ready_for_pickup: ['delivered', 'cancellation_requested'],
+  shipped: ['delivered'],
+  cancellation_requested: ['cancelled'],
+  delivered: ['return_requested', 'closed'],
+  return_requested: ['return_authorized', 'closed'],
+  return_authorized: ['return_in_transit', 'returned'],
+  return_in_transit: ['returned'],
+  returned: ['closed'],
+};
+
+const fulfillmentStatusLabel = (value?: string | null) => (
+  value ? FULFILLMENT_STATUS_LABELS[value] ?? value : 'Sin runtime de entrega'
+);
+
+const fulfillmentMethodLabel = (value?: string | null) => (
+  value ? FULFILLMENT_METHOD_LABELS[value] ?? value : '—'
+);
+
+const fulfillmentTransitionsFor = (method?: string | null, current?: string | null) => {
+  if (!method || !current) return [];
+  const common = COMMON_FULFILLMENT_TRANSITIONS[current] ?? [];
+  if (current !== 'picking') return common;
+  return method === 'pickup'
+    ? [...common, 'ready_for_pickup']
+    : [...common, 'shipped'];
+};
 
 const QUICK_VIEW_PRESETS = [
   { value: 'last7', label: 'Últimos 7 días' },
@@ -191,6 +295,24 @@ export default function MarketplaceOrdersPage() {
   const [copyMenuAnchorEl, setCopyMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [statusConfirmOpen, setStatusConfirmOpen] = useState(false);
   const [pendingSavePayload, setPendingSavePayload] = useState<{ id: string; payload: MarketplaceOrderUpdatePayload } | null>(null);
+  const [fulfillmentStatusInput, setFulfillmentStatusInput] = useState('');
+  const [fulfillmentCarrierInput, setFulfillmentCarrierInput] = useState('');
+  const [fulfillmentTrackingInput, setFulfillmentTrackingInput] = useState('');
+  const [fulfillmentReasonInput, setFulfillmentReasonInput] = useState('');
+  const [fulfillmentNotesInput, setFulfillmentNotesInput] = useState('');
+  const [rentalStatusInput, setRentalStatusInput] = useState('');
+  const [rentalConditionOutInput, setRentalConditionOutInput] = useState('');
+  const [rentalConditionInInput, setRentalConditionInInput] = useState('');
+  const [rentalEvidenceUrlInput, setRentalEvidenceUrlInput] = useState('');
+  const [rentalDepositDeductionInput, setRentalDepositDeductionInput] = useState('');
+  const [rentalReasonInput, setRentalReasonInput] = useState('');
+  const [rentalNotesInput, setRentalNotesInput] = useState('');
+  const [manualReviewNotes, setManualReviewNotes] = useState('');
+  const [customerRequestReviewNotes, setCustomerRequestReviewNotes] = useState('');
+  const [depositSettlementMethod, setDepositSettlementMethod] = useState<MarketplaceDepositSettlementSubmitPayload['mdssSettlementMethod']>('bank_transfer');
+  const [depositExternalReference, setDepositExternalReference] = useState('');
+  const [depositEvidenceUrl, setDepositEvidenceUrl] = useState('');
+  const [depositReviewNotes, setDepositReviewNotes] = useState('');
 
   const ordersQuery = useQuery<MarketplaceOrderDTO[], Error>({
     queryKey: ['marketplace-orders', statusFilter],
@@ -212,12 +334,50 @@ export default function MarketplaceOrdersPage() {
     () => sortedOrders.find((o) => o.moOrderId === selectedId) ?? null,
     [sortedOrders, selectedId],
   );
+  const marketplaceCommerceQuery = useQuery<MarketplaceCommerceDTO, Error>({
+    queryKey: ['marketplace-order-commerce', selectedId],
+    queryFn: () => Marketplace.getCommerce(selectedId!),
+    enabled: isAuthed
+      && Boolean(selectedId)
+      && ['bank_transfer', 'cash', 'pos'].includes(selectedOrder?.moPaymentProvider ?? ''),
+    retry: false,
+  });
+  const customerRequestsQuery = useQuery<MarketplaceCustomerRequestDTO[], Error>({
+    queryKey: ['marketplace-customer-requests', selectedId],
+    queryFn: () => Marketplace.listCustomerRequestsAdmin?.(selectedId!) ?? Promise.resolve([]),
+    enabled: isAuthed && Boolean(selectedId),
+    retry: false,
+  });
+  const depositSettlementsQuery = useQuery<MarketplaceDepositSettlementDTO[], Error>({
+    queryKey: ['marketplace-deposit-settlements', selectedId],
+    queryFn: () => Marketplace.listDepositSettlements?.(selectedId!) ?? Promise.resolve([]),
+    enabled: isAuthed && Boolean(selectedId) && selectedOrder?.moOrderKind === 'rental',
+    retry: false,
+  });
 
   useEffect(() => {
     if (!selectedOrder) return;
     setStatusInput('');
     setPaymentProviderInput(selectedOrder.moPaymentProvider ?? '');
     setPaidAtInput(formatInputDate(selectedOrder.moPaidAt));
+    setFulfillmentStatusInput('');
+    setFulfillmentCarrierInput('');
+    setFulfillmentTrackingInput(selectedOrder.moTrackingReference ?? '');
+    setFulfillmentReasonInput('');
+    setFulfillmentNotesInput('');
+    setRentalStatusInput('');
+    setRentalConditionOutInput(selectedOrder.moConditionOut ?? '');
+    setRentalConditionInInput(selectedOrder.moConditionIn ?? '');
+    setRentalEvidenceUrlInput('');
+    setRentalDepositDeductionInput(String(selectedOrder.moDepositDeductionUsdCents ?? ''));
+    setRentalReasonInput('');
+    setRentalNotesInput('');
+    setManualReviewNotes('');
+    setCustomerRequestReviewNotes('');
+    setDepositSettlementMethod('bank_transfer');
+    setDepositExternalReference('');
+    setDepositEvidenceUrl('');
+    setDepositReviewNotes('');
   }, [selectedOrder]);
 
   const statusFilterImpliesPaid = statusFilter !== 'all' && isPaidOrderStatus(statusFilter);
@@ -566,6 +726,128 @@ export default function MarketplaceOrdersPage() {
     },
   });
 
+  const fulfillmentMutation = useMutation<
+    MarketplaceOrderDTO,
+    Error,
+    { id: string; payload: MarketplaceFulfillmentUpdatePayload }
+  >({
+    mutationFn: ({ id, payload }) => Marketplace.updateFulfillment(id, payload),
+    onSuccess: (data) => {
+      qc.setQueryData(['marketplace-orders', statusFilter], (prev: MarketplaceOrderDTO[] | undefined) =>
+        prev ? prev.map((o) => (o.moOrderId === data.moOrderId ? data : o)) : prev,
+      );
+      void qc.invalidateQueries({ queryKey: ['marketplace-orders'] });
+      setFulfillmentStatusInput('');
+      setFulfillmentCarrierInput('');
+      setFulfillmentReasonInput('');
+      setFulfillmentNotesInput('');
+      setFulfillmentTrackingInput(data.moTrackingReference ?? '');
+      setToast('Entrega actualizada');
+    },
+  });
+
+  const rentalMutation = useMutation<
+    MarketplaceOrderDTO,
+    Error,
+    { id: string; payload: MarketplaceRentalUpdatePayload }
+  >({
+    mutationFn: ({ id, payload }) => Marketplace.updateRental(id, payload),
+    onSuccess: (data) => {
+      qc.setQueryData(['marketplace-orders', statusFilter], (prev: MarketplaceOrderDTO[] | undefined) =>
+        prev ? prev.map((order) => (order.moOrderId === data.moOrderId ? data : order)) : prev,
+      );
+      void qc.invalidateQueries({ queryKey: ['marketplace-orders'] });
+      setRentalStatusInput('');
+      setRentalEvidenceUrlInput('');
+      setRentalReasonInput('');
+      setRentalNotesInput('');
+      setToast('Renta actualizada');
+    },
+  });
+
+  const manualReviewMutation = useMutation<
+    MarketplaceCommerceDTO,
+    Error,
+    'approve' | 'reject'
+  >({
+    mutationFn: (action) => Marketplace.reviewManualPayment(
+      selectedId!,
+      action,
+      manualReviewNotes.trim(),
+    ),
+    onSuccess: (data, action) => {
+      qc.setQueryData(['marketplace-order-commerce', data.mpcOrderId], data);
+      void qc.invalidateQueries({ queryKey: ['marketplace-orders'] });
+      setManualReviewNotes('');
+      setToast(action === 'approve'
+        ? 'Pago manual verificado; la entrega o custodia sigue separada'
+        : 'Evidencia rechazada; la orden continúa impaga');
+    },
+  });
+
+  const customerRequestReviewMutation = useMutation<
+    MarketplaceCustomerRequestDTO,
+    Error,
+    { requestId: string; action: 'approve' | 'reject' | 'needs_quote' }
+  >({
+    mutationFn: ({ requestId, action }) => Marketplace.reviewCustomerRequest(
+      selectedId!, requestId, action, customerRequestReviewNotes.trim(),
+    ),
+    onSuccess: (updated) => {
+      qc.setQueryData<MarketplaceCustomerRequestDTO[]>(
+        ['marketplace-customer-requests', updated.mcrOrderId],
+        (current) => current?.map((request) =>
+          request.mcrRequestId === updated.mcrRequestId ? updated : request) ?? [updated],
+      );
+      void qc.invalidateQueries({ queryKey: ['marketplace-orders'] });
+      setCustomerRequestReviewNotes('');
+      setToast('Solicitud revisada; pago y cumplimiento permanecen separados');
+    },
+  });
+
+  const depositSettlementMutation = useMutation<
+    MarketplaceDepositSettlementDTO,
+    Error,
+    MarketplaceDepositSettlementSubmitPayload
+  >({
+    mutationFn: (payload) => Marketplace.submitDepositSettlement(
+      selectedId!, payload, getMarketplaceDepositIdempotencyKey(selectedId!),
+    ),
+    onSuccess: (created) => {
+      clearMarketplaceDepositIdempotencyKey(created.mdsOrderId);
+      qc.setQueryData<MarketplaceDepositSettlementDTO[]>(
+        ['marketplace-deposit-settlements', created.mdsOrderId],
+        (current) => [created, ...(current ?? []).filter((entry) =>
+          entry.mdsSettlementId !== created.mdsSettlementId)],
+      );
+      setDepositExternalReference('');
+      setDepositEvidenceUrl('');
+      setToast('Evidencia de devolución enviada; aún requiere revisión independiente');
+    },
+  });
+
+  const depositReviewMutation = useMutation<
+    MarketplaceDepositSettlementDTO,
+    Error,
+    { settlementId: string; action: 'approve' | 'reject' | 'requires_reconciliation' }
+  >({
+    mutationFn: ({ settlementId, action }) => Marketplace.reviewDepositSettlement(
+      selectedId!, settlementId, action, depositReviewNotes.trim(),
+    ),
+    onSuccess: (updated, variables) => {
+      qc.setQueryData<MarketplaceDepositSettlementDTO[]>(
+        ['marketplace-deposit-settlements', updated.mdsOrderId],
+        (current) => current?.map((entry) =>
+          entry.mdsSettlementId === updated.mdsSettlementId ? updated : entry) ?? [updated],
+      );
+      void qc.invalidateQueries({ queryKey: ['marketplace-orders'] });
+      setDepositReviewNotes('');
+      setToast(variables.action === 'approve'
+        ? 'Devolución manual verificada y contabilizada; no se registró un reembolso de proveedor'
+        : 'Evidencia de depósito revisada sin afirmar movimiento de proveedor');
+    },
+  });
+
   const handleRefresh = () => {
     void qc.invalidateQueries({ queryKey: ['marketplace-orders'] });
   };
@@ -608,8 +890,24 @@ export default function MarketplaceOrdersPage() {
     setStatusInput('');
     setPaymentProviderInput('');
     setPaidAtInput('');
+    setFulfillmentStatusInput('');
+    setFulfillmentCarrierInput('');
+    setFulfillmentTrackingInput('');
+    setFulfillmentReasonInput('');
+    setFulfillmentNotesInput('');
+    setRentalStatusInput('');
+    setRentalConditionOutInput('');
+    setRentalConditionInInput('');
+    setRentalEvidenceUrlInput('');
+    setRentalDepositDeductionInput('');
+    setRentalReasonInput('');
+    setRentalNotesInput('');
+    setManualReviewNotes('');
     setCopyMenuAnchorEl(null);
     updateMutation.reset();
+    fulfillmentMutation.reset();
+    rentalMutation.reset();
+    manualReviewMutation.reset();
   };
 
   const closeCopyMenu = () => {
@@ -668,6 +966,44 @@ export default function MarketplaceOrdersPage() {
     const nowStr = DateTime.now().toFormat("yyyy-LL-dd'T'HH:mm");
     setStatusInput('paid');
     setPaidAtInput(nowStr);
+  };
+
+  const handleFulfillmentSave = async () => {
+    if (!selectedOrder || !fulfillmentStatusInput) return;
+    const payload: MarketplaceFulfillmentUpdatePayload = {
+      mfuStatus: fulfillmentStatusInput,
+    };
+    const carrier = fulfillmentCarrierInput.trim();
+    const trackingReference = fulfillmentTrackingInput.trim();
+    const reasonCode = fulfillmentReasonInput.trim();
+    const notes = fulfillmentNotesInput.trim();
+    if (carrier) payload.mfuCarrier = carrier;
+    if (trackingReference) payload.mfuTrackingReference = trackingReference;
+    if (reasonCode) payload.mfuReasonCode = reasonCode;
+    if (notes) payload.mfuNotes = notes;
+    await fulfillmentMutation.mutateAsync({ id: selectedOrder.moOrderId, payload });
+  };
+
+  const handleRentalSave = async () => {
+    if (!selectedOrder || !rentalStatusInput) return;
+    const payload: MarketplaceRentalUpdatePayload = { mruStatus: rentalStatusInput };
+    const conditionOut = rentalConditionOutInput.trim();
+    const conditionIn = rentalConditionInInput.trim();
+    const evidenceUrl = rentalEvidenceUrlInput.trim();
+    const reasonCode = rentalReasonInput.trim();
+    const notes = rentalNotesInput.trim();
+    if (conditionOut) payload.mruConditionOut = conditionOut;
+    if (conditionIn) payload.mruConditionIn = conditionIn;
+    if (evidenceUrl) payload.mruEvidenceUrl = evidenceUrl;
+    if (
+      rentalDepositDeductionInput.trim()
+      && ['damage_review', 'deposit_refund_due', 'disputed'].includes(rentalStatusInput)
+    ) {
+      payload.mruDepositDeductionUsdCents = Number(rentalDepositDeductionInput);
+    }
+    if (reasonCode) payload.mruReasonCode = reasonCode;
+    if (notes) payload.mruNotes = notes;
+    await rentalMutation.mutateAsync({ id: selectedOrder.moOrderId, payload });
   };
 
   const handleCopyOrderId = async (orderId: string) => {
@@ -745,7 +1081,14 @@ export default function MarketplaceOrdersPage() {
   const paymentProviderHelperText = paymentProviderRequiredForShortcut
     ? 'Requerido antes de marcar una orden como pagada.'
     : undefined;
-  const showMarkPaidShortcut = Boolean(selectedOrder) && !isPaidOrderStatus(effectiveStatus) && Boolean(effectiveProvider);
+  const isCanonicalRental = selectedOrder?.moOrderKind === 'rental';
+  const hasCanonicalFulfillment = Boolean(
+    !isCanonicalRental && selectedOrder?.moFulfillmentMethod && selectedOrder.moFulfillmentStatus,
+  );
+  const showMarkPaidShortcut = Boolean(selectedOrder)
+    && !hasCanonicalFulfillment
+    && !isPaidOrderStatus(effectiveStatus)
+    && Boolean(effectiveProvider);
   const selectedBuyerIdentity = selectedOrder ? getOrderBuyerIdentity(selectedOrder) : '';
   const selectedBuyerEmail = selectedOrder ? normalizeEmailValue(selectedOrder.moBuyerEmail) : '';
   const selectedBuyerPhone = selectedOrder ? normalizeBuyerPhoneValue(selectedOrder.moBuyerPhone) : '';
@@ -753,6 +1096,13 @@ export default function MarketplaceOrdersPage() {
   const showSelectedBuyerPhone = shouldShowBuyerPhoneDetail(selectedBuyerPhone, selectedBuyerIdentity);
   const selectedCartId = selectedOrder?.moCartId?.trim() ?? '';
   const selectedPaypalOrderId = selectedOrder?.moPaypalOrderId?.trim() ?? '';
+  const selectedManualEvidence = marketplaceCommerceQuery.data?.mpcManualEvidence ?? null;
+  const manualReviewReady = Boolean(
+    selectedManualEvidence
+      && ['submitted', 'under_review'].includes(selectedManualEvidence.mmeStatus),
+  );
+  const manualReviewNotesValid = manualReviewNotes.trim().length >= 3
+    && manualReviewNotes.trim().length <= 2000;
   const selectedStatusHistory = selectedOrder?.moStatusHistory ?? [];
   const latestStatusChange = selectedStatusHistory[selectedStatusHistory.length - 1];
   const showLatestStatusChangeSummary = selectedStatusHistory.length === 1 && Boolean(latestStatusChange);
@@ -768,6 +1118,34 @@ export default function MarketplaceOrdersPage() {
   const availableStatusUpdatePresets = selectedOrder
     ? STATUS_PRESETS.filter((statusPreset) => statusPreset.value !== selectedOrder.moStatus)
     : STATUS_PRESETS;
+  const availableFulfillmentTransitions = fulfillmentTransitionsFor(
+    selectedOrder?.moFulfillmentMethod,
+    selectedOrder?.moFulfillmentStatus,
+  );
+  const availableRentalTransitions = selectedOrder?.moFulfillmentStatus
+    ? RENTAL_TRANSITIONS[selectedOrder.moFulfillmentStatus] ?? []
+    : [];
+  const selectedRentalTransition = availableRentalTransitions.includes(rentalStatusInput)
+    ? rentalStatusInput
+    : '';
+  const rentalConditionOutRequired = rentalStatusInput === 'checked_out'
+    && !rentalConditionOutInput.trim()
+    && !selectedOrder?.moConditionOut;
+  const rentalConditionInRequired = rentalStatusInput === 'returned_pending_inspection'
+    && !rentalConditionInInput.trim()
+    && !selectedOrder?.moConditionIn;
+  const parsedRentalDeduction = rentalDepositDeductionInput.trim() === ''
+    ? 0
+    : Number(rentalDepositDeductionInput);
+  const rentalDeductionInvalid = !Number.isSafeInteger(parsedRentalDeduction)
+    || parsedRentalDeduction < 0
+    || parsedRentalDeduction > (selectedOrder?.moSecurityDepositUsdCents ?? 0);
+  const selectedFulfillmentTransition = availableFulfillmentTransitions.includes(fulfillmentStatusInput)
+    ? fulfillmentStatusInput
+    : '';
+  const fulfillmentTrackingRequired = fulfillmentStatusInput === 'shipped'
+    && !fulfillmentTrackingInput.trim()
+    && !selectedOrder?.moTrackingReference;
   const orderPaginationResetKey = [
     statusFilter,
     providerFilter,
@@ -1406,6 +1784,43 @@ export default function MarketplaceOrdersPage() {
                           </Typography>
                           <Chip size="small" label={statusLabel(selectedOrder.moStatus)} color={statusColor(selectedOrder.moStatus)} />
                         </Stack>
+                        {hasCanonicalFulfillment && (
+                          <>
+                            <Typography variant="body2">
+                              <strong>Entrega:</strong> {fulfillmentStatusLabel(selectedOrder.moFulfillmentStatus)}
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Modalidad:</strong> {fulfillmentMethodLabel(selectedOrder.moFulfillmentMethod)}
+                            </Typography>
+                            {selectedOrder.moTrackingReference && (
+                              <Typography variant="body2">
+                                <strong>Guía:</strong> {selectedOrder.moTrackingReference}
+                              </Typography>
+                            )}
+                          </>
+                        )}
+                        {isCanonicalRental && (
+                          <Stack spacing={0.5}>
+                            <Typography variant="body2">
+                              <strong>Renta:</strong> {rentalStatusLabel(selectedOrder.moFulfillmentStatus)}
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Fechas:</strong> {selectedOrder.moRentalStartDate} → {selectedOrder.moRentalEndDate} ({selectedOrder.moRentalDurationDays} día(s))
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Cargo:</strong> {selectedOrder.moRentalChargeUsdCents ?? 0} centavos · <strong>depósito:</strong> {selectedOrder.moSecurityDepositUsdCents ?? 0} centavos
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Estado del depósito:</strong> {selectedOrder.moDepositStatus ?? '—'}
+                              {(selectedOrder.moDepositDeductionUsdCents ?? 0) > 0
+                                ? ` · deducción propuesta ${selectedOrder.moDepositDeductionUsdCents} centavos`
+                                : ''}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              Términos {selectedOrder.moRentalTermsVersion ?? '—'} · {selectedOrder.moRentalTimezone ?? 'America/Guayaquil'}
+                            </Typography>
+                          </Stack>
+                        )}
                         {showLatestStatusChangeSummary && latestStatusChange && (
                           <Typography variant="body2" color="text.secondary">
                             Último cambio: {formatDate(latestStatusChange[1])}
@@ -1426,9 +1841,196 @@ export default function MarketplaceOrdersPage() {
                     </CardContent>
                   </Card>
                   <Card variant="outlined" sx={{ flex: 1 }}>
-                    <CardHeader title="Actualizar estado" />
+                    <CardHeader title={isCanonicalRental ? 'Gestionar renta' : hasCanonicalFulfillment ? 'Gestionar entrega' : 'Actualizar estado'} />
                     <CardContent>
-                      <Stack spacing={2}>
+                      {isCanonicalRental ? (
+                        <Stack spacing={2}>
+                          <Alert severity="info" variant="outlined">
+                            Pago, custodia y depósito son estados separados. Una deducción queda pendiente; no representa que el reembolso o cobro ya ocurrió.
+                          </Alert>
+                          <FormControl fullWidth>
+                            <InputLabel id="rental-status-input-label" shrink>Siguiente estado de renta</InputLabel>
+                            <Select
+                              labelId="rental-status-input-label"
+                              label="Siguiente estado de renta"
+                              value={selectedRentalTransition}
+                              displayEmpty
+                              renderValue={(value) => value ? rentalStatusLabel(String(value)) : 'Selecciona una transición'}
+                              onChange={(event) => setRentalStatusInput(event.target.value)}
+                            >
+                              <MenuItem value=""><em>Selecciona una transición</em></MenuItem>
+                              {availableRentalTransitions.map((status) => (
+                                <MenuItem key={status} value={status}>{rentalStatusLabel(status)}</MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                          {(rentalStatusInput === 'checked_out' || Boolean(selectedOrder.moConditionOut)) && (
+                            <TextField
+                              label="Condición al entregar"
+                              value={rentalConditionOutInput}
+                              onChange={(event) => setRentalConditionOutInput(event.target.value)}
+                              multiline
+                              minRows={2}
+                              required={rentalStatusInput === 'checked_out'}
+                              error={rentalConditionOutRequired}
+                              helperText={rentalConditionOutRequired ? 'El informe de salida es obligatorio antes de transferir custodia.' : undefined}
+                              inputProps={{ maxLength: 1000 }}
+                            />
+                          )}
+                          {(rentalStatusInput === 'returned_pending_inspection' || Boolean(selectedOrder.moConditionIn)) && (
+                            <TextField
+                              label="Condición al devolver"
+                              value={rentalConditionInInput}
+                              onChange={(event) => setRentalConditionInInput(event.target.value)}
+                              multiline
+                              minRows={2}
+                              required={rentalStatusInput === 'returned_pending_inspection'}
+                              error={rentalConditionInRequired}
+                              helperText={rentalConditionInRequired ? 'El informe de retorno es obligatorio antes de iniciar inspección.' : undefined}
+                              inputProps={{ maxLength: 1000 }}
+                            />
+                          )}
+                          <TextField
+                            label="Evidencia HTTPS (opcional)"
+                            value={rentalEvidenceUrlInput}
+                            onChange={(event) => setRentalEvidenceUrlInput(event.target.value)}
+                            inputProps={{ maxLength: 2048 }}
+                            placeholder="https://..."
+                          />
+                          {(rentalStatusInput === 'damage_review' || (selectedOrder.moDepositDeductionUsdCents ?? 0) > 0) && (
+                            <TextField
+                              label="Deducción propuesta del depósito (centavos)"
+                              type="number"
+                              value={rentalDepositDeductionInput}
+                              onChange={(event) => setRentalDepositDeductionInput(event.target.value)}
+                              inputProps={{ min: 0, max: selectedOrder.moSecurityDepositUsdCents ?? 0, step: 1 }}
+                              error={rentalDeductionInvalid}
+                              helperText={`Máximo: ${selectedOrder.moSecurityDepositUsdCents ?? 0} centavos. La propuesta no ejecuta un cobro ni un reembolso.`}
+                            />
+                          )}
+                          <TextField
+                            label="Código de motivo"
+                            value={rentalReasonInput}
+                            onChange={(event) => setRentalReasonInput(event.target.value)}
+                            inputProps={{ maxLength: 80 }}
+                          />
+                          <TextField
+                            label="Notas de operación"
+                            value={rentalNotesInput}
+                            onChange={(event) => setRentalNotesInput(event.target.value)}
+                            multiline
+                            minRows={2}
+                            inputProps={{ maxLength: 500 }}
+                          />
+                          {availableRentalTransitions.length === 0 ? (
+                            <Typography variant="body2" color="text.secondary">
+                              Este estado no tiene una transición operativa posterior.
+                            </Typography>
+                          ) : (
+                            <Button
+                              variant="contained"
+                              onClick={() => { void handleRentalSave(); }}
+                              disabled={
+                                !rentalStatusInput
+                                || rentalConditionOutRequired
+                                || rentalConditionInRequired
+                                || rentalDeductionInvalid
+                                || rentalMutation.isPending
+                              }
+                            >
+                              Guardar transición de renta
+                            </Button>
+                          )}
+                          {rentalMutation.isError && (
+                            <Alert severity="error">
+                              {rentalMutation.error?.message ?? 'No se pudo actualizar la renta'}
+                            </Alert>
+                          )}
+                        </Stack>
+                      ) : hasCanonicalFulfillment ? (
+                        <Stack spacing={2}>
+                          <Alert severity="info" variant="outlined">
+                            El pago y la entrega son estados separados. El pago canónico solo cambia con evidencia verificada del proveedor o aprobación del pago manual.
+                          </Alert>
+                          <FormControl fullWidth>
+                            <InputLabel id="fulfillment-status-input-label" shrink>Siguiente estado de entrega</InputLabel>
+                            <Select
+                              labelId="fulfillment-status-input-label"
+                              label="Siguiente estado de entrega"
+                              value={selectedFulfillmentTransition}
+                              displayEmpty
+                              renderValue={(value) => (value ? fulfillmentStatusLabel(String(value)) : 'Selecciona una transición')}
+                              onChange={(event) => setFulfillmentStatusInput(event.target.value)}
+                            >
+                              <MenuItem value="">
+                                <em>Selecciona una transición</em>
+                              </MenuItem>
+                              {availableFulfillmentTransitions.map((status) => (
+                                <MenuItem key={status} value={status}>
+                                  {fulfillmentStatusLabel(status)}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                          {(fulfillmentStatusInput === 'shipped' || Boolean(selectedOrder.moTrackingReference)) && (
+                            <>
+                              <TextField
+                                label="Transportista"
+                                fullWidth
+                                value={fulfillmentCarrierInput}
+                                onChange={(event) => setFulfillmentCarrierInput(event.target.value)}
+                                inputProps={{ maxLength: 120 }}
+                              />
+                              <TextField
+                                label="Referencia de seguimiento"
+                                fullWidth
+                                required={fulfillmentStatusInput === 'shipped'}
+                                value={fulfillmentTrackingInput}
+                                onChange={(event) => setFulfillmentTrackingInput(event.target.value)}
+                                inputProps={{ maxLength: 160 }}
+                                error={fulfillmentTrackingRequired}
+                                helperText={fulfillmentTrackingRequired ? 'La guía es obligatoria antes de marcar un envío.' : undefined}
+                              />
+                            </>
+                          )}
+                          <TextField
+                            label="Código de motivo"
+                            fullWidth
+                            value={fulfillmentReasonInput}
+                            onChange={(event) => setFulfillmentReasonInput(event.target.value)}
+                            inputProps={{ maxLength: 80 }}
+                            placeholder="cancelled_by_customer, damaged, delivered..."
+                          />
+                          <TextField
+                            label="Notas de operación"
+                            fullWidth
+                            multiline
+                            minRows={2}
+                            value={fulfillmentNotesInput}
+                            onChange={(event) => setFulfillmentNotesInput(event.target.value)}
+                            inputProps={{ maxLength: 500 }}
+                          />
+                          {availableFulfillmentTransitions.length === 0 ? (
+                            <Typography variant="body2" color="text.secondary">
+                              Este estado no tiene una transición operativa posterior.
+                            </Typography>
+                          ) : (
+                            <Button
+                              variant="contained"
+                              onClick={() => { void handleFulfillmentSave(); }}
+                              disabled={!fulfillmentStatusInput || fulfillmentTrackingRequired || fulfillmentMutation.isPending}
+                            >
+                              Guardar transición de entrega
+                            </Button>
+                          )}
+                          {fulfillmentMutation.isError && (
+                            <Alert severity="error">
+                              {fulfillmentMutation.error?.message ?? 'No se pudo actualizar la entrega'}
+                            </Alert>
+                          )}
+                        </Stack>
+                      ) : (
+                        <Stack spacing={2}>
                         <FormControl fullWidth>
                           <InputLabel id="status-input-label" shrink>Nuevo estado</InputLabel>
                           <Select
@@ -1520,10 +2122,361 @@ export default function MarketplaceOrdersPage() {
                         {updateMutation.isError && (
                           <Alert severity="error">{updateMutation.error?.message ?? 'No se pudo actualizar'}</Alert>
                         )}
-                      </Stack>
+                        </Stack>
+                      )}
                     </CardContent>
                   </Card>
                 </Stack>
+
+                {['bank_transfer', 'cash', 'pos'].includes(selectedOrder.moPaymentProvider ?? '') && (
+                  <Card variant="outlined">
+                    <CardHeader
+                      title="Revisión de pago manual"
+                      subheader="La evidencia del cliente no confirma pago por sí sola."
+                    />
+                    <CardContent>
+                      <Stack spacing={1.5}>
+                        {marketplaceCommerceQuery.isLoading && (
+                          <Typography variant="body2" color="text.secondary">
+                            Cargando evidencia protegida…
+                          </Typography>
+                        )}
+                        {marketplaceCommerceQuery.isError && (
+                          <Alert severity="error">
+                            No se pudo cargar la evidencia financiera. Se requiere acceso de facturación.
+                          </Alert>
+                        )}
+                        {marketplaceCommerceQuery.data && !selectedManualEvidence && (
+                          <Alert severity="info" variant="outlined">
+                            El cliente aún no ha enviado una referencia. La orden continúa impaga.
+                          </Alert>
+                        )}
+                        {selectedManualEvidence && (
+                          <>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                              <Chip label={selectedManualEvidence.mmeStatus.replace(/_/g, ' ')} size="small" />
+                              <Typography variant="body2">
+                                Método: {formatPaymentProvider(selectedManualEvidence.mmePaymentMethod)}
+                              </Typography>
+                              {selectedManualEvidence.mmeSubmittedAt && (
+                                <Typography variant="body2" color="text.secondary">
+                                  Enviada: {formatDate(selectedManualEvidence.mmeSubmittedAt)}
+                                </Typography>
+                              )}
+                            </Stack>
+                            <Typography variant="body2">
+                              <strong>Referencia:</strong> {selectedManualEvidence.mmeCustomerReference ?? '—'}
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Monto declarado:</strong> {selectedManualEvidence.mmeSubmittedAmountMinor ?? '—'} {selectedManualEvidence.mmeCurrency ?? ''}
+                            </Typography>
+                            {selectedManualEvidence.mmeReviewNotes && (
+                              <Typography variant="body2" color="text.secondary">
+                                Revisión: {selectedManualEvidence.mmeReviewNotes}
+                              </Typography>
+                            )}
+                            {manualReviewReady && (
+                              <>
+                                <TextField
+                                  label="Notas de revisión"
+                                  value={manualReviewNotes}
+                                  onChange={(event) => setManualReviewNotes(event.target.value)}
+                                  multiline
+                                  minRows={2}
+                                  inputProps={{ maxLength: 2000 }}
+                                  helperText="Compara la referencia con el estado bancario. Debe revisar una persona distinta del remitente."
+                                />
+                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                                  <Button
+                                    variant="contained"
+                                    color="success"
+                                    disabled={!manualReviewNotesValid || manualReviewMutation.isPending}
+                                    onClick={() => manualReviewMutation.mutate('approve')}
+                                  >
+                                    Aprobar pago verificado
+                                  </Button>
+                                  <Button
+                                    variant="outlined"
+                                    color="error"
+                                    disabled={!manualReviewNotesValid || manualReviewMutation.isPending}
+                                    onClick={() => manualReviewMutation.mutate('reject')}
+                                  >
+                                    Rechazar evidencia
+                                  </Button>
+                                </Stack>
+                              </>
+                            )}
+                            {selectedManualEvidence.mmeStatus === 'approved' && marketplaceCommerceQuery.data?.mpcPaymentStatus === 'paid' && (
+                              <Alert severity="success" variant="outlined">
+                                Pago manual verificado. La entrega, custodia y depósito siguen sus propios estados.
+                              </Alert>
+                            )}
+                            {selectedManualEvidence.mmeStatus === 'rejected' && (
+                              <Alert severity="warning" variant="outlined">
+                                Evidencia rechazada. La orden permanece impaga hasta que el cliente reenvíe evidencia.
+                              </Alert>
+                            )}
+                          </>
+                        )}
+                        {manualReviewMutation.isError && (
+                          <Alert severity="error">
+                            {manualReviewMutation.error?.message ?? 'No se pudo completar la revisión'}
+                          </Alert>
+                        )}
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {(customerRequestsQuery.data?.length ?? 0) > 0 && (
+                  <Card variant="outlined">
+                    <CardHeader
+                      title="Solicitudes del cliente"
+                      subheader="La solicitud no cambia pago, entrega, custodia ni fechas hasta una transición autorizada."
+                    />
+                    <CardContent>
+                      <Stack spacing={1.5}>
+                        {customerRequestsQuery.data?.map((request) => {
+                          const reviewable = request.mcrStatus === 'submitted'
+                            || request.mcrStatus === 'needs_quote';
+                          const extension = request.mcrRequestType === 'rental_extension';
+                          return (
+                            <Paper key={request.mcrRequestId} variant="outlined" sx={{ p: 1.5 }}>
+                              <Stack spacing={1}>
+                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
+                                  <Chip size="small" label={request.mcrRequestType.replace(/_/g, ' ')} />
+                                  <Chip size="small" variant="outlined" label={request.mcrStatus.replace(/_/g, ' ')} />
+                                  <Typography variant="caption" color="text.secondary">
+                                    {formatDate(request.mcrRequestedAt)}
+                                  </Typography>
+                                </Stack>
+                                <Typography variant="body2">{request.mcrReason}</Typography>
+                                {request.mcrRequestedEndDate && (
+                                  <Typography variant="body2">
+                                    Fecha solicitada: {request.mcrRequestedEndDate}
+                                  </Typography>
+                                )}
+                                {request.mcrReviewNotes && (
+                                  <Typography variant="body2" color="text.secondary">
+                                    Revisión: {request.mcrReviewNotes}
+                                  </Typography>
+                                )}
+                                {reviewable && (
+                                  <>
+                                    <TextField
+                                      label="Notas para el cliente"
+                                      value={customerRequestReviewNotes}
+                                      onChange={(event) => setCustomerRequestReviewNotes(event.target.value)}
+                                      multiline
+                                      minRows={2}
+                                      inputProps={{ minLength: 3, maxLength: 1000 }}
+                                      helperText={extension
+                                        ? 'Una extensión solo puede requerir cotización o rechazarse; no edites la fecha directamente.'
+                                        : 'Confirma el estado actual antes de aplicar la transición de dominio.'}
+                                    />
+                                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                                      {request.mcrStatus === 'submitted' && !extension && (
+                                        <Button
+                                          variant="contained"
+                                          color="success"
+                                          disabled={customerRequestReviewNotes.trim().length < 3
+                                            || customerRequestReviewMutation.isPending}
+                                          onClick={() => customerRequestReviewMutation.mutate({
+                                            requestId: request.mcrRequestId,
+                                            action: 'approve',
+                                          })}
+                                        >
+                                          Aprobar transición
+                                        </Button>
+                                      )}
+                                      {request.mcrStatus === 'submitted' && extension && (
+                                        <Button
+                                          variant="contained"
+                                          disabled={customerRequestReviewNotes.trim().length < 3
+                                            || customerRequestReviewMutation.isPending}
+                                          onClick={() => customerRequestReviewMutation.mutate({
+                                            requestId: request.mcrRequestId,
+                                            action: 'needs_quote',
+                                          })}
+                                        >
+                                          Requiere cotización
+                                        </Button>
+                                      )}
+                                      <Button
+                                        variant="outlined"
+                                        color="error"
+                                        disabled={customerRequestReviewNotes.trim().length < 3
+                                          || customerRequestReviewMutation.isPending}
+                                        onClick={() => customerRequestReviewMutation.mutate({
+                                          requestId: request.mcrRequestId,
+                                          action: 'reject',
+                                        })}
+                                      >
+                                        Rechazar
+                                      </Button>
+                                    </Stack>
+                                  </>
+                                )}
+                              </Stack>
+                            </Paper>
+                          );
+                        })}
+                        {customerRequestReviewMutation.isError && (
+                          <Alert severity="error">
+                            {customerRequestReviewMutation.error?.message ?? 'No se pudo revisar la solicitud'}
+                          </Alert>
+                        )}
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {isCanonicalRental && (
+                  ['refund_due', 'partial_refund_due'].includes(selectedOrder.moDepositStatus ?? '')
+                    || (depositSettlementsQuery.data?.length ?? 0) > 0
+                ) && (
+                  <Card variant="outlined">
+                    <CardHeader
+                      title="Liquidación manual del depósito"
+                      subheader="Registra evidencia real. Esto no ejecuta ni afirma un reembolso de Datafast o PayPal."
+                    />
+                    <CardContent>
+                      <Stack spacing={1.5}>
+                        {depositSettlementsQuery.isError && (
+                          <Alert severity="error">No se pudo cargar la evidencia protegida de liquidación.</Alert>
+                        )}
+                        {(depositSettlementsQuery.data?.length ?? 0) === 0 && (
+                          <>
+                            <Alert severity="warning" variant="outlined">
+                              Depósito: {selectedOrder.moSecurityDepositUsdCents ?? 0} {selectedOrder.moCurrency} centavos · deducción aprobada: {selectedOrder.moDepositDeductionUsdCents ?? 0} · devolución esperada: {(selectedOrder.moSecurityDepositUsdCents ?? 0) - (selectedOrder.moDepositDeductionUsdCents ?? 0)}.
+                            </Alert>
+                            <FormControl fullWidth size="small">
+                              <InputLabel id="deposit-settlement-method-label">Método real de liquidación</InputLabel>
+                              <Select
+                                labelId="deposit-settlement-method-label"
+                                label="Método real de liquidación"
+                                value={depositSettlementMethod}
+                                onChange={(event) => setDepositSettlementMethod(
+                                  event.target.value as MarketplaceDepositSettlementSubmitPayload['mdssSettlementMethod'],
+                                )}
+                              >
+                                <MenuItem value="bank_transfer">Transferencia bancaria</MenuItem>
+                                <MenuItem value="cash">Efectivo</MenuItem>
+                                <MenuItem value="pos">POS</MenuItem>
+                                {(selectedOrder.moDepositDeductionUsdCents ?? 0)
+                                  === (selectedOrder.moSecurityDepositUsdCents ?? 0) && (
+                                  <MenuItem value="forfeiture">Retención total documentada</MenuItem>
+                                )}
+                              </Select>
+                            </FormControl>
+                            <TextField
+                              label="Referencia externa"
+                              value={depositExternalReference}
+                              onChange={(event) => setDepositExternalReference(event.target.value)}
+                              inputProps={{ minLength: 3, maxLength: 160 }}
+                            />
+                            <TextField
+                              label="Evidencia privada (HTTPS o /assets/)"
+                              value={depositEvidenceUrl}
+                              onChange={(event) => setDepositEvidenceUrl(event.target.value)}
+                              inputProps={{ maxLength: 2048 }}
+                            />
+                            <Button
+                              variant="contained"
+                              disabled={depositSettlementMutation.isPending
+                                || depositExternalReference.trim().length < 3
+                                || !(depositEvidenceUrl.trim().startsWith('https://')
+                                  || depositEvidenceUrl.trim().startsWith('/assets/'))}
+                              onClick={() => depositSettlementMutation.mutate({
+                                mdssSettlementMethod: depositSettlementMethod,
+                                mdssExternalReference: depositExternalReference.trim(),
+                                mdssEvidenceUrl: depositEvidenceUrl.trim(),
+                              })}
+                            >
+                              Enviar evidencia para revisión independiente
+                            </Button>
+                          </>
+                        )}
+                        {depositSettlementsQuery.data?.map((settlement) => (
+                          <Paper key={settlement.mdsSettlementId} variant="outlined" sx={{ p: 1.5 }}>
+                            <Stack spacing={1}>
+                              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
+                                <Chip size="small" label={settlement.mdsStatus.replace(/_/g, ' ')} />
+                                <Typography variant="body2">
+                                  {settlement.mdsSettlementMethod.replace(/_/g, ' ')} · devolución {settlement.mdsRefundAmountMinor} {settlement.mdsCurrency} centavos · deducción {settlement.mdsDeductionAmountMinor}
+                                </Typography>
+                              </Stack>
+                              <Typography variant="body2">
+                                Referencia: {settlement.mdsExternalReference}
+                              </Typography>
+                              <Link href={settlement.mdsEvidenceUrl} target="_blank" rel="noreferrer">
+                                Abrir evidencia protegida
+                              </Link>
+                              {settlement.mdsReviewNotes && (
+                                <Typography variant="body2" color="text.secondary">
+                                  Revisión: {settlement.mdsReviewNotes}
+                                </Typography>
+                              )}
+                              {settlement.mdsStatus === 'submitted' && (
+                                <>
+                                  <TextField
+                                    label="Notas de revisión independiente"
+                                    value={depositReviewNotes}
+                                    onChange={(event) => setDepositReviewNotes(event.target.value)}
+                                    multiline
+                                    minRows={2}
+                                    inputProps={{ minLength: 3, maxLength: 1000 }}
+                                  />
+                                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                                    <Button
+                                      variant="contained"
+                                      color="success"
+                                      disabled={depositReviewNotes.trim().length < 3 || depositReviewMutation.isPending}
+                                      onClick={() => depositReviewMutation.mutate({
+                                        settlementId: settlement.mdsSettlementId,
+                                        action: 'approve',
+                                      })}
+                                    >
+                                      Verificar evidencia real
+                                    </Button>
+                                    <Button
+                                      variant="outlined"
+                                      disabled={depositReviewNotes.trim().length < 3 || depositReviewMutation.isPending}
+                                      onClick={() => depositReviewMutation.mutate({
+                                        settlementId: settlement.mdsSettlementId,
+                                        action: 'requires_reconciliation',
+                                      })}
+                                    >
+                                      Requiere conciliación
+                                    </Button>
+                                    <Button
+                                      variant="outlined"
+                                      color="error"
+                                      disabled={depositReviewNotes.trim().length < 3 || depositReviewMutation.isPending}
+                                      onClick={() => depositReviewMutation.mutate({
+                                        settlementId: settlement.mdsSettlementId,
+                                        action: 'reject',
+                                      })}
+                                    >
+                                      Rechazar
+                                    </Button>
+                                  </Stack>
+                                </>
+                              )}
+                            </Stack>
+                          </Paper>
+                        ))}
+                        {(depositSettlementMutation.isError || depositReviewMutation.isError) && (
+                          <Alert severity="error">
+                            {depositSettlementMutation.error?.message
+                              ?? depositReviewMutation.error?.message
+                              ?? 'No se pudo completar la revisión del depósito'}
+                          </Alert>
+                        )}
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {showStatusHistorySection && (
                   <>
@@ -1534,6 +2487,21 @@ export default function MarketplaceOrdersPage() {
                         {selectedStatusHistory.map(([st, ts], idx) => (
                           <Typography key={`${st}-${ts}-${idx}`} variant="body2" color="text.secondary">
                             {formatDate(ts)} — {statusLabel(st)}
+                          </Typography>
+                        ))}
+                      </Stack>
+                    </Stack>
+                  </>
+                )}
+                {(hasCanonicalFulfillment || isCanonicalRental) && (selectedOrder.moFulfillmentHistory?.length ?? 0) > 0 && (
+                  <>
+                    <Divider />
+                    <Stack spacing={1}>
+                      <Typography variant="h6">{isCanonicalRental ? 'Historial de renta' : 'Historial de entrega'}</Typography>
+                      <Stack spacing={0.5}>
+                        {selectedOrder.moFulfillmentHistory?.map(([status, occurredAt], index) => (
+                          <Typography key={`${status}-${occurredAt}-${index}`} variant="body2" color="text.secondary">
+                            {formatDate(occurredAt)} — {isCanonicalRental ? rentalStatusLabel(status) : fulfillmentStatusLabel(status)}
                           </Typography>
                         ))}
                       </Stack>

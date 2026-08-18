@@ -4,6 +4,7 @@
 
 ### Database
 - [ ] Run migration: `tdf-hq/sql/2026-08-04_service_storefront.sql`
+- [ ] Apply the registered checkout migrations through `scripts/render-production-migration-batch.mjs`; do not apply an ad hoc subset
 - [ ] Verify tables created: `service_storefront_package`, `service_storefront_order`, `service_storefront_order_status_change`, `service_storefront_revision`
 - [ ] Verify seed data: 9 packages (3 Mixing, 3 Mastering, 3 Bundle)
 - [ ] Backup database before migration
@@ -37,17 +38,21 @@
   # PayPal
   PAYPAL_CLIENT_ID=...
   PAYPAL_CLIENT_SECRET=...
+  PAYPAL_ENV=sandbox
+  PAYPAL_MERCHANT_ID=...
   PAYPAL_WEBHOOK_ID=...
+  COMMERCE_EVENT_ENCRYPTION_KEY=... # independent 32+ character secret-manager value
+  COMMERCE_LOOKUP_TOKEN_SECRET=... # independent 32+ byte guest-capability HMAC key
   ```
 
 ### Webhooks
 - [ ] PayPal webhook endpoint configured: `https://tdf-hq.fly.dev/services/storefront/paypal/webhook`
 - [ ] Stripe webhook verified (existing): `https://tdf-hq.fly.dev/social-events/stripe/webhook`
-- [ ] Datafast uses redirect-based confirmation (no webhook needed)
+- [ ] Keep Datafast callbacks and refunds disabled until an authenticated merchant contract is verified
 
 ### Feature Flags
-- [ ] Consider adding feature flag for gradual rollout
-- [ ] Default: enabled for all users
+- [ ] Confirm `checkout.paypal`, `checkout.paypal.webhooks`, `checkout.paypal.refunds`, and `commerce.mixing_mastering` remain disabled in production until separate approval
+- [ ] Confirm `checkout.datafast.webhooks` and `checkout.datafast.refunds` remain disabled
 
 ---
 
@@ -79,7 +84,7 @@ wrangler pages deploy dist --project-name=tdf-app
 # Check backend health
 curl https://tdf-hq.fly.dev/health
 
-# Check new endpoint (will 404 until handlers implemented)
+# Check the public package endpoint; this is not payment evidence
 curl https://tdf-hq.fly.dev/services/storefront
 
 # Check frontend
@@ -91,8 +96,8 @@ curl -I https://tdf-app.pages.dev/mezcla-mastering
 2. Verify page loads correctly
 3. Test package selection
 4. Test order form validation
-5. Test payment flow (use test credentials)
-6. Verify order confirmation
+5. Test payment flow only in the provider sandbox with approved test credentials
+6. Verify browser return remains `processing` until server verification or a verified webhook
 7. Check order tracking page
 
 ---

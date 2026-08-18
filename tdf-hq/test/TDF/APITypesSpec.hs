@@ -417,15 +417,16 @@ spec = do
     describe "CourseRegistrationRequest FromJSON" $ do
         it "accepts canonical public course registration payloads" $
             case decodeCourseRegistration
-                "{\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phoneE164\":\"+593991234567\",\"source\":\"landing\",\"howHeard\":\"instagram\",\"utm\":{\"source\":\"ig\",\"medium\":\"social\",\"campaign\":\"launch\",\"content\":\"reel\"}}" of
+                "{\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phoneE164\":\"+593991234567\",\"source\":\"landing\",\"howHeard\":\"instagram\",\"utm\":{\"source\":\"ig\",\"medium\":\"social\",\"campaign\":\"launch\",\"content\":\"reel\"},\"termsAccepted\":true}" of
                 Left err ->
                     expectationFailure ("Expected canonical course registration payload to decode, got: " <> err)
-                Right (Courses.CourseRegistrationRequest fullNameVal emailVal phoneVal sourceVal howHeardVal utmVal) -> do
+                Right (Courses.CourseRegistrationRequest fullNameVal emailVal phoneVal sourceVal howHeardVal utmVal termsAcceptedVal) -> do
                     fullNameVal `shouldBe` Just "Ada Lovelace"
                     emailVal `shouldBe` Just "ada@example.com"
                     phoneVal `shouldBe` Just "+593991234567"
                     sourceVal `shouldBe` "landing"
                     howHeardVal `shouldBe` Just "instagram"
+                    termsAcceptedVal `shouldBe` Just True
                     case utmVal of
                         Nothing ->
                             expectationFailure "Expected canonical course registration payload to preserve utm tags"
@@ -1818,16 +1819,16 @@ spec = do
     describe "MarketplaceCartItemUpdate FromJSON" $ do
         it "accepts canonical public cart item payloads" $
             case decodeMarketplaceCartItemUpdate
-                "{\"mciuListingId\":\" 1 \",\"mciuQuantity\":2}" of
+                "{\"mciuListingId\":\" 11111111-1111-4111-8111-111111111111 \",\"mciuQuantity\":1}" of
                 Left err ->
                     expectationFailure ("Expected marketplace cart item payload to decode, got: " <> err)
                 Right payload -> do
-                    mciuListingId payload `shouldBe` "1"
-                    mciuQuantity payload `shouldBe` 2
+                    mciuListingId payload `shouldBe` "11111111-1111-4111-8111-111111111111"
+                    mciuQuantity payload `shouldBe` 1
 
         it "accepts cart item removal and the configured public quantity cap" $ do
             case decodeMarketplaceCartItemUpdate
-                "{\"mciuListingId\":\"1\",\"mciuQuantity\":0}" of
+                "{\"mciuListingId\":\"11111111-1111-4111-8111-111111111111\",\"mciuQuantity\":0}" of
                 Left err ->
                     expectationFailure ("Expected zero quantity cart item payload to decode, got: " <> err)
                 Right payload ->
@@ -1841,7 +1842,7 @@ spec = do
 
         it "rejects unexpected cart item keys so malformed cart writes fail explicitly" $
             decodeMarketplaceCartItemUpdate
-                "{\"mciuListingId\":\"1\",\"mciuQuantity\":2,\"status\":\"pending\"}"
+                "{\"mciuListingId\":\"11111111-1111-4111-8111-111111111111\",\"mciuQuantity\":1,\"status\":\"pending\"}"
                 `shouldSatisfy` isLeft
 
         it "rejects malformed listing ids before cart handler fallback validation" $ do
@@ -1863,7 +1864,7 @@ spec = do
 
         it "rejects negative or excessive cart item quantities before handler execution" $ do
             decodeMarketplaceCartItemUpdate
-                "{\"mciuListingId\":\"1\",\"mciuQuantity\":-1}"
+                "{\"mciuListingId\":\"11111111-1111-4111-8111-111111111111\",\"mciuQuantity\":-1}"
                 `shouldSatisfy` isLeft
             decodeMarketplaceCartItemUpdate (cartItemUpdateJson (maxMarketplaceCartItemQuantity + 1))
                 `shouldSatisfy` isLeft
@@ -1906,16 +1907,16 @@ spec = do
     describe "PaypalCaptureReq FromJSON" $ do
         it "accepts canonical PayPal capture payloads and trims identifiers" $
             case decodePaypalCapture
-                "{\"pcCaptureOrderId\":\" 42 \",\"pcCapturePaypalId\":\" PAYPAL-ORDER-123 \"}" of
+                "{\"pcCaptureOrderId\":\" 22222222-2222-4222-8222-222222222222 \",\"pcCapturePaypalId\":\" PAYPAL-ORDER-123 \"}" of
                 Left err ->
                     expectationFailure ("Expected PayPal capture payload to decode, got: " <> err)
                 Right payload -> do
-                    pcCaptureOrderId payload `shouldBe` "42"
+                    pcCaptureOrderId payload `shouldBe` "22222222-2222-4222-8222-222222222222"
                     pcCapturePaypalId payload `shouldBe` "PAYPAL-ORDER-123"
 
         it "rejects unexpected capture keys before payment handler validation runs" $
             decodePaypalCapture
-                "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\",\"paypalOrderId\":\"TYPOED-DUPLICATE\"}"
+                "{\"pcCaptureOrderId\":\"22222222-2222-4222-8222-222222222222\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\",\"paypalOrderId\":\"TYPOED-DUPLICATE\"}"
                 `shouldSatisfy` isLeft
 
         it "rejects malformed capture identifiers before payment handler fallback validation" $ do
@@ -1932,16 +1933,16 @@ spec = do
                 "{\"pcCaptureOrderId\":\"../42\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\"}"
                 `shouldSatisfy` isLeft
             decodePaypalCapture
-                "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"   \"}"
+                "{\"pcCaptureOrderId\":\"22222222-2222-4222-8222-222222222222\",\"pcCapturePaypalId\":\"   \"}"
                 `shouldSatisfy` isLeft
             decodePaypalCapture
-                "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"---___\"}"
+                "{\"pcCaptureOrderId\":\"22222222-2222-4222-8222-222222222222\",\"pcCapturePaypalId\":\"---___\"}"
                 `shouldSatisfy` isLeft
             decodePaypalCapture
-                "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"PAYPAL/ORDER-123\"}"
+                "{\"pcCaptureOrderId\":\"22222222-2222-4222-8222-222222222222\",\"pcCapturePaypalId\":\"PAYPAL/ORDER-123\"}"
                 `shouldSatisfy` isLeft
             decodePaypalCapture
-                "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-\\u0661\\u0662\\u0663\"}"
+                "{\"pcCaptureOrderId\":\"22222222-2222-4222-8222-222222222222\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-\\u0661\\u0662\\u0663\"}"
                 `shouldSatisfy` isLeft
 
     describe "LabelTrack write payload FromJSON" $ do
@@ -3191,7 +3192,11 @@ spec = do
     decodeMarketplaceCartItemUpdate = eitherDecode
     cartItemUpdateJson :: Int -> BL8.ByteString
     cartItemUpdateJson quantity =
-        BL8.pack ("{\"mciuListingId\":\"1\",\"mciuQuantity\":" <> show quantity <> "}")
+        BL8.pack
+            ( "{\"mciuListingId\":\"11111111-1111-4111-8111-111111111111\",\"mciuQuantity\":"
+                <> show quantity
+                <> "}"
+            )
     decodeMarketplaceOrderUpdate :: BL8.ByteString -> Either String MarketplaceOrderUpdate
     decodeMarketplaceOrderUpdate = eitherDecode
     decodePaypalCapture :: BL8.ByteString -> Either String PaypalCaptureReq

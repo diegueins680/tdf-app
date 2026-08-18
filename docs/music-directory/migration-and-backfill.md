@@ -17,6 +17,14 @@ nuevos son optativos y los campos históricos permanecen obligatorios. El rollba
 revertir backend/clientes; los datos enriquecidos permanecen preservados y los writers antiguos no
 los borran al omitirlos.
 
+## Proyección de imágenes de perfil (2026-08-18)
+
+La migración incremental `2026-08-18_music_directory_profile_images.sql` mantiene como fuente de
+verdad la primera entrada pública de tipo `image` del portafolio y la proyecta como `imageUrl` en la
+búsqueda. Solo acepta URLs HTTP(S) o rutas relativas seguras ya admitidas por el writer, reindexa los
+perfiles existentes de forma idempotente y actualiza la imagen en futuros refrescos. Su rollback
+restaura la función anterior sin borrar URLs ya publicadas.
+
 ## Etapas
 
 1. **Expand:** extensiones opcionales seguras (`unaccent`, `pg_trgm`), catálogos nuevos, perfiles,

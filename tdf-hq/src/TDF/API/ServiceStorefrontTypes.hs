@@ -5,6 +5,7 @@
 module TDF.API.ServiceStorefrontTypes where
 
 import           Data.Aeson   (FromJSON(..), ToJSON(..), genericParseJSON)
+import           Data.Int     (Int64)
 import           Data.Text    (Text)
 import           Data.Time    (UTCTime, Day)
 import           GHC.Generics (Generic)
@@ -158,6 +159,49 @@ data ServiceStorefrontPaypalCaptureReq = ServiceStorefrontPaypalCaptureReq
 instance ToJSON ServiceStorefrontPaypalCaptureReq
 instance FromJSON ServiceStorefrontPaypalCaptureReq where
   parseJSON = genericParseJSON strictObjectOptions
+
+-- | Request a full or partial refund. When omitted, the amount is the remaining
+-- unreserved captured balance calculated by the server.
+data ServiceStorefrontRefundCreate = ServiceStorefrontRefundCreate
+  { ssrfcAmountUsdCents :: Maybe Int
+  , ssrfcReasonCode     :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON ServiceStorefrontRefundCreate
+instance FromJSON ServiceStorefrontRefundCreate where
+  parseJSON = genericParseJSON strictObjectOptions
+
+data ServiceStorefrontRefundDTO = ServiceStorefrontRefundDTO
+  { ssrfId               :: Text
+  , ssrfOrderId          :: Text
+  , ssrfProvider         :: Text
+  , ssrfProviderRefundId :: Maybe Text
+  , ssrfStatus           :: Text
+  , ssrfAmountUsdCents   :: Int
+  , ssrfCurrency         :: Text
+  , ssrfReasonCode       :: Text
+  , ssrfRequestedBy      :: Int64
+  , ssrfApprovedBy       :: Maybe Int64
+  , ssrfCreatedAt        :: UTCTime
+  , ssrfCompletedAt      :: Maybe UTCTime
+  } deriving (Show, Generic)
+
+instance ToJSON ServiceStorefrontRefundDTO
+instance FromJSON ServiceStorefrontRefundDTO
+
+data ServiceStorefrontReconciliationDTO = ServiceStorefrontReconciliationDTO
+  { ssrecOrderId           :: Text
+  , ssrecProvider          :: Text
+  , ssrecProviderReference :: Text
+  , ssrecExpectedAmount    :: Int
+  , ssrecActualAmount      :: Maybe Int
+  , ssrecCurrency          :: Text
+  , ssrecMatched           :: Bool
+  , ssrecCheckedAt         :: UTCTime
+  } deriving (Show, Generic)
+
+instance ToJSON ServiceStorefrontReconciliationDTO
+instance FromJSON ServiceStorefrontReconciliationDTO
 
 -- | A revision request (public view).
 data ServiceStorefrontRevisionDTO = ServiceStorefrontRevisionDTO
