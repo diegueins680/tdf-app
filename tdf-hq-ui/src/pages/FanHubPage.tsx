@@ -1685,7 +1685,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           <Button
                             color="inherit"
                             size="small"
-                            onClick={() => genresCatalogQuery.refetch()}
+                            onClick={() => { void genresCatalogQuery.refetch(); }}
                             disabled={genresCatalogQuery.isRefetching}
                           >
                             {genresCatalogQuery.isRefetching ? 'Reintentando…' : 'Reintentar'}
