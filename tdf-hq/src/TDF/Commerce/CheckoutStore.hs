@@ -17,6 +17,7 @@ module TDF.Commerce.CheckoutStore
   , checkoutEnvironmentText
   , paymentProviderText
   , createCheckout
+  , createHoldingCheckout
   , createCheckoutWithLines
   , loadCheckoutEnvironment
   , beginPaymentAttempt
@@ -215,11 +216,38 @@ createCheckout creation@CheckoutCreation{..} =
         }
     ]
 
+-- | Create a checkout whose immutable price is known but whose customer has
+-- not yet accepted the versioned quote. Provider attempts must remain blocked
+-- until the domain explicitly advances this checkout to awaiting_payment.
+createHoldingCheckout :: CheckoutCreation -> SqlPersistT IO CheckoutReference
+createHoldingCheckout creation@CheckoutCreation{..} =
+  createCheckoutWithInitialStatus "holding" creation
+    [ CheckoutLineCreation
+        { clProductType = ccProductType
+        , clProductId = ccProductId
+        , clProductVersion = ccProductVersion
+        , clDescription = ccDescription
+        , clQuantity = 1
+        , clUnitAmountMinor = ccAmountMinor
+        , clSnapshot = ccSnapshot
+        }
+    ]
+
 createCheckoutWithLines
   :: CheckoutCreation
   -> [CheckoutLineCreation]
   -> SqlPersistT IO CheckoutReference
-createCheckoutWithLines CheckoutCreation{..} checkoutLines = do
+createCheckoutWithLines creation checkoutLines =
+  createCheckoutWithInitialStatus "awaiting_payment" creation checkoutLines
+
+createCheckoutWithInitialStatus
+  :: Text
+  -> CheckoutCreation
+  -> [CheckoutLineCreation]
+  -> SqlPersistT IO CheckoutReference
+createCheckoutWithInitialStatus initialStatus CheckoutCreation{..} checkoutLines = do
+  when (initialStatus `notElem` ["holding", "awaiting_payment"]) $
+    fail "Canonical checkout initial status is invalid"
   when (null checkoutLines) $
     fail "Canonical checkout requires at least one immutable line item"
   when (any invalidLine checkoutLines) $
@@ -232,10 +260,11 @@ createCheckoutWithLines CheckoutCreation{..} checkoutLines = do
     \ id, domain_type, domain_order_id, status, environment, currency,\
     \ subtotal_minor, total_minor, customer_email, lookup_token_hash,\
     \ idempotency_key, expires_at, created_at, updated_at\
-    \) VALUES (?::uuid, ?, ?, 'awaiting_payment', ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
+    \) VALUES (?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
     [ PersistText checkoutId
     , PersistText ccDomainType
     , PersistText ccDomainOrderId
+    , PersistText initialStatus
     , PersistText (checkoutEnvironmentText ccEnvironment)
     , PersistText (normalizeCurrency ccCurrency)
     , PersistInt64 ccAmountMinor
@@ -250,7 +279,7 @@ createCheckoutWithLines CheckoutCreation{..} checkoutLines = do
     checkoutId
     "checkout_created"
     Nothing
-    (Just "awaiting_payment")
+    (Just initialStatus)
     "system"
     ccCorrelationId
     ccSnapshot
@@ -435,17 +464,23 @@ bindProviderResource ProviderBindingCreation{..}
           rawExecute
             "UPDATE commerce_checkout_session SET status = ?, updated_at = ?\
             \ WHERE id = ?::uuid AND status NOT IN (\
-            \ 'paid','partially_refunded','refunded','disputed','chargeback')"
+            \ 'paid','cancelled','expired','partially_refunded','refunded','disputed','chargeback')"
             [ PersistText checkoutStatus
             , PersistUTCTime pbcOccurredAt
             , PersistText (checkoutReferenceId pbcCheckout)
             ]
-          when (not (null created)) $
+          when (not (null created)) $ do
+            currentStatuses <- rawSql
+              "SELECT status FROM commerce_checkout_session WHERE id = ?::uuid"
+              [PersistText (checkoutReferenceId pbcCheckout)]
+            let currentCheckoutStatus = case currentStatuses of
+                  [Single status] -> Just status
+                  _ -> Nothing
             insertAudit
               (checkoutReferenceId pbcCheckout)
               "provider_resource_bound"
               Nothing
-              (Just checkoutStatus)
+              currentCheckoutStatus
               (paymentProviderText pbcProvider)
               pbcCorrelationId
               (bindingMetadata pbcResourceType pbcProviderResource)

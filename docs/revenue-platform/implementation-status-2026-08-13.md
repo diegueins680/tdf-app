@@ -113,6 +113,14 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
   payout approval requires separation of duties.
 - The historical Domo browser formula is preserved as an inactive, reviewable server rate version.
   The public page no longer presents its local arithmetic as an authoritative quote or deposit.
+- Domo now has a provider-neutral, domain-linked quote/deposit runtime. Exactly one independently
+  reviewed active rate card drives server-only integer pricing; quote creation atomically snapshots
+  the lines, venue timezone, and policy and places an exclusion-constrained expiring venue hold. Versioned terms
+  acceptance opens the deposit checkout without claiming payment. Datafast/PayPal verification can
+  advance only to `deposit_paid` plus `date_reserved`; browser returns, late payments, and failed
+  provider calls cannot complete the event or reserve an expired date. Late provider evidence
+  retains its real payment/capture ID for reconciliation without reopening an expired checkout. The secure bilingual route
+  `/domo-del-pululahua/cotizaciones/:quoteId` keeps quote, payment, and venue fulfillment separate.
 - Public course registration now creates an atomic 15-minute seat hold and one canonical checkout
   from an approved active immutable policy. Datafast and PayPal actions use the shared attempt,
   binding, verification, receipt, ledger, and secure guest-lookup contracts. A registration becomes
@@ -183,7 +191,11 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
 - Datafast webhook and refund runtime; the public merchant documentation reviewed does not establish
   an authenticated callback or refund contract for TDF's merchant capability.
 - PayPal subscriptions and Payouts; they are different products from PayPal Checkout.
-- Domo checkout until the historical and proposed rate card receives independent approval.
+- Domo authoritative quote/deposit checkout through `commerce.domo_quotes`,
+  `domo.authoritative_quotes`, and `domo.checkout`. Production starts disabled; the preserved
+  historical formula remains pending approval. Enabling requires independent rate-card and policy
+  review, the missing admin comparison/approval screen, Datafast/PayPal sandbox evidence, named
+  availability and reconciliation owners, and separate production authorization.
 - DDEX production export/delivery/takedown, DSR ingestion, statements, automatic payouts, and every
   recipient-specific operation until the required licence, DPID/partner contract/profile/transport
   evidence, credentials, and authorization exist.
@@ -194,8 +206,11 @@ DSP acknowledgement, live release, royalty receipt, settlement, or payout.
 
 The following requested domains remain future phases and must not be represented as complete:
 
-- Wiring the canonical checkout aggregate into Domo accepted quotes, tips, memberships, provider
-  services, and verified donations.
+- Wiring the canonical checkout aggregate into tips, memberships, provider services, and verified
+  donations.
+- Domo staff rate-card comparison/approval, availability operations, quote change orders, balance
+  milestones/collection, contracts, cancellation/refund execution, guest-count changes, and
+  verified-email recovery. The current production gates remain closed until these controls exist.
 - Marketplace carrier integrations, approved-return shipping, and sale/provider refund execution;
   payable rental extensions, automated late-fee charging, and non-zero-deposit provider refund
   execution; booking balance collection, refunds, rescheduling/no-show/overtime operator APIs and

@@ -56,6 +56,7 @@ executable tdf-hq-exe
     TDF.CampaignAutomation
     TDF.Commerce.CheckoutStore
     TDF.Commerce.CourseCheckout
+    TDF.Commerce.DomoQuotes
     TDF.Commerce.EventTickets
     TDF.Commerce.MarketplaceSales
     TDF.Commerce.MarketplaceRentals
@@ -108,6 +109,7 @@ executable tdf-hq-exe
     TDF.Server
     TDF.Server.CommerceOperations
     TDF.Server.CourseCheckout
+    TDF.Server.DomoQuoteCheckout
     TDF.Server.EventTicketCheckout
     TDF.ServerAuth
     TDF.ServerAdmin
@@ -129,6 +131,7 @@ executable tdf-hq-exe
     TDF.ServerFanClub
     TDF.ServerFuture
     TDF.Routes.Courses
+    TDF.Routes.DomoQuotes
     TDF.Routes.EventTickets
     TDF.Trials.API
     TDF.Trials.DTO
@@ -276,6 +279,7 @@ test-suite tdf-hq-test
     TDF.CampaignAutomation
     TDF.Commerce.CheckoutStore
     TDF.Commerce.CourseCheckout
+    TDF.Commerce.DomoQuotes
     TDF.Commerce.EventTickets
     TDF.Commerce.MarketplaceSales
     TDF.Commerce.MarketplaceRentals
@@ -323,12 +327,14 @@ test-suite tdf-hq-test
     TDF.RagStore
     TDF.Routes.Academy
     TDF.Routes.Courses
+    TDF.Routes.DomoQuotes
     TDF.Routes.EventTickets
     TDF.Seed
     TDF.Server
     TDF.Server.Catalog
     TDF.Server.CommerceOperations
     TDF.Server.CourseCheckout
+    TDF.Server.DomoQuoteCheckout
     TDF.Server.EventTicketCheckout
     TDF.Server.DDEX
     TDF.Server.Directory

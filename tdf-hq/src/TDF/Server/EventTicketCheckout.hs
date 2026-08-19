@@ -1395,62 +1395,9 @@ finalizeVerifiedTicketOrder :: TicketPaymentContext -> AppM ()
 finalizeVerifiedTicketOrder context = do
   now <- liftIO getCurrentTime
   Env{ envPool } <- ask
-  (order, ticketCodes, newlyIssued) <- liftIO $ runSqlPool (do
-    runtimeRows <- (rawSql
-      "SELECT runtime.fulfillment_status, runtime.payment_status,\
-      \ runtime.promo_code_id, runtime.discount_minor\
-      \ FROM event_ticket_checkout_runtime runtime\
-      \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
-      \ WHERE runtime.order_id = ? AND checkout.status = 'paid' FOR UPDATE OF runtime"
-      [toPersistValue (tpcOrderKey context)]
-      :: SqlPersistT IO
-        [(Single Text, Single Text, Single (Maybe Int64), Single Int64)])
-    (fulfillmentStatus, paymentStatus, promoKey, discountMinor) <- case runtimeRows of
-      [(Single status, Single payment, Single promoId, Single discount)] ->
-        pure (status, payment, toSqlKey <$> promoId, discount)
-      _ -> fail "Ticket issuance requires one locked canonical checkout runtime"
-    unless (paymentStatus == "paid") $
-      fail "Ticket issuance requires a paid canonical checkout"
-    order <- getJust (tpcOrderKey context)
-    when (SM.eventTicketOrderStatus order `notElem` ["pending", "paid"]) $
-      fail "Closed ticket order cannot be issued"
-    updateWhere
-      [ SM.EventTicketOrderId ==. tpcOrderKey context
-      , SM.EventTicketOrderStatus ==. "pending"
-      ]
-      [ SM.EventTicketOrderStatus =. "paid"
-      , SM.EventTicketOrderUpdatedAt =. now
-      ]
-    case fulfillmentStatus of
-      "seat_held" -> do
-        ticketCodes <- SocialEvents.issueMissingTicketsForOrder
-          now (tpcOrderKey context) order
-        forM_ promoKey $ \key -> do
-          existingRedemption <- selectFirst
-            [SM.PromoCodeRedemptionOrderId ==. tpcOrderKey context] []
-          when (not (isJust existingRedemption)) $ insert_ SM.PromoCodeRedemption
-            { SM.promoCodeRedemptionPromoCodeId = key
-            , SM.promoCodeRedemptionOrderId = tpcOrderKey context
-            , SM.promoCodeRedemptionDiscountAmountCents = fromIntegral discountMinor
-            , SM.promoCodeRedemptionRedeemedAt = now
-            }
-        rawExecute
-          "UPDATE event_ticket_checkout_runtime\
-          \ SET fulfillment_status='issued', issued_at=?, updated_at=? WHERE order_id=?"
-          [ PersistUTCTime now, PersistUTCTime now
-          , toPersistValue (tpcOrderKey context)
-          ]
-        rawExecute
-          "INSERT INTO event_ticket_fulfillment_event(\
-          \ order_id, from_status, to_status, actor_type, reason_code, notes\
-          \) VALUES (?, 'seat_held', 'issued', 'provider', 'verified_payment',\
-          \ 'Tickets issued only after canonical provider verification')"
-          [toPersistValue (tpcOrderKey context)]
-        pure (order, ticketCodes, True)
-      "issued" -> do
-        existingTickets <- selectList
-          [SM.EventTicketOrderRefId ==. tpcOrderKey context] [Asc SM.EventTicketId]
-        pure (order, map (SM.eventTicketCode . entityVal) existingTickets, False)
-      _ -> fail "Paid ticket checkout is not in an issuable fulfillment state") envPool
+  (order, ticketCodes, newlyIssued) <- liftIO $
+    runSqlPool
+      (SocialEvents.finalizePaidTicketOrder now (tpcOrderKey context))
+      envPool
   when newlyIssued $
     SocialEvents.sendTicketConfirmationForOrder order ticketCodes

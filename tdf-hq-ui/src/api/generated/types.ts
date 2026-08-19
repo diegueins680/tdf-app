@@ -4651,10 +4651,248 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/domo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the authoritative Domo quote capability and approved rate-card limits
+         * @description Prices are intentionally omitted. A payable quote is calculated only by the server from exactly one independently approved active rate-card version.
+         */
+        get: operations["getPublicDomoStorefront"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/domo/quotes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Calculate an immutable Domo quote and atomically hold the requested date
+         * @description Guest count, duration, add-ons, tax, deposit, balance, policy, rate-card version, and hold expiry are server-authoritative. Creation starts in holding state and never means acceptance or payment.
+         */
+        post: operations["createPublicDomoQuote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/domo/quotes/{quoteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Track a customer-safe Domo quote using its unguessable lookup token */
+        get: operations["getPublicDomoQuote"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/domo/quotes/{quoteId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept the exact versioned Domo quote and open its deposit checkout
+         * @description Acceptance records the terms version and changes payment from holding to awaiting_payment; it never records payment.
+         */
+        post: operations["acceptPublicDomoQuote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/domo/quotes/{quoteId}/datafast/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover the deposit checkout's strongly bound Datafast resource */
+        post: operations["createPublicDomoDatafastCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/domo/quotes/{quoteId}/datafast/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify a bound Datafast Domo deposit server-to-server
+         * @description A browser return is not payment evidence. Amount, currency, merchant, quote, checkout, environment, and exact stored resource path must match before the deposit and date-reserved transitions.
+         */
+        get: operations["confirmPublicDomoDatafastStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/domo/quotes/{quoteId}/paypal/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover the deposit checkout's bound PayPal order */
+        post: operations["createPublicDomoPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/domo/quotes/{quoteId}/paypal/capture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Capture and verify the exact bound PayPal Domo deposit
+         * @description Browser approval is not success. TDF captures server-to-server and verifies capture status, amount, currency, payee merchant, quote, checkout, environment, and provider binding before recording the deposit and reserving the date.
+         */
+        post: operations["capturePublicDomoPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        PublicDomoStorefront: {
+            checkoutAvailable: boolean;
+            unavailableReason?: string | null;
+            rateCardVersion?: string | null;
+            currency?: string | null;
+            eventTypes: string[];
+            maximumGuests?: number | null;
+            maximumDurationHours?: number | null;
+            maximumSetupHours?: number | null;
+            quoteHoldMinutes?: number | null;
+            timezone: string;
+        };
+        PublicDomoQuoteCreateRequest: {
+            customerName: string;
+            /** Format: email */
+            customerEmail: string;
+            customerPhone?: string;
+            eventType: string;
+            guests: number;
+            /** Format: date-time */
+            startsAt: string;
+            durationHours: number;
+            setupHours: number;
+            catering: boolean;
+            production: boolean;
+            transport: boolean;
+            notes?: string;
+        };
+        PublicDomoQuoteAcceptRequest: {
+            /** @enum {boolean} */
+            termsAccepted: true;
+        };
+        PublicDomoQuoteLine: {
+            code: string;
+            description: string;
+            quantity: number;
+            /** Format: int64 */
+            unitAmountMinor: number;
+            /** Format: int64 */
+            subtotalMinor: number;
+        };
+        PublicDomoQuote: {
+            /** Format: uuid */
+            quoteId: string;
+            /** Format: uuid */
+            checkoutId: string;
+            lookupToken?: string | null;
+            /** @enum {string} */
+            quoteStatus: "draft" | "sent" | "viewed" | "accepted" | "deposit_due" | "deposit_paid" | "in_progress" | "balance_due" | "completed" | "cancelled" | "expired";
+            /** @enum {string} */
+            paymentStatus: "holding" | "awaiting_payment" | "processing" | "paid" | "failed" | "cancelled" | "expired" | "partially_refunded" | "refunded" | "disputed" | "chargeback";
+            /** @enum {string} */
+            fulfillmentStatus: "date_held" | "date_reserved" | "in_progress" | "balance_due" | "completed" | "cancelled" | "expired";
+            rateCardVersion: string;
+            currency: string;
+            eventType: string;
+            guests: number;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string;
+            /** Format: date-time */
+            setupStartsAt: string;
+            lines: components["schemas"]["PublicDomoQuoteLine"][];
+            /** Format: int64 */
+            subtotalMinor: number;
+            /** Format: int64 */
+            taxMinor: number;
+            /** Format: int64 */
+            totalMinor: number;
+            /** Format: int64 */
+            depositMinor: number;
+            /** Format: int64 */
+            balanceMinor: number;
+            timezone: string;
+            termsVersion: string;
+            /** Format: date-time */
+            holdExpiresAt: string;
+            /** Format: date-time */
+            termsAcceptedAt?: string | null;
+            /** Format: date-time */
+            depositPaidAt?: string | null;
+            paymentMethods: ("datafast" | "paypal")[];
+        };
+        PublicDomoPaypalCaptureRequest: {
+            paypalOrderId: string;
+        };
         PublicEventTicketTier: {
             /** Format: int64 */
             tierId: number;
@@ -8915,6 +9153,8 @@ export interface components {
     parameters: {
         PublicEventId: number;
         PublicEventTicketOrderId: number;
+        /** @description Immutable canonical UUID of the Domo quote runtime. */
+        PublicDomoQuoteId: string;
         /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
         PublicOrderLookupToken: string;
         PublicBookingId: number;
@@ -17981,6 +18221,345 @@ export interface operations {
                 content?: never;
             };
             /** @description Provider binding mismatch or payment arrived after hold expiry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal capture or immutable payment fields could not be verified */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicDomoStorefront: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public Domo quote capability; checkoutAvailable remains false until all environment and rate-card gates pass */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDomoStorefront"];
+                };
+            };
+        };
+    };
+    createPublicDomoQuote: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicDomoQuoteCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Immutable quote and temporary date hold; lookupToken is returned only on creation */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDomoQuote"];
+                };
+            };
+            /** @description Customer or event input is invalid under the approved rate-card policy */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requested venue window is already held or reserved */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authoritative Domo quotes or an approved active rate card are unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicDomoQuote: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current quote, payment, and venue-fulfillment state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDomoQuote"];
+                };
+            };
+            /** @description Quote not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    acceptPublicDomoQuote: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicDomoQuoteAcceptRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted quote awaiting a separately verified deposit */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDomoQuote"];
+                };
+            };
+            /** @description Quote not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Quote hold expired or quote cannot be accepted in its current state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicDomoDatafastCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound Datafast hosted checkout */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatafastCheckout"];
+                };
+            };
+            /** @description Quote not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Quote is unaccepted */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast or Domo checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmPublicDomoDatafastStatus: {
+        parameters: {
+            query: {
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current server-verified quote, checkout, and venue state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDomoQuote"];
+                };
+            };
+            /** @description Quote not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider binding mismatch or verified payment arrived after hold expiry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider status or immutable payment fields could not be verified */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicDomoPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound PayPal order awaiting customer approval */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaypalCreate"];
+                };
+            };
+            /** @description Quote not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Quote is unaccepted */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal or Domo checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    capturePublicDomoPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicDomoPaypalCaptureRequest"];
+            };
+        };
+        responses: {
+            /** @description Current server-verified quote, checkout, and venue state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDomoQuote"];
+                };
+            };
+            /** @description Quote not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider binding mismatch or verified payment arrived after hold expiry */
             409: {
                 headers: {
                     [name: string]: unknown;
