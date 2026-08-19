@@ -26,7 +26,9 @@ module TDF.Server.SocialEventsHandlers (
     eventTicketPurchaseEnabledFor,
     isTicketTierSaleOpen,
     issueMissingTicketsForOrder,
+    finalizePaidTicketOrder,
     sendTicketConfirmationForOrder,
+    sendTicketConfirmationForOrderIO,
     normalizeTicketStatus,
     validateEventMetadataUpdate,
     validateEventMetadataUrlField,
@@ -166,6 +168,7 @@ import Database.Persist.Sql
     , filterClauseWithVals
     , fromSqlKey
     , orderClause
+    , rawExecute
     , rawSql
     , runSqlPool
     , toSqlKey
@@ -710,35 +713,109 @@ issueMissingTicketsForOrder now orderKey order = do
     allTickets <- selectList [EventTicketOrderRefId ==. orderKey] [Asc EventTicketId]
     pure (map (eventTicketCode . entityVal) allTickets)
 
+finalizePaidTicketOrder ::
+    UTCTime ->
+    EventTicketOrderId ->
+    SqlPersistT IO (EventTicketOrder, [T.Text], Bool)
+finalizePaidTicketOrder now orderKey = do
+    runtimeRows <-
+        ( rawSql
+            "SELECT runtime.fulfillment_status, runtime.payment_status,\
+            \ runtime.promo_code_id, runtime.discount_minor\
+            \ FROM event_ticket_checkout_runtime runtime\
+            \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
+            \ WHERE runtime.order_id = ? AND checkout.status = 'paid' FOR UPDATE OF runtime"
+            [toPersistValue orderKey]
+            :: SqlPersistT IO
+                [(Single T.Text, Single T.Text, Single (Maybe Int64), Single Int64)]
+        )
+    (fulfillmentStatus, paymentStatus, promoKey, discountMinor) <-
+        case runtimeRows of
+            [(Single status, Single payment, Single promoId, Single discount)] ->
+                pure (status, payment, toSqlKey <$> promoId, discount)
+            _ -> fail "Ticket issuance requires one locked canonical checkout runtime"
+    unless (paymentStatus == "paid") $
+        fail "Ticket issuance requires a paid canonical checkout"
+    order <- getJust orderKey
+    when (eventTicketOrderStatus order `notElem` ["pending", "paid"]) $
+        fail "Closed ticket order cannot be issued"
+    updateWhere
+        [ EventTicketOrderId ==. orderKey
+        , EventTicketOrderStatus ==. "pending"
+        ]
+        [ EventTicketOrderStatus =. "paid"
+        , EventTicketOrderUpdatedAt =. now
+        ]
+    case fulfillmentStatus of
+        "seat_held" -> do
+            ticketCodes <- issueMissingTicketsForOrder now orderKey order
+            forM_ promoKey $ \key -> do
+                existingRedemption <-
+                    selectFirst [PromoCodeRedemptionOrderId ==. orderKey] []
+                when (not (isJust existingRedemption)) $
+                    insert_
+                        PromoCodeRedemption
+                            { promoCodeRedemptionPromoCodeId = key
+                            , promoCodeRedemptionOrderId = orderKey
+                            , promoCodeRedemptionDiscountAmountCents =
+                                fromIntegral discountMinor
+                            , promoCodeRedemptionRedeemedAt = now
+                            }
+            rawExecute
+                "UPDATE event_ticket_checkout_runtime\
+                \ SET fulfillment_status='issued', issued_at=?, updated_at=? WHERE order_id=?"
+                [ PersistUTCTime now
+                , PersistUTCTime now
+                , toPersistValue orderKey
+                ]
+            rawExecute
+                "INSERT INTO event_ticket_fulfillment_event(\
+                \ order_id, from_status, to_status, actor_type, reason_code, notes\
+                \) VALUES (?, 'seat_held', 'issued', 'provider', 'verified_payment',\
+                \ 'Tickets issued only after canonical provider verification')"
+                [toPersistValue orderKey]
+            pure (order, ticketCodes, True)
+        "issued" -> do
+            existingTickets <-
+                selectList [EventTicketOrderRefId ==. orderKey] [Asc EventTicketId]
+            pure
+                ( order
+                , map (eventTicketCode . entityVal) existingTickets
+                , False
+                )
+        _ -> fail "Paid ticket checkout is not in an issuable fulfillment state"
+
 sendTicketConfirmationForOrder :: EventTicketOrder -> [T.Text] -> AppM ()
 sendTicketConfirmationForOrder order ticketCodes = do
-    Env{..} <- ask
+    env <- ask
+    liftIO $ sendTicketConfirmationForOrderIO env order ticketCodes
+
+sendTicketConfirmationForOrderIO :: Env -> EventTicketOrder -> [T.Text] -> IO ()
+sendTicketConfirmationForOrderIO Env{..} order ticketCodes = do
     (mEvent, mTier, mParty) <-
-        liftIO $
-            runSqlPool
-                ( do
-                    eventRow <- get (eventTicketOrderEventId order)
-                    tierRow <- get (eventTicketOrderTierId order)
-                    partyRow <- case partyKey of
-                        Nothing -> pure Nothing
-                        Just key -> get key
-                    pure (eventRow, tierRow, partyRow)
-                )
-                envPool
+        runSqlPool
+            ( do
+                eventRow <- get (eventTicketOrderEventId order)
+                tierRow <- get (eventTicketOrderTierId order)
+                partyRow <- case partyKey of
+                    Nothing -> pure Nothing
+                    Just key -> get key
+                pure (eventRow, tierRow, partyRow)
+            )
+            envPool
     case (mEvent, mTier, recipientEmail mParty) of
         (Just eventRow, Just tierRow, Just emailAddress) ->
-            liftIO $
-                sendTicketConfirmationEmailBestEffort
-                    (emailConfig envConfig)
-                    (recipientName mParty)
-                    emailAddress
-                    (socialEventTitle eventRow)
-                    (formatTicketEventDate (socialEventStartTime eventRow))
-                    (eventTicketOrderQuantity order)
-                    (eventTicketTierName tierRow)
-                    (formatTicketOrderTotal order)
-                    ticketCodes
-                    (Just ticketMobileUrl)
+            sendTicketConfirmationEmailBestEffort
+                (emailConfig envConfig)
+                (recipientName mParty)
+                emailAddress
+                (socialEventTitle eventRow)
+                (formatTicketEventDate (socialEventStartTime eventRow))
+                (eventTicketOrderQuantity order)
+                (eventTicketTierName tierRow)
+                (formatTicketOrderTotal order)
+                ticketCodes
+                (Just ticketMobileUrl)
         _ -> pure ()
   where
     partyKey =

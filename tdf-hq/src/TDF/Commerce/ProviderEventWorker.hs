@@ -90,7 +90,7 @@ processReference
   -> ProviderEventWorkerStats
   -> ProviderEvent.ProviderEventReference
   -> IO ProviderEventWorkerStats
-processReference Env{envPool} encryptionKey stats eventRef = do
+processReference env@Env{envPool} encryptionKey stats eventRef = do
   now <- getCurrentTime
   claim <- runSqlPool (ProviderEvent.claimProviderEvent eventRef now) envPool
   case claim of
@@ -119,7 +119,7 @@ processReference Env{envPool} encryptionKey stats eventRef = do
                 { pewDeadLettered = pewDeadLettered claimedStats + 1 }
             Right (environment, envelope) -> do
               processed <- tryAny $ processPaypalWebhookEventIO
-                envPool environment (ProviderEvent.pepMerchantRef payload) envelope now
+                env environment (ProviderEvent.pepMerchantRef payload) envelope now
               case processed of
                 Left _ -> markRetry envPool eventRef attemptCount
                   "Provider event processing failed" now claimedStats
