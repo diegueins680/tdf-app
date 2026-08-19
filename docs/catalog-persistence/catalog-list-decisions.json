@@ -8604,7 +8604,47 @@
       "reviewed": true
     },
     {
-      "id": "dee5c1431841d4f8474a",
+      "id": "2de186508bcd87434cc5",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item",
+      "priority": "P3-retain",
+      "risk": "Changing UI constants could break rendering or user experience.",
+      "justification": "UI view mode constants are client-side presentation mechanics, not governed business catalog data.",
+      "reviewed": true
+    },
+    {
+      "id": "3c57b107ee336167e09d",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item",
+      "priority": "P3-retain",
+      "risk": "Changing UI constants could break rendering or user experience.",
+      "justification": "UI entity options are client-side presentation mechanics, not governed business catalog data.",
+      "reviewed": true
+    },
+    {
+      "id": "4d31826e1beb0c734a96",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item",
+      "priority": "P3-retain",
+      "risk": "Changing UI constants could break rendering or user experience.",
+      "justification": "UI mode options are client-side presentation mechanics, not governed business catalog data.",
+      "reviewed": true
+    },
+    {
+      "id": "929988ea9cf22625c461",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P3-consumer",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+      "reviewed": true
+    },
+    {
+      "id": "149cb8b498b0cc858d3d",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
@@ -8614,7 +8654,7 @@
       "reviewed": true
     },
     {
-      "id": "d93f59a611b6da200219",
+      "id": "faf664611d7ab0aa954d",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
       "specializedModel": "navigation_item",
@@ -8624,7 +8664,7 @@
       "reviewed": true
     },
     {
-      "id": "db643fc9e5c94775063b",
+      "id": "60990a5df11b7a72f4d0",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
       "specializedModel": "navigation_item",
