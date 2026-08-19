@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.Commerce.CheckoutStore
   ( CheckoutEnvironment(..)

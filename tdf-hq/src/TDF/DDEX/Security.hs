@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.DDEX.Security
   ( -- * Safe XML parsing
@@ -215,10 +216,12 @@ validateTagBalance = go [] 0
               | otherwise -> scan quote (T.snoc acc character) rest
 
     validXmlName name =
-      not (T.null name)
-        && T.all validNameCharacter name
-        && not (T.any isXmlSpace name)
-        && T.head name /= '/'
+      case T.uncons name of
+        Nothing -> False
+        Just (firstCharacter, _) ->
+          firstCharacter /= '/'
+            && T.all validNameCharacter name
+            && not (T.any isXmlSpace name)
 
     validNameCharacter character =
       character == ':' || character == '_' || character == '-' || character == '.'

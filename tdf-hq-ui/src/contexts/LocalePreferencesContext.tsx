@@ -10,8 +10,8 @@ const STORAGE_KEY = 'tdf-hq-ui/locale-preferences';
 
 function browserTimezone(): string {
   try {
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    return timezone.length > 0 ? timezone : 'UTC';
+    const resolvedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return resolvedTimezone.length > 0 ? resolvedTimezone : 'UTC';
   } catch {
     return 'UTC';
   }
@@ -37,11 +37,11 @@ function readStoredPreferences(): LocalePreferences {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return fallback;
     const stored = JSON.parse(raw) as Partial<LocalePreferences>;
-    const locale = normalizeLocale(stored.locale) ?? fallback.locale;
+    const storedLocale = normalizeLocale(stored.locale) ?? fallback.locale;
     return {
       ...fallback,
       localeId: typeof stored.localeId === 'string' ? stored.localeId.trim() : '',
-      locale,
+      locale: storedLocale,
       currencyId: typeof stored.currencyId === 'string' ? stored.currencyId.trim() : '',
       currency: typeof stored.currency === 'string' ? stored.currency.toUpperCase() : fallback.currency,
       timezone: typeof stored.timezone === 'string' && stored.timezone.trim() ? stored.timezone : fallback.timezone,
@@ -58,7 +58,7 @@ export function normalizePreferences(value: unknown, fallback: LocalePreferences
   // code-only shape, without localeId, currencyId, or countryId.
   const source = value && typeof value === 'object' ? value as Record<string, unknown> : {};
   const localeId = typeof source['localeId'] === 'string' ? source['localeId'].trim() : fallback.localeId;
-  const locale = normalizeLocale(typeof source['locale'] === 'string' ? source['locale'] : undefined)
+  const normalizedLocale = normalizeLocale(typeof source['locale'] === 'string' ? source['locale'] : undefined)
     ?? normalizeLocale(fallback.locale)
     ?? 'en';
   const currencyId = typeof source['currencyId'] === 'string'
@@ -67,7 +67,7 @@ export function normalizePreferences(value: unknown, fallback: LocalePreferences
   const currency = typeof source['currency'] === 'string' && source['currency'].trim()
     ? source['currency'].trim().toUpperCase()
     : fallback.currency;
-  const timezone = typeof source['timezone'] === 'string' && source['timezone'].trim()
+  const normalizedTimezone = typeof source['timezone'] === 'string' && source['timezone'].trim()
     ? source['timezone'].trim()
     : fallback.timezone;
   const countryId = typeof source['countryId'] === 'string' ? source['countryId'].trim() : fallback.countryId;
@@ -76,10 +76,10 @@ export function normalizePreferences(value: unknown, fallback: LocalePreferences
     : fallback.countryCode;
   return {
     localeId,
-    locale,
+    locale: normalizedLocale,
     currencyId,
     currency,
-    timezone,
+    timezone: normalizedTimezone,
     countryId: countryId && countryId.length > 0 ? countryId : null,
     countryCode: countryCode && countryCode.length > 0 ? countryCode : null,
   };

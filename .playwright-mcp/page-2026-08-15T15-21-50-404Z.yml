@@ -1,0 +1,208 @@
+- generic [ref=f30e9]:
+  - generic [ref=f30e12]:
+    - link [ref=f30e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f30e22]
+    - generic [ref=f30e25]:
+      - link [ref=f30e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f30e35]
+      - link [ref=f30e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f30e45]
+      - link [ref=f30e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=f30e57]
+      - link [ref=f30e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f30e67]
+      - link [ref=f30e217] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f30e222]
+      - link [ref=f30e85] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f30e90]
+      - link [ref=f30e95] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f30e100]
+      - link [ref=f30e107] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f30e112]:
+          - img "tdf.records.label's profile picture" [ref=f30e113]
+    - generic [ref=f30e114]:
+      - link [ref=f30e117] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f30e122]
+      - link [ref=f30e125] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f30e130]
+  - main [ref=f30e134]:
+    - generic [ref=f30e230]:
+      - navigation "Thread list" [ref=f30e231]:
+        - generic [ref=f30e232]:
+          - generic [ref=f30e233]:
+            - button [ref=f30e234] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f30e236]
+              - img "Down chevron icon" [ref=f30e239]
+            - button [ref=f30e243] [cursor=pointer]:
+              - img "New message" [ref=f30e245]
+          - tablist [ref=f30e250]:
+            - tab "Primary" [selected] [ref=f30e251] [cursor=pointer]
+            - tab "General" [ref=f30e254] [cursor=pointer]
+            - tab "From ads" [ref=f30e257] [cursor=pointer]
+            - tab "Requests" [ref=f30e261] [cursor=pointer]
+          - generic [ref=f30e264]:
+            - generic [ref=f30e265]:
+              - button "Back" [ref=f30e3497] [cursor=pointer]:
+                - img "Back" [ref=f30e3500]
+              - generic [ref=f30e3503]:
+                - textbox "Clear search" [active] [ref=f30e3504]:
+                  - /placeholder: Search
+                  - text: federico__molinari_
+                - button "Clear search" [ref=f30e3505] [cursor=pointer]:
+                  - img "Clear search" [ref=f30e3507]
+            - generic [ref=f30e3509]:
+              - button "Llama Este Pez, Fabro Alomìa Torres, Federico Molinari and Space Trip Fest jam_estepez, planet_303" [ref=f30e3510] [cursor=pointer]:
+                - generic [ref=f30e3520]:
+                  - generic [ref=f30e3521]: Llama Este Pez, Fabro Alomìa Torres, Federico Molinari and Space Trip Fest
+                  - generic [ref=f30e3525]: jam_estepez, planet_303
+              - generic:
+                - heading "More accounts" [level=2]
+              - button "User avatar Federico Molinari federico__molinari_" [ref=f30e3526] [cursor=pointer]:
+                - generic [ref=f30e3527]:
+                  - img "User avatar" [ref=f30e3532]
+                  - generic [ref=f30e3535]:
+                    - generic [ref=f30e3536]: Federico Molinari
+                    - generic [ref=f30e3540]: federico__molinari_
+              - button "User avatar Federico Molinari ficomolinari" [ref=f30e3541] [cursor=pointer]:
+                - generic [ref=f30e3542]:
+                  - img "User avatar" [ref=f30e3547]
+                  - generic [ref=f30e3550]:
+                    - generic [ref=f30e3551]: Federico Molinari
+                    - generic [ref=f30e3555]: ficomolinari
+              - button "User avatar Federico Molinari federico_molinari You both follow balitimechamber and 1 other" [ref=f30e3556] [cursor=pointer]:
+                - generic [ref=f30e3557]:
+                  - img "User avatar" [ref=f30e3562]
+                  - generic [ref=f30e3565]:
+                    - generic [ref=f30e3566]: Federico Molinari
+                    - generic [ref=f30e3570]: federico_molinari
+                    - generic [ref=f30e3572]: You both follow balitimechamber and 1 other
+              - button "User avatar 𝐅𝐞𝐝𝐞𝐫𝐢𝐜𝐨 𝐌𝐨𝐥𝐢𝐧𝐚𝐫𝐢 federico.molinari__ we gon make it⭐️🫆 @pitfallinup 🔊" [ref=f30e3574] [cursor=pointer]:
+                - generic [ref=f30e3575]:
+                  - img "User avatar" [ref=f30e3580]
+                  - generic [ref=f30e3583]:
+                    - generic [ref=f30e3584]: 𝐅𝐞𝐝𝐞𝐫𝐢𝐜𝐨 𝐌𝐨𝐥𝐢𝐧𝐚𝐫𝐢
+                    - generic [ref=f30e3588]: federico.molinari__
+                    - generic [ref=f30e3590]: we gon make it⭐️🫆 @pitfallinup 🔊
+              - button "User avatar Federico Molinari federico.molinari El gimnasta olímpico es @FDMolinari" [ref=f30e3592] [cursor=pointer]:
+                - generic [ref=f30e3593]:
+                  - img "User avatar" [ref=f30e3598]
+                  - generic [ref=f30e3601]:
+                    - generic [ref=f30e3602]: Federico Molinari
+                    - generic [ref=f30e3606]: federico.molinari
+                    - generic [ref=f30e3608]: El gimnasta olímpico es @FDMolinari
+              - button "User avatar Federico Molinari federicomolinari 💙G&V🩵" [ref=f30e3610] [cursor=pointer]:
+                - generic [ref=f30e3611]:
+                  - img "User avatar" [ref=f30e3616]
+                  - generic [ref=f30e3619]:
+                    - generic [ref=f30e3620]: Federico Molinari
+                    - generic [ref=f30e3624]: federicomolinari
+                    - generic [ref=f30e3626]: 💙G&V🩵
+              - button "User avatar federico molinari _federico.molinari_ MI @polimi" [ref=f30e3628] [cursor=pointer]:
+                - generic [ref=f30e3629]:
+                  - img "User avatar" [ref=f30e3634]
+                  - generic [ref=f30e3637]:
+                    - generic [ref=f30e3638]: federico molinari
+                    - generic [ref=f30e3642]: _federico.molinari_
+                    - generic [ref=f30e3644]: MI @polimi
+              - button "User avatar Federico Molinari federico__molinari" [ref=f30e3646] [cursor=pointer]:
+                - generic [ref=f30e3647]:
+                  - img "User avatar" [ref=f30e3652]
+                  - generic [ref=f30e3655]:
+                    - generic [ref=f30e3656]: Federico Molinari
+                    - generic [ref=f30e3660]: federico__molinari
+              - 'button "User avatar Federico Molinari fedeemolinari #1041 #Fire Aspirado #Scr swap 2.5 #147 1.4T" [ref=f30e3661] [cursor=pointer]':
+                - generic [ref=f30e3662]:
+                  - img "User avatar" [ref=f30e3667]
+                  - generic [ref=f30e3670]:
+                    - generic [ref=f30e3671]: Federico Molinari
+                    - generic [ref=f30e3675]: fedeemolinari
+                    - generic [ref=f30e3677]: "#1041 #Fire Aspirado #Scr swap 2.5 #147 1.4T"
+      - generic [ref=f30e3260]:
+        - generic [ref=f30e3264]:
+          - link "Open the profile page of planet_303" [ref=f30e3265] [cursor=pointer]:
+            - /url: /planet_303/
+            - generic [ref=f30e3266]:
+              - img "user-profile-picture" [ref=f30e3270]
+              - generic [ref=f30e3271]:
+                - heading "Fabro Alomìa Torres" [level=2] [ref=f30e3273]
+                - generic [ref=f30e3275]: planet_303
+          - generic [ref=f30e3279]:
+            - button [ref=f30e3280] [cursor=pointer]:
+              - img "Audio call" [ref=f30e3282]
+            - button [ref=f30e3284] [cursor=pointer]:
+              - img "Video call" [ref=f30e3286]
+            - button [ref=f30e3289] [cursor=pointer]:
+              - img "Conversation information" [ref=f30e3291]
+        - generic [ref=f30e3295]:
+          - generic [ref=f30e3299]:
+            - generic [ref=f30e3300]:
+              - progressbar [ref=f30e3303]:
+                - img "Loading..." [ref=f30e3304]
+              - generic [ref=f30e3343]:
+                - generic [ref=f30e3344]: 6/25/25, 8:36 PM
+                - group [ref=f30e3347]:
+                  - generic [ref=f30e3348]:
+                    - button [ref=f30e3352] [cursor=pointer]:
+                      - link "tdf.records.label" [ref=f30e3356]:
+                        - /url: /tdf.records.label/
+                      - img "Clip" [ref=f30e3361]
+                    - button "❤️" [ref=f30e3364] [cursor=pointer]
+              - group [ref=f30e3370]:
+                - generic [ref=f30e3371]: En la descripción está con un pequeño error
+              - group [ref=f30e3381]:
+                - generic [ref=f30e3382]: No es radio Hostel
+              - group [ref=f30e3392]:
+                - generic [ref=f30e3394]:
+                  - link "Open the profile page of planet_303" [ref=f30e3397] [cursor=pointer]:
+                    - /url: /planet_303
+                    - img "user-profile-picture" [ref=f30e3400]
+                  - generic [ref=f30e3401]: Es Rio Hostel
+              - generic [ref=f30e3408]:
+                - generic [ref=f30e3409]: 11/22/25, 8:50 AM
+                - group [ref=f30e3412]:
+                  - generic [ref=f30e3413]:
+                    - generic [ref=f30e3414]: Mentioned you in their story
+                    - generic [ref=f30e3418]:
+                      - link "Open the profile page of planet_303" [ref=f30e3421] [cursor=pointer]:
+                        - /url: /planet_303
+                        - img "user-profile-picture" [ref=f30e3424]
+                      - generic [ref=f30e3425]: Story unavailable
+              - generic [ref=f30e3433]:
+                - generic [ref=f30e3434]: Wed 7:33 PM
+                - group [ref=f30e3437]:
+                  - generic [ref=f30e3442]:
+                    - generic [ref=f30e3445]:
+                      - text: Hola, Fabro
+                      - img "👋" [ref=f30e3447]
+                      - text: "Vimos tus fechas electrónicas en Las Abejas y Cumbayá, además del grupo reciente conectado con TDF. Tu escena necesita un espacio propio: en TDF puedes armar tu perfil y encontrarte con artistas, lanzamientos y experiencias de Quito. Te invitamos a probarlo:"
+                      - link "https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a" [ref=f30e3449] [cursor=pointer]:
+                        - /url: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a
+                      - text: "Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                    - link "TDF Records" [ref=f30e3450] [cursor=pointer]:
+                      - /url: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a
+            - generic [ref=f30e3455]: Seen
+          - generic [ref=f30e3466]:
+            - button [ref=f30e3469] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f30e3471]
+            - generic [ref=f30e3473]:
+              - textbox [ref=f30e3474]:
+                - paragraph [ref=f30e3475]
+              - generic: Message...
+            - generic [ref=f30e3476]:
+              - button [ref=f30e3477] [cursor=pointer]:
+                - img "Voice Clip" [ref=f30e3479]
+              - button [ref=f30e3482] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f30e3484]
+              - button [ref=f30e3489] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f30e3491]

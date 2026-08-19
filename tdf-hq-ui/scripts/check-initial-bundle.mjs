@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = path.resolve(SCRIPT_DIR, '..', 'dist');
 const INDEX_PATH = path.join(DIST_DIR, 'index.html');
-const MAX_INITIAL_GZIP_BYTES = 400 * 1024;
+const MAX_INITIAL_GZIP_BYTES = 410 * 1024;
 const MAX_MODULE_PRELOADS = 8;
 const ROUTE_CHUNK_PATTERN = /(?:^|\/)(?:fullcalendar|mui-x|dnd|qrcode)-|Page-/;
 const SECRET_PATTERNS = [

@@ -1,0 +1,163 @@
+- generic [ref=f30e9]:
+  - generic [ref=f30e12]:
+    - link [ref=f30e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f30e22]
+    - generic [ref=f30e25]:
+      - link [ref=f30e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f30e35]
+      - link [ref=f30e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f30e45]
+      - link [ref=f30e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=f30e57]
+      - link [ref=f30e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f30e67]
+      - link [ref=f30e217] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f30e222]
+      - link [ref=f30e85] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f30e90]
+      - link [ref=f30e95] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f30e100]
+      - link [ref=f30e107] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f30e112]:
+          - img "tdf.records.label's profile picture" [ref=f30e113]
+    - generic [ref=f30e114]:
+      - link [ref=f30e117] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f30e122]
+      - link [ref=f30e125] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f30e130]
+  - main [ref=f30e134]:
+    - generic [ref=f30e230]:
+      - navigation "Thread list" [ref=f30e231]:
+        - generic [ref=f30e232]:
+          - generic [ref=f30e233]:
+            - button [ref=f30e234] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f30e236]
+              - img "Down chevron icon" [ref=f30e239]
+            - button [ref=f30e243] [cursor=pointer]:
+              - img "New message" [ref=f30e245]
+          - tablist [ref=f30e250]:
+            - tab "Primary" [selected] [ref=f30e251] [cursor=pointer]
+            - tab "General" [ref=f30e254] [cursor=pointer]
+            - tab "From ads" [ref=f30e257] [cursor=pointer]
+            - tab "Requests" [ref=f30e261] [cursor=pointer]
+          - generic [ref=f30e264]:
+            - generic [ref=f30e265]:
+              - button "Back" [ref=f30e1655] [cursor=pointer]:
+                - img "Back" [ref=f30e1658]
+              - generic [ref=f30e1833]:
+                - textbox "Clear search" [active] [ref=f30e1834]:
+                  - /placeholder: Search
+                  - text: jam_estepez
+                - button "Clear search" [ref=f30e1835] [cursor=pointer]:
+                  - img "Clear search" [ref=f30e1837]
+            - generic [ref=f30e1839]:
+              - button "Llama Este Pez, Fabro Alomìa Torres, Federico Molinari and Space Trip Fest jam_estepez, planet_303" [ref=f30e1840] [cursor=pointer]:
+                - generic [ref=f30e1850]:
+                  - generic [ref=f30e1851]: Llama Este Pez, Fabro Alomìa Torres, Federico Molinari and Space Trip Fest
+                  - generic [ref=f30e1855]: jam_estepez, planet_303
+              - generic [ref=f30e1856]:
+                - generic:
+                  - heading "Messages" [level=2]
+                - button "User avatar Llama Este Pez 3 matched messages" [ref=f30e1857] [cursor=pointer]:
+                  - generic [ref=f30e1858]:
+                    - img "User avatar" [ref=f30e1863]
+                    - generic [ref=f30e1866]:
+                      - generic [ref=f30e1867]: Llama Este Pez
+                      - generic [ref=f30e1871]: 3 matched messages
+                - button "jam_estepez, planet_303, federico__molinari_, spacetripfest ...am.com/stories/jam_estepez/3570073871366874856?utm_source=ig_story_item_share&igsh=YnFsemU1MmdlcHd2 a year ago" [ref=f30e1872] [cursor=pointer]:
+                  - generic [ref=f30e1882]:
+                    - generic [ref=f30e1883]: jam_estepez, planet_303, federico__molinari_, spacetripfest
+                    - generic [ref=f30e1889]:
+                      - generic [ref=f30e1890]: ...am.com/stories/jam_estepez/3570073871366874856?utm_source=ig_story_item_share&igsh=YnFsemU1MmdlcHd2
+                      - generic [ref=f30e1892]: ·
+                      - generic "a year ago" [ref=f30e1895]: 1y
+                - button "User avatar nicorocco .../instagram.com/jam_estepez?igshid=YmMyMTA2M2Y= 3 years ago" [ref=f30e1896] [cursor=pointer]:
+                  - generic [ref=f30e1897]:
+                    - img "User avatar" [ref=f30e1902]
+                    - generic [ref=f30e1905]:
+                      - generic [ref=f30e1906]: nicorocco
+                      - generic [ref=f30e1912]:
+                        - generic [ref=f30e1913]: .../instagram.com/jam_estepez?igshid=YmMyMTA2M2Y=
+                        - generic [ref=f30e1915]: ·
+                        - generic "3 years ago" [ref=f30e1918]: 3y
+              - generic:
+                - heading "More accounts" [level=2]
+              - button "User avatar Llama Este Pez jam_estepez" [ref=f30e1919] [cursor=pointer]:
+                - generic [ref=f30e1920]:
+                  - img "User avatar" [ref=f30e1925]
+                  - generic [ref=f30e1928]:
+                    - generic [ref=f30e1929]: Llama Este Pez
+                    - generic [ref=f30e1933]: jam_estepez
+      - generic [ref=f30e1514]:
+        - generic [ref=f30e1518]:
+          - link "Open the profile page of el_rovlex" [ref=f30e1519] [cursor=pointer]:
+            - /url: /el_rovlex/
+            - generic [ref=f30e1520]:
+              - img "user-profile-picture" [ref=f30e1524]
+              - generic [ref=f30e1525]:
+                - heading "el Rovlex" [level=2] [ref=f30e1527]
+                - generic [ref=f30e1529]: el_rovlex
+          - generic [ref=f30e1533]:
+            - button [ref=f30e1534] [cursor=pointer]:
+              - img "Audio call" [ref=f30e1536]
+            - button [ref=f30e1538] [cursor=pointer]:
+              - img "Video call" [ref=f30e1540]
+            - button [ref=f30e1543] [cursor=pointer]:
+              - img "Conversation information" [ref=f30e1545]
+        - generic [ref=f30e1549]:
+          - generic [ref=f30e1553]:
+            - generic [ref=f30e1554]:
+              - img "user-profile-picture" [ref=f30e1558]
+              - generic [ref=f30e1559]:
+                - heading "el Rovlex" [level=2] [ref=f30e1562]
+                - generic [ref=f30e1564]: el_rovlex · Instagram
+                - link "View profile" [ref=f30e1567] [cursor=pointer]:
+                  - /url: /el_rovlex/
+            - generic [ref=f30e1568]:
+              - generic [ref=f30e1571]:
+                - generic [ref=f30e1572]: Aug 3, 2026, 11:31 AM
+                - group [ref=f30e1575]:
+                  - generic [ref=f30e1577]:
+                    - link "Open the profile page of el_rovlex" [ref=f30e1580] [cursor=pointer]:
+                      - /url: /el_rovlex
+                      - img "user-profile-picture" [ref=f30e1583]
+                    - generic [ref=f30e1584]: ¿Puedo obtener más información sobre tu empresa?
+              - generic [ref=f30e1591]:
+                - generic [ref=f30e1592]: Wed 7:30 PM
+                - group [ref=f30e1595]:
+                  - generic [ref=f30e1600]:
+                    - generic [ref=f30e1603]:
+                      - text: Hola, Rovlex
+                      - img "👋" [ref=f30e1605]
+                      - text: "Nos pediste información sobre TDF y vimos tu contenido de trap, rap y drill vinculado a Quito. Tu escena necesita un espacio propio: aquí puedes crear tu perfil público, mostrar música y conectar con la comunidad. Te invitamos a probarlo:"
+                      - link "https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a" [ref=f30e1607] [cursor=pointer]:
+                        - /url: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+                      - text: "Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                    - link "TDF Records" [ref=f30e1608] [cursor=pointer]:
+                      - /url: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+            - generic [ref=f30e1613]: Seen
+          - generic [ref=f30e1624]:
+            - button [ref=f30e1627] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f30e1629]
+            - generic [ref=f30e1631]:
+              - textbox [ref=f30e1632]:
+                - paragraph [ref=f30e1633]
+              - generic: Message...
+            - generic [ref=f30e1634]:
+              - button [ref=f30e1635] [cursor=pointer]:
+                - img "Voice Clip" [ref=f30e1637]
+              - button [ref=f30e1640] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f30e1642]
+              - button [ref=f30e1647] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f30e1649]

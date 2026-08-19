@@ -1,0 +1,184 @@
+- generic [ref=f30e9]:
+  - generic [ref=f30e12]:
+    - link [ref=f30e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f30e22]
+    - generic [ref=f30e25]:
+      - link [ref=f30e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f30e35]
+      - link [ref=f30e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f30e45]
+      - link [ref=f30e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=f30e57]
+      - link [ref=f30e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f30e67]
+      - link [ref=f30e217] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f30e222]
+      - link [ref=f30e85] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f30e90]
+      - link [ref=f30e95] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f30e100]
+      - link [ref=f30e107] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f30e112]:
+          - img "tdf.records.label's profile picture" [ref=f30e113]
+    - generic [ref=f30e114]:
+      - link [ref=f30e117] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f30e122]
+      - link [ref=f30e125] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f30e130]
+  - main [ref=f30e134]:
+    - generic [ref=f30e230]:
+      - navigation "Thread list" [ref=f30e231]:
+        - generic [ref=f30e232]:
+          - generic [ref=f30e233]:
+            - button [ref=f30e234] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f30e236]
+              - img "Down chevron icon" [ref=f30e239]
+            - button [ref=f30e243] [cursor=pointer]:
+              - img "New message" [ref=f30e245]
+          - tablist [ref=f30e250]:
+            - tab "Primary" [selected] [ref=f30e251] [cursor=pointer]
+            - tab "General" [ref=f30e254] [cursor=pointer]
+            - tab "From ads" [ref=f30e257] [cursor=pointer]
+            - tab "Requests" [ref=f30e261] [cursor=pointer]
+          - generic [ref=f30e264]:
+            - generic [ref=f30e265]:
+              - button "Back" [ref=f30e4351] [cursor=pointer]:
+                - img "Back" [ref=f30e4354]
+              - generic [ref=f30e4357]:
+                - textbox "Clear search" [active] [ref=f30e4358]:
+                  - /placeholder: Search
+                  - text: teez__t
+                - button "Clear search" [ref=f30e4359] [cursor=pointer]:
+                  - img "Clear search" [ref=f30e4361]
+            - generic [ref=f30e4363]:
+              - generic [ref=f30e4364]:
+                - generic:
+                  - heading "Messages" [level=2]
+                - 'button "User avatar La T de Teez Hola, Teez 👋 Nos escribiste por el anuncio y vimos tu trabajo urbano desde Quitumbe. En TDF puedes reunir tu perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Aquí puedes crear tu cuenta: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records 2 days ago" [ref=f30e4365] [cursor=pointer]':
+                  - generic [ref=f30e4366]:
+                    - img "User avatar" [ref=f30e4371]
+                    - generic [ref=f30e4374]:
+                      - generic [ref=f30e4375]: La T de Teez
+                      - generic [ref=f30e4381]:
+                        - generic [ref=f30e4382]: "Hola, Teez 👋 Nos escribiste por el anuncio y vimos tu trabajo urbano desde Quitumbe. En TDF puedes reunir tu perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Aquí puedes crear tu cuenta: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                        - generic [ref=f30e4384]: ·
+                        - generic "2 days ago" [ref=f30e4387]: 2d
+              - generic:
+                - heading "More accounts" [level=2]
+              - button "User avatar La T de Teez teez__t You both follow renn.og" [ref=f30e4388] [cursor=pointer]:
+                - generic [ref=f30e4389]:
+                  - img "User avatar" [ref=f30e4394]
+                  - generic [ref=f30e4397]:
+                    - generic [ref=f30e4398]: La T de Teez
+                    - generic [ref=f30e4402]: teez__t
+                    - generic [ref=f30e4404]: You both follow renn.og
+              - button "User avatar Teez & Teez Branding teez_n_teez" [ref=f30e4406] [cursor=pointer]:
+                - generic [ref=f30e4407]:
+                  - img "User avatar" [ref=f30e4412]
+                  - generic [ref=f30e4415]:
+                    - generic [ref=f30e4416]: Teez & Teez Branding
+                    - generic [ref=f30e4420]: teez_n_teez
+              - button "User avatar Teez🦁 teez_t 🌻 ʀᴡ | ᴛᴜ 📷 @_t1595" [ref=f30e4421] [cursor=pointer]:
+                - generic [ref=f30e4422]:
+                  - img "User avatar" [ref=f30e4427]
+                  - generic [ref=f30e4430]:
+                    - generic [ref=f30e4431]: Teez🦁
+                    - generic [ref=f30e4435]: teez_t
+                    - generic [ref=f30e4437]: 🌻 ʀᴡ | ᴛᴜ 📷 @_t1595
+              - button "User avatar teezt_ teextrañomucho_auntendremosnuestracasitaono,vuelve...🙏" [ref=f30e4439] [cursor=pointer]:
+                - generic [ref=f30e4440]:
+                  - img "User avatar" [ref=f30e4445]
+                  - generic [ref=f30e4448]:
+                    - generic [ref=f30e4449]: teezt_
+                    - generic [ref=f30e4451]: teextrañomucho_auntendremosnuestracasitaono,vuelve...🙏
+              - button "User avatar teez teez teez teezteezt" [ref=f30e4453] [cursor=pointer]:
+                - generic [ref=f30e4454]:
+                  - img "User avatar" [ref=f30e4459]
+                  - generic [ref=f30e4462]:
+                    - generic [ref=f30e4463]: teez teez teez
+                    - generic [ref=f30e4467]: teezteezt
+              - button "User avatar teez🧟‍♂️ teeztha3rd déjaselo a Dios @justin0rt" [ref=f30e4468] [cursor=pointer]:
+                - generic [ref=f30e4469]:
+                  - img "User avatar" [ref=f30e4474]
+                  - generic [ref=f30e4477]:
+                    - generic [ref=f30e4478]: teez🧟‍♂️
+                    - generic [ref=f30e4482]: teeztha3rd
+                    - generic [ref=f30e4484]: déjaselo a Dios @justin0rt
+              - button "User avatar teeztittiez Talk to me Nice 😇💸" [ref=f30e4486] [cursor=pointer]:
+                - generic [ref=f30e4487]:
+                  - img "User avatar" [ref=f30e4492]
+                  - generic [ref=f30e4495]:
+                    - generic [ref=f30e4496]: teeztittiez
+                    - generic [ref=f30e4498]: Talk to me Nice 😇💸
+      - generic [ref=f30e4186]:
+        - generic [ref=f30e4190]:
+          - link "Open the profile page of federico__molinari_" [ref=f30e4191] [cursor=pointer]:
+            - /url: /federico__molinari_/
+            - generic [ref=f30e4192]:
+              - img "user-profile-picture" [ref=f30e4196]
+              - generic [ref=f30e4197]:
+                - heading "Federico Molinari" [level=2] [ref=f30e4199]
+                - generic [ref=f30e4201]: federico__molinari_
+          - generic [ref=f30e4205]:
+            - button [ref=f30e4206] [cursor=pointer]:
+              - img "Audio call" [ref=f30e4208]
+            - button [ref=f30e4210] [cursor=pointer]:
+              - img "Video call" [ref=f30e4212]
+            - button [ref=f30e4215] [cursor=pointer]:
+              - img "Conversation information" [ref=f30e4217]
+        - generic [ref=f30e4221]:
+          - generic [ref=f30e4225]:
+            - generic [ref=f30e4226]:
+              - img "user-profile-picture" [ref=f30e4230]
+              - generic [ref=f30e4231]:
+                - heading "Federico Molinari" [level=2] [ref=f30e4234]
+                - generic [ref=f30e4236]: federico__molinari_ · Instagram
+                - link "View profile" [ref=f30e4239] [cursor=pointer]:
+                  - /url: /federico__molinari_/
+            - generic [ref=f30e4240]:
+              - generic [ref=f30e4267]:
+                - generic [ref=f30e4268]: 11/3/25, 8:42 PM
+                - group [ref=f30e4271]:
+                  - generic [ref=f30e4272]:
+                    - generic [ref=f30e4273]: Mentioned you in their story
+                    - link [ref=f30e4282] [cursor=pointer]:
+                      - /url: /stories/tdf.records.label/3758100430095193509?reel_id=archiveDay%3A18074115473185754&reel_owner_id=45696040941
+              - generic [ref=f30e4287]:
+                - generic [ref=f30e4288]: Wed 7:35 PM
+                - group [ref=f30e4291]:
+                  - generic [ref=f30e4296]:
+                    - generic [ref=f30e4299]:
+                      - text: Hola, Federico
+                      - img "👋" [ref=f30e4301]
+                      - text: "Vimos tu fecha en Cumbayá y la conversación grupal reciente conectada con TDF. En TDF puedes reunir perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Te invitamos a recorrerlo:"
+                      - link "https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b" [ref=f30e4303] [cursor=pointer]:
+                        - /url: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b
+                      - text: "Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                    - link "TDF Records" [ref=f30e4304] [cursor=pointer]:
+                      - /url: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b
+            - generic [ref=f30e4309]: Seen
+          - generic [ref=f30e4320]:
+            - button [ref=f30e4323] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f30e4325]
+            - generic [ref=f30e4327]:
+              - textbox [ref=f30e4328]:
+                - paragraph [ref=f30e4329]
+              - generic: Message...
+            - generic [ref=f30e4330]:
+              - button [ref=f30e4331] [cursor=pointer]:
+                - img "Voice Clip" [ref=f30e4333]
+              - button [ref=f30e4336] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f30e4338]
+              - button [ref=f30e4343] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f30e4345]

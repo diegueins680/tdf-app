@@ -1,0 +1,337 @@
+- generic [ref=f33e9]:
+  - generic [ref=f33e12]:
+    - link [ref=f33e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f33e22]
+    - generic [ref=f33e25]:
+      - link [ref=f33e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f33e35]
+      - link [ref=f33e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f33e45]
+      - link [ref=f33e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=f33e57]
+      - link [ref=f33e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f33e67]
+      - link [ref=f33e75] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f33e80]
+      - link [ref=f33e88] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f33e93]
+      - link [ref=f33e98] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f33e103]
+      - link [ref=f33e110] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f33e115]:
+          - img "tdf.records.label's profile picture" [ref=f33e116]
+    - generic [ref=f33e117]:
+      - link [ref=f33e120] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f33e125]
+      - link [ref=f33e128] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f33e133]
+  - main [ref=f33e137]:
+    - generic [ref=f33e142]:
+      - navigation "Thread list" [ref=f33e143]:
+        - generic [ref=f33e144]:
+          - generic [ref=f33e145]:
+            - button [ref=f33e146] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f33e148]
+              - img "Down chevron icon" [ref=f33e151]
+            - button [ref=f33e155] [cursor=pointer]:
+              - img "New message" [ref=f33e157]
+          - tablist [ref=f33e162]:
+            - tab "Primary" [selected] [ref=f33e163] [cursor=pointer]
+            - tab "General" [ref=f33e166] [cursor=pointer]
+            - tab "From ads" [ref=f33e169] [cursor=pointer]
+            - tab "Requests" [ref=f33e173] [cursor=pointer]
+          - generic [ref=f33e179]:
+            - img "Search" [ref=f33e181]
+            - textbox "Search" [ref=f33e184]
+          - generic [ref=f33e185]:
+            - generic [ref=f33e275]:
+              - list [ref=f33e277]:
+                - listitem [ref=f33e278]
+                - listitem [ref=f33e279]:
+                  - button "Come back and share... Your note" [ref=f33e281] [cursor=pointer]:
+                    - generic [ref=f33e282]:
+                      - generic [ref=f33e283]: Come back and share...
+                      - generic [ref=f33e289]:
+                        - link [ref=f33e291]
+                        - generic [ref=f33e292]: Your note
+                - listitem [ref=f33e294]:
+                  - button "Deberían aplazar los evento. Escena más empatía 💔 cali_raw.sess's profile picture CALI • RAW • SESSIONS" [ref=f33e297] [cursor=pointer]:
+                    - generic [ref=f33e298]:
+                      - generic [ref=f33e299]: Deberían aplazar los evento. Escena más empatía 💔
+                      - generic [ref=f33e306]:
+                        - link [ref=f33e308]:
+                          - img "cali_raw.sess's profile picture" [ref=f33e309]
+                        - generic [ref=f33e310]: CALI • RAW • SESSIONS
+                - listitem [ref=f33e313]:
+                  - button "Abuelitos perdidos en el sismo y gente dice que los adoota 🥹 jofiel.arch.music's profile picture Jofiel.arch.music" [ref=f33e316] [cursor=pointer]:
+                    - generic [ref=f33e317]:
+                      - generic [ref=f33e318]: Abuelitos perdidos en el sismo y gente dice que los adoota 🥹
+                      - generic [ref=f33e325]:
+                        - link [ref=f33e327]:
+                          - img "jofiel.arch.music's profile picture" [ref=f33e328]
+                        - generic [ref=f33e329]: Jofiel.arch.music
+                - listitem [ref=f33e332]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner EL MUNDO X TI Rels B rafa_.pita's profile picture Rafa :)" [ref=f33e335] [cursor=pointer]:
+                    - generic [ref=f33e336]:
+                      - generic [ref=f33e342]:
+                        - generic [ref=f33e343]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f33e345]
+                          - generic [ref=f33e349]: EL MUNDO X TI
+                        - generic [ref=f33e350]: Rels B
+                      - generic [ref=f33e351]:
+                        - link [ref=f33e353]:
+                          - img "rafa_.pita's profile picture" [ref=f33e354]
+                        - generic [ref=f33e355]: Rafa :)
+                - listitem [ref=f33e358]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner ATWA System Of A Down saraking30's profile picture Sara King" [ref=f33e361] [cursor=pointer]:
+                    - generic [ref=f33e362]:
+                      - generic [ref=f33e368]:
+                        - generic [ref=f33e369]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f33e371]
+                          - generic [ref=f33e375]: ATWA
+                        - generic [ref=f33e376]: System Of A Down
+                      - generic [ref=f33e377]:
+                        - link [ref=f33e379]:
+                          - img "saraking30's profile picture" [ref=f33e380]
+                        - generic [ref=f33e381]: Sara King
+                - listitem [ref=f33e384]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Rabo de Paja La Debochada Mi reina ladebochadagarcia's profile picture La Debochada" [ref=f33e387] [cursor=pointer]:
+                    - generic [ref=f33e388]:
+                      - generic [ref=f33e394]:
+                        - generic [ref=f33e395]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f33e397]
+                          - generic [ref=f33e401]: Rabo de Paja
+                        - generic [ref=f33e402]: La Debochada
+                        - generic [ref=f33e403]: Mi reina
+                      - generic [ref=f33e404]:
+                        - link [ref=f33e406]:
+                          - img "ladebochadagarcia's profile picture" [ref=f33e407]
+                        - generic [ref=f33e408]: La Debochada
+                - listitem [ref=f33e411]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Astro Moog (feat. Llama Este Pez) Juano Ledesma juano_music's profile picture J" [ref=f33e414] [cursor=pointer]:
+                    - generic [ref=f33e415]:
+                      - generic [ref=f33e421]:
+                        - generic [ref=f33e422]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f33e424]
+                          - generic [ref=f33e428]: Astro Moog (feat. Llama Este Pez)
+                        - generic [ref=f33e429]: Juano Ledesma
+                      - generic [ref=f33e430]:
+                        - link [ref=f33e432]:
+                          - img "juano_music's profile picture" [ref=f33e433]
+                        - generic [ref=f33e434]: J
+                - listitem [ref=f33e437]:
+                  - button "🪩HOY🪩 @nurbrewery @socialspiritsquito 6PM - 12AM djettalessi__'s profile picture JETTALESSI" [ref=f33e440] [cursor=pointer]:
+                    - generic [ref=f33e441]:
+                      - generic [ref=f33e449]:
+                        - text: 🪩HOY🪩
+                        - link "@nurbrewery" [ref=f33e450]:
+                          - /url: /nurbrewery/
+                        - link "@socialspiritsquito" [ref=f33e451]:
+                          - /url: /socialspiritsquito/
+                        - text: 6PM - 12AM
+                      - generic [ref=f33e452]:
+                        - link [ref=f33e454]:
+                          - img "djettalessi__'s profile picture" [ref=f33e455]
+                        - generic [ref=f33e456]: JETTALESSI
+                - listitem [ref=f33e459]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner OKLOSER Explicit Doja Cat bonk.bonk.bonk_'s profile picture Carolina | BONK" [ref=f33e462] [cursor=pointer]:
+                    - generic [ref=f33e463]:
+                      - generic [ref=f33e469]:
+                        - generic [ref=f33e470]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f33e472]
+                          - generic [ref=f33e476]: OKLOSER
+                          - img "Explicit" [ref=f33e478]
+                        - generic [ref=f33e480]: Doja Cat
+                      - generic [ref=f33e481]:
+                        - link [ref=f33e483]:
+                          - img "bonk.bonk.bonk_'s profile picture" [ref=f33e484]
+                        - generic [ref=f33e485]: Carolina | BONK
+              - button "Next" [ref=f33e488] [cursor=pointer]
+            - generic [ref=f33e491]:
+              - button "user-profile-picture Edmundo Liked a message about an hour ago" [ref=f33e495] [cursor=pointer]:
+                - generic [ref=f33e497]:
+                  - img "user-profile-picture" [ref=f33e501]
+                  - generic [ref=f33e504]:
+                    - generic [ref=f33e505]: Edmundo
+                    - generic [ref=f33e511]:
+                      - generic [ref=f33e512]: Liked a message
+                      - generic [ref=f33e514]:
+                        - generic [ref=f33e515]: ·
+                        - generic "about an hour ago" [ref=f33e520]: 1h
+              - button "user-profile-picture Tentáculos Tentáculos sent a sticker. 10 hours ago More options" [pressed] [ref=f33e760] [cursor=pointer]:
+                - generic [ref=f33e526]:
+                  - img "user-profile-picture" [ref=f33e530]
+                  - generic [ref=f33e533]:
+                    - generic [ref=f33e534]: Tentáculos
+                    - generic [ref=f33e540]:
+                      - generic [ref=f33e541]: Tentáculos sent a sticker.
+                      - generic [ref=f33e543]:
+                        - generic [ref=f33e544]: ·
+                        - generic "10 hours ago" [ref=f33e549]: 10h
+                  - button [ref=f33e763]:
+                    - img "More options" [ref=f33e766]
+              - button "user-profile-picture B.G Audio Solutions You sent an attachment. 21 hours ago" [ref=f33e553] [cursor=pointer]:
+                - generic [ref=f33e555]:
+                  - img "user-profile-picture" [ref=f33e559]
+                  - generic [ref=f33e562]:
+                    - generic [ref=f33e563]: B.G Audio Solutions
+                    - generic [ref=f33e569]:
+                      - generic [ref=f33e570]: You sent an attachment.
+                      - generic [ref=f33e572]:
+                        - generic [ref=f33e573]: ·
+                        - generic "21 hours ago" [ref=f33e578]: 21h
+              - 'button "user-profile-picture HNO You: ¡Buenísimo! 🙌 ¿Alcanzaste a crear tu perfil? Si ya quedó listo, dinos únicamente con qué nombre aparece en TDF y revisamos que esté bien vinculado. Si te trabaste en algún paso, cuéntanos cuál y te ayudamos. a day ago" [ref=f33e582] [cursor=pointer]':
+                - generic [ref=f33e584]:
+                  - img "user-profile-picture" [ref=f33e588]
+                  - generic [ref=f33e591]:
+                    - generic [ref=f33e592]: HNO
+                    - generic [ref=f33e598]:
+                      - generic [ref=f33e599]: "You: ¡Buenísimo! 🙌 ¿Alcanzaste a crear tu perfil? Si ya quedó listo, dinos únicamente con qué nombre aparece en TDF y revisamos que esté bien vinculado. Si te trabaste en algún paso, cuéntanos cuál y te ayudamos."
+                      - generic [ref=f33e601]:
+                        - generic [ref=f33e602]: ·
+                        - generic "a day ago" [ref=f33e607]: 1d
+              - 'button "user-profile-picture Blue Records You: ¡Buenísimo! 🙌 ¿Pudieron crear la cuenta? Si ya quedó lista, dígannos únicamente con qué nombre aparece el perfil en TDF y revisamos que esté bien vinculado. Si tuvieron algún problema en el registro, cuéntennos en qué paso y les ayudamos. a day ago" [ref=f33e611] [cursor=pointer]':
+                - generic [ref=f33e613]:
+                  - img "user-profile-picture" [ref=f33e617]
+                  - generic [ref=f33e620]:
+                    - generic [ref=f33e621]: Blue Records
+                    - generic [ref=f33e627]:
+                      - generic [ref=f33e628]: "You: ¡Buenísimo! 🙌 ¿Pudieron crear la cuenta? Si ya quedó lista, dígannos únicamente con qué nombre aparece el perfil en TDF y revisamos que esté bien vinculado. Si tuvieron algún problema en el registro, cuéntennos en qué paso y les ayudamos."
+                      - generic [ref=f33e630]:
+                        - generic [ref=f33e631]: ·
+                        - generic "a day ago" [ref=f33e636]: 1d
+              - 'button "user-profile-picture Las Abejas - Club de Vinilos You: Hola, Las Abejas 👋 Vimos que empezaron a seguir a TDF y su espacio de vinilos y sesiones en San Blas. En TDF pueden encontrar perfiles, artistas, lanzamientos y experiencias de la escena en un mismo lugar. Les invitamos a explorarla: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b Si no les interesa, todo bien: no volvemos a escribir. — TDF Records 2 days ago" [ref=f33e640] [cursor=pointer]':
+                - generic [ref=f33e642]:
+                  - img "user-profile-picture" [ref=f33e646]
+                  - generic [ref=f33e649]:
+                    - generic [ref=f33e650]: Las Abejas - Club de Vinilos
+                    - generic [ref=f33e656]:
+                      - generic [ref=f33e657]: "You: Hola, Las Abejas 👋 Vimos que empezaron a seguir a TDF y su espacio de vinilos y sesiones en San Blas. En TDF pueden encontrar perfiles, artistas, lanzamientos y experiencias de la escena en un mismo lugar. Les invitamos a explorarla: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f33e659]:
+                        - generic [ref=f33e660]: ·
+                        - generic "2 days ago" [ref=f33e665]: 2d
+              - 'button "user-profile-picture ▪️ KINO CAVALIER▫️▪️ You: Hola, Kino 👋 Vimos que empezaste a seguir a TDF y tu trabajo de cámara en una pieza musical realizada en Pichincha. En TDF puedes reunir tu perfil profesional con artistas, lanzamientos y experiencias de la escena en un mismo lugar. Te invitamos a explorarla: https://tdf-app.pages.dev/login?signup=1&roles=Photographer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records 2 days ago" [ref=f33e669] [cursor=pointer]':
+                - generic [ref=f33e671]:
+                  - img "user-profile-picture" [ref=f33e675]
+                  - generic [ref=f33e678]:
+                    - generic [ref=f33e679]: ▪️ KINO CAVALIER▫️▪️
+                    - generic [ref=f33e685]:
+                      - generic [ref=f33e686]: "You: Hola, Kino 👋 Vimos que empezaste a seguir a TDF y tu trabajo de cámara en una pieza musical realizada en Pichincha. En TDF puedes reunir tu perfil profesional con artistas, lanzamientos y experiencias de la escena en un mismo lugar. Te invitamos a explorarla: https://tdf-app.pages.dev/login?signup=1&roles=Photographer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f33e688]:
+                        - generic [ref=f33e689]: ·
+                        - generic "2 days ago" [ref=f33e694]: 2d
+              - button "user-profile-picture George Molina Liked a message 2 days ago" [ref=f33e698] [cursor=pointer]:
+                - generic [ref=f33e700]:
+                  - img "user-profile-picture" [ref=f33e704]
+                  - generic [ref=f33e707]:
+                    - generic [ref=f33e708]: George Molina
+                    - generic [ref=f33e714]:
+                      - generic [ref=f33e715]: Liked a message
+                      - generic [ref=f33e717]:
+                        - generic [ref=f33e718]: ·
+                        - generic "2 days ago" [ref=f33e723]: 2d
+              - button [ref=f33e746] [cursor=pointer]:
+                - generic [ref=f33e748]:
+                  - status "Loading..." [ref=f33e751]
+                  - generic [ref=f33e754]:
+                    - status "Loading..." [ref=f33e756]
+                    - status "Loading..." [ref=f33e758]
+      - generic [ref=f33e771]:
+        - generic [ref=f33e775]:
+          - link "Open the profile page of oximoron_tu_tentaculo" [ref=f33e776] [cursor=pointer]:
+            - /url: /oximoron_tu_tentaculo/
+            - generic [ref=f33e777]:
+              - img "user-profile-picture" [ref=f33e781]
+              - generic [ref=f33e782]:
+                - heading "Tentáculos" [level=2] [ref=f33e784]
+                - generic [ref=f33e786]: oximoron_tu_tentaculo
+          - generic [ref=f33e790]:
+            - button [ref=f33e791] [cursor=pointer]:
+              - img "Audio call" [ref=f33e793]
+            - button [ref=f33e795] [cursor=pointer]:
+              - img "Video call" [ref=f33e797]
+            - button [ref=f33e800] [cursor=pointer]:
+              - img "Conversation information" [ref=f33e802]
+        - generic [ref=f33e806]:
+          - generic [ref=f33e810]:
+            - generic [ref=f33e811]:
+              - img "user-profile-picture" [ref=f33e815]
+              - generic [ref=f33e816]:
+                - heading "Tentáculos" [level=2] [ref=f33e819]
+                - generic [ref=f33e821]: oximoron_tu_tentaculo · Instagram
+                - link "View profile" [ref=f33e824] [cursor=pointer]:
+                  - /url: /oximoron_tu_tentaculo/
+            - generic [ref=f33e825]:
+              - generic [ref=f33e830]:
+                - generic [ref=f33e831]: Fri 10:09 AM
+                - group [ref=f33e834]:
+                  - generic [ref=f33e839]:
+                    - generic [ref=f33e842]:
+                      - text: Hola, Tentáculos
+                      - img "👋" [ref=f33e844]
+                      - text: "Vimos su comentario en TDF y la agenda de encuentros electrónicos que mueven en Quito. En TDF pueden reunir perfiles, artistas, lanzamientos y experiencias de la escena en un mismo lugar. Les invitamos a explorarla:"
+                      - link "https://tdf-app.pages.dev/login?signup=1&roles=Promotor&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b" [ref=f33e846] [cursor=pointer]:
+                        - /url: https://tdf-app.pages.dev/login?signup=1&roles=Promotor&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b
+                      - text: "Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                    - link "TDF Records" [ref=f33e847] [cursor=pointer]:
+                      - /url: https://tdf-app.pages.dev/login?signup=1&roles=Promotor&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b
+              - group [ref=f33e855]:
+                - generic [ref=f33e856]: Hola
+              - group [ref=f33e866]:
+                - generic [ref=f33e867]:
+                  - generic [ref=f33e868]:
+                    - link "Open the profile page of oximoron_tu_tentaculo" [ref=f33e871] [cursor=pointer]:
+                      - /url: /oximoron_tu_tentaculo
+                      - img "user-profile-picture" [ref=f33e874]
+                    - button [ref=f33e877] [cursor=pointer]
+                  - button "❤️" [ref=f33e885] [cursor=pointer]
+              - generic [ref=f33e890]:
+                - generic [ref=f33e891]: Sat 10:02 AM
+                - group [ref=f33e894]:
+                  - generic [ref=f33e900]:
+                    - text: ¡Gracias por compartirnos el video!
+                    - img "🙌" [ref=f33e902]
+                    - text: Nos gustó la estética electrónica y meditativa. ¿Ya pudieron explorar el registro como promotores en TDF? Si les interesa, cuéntennos brevemente qué tipo de encuentros están organizando y vemos cómo presentar su proyecto y posibles colaboraciones.
+              - generic [ref=f33e905]:
+                - generic [ref=f33e906]: Sat 11:07 AM
+                - group [ref=f33e909]:
+                  - generic [ref=f33e911]:
+                    - link "Open the profile page of oximoron_tu_tentaculo" [ref=f33e914] [cursor=pointer]:
+                      - /url: /oximoron_tu_tentaculo
+                      - img "user-profile-picture" [ref=f33e917]
+                    - generic [ref=f33e918]: Ok
+              - generic [ref=f33e925]:
+                - generic [ref=f33e926]: 1:49 AM
+                - group [ref=f33e929]:
+                  - generic [ref=f33e930]: Hola TDF dispongo de un lugar accesible a gente de confianza para practicas de música electrónica. Dm
+              - group [ref=f33e940]:
+                - generic [ref=f33e942]:
+                  - link "Open the profile page of oximoron_tu_tentaculo" [ref=f33e945] [cursor=pointer]:
+                    - /url: /oximoron_tu_tentaculo
+                    - img "user-profile-picture" [ref=f33e948]
+                  - img "Sticker" [ref=f33e957]
+          - generic [ref=f33e967]:
+            - button [ref=f33e970] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f33e972]
+            - generic [ref=f33e974]:
+              - textbox [active] [ref=f33e975]:
+                - paragraph [ref=f33e976]
+              - generic: Message...
+            - generic [ref=f33e977]:
+              - button [ref=f33e978] [cursor=pointer]:
+                - img "Voice Clip" [ref=f33e980]
+              - button [ref=f33e983] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f33e985]
+              - button [ref=f33e990] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f33e992]

@@ -432,15 +432,15 @@ export default function MarketplacePage() {
   );
   const canManagePhotos = modules.has('ops') || modules.has('admin');
   const paypalClientId = useMemo<string>(() => {
-    const baked = String(import.meta.env?.VITE_PAYPAL_CLIENT_ID ?? '').trim();
+    const paypalBakedClientId = String(import.meta.env?.VITE_PAYPAL_CLIENT_ID ?? '').trim();
     const runtimeVal: string = readRuntimeEnv('VITE_PAYPAL_CLIENT_ID');
     const cleanedRuntime = runtimeVal.trim();
-    return baked !== '' ? baked : cleanedRuntime;
+    return paypalBakedClientId !== '' ? paypalBakedClientId : cleanedRuntime;
   }, []);
   const stripePublishableKey = useMemo<string>(() => {
-    const baked = String(import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY ?? '').trim();
+    const stripeBakedPublishableKey = String(import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY ?? '').trim();
     const runtimeVal = readRuntimeEnv('VITE_STRIPE_PUBLISHABLE_KEY');
-    return baked !== '' ? baked : runtimeVal.trim();
+    return stripeBakedPublishableKey !== '' ? stripeBakedPublishableKey : runtimeVal.trim();
   }, []);
   const stripePromise = useMemo(
     () => (stripePublishableKey ? loadStripe(stripePublishableKey) : null),

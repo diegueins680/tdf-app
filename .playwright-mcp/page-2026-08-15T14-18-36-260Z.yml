@@ -1,0 +1,279 @@
+- generic [ref=f12e1]:
+  - generic [ref=f12e2617]:
+    - generic [ref=f12e2620]:
+      - link [ref=f12e3570] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f12e2633]:
+        - link [ref=f12e3572] [cursor=pointer]:
+          - /url: /
+        - link [ref=f12e3574] [cursor=pointer]:
+          - /url: /reels/
+        - link [ref=f12e3576] [cursor=pointer]:
+          - /url: /direct/inbox/
+        - link [ref=f12e3578] [cursor=pointer]:
+          - /url: /explore/
+        - link [ref=f12e3580] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f12e3582] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f12e3584] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f12e3586] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f12e3587]
+      - generic [ref=f12e2722]:
+        - link [ref=f12e3589] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f12e3591] [cursor=pointer]:
+          - /url: "#"
+    - main [ref=f12e2742]:
+      - generic [ref=f12e2747]:
+        - navigation [ref=f12e3593]:
+          - generic [ref=f12e2749]:
+            - generic [ref=f12e2750]:
+              - button [ref=f12e3594] [cursor=pointer]:
+                - heading [level=2] [ref=f12e3595]:
+                  - generic [ref=f12e2754]: tdf.records.label
+              - button [ref=f12e3597] [cursor=pointer]
+            - tablist [ref=f12e2767]:
+              - tab [selected] [ref=f12e3599] [cursor=pointer]:
+                - generic [ref=f12e2769]: Primary
+              - tab [ref=f12e3600] [cursor=pointer]:
+                - generic [ref=f12e2772]: General
+              - tab [ref=f12e3601] [cursor=pointer]:
+                - generic [ref=f12e2775]: From ads
+              - tab [ref=f12e3602] [cursor=pointer]:
+                - generic [ref=f12e2779]: Requests
+            - textbox [ref=f12e3604]:
+              - /placeholder: Search
+            - generic [ref=f12e2790]:
+              - generic [ref=f12e2792]:
+                - list [ref=f12e2794]:
+                  - listitem [ref=f12e2795]
+                  - listitem [ref=f12e2796]:
+                    - button [ref=f12e3605] [cursor=pointer]:
+                      - generic [ref=f12e2799]:
+                        - generic [ref=f12e2800]: Try a fun fact...
+                        - generic [ref=f12e2806]:
+                          - link [ref=f12e2808]
+                          - generic [ref=f12e2809]: Your note
+                  - listitem [ref=f12e2811]:
+                    - button [ref=f12e3606] [cursor=pointer]:
+                      - generic [ref=f12e2815]:
+                        - generic [ref=f12e2816]: No dormí ni vrg:(
+                        - generic [ref=f12e2823]:
+                          - link [ref=f12e3607]
+                          - generic [ref=f12e2827]: nao✨
+                  - listitem [ref=f12e2830]:
+                    - button [ref=f12e3609] [cursor=pointer]:
+                      - generic [ref=f12e2834]:
+                        - generic [ref=f12e2835]: Hic et nunc
+                        - generic [ref=f12e2842]:
+                          - link [ref=f12e3610]
+                          - generic [ref=f12e2846]: Dany Rivadeneira López
+                  - listitem [ref=f12e2849]:
+                    - button [ref=f12e3612] [cursor=pointer]:
+                      - generic [ref=f12e2853]:
+                        - generic [ref=f12e2854]: Mi casa, en el centro, está disponible para quien necesite de algo,
+                        - generic [ref=f12e2861]:
+                          - link [ref=f12e3613]
+                          - generic [ref=f12e2865]: Strange Soul Dj
+                  - listitem [ref=f12e2868]:
+                    - button [ref=f12e3615] [cursor=pointer]:
+                      - generic [ref=f12e2872]:
+                        - generic [ref=f12e2873]: 🌀
+                        - generic [ref=f12e2880]:
+                          - link [ref=f12e3616]
+                          - generic [ref=f12e2884]: Gabu Córdova (NO Gabriela)
+                  - listitem [ref=f12e2887]:
+                    - button [ref=f12e3618] [cursor=pointer]:
+                      - generic [ref=f12e2891]:
+                        - generic [ref=f12e2892]: 😮‍💨😍🎸
+                        - generic [ref=f12e2899]:
+                          - link [ref=f12e3619]
+                          - generic [ref=f12e2903]: Steve Lopez
+                  - listitem [ref=f12e2906]:
+                    - button [ref=f12e3621] [cursor=pointer]:
+                      - generic [ref=f12e2910]:
+                        - generic [ref=f12e2918]:
+                          - text: Mañana barra libre en
+                          - link [ref=f12e3622]:
+                            - /url: /collide.party/
+                            - text: "@collide.party"
+                          - text: de 8 a 10! Ven a previar😋⭐️
+                        - generic [ref=f12e2920]:
+                          - link [ref=f12e3623]
+                          - generic [ref=f12e2924]: Ana Julia/ DJ JU🫧
+                  - listitem [ref=f12e2927]:
+                    - button [ref=f12e3625] [cursor=pointer]:
+                      - generic [ref=f12e2931]:
+                        - generic [ref=f12e2937]:
+                          - generic [ref=f12e2938]: Perro Fiel (feat. Nicky Jam)
+                          - generic [ref=f12e2945]: Shakira
+                          - generic [ref=f12e2946]: 😅
+                        - generic [ref=f12e2947]:
+                          - link [ref=f12e3627]
+                          - generic [ref=f12e2951]: Soley Fino
+                  - listitem [ref=f12e2954]:
+                    - button [ref=f12e3629] [cursor=pointer]:
+                      - generic [ref=f12e2958]:
+                        - generic [ref=f12e2959]: 🇪🇨
+                        - generic [ref=f12e2966]:
+                          - link [ref=f12e3630]
+                          - generic [ref=f12e2970]: Green House Music | Sello Discográfico
+                - button [ref=f12e3632] [cursor=pointer]
+              - generic [ref=f12e2978]:
+                - button [pressed] [ref=f12e3633] [cursor=pointer]:
+                  - generic [ref=f12e2991]:
+                    - generic [ref=f12e2992]: Tentáculos
+                    - generic [ref=f12e2998]:
+                      - generic [ref=f12e2999]: Tentáculos sent a video.
+                      - generic [ref=f12e3001]:
+                        - generic [ref=f12e3002]: ·
+                        - generic [ref=f12e3005]: 23h
+                - button [ref=f12e3636] [cursor=pointer]:
+                  - generic [ref=f12e3020]:
+                    - generic [ref=f12e3021]: Las Abejas - Club de Vinilos
+                    - generic [ref=f12e3027]:
+                      - generic [ref=f12e3028]: "You: Hola, Las Abejas 👋 Vimos que empezaron a seguir a TDF y su espacio de vinilos y sesiones en San Blas. En TDF pueden encontrar perfiles, artistas, lanzamientos y experiencias de la escena en un mismo lugar. Les invitamos a explorarla: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f12e3030]:
+                        - generic [ref=f12e3031]: ·
+                        - generic [ref=f12e3034]: 23h
+                - button [ref=f12e3639] [cursor=pointer]:
+                  - generic [ref=f12e3049]:
+                    - generic [ref=f12e3050]: ▪️ KINO CAVALIER▫️▪️
+                    - generic [ref=f12e3056]:
+                      - generic [ref=f12e3057]: "You: Hola, Kino 👋 Vimos que empezaste a seguir a TDF y tu trabajo de cámara en una pieza musical realizada en Pichincha. En TDF puedes reunir tu perfil profesional con artistas, lanzamientos y experiencias de la escena en un mismo lugar. Te invitamos a explorarla: https://tdf-app.pages.dev/login?signup=1&roles=Photographer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f12e3059]:
+                        - generic [ref=f12e3060]: ·
+                        - generic [ref=f12e3063]: 23h
+                - button [ref=f12e3642] [cursor=pointer]:
+                  - generic [ref=f12e3078]:
+                    - generic [ref=f12e3079]: George Molina
+                    - generic [ref=f12e3085]:
+                      - generic [ref=f12e3086]: Liked a message
+                      - generic [ref=f12e3088]:
+                        - generic [ref=f12e3089]: ·
+                        - generic [ref=f12e3092]: 1d
+                - button [ref=f12e3645] [cursor=pointer]:
+                  - generic [ref=f12e3107]:
+                    - generic [ref=f12e3108]: KIRMANA RECORDS
+                    - generic [ref=f12e3114]:
+                      - generic [ref=f12e3115]: Liked a message
+                      - generic [ref=f12e3117]:
+                        - generic [ref=f12e3118]: ·
+                        - generic [ref=f12e3121]: 1d
+                - button [ref=f12e3648] [cursor=pointer]:
+                  - generic [ref=f12e3136]:
+                    - generic [ref=f12e3137]: Beto
+                    - generic [ref=f12e3143]:
+                      - generic [ref=f12e3144]: Graciaaaaas locoo
+                      - generic [ref=f12e3146]:
+                        - generic [ref=f12e3147]: ·
+                        - generic [ref=f12e3150]: 1d
+                - button [ref=f12e3651] [cursor=pointer]:
+                  - generic [ref=f12e3165]:
+                    - generic [ref=f12e3166]: BACKROOM SESSIONS
+                    - generic [ref=f12e3172]:
+                      - generic [ref=f12e3173]: "You: La idea sería diseñar juntos un modelo de coproducción viable: Backroom Sessions aportaría su identidad, curaduría, comunidad y visión de contenidos; TDF, el espacio, la infraestructura y el soporte de producción. También nos interesa conversar sobre otras formas de colaboración entre ambos proyectos. ¿Les gustaría visitar el Domo y tener una reunión breve para conversar sobre el piloto y una posible serie recurrente? Pueden proponernos una fecha que les funcione y, si les parece, compartirnos un número de WhatsApp para coordinar con mayor facilidad."
+                      - generic [ref=f12e3175]:
+                        - generic [ref=f12e3176]: ·
+                        - generic [ref=f12e3179]: 1d
+                - button [ref=f12e3654] [cursor=pointer]:
+                  - generic [ref=f12e3194]:
+                    - generic [ref=f12e3195]: ✨Festival Mestizónica ✨
+                    - generic [ref=f12e3201]:
+                      - generic [ref=f12e3202]: Liked a message
+                      - generic [ref=f12e3204]:
+                        - generic [ref=f12e3205]: ·
+                        - generic [ref=f12e3208]: 1d
+                - button [ref=f12e3657] [cursor=pointer]:
+                  - generic [ref=f12e3244]:
+                    - status [ref=f12e3658]
+                    - generic [ref=f12e3250]:
+                      - status [ref=f12e3659]
+                      - status [ref=f12e3660]
+        - generic [ref=f12e3391]:
+          - generic [ref=f12e3395]:
+            - link [ref=f12e3661] [cursor=pointer]:
+              - /url: /oximoron_tu_tentaculo/
+              - generic [ref=f12e3402]:
+                - heading [level=2] [ref=f12e3663]:
+                  - generic [ref=f12e3405]: Tentáculos
+                - generic [ref=f12e3406]: oximoron_tu_tentaculo
+            - generic [ref=f12e3410]:
+              - button [ref=f12e3664] [cursor=pointer]
+              - button [ref=f12e3666] [cursor=pointer]
+              - button [ref=f12e3668] [cursor=pointer]
+          - generic [ref=f12e3426]:
+            - generic [ref=f12e3430]:
+              - generic [ref=f12e3436]:
+                - heading [level=2] [ref=f12e3671]:
+                  - generic [ref=f12e3440]: Tentáculos
+                - generic [ref=f12e3441]: oximoron_tu_tentaculo · Instagram
+                - link [ref=f12e3672] [cursor=pointer]:
+                  - /url: /oximoron_tu_tentaculo/
+                  - text: View profile
+              - generic [ref=f12e3445]:
+                - generic [ref=f12e3448]:
+                  - generic [ref=f12e3449]: 7/11/23, 6:27 PM
+                  - group [ref=f12e3452]:
+                    - generic [ref=f12e3454]:
+                      - link [ref=f12e3673] [cursor=pointer]:
+                        - /url: /oximoron_tu_tentaculo
+                      - generic [ref=f12e3464]:
+                        - generic [ref=f12e3465]: Unsupported message
+                        - generic [ref=f12e3467]: Use the Instagram mobile app to view this message.
+                - generic [ref=f12e3470]:
+                  - generic [ref=f12e3471]: Fri 10:09 AM
+                  - group [ref=f12e3474]:
+                    - generic [ref=f12e3479]:
+                      - generic [ref=f12e3482]:
+                        - text: "Hola, Tentáculos Vimos su comentario en TDF y la agenda de encuentros electrónicos que mueven en Quito. En TDF pueden reunir perfiles, artistas, lanzamientos y experiencias de la escena en un mismo lugar. Les invitamos a explorarla:"
+                        - link [ref=f12e3676] [cursor=pointer]:
+                          - /url: https://tdf-app.pages.dev/login?signup=1&roles=Promotor&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b
+                          - text: https://tdf-app.pages.dev/login?signup=1&roles=Promotor&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b
+                        - text: "Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - link [ref=f12e3677] [cursor=pointer]:
+                        - /url: https://tdf-app.pages.dev/login?signup=1&roles=Promotor&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b
+                        - generic [ref=f12e3488]: TDF Records
+                - group [ref=f12e3495]:
+                  - generic [ref=f12e3496]: Hola
+                - group [ref=f12e3506]:
+                  - generic [ref=f12e3507]:
+                    - generic [ref=f12e3508]:
+                      - link [ref=f12e3678] [cursor=pointer]:
+                        - /url: /oximoron_tu_tentaculo
+                      - button [ref=f12e3517] [cursor=pointer]
+                    - button [ref=f12e3680] [cursor=pointer]:
+                      - generic [ref=f12e3526]: ❤️
+              - generic [ref=f12e3528]: Seen 19h ago
+            - generic [ref=f12e3539]:
+              - button [ref=f12e3681] [cursor=pointer]
+              - generic [ref=f12e3546]:
+                - textbox [ref=f12e3547]:
+                  - paragraph [ref=f12e3548]
+                - generic: Message...
+              - generic [ref=f12e3549]:
+                - button [ref=f12e3683] [cursor=pointer]
+                - button [ref=f12e3685] [cursor=pointer]
+                - button [ref=f12e3687] [cursor=pointer]
+  - generic [ref=f12e3694]:
+    - button [active] [ref=f12e3696] [cursor=pointer]:
+      - img "Close" [ref=f12e3698]
+    - dialog [ref=f12e3703]:
+      - generic [ref=f12e3711]:
+        - generic "Open Video" [ref=f12e3712]
+        - group "Video player" [ref=f12e3713]:
+          - button "Pause video"
+          - generic [ref=f12e3714]:
+            - generic [ref=f12e3716]:
+              - button "Pause" [ref=f12e3720] [cursor=pointer]
+              - generic [ref=f12e3722]: 0:00 / 0:25
+            - slider "Change Position" [ref=f12e3725] [cursor=pointer]
+            - button "Settings" [ref=f12e3734] [cursor=pointer]
+            - button "Enter fullscreen" [ref=f12e3740] [cursor=pointer]
+            - generic [ref=f12e3743] [cursor=pointer]:
+              - generic [ref=f12e3745]:
+                - slider "Change volume"
+              - button "Mute" [ref=f12e3749]

@@ -39,8 +39,12 @@ export function useAutoSave<T>(
     try {
       const saved = localStorage.getItem(storageKey);
       if (!saved) return null;
-      const parsed: unknown = JSON.parse(saved);
-      return parsed as T;
+      try {
+        const parsed: unknown = JSON.parse(saved);
+        return parsed as T;
+      } catch {
+        return null;
+      }
     } catch {
       return null;
     }

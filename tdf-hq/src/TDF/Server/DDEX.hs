@@ -601,7 +601,7 @@ resolveUploadReferences detection = do
   env <- ask
   let standardCode = DDEXTypes.familyToText (DDEXTypes.detectionFamily detection)
       versionCode = DDEXTypes.detectionVersion detection
-      messageCode = last (T.splitOn ":" (DDEXTypes.detectionRoot detection))
+      messageCode = T.takeWhileEnd (/= ':') (DDEXTypes.detectionRoot detection)
   result <- liftIO $ runSqlPool (do
     standard <- selectFirst
       [ Catalog.DdexStandardVersionStandardCode ==. standardCode

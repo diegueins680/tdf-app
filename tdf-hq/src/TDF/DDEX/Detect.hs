@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.DDEX.Detect
   ( -- * Detection
@@ -170,9 +171,7 @@ extractVersion text =
       | T.null value = fallback
       | otherwise = Just value
 
-    versionFromNamespace namespace = normalizeDetectedVersion (lastOrEmpty (T.splitOn "/" namespace))
-    lastOrEmpty [] = ""
-    lastOrEmpty values = last values
+    versionFromNamespace = normalizeDetectedVersion . T.takeWhileEnd (/= '/')
 
 normalizeDetectedVersion :: Text -> Maybe Text
 normalizeDetectedVersion raw =

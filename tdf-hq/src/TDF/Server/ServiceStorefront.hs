@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.Server.ServiceStorefront
   ( serviceStorefrontPublicServer
