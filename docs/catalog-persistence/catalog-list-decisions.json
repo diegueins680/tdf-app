@@ -4,16 +4,6 @@
   "generatedFrom": "docs/catalog-persistence/reports/static-list-inventory.json",
   "decisions": [
     {
-      "id": "a43462622b60606b37d9",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Accepting a capture for a checkout domain without a verified recovery handler could record payment without completing or safely reconciling its fulfillment.",
-      "justification": "The values form a closed PayPal webhook dispatch allowlist for checkout domains with implemented recovery semantics; they must remain aligned with backend handlers rather than become merchant-configurable catalog data.",
-      "reviewed": true
-    },
-    {
       "id": "c3d1e41b543e7cbdaf00",
       "classification": "dynamic-business-catalog",
       "disposition": "consumer-update",
@@ -148,66 +138,6 @@
       "classification": "governed-reference-data",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P2-domain",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
-      "reviewed": true
-    },
-    {
-      "id": "7ee5d35bbb36877bd006",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "The list is a security/parser allowlist for MIME types, file extensions, reserved language properties, or secret-bearing fields.",
-      "reviewed": true
-    },
-    {
-      "id": "7ce7e818e76567a66ad5",
-      "classification": "governed-reference-data",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "currency_reference, deployment_currency_enablement",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
-      "reviewed": true
-    },
-    {
-      "id": "cbb4b83dfc2c8da596a4",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
-      "reviewed": true
-    },
-    {
-      "id": "770fc9c86bf4e2895825",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "instrument, instrument_translation, session_instrument",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "4067b810ede8798454d7",
-      "classification": "governed-reference-data",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "language_reference, locale_reference, deployment_locale_enablement",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
-      "reviewed": true
-    },
-    {
-      "id": "785d27b94969c66b7064",
-      "classification": "governed-reference-data",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "country_reference, subdivision_reference, city_reference",
       "priority": "P2-domain",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
@@ -454,36 +384,6 @@
       "reviewed": true
     },
     {
-      "id": "86d102f7ab4e7888140b",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "f600d35941975d573f6e",
-      "classification": "governed-reference-data",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "country_reference, subdivision_reference, city_reference",
-      "priority": "P2-domain",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
-      "reviewed": true
-    },
-    {
-      "id": "ac9eac6b86f9fe198909",
-      "classification": "governed-reference-data",
-      "disposition": "consumer-update",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P3-consumer",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
-      "reviewed": true
-    },
-    {
       "id": "6d2f655beb6cdd815ba8",
       "classification": "dynamic-business-catalog",
       "disposition": "consumer-update",
@@ -534,16 +434,6 @@
       "reviewed": true
     },
     {
-      "id": "eee96a6fcf0ab03491a5",
-      "classification": "governed-reference-data",
-      "disposition": "consumer-update",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P3-consumer",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
-      "reviewed": true
-    },
-    {
       "id": "ed73c7e281ee224c7abe",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -551,16 +441,6 @@
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "adf984b027c7b738586e",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
       "reviewed": true
     },
     {
@@ -594,16 +474,6 @@
       "reviewed": true
     },
     {
-      "id": "fd041f69371df7061bea",
-      "classification": "governed-reference-data",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "external_provider, external_provider_code",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
-      "reviewed": true
-    },
-    {
       "id": "54b69bd3e72c315624d5",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -614,16 +484,6 @@
       "reviewed": true
     },
     {
-      "id": "51b43e3c0476c26bf606",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
       "id": "a30cbaf1466712b99f32",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -631,56 +491,6 @@
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
-      "reviewed": true
-    },
-    {
-      "id": "45ae335358b3aca8ae1b",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "cd20caaccdeb5777d35d",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "48faaec5aef65c661663",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "1e30314ea4c1b992031e",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "b49e7cbf2d277aeb3533",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
     },
     {
@@ -838,16 +648,6 @@
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "content_category, tag",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "b6543b76090287ae642d",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
@@ -1014,16 +814,6 @@
       "reviewed": true
     },
     {
-      "id": "2d43a4c97f70b8e8a5bc",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
       "id": "915967d05f3593fea628",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -1111,16 +901,6 @@
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "91ec5702d1c3efd7777e",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
       "reviewed": true
     },
     {
@@ -2384,16 +2164,6 @@
       "reviewed": true
     },
     {
-      "id": "362db8e04619b3b1f700",
-      "classification": "governed-reference-data",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "external_provider, external_provider_code",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
-      "reviewed": true
-    },
-    {
       "id": "ebbb9baeaa41065fe9c1",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -2634,156 +2404,6 @@
       "reviewed": true
     },
     {
-      "id": "d5bae17f9d945e267964",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "6b318faff0b928fb747e",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "428937edfb2f9054c586",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "security_action, security_permission, role_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
-      "reviewed": true
-    },
-    {
-      "id": "82181bc7a177bc6f96f4",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "security_action, security_permission, role_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
-      "reviewed": true
-    },
-    {
-      "id": "82140535cd9f5b0e5005",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "security_action, security_permission, role_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
-      "reviewed": true
-    },
-    {
-      "id": "1f19b37a62b7ed759d39",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "security_action, security_permission, role_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
-      "reviewed": true
-    },
-    {
-      "id": "1708066f65e663cbfd77",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "security_action, security_permission, role_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
-      "reviewed": true
-    },
-    {
-      "id": "598497cc3ebb13d2ff90",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "security_action, security_permission, role_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
-      "reviewed": true
-    },
-    {
-      "id": "4b773481349a641ac3e9",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "security_action, security_permission, role_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
-      "reviewed": true
-    },
-    {
-      "id": "efe18ace978eb8e10eaf",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "security_action, security_permission, role_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
-      "reviewed": true
-    },
-    {
-      "id": "e684c827cdca636c5121",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "security_action, security_permission, role_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
-      "reviewed": true
-    },
-    {
-      "id": "317b1912f8642a98c451",
-      "classification": "dynamic-business-catalog",
-      "disposition": "consumer-update",
-      "specializedModel": "country_reference, subdivision_reference, city_reference",
-      "priority": "P3-consumer",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
-      "reviewed": true
-    },
-    {
-      "id": "de399d76192be9ea5869",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "service_category, service_offering, booking_type",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "4d4648fc985a2aa96897",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "7393e5dd10ebe68ae3e2",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
       "id": "efcf67ba4f916059b646",
       "classification": "governed-reference-data",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -2809,16 +2429,6 @@
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "content_type, record_release, recording, recording_session, editorial_collection",
       "priority": "P0-cutover",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "dee5c1431841d4f8474a",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
@@ -2884,21 +2494,11 @@
       "reviewed": true
     },
     {
-      "id": "17ba38f46aff91a21784",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
       "id": "3b3e2aeca1d0620424cc",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
+      "priority": "P2-domain",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
@@ -3154,91 +2754,11 @@
       "reviewed": true
     },
     {
-      "id": "e999f1d784e81c82db26",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Marketplace fulfillment, custody, and actor discriminants form a closed state-machine and audit protocol enforced across code, OpenAPI, and database constraints; making them editable would weaken transition correctness.",
-      "reviewed": true
-    },
-    {
-      "id": "8ed1df400c6dae184688",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Marketplace fulfillment, custody, and actor discriminants form a closed state-machine and audit protocol enforced across code, OpenAPI, and database constraints; making them editable would weaken transition correctness.",
-      "reviewed": true
-    },
-    {
-      "id": "f2263c4938549920d1af",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "2fc9975280cb062972db",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "aa5cbbb6f1e3e1f604be",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "10144f9b4ef521b53ee0",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Marketplace fulfillment, custody, and actor discriminants form a closed state-machine and audit protocol enforced across code, OpenAPI, and database constraints; making them editable would weaken transition correctness.",
-      "reviewed": true
-    },
-    {
       "id": "6de6872a4bf29f8b3bab",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "ff6890ff4b803522a455",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "31fdec804cc113595b2f",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
@@ -3279,16 +2799,6 @@
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "a381cb7e6b2c3eec3429",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-domain",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
@@ -3471,16 +2981,6 @@
       "priority": "P2-domain",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
-      "reviewed": true
-    },
-    {
-      "id": "8f947bb3d6c6009a5757",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "service_category, service_offering, booking_type",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
     },
     {
@@ -4474,116 +3974,6 @@
       "reviewed": true
     },
     {
-      "id": "c6e4988f9791b0f4e8d0",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "ff5bad7fa91ca0fac5c2",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Domo quote, fulfillment, acceptance-gate, and actor states form a closed state-machine and audit protocol enforced across Haskell, OpenAPI, and PostgreSQL constraints; making them editable would weaken transition correctness.",
-      "reviewed": true
-    },
-    {
-      "id": "371a887fe24756ca53a1",
-      "classification": "governed-reference-data",
-      "disposition": "persisted-reference-with-parser-adapter-mirror",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "Code retains only stable exhaustive identifiers needed for deny-by-default enforcement or protocol parsing; persisted rows own labels, ordering, assignment, validation metadata, and administration.",
-      "reviewed": true
-    },
-    {
-      "id": "108f6b1455f4a682da7b",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Domo quote, fulfillment, acceptance-gate, and actor states form a closed state-machine and audit protocol enforced across Haskell, OpenAPI, and PostgreSQL constraints; making them editable would weaken transition correctness.",
-      "reviewed": true
-    },
-    {
-      "id": "79372a40585aff06153c",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "e8e58fa08f4be8bd4c72",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Marketplace fulfillment, custody, and actor discriminants form a closed state-machine and audit protocol enforced across code, OpenAPI, and database constraints; making them editable would weaken transition correctness.",
-      "reviewed": true
-    },
-    {
-      "id": "c95b31e9904617a462d9",
-      "classification": "governed-reference-data",
-      "disposition": "persisted-reference-with-parser-adapter-mirror",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "Code retains only stable exhaustive identifiers needed for deny-by-default enforcement or protocol parsing; persisted rows own labels, ordering, assignment, validation metadata, and administration.",
-      "reviewed": true
-    },
-    {
-      "id": "25c7cc5326604d716792",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "a9355175a814c9629c7d",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "5a635180b6c8aaa6498e",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Marketplace fulfillment, custody, and actor discriminants form a closed state-machine and audit protocol enforced across code, OpenAPI, and database constraints; making them editable would weaken transition correctness.",
-      "reviewed": true
-    },
-    {
-      "id": "4e7bfcfcc072476b5afc",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
       "id": "540029aef455a23da579",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -4714,26 +4104,6 @@
       "reviewed": true
     },
     {
-      "id": "c0b15ba801b39d727d28",
-      "classification": "governed-reference-data",
-      "disposition": "persisted-reference-with-parser-adapter-mirror",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "Code retains only stable exhaustive identifiers needed for deny-by-default enforcement or protocol parsing; persisted rows own labels, ordering, assignment, validation metadata, and administration.",
-      "reviewed": true
-    },
-    {
-      "id": "3c06fde6238c5e490724",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
       "id": "5a740a9ec7e22d8eb0c9",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -4778,16 +4148,6 @@
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "8c6cd021a46302ff21bd",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
@@ -5658,7 +5018,7 @@
       "classification": "governed-reference-data",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "external_provider, external_provider_code",
-      "priority": "P1-cross-platform",
+      "priority": "P2-schema-history",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true
@@ -5728,7 +5088,7 @@
       "classification": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
+      "priority": "P2-schema-history",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true
@@ -5898,7 +5258,7 @@
       "classification": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
+      "priority": "P2-schema-history",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true
@@ -5918,7 +5278,7 @@
       "classification": "governed-reference-data",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
+      "priority": "P2-schema-history",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true
@@ -5928,7 +5288,7 @@
       "classification": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
+      "priority": "P2-schema-history",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true
@@ -5948,7 +5308,7 @@
       "classification": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
+      "priority": "P2-schema-history",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true
@@ -6014,936 +5374,6 @@
       "reviewed": true
     },
     {
-      "id": "788589924677cdaf0afa",
-      "classification": "security-system-registry",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "security_action, security_permission, role_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "a1d28d8c97d930d72c96",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P0-cutover",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "7aded0cb900eb3a3e228",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P0-cutover",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "abf4dcddf1b0335c46ba",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P0-cutover",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "f8cac28929a0db75db14",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P0-cutover",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "ebd81d1dca9a8835b48b",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P0-cutover",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "67ea93ac852e5fd17892",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "d14b4c467d704c72df48",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "cee4d4a6d948238ce398",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "792b81fa59eafa853254",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "419b51c7a94ebb342907",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "c2530dae2f9a5c20f9c9",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "f369015eacaed06743c9",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "657b39f251fd78576db1",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "09d7f51bf6a99dfadcd3",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "service_category, service_offering, booking_type",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "bd2f4addef414df9ca7e",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "2587a4867fe770b27dce",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "ba9ad118c8437c6253ec",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "ef52b73d40df29d50778",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-schema-history",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "4ed3222b18eb75242874",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "0d32008c11292da2b69b",
-      "classification": "governed-reference-data",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "country_reference, subdivision_reference, city_reference",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "2995ca02605c449805b0",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "0387c9bc8e0ca8281978",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "e2c7b685298f05265cb9",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "fd4131c78aad60ed3c06",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-schema-history",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "65855f3eabc98f6fc353",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "e70789731cbfd76ced7d",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-schema-history",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "09765012763bda3ffb3b",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "1c1246b2d50069074ba9",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "407713768bba280c687b",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "b8d9e1b479c47466129d",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "fb8539c3c3c26a928fe4",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "525474d28d28df060fc1",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "2bd3424e25d2a6fe35e8",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-schema-history",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "fcc83a1bc147933d21b3",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-schema-history",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "80574237aa75c11bf806",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "b5cf352ce0b028fa7f58",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "bd072e192b8416caa78e",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "275d08408548520ca639",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "85a959c297d8a7db27dd",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "service_category, service_offering, booking_type",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "7ef1fc8434bd594babcc",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "074c5415f364199fc7ee",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "e585e4c6d12725f26152",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "453a1942573f5535d3cc",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "ddfd98c3ccea75a4616c",
-      "classification": "security-system-registry",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "security_action, security_permission, role_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "3dea505548fda0bac19e",
-      "classification": "security-system-registry",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "security_action, security_permission, role_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "a1963477aa528d7cb624",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "30a80b1484481b8053dd",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "f795c4449024e8261ab6",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "a564590532a2b4b48dde",
-      "classification": "security-system-registry",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "security_action, security_permission, role_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "3745b147633959802aae",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "b98be1c0fea641905719",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "3aff147cb73e52815e8e",
-      "classification": "governed-reference-data",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "abbb7014bdb6e63ac04a",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-schema-history",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "d2ea23b7d44bbd50a610",
-      "classification": "governed-reference-data",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "external_provider, external_provider_code",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "f12a6b38ce861149c4d9",
-      "classification": "genuine-technical-constant",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "93b50722b24aeddcba94",
-      "classification": "genuine-technical-constant",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "d10c683da275a77e10b8",
-      "classification": "genuine-technical-constant",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "0bd65c3e920d79f4244e",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "dc6c6597683d6ff100b9",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "8de9886e85da6298e67a",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "dcb9e8ac9a1de3ba1f87",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "1273bfdd57643fef70ca",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "cd168824dbabcf3e70ac",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "1d838bbd25fdc453a5f4",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "d1dd781d0cae53328f56",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "6237f283465fb123ee9d",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "service_category, service_offering, booking_type",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "ea4e7fb616117e5c1209",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "service_category, service_offering, booking_type",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "5a037f6044ec0cc0f263",
-      "classification": "governed-reference-data",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "service_category, service_offering, booking_type",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "a71126d54d99b03eb9e3",
-      "classification": "governed-reference-data",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "service_category, service_offering, booking_type",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "16f06a4cf232083bb4e8",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "content_type, record_release, recording, recording_session, editorial_collection",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "6f3c9c7c76c6566116b5",
-      "classification": "governed-reference-data",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "external_provider, external_provider_code",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "05af1b5d2c8239cd665a",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-schema-history",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "a9c4286c1f55cfeeba40",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "9a73ba48bf9417a6838a",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "94facbb6055554cd4f17",
-      "classification": "governed-reference-data",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "9889e8ccbb9910642729",
-      "classification": "governed-reference-data",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "611cd4ca2cbad146577d",
-      "classification": "governed-reference-data",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "external_provider, external_provider_code",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "737ac44844795e769499",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "9d0f627a6ca896268550",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "6579efd6808d343c3474",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "6909aac76b066d329577",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "94c516f5a3e017efd362",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "189a592a794e28d0b5a8",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "cef071f207659dd4bcaa",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Domo quote, fulfillment, acceptance-gate, and actor states form a closed state-machine and audit protocol enforced across Haskell, OpenAPI, and PostgreSQL constraints; making them editable would weaken transition correctness.",
-      "reviewed": true
-    },
-    {
-      "id": "5ce3863d2d468d041117",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Domo quote, fulfillment, acceptance-gate, and actor states form a closed state-machine and audit protocol enforced across Haskell, OpenAPI, and PostgreSQL constraints; making them editable would weaken transition correctness.",
-      "reviewed": true
-    },
-    {
-      "id": "9996c143f628813c8b93",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Domo quote, fulfillment, acceptance-gate, and actor states form a closed state-machine and audit protocol enforced across Haskell, OpenAPI, and PostgreSQL constraints; making them editable would weaken transition correctness.",
-      "reviewed": true
-    },
-    {
-      "id": "607a9332153352a645c4",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Domo quote, fulfillment, acceptance-gate, and actor states form a closed state-machine and audit protocol enforced across Haskell, OpenAPI, and PostgreSQL constraints; making them editable would weaken transition correctness.",
-      "reviewed": true
-    },
-    {
-      "id": "294b9affcca31aef5bdf",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Domo quote, fulfillment, acceptance-gate, and actor states form a closed state-machine and audit protocol enforced across Haskell, OpenAPI, and PostgreSQL constraints; making them editable would weaken transition correctness.",
-      "reviewed": true
-    },
-    {
-      "id": "3f307a07b889d2829e7a",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "2dd1831ab63300307414",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "46925f49241abc029a45",
-      "classification": "governed-reference-data",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
-      "id": "abf8941e408d6b5a0dc2",
-      "classification": "governed-reference-data",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "external_provider, external_provider_code",
-      "priority": "P1-cross-platform",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
       "id": "b4532ea6cfa7d8e317e8",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -6981,16 +5411,6 @@
       "priority": "P2-domain",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "173ec9d5db984ba8e0e8",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "These labels identify the exhaustive compiled Persistent migration groups checked before startup writes; they are execution boundaries, not selectable business data, roles, permissions, labels, or assignments.",
       "reviewed": true
     },
     {
@@ -7164,26 +5584,6 @@
       "reviewed": true
     },
     {
-      "id": "67f1c1984aab8a63d512",
-      "classification": "security-system-registry",
-      "disposition": "persisted-registry-with-deny-by-default-code-mirror",
-      "specializedModel": "security_action, security_permission, role_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Code retains only stable exhaustive identifiers needed for deny-by-default enforcement or protocol parsing; persisted rows own labels, ordering, assignment, validation metadata, and administration.",
-      "reviewed": true
-    },
-    {
-      "id": "61de129c2d466a70fd79",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
       "id": "d9c36c31cd1ae0306d08",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -7201,16 +5601,6 @@
       "priority": "P2-domain",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Code retains only stable exhaustive identifiers needed for deny-by-default enforcement or protocol parsing; persisted rows own labels, ordering, assignment, validation metadata, and administration.",
-      "reviewed": true
-    },
-    {
-      "id": "3f00137f715a55f77dc3",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "The list is a strict wire-payload field allowlist used to reject unknown JSON keys, not domain reference data.",
       "reviewed": true
     },
     {
@@ -7374,16 +5764,6 @@
       "reviewed": true
     },
     {
-      "id": "1ba8101b3e8ed105d23b",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Marketplace fulfillment, custody, and actor discriminants form a closed state-machine and audit protocol enforced across code, OpenAPI, and database constraints; making them editable would weaken transition correctness.",
-      "reviewed": true
-    },
-    {
       "id": "6eabfb3a618021538a2d",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -7541,16 +5921,6 @@
       "priority": "P1-cross-platform",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Code retains only stable exhaustive identifiers needed for deny-by-default enforcement or protocol parsing; persisted rows own labels, ordering, assignment, validation metadata, and administration.",
-      "reviewed": true
-    },
-    {
-      "id": "92bdf7d80182ff259008",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
     },
     {
@@ -8021,6 +6391,16 @@
       "priority": "P2-domain",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "dee5c1431841d4f8474a",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
       "reviewed": true
     },
     {
@@ -8514,6 +6894,26 @@
       "reviewed": true
     },
     {
+      "id": "d93f59a611b6da200219",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "db643fc9e5c94775063b",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
       "id": "5531b94c0e2171c68477",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -8581,56 +6981,6 @@
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "9541c8b51b5a0ba2a5c0",
-      "classification": "security-system-registry",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the migration list could break deployment execution or skip required schema changes.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
-      "reviewed": true
-    },
-    {
-      "id": "33560ce7abeb955dc314",
-      "classification": "governed-reference-data",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "currency_reference",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Currency codes are governed reference data that must be database-authoritative and validated against the exhaustive backend currency registry.",
-      "reviewed": true
-    },
-    {
-      "id": "2c318ad8f182eb96e2b8",
-      "classification": "governed-reference-data",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "locale_reference",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Locale codes are governed reference data that must be database-authoritative and validated against the exhaustive backend locale registry.",
-      "reviewed": true
-    },
-    {
-      "id": "d93f59a611b6da200219",
-      "classification": "dynamic-business-catalog",
-      "disposition": "retain-in-code",
-      "specializedModel": "navigation_item",
-      "priority": "P3-retain",
-      "risk": "Changing the navigation structure could break mobile app rendering or user experience.",
-      "justification": "Mobile navigation tabs are UI presentation mechanics controlled by the client; they are not governed business catalog data.",
-      "reviewed": true
-    },
-    {
-      "id": "db643fc9e5c94775063b",
-      "classification": "dynamic-business-catalog",
-      "disposition": "retain-in-code",
-      "specializedModel": "feature_access_registry",
-      "priority": "P3-retain",
-      "risk": "Changing the feature list could break mobile app feature gating or user experience.",
-      "justification": "Mobile feature flags are UI presentation mechanics controlled by the client; they are not governed business catalog data.",
       "reviewed": true
     }
   ]
