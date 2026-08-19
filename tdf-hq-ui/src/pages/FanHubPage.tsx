@@ -122,6 +122,15 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     queryKey: ['catalog', 'genres', 'es'],
     queryFn: () => Catalogs.listItems('genres', { locale: 'es', page: 1, pageSize: 500 }),
     staleTime: 5 * 60 * 1000,
+    retry: (failureCount, error) => {
+      // Retry on network errors or 5xx, but not on 4xx (auth issues)
+      if (error && typeof error === 'object' && 'status' in error) {
+        const status = (error as { status: number }).status;
+        if (status >= 400 && status < 500) return false;
+      }
+      return failureCount < 2;
+    },
+    retryDelay: 1000,
   });
   const fanHubRecoveryCards = useMemo<CatalogRecoveryCard[]>(() => {
     const feed = recordsFeedQuery.data;
@@ -1670,7 +1679,19 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       />
                     </Stack>
                     {genresCatalogQuery.isError && (
-                      <Alert severity="error">
+                      <Alert
+                        severity="error"
+                        action={
+                          <Button
+                            color="inherit"
+                            size="small"
+                            onClick={() => genresCatalogQuery.refetch()}
+                            disabled={genresCatalogQuery.isRefetching}
+                          >
+                            {genresCatalogQuery.isRefetching ? 'Reintentando…' : 'Reintentar'}
+                          </Button>
+                        }
+                      >
                         No se pudo cargar el catálogo de géneros. Intenta nuevamente antes de guardar.
                       </Alert>
                     )}
