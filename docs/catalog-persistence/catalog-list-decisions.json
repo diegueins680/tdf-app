@@ -424,16 +424,6 @@
       "reviewed": true
     },
     {
-      "id": "e70635629376d66cfcf9",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
-      "reviewed": true
-    },
-    {
       "id": "3391a96825357d78f794",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -2825,16 +2815,6 @@
     },
     {
       "id": "dee5c1431841d4f8474a",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "6f64a78cd61f77ccfb03",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
@@ -7734,36 +7714,6 @@
       "reviewed": true
     },
     {
-      "id": "2de186508bcd87434cc5",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
-      "reviewed": true
-    },
-    {
-      "id": "3c57b107ee336167e09d",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "4d31826e1beb0c734a96",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
       "id": "eaadaf8438c6c2ae933c",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -8024,16 +7974,6 @@
       "reviewed": true
     },
     {
-      "id": "929988ea9cf22625c461",
-      "classification": "dynamic-business-catalog",
-      "disposition": "consumer-update",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P3-consumer",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
-      "reviewed": true
-    },
-    {
       "id": "dffb7b67ef76a574ccc9",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -8081,16 +8021,6 @@
       "priority": "P2-domain",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "149cb8b498b0cc858d3d",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
       "reviewed": true
     },
     {
@@ -8584,26 +8514,6 @@
       "reviewed": true
     },
     {
-      "id": "faf664611d7ab0aa954d",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "60990a5df11b7a72f4d0",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
       "id": "5531b94c0e2171c68477",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -8671,6 +8581,56 @@
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "9541c8b51b5a0ba2a5c0",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the migration list could break deployment execution or skip required schema changes.",
+      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
+      "reviewed": true
+    },
+    {
+      "id": "33560ce7abeb955dc314",
+      "classification": "governed-reference-data",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "currency_reference",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Currency codes are governed reference data that must be database-authoritative and validated against the exhaustive backend currency registry.",
+      "reviewed": true
+    },
+    {
+      "id": "2c318ad8f182eb96e2b8",
+      "classification": "governed-reference-data",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "locale_reference",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Locale codes are governed reference data that must be database-authoritative and validated against the exhaustive backend locale registry.",
+      "reviewed": true
+    },
+    {
+      "id": "d93f59a611b6da200219",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item",
+      "priority": "P3-retain",
+      "risk": "Changing the navigation structure could break mobile app rendering or user experience.",
+      "justification": "Mobile navigation tabs are UI presentation mechanics controlled by the client; they are not governed business catalog data.",
+      "reviewed": true
+    },
+    {
+      "id": "db643fc9e5c94775063b",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "feature_access_registry",
+      "priority": "P3-retain",
+      "risk": "Changing the feature list could break mobile app feature gating or user experience.",
+      "justification": "Mobile feature flags are UI presentation mechanics controlled by the client; they are not governed business catalog data.",
       "reviewed": true
     }
   ]
