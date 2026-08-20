@@ -153,7 +153,8 @@ import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceLi
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
 import           TDF.Server.SocialEventsHandlers
-  ( socialEventsServer
+  ( publicUpcomingEventsServer
+  , socialEventsServer
   , stripeWebhookServer
   , eitherStripeServerError
   , parseStripeEphemeralKeySecret
@@ -734,6 +735,7 @@ server env =
   :<|> feedbackServer
   :<|> CatalogServer.publicCatalogServer
   :<|> DirectoryServer.directoryPublicServer
+  :<|> publicUpcomingEventsServer
   :<|> protectedServer
   :<|> marketplacePublicServer
   :<|> radioPresencePublicServer

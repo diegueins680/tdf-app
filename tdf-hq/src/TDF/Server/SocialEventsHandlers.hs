@@ -5,6 +5,7 @@
 {-# LANGUAGE TypeOperators #-}
 
 module TDF.Server.SocialEventsHandlers (
+    publicUpcomingEventsServer,
     socialEventsServer,
     stripeWebhookServer,
     validateRsvpStatus,
@@ -57,6 +58,7 @@ module TDF.Server.SocialEventsHandlers (
     validateEventCreateUpdateDimensions,
     validateSocialEventsListOffset,
     validateSocialEventsListFilter,
+    postgresVisibleImportedMetadataClause,
     validateDiscoverySourceWrite,
     validateVenueCreateUpdateFields,
     validateEventCurrencyInput,
@@ -205,6 +207,7 @@ import TDF.DTO.SocialEventsDTO (
     DiscoverySourceDTO (..),
     DiscoverySourceWriteDTO (..),
     EventDTO (..),
+    PublicUpcomingEventDTO (..),
     EventFinanceEntryDTO (..),
     EventFinanceSummaryDTO (..),
     EventLogisticsActivityDTO (..),
@@ -276,6 +279,49 @@ import TDF.Services.EventLogisticsRoutes
 import qualified TDF.Trials.Server as TrialsServer (isValidHttpUrl)
 
 type AppM = ReaderT Env Handler
+
+publicUpcomingEventsServer :: Maybe T.Text -> Maybe UTCTime -> Maybe Int -> AppM [PublicUpcomingEventDTO]
+publicUpcomingEventsServer mCity mStartAfter mLimit = do
+    Env{..} <- ask
+    now <- liftIO getCurrentTime
+    let startAfter = fromMaybe now mStartAfter
+        limit = min 200 (max 1 (fromMaybe 50 mLimit))
+        filters = [SocialEventStartTime >=. startAfter]
+    rows <- liftIO $ runSqlPool (selectVisibleSocialEvents filters (Asc SocialEventStartTime) (limit * 3) 0) envPool
+    events <- liftIO $ runSqlPool (catMaybes <$> mapM (publicUpcomingEventRow mCity) rows) envPool
+    pure (take limit events)
+
+publicUpcomingEventRow :: Maybe T.Text -> Entity SocialEvent -> SqlPersistT IO (Maybe PublicUpcomingEventDTO)
+publicUpcomingEventRow mCity (Entity eventKey eventRow) = do
+    metadataResult <- pure (decodeStoredEventMetadata (socialEventMetadata eventRow))
+    venue <- maybe (pure Nothing) get (socialEventVenueId eventRow)
+    case (metadataResult, socialEventWorkflowStateId eventRow) of
+        (Right metadata, Just workflowStateId) -> do
+            workflow <- EventLifecycle.loadActiveSocialEventState workflowStateId
+            publicListable <- EventLifecycle.socialEventStateHasCapability workflowStateId "public-listable"
+            let city = venue >>= SM.venueCity
+                cityMatches = maybe True (\needle -> maybe False (T.isInfixOf (T.toCaseFold (T.strip needle)) . T.toCaseFold) city) mCity
+            pure $
+                if publicListable && emIsPublic metadata /= Just False && cityMatches
+                    then do
+                        (stateCode, _, _) <- workflow
+                        Just PublicUpcomingEventDTO
+                            { publicUpcomingEventId = renderKeyText eventKey
+                            , publicUpcomingEventTitle = socialEventTitle eventRow
+                            , publicUpcomingEventDescription = socialEventDescription eventRow
+                            , publicUpcomingEventStart = socialEventStartTime eventRow
+                            , publicUpcomingEventEnd = socialEventEndTime eventRow
+                            , publicUpcomingEventTimezone = socialEventTimezone eventRow
+                            , publicUpcomingEventVenueName = SM.venueName <$> venue
+                            , publicUpcomingEventCity = city
+                            , publicUpcomingEventPriceCents = socialEventPriceCents eventRow
+                            , publicUpcomingEventCurrency = emCurrency metadata
+                            , publicUpcomingEventTicketUrl = emTicketUrl metadata
+                            , publicUpcomingEventImageUrl = emImageUrl metadata
+                            , publicUpcomingEventWorkflowStateCode = stateCode
+                            }
+                    else Nothing
+        _ -> pure Nothing
 
 validateSocialEventsFeatureAction :: T.Text -> T.Text -> AuthedUser -> Either ServerError ()
 validateSocialEventsFeatureAction featureId action user =

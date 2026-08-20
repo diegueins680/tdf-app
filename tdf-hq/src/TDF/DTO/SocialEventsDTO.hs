@@ -19,6 +19,7 @@ module TDF.DTO.SocialEventsDTO (
     DiscoverySourceDTO (..),
     DiscoverySourceWriteDTO (..),
     EventDTO (..),
+    PublicUpcomingEventDTO (..),
     EventMetadataUpdateDTO (..),
     EventUpdateDTO (..),
     RsvpCreateDTO (..),
@@ -489,6 +490,26 @@ instance FromJSON EventDTO where
             defaultOptions
                 { rejectUnknownFields = True
                 }
+
+-- Deliberately excludes organizer identifiers, source history, finance fields,
+-- and other authenticated event-management data.
+data PublicUpcomingEventDTO = PublicUpcomingEventDTO
+    { publicUpcomingEventId :: Text
+    , publicUpcomingEventTitle :: Text
+    , publicUpcomingEventDescription :: Maybe Text
+    , publicUpcomingEventStart :: UTCTime
+    , publicUpcomingEventEnd :: Maybe UTCTime
+    , publicUpcomingEventTimezone :: Maybe Text
+    , publicUpcomingEventVenueName :: Maybe Text
+    , publicUpcomingEventCity :: Maybe Text
+    , publicUpcomingEventPriceCents :: Maybe Int
+    , publicUpcomingEventCurrency :: Maybe Text
+    , publicUpcomingEventTicketUrl :: Maybe Text
+    , publicUpcomingEventImageUrl :: Maybe Text
+    , publicUpcomingEventWorkflowStateCode :: Text
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON PublicUpcomingEventDTO
 
 data EventMetadataUpdateDTO = EventMetadataUpdateDTO
     { emuTicketUrl :: NullableFieldUpdate Text

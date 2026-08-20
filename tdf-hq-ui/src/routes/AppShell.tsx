@@ -15,6 +15,8 @@ import { canAccessPath } from '../utils/accessControl';
 import { buildLoginRedirectPath, pickLandingPath } from '../utils/loginRouting';
 import RouteLoadingFallback from './RouteLoadingFallback';
 import ForbiddenPage from '../pages/ForbiddenPage';
+import PublicBranding from '../components/PublicBranding';
+import UpcomingEventsPublicPage from '../pages/UpcomingEventsPublicPage';
 import { evaluatePathAccess } from '../features/featureRegistry';
 import { useNavigationPreferences } from '../hooks/useNavigationPreferences';
 import { getAnalyticsClient } from '../analytics/posthog';
@@ -135,6 +137,9 @@ export function Shell() {
   }
 
   if (!session) {
+    if (location.pathname === '/social/eventos') {
+      return <PublicBranding><UpcomingEventsPublicPage /></PublicBranding>;
+    }
     const loginPath = buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`);
     return <Navigate to={loginPath} replace />;
   }

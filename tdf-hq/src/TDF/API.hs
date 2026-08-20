@@ -60,6 +60,7 @@ import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.Services (ServiceCatalogAPI, ServiceCatalogPublicAPI)
 import           TDF.API.SocialEventsAPI (SocialEventsAPI)
+import           TDF.API.SocialEventsAPI (PublicUpcomingEventsAPI)
 import           TDF.API.SocialSyncAPI (SocialSyncAPI)
 import           TDF.API.SocialDiscoveryAPI (SocialDiscoveryAPI)
 import           TDF.Contracts.API (ContractsAPI)
@@ -632,6 +633,7 @@ type API =
   :<|> FeedbackAPI
   :<|> PublicCatalogAPI
   :<|> DirectoryPublicAPI
+  :<|> PublicUpcomingEventsAPI
   -- Keep the authenticated marketplace branch ahead of the public one so
   -- /marketplace/orders is not consumed by the public /marketplace/:id capture.
   :<|> AuthProtect "bearer-token" :> ProtectedAPI

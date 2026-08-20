@@ -56,6 +56,22 @@ export interface SocialEventDTO {
   eventArtists: SocialArtistDTO[];
 }
 
+export interface PublicUpcomingEventDTO {
+  publicUpcomingEventId: string;
+  publicUpcomingEventTitle: string;
+  publicUpcomingEventDescription?: string | null;
+  publicUpcomingEventStart: string;
+  publicUpcomingEventEnd?: string | null;
+  publicUpcomingEventTimezone?: string | null;
+  publicUpcomingEventVenueName?: string | null;
+  publicUpcomingEventCity?: string | null;
+  publicUpcomingEventPriceCents?: number | null;
+  publicUpcomingEventCurrency?: string | null;
+  publicUpcomingEventTicketUrl?: string | null;
+  publicUpcomingEventImageUrl?: string | null;
+  publicUpcomingEventWorkflowStateCode: string;
+}
+
 export interface SocialEventImageUploadDTO {
   eiuEventId: string;
   eiuFileName: string;
@@ -485,6 +501,10 @@ const buildQuery = (params: QueryParams) => {
 };
 
 export const SocialEventsAPI = {
+  listPublicUpcomingEvents: async (opts?: { city?: string; startAfter?: string; limit?: number }) => {
+    const qs = buildQuery({ city: opts?.city, startAfter: opts?.startAfter, limit: opts?.limit });
+    return await getUnknown(`/social-events/upcoming${qs}`) as PublicUpcomingEventDTO[];
+  },
   listEvents: async (opts?: { city?: string; startAfter?: string; eventTypeId?: string; workflowStateId?: string; artistId?: string; venueId?: string }) => {
     const qs = buildQuery({
       city: opts?.city,
