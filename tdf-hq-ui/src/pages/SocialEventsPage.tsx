@@ -428,11 +428,17 @@ export default function SocialEventsPage() {
         workflowStateId: eventWorkflowStateFilter || undefined,
         startAfter,
       }),
+    // This page already exposes an explicit refresh action. Retrying a failed
+    // request with the app-wide defaults (up to three additional 30s requests)
+    // leaves the page looking stuck for well over a minute when the API is
+    // restarting or the user's connection briefly drops.
+    retry: false,
   });
 
   const venuesQuery = useQuery({
     queryKey: ['social-venues', city],
     queryFn: () => SocialEventsAPI.listVenues({ city: city.trim() || undefined }),
+    retry: false,
   });
   const eventTypesQuery = useQuery({
     queryKey: ['catalog', 'event-types', 'social-events', locale],
@@ -1273,10 +1279,10 @@ export default function SocialEventsPage() {
 
       {eventsQuery.error ? (
         <Alert severity="error">No pudimos cargar los eventos. Intenta de nuevo.</Alert>
-      ) : eventsQuery.isLoading || venuesQuery.isLoading ? (
+      ) : eventsQuery.isLoading ? (
         <Stack direction="row" spacing={1.5} alignItems="center">
           <CircularProgress size={18} />
-          <Typography>Cargando eventos y venues...</Typography>
+          <Typography>Cargando eventos...</Typography>
         </Stack>
       ) : events.length === 0 ? (
         <Alert severity="info">{eventOverviewUiState.emptyEventsMessage}</Alert>
