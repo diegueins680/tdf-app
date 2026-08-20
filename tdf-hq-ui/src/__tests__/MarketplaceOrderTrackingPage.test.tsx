@@ -27,6 +27,10 @@ jest.unstable_mockModule('../utils/logger', () => ({
   logger: { warn: jest.fn() },
 }));
 
+jest.unstable_mockModule('../components/reviews/ExperienceReviews', () => ({
+  default: () => null,
+}));
+
 const { default: MarketplaceOrderTrackingPage } = await import('../pages/MarketplaceOrderTrackingPage');
 
 const orderFixture = (manualStatus: string): MarketplaceOrderDTO => ({

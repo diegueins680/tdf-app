@@ -71,6 +71,7 @@ import { buildPublicContentUrl, type DriveFileInfo } from '../services/googleDri
 import { buildAccessibleModuleSet } from '../utils/accessControl';
 import { assertNever } from '../utils/assertNever';
 import { formatCurrencyForUser, resolveRuntimeCurrency } from '../utils/formatters';
+import ExperienceReviews from '../components/reviews/ExperienceReviews';
 
 const API_BASE = (import.meta.env?.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
   ? import.meta.env.VITE_API_BASE
@@ -3120,6 +3121,11 @@ export default function MarketplacePage() {
                   Copiar detalle
                 </Button>
               </Stack>
+              <ExperienceReviews
+                targetKind="marketplace_listing"
+                targetId={selectedListing.miListingId}
+                title="Reseñas verificadas"
+              />
             </Stack>
           )}
         </DialogContent>

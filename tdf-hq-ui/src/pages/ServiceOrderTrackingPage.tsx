@@ -3,6 +3,7 @@ import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Divider,
 import { useQuery } from '@tanstack/react-query';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { ServiceStorefront } from '../api/serviceStorefront';
+import ExperienceReviews from '../components/reviews/ExperienceReviews';
 
 const readFragmentToken = (): string => {
   if (typeof window === 'undefined') return '';
@@ -94,6 +95,11 @@ export default function ServiceOrderTrackingPage() {
             </Stack>
           </CardContent>
         </Card>
+        <ExperienceReviews
+          targetKind="service_package"
+          targetId={order.ssoPackageId}
+          title={`Reseñas de ${order.ssoServiceKind} ${order.ssoTier}`}
+        />
         <Button component={RouterLink} to="/mezcla-mastering" variant="outlined">Volver a servicios</Button>
       </Stack>
     </Box>

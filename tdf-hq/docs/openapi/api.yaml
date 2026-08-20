@@ -5151,6 +5151,7 @@ paths:
   /directory/suggestions: { $ref: './directory.yaml#/paths/~1directory~1suggestions' }
   /directory/taxonomies: { $ref: './directory.yaml#/paths/~1directory~1taxonomies' }
   /directory/profiles/{slug}: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{slug}' }
+  /directory/party-profiles/{partyId}: { $ref: './directory.yaml#/paths/~1directory~1party-profiles~1{partyId}' }
   /directory/profiles/{slug}/reviews: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{slug}~1reviews' }
   /directory/classifieds/{slug}: { $ref: './directory.yaml#/paths/~1directory~1classifieds~1{slug}' }
   /directory/events/{eventId}: { $ref: './directory.yaml#/paths/~1directory~1events~1{eventId}' }
@@ -5181,6 +5182,9 @@ paths:
   /directory/admin/moderation: { $ref: './directory.yaml#/paths/~1directory~1admin~1moderation' }
   /directory/admin/moderation/{caseId}/decisions: { $ref: './directory.yaml#/paths/~1directory~1admin~1moderation~1{caseId}~1decisions' }
   /directory/admin/merges: { $ref: './directory.yaml#/paths/~1directory~1admin~1merges' }
+  /reviews/{targetKind}/{targetId}: { $ref: './reviews.yaml#/paths/~1reviews~1{targetKind}~1{targetId}' }
+  /reviews/eligibility: { $ref: './reviews.yaml#/paths/~1reviews~1eligibility' }
+  /reviews: { $ref: './reviews.yaml#/paths/~1reviews' }
 
   /public/events/{eventId}/tickets:
     get:

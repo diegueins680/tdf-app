@@ -311,6 +311,9 @@ jobs:
       - name: Rehearse marketplace customer operations and deposit settlement migration
         run: ./scripts/test-marketplace-operations-migration.sh
 
+      - name: Rehearse verified experience review migration
+        run: sh ./scripts/test-verified-experience-reviews-migration.sh
+
       - name: Create production baseline fixture
         run: |
           psql "$PGURL" -v ON_ERROR_STOP=1 -f scripts/__tests__/fixtures/production-schema-20260814.sql

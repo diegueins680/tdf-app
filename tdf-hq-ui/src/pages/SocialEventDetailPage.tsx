@@ -12,6 +12,7 @@ import { Catalogs } from '../api/catalogs';
 import { useSession } from '../session/SessionContext';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { formatCurrency } from '../utils/formatters';
+import ExperienceReviews from '../components/reviews/ExperienceReviews';
 
 const formatDate = (value: string | null | undefined, locale: string, timezone: string) => {
   if (!value) return '';
@@ -178,6 +179,8 @@ export default function SocialEventDetailPage() {
             </Stack>
           </CardContent>
         </Card>
+
+        {event && <ExperienceReviews targetKind="event" targetId={eventId} title="Reseñas del evento" />}
 
         <Card variant="outlined">
           <CardContent>

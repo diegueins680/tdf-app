@@ -54,6 +54,7 @@ import {
   type ServiceStorefrontOrderDTO,
   type ServiceStorefrontPackageDTO,
 } from '../api/serviceStorefront';
+import ExperienceReviews from '../components/reviews/ExperienceReviews';
 
 const IMPORT_META_ENV = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
 
@@ -595,7 +596,8 @@ export default function MixingMasteringPage() {
 
       {/* Step 2: Order Details */}
       {currentStep === 'details' && selectedPackage && (
-        <Paper sx={{ p: 4, maxWidth: 600, mx: 'auto' }}>
+        <Stack spacing={3} sx={{ maxWidth: 700, mx: 'auto' }}>
+          <Paper sx={{ p: 4 }}>
           <Typography variant="h5" gutterBottom fontWeight={600}>
             Detalles del Proyecto
           </Typography>
@@ -685,7 +687,13 @@ export default function MixingMasteringPage() {
               Continuar al pago
             </Button>
           </Stack>
-        </Paper>
+          </Paper>
+          <ExperienceReviews
+            targetKind="service_package"
+            targetId={selectedPackage.id}
+            title={`Reseñas de ${selectedPackage.name}`}
+          />
+        </Stack>
       )}
 
       {/* Step 3: Payment */}
