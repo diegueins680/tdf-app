@@ -42,6 +42,21 @@ describe('Catalog administration API', () => {
     );
   });
 
+  it('loads a public catalog without requiring administrative access', async () => {
+    getMock.mockResolvedValueOnce({});
+
+    await Catalogs.listPublicItems('music genres', {
+      locale: 'es EC',
+      q: 'rock alternativo',
+      page: 1,
+      pageSize: 500,
+    });
+
+    expect(getMock).toHaveBeenCalledWith(
+      '/catalogs/music%20genres/items?locale=es+EC&q=rock+alternativo&page=1&pageSize=500',
+    );
+  });
+
   it('loads canonical authored-content IDs and persisted URL metadata', async () => {
     getMock.mockResolvedValueOnce([]);
 

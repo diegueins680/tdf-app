@@ -119,8 +119,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     staleTime: 5 * 60 * 1000,
   });
   const genresCatalogQuery = useQuery({
-    queryKey: ['catalog', 'genres', 'es'],
-    queryFn: () => Catalogs.listItems('genres', { locale: 'es', page: 1, pageSize: 500 }),
+    queryKey: ['catalog', 'public', 'genres', 'es'],
+    queryFn: () => Catalogs.listPublicItems('genres', { locale: 'es', page: 1, pageSize: 500 }),
     staleTime: 5 * 60 * 1000,
     retry: (failureCount, error) => {
       // Retry on network errors or 5xx, but not on 4xx (auth issues)

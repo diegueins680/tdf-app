@@ -37,6 +37,7 @@ const querySuffix = (params: URLSearchParams) => {
 };
 
 const catalogPath = (catalogCode: string) => `/catalog/${encodeURIComponent(catalogCode)}`;
+const publicCatalogPath = (catalogCode: string) => `/catalogs/${encodeURIComponent(catalogCode)}`;
 
 export const Catalogs = {
   listPublicBatch: (catalogCodes: string[], query: CatalogPageQuery = {}) => {
@@ -48,6 +49,15 @@ export const Catalogs = {
     appendOptional(params, 'page', query.page);
     appendOptional(params, 'pageSize', query.pageSize);
     return get<CatalogBatch>(`/catalogs/batch${querySuffix(params)}`);
+  },
+
+  listPublicItems: (catalogCode: string, query: Omit<CatalogPageQuery, 'includeInactive'> = {}) => {
+    const params = new URLSearchParams();
+    appendOptional(params, 'locale', query.locale);
+    appendOptional(params, 'q', query.q);
+    appendOptional(params, 'page', query.page);
+    appendOptional(params, 'pageSize', query.pageSize);
+    return get<CatalogPage>(`${publicCatalogPath(catalogCode)}/items${querySuffix(params)}`);
   },
 
   listDefinitions: (locale?: string) => {

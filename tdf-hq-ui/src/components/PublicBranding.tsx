@@ -7,6 +7,8 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import InstagramEntryLinks from './InstagramEntryLinks';
+import SessionMenu from './SessionMenu';
+import { useSession } from '../session/SessionContext';
 import {
   hasInstagramTrafficSignal,
   readStoredInstagramTraffic,
@@ -40,6 +42,7 @@ export default function PublicBranding({
   showHeader?: boolean;
   showLoginButton?: boolean;
 }) {
+  const { session } = useSession();
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const location = useLocation();
   const [showInstagramEntryLinks, setShowInstagramEntryLinks] = useState(() => {
@@ -187,7 +190,9 @@ export default function PublicBranding({
                 </Stack>
               </Stack>
               <Stack direction="row" alignItems="center" spacing={1.5}>
-                {showLoginButton && (
+                {session ? (
+                  <SessionMenu />
+                ) : showLoginButton && (
                   <Button
                     variant="contained"
                     component={RouterLink}

@@ -4,6 +4,34 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 
+let activeSession: {
+  username: string;
+  displayName: string;
+  roles: string[];
+  partyId: number;
+} | null = null;
+const logoutMock = jest.fn();
+
+jest.unstable_mockModule('../session/SessionContext', () => ({
+  useSession: () => ({
+    session: activeSession,
+    loading: false,
+    login: jest.fn(),
+    logout: logoutMock,
+    setApiToken: jest.fn(),
+  }),
+}));
+
+jest.unstable_mockModule('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => ({
+      'sessionMenu.noRoles': 'Sin roles asignados',
+      'sessionMenu.logout': 'Cerrar sesión',
+      'sessionMenu.open': 'Abrir menú de sesión',
+    })[key] ?? key,
+  }),
+}));
+
 jest.unstable_mockModule('./BrandLogo', () => ({
   default: () => <span>TDF Records</span>,
 }));
@@ -47,12 +75,14 @@ const linkHrefByText = (container: HTMLElement, label: string) => {
   return link.getAttribute('href');
 };
 
-describe('PublicBranding Instagram entry links', () => {
+describe('PublicBranding', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   });
 
   beforeEach(() => {
+    activeSession = null;
+    logoutMock.mockClear();
     window.sessionStorage.clear();
   });
 
@@ -124,6 +154,45 @@ describe('PublicBranding Instagram entry links', () => {
       expect(container.querySelector('header')).not.toBeNull();
       expect(container.querySelector('nav[aria-label="Navegación principal"]')).not.toBeNull();
       expect(container.querySelector('footer')).not.toBeNull();
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('shows the session menu instead of a login action for authenticated visitors', async () => {
+    activeSession = {
+      username: 'fabro',
+      displayName: 'Fabro',
+      roles: ['artist'],
+      partyId: 42,
+    };
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderBranding(container, '/fans');
+
+    try {
+      expect(container.textContent).not.toContain('Ingresar');
+      const sessionButton = container.querySelector<HTMLButtonElement>(
+        'button[aria-label="Abrir menú de sesión"]',
+      );
+      expect(sessionButton).not.toBeNull();
+
+      await act(async () => {
+        sessionButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      expect(document.body.textContent).toContain('Cerrar sesión');
+      const logoutItem = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]'))
+        .find((item) => item.textContent?.includes('Cerrar sesión'));
+      expect(logoutItem).not.toBeUndefined();
+
+      await act(async () => {
+        logoutItem?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      expect(logoutMock).toHaveBeenCalledTimes(1);
     } finally {
       await cleanup();
     }
