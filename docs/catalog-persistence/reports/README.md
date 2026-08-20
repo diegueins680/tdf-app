@@ -13,3 +13,6 @@ CI fails for every new or changed candidate until its classification, dispositio
 model (or technical allowlist target), and substantive justification are explicitly reviewed. It
 also fails when a decision becomes stale, is duplicated, lacks `reviewed: true`, or claims a
 technical exception outside `technical_constant_allowlist`.
+
+Repository scans include only Git-tracked files, including tracked submodule contents, so ignored
+local configuration and build artifacts cannot create machine-specific candidate fingerprints.

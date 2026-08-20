@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { existsSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { extname, relative, resolve, sep } from 'node:path';
 import process from 'node:process';
 import ts from 'typescript';
@@ -90,6 +91,26 @@ function walk(pathname) {
     if (SKIPPED_SEGMENTS.has(entry.name)) return [];
     return walk(resolve(pathname, entry.name));
   });
+}
+
+function repositoryTrackedFiles(root) {
+  const rootResult = spawnSync('git', ['-C', root, 'rev-parse', '--show-toplevel'], {
+    encoding: 'utf8',
+  });
+  if (
+    rootResult.status !== 0 ||
+    realpathSync(resolve(rootResult.stdout.trim())) !== realpathSync(root)
+  ) {
+    return null;
+  }
+
+  const filesResult = spawnSync(
+    'git',
+    ['-C', root, '-c', 'core.quotePath=false', 'ls-files', '--cached', '--recurse-submodules', '-z'],
+    { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 },
+  );
+  if (filesResult.status !== 0) return null;
+  return new Set(filesResult.stdout.split('\0').filter(Boolean));
 }
 
 function sourceKind(file) {
@@ -690,7 +711,14 @@ function loadDecisions(pathname, root) {
 function main() {
   const options = parseArgs(process.argv.slice(2));
   const root = resolve(options.root);
-  const files = SOURCE_ROOTS.flatMap((sourceRoot) => walk(resolve(root, sourceRoot)));
+  const trackedFiles = repositoryTrackedFiles(root);
+  const files = SOURCE_ROOTS
+    .flatMap((sourceRoot) => walk(resolve(root, sourceRoot)))
+    .filter((absolutePath) => {
+      if (!trackedFiles) return true;
+      const file = relative(root, absolutePath).split(sep).join('/');
+      return trackedFiles.has(file);
+    });
   const uniqueFiles = [...new Set(files)].sort();
   const fileTexts = new Map(
     uniqueFiles.map((absolutePath) => [

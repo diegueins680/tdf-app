@@ -7444,26 +7444,6 @@
       "reviewed": true
     },
     {
-      "id": "33560ce7abeb955dc314",
-      "classification": "governed-reference-data",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "governed reference table selected during consumer refactor",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Environment configuration values are governed reference data that must be database-authoritative and validated against the exhaustive backend registry.",
-      "reviewed": true
-    },
-    {
-      "id": "2c318ad8f182eb96e2b8",
-      "classification": "governed-reference-data",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "governed reference table selected during consumer refactor",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Environment configuration values are governed reference data that must be database-authoritative and validated against the exhaustive backend registry.",
-      "reviewed": true
-    },
-    {
       "id": "c6e4988f9791b0f4e8d0",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
