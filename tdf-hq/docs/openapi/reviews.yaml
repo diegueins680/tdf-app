@@ -23,6 +23,7 @@ paths:
       tags: [Verified reviews]
       operationId: listExperienceReviewEligibility
       summary: List this account's completed, not-yet-reviewed interactions
+      security: [{ bearerAuth: [] }]
       parameters:
         - { name: targetKind, in: query, schema: { $ref: '#/components/schemas/ExperienceReviewTargetKind' } }
         - { name: targetId, in: query, schema: { type: string } }
@@ -39,6 +40,7 @@ paths:
       tags: [Verified reviews]
       operationId: createExperienceReview
       summary: Publish one review for an eligible completed interaction
+      security: [{ bearerAuth: [] }]
       parameters:
         - { name: Idempotency-Key, in: header, required: true, schema: { type: string, minLength: 8, maxLength: 160 } }
       requestBody:

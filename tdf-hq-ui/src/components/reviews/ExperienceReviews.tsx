@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import {
@@ -47,9 +47,11 @@ export default function ExperienceReviews({ targetKind, targetId, title = 'Rese�
   const [body, setBody] = useState('');
   const createAttempt = useRef<{ fingerprint: string; key: string } | null>(null);
 
-  const reviewsQuery = useQuery({
+  const reviewsQuery = useInfiniteQuery({
     queryKey: ['experience-reviews', targetKind, targetId],
-    queryFn: () => Reviews.list(targetKind, targetId),
+    queryFn: ({ pageParam }) => Reviews.list(targetKind, targetId, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
     enabled: Boolean(targetId),
   });
   const eligibilityQuery = useQuery({
@@ -97,11 +99,12 @@ export default function ExperienceReviews({ targetKind, targetId, title = 'Rese�
     }),
   });
 
+  const reviews = reviewsQuery.data?.pages.flatMap((page) => page.items) ?? [];
+  const summary = reviewsQuery.data?.pages[0]?.summary;
   const summaryLabel = useMemo(() => {
-    const summary = reviewsQuery.data?.summary;
     if (!summary || summary.count === 0) return 'Aún no hay reseñas';
     return `${Number(summary.average ?? 0).toFixed(1)} de 5 · ${summary.count} ${summary.count === 1 ? 'reseña' : 'reseñas'}`;
-  }, [reviewsQuery.data?.summary]);
+  }, [summary]);
 
   return (
     <Card variant="outlined" component="section" aria-labelledby={`reviews-${targetKind}-${targetId}`}>
@@ -110,7 +113,7 @@ export default function ExperienceReviews({ targetKind, targetId, title = 'Rese�
           <Box>
             <Typography id={`reviews-${targetKind}-${targetId}`} variant="h5" fontWeight={800}>{title}</Typography>
             <Stack direction="row" spacing={1} alignItems="center" mt={0.5}>
-              <Rating value={reviewsQuery.data?.summary.average ?? 0} precision={0.1} readOnly aria-label={summaryLabel} />
+              <Rating value={summary?.average ?? 0} precision={0.1} readOnly aria-label={summaryLabel} />
               <Typography variant="body2" color="text.secondary">{summaryLabel}</Typography>
             </Stack>
           </Box>
@@ -156,7 +159,7 @@ export default function ExperienceReviews({ targetKind, targetId, title = 'Rese�
           {reviewsQuery.isLoading && <CircularProgress size={24} />}
           {reviewsQuery.error && <Alert severity="error">No se pudieron cargar las reseñas.</Alert>}
 
-          {reviewsQuery.data?.items.map((review, index) => (
+          {reviews.map((review, index) => (
             <Box key={review.id}>
               {index > 0 && <Divider sx={{ mb: 2 }} />}
               <Stack direction="row" spacing={1.25} alignItems="flex-start">
@@ -187,6 +190,16 @@ export default function ExperienceReviews({ targetKind, targetId, title = 'Rese�
               </Stack>
             </Box>
           ))}
+          {reviewsQuery.hasNextPage && (
+            <Button
+              variant="outlined"
+              onClick={() => { void reviewsQuery.fetchNextPage(); }}
+              disabled={reviewsQuery.isFetchingNextPage}
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              {reviewsQuery.isFetchingNextPage ? 'Cargando…' : 'Ver más reseñas'}
+            </Button>
+          )}
           {reportMutation.isSuccess && <Alert severity="success">Gracias. La reseña fue enviada a moderación.</Alert>}
         </Stack>
       </CardContent>
