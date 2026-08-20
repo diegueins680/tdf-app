@@ -20,6 +20,7 @@ module.exports = {
     '^react/jsx-runtime$': '<rootDir>/node_modules/react/jsx-runtime.js',
     '^react/jsx-dev-runtime$': '<rootDir>/node_modules/react/jsx-dev-runtime.js',
     '^webtorrent/dist/webtorrent\\.min\\.js(?:\\?url)?$': '<rootDir>/src/__mocks__/assetUrlMock.ts',
+    '\\.(svg|png|jpe?g|gif|webp)$': '<rootDir>/src/__mocks__/assetUrlMock.ts',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   setupFilesAfterEnv: [],
