@@ -358,7 +358,9 @@ describe('LabelArtistsPage', () => {
   it('blocks profile writes when the canonical genre catalog cannot be loaded', async () => {
     listArtistProfilesMock.mockResolvedValue([buildArtist()]);
     listPartiesMock.mockResolvedValue([buildParty()]);
-    listCatalogItemsMock.mockRejectedValue(new Error('catalog unavailable'));
+    listCatalogItemsMock.mockRejectedValue(
+      Object.assign(new Error('catalog unavailable'), { status: 403 }),
+    );
 
     const container = document.createElement('div');
     document.body.appendChild(container);
