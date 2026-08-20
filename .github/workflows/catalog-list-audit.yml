@@ -27,5 +27,8 @@ jobs:
       - name: Install audit dependencies
         run: npm ci --ignore-scripts
 
+      - name: Verify deterministic catalog-list discovery
+        run: npm run test:catalog-list-audit
+
       - name: Reject unreviewed or stale business-list decisions
         run: npm run audit:catalog-lists
