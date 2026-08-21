@@ -18,6 +18,7 @@ import {
   type PublicBookingCheckoutDTO,
 } from '../api/bookings';
 import { useMetaTags } from '../hooks/useMetaTags';
+import ExperienceReviews from '../components/reviews/ExperienceReviews';
 
 const paidStatuses = new Set(['paid', 'partially_refunded', 'refunded']);
 
@@ -127,9 +128,10 @@ export default function PublicBookingOrderTrackingPage() {
 
   return (
     <Box sx={{ minHeight: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 5 }}>
-      <Card sx={{ width: '100%', maxWidth: 720, borderRadius: 3 }}>
-        <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-          <Stack spacing={2.5}>
+      <Stack sx={{ width: '100%', maxWidth: 720 }} spacing={3}>
+        <Card sx={{ borderRadius: 3 }}>
+          <CardContent sx={{ p: { xs: 3, md: 5 } }}>
+            <Stack spacing={2.5}>
             <Stack spacing={0.5}>
               <Typography variant="overline" color="text.secondary">Reserva TDF</Typography>
               <Typography variant="h4" fontWeight={800}>Estado de tu orden</Typography>
@@ -194,9 +196,17 @@ export default function PublicBookingOrderTrackingPage() {
                 Nueva reserva
               </Button>
             </Stack>
-          </Stack>
-        </CardContent>
-      </Card>
+            </Stack>
+          </CardContent>
+        </Card>
+        {order?.booking.serviceOfferingId ? (
+          <ExperienceReviews
+            targetKind="service_offering"
+            targetId={order.booking.serviceOfferingId}
+            title={`Reseñas de ${order.booking.title}`}
+          />
+        ) : null}
+      </Stack>
     </Box>
   );
 }

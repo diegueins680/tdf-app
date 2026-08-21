@@ -624,7 +624,7 @@
       "reviewed": true
     },
     {
-      "id": "8aebd2c39e94632d619f",
+      "id": "ac1d43fea60bbc54a939",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -7014,16 +7014,6 @@
       "reviewed": true
     },
     {
-      "id": "9541c8b51b5a0ba2a5c0",
-      "classification": "security-system-registry",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the migration list could break deployment execution or skip required schema changes.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
-      "reviewed": true
-    },
-    {
       "id": "86d102f7ab4e7888140b",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
@@ -7441,26 +7431,6 @@
       "priority": "P3-retain",
       "risk": "Changing UI constants could break rendering or user experience.",
       "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data.",
-      "reviewed": true
-    },
-    {
-      "id": "33560ce7abeb955dc314",
-      "classification": "governed-reference-data",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "governed reference table selected during consumer refactor",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Environment configuration values are governed reference data that must be database-authoritative and validated against the exhaustive backend registry.",
-      "reviewed": true
-    },
-    {
-      "id": "2c318ad8f182eb96e2b8",
-      "classification": "governed-reference-data",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "governed reference table selected during consumer refactor",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Environment configuration values are governed reference data that must be database-authoritative and validated against the exhaustive backend registry.",
       "reviewed": true
     },
     {
@@ -8604,13 +8574,13 @@
       "reviewed": true
     },
     {
-      "id": "dee5c1431841d4f8474a",
+      "id": "149cb8b498b0cc858d3d",
       "classification": "security-system-registry",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "The generated mobile feature registry mirrors the reviewed navigation and permission contract; persisted assignments remain authoritative and backend capabilities remain exhaustive.",
       "reviewed": true
     },
     {
@@ -8631,6 +8601,116 @@
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
       "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "9fa6b8a8aff3c73f0707",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the migration list could break deployment execution or skip required schema changes.",
+      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
+      "reviewed": true
+    },
+    {
+      "id": "6e9a4e9296cdc51a7fa3",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Review target kinds are cross-client business data and require one governed source shared by API validation, persistence, and both clients.",
+      "reviewed": true
+    },
+    {
+      "id": "1607a77029a8b28c4e7f",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Verified interaction source kinds are shared business data whose eligibility mapping must remain consistent across the API, persistence, and both clients.",
+      "reviewed": true
+    },
+    {
+      "id": "076e28494a6b4db501b5",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break abuse-control accounting or permit an unknown rate-limit scope.",
+      "justification": "Rate-limit scopes are closed security mechanics validated by the database rather than selectable or displayable business data.",
+      "reviewed": true
+    },
+    {
+      "id": "9debece52815e02a07a9",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The persistence constraint mirrors cross-client review target kinds and must converge on their governed domain model.",
+      "reviewed": true
+    },
+    {
+      "id": "0ad29b3306e823682bf8",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The persistence constraint mirrors verified interaction source kinds and must converge on their governed eligibility model.",
+      "reviewed": true
+    },
+    {
+      "id": "f99ba8fe6f37a8606d3d",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-domain",
+      "risk": "Invalid moderation transitions could expose removed content or hide published reviews without an auditable state model.",
+      "justification": "Review publication and moderation statuses are governed workflow states and should converge on the canonical workflow model.",
+      "reviewed": true
+    },
+    {
+      "id": "ce63e73628f073165d01",
+      "classification": "governed-reference-data",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing identifier parsing modes could accept malformed evidence identifiers or reject valid persisted identifiers.",
+      "justification": "DecimalId and UuidId are closed parser dispatch constructors, not selectable or reportable domain values.",
+      "reviewed": true
+    },
+    {
+      "id": "b4e40b60881e99889eae",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing execution-status identifiers could misclassify evidence or allow an unsupported result state.",
+      "justification": "These values are the closed validation vocabulary for machine-readable persona test evidence, not configurable product or business data.",
+      "reviewed": true
+    },
+    {
+      "id": "4a073fb05189df4f5797",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the template could make generated scenario specifications omit required lifecycle and idempotency expectations.",
+      "justification": "These sentences are deterministic documentation-template clauses generated for test specifications; they are neither runtime choices nor domain authority.",
+      "reviewed": true
+    },
+    {
+      "id": "616c028680c8f586b7c3",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the template could make generated scenario specifications omit required notification and deduplication expectations.",
+      "justification": "These sentences are deterministic documentation-template clauses generated for test specifications; they are neither runtime choices nor domain authority.",
       "reviewed": true
     }
   ]

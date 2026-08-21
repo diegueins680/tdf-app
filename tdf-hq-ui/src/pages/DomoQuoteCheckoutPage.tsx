@@ -246,7 +246,7 @@ export default function DomoQuoteCheckoutPage() {
     : new URL(`/domo-del-pululahua/cotizaciones/${quote.quoteId}`, window.location.origin).toString();
 
   return (
-    <Box component="main" id="main-content" sx={{ bgcolor: '#faf8f3', minHeight: '100vh', py: { xs: 4, md: 7 } }}>
+    <Box sx={{ bgcolor: '#faf8f3', minHeight: '100vh', py: { xs: 4, md: 7 } }}>
       <Container maxWidth="md">
         <Stack spacing={3}>
           <Button component={RouterLink} to="/domo-del-pululahua" sx={{ alignSelf: 'flex-start' }}>

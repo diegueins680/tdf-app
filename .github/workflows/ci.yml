@@ -8,6 +8,10 @@ on:
       - 'tdf-mobile'
       - 'tdf-mobile/**'
       - 'scripts/**'
+      - 'test/personas/**'
+      - 'e2e/web/**'
+      - 'playwright.config.mjs'
+      - 'docs/persona-testing/**'
       - 'package.json'
       - 'package-lock.json'
       - '.npmrc'
@@ -98,6 +102,37 @@ jobs:
 
       - name: Run UI checks
         run: npm run quality:ui
+
+  persona-web-e2e:
+    needs: changes
+    if: needs.changes.outputs.ui == 'true' || needs.changes.outputs.repo == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Run isolated persona web journeys
+        run: npm run test:e2e:web
+
+      - name: Upload sanitized browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: persona-web-e2e-${{ github.run_id }}
+          path: artifacts/persona-playwright
+          retention-days: 14
 
   mobile-quality:
     needs: changes
@@ -194,6 +229,7 @@ jobs:
       - changes
       - repo-quality
       - ui-quality
+      - persona-web-e2e
       - mobile-quality
       - backend-quality
     runs-on: ubuntu-latest
@@ -203,10 +239,11 @@ jobs:
           CHANGES_RESULT: ${{ needs.changes.result }}
           REPO_RESULT: ${{ needs.repo-quality.result }}
           UI_RESULT: ${{ needs.ui-quality.result }}
+          PERSONA_WEB_E2E_RESULT: ${{ needs.persona-web-e2e.result }}
           MOBILE_RESULT: ${{ needs.mobile-quality.result }}
           BACKEND_RESULT: ${{ needs.backend-quality.result }}
         run: |
-          for result in "$CHANGES_RESULT" "$REPO_RESULT" "$UI_RESULT" "$MOBILE_RESULT" "$BACKEND_RESULT"; do
+          for result in "$CHANGES_RESULT" "$REPO_RESULT" "$UI_RESULT" "$PERSONA_WEB_E2E_RESULT" "$MOBILE_RESULT" "$BACKEND_RESULT"; do
             case "$result" in
               success|skipped) ;;
               *) echo "Selected quality job did not pass: $result" >&2; exit 1 ;;
@@ -310,6 +347,9 @@ jobs:
 
       - name: Rehearse marketplace customer operations and deposit settlement migration
         run: ./scripts/test-marketplace-operations-migration.sh
+
+      - name: Rehearse verified experience review migration
+        run: sh ./scripts/test-verified-experience-reviews-migration.sh
 
       - name: Create production baseline fixture
         run: |

@@ -50,7 +50,12 @@
     "test:formal": "node --test scripts/__tests__/formal-methods-audit.test.mjs",
     "test:production-release": "node --test scripts/__tests__/production-entrypoint.test.mjs scripts/__tests__/production-release.test.mjs",
     "test:ci-pipeline": "node --test scripts/__tests__/ci-change-scope.test.mjs scripts/__tests__/ci-pipeline.test.mjs",
+    "test:catalog-list-audit": "node --test scripts/__tests__/catalog-list-audit.test.mjs",
     "test:music-directory-visual-artifacts": "node --test scripts/__tests__/music-directory-visual-artifacts.test.mjs",
+    "generate:persona-program": "node scripts/persona-test-program.mjs generate",
+    "test:persona-program": "node scripts/persona-test-program.mjs validate && node --test scripts/__tests__/persona-test-program.test.mjs",
+    "test:e2e:web": "playwright test",
+    "test:e2e:web:critical": "playwright test --grep @critical",
     "artists:enrich": "node scripts/artist-enrichment.mjs",
     "test:artist-enrichment": "node --test scripts/__tests__/artist-enrichment.test.mjs",
     "meta:review:packet": "node scripts/meta-app-review-packet.mjs",
@@ -106,6 +111,7 @@
     "url": "https://github.com/diegueins680/tdf-app"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "audit-ci": "^7.1.0",
     "detox": "^20.51.1",
     "jest-environment-node": "^30.4.1",

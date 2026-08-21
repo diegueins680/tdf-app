@@ -60,6 +60,7 @@ import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.Services (ServiceCatalogAPI, ServiceCatalogPublicAPI)
 import           TDF.API.SocialEventsAPI (SocialEventsAPI)
+import           TDF.API.SocialEventsAPI (PublicUpcomingEventsAPI)
 import           TDF.API.SocialSyncAPI (SocialSyncAPI)
 import           TDF.API.SocialDiscoveryAPI (SocialDiscoveryAPI)
 import           TDF.Contracts.API (ContractsAPI)
@@ -68,6 +69,7 @@ import           TDF.API.Catalog (CatalogAPI, PublicCatalogAPI, SecurityGrantRev
 import           TDF.API.ServiceStorefront (ServiceStorefrontPublicAPI, ServiceStorefrontAdminAPI)
 import           TDF.API.CommerceOperations (CommerceOperationsAPI)
 import           TDF.API.Directory (DirectoryPublicAPI, DirectoryProtectedAPI)
+import           TDF.API.Reviews (ReviewsPublicAPI, ReviewsProtectedAPI)
 import           TDF.Operations.API (OperationsAPI)
 
 type InventoryItem = ME.Asset
@@ -517,7 +519,7 @@ type SeedAPI = Header "X-Seed-Token" Text :> Post '[JSON] NoContent
 
 type SessionAPI =
        Header "Authorization" Text :> Header "Cookie" Text :> "session" :> Get '[JSON] (Maybe SessionResponse)
-  :<|> "session" :> "logout" :> Post '[JSON] (SessionCookieHeaders NoContent)
+  :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "logout" :> Post '[JSON] (SessionCookieHeaders NoContent)
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "preferences" :> Get '[JSON] LocalePreferencesDTO
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "preferences" :> ReqBody '[JSON] LocalePreferencesUpdate :> Put '[JSON] LocalePreferencesDTO
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "currency-conversions" :> ReqBody '[JSON] CurrencyConversionAuditCreate :> Post '[JSON] NoContent
@@ -601,6 +603,7 @@ type ProtectedAPI =
   :<|> DirectoryProtectedAPI
   :<|> OperationsAPI
   :<|> CommerceOperationsAPI
+  :<|> ReviewsProtectedAPI
 
 type API =
        VersionAPI
@@ -632,6 +635,8 @@ type API =
   :<|> FeedbackAPI
   :<|> PublicCatalogAPI
   :<|> DirectoryPublicAPI
+  :<|> PublicUpcomingEventsAPI
+  :<|> ReviewsPublicAPI
   -- Keep the authenticated marketplace branch ahead of the public one so
   -- /marketplace/orders is not consumed by the public /marketplace/:id capture.
   :<|> AuthProtect "bearer-token" :> ProtectedAPI

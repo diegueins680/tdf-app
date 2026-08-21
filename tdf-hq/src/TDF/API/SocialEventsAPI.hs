@@ -6,6 +6,7 @@
 
 module TDF.API.SocialEventsAPI (
     SocialEventsAPI,
+    PublicUpcomingEventsAPI,
     EventsRoutes,
     EventCitiesRoutes,
     EventDiscoverySourcesRoutes,
@@ -36,6 +37,7 @@ import Data.Char (
  )
 import Data.Text (Text)
 import qualified Data.Text as T
+import Data.Time (UTCTime)
 import Data.UUID (UUID)
 import GHC.Generics (Generic)
 import Servant
@@ -64,6 +66,7 @@ import TDF.DTO.SocialEventsDTO (
     DiscoverySourceDTO,
     DiscoverySourceWriteDTO,
     EventDTO,
+    PublicUpcomingEventDTO,
     EventFinanceEntryDTO,
     EventFinanceSummaryDTO,
     EventLogisticsActivityDTO,
@@ -106,6 +109,13 @@ import TDF.DTO.SocialEventsDTO (
     WaitlistEntryDTO,
     WaitlistJoinDTO,
  )
+
+type PublicUpcomingEventsAPI =
+    "social-events" :> "upcoming"
+        :> QueryParam "city" Text
+        :> QueryParam "startAfter" UTCTime
+        :> QueryParam "limit" Int
+        :> Get '[JSON] [PublicUpcomingEventDTO]
 
 type IdParam = Capture "id" Text
 

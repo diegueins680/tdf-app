@@ -57,7 +57,7 @@ describe('DirectorySearchPage', () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
       });
       await act(async () => { await new Promise((resolve) => setTimeout(resolve, 100)); });
-      expect(container.querySelector('main#main-content')).not.toBeNull();
+      expect(container.querySelector('h1')?.textContent).toContain('Encuentra a la gente');
       expect(container.textContent).toContain('Encuentra a la gente y las oportunidades que hacen música');
       expect(container.textContent).toContain('Quito');
       expect(container.textContent).toContain('Servicio');

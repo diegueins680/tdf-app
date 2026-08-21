@@ -105,13 +105,19 @@ export function LocalePreferencesProvider({ children }: { children: ReactNode })
       { locale: preferences.locale, page: 1, pageSize: 500 },
     ),
   });
-  const localeCatalog = useMemo(
-    () => regionalCatalogsQuery.data?.catalogs.find((page) => page.catalog.code === 'locales'),
+  const regionalCatalogPages = useMemo(
+    () => Array.isArray(regionalCatalogsQuery.data?.catalogs)
+      ? regionalCatalogsQuery.data.catalogs
+      : [],
     [regionalCatalogsQuery.data?.catalogs],
   );
+  const localeCatalog = useMemo(
+    () => regionalCatalogPages.find((page) => page?.catalog?.code === 'locales'),
+    [regionalCatalogPages],
+  );
   const currencyCatalog = useMemo(
-    () => regionalCatalogsQuery.data?.catalogs.find((page) => page.catalog.code === 'currencies'),
-    [regionalCatalogsQuery.data?.catalogs],
+    () => regionalCatalogPages.find((page) => page?.catalog?.code === 'currencies'),
+    [regionalCatalogPages],
   );
   const localeOptions = useMemo(() => localeCatalog?.items ?? [], [localeCatalog]);
   const currencyOptions = useMemo(() => currencyCatalog?.items ?? [], [currencyCatalog]);

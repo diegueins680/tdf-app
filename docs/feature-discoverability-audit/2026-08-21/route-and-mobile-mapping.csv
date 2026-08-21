@@ -1,0 +1,138 @@
+feature_id,classification,web_route,web_aliases,mobile_kind,mobile_destination,mobile_aliases,parent_feature,breadcrumb,global_discovery,discovery_mechanism,maximum_interactions,contextual_only,technical_hidden
+public.platform,primary-destination,/tdf,/instagram|/ig|/sobre-tdf,external-web,https://tdf-app.pages.dev/tdf,,,,false,command-palette-or-mobile-explorer,2,false,false
+public.commerce,primary-destination,/comercio,/commerce,external-web,https://tdf-app.pages.dev/comercio,,public.platform,public.platform,false,command-palette-or-mobile-explorer,2,false,false
+public.distribution,primary-destination,/distribucion,/distribution,external-web,https://tdf-app.pages.dev/distribucion,,public.commerce,public.platform > public.commerce,false,command-palette-or-mobile-explorer,2,false,false
+home,primary-destination,/inicio,/,external-web,https://tdf-app.pages.dev/inicio,,,,true,global-menu,1,false,false
+directory.search,primary-destination,/buscar,,external-web,https://tdf-app.pages.dev/buscar,,,,true,global-menu,1,false,false
+directory.profile.public,record-detail-contextual-action,/directorio/:slug,,external-web,,,directory.search,directory.search,false,command-palette-or-mobile-explorer,2,true,false
+directory.classified.public,record-detail-contextual-action,/clasificados/:slug,,external-web,,,directory.search,directory.search,false,command-palette-or-mobile-explorer,2,true,false
+directory.event.public,record-detail-contextual-action,/eventos/:eventId,,external-web,,,directory.search,directory.search,false,command-palette-or-mobile-explorer,2,true,false
+directory.venue.public,record-detail-contextual-action,/venues/:venueId,,external-web,,,directory.search,directory.search,false,command-palette-or-mobile-explorer,2,true,false
+directory.classifieds.manage,primary-destination,/mis-clasificados,,external-web,,,directory.search,directory.search,true,global-menu,1,false,false
+directory.admin,primary-destination,/admin/directorio,,web-only,,,directory.search,directory.search,true,global-menu,1,false,false
+community,primary-destination,/fans,,native,/(tabs)/social,,,,true,global-menu,1,false,false
+community.club,record-detail-contextual-action,/fans/clubs/:artistId,,native-contextual,/artistDetail,,community,community,false,command-palette-or-mobile-explorer,2,true,false
+community.member,record-detail-contextual-action,/fans/clubs/:artistId/members/:partyId,/fans/clubs/:artistId/members,web-only,,,community.club,community > community.club,false,command-palette-or-mobile-explorer,2,true,false
+artist.public,record-detail-contextual-action,/artista/:slugOrId,/a/:slugOrId|/mi-artista,native-contextual,/artistDetail,,community,community,false,command-palette-or-mobile-explorer,2,true,false
+artist.onboarding,important-submodule,/artista/crear,,native,/createArtistProfile,,artist.public,community,false,command-palette-or-mobile-explorer,2,false,false
+marketplace,primary-destination,/marketplace,,external-web,https://tdf-app.pages.dev/marketplace,,,,true,global-menu,1,false,false
+marketplace.order-tracking,record-detail-contextual-action,/marketplace/orden/:orderId,,external-web,,,marketplace,marketplace,false,command-palette-or-mobile-explorer,2,true,false
+service.mixing-mastering,important-submodule,/mezcla-mastering,/services/mixing-mastering|/mezcla-mastering/pago-datafast|/mezcla-mastering/pedido/:orderNumber,external-web,,,marketplace,marketplace,false,command-palette-or-mobile-explorer,2,false,false
+bookings.public,primary-destination,/reservar,,native,/(tabs)/bookings,,,,true,global-menu,1,false,false
+bookings.public-order-tracking,record-detail-contextual-action,/reservas/orden/:bookingId,,external-web,,,bookings.public,bookings.public,false,command-palette-or-mobile-explorer,2,true,false
+bookings.dj-booth,important-submodule,/dj-booth,/reservar/dj-booth,native,/(tabs)/bookings,,bookings.public,bookings.public,false,command-palette-or-mobile-explorer,2,false,false
+public.trials,important-submodule,/trials,,external-web,,,,,true,global-menu,1,false,false
+public.live-session-registration,important-submodule,/live-sessions/registro,,external-web,,,,,true,global-menu,1,false,false
+public.records,primary-destination,/records,,external-web,,,,,true,global-menu,1,false,false
+public.donations,primary-destination,/donar,,external-web,https://tdf-app.pages.dev/donar,,,,true,global-menu,1,false,false
+public.domo,primary-destination,/domo-del-pululahua,/venues/domo-del-pululahua,external-web,https://tdf-app.pages.dev/domo-del-pululahua,,,,true,global-menu,1,false,false
+public.domo-quote,record-detail-contextual-action,/domo-del-pululahua/cotizaciones/:quoteId,,web-only,,,public.domo,public.domo,false,command-palette-or-mobile-explorer,2,true,false
+profile.detail,record-detail-contextual-action,/perfil/:partyId,,native-contextual,/userProfile,,community,community,false,command-palette-or-mobile-explorer,2,true,false
+social,primary-destination,/social,,native,/(tabs)/social,,,,true,global-menu,1,false,false
+social.instagram,important-submodule,/social/instagram,,web-only,,,social,social,true,global-menu,1,false,false
+social.vcard,important-submodule,,,native,/(tabs)/vcard,,social,social,false,command-palette-or-mobile-explorer,2,false,false
+social.inbox,primary-destination,/social/inbox,,web-only,,,social,social,true,global-menu,1,false,false
+social.events,primary-destination,/social/eventos,,native,/(tabs)/events,,social,social,true,global-menu,1,false,false
+social.events.create,record-detail-contextual-action,/social/eventos/nuevo,,native,/createEvent,,social.events,social > social.events,false,command-palette-or-mobile-explorer,2,true,false
+social.event.detail,record-detail-contextual-action,/social/eventos/:eventId,,native-contextual,/eventDetail,,social.events,social > social.events,false,command-palette-or-mobile-explorer,2,true,false
+social.event.logistics,record-detail-contextual-action,/social/eventos/:eventId/logistica,,native-contextual,/eventDetail,,social.event.detail,social > social.events > social.event.detail,false,command-palette-or-mobile-explorer,2,true,false
+social.discovery,important-submodule,/social/eventos-descubiertos,,native,/(tabs)/events,,social.events,social > social.events,true,global-menu,1,false,false
+chat,primary-destination,/chat,,web-only,,,social,social,true,global-menu,1,false,false
+crm.contacts,primary-destination,/crm/contactos,/crm|/parties|/contactos,native,/(tabs)/parties,,,,true,global-menu,1,false,false
+crm.companies,important-submodule,/crm/empresas,,native,/(tabs)/parties,,crm.contacts,crm.contacts,true,global-menu,1,false,false
+crm.leads,important-submodule,/crm/leads,,web-only,,,crm.contacts,crm.contacts,true,global-menu,1,false,false
+studio.calendar,primary-destination,/estudio/calendario,/estudio|/bookings,native,/(tabs)/bookings,,,,true,global-menu,1,false,false
+studio.rooms,important-submodule,/estudio/salas,,native,/(tabs)/bookings,,studio.calendar,studio.calendar,true,global-menu,1,false,false
+studio.orders,primary-destination,/estudio/ordenes,,web-only,,,studio.calendar,studio.calendar,true,global-menu,1,false,false
+studio.services,important-submodule,/estudio/servicios,,web-only,,,studio.orders,studio.calendar,true,global-menu,1,false,false
+studio.pipelines,primary-destination,/estudio/pipelines,/pipelines|/kanban,native,/(tabs)/pipelines,,studio.calendar,studio.calendar,true,global-menu,1,false,false
+studio.live-sessions,important-submodule,/estudio/live-sessions,,web-only,,,studio.calendar,studio.calendar,true,global-menu,1,false,false
+studio.domo-campaign,important-submodule,/estudio/campanas/tdf-sessions-domo,,web-only,,,studio.calendar,studio.calendar,true,global-menu,1,false,false
+studio.reports,primary-destination,/estudio/reportes,,web-only,,,studio.calendar,studio.calendar,true,global-menu,1,false,false
+school.teacher-portal,primary-destination,/mi-profesor,,web-only,,,,,true,global-menu,1,false,false
+school.teachers,primary-destination,/escuela/profesores,/escuela,web-only,,,school.teacher-portal,school.teacher-portal,true,global-menu,1,false,false
+school.classes,primary-destination,/escuela/clases,,web-only,,,school.teacher-portal,school.teacher-portal,true,global-menu,1,false,false
+school.trial-lessons,important-submodule,/escuela/trial-lessons,,web-only,,,school.teacher-portal,school.teacher-portal,true,global-menu,1,false,false
+school.trial-queue,important-submodule,/escuela/trial-queue,,web-only,,,school.trial-lessons,school.teacher-portal > school.trial-lessons,true,global-menu,1,false,false
+internships,primary-destination,/practicas,/practicas/tareas/:taskId,web-only,,,,,true,global-menu,1,false,false
+label.artists,primary-destination,/label/artistas,/label,native,/(tabs)/events,,,,true,global-menu,1,false,false
+label.projects,primary-destination,/label/proyectos,,web-only,,,label.artists,label.artists,true,global-menu,1,false,false
+label.releases,primary-destination,/label/releases,,external-web,,,label.artists,label.artists,true,global-menu,1,false,false
+label.assets,important-submodule,/label/assets,,web-only,,,label.releases,label.artists > label.releases,true,global-menu,1,false,false
+label.tracks,important-submodule,/label/tracks,,web-only,,,label.releases,label.artists > label.releases,true,global-menu,1,false,false
+label.ddex.inbox,primary-destination,/label/ddex,,native,/ddex,,,,true,global-menu,1,false,false
+label.ddex.document,record-detail-contextual-action,/label/ddex/documents/:id,,native-contextual,/ddex/document/[id],,label.ddex.inbox,label.ddex.inbox,false,command-palette-or-mobile-explorer,2,true,false
+label.ddex.import,record-detail-contextual-action,/label/ddex/documents/:id/import,,security-concealed,,,label.ddex.document,label.ddex.inbox > label.ddex.document,false,command-palette-or-mobile-explorer,2,true,false
+label.ddex.partners,important-submodule,/label/ddex/partners,,native,/ddex/partners,,label.ddex.inbox,label.ddex.inbox,false,command-palette-or-mobile-explorer,2,false,false
+operations.control-center,primary-destination,/dashboard/operations,/operacion/control,native,/operations,,,,true,global-menu,1,false,false
+operations.inventory,primary-destination,/operacion/inventario,/operacion,native,/(tabs)/inventory,,,,true,global-menu,1,false,false
+operations.marketplace-orders,primary-destination,/operacion/ordenes-marketplace,,web-only,,,marketplace,marketplace,true,global-menu,1,false,false
+operations.equipment-bookings,important-submodule,/operacion/reservas-equipo,,native,/(tabs)/inventory,,operations.inventory,operations.inventory,true,global-menu,1,false,false
+finance.payments,primary-destination,/finanzas/pagos,/finanzas,web-only,,,,,true,global-menu,1,false,false
+finance.account-report-builder,important-submodule,/finanzas/creador-reporte-cuenta,,web-only,,,finance.payments,finance.payments,true,global-menu,1,false,false
+finance.esteban-report,important-submodule,/finanzas/reporte-esteban-munoz,,web-only,,,finance.payments,finance.payments,true,global-menu,1,false,false
+finance.david-report,important-submodule,/finanzas/reporte-david-celaya,,web-only,,,finance.payments,finance.payments,true,global-menu,1,false,false
+admin.catalogs,primary-destination,/configuracion/catalogos,,native,/catalogs,/catalogEditor,,,true,global-menu,1,false,false
+admin.catalogs.radio-auto-stop,important-submodule,/configuracion/catalogos/radio-auto-stop,,web-only,,,admin.catalogs,admin.catalogs,false,command-palette-or-mobile-explorer,2,false,false
+admin.catalogs.appearance,important-submodule,/configuracion/catalogos/apariencia,,web-only,,,admin.catalogs,admin.catalogs,false,command-palette-or-mobile-explorer,2,false,false
+admin.catalogs.feedback,important-submodule,/configuracion/catalogos/feedback,,web-only,,,admin.catalogs,admin.catalogs,false,command-palette-or-mobile-explorer,2,false,false
+admin.catalogs.reactions,important-submodule,/configuracion/catalogos/reacciones,,web-only,,,admin.catalogs,admin.catalogs,false,command-palette-or-mobile-explorer,2,false,false
+admin.catalogs.content-reactions,important-submodule,/configuracion/catalogos/reacciones-contenido,,web-only,,,admin.catalogs,admin.catalogs,false,command-palette-or-mobile-explorer,2,false,false
+admin.catalogs.creator-badges,important-submodule,/configuracion/catalogos/insignias-creadores,,web-only,,,admin.catalogs,admin.catalogs,false,command-palette-or-mobile-explorer,2,false,false
+admin.course-registrations,primary-destination,/configuracion/inscripciones-curso,,web-only,,,,,true,global-menu,1,false,false
+admin.courses,important-submodule,/configuracion/cursos,,web-only,,,admin.course-registrations,admin.course-registrations,true,global-menu,1,false,false
+admin.users,primary-destination,/configuracion/usuarios-admin,,security-concealed,,,,,true,global-menu,1,false,false
+admin.roles,primary-destination,/configuracion/roles-permisos,/admin/roles,security-concealed,,,admin.users,admin.users,true,global-menu,1,false,false
+admin.system-status,important-submodule,/configuracion/estado,,web-only,,,,,true,global-menu,1,false,false
+admin.activity,important-submodule,/configuracion/actividad,,web-only,,,admin.system-status,admin.system-status,true,global-menu,1,false,false
+admin.logs,important-submodule,/configuracion/logs,,web-only,,,admin.system-status,admin.system-status,true,global-menu,1,false,false
+admin.diagnostics,important-submodule,/admin/diagnosticos,,web-only,,,admin.system-status,admin.system-status,true,global-menu,1,false,false
+admin.commerce-provider-events,important-submodule,/admin/commerce/provider-events,,web-only,,,admin.system-status,admin.system-status,true,global-menu,1,false,false
+admin.artist-enrichment,important-submodule,/admin/artistas-enriquecimiento,/admin/artists/enrichment,security-concealed,,,admin.system-status,admin.system-status,true,global-menu,1,false,false
+admin.brain,important-submodule,/configuracion/brain,,web-only,,,admin.system-status,admin.system-status,true,global-menu,1,false,false
+admin.calendar-integration,important-submodule,/configuracion/integraciones/calendario,,security-concealed,,,admin.system-status,admin.system-status,true,global-menu,1,false,false
+admin.cms,primary-destination,/configuracion/cms,,web-only,,,,,true,global-menu,1,false,false
+admin.campaign-automations,important-submodule,/configuracion/campanas-automaticas,,web-only,,,admin.cms,admin.cms,true,global-menu,1,false,false
+admin.event-sources,important-submodule,/configuracion/fuentes-eventos,,security-concealed,,,social.discovery,social > social.events > social.discovery,true,global-menu,1,false,false
+admin.whatsapp-consent,important-submodule,/configuracion/whatsapp-consentimiento,,security-concealed,,,social.inbox,social > social.inbox,true,global-menu,1,false,false
+admin.ux-options,important-submodule,/configuracion/opciones-ux,,web-only,,,admin.preferences,admin.preferences,true,global-menu,1,false,false
+admin.preferences,primary-destination,/configuracion/preferencias,/configuracion|/system,web-only,,,,,true,global-menu,1,false,false
+tools.chatkit,important-submodule,/herramientas/chatkit,,web-only,,,,,true,global-menu,1,false,false
+tools.tidal-agent,important-submodule,/herramientas/tidal-agent,,web-only,,,,,true,global-menu,1,false,false
+tools.music-maker,primary-destination,/herramientas/creador-musical,,external-web,,,,,true,global-menu,1,false,false
+tools.admin-token,important-submodule,/herramientas/token-admin,,security-concealed,,,,,true,global-menu,1,false,false
+help.manual,primary-destination,/manual,,native,/about,,,,true,global-menu,1,false,false
+help.docs,important-submodule,/docs,,native,/about,,help.manual,help.manual,true,global-menu,1,false,false
+help.about,important-submodule,/acerca,,native,/about,/(tabs)/about,help.manual,help.manual,true,global-menu,1,false,false
+help.security,important-submodule,/seguridad,,native,/about,,help.manual,help.manual,true,global-menu,1,false,false
+help.feedback,important-submodule,/feedback,,native,/about,,help.manual,help.manual,true,global-menu,1,false,false
+navigation.quick-create,important-submodule,,,native,/(tabs)/create,,home,home,false,module-landing-context,2,false,false
+navigation.explore,important-submodule,,,native,/(tabs)/more,,home,home,false,module-landing-context,2,false,false
+profile.self,primary-destination,,,native,/(tabs)/profile,,community,community,false,command-palette-or-mobile-explorer,2,false,false
+social.venues,important-submodule,,,native,/venueExplorer,,social.events,social > social.events,true,global-menu,1,false,false
+social.venue.detail,record-detail-contextual-action,,,native-contextual,/venueDetail,,social.venues,social > social.events > social.venues,false,command-palette-or-mobile-explorer,2,true,false
+social.venue.create,record-detail-contextual-action,,,native-contextual,/createVenue,,social.venues,social > social.events > social.venues,false,command-palette-or-mobile-explorer,2,true,false
+artist.profile.edit,record-detail-contextual-action,,,native-contextual,/editArtistProfile,,artist.public,community > artist.public,false,command-palette-or-mobile-explorer,2,true,false
+studio.session.input-list,record-detail-contextual-action,,,native-contextual,/input-list/[id],,studio.calendar,studio.calendar,false,command-palette-or-mobile-explorer,2,true,false
+social.tickets,important-submodule,,,native,/tickets,,social.events,social > social.events,true,global-menu,1,false,false
+social.ticket-checkout,record-detail-contextual-action,/eventos/:eventId/entradas,,native-contextual,/ticketCheckout,,social.event.detail,social > social.events > social.event.detail,false,command-palette-or-mobile-explorer,2,true,false
+social.ticket-order-public,record-detail-contextual-action,/eventos/:eventId/orden/:orderId,,web-only,,,social.ticket-checkout,social > social.events > social.event.detail > social.ticket-checkout,false,command-palette-or-mobile-explorer,2,true,false
+label.contracts.create,important-submodule,,,security-concealed,/contracts/NewContractScreen,,label.projects,label.projects,false,command-palette-or-mobile-explorer,2,false,false
+label.contracts.detail,record-detail-contextual-action,,,security-concealed,/contracts/ContractViewScreen,,label.contracts.create,label.projects > label.contracts.create,false,command-palette-or-mobile-explorer,2,true,false
+mobile.onboarding,important-submodule,,,native,/onboarding,,public.platform,public.platform,false,module-landing-context,2,false,false
+technical.mobile-entry,technical-route,,,technical,/,,technical.auth-login,,false,never-displayed,,false,true
+access-requests.mine,primary-destination,/solicitudes-acceso,,native,/access-requests,,,,true,global-menu,1,false,false
+access-requests.create,important-submodule,/solicitudes-acceso/nueva,,native,/access-requests/new,,access-requests.mine,access-requests.mine,false,command-palette-or-mobile-explorer,2,false,false
+access-requests.review,important-submodule,/solicitudes-acceso/revision,,native,/access-requests/review,,access-requests.mine,access-requests.mine,true,global-menu,1,false,false
+technical.auth-login,technical-route,/login,,technical,/auth,,,,false,never-displayed,,false,true
+technical.auth-reset,technical-route,/reset,,technical,/auth,,technical.auth-login,,false,never-displayed,,false,true
+technical.oauth-google-drive,technical-route,/oauth/google-drive/callback,,technical,,,admin.calendar-integration,,false,never-displayed,,false,true
+technical.oauth-instagram,technical-route,/oauth/instagram/callback,,technical,,,social.instagram,,false,never-displayed,,false,true
+technical.service-payment-return,technical-route,/mezcla-mastering/pago-datafast,,technical,,,service.mixing-mastering,,false,never-displayed,,false,true
+technical.payment-return,technical-route,/marketplace/pago-datafast,,technical,,,marketplace,,false,never-displayed,,false,true
+technical.whatsapp-return,technical-route,/whatsapp/ok,,technical,,,help.feedback,,false,never-displayed,,false,true
+technical.inventory-scan,technical-route,/inventario/scan/:token,,technical,,,operations.inventory,,false,never-displayed,,false,true
+technical.course-public,record-detail-contextual-action,/curso/:slug,/curso/:slug/orden/:registrationId|/curso/produccion-musical-dic-2025|/curso/produccion-musical-abr-2026,external-web,,,admin.courses,,false,command-palette-or-mobile-explorer,2,true,false
+technical.course-registration,record-detail-contextual-action,/inscripcion/:slug,,external-web,,,technical.course-public,technical.course-public,false,command-palette-or-mobile-explorer,2,true,false
+technical.whatsapp-consent-public,record-detail-contextual-action,/whatsapp/consentimiento,,external-web,,,admin.whatsapp-consent,,false,command-palette-or-mobile-explorer,2,true,false
+experimental.future-stubs,technical-route,,,technical,,,,,false,never-displayed,,false,true

@@ -54,6 +54,17 @@ paths:
       responses:
         '200': { description: Safe public profile projection, content: { application/json: { schema: { $ref: '#/components/schemas/PublicDirectoryProfile' } } } }
         '404': { $ref: '#/components/responses/NotFound' }
+  /directory/party-profiles/{partyId}:
+    get:
+      tags: [Music directory]
+      operationId: getPublicDirectoryProfileByParty
+      summary: Resolve an artist's public directory profile without exposing Party data in the response
+      security: []
+      parameters:
+        - { name: partyId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      responses:
+        '200': { description: Safe public profile projection, content: { application/json: { schema: { $ref: '#/components/schemas/PublicDirectoryProfile' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
   /directory/profiles/{slug}/reviews:
     get:
       tags: [Music directory trust]

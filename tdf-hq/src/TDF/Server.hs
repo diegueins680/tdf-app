@@ -153,7 +153,8 @@ import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceLi
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
 import           TDF.Server.SocialEventsHandlers
-  ( socialEventsServer
+  ( publicUpcomingEventsServer
+  , socialEventsServer
   , stripeWebhookServer
   , eitherStripeServerError
   , parseStripeEphemeralKeySecret
@@ -187,6 +188,7 @@ import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
 import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
 import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Server.Directory as DirectoryServer
+import qualified TDF.Server.Reviews as ReviewsServer
 import           TDF.ServerFeedback (feedbackServer)
 import qualified TDF.Contracts.Server as Contracts
 import           TDF.ServerProposals (proposalsServer)
@@ -734,6 +736,8 @@ server env =
   :<|> feedbackServer
   :<|> CatalogServer.publicCatalogServer
   :<|> DirectoryServer.directoryPublicServer
+  :<|> publicUpcomingEventsServer
+  :<|> ReviewsServer.reviewsPublicServer
   :<|> protectedServer
   :<|> marketplacePublicServer
   :<|> radioPresencePublicServer
@@ -3791,6 +3795,7 @@ protectedServer user =
   :<|> DirectoryServer.directoryProtectedServer user
   :<|> OperationsServer.operationsServer user
   :<|> CommerceOperationsServer.commerceOperationsServer user
+  :<|> ReviewsServer.reviewsProtectedServer user
 
 navigationPreferencesServer :: AuthedUser -> ServerT NavigationPreferencesAPI AppM
 navigationPreferencesServer user =

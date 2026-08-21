@@ -281,6 +281,7 @@ type DirectoryPublicAPI = "directory" :>
     :<|> "suggestions" :> QueryParam "q" Text :> QueryParam "cityId" UUID :> Get '[JSON] [DirectorySuggestion]
     :<|> "taxonomies" :> QueryParam "locale" Text :> Get '[JSON] Value
     :<|> "profiles" :> Capture "slug" Text :> Get '[JSON] Value
+    :<|> "party-profiles" :> Capture "partyId" Int64 :> Get '[JSON] Value
     :<|> "profiles" :> Capture "slug" Text :> "reviews" :> QueryParam "cursor" UUID :> QueryParam "limit" Int :> Get '[JSON] DirectoryReviewPage
     :<|> "classifieds" :> Capture "slug" Text :> Get '[JSON] Value
     :<|> "events" :> Capture "eventId" Int64 :> Get '[JSON] Value

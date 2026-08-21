@@ -120,7 +120,7 @@
       "breadcrumb": [],
       "requiredAuth": "public",
       "globalMenu": true,
-      "mobilePresentation": { "kind": "native", "destination": "/(tabs)/directory", "documentedException": null },
+      "mobilePresentation": { "kind": "external-web", "destination": "https://tdf-app.pages.dev/inicio", "documentedException": "The pinned native client does not yet include the directory landing route; use the public responsive web home." },
       "aliases": ["/"],
       "apiScopes": [{ "pathPrefix": "/directory", "methods": { "GET": "view" } }]
     },
@@ -142,7 +142,7 @@
       "recordScope": "public-published-current-moderated",
       "globalMenu": true,
       "quickCreate": null,
-      "mobilePresentation": { "kind": "native", "destination": "/(tabs)/directory", "documentedException": null },
+      "mobilePresentation": { "kind": "external-web", "destination": "https://tdf-app.pages.dev/buscar", "documentedException": "Native directory discovery is not implemented in the pinned client; use the public responsive web directory." },
       "accessRequestEligible": false,
       "apiScopes": [{ "pathPrefix": "/directory", "methods": { "GET": "view" } }]
     },
@@ -162,7 +162,7 @@
       "favoriteEligible": false,
       "pinEligible": false,
       "recentBehavior": "record",
-      "mobilePresentation": { "kind": "native-contextual", "destination": "/directory/profile/[slug]", "documentedException": null },
+      "mobilePresentation": { "kind": "external-web", "destination": null, "documentedException": "Public profile links use the responsive web detail route until a native contextual route is implemented." },
       "accessRequestEligible": false,
       "apiScopes": [{ "pathPrefix": "/directory/profiles", "methods": { "GET": "view" } }]
     },
@@ -182,7 +182,7 @@
       "favoriteEligible": false,
       "pinEligible": false,
       "recentBehavior": "record",
-      "mobilePresentation": { "kind": "native-contextual", "destination": "/directory/classified/[slug]", "documentedException": null },
+      "mobilePresentation": { "kind": "external-web", "destination": null, "documentedException": "Public classified links use the responsive web detail route until a native contextual route is implemented." },
       "accessRequestEligible": false,
       "apiScopes": [{ "pathPrefix": "/directory/classifieds", "methods": { "GET": "view" } }]
     },
@@ -202,7 +202,7 @@
       "favoriteEligible": false,
       "pinEligible": false,
       "recentBehavior": "record",
-      "mobilePresentation": { "kind": "native-contextual", "destination": "/directory/event/[id]", "documentedException": null },
+      "mobilePresentation": { "kind": "external-web", "destination": null, "documentedException": "Public event links use the responsive web detail route until a native contextual route is implemented." },
       "accessRequestEligible": false,
       "apiScopes": [{ "pathPrefix": "/directory/events", "methods": { "GET": "view" } }]
     },
@@ -222,7 +222,7 @@
       "favoriteEligible": false,
       "pinEligible": false,
       "recentBehavior": "record",
-      "mobilePresentation": { "kind": "native-contextual", "destination": "/directory/venue/[id]", "documentedException": null },
+      "mobilePresentation": { "kind": "external-web", "destination": null, "documentedException": "Public venue links use the responsive web detail route until a native contextual route is implemented." },
       "accessRequestEligible": false,
       "apiScopes": [{ "pathPrefix": "/directory/venues", "methods": { "GET": "view" } }]
     },
@@ -242,8 +242,8 @@
       "permissions": { "discover": {}, "view": { "recordScope": "explicit-manager" }, "create": { "recordScope": "authenticated-adult-or-guardian-approved" }, "edit": { "recordScope": "explicit-manager" }, "submit": { "recordScope": "authenticated-adult-or-guardian-approved" } },
       "recordScope": "explicit-manager",
       "globalMenu": true,
-      "quickCreate": { "action": "create", "label": { "es": "Nuevo clasificado", "en": "New classified" }, "webDestination": "/mis-clasificados?crear=clasificado", "mobileDestination": "/directory/manage?create=classified" },
-      "mobilePresentation": { "kind": "native", "destination": "/directory/manage", "documentedException": null },
+      "quickCreate": { "action": "create", "label": { "es": "Nuevo clasificado", "en": "New classified" }, "webDestination": "/mis-clasificados?crear=clasificado", "mobileDestination": null },
+      "mobilePresentation": { "kind": "external-web", "destination": null, "documentedException": "Directory profile and classified management remains an authenticated responsive web workflow." },
       "accessRequestEligible": false,
       "apiScopes": [{ "pathPrefix": "/directory", "methods": { "GET": "view", "POST": "create", "PUT": "edit", "PATCH": "edit" } }]
     },
