@@ -6164,16 +6164,6 @@
       "reviewed": true
     },
     {
-      "id": "84fe28bce69192ea409d",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
       "id": "492ed211f271acf35d4b",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -8751,6 +8741,66 @@
       "priority": "P3-retain",
       "risk": "Changing the template could make generated scenario specifications omit required notification and deduplication expectations.",
       "justification": "These sentences are deterministic documentation-template clauses generated for test specifications; they are neither runtime choices nor domain authority.",
+      "reviewed": true
+    },
+    {
+      "id": "dc2478eb86deaac6aed4",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
+      "priority": "P1-cross-platform",
+      "risk": "Web and mobile onboarding funnels could diverge, route to different products, or present inconsistent localized choices.",
+      "justification": "Onboarding intents are cross-client product choices whose identifiers, labels, order, and availability require one governed source.",
+      "reviewed": true
+    },
+    {
+      "id": "82e3ab110124708c621c",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
+      "priority": "P1-cross-platform",
+      "risk": "Web and mobile onboarding funnels could diverge, route to different products, or present inconsistent localized choices.",
+      "justification": "Onboarding intents are cross-client product choices whose identifiers, labels, order, and availability require one governed source.",
+      "reviewed": true
+    },
+    {
+      "id": "29021a526fad50de4bf4",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
+      "priority": "P1-cross-platform",
+      "risk": "Web and mobile onboarding funnels could diverge, route to different products, or present inconsistent localized choices.",
+      "justification": "Onboarding intent labels and ordering are user-visible cross-client product data and must follow the governed intent registry.",
+      "reviewed": true
+    },
+    {
+      "id": "9ebf2e096eeddbecfa52",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
+      "priority": "P3-consumer",
+      "risk": "A governed onboarding intent could become unreachable or route to the wrong product surface.",
+      "justification": "This switch maps governed onboarding intent identifiers to fixed client routes and must reject unknown values safely.",
+      "reviewed": true
+    },
+    {
+      "id": "34d5f2f94d1a165783ba",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
+      "priority": "P3-consumer",
+      "risk": "A governed onboarding intent could become unreachable or route to the wrong product surface.",
+      "justification": "This switch maps governed onboarding intent identifiers to fixed client routes and must reject unknown values safely.",
+      "reviewed": true
+    },
+    {
+      "id": "0d446c4b4529b9202d68",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-security",
+      "risk": "Untrusted legacy role labels could be confused with authorization grants or routed to unintended privileged workflows.",
+      "justification": "This explicit compatibility allowlist translates legacy product labels into non-authorizing onboarding intents and never grants security roles.",
       "reviewed": true
     }
   ]
