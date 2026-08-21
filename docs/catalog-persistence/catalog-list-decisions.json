@@ -8584,7 +8584,7 @@
       "reviewed": true
     },
     {
-      "id": "d93f59a611b6da200219",
+      "id": "faf664611d7ab0aa954d",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -8594,13 +8594,53 @@
       "reviewed": true
     },
     {
-      "id": "db643fc9e5c94775063b",
+      "id": "60990a5df11b7a72f4d0",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
       "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "2de186508bcd87434cc5",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "3c57b107ee336167e09d",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item",
+      "priority": "P3-retain",
+      "risk": "Changing UI constants could break rendering or user experience.",
+      "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data.",
+      "reviewed": true
+    },
+    {
+      "id": "4d31826e1beb0c734a96",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item",
+      "priority": "P3-retain",
+      "risk": "Changing UI constants could break rendering or user experience.",
+      "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data.",
+      "reviewed": true
+    },
+    {
+      "id": "929988ea9cf22625c461",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item",
+      "priority": "P3-retain",
+      "risk": "Changing UI constants could break rendering or user experience.",
+      "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data.",
       "reviewed": true
     },
     {
