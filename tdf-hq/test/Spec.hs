@@ -338,6 +338,7 @@ import TDF.Server
       extractApiErrorMessage,
       chatKitSessionErrorMessage,
       shouldRetryWithFallbackModel )
+import TDF.Server.Reviews (publicReviewTargetStatement)
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
       LiveSessionMusicianLookup (..),
@@ -756,6 +757,18 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    describe "public review target visibility" $ do
+        it "requires marketplace listings and storefront packages to remain active" $ do
+            publicReviewTargetStatement "marketplace_listing"
+                `shouldSatisfy` Data.Text.isInfixOf "AND active"
+            publicReviewTargetStatement "service_package"
+                `shouldSatisfy` Data.Text.isInfixOf "AND active"
+
+        it "rejects inactive or deprecated service offerings" $ do
+            let statement = publicReviewTargetStatement "service_offering"
+            statement `shouldSatisfy` Data.Text.isInfixOf "AND active"
+            statement `shouldSatisfy` Data.Text.isInfixOf "deprecated_at IS NULL"
+
     describe "DDEX canonical write JSON contracts" $ do
         it "accepts export writes with only a canonical standard-version id" $ do
             let payload = "{\"exportReleaseId\":42,\"exportPartnerId\":7,\"exportStandardVersionId\":\"40000000-0000-4000-8000-000000000001\"}"

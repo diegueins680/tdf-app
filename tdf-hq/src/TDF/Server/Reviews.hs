@@ -4,6 +4,7 @@
 module TDF.Server.Reviews
   ( reviewsPublicServer
   , reviewsProtectedServer
+  , publicReviewTargetStatement
   ) where
 
 import Control.Monad (unless, when)
@@ -104,21 +105,24 @@ visibleReviewId _ = Nothing
 
 ensurePublicTarget :: Text -> Text -> AppM ()
 ensurePublicTarget targetKind targetId = do
-  rows <- jsonRows statement [PersistText targetId]
+  rows <- jsonRows (publicReviewTargetStatement targetKind) [PersistText targetId]
   when (null rows) (throwError err404 {errBody = "review target not found"})
-  where
-    statement = case targetKind of
-      "event" ->
-        ( "SELECT to_jsonb(TRUE) FROM social_event event WHERE event.id::text=? AND ("
-       <> "NOT EXISTS (SELECT 1 FROM external_event_ref source WHERE source.event_id=event.id) OR "
-       <> postgresVisibleImportedMetadataClause "event.metadata"
-       <> ")" )
-      "marketplace_listing" -> "SELECT to_jsonb(TRUE) FROM marketplace_listing WHERE id::text=?"
-      "service_offering" ->
-        "SELECT to_jsonb(TRUE) FROM service_offering WHERE id::text=?"
-      "service_package" ->
-        "SELECT to_jsonb(TRUE) FROM service_storefront_package WHERE id::text=?"
-      _ -> "SELECT to_jsonb(FALSE) WHERE FALSE"
+
+publicReviewTargetStatement :: Text -> Text
+publicReviewTargetStatement targetKind = case targetKind of
+  "event" ->
+    ( "SELECT to_jsonb(TRUE) FROM social_event event WHERE event.id::text=? AND ("
+   <> "NOT EXISTS (SELECT 1 FROM external_event_ref source WHERE source.event_id=event.id) OR "
+   <> postgresVisibleImportedMetadataClause "event.metadata"
+   <> ")" )
+  "marketplace_listing" ->
+    "SELECT to_jsonb(TRUE) FROM marketplace_listing WHERE id::text=? AND active"
+  "service_offering" ->
+    ( "SELECT to_jsonb(TRUE) FROM service_offering WHERE id::text=? "
+   <> "AND active AND deprecated_at IS NULL" )
+  "service_package" ->
+    "SELECT to_jsonb(TRUE) FROM service_storefront_package WHERE id::text=? AND active"
+  _ -> "SELECT to_jsonb(FALSE) WHERE FALSE"
 
 listReviewEligibility :: AuthedUser -> Maybe Text -> Maybe Text -> AppM [Value]
 listReviewEligibility user rawTargetKind rawTargetId = do
