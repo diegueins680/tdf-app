@@ -67,7 +67,7 @@ import Data.Foldable (for_)
 import Data.Int (Int64)
 import GHC.Generics (Generic)
 import Data.List (nub)
-import Data.Maybe (fromMaybe, isJust, isNothing)
+import Data.Maybe (fromMaybe, isJust, isNothing, mapMaybe)
 import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -687,9 +687,20 @@ validateActivePreferenceCountry requested@(Just countryId) = do
       , isNothing (Catalog.countryReferenceDeprecatedAt country) -> Right requested
     _ -> Left err400 { errBody = "countryId must reference an active country" }
 
-logoutSession :: AppM (Api.SessionCookieHeaders NoContent)
-logoutSession = do
-  cfg <- asks envConfig
+logoutSession :: Maybe Text -> Maybe Text -> AppM (Api.SessionCookieHeaders NoContent)
+logoutSession mAuthorizationHeader mCookieHeader = do
+  Env pool cfg <- ask
+  let presentedTokens =
+        nub . mapMaybe (either (const Nothing) Just) $
+          [ extractTokenFromHeaders cfg mAuthorizationHeader Nothing
+          , extractTokenFromHeaders cfg Nothing mCookieHeader
+          ]
+  unless (null presentedTokens) . liftIO . flip runSqlPool pool $
+    forM_ presentedTokens $ \tokenValue -> do
+      mToken <- getBy (UniqueApiToken tokenValue)
+      for_ mToken $ \(Entity tokenId storedToken) ->
+        when (apiTokenActive storedToken) $
+          update tokenId [ApiTokenActive =. False]
   pure (addHeader (clearSessionCookieHeader cfg) NoContent)
 
 withSessionCookie :: LoginResponse -> AppM (Api.SessionCookieHeaders LoginResponse)

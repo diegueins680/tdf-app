@@ -1,0 +1,300 @@
+{
+  "schemaVersion": 1,
+  "catalogId": "TDF-PERSONA-2026-08",
+  "notice": "All identities and records are deterministic fiction for isolated local or test environments. They are not human participants.",
+  "isolation": {
+    "emailDomain": "persona.test",
+    "publicVisibility": false,
+    "realProviderInteractions": false,
+    "cleanup": "Deactivate credentials and delete the disposable persona database. Never load into production."
+  },
+  "personas": [
+    {
+      "id": "PER-01", "name": "Elena Paredes", "fictional": true, "email": "per-01.elena@persona.test",
+      "biography": "A Cuenca listener exploring TDF before creating an account.",
+      "location": { "country": "Ecuador", "city": "Cuenca" }, "language": "es-EC",
+      "goals": ["Discover local artists and events", "Understand prices before registration", "Request account recovery safely"],
+      "motivations": ["Affordable local culture", "A trustworthy first purchase"], "roles": [],
+      "permissionsExpected": ["Public read only", "No private records or mutations"], "preexistingData": [],
+      "technicalProficiency": "low", "device": { "preferred": "budget Android phone", "platform": "mobile-web" },
+      "connectivity": "intermittent 3G with 600 ms latency", "accessibility": ["200% text zoom"],
+      "budget": "USD 15 monthly discretionary", "privacyTrustConcerns": ["Why registration data is needed", "Payment legitimacy"],
+      "primaryEpics": ["EP-01", "EP-03", "EP-08"], "expectedSuccessCriteria": ["Public content works without login", "No horizontal scrolling at 200% zoom", "Authentication prompts preserve context"]
+    },
+    {
+      "id": "PER-02", "name": "Mateo Ruiz", "fictional": true, "email": "per-02.mateo@persona.test",
+      "biography": "A Quito concert fan who buys tickets and follows artists.",
+      "location": { "country": "Ecuador", "city": "Quito" }, "language": "es-EC",
+      "goals": ["Complete profile", "Buy and retrieve a ticket", "Receive only opted-in notifications"],
+      "motivations": ["Fast checkout", "Reliable event access"], "roles": ["Fan", "Customer"],
+      "permissionsExpected": ["Own profile and orders", "Published public catalog", "No administrative access"], "preexistingData": ["Verified account", "Saved Quito preference"],
+      "technicalProficiency": "medium", "device": { "preferred": "iPhone", "platform": "native-ios" },
+      "connectivity": "stable 4G", "accessibility": ["reduced motion"], "budget": "USD 35 per event", "privacyTrustConcerns": ["Ticket delivery", "Marketing consent"],
+      "primaryEpics": ["EP-01", "EP-08", "EP-09"], "expectedSuccessCriteria": ["One authoritative order per checkout", "Ticket can be recovered cross-device", "Consent choices are respected"]
+    },
+    {
+      "id": "PER-03", "name": "Claire Morgan", "fictional": true, "email": "per-03.claire@persona.test",
+      "biography": "An English-speaking visitor following an Ecuadorian artist from Montréal.",
+      "location": { "country": "Canada", "city": "Montréal" }, "language": "en-CA",
+      "goals": ["Browse in English", "Purchase internationally", "Understand refund status"],
+      "motivations": ["Support independent music", "Transparent exchange and refund handling"], "roles": ["Fan", "Customer"],
+      "permissionsExpected": ["Own orders and refunds", "Public catalog"], "preexistingData": ["Verified English-language account"],
+      "technicalProficiency": "high", "device": { "preferred": "MacBook", "platform": "desktop-web" },
+      "connectivity": "stable broadband", "accessibility": ["high contrast", "deuteranopia"], "budget": "CAD 80 per purchase", "privacyTrustConcerns": ["Cross-border payment data", "Refund evidence"],
+      "primaryEpics": ["EP-03", "EP-09", "EP-16"], "expectedSuccessCriteria": ["No mixed-language critical UI", "Status is not color-only", "Refund has an auditable timeline"]
+    },
+    {
+      "id": "PER-04", "name": "Valeria Cedeño", "fictional": true, "email": "per-04.valeria@persona.test",
+      "biography": "An independent Guayaquil singer releasing her first EP while remaining a customer and fan.",
+      "location": { "country": "Ecuador", "city": "Guayaquil" }, "language": "es-EC",
+      "goals": ["Publish a professional profile", "Book studio time", "Submit a distribution release"],
+      "motivations": ["Audience growth", "A credible release"], "roles": ["Artist", "Fan", "Customer"],
+      "permissionsExpected": ["Own artist records and bookings", "No label-wide administration"], "preexistingData": ["Draft profile", "Fictional EP Neblina de Sal"],
+      "technicalProficiency": "medium", "device": { "preferred": "Android phone", "platform": "native-android" },
+      "connectivity": "variable 4G", "accessibility": [], "budget": "USD 220 per release cycle", "privacyTrustConcerns": ["Rights metadata", "Unpublished audio exposure"],
+      "primaryEpics": ["EP-02", "EP-05", "EP-12"], "expectedSuccessCriteria": ["Drafts remain private", "Conflicts cannot double-book a room", "Distribution validation explains blockers"]
+    },
+    {
+      "id": "PER-05", "name": "Bruno Azevedo", "fictional": true, "email": "per-05.bruno@persona.test",
+      "biography": "A São Paulo electronic artist and producer purchasing services for collaborations.",
+      "location": { "country": "Brazil", "city": "São Paulo" }, "language": "en-US",
+      "goals": ["Switch professional contexts", "Find collaborators", "Continue work across devices"],
+      "motivations": ["Regional collaboration", "Efficient multi-role work"], "roles": ["Artist", "Producer", "Customer"],
+      "permissionsExpected": ["Union of explicit Artist and Producer capabilities", "Ownership isolation"], "preexistingData": ["Producer portfolio", "Two private project drafts"],
+      "technicalProficiency": "high", "device": { "preferred": "Android tablet", "platform": "tablet-web" },
+      "connectivity": "stable Wi-Fi", "accessibility": ["keyboard with tablet cover"], "budget": "USD 500 quarterly", "privacyTrustConcerns": ["Role boundary clarity", "Project collaborator visibility"],
+      "primaryEpics": ["EP-02", "EP-03", "EP-04"], "expectedSuccessCriteria": ["Roles compose predictably", "Search filters survive navigation", "Private projects remain scoped"]
+    },
+    {
+      "id": "PER-06", "name": "Nicolás Jaramillo", "fictional": true, "email": "per-06.nicolas@persona.test",
+      "biography": "A Loja songwriter looking for a drummer and remote co-writing opportunities.",
+      "location": { "country": "Ecuador", "city": "Loja" }, "language": "es-EC",
+      "goals": ["Find collaborators by city and profession", "Post a classified", "Manage responses"],
+      "motivations": ["Complete a live band", "Avoid spam"], "roles": ["Artist", "Songwriter", "Customer"],
+      "permissionsExpected": ["Own classifieds and applications", "No moderation capability"], "preexistingData": ["Public songwriter profile"],
+      "technicalProficiency": "medium", "device": { "preferred": "Windows laptop", "platform": "desktop-web" }, "connectivity": "slow rural broadband", "accessibility": [],
+      "budget": "USD 60 per collaboration", "privacyTrustConcerns": ["Contact detail disclosure", "Reported-user handling"],
+      "primaryEpics": ["EP-03", "EP-04", "EP-16"], "expectedSuccessCriteria": ["Relevant results appear without exact terminology", "Duplicate post is prevented", "Block and report paths are clear"]
+    },
+    {
+      "id": "PER-07", "name": "Camila Viteri", "fictional": true, "email": "per-07.camila@persona.test",
+      "biography": "A Quito producer who also evaluates demos for small labels.",
+      "location": { "country": "Ecuador", "city": "Quito" }, "language": "es-EC",
+      "goals": ["Qualify a lead", "Plan a studio session", "Review a release package"],
+      "motivations": ["Shorter lead-to-session cycle", "Complete metadata"], "roles": ["Producer", "AandR", "Customer"],
+      "permissionsExpected": ["CRM, scheduling, and catalog access within assigned scope"], "preexistingData": ["Assigned fictional lead", "Draft production booking"],
+      "technicalProficiency": "high", "device": { "preferred": "MacBook", "platform": "desktop-web" }, "connectivity": "stable broadband", "accessibility": ["reduced motion"],
+      "budget": "USD 900 project budget", "privacyTrustConcerns": ["Unsolicited demo access", "Lead notes confidentiality"],
+      "primaryEpics": ["EP-05", "EP-11", "EP-12"], "expectedSuccessCriteria": ["Assignment is enforced server-side", "Pipeline history is auditable", "Release validation is actionable"]
+    },
+    {
+      "id": "PER-08", "name": "Sofía Rojas", "fictional": true, "email": "per-08.sofia@persona.test",
+      "biography": "A Bogotá A&R consultant supporting a fictional regional label.",
+      "location": { "country": "Colombia", "city": "Bogotá" }, "language": "es-CO",
+      "goals": ["Review artist submissions", "Validate DDEX metadata", "Track partner delivery"],
+      "motivations": ["Fewer delivery rejections", "Clear chain of responsibility"], "roles": ["AandR", "LabelRep"],
+      "permissionsExpected": ["Assigned catalog and delivery records", "No finance administration"], "preexistingData": ["Fictional label Prisma Norte", "Draft release PN-001"],
+      "technicalProficiency": "high", "device": { "preferred": "Windows desktop", "platform": "desktop-web" }, "connectivity": "corporate broadband", "accessibility": ["keyboard-only"],
+      "budget": "Departmental approval required", "privacyTrustConcerns": ["Contract access", "Partner payload leakage"],
+      "primaryEpics": ["EP-02", "EP-12", "EP-14"], "expectedSuccessCriteria": ["Keyboard workflow has visible focus", "Invalid DDEX cannot deliver", "Sensitive contracts require explicit authorization"]
+    },
+    {
+      "id": "PER-09", "name": "Andrés Molina", "fictional": true, "email": "per-09.andres@persona.test",
+      "biography": "A Cuenca guitar instructor who also performs as an artist.",
+      "location": { "country": "Ecuador", "city": "Cuenca" }, "language": "es-EC",
+      "goals": ["Publish course availability", "Schedule trial lessons", "Record attendance"],
+      "motivations": ["Fill teaching hours", "Accurate rosters"], "roles": ["Teacher", "Artist"],
+      "permissionsExpected": ["Own teaching schedule and assigned students", "No unrelated student records"], "preexistingData": ["Guitar Fundamentals course", "Three fictional students"],
+      "technicalProficiency": "medium", "device": { "preferred": "iPad", "platform": "tablet-web" }, "connectivity": "stable Wi-Fi", "accessibility": ["large touch targets"],
+      "budget": "Not a purchasing persona", "privacyTrustConcerns": ["Student information", "Attendance edits"],
+      "primaryEpics": ["EP-06", "EP-02", "EP-16"], "expectedSuccessCriteria": ["Schedule conflicts are blocked", "Attendance changes are audited", "Only assigned students are visible"]
+    },
+    {
+      "id": "PER-10", "name": "Lucía Torres", "fictional": true, "email": "per-10.lucia@persona.test",
+      "biography": "A fictional 16-year-old Quito piano student represented by fictional guardian Daniela Torres.",
+      "location": { "country": "Ecuador", "city": "Quito" }, "language": "es-EC",
+      "goals": ["Browse courses", "Request a trial with guardian consent", "View own schedule"],
+      "motivations": ["Learn composition", "Safe communication"], "roles": ["Student", "Customer"],
+      "permissionsExpected": ["Own learning records after guardian approval", "No direct commercial consent"], "preexistingData": ["Fictional guardian consent pending"],
+      "technicalProficiency": "medium", "device": { "preferred": "shared Android phone", "platform": "mobile-web" }, "connectivity": "prepaid 4G", "accessibility": [],
+      "budget": "Guardian-controlled USD 45 monthly", "privacyTrustConcerns": ["Minor safety", "Guardian consent", "Shared-device logout"],
+      "primaryEpics": ["EP-01", "EP-06", "EP-16"], "expectedSuccessCriteria": ["Consent gate cannot be bypassed", "Sensitive data is minimized", "Logout clears shared-device session"]
+    },
+    {
+      "id": "PER-11", "name": "Martina Salazar", "fictional": true, "email": "per-11.martina@persona.test",
+      "biography": "An Ambato audio-production intern assisting with supervised operational work.",
+      "location": { "country": "Ecuador", "city": "Ambato" }, "language": "es-EC",
+      "goals": ["See assigned internship tasks", "Submit evidence", "Avoid accidental privileged actions"],
+      "motivations": ["Learn studio operations", "Receive clear feedback"], "roles": ["Intern"],
+      "permissionsExpected": ["Internship module only unless explicitly assigned"], "preexistingData": ["Active fictional placement", "Two assigned tasks"],
+      "technicalProficiency": "medium", "device": { "preferred": "Chromebook", "platform": "desktop-web" }, "connectivity": "shared Wi-Fi", "accessibility": [],
+      "budget": "Not applicable", "privacyTrustConcerns": ["Supervisor notes", "Least privilege"],
+      "primaryEpics": ["EP-04", "EP-13", "EP-15"], "expectedSuccessCriteria": ["Direct admin URLs are rejected", "Evidence resubmission is idempotent", "Supervisor actions are distinct"]
+    },
+    {
+      "id": "PER-12", "name": "Karla Benítez", "fictional": true, "email": "per-12.karla@persona.test",
+      "biography": "A Quito reception employee handling inquiries, customers, and reservations.",
+      "location": { "country": "Ecuador", "city": "Quito" }, "language": "es-EC",
+      "goals": ["Capture a public lead", "Book an available room", "Recover from duplicate submission"],
+      "motivations": ["Shorter call handling", "No lost customer requests"], "roles": ["Reception"],
+      "permissionsExpected": ["CRM and scheduling", "No payment reconciliation"], "preexistingData": ["Assigned shift", "Fictional caller lead"],
+      "technicalProficiency": "medium", "device": { "preferred": "Windows desktop", "platform": "desktop-web" }, "connectivity": "stable LAN", "accessibility": ["keyboard-heavy"],
+      "budget": "Processes customer budgets", "privacyTrustConcerns": ["Contact consent", "Card data must never enter notes"],
+      "primaryEpics": ["EP-05", "EP-11", "EP-17"], "expectedSuccessCriteria": ["Lead source survives conversion", "Conflicts are prevented", "Payment controls stay inaccessible"]
+    },
+    {
+      "id": "PER-13", "name": "Fernando Lema", "fictional": true, "email": "per-13.fernando@persona.test",
+      "biography": "A Quito studio manager overseeing rooms, orders, staff, and reports.",
+      "location": { "country": "Ecuador", "city": "Quito" }, "language": "es-EC",
+      "goals": ["Resolve schedule conflicts", "Assign a session", "Review operational and revenue status"],
+      "motivations": ["High room utilization", "Accurate handoffs"], "roles": ["StudioManager"],
+      "permissionsExpected": ["Broad studio modules with audited administration"], "preexistingData": ["Two rooms", "One conflicting hold", "Unassigned session"],
+      "technicalProficiency": "high", "device": { "preferred": "desktop workstation", "platform": "desktop-web" }, "connectivity": "stable LAN", "accessibility": ["150% zoom"],
+      "budget": "Approves operational discounts", "privacyTrustConcerns": ["Staff visibility", "Override auditability"],
+      "primaryEpics": ["EP-05", "EP-13", "EP-14"], "expectedSuccessCriteria": ["Override requires reason", "Assignments notify affected staff", "Reports reconcile to authoritative records"]
+    },
+    {
+      "id": "PER-14", "name": "Óscar Guamán", "fictional": true, "email": "per-14.oscar@persona.test",
+      "biography": "A maintenance employee tracking equipment condition and room readiness.",
+      "location": { "country": "Ecuador", "city": "Quito" }, "language": "es-EC",
+      "goals": ["Report damaged equipment", "Block unavailable inventory", "Close a work order"],
+      "motivations": ["Prevent unsafe bookings", "Clear priorities"], "roles": ["Maintenance"],
+      "permissionsExpected": ["Operations, assigned inventory, and scheduling context", "No customer finance"], "preexistingData": ["Microphone EQ-TEST-014", "Open maintenance task"],
+      "technicalProficiency": "low", "device": { "preferred": "rugged Android phone", "platform": "native-android" }, "connectivity": "dead zones inside studio", "accessibility": ["protanopia", "large touch targets"],
+      "budget": "Escalates purchases", "privacyTrustConcerns": ["Location tracking", "Accidental deletion"],
+      "primaryEpics": ["EP-13", "EP-05", "EP-16"], "expectedSuccessCriteria": ["Offline interruption preserves draft", "Unsafe item cannot be reserved", "Status is not color-only"]
+    },
+    {
+      "id": "PER-15", "name": "Paula Espinosa", "fictional": true, "email": "per-15.paula@persona.test",
+      "biography": "A Quito webmaster maintaining public content and site diagnostics.",
+      "location": { "country": "Ecuador", "city": "Quito" }, "language": "es-EC",
+      "goals": ["Publish bilingual content", "Inspect diagnostics", "Confirm CMS changes publicly"],
+      "motivations": ["Accurate public information", "Fast incident triage"], "roles": ["Webmaster"],
+      "permissionsExpected": ["Admin/CMS and CRM as mapped", "No implicit finance access"], "preexistingData": ["Draft bilingual announcement"],
+      "technicalProficiency": "high", "device": { "preferred": "Linux laptop", "platform": "desktop-web" }, "connectivity": "stable broadband", "accessibility": ["keyboard-only"],
+      "budget": "Not applicable", "privacyTrustConcerns": ["Diagnostic secret exposure", "Preview versus publish distinction"],
+      "primaryEpics": ["EP-15", "EP-16", "EP-03"], "expectedSuccessCriteria": ["Preview is clearly labeled", "Diagnostics redact secrets", "Publishing produces an audit event"]
+    },
+    {
+      "id": "PER-16", "name": "Irene Cárdenas", "fictional": true, "email": "per-16.irene@persona.test",
+      "biography": "A system administrator responsible for users, roles, integrations, and release readiness.",
+      "location": { "country": "Ecuador", "city": "Quito" }, "language": "es-EC",
+      "goals": ["Assign and revoke roles", "Inspect provider health", "Review security audit events"],
+      "motivations": ["Least privilege", "Safe releases"], "roles": ["Admin"],
+      "permissionsExpected": ["All modules, with strict-admin actions requiring an unambiguous admin context"], "preexistingData": ["Fictional suspended user", "Failed sandbox webhook"],
+      "technicalProficiency": "high", "device": { "preferred": "MacBook", "platform": "desktop-web" }, "connectivity": "stable broadband", "accessibility": ["screen reader orientation"],
+      "budget": "Approves provider changes", "privacyTrustConcerns": ["Secret redaction", "Privilege escalation", "Audit integrity"],
+      "primaryEpics": ["EP-15", "EP-09", "EP-16"], "expectedSuccessCriteria": ["Backend enforces every role change", "Old sessions lose revoked access predictably", "Logs exclude secrets"]
+    },
+    {
+      "id": "PER-17", "name": "Ana Beltrán", "fictional": true, "email": "per-17.ana@persona.test",
+      "biography": "A venue representative publishing availability for fictional venue Sala Jacarandá.",
+      "location": { "country": "Ecuador", "city": "Guayaquil" }, "language": "es-EC",
+      "goals": ["Claim and update a venue page", "Respond to inquiries", "Avoid overlapping bookings"],
+      "motivations": ["More qualified events", "Accurate availability"], "roles": ["Vendor", "Customer"],
+      "permissionsExpected": ["Owned venue/listing and orders only"], "preexistingData": ["Unverified venue claim", "Two availability blocks"],
+      "technicalProficiency": "medium", "device": { "preferred": "iPhone", "platform": "mobile-web" }, "connectivity": "stable 4G", "accessibility": [],
+      "budget": "USD 1,200 event quote", "privacyTrustConcerns": ["Public address accuracy", "Inquiry spam"],
+      "primaryEpics": ["EP-02", "EP-03", "EP-07"], "expectedSuccessCriteria": ["Claim requires verification", "Private inquiries are isolated", "Availability is authoritative"]
+    },
+    {
+      "id": "PER-18", "name": "Marco Quispe", "fictional": true, "email": "per-18.marco@persona.test",
+      "biography": "A Lima musician renting equipment for a short Ecuador tour.",
+      "location": { "country": "Peru", "city": "Lima" }, "language": "es-PE",
+      "goals": ["Find available rental equipment", "Complete a deposit checkout", "Track return and refund"],
+      "motivations": ["Predictable tour costs", "Proof of custody"], "roles": ["Customer"],
+      "permissionsExpected": ["Own rental orders and public inventory"], "preexistingData": ["Verified customer", "Fictional saved rental dates"],
+      "technicalProficiency": "medium", "device": { "preferred": "Android phone", "platform": "mobile-web" }, "connectivity": "roaming 4G", "accessibility": [],
+      "budget": "USD 300 rental plus deposit", "privacyTrustConcerns": ["Deposit release", "Condition evidence"],
+      "primaryEpics": ["EP-07", "EP-09", "EP-14"], "expectedSuccessCriteria": ["Unavailable stock cannot sell", "Deposit and charge are distinct", "Refund status is traceable"]
+    },
+    {
+      "id": "PER-19", "name": "Rosa Andrade", "fictional": true, "email": "per-19.rosa@persona.test",
+      "biography": "A Guayaquil equipment owner selling and renting tested gear.",
+      "location": { "country": "Ecuador", "city": "Guayaquil" }, "language": "es-EC",
+      "goals": ["Create a listing", "Approve a rental request", "Record handoff and return"],
+      "motivations": ["Earn from idle equipment", "Protect asset condition"], "roles": ["Vendor", "Customer"],
+      "permissionsExpected": ["Owned listings, requests, and custody evidence"], "preexistingData": ["Fictional interface listing", "Pending rental request"],
+      "technicalProficiency": "medium", "device": { "preferred": "Android tablet", "platform": "tablet-web" }, "connectivity": "home Wi-Fi", "accessibility": ["150% zoom"],
+      "budget": "Targets USD 100 monthly revenue", "privacyTrustConcerns": ["Buyer contact exposure", "Dispute evidence retention"],
+      "primaryEpics": ["EP-07", "EP-13", "EP-14"], "expectedSuccessCriteria": ["Ownership checks reject other sellers", "Handoff evidence is immutable", "Cancellations explain consequences"]
+    },
+    {
+      "id": "PER-20", "name": "Javier Mena", "fictional": true, "email": "per-20.javier@persona.test",
+      "biography": "A Quito promoter organizing the fictional festival Noche del Volcán.",
+      "location": { "country": "Ecuador", "city": "Quito" }, "language": "es-EC",
+      "goals": ["Publish an event", "Sell and validate tickets", "Reconcile event revenue"],
+      "motivations": ["Higher conversion", "Fraud-resistant entry"], "roles": ["Promoter", "Producer", "Customer"],
+      "permissionsExpected": ["Owned event operations and assigned CRM/scheduling capabilities"], "preexistingData": ["Draft event", "Two ticket tiers"],
+      "technicalProficiency": "high", "device": { "preferred": "Windows laptop", "platform": "desktop-web" }, "connectivity": "stable broadband", "accessibility": [],
+      "budget": "USD 8,000 event budget", "privacyTrustConcerns": ["Attendee data", "Ticket replay", "Payout accuracy"],
+      "primaryEpics": ["EP-04", "EP-08", "EP-14"], "expectedSuccessCriteria": ["Publish validation blocks incomplete events", "Ticket validation is single-use", "Revenue reconciles to provider evidence"]
+    },
+    {
+      "id": "PER-21", "name": "Gabriela Flores", "fictional": true, "email": "per-21.gabriela@persona.test",
+      "biography": "A Mexico City distribution client managing the fictional label Faro Índigo.",
+      "location": { "country": "Mexico", "city": "Mexico City" }, "language": "es-MX",
+      "goals": ["Create a release", "Import partner metadata", "Track delivery and corrections"],
+      "motivations": ["On-time release", "Fewer metadata rejections"], "roles": ["LabelRep", "Customer"],
+      "permissionsExpected": ["Owned/assigned label catalog only"], "preexistingData": ["Fictional artist Luz Cobalto", "Draft release FI-2026-01"],
+      "technicalProficiency": "high", "device": { "preferred": "MacBook", "platform": "desktop-web" }, "connectivity": "stable broadband", "accessibility": [],
+      "budget": "USD 1,500 release budget", "privacyTrustConcerns": ["Territorial rights", "Asset encryption", "Partner retries"],
+      "primaryEpics": ["EP-12", "EP-09", "EP-15"], "expectedSuccessCriteria": ["Partner failures are recoverable", "Idempotent imports do not duplicate tracks", "Delivery state is authoritative"]
+    },
+    {
+      "id": "PER-22", "name": "Luis Vallejo", "fictional": true, "email": "per-22.luis@persona.test",
+      "biography": "A Quito accounting employee reconciling sandbox payments and refunds.",
+      "location": { "country": "Ecuador", "city": "Quito" }, "language": "es-EC",
+      "goals": ["Reconcile provider events", "Prepare a refund", "Export an audit report"],
+      "motivations": ["Accurate books", "No duplicate money movement"], "roles": ["Accounting"],
+      "permissionsExpected": ["Invoicing and finance records", "No customer-profile administration"], "preexistingData": ["Unmatched sandbox payment", "Refund awaiting approval"],
+      "technicalProficiency": "high", "device": { "preferred": "Windows desktop", "platform": "desktop-web" }, "connectivity": "stable LAN", "accessibility": ["keyboard-only"],
+      "budget": "Controls refunds within policy", "privacyTrustConcerns": ["Payment-data minimization", "Dual control", "Export retention"],
+      "primaryEpics": ["EP-09", "EP-14", "EP-15"], "expectedSuccessCriteria": ["Browser return never confirms payment", "Refund approval is separated", "Exports are access-controlled"]
+    },
+    {
+      "id": "PER-23", "name": "Renata Paz", "fictional": true, "email": "per-23.renata@persona.test",
+      "biography": "A Quito Live Sessions producer coordinating guests, room, staff, and publishing state.",
+      "location": { "country": "Ecuador", "city": "Quito" }, "language": "es-EC",
+      "goals": ["Create a Live Session", "Assign collaborators and assets", "Publish only after approval"],
+      "motivations": ["Reliable production day", "Clear release gate"], "roles": ["LiveSessionsProducer", "Producer"],
+      "permissionsExpected": ["CRM and scheduling in assigned productions"], "preexistingData": ["Fictional session Andean Frequencies", "Unassigned camera"],
+      "technicalProficiency": "high", "device": { "preferred": "iPad", "platform": "tablet-web" }, "connectivity": "studio Wi-Fi", "accessibility": ["reduced motion"],
+      "budget": "USD 600 session budget", "privacyTrustConcerns": ["Guest releases", "Pre-publication assets"],
+      "primaryEpics": ["EP-05", "EP-04", "EP-13"], "expectedSuccessCriteria": ["Missing consent blocks publish", "Assignments detect conflicts", "Draft media is private"]
+    },
+    {
+      "id": "PER-24", "name": "Eva Williams", "fictional": true, "email": "per-24.eva@persona.test",
+      "biography": "A blind New York customer using a screen reader to explore remote courses and services.",
+      "location": { "country": "United States", "city": "New York" }, "language": "en-US",
+      "goals": ["Navigate landmarks and headings", "Book without pointer input", "Recover from form errors"],
+      "motivations": ["Independent completion", "Predictable confirmations"], "roles": ["Customer", "Fan"],
+      "permissionsExpected": ["Own orders and public content"], "preexistingData": ["Verified account", "No stored payment instrument"],
+      "technicalProficiency": "high", "device": { "preferred": "Windows laptop with NVDA", "platform": "desktop-web" }, "connectivity": "stable broadband", "accessibility": ["screen reader", "keyboard-only"],
+      "budget": "USD 100 per service", "privacyTrustConcerns": ["Accessible privacy notice", "Error announcement"],
+      "primaryEpics": ["EP-16", "EP-05", "EP-06"], "expectedSuccessCriteria": ["Accessible names and live errors", "Logical focus order", "No pointer-only action"]
+    },
+    {
+      "id": "PER-25", "name": "Tomás León", "fictional": true, "email": "per-25.tomas@persona.test",
+      "biography": "A Quito road-crew and maintenance worker managing gear assignments on event days.",
+      "location": { "country": "Ecuador", "city": "Quito" }, "language": "es-EC",
+      "goals": ["Accept an assignment", "Scan equipment handoff", "Report a late return"],
+      "motivations": ["Fast load-in", "Accountable custody"], "roles": ["RoadCrew", "Maintenance"],
+      "permissionsExpected": ["Assigned operational records and maintenance capabilities"], "preexistingData": ["Fictional road-case assignment", "Offline handoff draft"],
+      "technicalProficiency": "low", "device": { "preferred": "Android phone", "platform": "native-android" }, "connectivity": "intermittent event Wi-Fi", "accessibility": ["glove-friendly large controls"],
+      "budget": "Not applicable", "privacyTrustConcerns": ["Personal location", "False custody attribution"],
+      "primaryEpics": ["EP-13", "EP-04", "EP-16"], "expectedSuccessCriteria": ["Assignment scope is enforced", "Offline retry does not duplicate handoff", "Custody history identifies actor and time"]
+    },
+    {
+      "id": "PER-26", "name": "Micaela Ortiz", "fictional": true, "email": "per-26.micaela@persona.test",
+      "biography": "A Quito DJ comparing Domo events, marketplace gear, and studio services on a limited data plan.",
+      "location": { "country": "Ecuador", "city": "Quito" }, "language": "es-EC",
+      "goals": ["Request a Domo quote", "Compare marketplace options", "Resume an interrupted checkout"],
+      "motivations": ["Bundle a showcase affordably", "Avoid repeating forms"], "roles": ["DJ", "Customer"],
+      "permissionsExpected": ["Own inquiries and orders", "Public catalogs"], "preexistingData": ["Incomplete fictional Domo inquiry"],
+      "technicalProficiency": "medium", "device": { "preferred": "budget Android phone", "platform": "mobile-web" }, "connectivity": "data saver with 2G fallback", "accessibility": ["reduced motion"],
+      "budget": "USD 700 event cap", "privacyTrustConcerns": ["Quote validity", "Retry charges", "WhatsApp consent"],
+      "primaryEpics": ["EP-10", "EP-07", "EP-09"], "expectedSuccessCriteria": ["Draft survives interruption", "Quote terms are explicit", "Payment retry is idempotent"]
+    }
+  ]
+}

@@ -24,6 +24,17 @@ test('CI splits component checks and preserves Stack build caches', async () => 
   assert.match(workflow, /concurrency:[\s\S]*?cancel-in-progress: true/);
 });
 
+test('persona browser journeys are artifacted and gate aggregate quality', async () => {
+  const workflow = await source('.github/workflows/ci.yml');
+  assert.match(workflow, /^  persona-web-e2e:/m);
+  assert.match(workflow, /npx playwright install --with-deps chromium firefox webkit/);
+  assert.match(workflow, /run: npm run test:e2e:web/);
+  assert.match(workflow, /path: artifacts\/persona-playwright/);
+  assert.match(workflow, /retention-days: 14/);
+  assert.match(workflow, /quality:[\s\S]*?needs:[\s\S]*?- persona-web-e2e/);
+  assert.match(workflow, /PERSONA_WEB_E2E_RESULT: \$\{\{ needs\.persona-web-e2e\.result \}\}/);
+});
+
 test('backend quality compiles, tests and exports the binary in one Stack pass', async () => {
   const script = await source('scripts/quality-backend.sh');
   assert.match(script, /build_args=\(--no-terminal test tdf-hq\)/);

@@ -197,7 +197,7 @@ export default function DirectorySearchPage() {
   });
 
   return (
-    <Box component="main" id="main-content" sx={{ pb: 8 }}>
+    <Box sx={{ pb: 8 }}>
       <Box sx={{ background: 'linear-gradient(135deg, #17112d 0%, #3b1d66 52%, #0e6470 100%)', color: 'white', py: { xs: 6, md: 10 } }}>
         <Container maxWidth="lg">
           <Stack spacing={3} maxWidth={900}>

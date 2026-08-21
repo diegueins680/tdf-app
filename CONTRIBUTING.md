@@ -8,6 +8,7 @@ Thank you for contributing! This guide will help you get started.
    - [README.md](./README.md) - Project overview
    - [DEVELOPMENT.md](./DEVELOPMENT.md) - Development workflow
    - [specs.yaml](./specs.yaml) - Business requirements
+   - [Persona quality program](./docs/persona-testing/README.md) - deterministic fixtures, journeys, evidence labels, and safe seeding
 
 2. **Set up your environment:**
    - Follow the setup in DEVELOPMENT.md
@@ -76,6 +77,10 @@ stack test
 # Frontend
 npm run test:ui
 npm run build:ui  # Ensure it builds
+
+# Repository-wide persona definitions and isolated browser journeys
+npm run test:persona-program
+npm run test:e2e:web
 
 # Manual testing
 npm run dev:ui

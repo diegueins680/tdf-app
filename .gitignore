@@ -64,6 +64,10 @@ yarn-error.log*
 # Testing
 coverage/
 .nyc_output/
+playwright-report/
+test-results/
+blob-report/
+artifacts/persona-playwright/
 
 # Temporary files
 tmp/

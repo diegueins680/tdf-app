@@ -88,15 +88,30 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
     }),
     staleTime: 1000 * 60 * 10,
   });
-  const appearancePage = catalogQuery.data?.catalogs.find((page) => page.catalog.code === 'appearance-modes');
-  const networkItems = appearancePage?.items.filter((item): item is CatalogItem & { code: ThemeModePreference } =>
-    isThemeModePreference(item.code));
-  const appearanceDefaults = appearancePage?.defaults.filter(
-    (entry) => entry.scopeKind === 'appearance-mode' && entry.scopeId === 'global' && !entry.localeId,
-  ) ?? [];
+  const catalogPages = useMemo(
+    () => Array.isArray(catalogQuery.data?.catalogs) ? catalogQuery.data.catalogs : [],
+    [catalogQuery.data?.catalogs],
+  );
+  const appearancePage = useMemo(
+    () => catalogPages.find((page) => page?.catalog?.code === 'appearance-modes'),
+    [catalogPages],
+  );
+  const networkItems = useMemo(
+    () => Array.isArray(appearancePage?.items)
+      ? appearancePage.items.filter((item): item is CatalogItem & { code: ThemeModePreference } =>
+        isThemeModePreference(item.code))
+      : [],
+    [appearancePage?.items],
+  );
+  const appearanceDefaults = useMemo(
+    () => (Array.isArray(appearancePage?.defaults) ? appearancePage.defaults : []).filter(
+      (entry) => entry.scopeKind === 'appearance-mode' && entry.scopeId === 'global' && !entry.localeId,
+    ),
+    [appearancePage?.defaults],
+  );
   const validNetworkCatalog = Boolean(
     appearancePage
-      && networkItems?.length
+      && networkItems.length
       && networkItems.length === appearancePage.items.length
       && networkItems.every((item) => item.active && item.workflowState === 'published')
       && new Set(networkItems.map((item) => item.id)).size === networkItems.length
@@ -106,7 +121,7 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
   );
   const options = useMemo<readonly ThemeModeOption[]>(
     () => validNetworkCatalog
-      ? networkItems!.map((item) => ({ id: item.id, code: item.code, label: item.name }))
+      ? networkItems.map((item) => ({ id: item.id, code: item.code, label: item.name }))
       : EMERGENCY_THEME_OPTIONS,
     [networkItems, validNetworkCatalog],
   );
@@ -155,8 +170,12 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
           mode,
           // Keep the brighter brand hues as `light`, while using AA-safe
           // action shades whenever MUI places normal-size white text on top.
-          primary: { main: '#7c3aed', light: '#7c3aed', dark: '#6d28d9', contrastText: '#ffffff' },
-          secondary: { main: '#be123c', light: '#f43f5e', dark: '#be123c', contrastText: '#ffffff' },
+          primary: mode === 'light'
+            ? { main: '#6d28d9', light: '#7c3aed', dark: '#5b21b6', contrastText: '#ffffff' }
+            : { main: '#c4b5fd', light: '#ddd6fe', dark: '#a78bfa', contrastText: '#17111d' },
+          secondary: mode === 'light'
+            ? { main: '#be123c', light: '#e11d48', dark: '#9f1239', contrastText: '#ffffff' }
+            : { main: '#fda4af', light: '#fecdd3', dark: '#fb7185', contrastText: '#1f1115' },
           background: {
             default: mode === 'light' ? '#f8f7f5' : '#0a0a0f',
             paper: mode === 'light' ? '#ffffff' : '#12121a',
@@ -209,12 +228,14 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
                 transition: 'all 0.15s ease',
               },
               containedPrimary: {
-                backgroundColor: '#7c3aed',
-                '&:hover': { backgroundColor: '#6d28d9' },
+                backgroundColor: mode === 'light' ? '#6d28d9' : '#c4b5fd',
+                color: mode === 'light' ? '#ffffff' : '#17111d',
+                '&:hover': { backgroundColor: mode === 'light' ? '#5b21b6' : '#a78bfa' },
               },
               containedSecondary: {
-                backgroundColor: '#e11d48',
-                '&:hover': { backgroundColor: '#be123c' },
+                backgroundColor: mode === 'light' ? '#be123c' : '#fda4af',
+                color: mode === 'light' ? '#ffffff' : '#1f1115',
+                '&:hover': { backgroundColor: mode === 'light' ? '#9f1239' : '#fb7185' },
               },
             },
           },

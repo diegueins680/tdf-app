@@ -10,7 +10,7 @@ import Control.Monad (forM, forM_, unless, void, when)
 import Control.Monad.IO.Class (liftIO)
 import Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
 import Crypto.Hash (Digest, SHA256, hash)
-import Data.Aeson (FromJSON, Value, decode, object, withObject, (.:), (.=))
+import Data.Aeson (FromJSON (parseJSON), Value, decode, eitherDecode, object, withObject, (.:), (.=))
 import qualified Data.Aeson.Key as AesonKey
 import Data.Aeson.Types (parseMaybe)
 import qualified Data.ByteString.Lazy as BL
@@ -32,8 +32,8 @@ import Database.Persist.Sql
 import GHC.Generics (Generic)
 import System.Directory (doesFileExist)
 import System.Environment (getEnvironment, lookupEnv)
-import TDF.Catalog.Security (ensureBootstrapSecurityRole, hasCanonicalPartyRole)
 import qualified TDF.Catalog.Models as Catalog
+import TDF.Catalog.Security (ensureBootstrapSecurityRole, hasCanonicalPartyRole)
 import TDF.Config (resolveAppBase)
 import TDF.Models
 import TDF.ModelsExtra (DropdownOption (..))
@@ -231,6 +231,7 @@ seedAll = do
                     "Skipping demo credentials: hosted/production runtime or TDF_SEED_DEMO_PASSWORD/TDF_SEED_TOKEN_PREFIX is missing or too short."
 
     seedCoreStaffRoles (fst <$> seededSecrets) now
+    seedSyntheticPersonasFromEnv now
 
     -- Ensure tdf-owner test account has Manager, Fan and Customer roles
     when allowSeededCredentials $ do
@@ -1055,6 +1056,33 @@ data StaffSeed = StaffSeed
     , ssRoles :: [RoleEnum]
     }
 
+data SyntheticPersonaSeed = SyntheticPersonaSeed
+    { syntheticPersonaId :: Text
+    , syntheticPersonaName :: Text
+    , syntheticPersonaFictional :: Bool
+    , syntheticPersonaEmail :: Text
+    , syntheticPersonaRoles :: [RoleEnum]
+    }
+    deriving (Show, Generic)
+
+instance FromJSON SyntheticPersonaSeed where
+    parseJSON = withObject "SyntheticPersonaSeed" $ \value ->
+        SyntheticPersonaSeed
+            <$> value .: "id"
+            <*> value .: "name"
+            <*> value .: "fictional"
+            <*> value .: "email"
+            <*> value .: "roles"
+
+newtype SyntheticPersonaCatalog = SyntheticPersonaCatalog
+    { syntheticPersonaCatalogPersonas :: [SyntheticPersonaSeed]
+    }
+    deriving (Show, Generic)
+
+instance FromJSON SyntheticPersonaCatalog where
+    parseJSON = withObject "SyntheticPersonaCatalog" $ \value ->
+        SyntheticPersonaCatalog <$> value .: "personas"
+
 coreStaffSeeds :: [StaffSeed]
 coreStaffSeeds =
     [ StaffSeed "Esteban Muñoz" "mixandlivesound@gmail.com" [Engineer, Teacher, StudioManager]
@@ -1078,6 +1106,81 @@ data CredentialStatus
 
 seededCredentialSeedingAllowedFromEnv :: IO Bool
 seededCredentialSeedingAllowedFromEnv = seededCredentialSeedingAllowed <$> getEnvironment
+
+syntheticPersonaSeedingAllowed :: [(String, String)] -> Bool
+syntheticPersonaSeedingAllowed env =
+    seededCredentialSeedingAllowed env
+        && lookupNormalized "TDF_ENABLE_SYNTHETIC_PERSONAS" `elem` [Just "1", Just "true", Just "yes"]
+        && any
+            ( (`elem` [Just "development", Just "dev", Just "local", Just "test"])
+                . lookupNormalized
+            )
+            ["APP_ENV", "ENVIRONMENT", "NODE_ENV", "RUNTIME_ENV"]
+  where
+    lookupNormalized key = T.toLower . T.strip . T.pack <$> lookup key env
+
+syntheticPersonaPassword :: [(String, String)] -> Maybe Text
+syntheticPersonaPassword env = do
+    raw <- lookup "TDF_PERSONA_TEST_PASSWORD" env
+    let password = T.strip (T.pack raw)
+    if T.length password >= 16 then Just password else Nothing
+
+seedSyntheticPersonasFromEnv :: UTCTime -> SqlPersistT IO ()
+seedSyntheticPersonasFromEnv now = do
+    env <- liftIO getEnvironment
+    when (syntheticPersonaSeedingAllowed env) $ do
+        password <- case syntheticPersonaPassword env of
+            Just value -> pure value
+            Nothing ->
+                liftIO . ioError . userError $
+                    "TDF_PERSONA_TEST_PASSWORD must contain at least 16 characters when synthetic persona seeding is enabled."
+        path <- liftIO (resolveSyntheticPersonaPath env)
+        personas <- liftIO (loadSyntheticPersonaSeeds path)
+        let accountPersonas = filter (not . null . syntheticPersonaRoles) personas
+        liftIO $ putStrLn ("Seeding " <> show (length accountPersonas) <> " isolated synthetic persona accounts from " <> path <> "...")
+        forM_ accountPersonas $ \persona -> do
+            (pid, partyChange) <- ensureSyntheticPersonaParty now (syntheticPersonaName persona) (normalizeEmail (syntheticPersonaEmail persona))
+            newRoles <- ensureStaffRoles now pid (syntheticPersonaRoles persona)
+            credentialStatus <- ensureStaffCredential pid (normalizeEmail (syntheticPersonaEmail persona)) password
+            logStaffSeed
+                (syntheticPersonaId persona <> " " <> syntheticPersonaName persona)
+                (syntheticPersonaRoles persona)
+                partyChange
+                newRoles
+                credentialStatus
+
+resolveSyntheticPersonaPath :: [(String, String)] -> IO FilePath
+resolveSyntheticPersonaPath env =
+    case lookup "TDF_SYNTHETIC_PERSONA_FILE" env of
+        Just raw | not (null (T.unpack (T.strip (T.pack raw)))) -> requireExisting (T.unpack (T.strip (T.pack raw)))
+        _ -> do
+            rootRelative <- doesFileExist "test/personas/personas.json"
+            if rootRelative
+                then pure "test/personas/personas.json"
+                else requireExisting "../test/personas/personas.json"
+  where
+    requireExisting path = do
+        pathExists <- doesFileExist path
+        if pathExists
+            then pure path
+            else ioError . userError $ "Synthetic persona catalog not found: " <> path
+
+loadSyntheticPersonaSeeds :: FilePath -> IO [SyntheticPersonaSeed]
+loadSyntheticPersonaSeeds path = do
+    payload <- BL.readFile path
+    catalog <- case eitherDecode payload of
+        Left message -> ioError . userError $ "Invalid synthetic persona catalog: " <> message
+        Right value -> pure value
+    let personas = syntheticPersonaCatalogPersonas catalog
+        invalid = filter (not . validPersona) personas
+    unless (null invalid) . ioError . userError $
+        "Synthetic persona catalog contains non-fictional or non-reserved identities: "
+            <> show (map syntheticPersonaId invalid)
+    pure personas
+  where
+    validPersona persona =
+        syntheticPersonaFictional persona
+            && "@persona.test" `T.isSuffixOf` normalizeEmail (syntheticPersonaEmail persona)
 
 loadSeedCredentialSecrets :: IO (Maybe (Text, Text))
 loadSeedCredentialSecrets = seededCredentialSecrets <$> getEnvironment
@@ -1143,12 +1246,19 @@ seedStaff mPassword now StaffSeed{ssName = nameVal, ssEmail = emailVal, ssRoles 
     logStaffSeed cleanName rolesVal partyChange newRoles credStatus
 
 ensureStaffParty :: UTCTime -> Text -> Text -> SqlPersistT IO (Key Party, PartyChange)
-ensureStaffParty now displayName email = do
+ensureStaffParty now = ensureSeedParty now True
+
+ensureSyntheticPersonaParty :: UTCTime -> Text -> Text -> SqlPersistT IO (Key Party, PartyChange)
+ensureSyntheticPersonaParty now = ensureSeedParty now False
+
+ensureSeedParty :: UTCTime -> Bool -> Text -> Text -> SqlPersistT IO (Key Party, PartyChange)
+ensureSeedParty now allowNameFallback displayName email = do
     mPartyFromCredential <- lookupPartyByCredential email
     mPartyByEmail <- maybe (lookupPartyByEmail email) (const (pure Nothing)) mPartyFromCredential
-    mPartyByName <- case mPartyFromCredential <|> mPartyByEmail of
-        Just _ -> pure Nothing
-        Nothing -> lookupPartyByName displayName
+    mPartyByName <- case (allowNameFallback, mPartyFromCredential <|> mPartyByEmail) of
+        (_, Just _) -> pure Nothing
+        (True, Nothing) -> lookupPartyByName displayName
+        (False, Nothing) -> pure Nothing
     let chosen = mPartyFromCredential <|> mPartyByEmail <|> mPartyByName
     case chosen of
         Just (Entity pid party) -> do

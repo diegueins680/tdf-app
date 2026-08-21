@@ -128,7 +128,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
   const invitationAction = `/mis-clasificados?invite=${encodeURIComponent(targetId)}`;
 
   return (
-    <Box component="main" id="main-content" sx={{ py: { xs: 4, md: 7 } }}>
+    <Box sx={{ py: { xs: 4, md: 7 } }}>
       <Container maxWidth="lg">
         <Stack spacing={3}>
           <Button component={RouterLink} to="/buscar" startIcon={<ArrowBackIcon />} sx={{ alignSelf: 'flex-start' }}>Volver a buscar</Button>

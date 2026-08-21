@@ -4746,7 +4746,68 @@ spec = describe "TDF.Server helpers" $ do
             singleUsername `shouldBe` Just "single@example.com"
             ambiguousUsername `shouldBe` Nothing
 
-    describe "sessionServer" $
+    describe "sessionServer" $ do
+        it "revokes every valid token presented during logout" $ do
+            (logoutResult, authorizationActive, cookieActive) <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    (authorizationTokenId, cookieTokenId) <- liftIO $ flip runSqlPool pool $ do
+                        now <- liftIO getCurrentTime
+                        partyId <-
+                            insert
+                                Party
+                                    { partyLegalName = Nothing
+                                    , partyDisplayName = "Logout User"
+                                    , partyIsOrg = False
+                                    , partyTaxId = Nothing
+                                    , partyPrimaryEmail = Just "logout@example.com"
+                                    , partyPrimaryPhone = Nothing
+                                    , partyWhatsapp = Nothing
+                                    , partyInstagram = Nothing
+                                    , partyEmergencyContact = Nothing
+                                    , partyNotes = Nothing
+                                    , partyStripeCustomerId = Nothing
+                                    , partyCountryCode = Nothing
+                                    , partyCountryId = Nothing
+                                    , partyCreatedAt = now
+                                    }
+                        (,)
+                            <$> insert (ApiToken "authorization-token" partyId (Just "password-login:logout@example.com") True)
+                            <*> insert (ApiToken "cookie-token" partyId (Just "password-login:logout@example.com") True)
+                    let env =
+                            Env
+                                { envPool = pool
+                                , envConfig = marketplaceTestConfig False
+                                }
+                        _currentSession :<|> logout :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion = sessionServer
+                    result <-
+                        liftIO $
+                            runHandler $
+                                runReaderT
+                                    ( logout
+                                        (Just "Bearer authorization-token")
+                                        (Just "tdf_session=cookie-token")
+                                    )
+                                    env
+                    (authorizationState, cookieState) <- liftIO $ flip runSqlPool pool $ do
+                        (,)
+                            <$> get authorizationTokenId
+                            <*> get cookieTokenId
+                    pure
+                        ( result
+                        , apiTokenActive <$> authorizationState
+                        , apiTokenActive <$> cookieState
+                        )
+
+            case logoutResult of
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected logout to succeed, got: " <> show serverErr)
+                Right _ -> pure ()
+            authorizationActive `shouldBe` Just False
+            cookieActive `shouldBe` Just False
+
         it "uses deterministic usernames when session credential fallback is ambiguous" $ do
             (ambiguousPartyId, googlePartyId, ambiguousResult, googleResult) <-
                 ( runNoLoggingT $ do

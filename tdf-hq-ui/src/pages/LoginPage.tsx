@@ -669,7 +669,6 @@ export default function LoginPage() {
   if (loading && !session) {
     return (
       <Box
-        component="main"
         sx={{
           minHeight: '100vh',
           display: 'flex',
@@ -690,7 +689,6 @@ export default function LoginPage() {
 
   return (
     <Box
-      component="main"
       sx={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #0b1224 0%, #0f172a 35%, #0b1224 100%)',
