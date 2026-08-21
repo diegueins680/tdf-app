@@ -231,7 +231,7 @@ function personaCatalogMarkdown(personas) {
       `- **Expected permissions:** ${list(persona.permissionsExpected)}`,
       `- **Success criteria:** ${list(persona.expectedSuccessCriteria)}`, '');
   }
-  return `${lines.join('\n')}\n`;
+  return `${lines.join('\n').trimEnd()}\n`;
 }
 
 function epicMarkdown(blueprints, scenarios) {
@@ -243,7 +243,7 @@ function epicMarkdown(blueprints, scenarios) {
   for (const epic of [...blueprints.epics].sort((a, b) => a.priority - b.priority || a.id.localeCompare(b.id))) {
     lines.push(`| ${epic.priority} | ${epic.id} — ${mdEscape(epic.title)} | ${epic.risk} | ${scenarios.filter((story) => story.epic.id === epic.id).length} | ${mdEscape(epic.rationale)} |`);
   }
-  return `${lines.join('\n')}\n`;
+  return `${lines.join('\n').trimEnd()}\n`;
 }
 
 function journeysMarkdown(scenarios) {
@@ -273,7 +273,7 @@ function journeysMarkdown(scenarios) {
       '**Cleanup**', '', ...scenario.cleanupRequirements.map((value) => `- ${value}`), '',
       `**Execution evidence:** ${scenario.execution.evidence || 'None yet.'} ${scenario.execution.reason || ''}`, '');
   }
-  return `${lines.join('\n')}\n`;
+  return `${lines.join('\n').trimEnd()}\n`;
 }
 
 function traceabilityCsv(personas, scenarios) {
