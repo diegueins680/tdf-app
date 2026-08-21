@@ -8574,13 +8574,13 @@
       "reviewed": true
     },
     {
-      "id": "dee5c1431841d4f8474a",
+      "id": "149cb8b498b0cc858d3d",
       "classification": "security-system-registry",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "The generated mobile feature registry mirrors the reviewed navigation and permission contract; persisted assignments remain authoritative and backend capabilities remain exhaustive.",
       "reviewed": true
     },
     {
@@ -8681,6 +8681,36 @@
       "priority": "P3-retain",
       "risk": "Changing identifier parsing modes could accept malformed evidence identifiers or reject valid persisted identifiers.",
       "justification": "DecimalId and UuidId are closed parser dispatch constructors, not selectable or reportable domain values.",
+      "reviewed": true
+    },
+    {
+      "id": "b4e40b60881e99889eae",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing execution-status identifiers could misclassify evidence or allow an unsupported result state.",
+      "justification": "These values are the closed validation vocabulary for machine-readable persona test evidence, not configurable product or business data.",
+      "reviewed": true
+    },
+    {
+      "id": "4a073fb05189df4f5797",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the template could make generated scenario specifications omit required lifecycle and idempotency expectations.",
+      "justification": "These sentences are deterministic documentation-template clauses generated for test specifications; they are neither runtime choices nor domain authority.",
+      "reviewed": true
+    },
+    {
+      "id": "616c028680c8f586b7c3",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the template could make generated scenario specifications omit required notification and deduplication expectations.",
+      "justification": "These sentences are deterministic documentation-template clauses generated for test specifications; they are neither runtime choices nor domain authority.",
       "reviewed": true
     }
   ]

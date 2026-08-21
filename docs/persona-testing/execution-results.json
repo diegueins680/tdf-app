@@ -219,6 +219,14 @@
       "status": "passed",
       "result": "No whitespace errors; machine-readable files parsed; traceability contains 78 story rows plus header; remote main still equals baseline 560ac9954b655ba8aa719963a2c890110b74a232.",
       "evidence": "docs/persona-testing/execution-report.md#run-025"
+    },
+    {
+      "id": "RUN-026",
+      "command": "npm run test:catalog-list-audit; npm run audit:catalog-lists; npx playwright test --project=webkit-critical --repeat-each=3; npm run build --workspace=tdf-hq-ui; npx playwright test; npm run quality:repo",
+      "scope": "draft-PR catalog-governance and WebKit CI regression follow-up",
+      "status": "passed-with-diagnostic-failure",
+      "result": "Catalog discovery passed 1/1 and all 871 candidates were reviewed with no stale decisions. Three repeated WebKit critical runs passed. A disclosed dev-server run had 10 passes, 2 skips and 5 module-compilation timeouts; the production build passed and the clean built-preview rerun passed 15 tests with 2 expected skips and zero retries. Repository quality passed with 0 formal errors and 307 warnings.",
+      "evidence": "docs/persona-testing/execution-report.md#run-026"
     }
   ],
   "storyResults": [

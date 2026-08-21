@@ -99,7 +99,11 @@ function observeRuntime(page) {
     const reason = request.failure()?.errorText ?? 'unknown';
     // Browser navigation cancels in-flight optional rate/catalog reads. This is not a network
     // failure presented to the user and must not obscure genuine request failures.
-    if (reason === 'net::ERR_ABORTED' || reason === 'cancelled') return;
+    if (
+      reason === 'net::ERR_ABORTED'
+      || reason === 'cancelled'
+      || reason === 'Load request cancelled'
+    ) return;
     failedRequests.push(`${request.method()} ${new URL(request.url()).pathname}: ${reason}`);
   });
   return { consoleErrors, failedRequests };
