@@ -519,7 +519,7 @@ type SeedAPI = Header "X-Seed-Token" Text :> Post '[JSON] NoContent
 
 type SessionAPI =
        Header "Authorization" Text :> Header "Cookie" Text :> "session" :> Get '[JSON] (Maybe SessionResponse)
-  :<|> "session" :> "logout" :> Post '[JSON] (SessionCookieHeaders NoContent)
+  :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "logout" :> Post '[JSON] (SessionCookieHeaders NoContent)
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "preferences" :> Get '[JSON] LocalePreferencesDTO
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "preferences" :> ReqBody '[JSON] LocalePreferencesUpdate :> Put '[JSON] LocalePreferencesDTO
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "currency-conversions" :> ReqBody '[JSON] CurrencyConversionAuditCreate :> Post '[JSON] NoContent

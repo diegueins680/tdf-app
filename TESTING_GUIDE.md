@@ -2,6 +2,8 @@
 
 This guide provides manual and automated testing procedures for the multi-role user management system.
 
+For the current cross-product program, deterministic fictional users, 17 epics, 78 complete-lifecycle stories, evidence statuses, safe seed guards and browser/mobile coverage, start with [docs/persona-testing/README.md](docs/persona-testing/README.md). The raw SQL examples below are legacy role-focused fixtures; new persona testing should use `test/personas/` and a disposable database.
+
 ## Prerequisites
 
 - PostgreSQL database running with `tdf_hq` database

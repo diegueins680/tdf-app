@@ -5,7 +5,9 @@ import { fileURLToPath } from 'node:url';
 const workspaceRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const registryPath = path.join(workspaceRoot, 'tdf-hq/assets/feature-registry.json');
 const backendSourcePath = path.join(workspaceRoot, 'tdf-hq/src');
-const reportPath = path.join(workspaceRoot, 'docs/feature-discoverability-audit/2026-08-06');
+const reportDate = process.env.FEATURE_AUDIT_DATE?.trim() || '2026-08-21';
+if (!/^\d{4}-\d{2}-\d{2}$/.test(reportDate)) throw new Error('FEATURE_AUDIT_DATE must use YYYY-MM-DD.');
+const reportPath = path.join(workspaceRoot, 'docs/feature-discoverability-audit', reportDate);
 const actions = [
   'discover', 'view', 'create', 'edit', 'delete', 'archive', 'deactivate', 'import',
   'export', 'submit', 'validate', 'approve', 'reject', 'assign', 'publish', 'report',
@@ -126,10 +128,16 @@ function extractTypeAliases(source, relativeFile) {
     current = null;
   };
   for (const [index, line] of lines.entries()) {
-    const match = line.match(/^type\s+([A-Z][A-Za-z0-9_']*)(?:\s+[^=]*)?\s*=\s*(.*)$/);
+    const match = line.match(/^type\s+([A-Z][A-Za-z0-9_']*)(?:\s+([^=]*?))?\s*=\s*(.*)$/);
     if (match) {
       flush();
-      current = { name: match[1], parts: [match[2]], file: relativeFile, line: index + 1 };
+      current = {
+        name: match[1],
+        parameters: (match[2] ?? '').trim().split(/\s+/).filter(Boolean),
+        parts: [match[3]],
+        file: relativeFile,
+        line: index + 1,
+      };
     } else if (current && (line.trim() === '' || /^\s/.test(line))) {
       current.parts.push(line.trim());
     } else if (current) {
@@ -227,7 +235,14 @@ function buildEndpointInventory(aliasMap) {
           unresolved.push({ component, reason: 'recursive alias', stack: stack.join(' > ') });
           return;
         }
-        expand(aliasMap.get(aliasName).expression, current, [...stack, aliasName]);
+        const alias = aliasMap.get(aliasName);
+        const argumentSource = component.slice(aliasName.length).trim();
+        let expression = alias.expression;
+        if (alias.parameters.length === 1 && argumentSource) {
+          const parameter = alias.parameters[0];
+          expression = expression.replace(new RegExp(`\\b${parameter}\\b`, 'g'), unwrapParentheses(argumentSource));
+        }
+        expand(expression, current, [...stack, aliasName]);
         return;
       }
       if (splitTopLevel(component, ':<|>').length > 1 || splitTopLevel(component, ':>').length > 1) {
@@ -415,7 +430,7 @@ const endpointRows = uniqueEndpoints.map((endpoint) => {
 await writeFile(path.join(reportPath, 'backend-capability-inventory.csv'), csv(Object.keys(endpointRows[0]), endpointRows));
 
 const summary = {
-  generatedAt: '2026-08-06',
+  generatedAt: reportDate,
   registryVersion: registry.registryVersion,
   featureCount: features.length,
   primaryDestinations: features.filter((feature) => feature.classification === 'primary-destination').length,
@@ -439,8 +454,13 @@ const summary = {
       ]),
   ),
 };
-if (summary.backendEndpointsPendingDisposition > 0) {
+const pendingEndpointRows = endpointRows.filter((endpoint) => endpoint.interface_disposition.includes('pending'));
+await writeFile(
+  path.join(reportPath, 'pending-backend-capabilities.csv'),
+  csv(Object.keys(endpointRows[0]), pendingEndpointRows),
+);
+await writeFile(path.join(reportPath, 'generated-summary.json'), `${JSON.stringify(summary, null, 2)}\n`);
+if (summary.backendEndpointsPendingDisposition > 0 && process.env.ALLOW_PENDING_FEATURE_DISPOSITIONS !== '1') {
   throw new Error(`${summary.backendEndpointsPendingDisposition} backend endpoint(s) still lack an explicit disposition`);
 }
-await writeFile(path.join(reportPath, 'generated-summary.json'), `${JSON.stringify(summary, null, 2)}\n`);
 console.log(JSON.stringify(summary, null, 2));

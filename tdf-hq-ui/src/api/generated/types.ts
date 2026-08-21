@@ -296,8 +296,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Clear current session
-         * @description Clears the browser session cookie for the current user.
+         * Revoke and clear current session
+         * @description Revokes every valid bearer token or session cookie presented with the request, then expires the browser session cookie. The operation is idempotent and also succeeds for an anonymous request.
          */
         post: operations["logoutSession"];
         delete?: never;
@@ -9885,7 +9885,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Session cleared */
+            /** @description Presented session credentials revoked and browser cookie cleared */
             200: {
                 headers: {
                     /** @description Expired session cookie. */

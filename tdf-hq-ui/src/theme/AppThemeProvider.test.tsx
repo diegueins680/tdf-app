@@ -187,4 +187,22 @@ describe('AppThemeProvider', () => {
       JSON.stringify({ id: 'appearance-system', code: 'system' }),
     );
   });
+
+  it('keeps the application usable when the public catalog payload is malformed', async () => {
+    mockListPublicBatch.mockResolvedValue({});
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <AppThemeProvider><ThemeProbe /></AppThemeProvider>
+        </QueryClientProvider>,
+      );
+      await flushPromises();
+    });
+
+    const probe = mountNode.querySelector('button');
+    await waitForCondition(() => probe?.dataset['preferenceId'] === 'emergency:appearance-modes:system');
+    expect(probe?.dataset['preference']).toBe('system');
+    expect(probe?.dataset['mode']).toBe('light');
+  });
 });

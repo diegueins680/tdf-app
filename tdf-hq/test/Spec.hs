@@ -514,7 +514,12 @@ import TDF.Config
       smtpUseTLS,
       supportedCurrencies )
 import TDF.Version (VersionInfo (..), getVersionInfo)
-import TDF.Seed (seededCredentialSeedingAllowed, seededCredentialSecrets)
+import TDF.Seed
+    ( seededCredentialSeedingAllowed
+    , seededCredentialSecrets
+    , syntheticPersonaPassword
+    , syntheticPersonaSeedingAllowed
+    )
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
@@ -1982,6 +1987,26 @@ main = hspec $ do
                 , ("TDF_SEED_TOKEN_PREFIX", "isolated-fixture-token-prefix")
                 ]
                 `shouldBe` Just ("isolated-fixture-password", "isolated-fixture-token-prefix")
+
+    describe "syntheticPersonaSeedingAllowed" $ do
+        it "requires both an explicit flag and an explicit local or test environment" $ do
+            syntheticPersonaSeedingAllowed [] `shouldBe` False
+            syntheticPersonaSeedingAllowed
+                [("TDF_ENABLE_SYNTHETIC_PERSONAS", "true"), ("NODE_ENV", "test")]
+                `shouldBe` True
+            syntheticPersonaSeedingAllowed
+                [("TDF_ENABLE_SYNTHETIC_PERSONAS", "true"), ("NODE_ENV", "production")]
+                `shouldBe` False
+            syntheticPersonaSeedingAllowed
+                [("TDF_ENABLE_SYNTHETIC_PERSONAS", "true"), ("NODE_ENV", "test"), ("FLY_APP_NAME", "tdf-hq")]
+                `shouldBe` False
+
+        it "requires a runtime-only persona password with at least sixteen characters" $ do
+            syntheticPersonaPassword [] `shouldBe` Nothing
+            syntheticPersonaPassword [("TDF_PERSONA_TEST_PASSWORD", "short")]
+                `shouldBe` Nothing
+            syntheticPersonaPassword [("TDF_PERSONA_TEST_PASSWORD", "fiction-only-credential")]
+                `shouldBe` Just "fiction-only-credential"
 
     describe "validateSeedDatabaseStartup" $ do
         it "allows database seeding in local development" $

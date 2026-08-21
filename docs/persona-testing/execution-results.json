@@ -1,0 +1,289 @@
+{
+  "schemaVersion": 1,
+  "baseline": {
+    "repository": "diegueins680/tdf-app",
+    "ref": "origin/main",
+    "commit": "560ac9954b655ba8aa719963a2c890110b74a232",
+    "mobileSubmoduleCommit": "e1f9707eb130ec24892b544e0f470d254d4b2176",
+    "workspace": "isolated detached worktree",
+    "productionTouched": false,
+    "stagingTouched": false
+  },
+  "environment": {
+    "executedAt": "2026-08-21",
+    "operatingSystem": "macOS 14.7.7 (23H723)",
+    "node": "24.8.0",
+    "npm": "11.6.0",
+    "stack": "3.7.1",
+    "ghc": "9.10.3",
+    "locale": "es-EC",
+    "timezone": "America/Guayaquil"
+  },
+  "runs": [
+    {
+      "id": "RUN-001",
+      "command": "npm ci",
+      "scope": "root/web dependencies",
+      "status": "passed-with-warnings",
+      "result": "1561 packages installed; npm reported 6 moderate and 6 high dependency audit findings.",
+      "evidence": "docs/persona-testing/execution-report.md#run-001"
+    },
+    {
+      "id": "RUN-002",
+      "command": "npm --prefix tdf-mobile ci",
+      "scope": "mobile dependencies",
+      "status": "passed-with-warnings",
+      "result": "1402 packages installed; npm reported 4 moderate and 35 high dependency audit findings.",
+      "evidence": "docs/persona-testing/execution-report.md#run-002"
+    },
+    {
+      "id": "RUN-003",
+      "command": "npm run quality:repo",
+      "scope": "baseline repository checks",
+      "status": "passed",
+      "result": "Formal audit: 8676 findings, 0 errors, 307 warnings; all repository Node test suites passed.",
+      "evidence": "docs/persona-testing/execution-report.md#run-003"
+    },
+    {
+      "id": "RUN-004",
+      "command": "npm run quality:ui",
+      "scope": "baseline web lint, typecheck, Jest, build",
+      "status": "passed-with-warnings",
+      "result": "Lint: 0 errors and 93 warnings; TypeScript passed; 162 suites and 1651 tests passed; production build passed with bundle-size warnings.",
+      "evidence": "docs/persona-testing/execution-report.md#run-004"
+    },
+    {
+      "id": "RUN-005",
+      "command": "REQUIRE_MOBILE_WORKSPACE=1 npm run quality:mobile",
+      "scope": "baseline mobile lint, typecheck, Jest",
+      "status": "failed",
+      "result": "47 suites passed and 2 failed: seven declared native destinations did not exist; one TicketCheckout component test exceeded the 5 second timeout.",
+      "evidence": "docs/persona-testing/execution-report.md#run-005"
+    },
+    {
+      "id": "RUN-006",
+      "command": "npm --prefix tdf-mobile test -- --runInBand __tests__/TicketCheckout.test.tsx",
+      "scope": "isolated mobile ticket checkout diagnosis",
+      "status": "passed",
+      "result": "14 of 14 tests passed; the previously timed test completed in 806 ms, making the original timeout an observed non-reproducing timing instability.",
+      "evidence": "docs/persona-testing/execution-report.md#run-006"
+    },
+    {
+      "id": "RUN-007",
+      "command": "REQUIRE_STACK=1 npm run quality:backend",
+      "scope": "backend build and tests",
+      "status": "blocked-environment",
+      "result": "Stack attempted to install GHC 9.10.3, but the runner had only about 1.3 GiB available and unpack failed. The incomplete local toolchain directory created by the run was removed; backend tests did not execute. Targeted HLint completed with seven existing hints outside the added seed block and exit status 1.",
+      "evidence": "docs/persona-testing/execution-report.md#run-007"
+    },
+    {
+      "id": "RUN-008",
+      "command": "npm run generate:features && npm run audit:features",
+      "scope": "web/mobile feature registry parity",
+      "status": "passed",
+      "result": "137 features, 156 web routes, and 38 mobile routes validated after replacing seven false native destinations with truthful web fallbacks.",
+      "evidence": "docs/persona-testing/execution-report.md#run-008"
+    },
+    {
+      "id": "RUN-009",
+      "command": "ALLOW_PENDING_FEATURE_DISPOSITIONS=1 npm run generate:feature-audit-reports",
+      "scope": "current feature, route, role and backend capability inventory",
+      "status": "passed-with-gate",
+      "result": "Generated a 2026-08-21 packet for 137 features, 3014 role/action/platform rows, and 548 endpoints. Forty endpoints remain pending explicit interface/security disposition; the default command still fails until they are resolved.",
+      "evidence": "docs/feature-discoverability-audit/2026-08-21/README.md"
+    },
+    {
+      "id": "RUN-010",
+      "command": "npm run test:e2e:web",
+      "scope": "isolated public/auth web journeys",
+      "status": "passed",
+      "result": "15 passed and 2 expected project-specific skips in 1.3 minutes. Chromium desktop/phone/tablet covered login, UI signup, public discovery and a public guest-ticket hold; Firefox and WebKit covered the critical auth path. Axe serious/critical violations, unexpected console errors and user-relevant failed requests were zero in instrumented cases.",
+      "evidence": "docs/persona-testing/execution-report.md#run-010"
+    },
+    {
+      "id": "RUN-011",
+      "command": "REQUIRE_MOBILE_WORKSPACE=1 npm run quality:mobile",
+      "scope": "post-fix mobile lint, typecheck, Jest",
+      "status": "passed",
+      "result": "Lint and typecheck passed; 49 suites and 256 tests passed in 33.153 seconds. The earlier TicketCheckout timeout did not recur.",
+      "evidence": "docs/persona-testing/execution-report.md#run-011"
+    },
+    {
+      "id": "RUN-012",
+      "command": "npm run quality:repo",
+      "scope": "post-change repository checks",
+      "status": "passed",
+      "result": "Formal audit remained at 8676 findings, 0 errors and 307 warnings; all repository suites passed, including 3 persona-program tests. The focused updated CI-pipeline suite passed 16 of 16 tests.",
+      "evidence": "docs/persona-testing/execution-report.md#run-012"
+    },
+    {
+      "id": "RUN-013",
+      "command": "npm run quality:ui",
+      "scope": "post-change web lint, typecheck, Jest and build",
+      "status": "passed-with-warnings",
+      "result": "Lint passed with the baseline 93 warnings and 0 errors after the follow-up lint run; typecheck passed; 162 suites and 1652 tests passed; production build and bundle budget passed with the existing large-chunk warning. A final focused 3-suite/7-test regression run passed after the memoization-only lint correction.",
+      "evidence": "docs/persona-testing/execution-report.md#run-013"
+    },
+    {
+      "id": "RUN-014",
+      "command": "REQUIRE_STACK=1 npm run quality:backend",
+      "scope": "backend retry after disk capacity was restored",
+      "status": "failed",
+      "result": "The cold retry installed GHC 9.10.3 and compiled the backend through TDF.Seed, exposing two parseJSON visibility errors in the added persona catalog decoders. No tests executed in this attempt; the import was corrected before rerunning.",
+      "evidence": "docs/persona-testing/execution-report.md#run-014"
+    },
+    {
+      "id": "RUN-015",
+      "command": "REQUIRE_STACK=1 npm run quality:backend",
+      "scope": "final post-fix backend build and tests",
+      "status": "passed-with-warnings",
+      "result": "GHC 9.10.3 built and linked the backend executable and test target; Hspec passed 2419 examples with 0 failures, including both synthetic-persona seeding guard tests. Stack retained existing allow-newer/http2 and Cabal missing-other-modules warnings.",
+      "evidence": "docs/persona-testing/execution-report.md#run-015"
+    },
+    {
+      "id": "RUN-016",
+      "command": "hlint tdf-hq/src/TDF/Seed.hs",
+      "scope": "final targeted backend seed lint",
+      "status": "failed-baseline",
+      "result": "Exit 1 with seven existing hints outside the added synthetic-persona block; no new hint points into that block.",
+      "evidence": "docs/persona-testing/execution-report.md#run-016"
+    },
+    {
+      "id": "RUN-017",
+      "command": "ormolu --mode check tdf-hq/src/TDF/Seed.hs tdf-hq/test/Spec.hs",
+      "scope": "changed Haskell file formatting check",
+      "status": "failed-baseline",
+      "result": "The check emitted an extensive whole-file reformat diff for legacy formatting beginning with Seed.hs, so the changed-file set is not clean. A redundant output-suppressed confirmation was stopped after more than four minutes with exit 130; no formatting rewrite was applied.",
+      "evidence": "docs/persona-testing/execution-report.md#run-017"
+    },
+    {
+      "id": "RUN-018",
+      "command": "isolated PostgreSQL 16 init; compiled backend boot with migrations and opt-in persona seed; SQL count/relationship assertions; second no-reset boot",
+      "scope": "synthetic persona database lifecycle and idempotency",
+      "status": "passed",
+      "result": "Health passed. Both boots produced 25 account parties, 25 active bcrypt credentials and 47 active canonical role assignments across 21 roles, exactly matching the 25 account-bearing fixtures; duplicate reserved emails and pre-login tokens were zero.",
+      "evidence": "docs/persona-testing/execution-report.md#run-018"
+    },
+    {
+      "id": "RUN-019",
+      "command": "isolated PER-02 login, preserved-cookie logout replay, and sanitized PostgreSQL token-state query",
+      "scope": "pre-fix authentication and logout slice",
+      "status": "failed",
+      "result": "Login and session resolution succeeded, but a copied pre-logout cookie still resolved PER-02 after logout and its server token remained active, confirming PT-011. Token and password evidence were redacted.",
+      "evidence": "docs/persona-testing/execution-report.md#run-019"
+    },
+    {
+      "id": "RUN-020",
+      "command": "stack test tdf-hq --test-arguments='--match sessionServer'; repeated isolated PER-02 login/logout/stale-cookie and SQL assertions",
+      "scope": "logout token-revocation regression",
+      "status": "passed",
+      "result": "Focused backend regression passed 2 examples with 0 failures. In the live PostgreSQL flow, one active PER-02 token before logout became zero afterward and replay of the preserved cookie returned null.",
+      "evidence": "docs/persona-testing/execution-report.md#run-020"
+    },
+    {
+      "id": "RUN-021",
+      "command": "npm run generate:api (tdf-hq-ui and tdf-mobile)",
+      "scope": "logout OpenAPI contract and generated web/mobile clients",
+      "status": "passed",
+      "result": "Both generators completed successfully from the updated bearer-or-cookie, anonymous-idempotent logout contract.",
+      "evidence": "docs/persona-testing/execution-report.md#run-021"
+    },
+    {
+      "id": "RUN-022",
+      "command": "REQUIRE_STACK=1 npm run quality:backend",
+      "scope": "final backend build and complete test suite after PT-011 and OpenAPI changes",
+      "status": "passed-with-warnings",
+      "result": "GHC 9.10.3 built and linked the final executable and test target; Hspec passed 2420 examples with 0 failures. Existing allow-newer/http2 and Cabal missing-other-modules warnings remain.",
+      "evidence": "docs/persona-testing/execution-report.md#run-022"
+    },
+    {
+      "id": "RUN-023",
+      "command": "REQUIRE_MOBILE_WORKSPACE=1 npm run generate:api; npm run typecheck:ui; npm --prefix tdf-mobile run typecheck; npm run generate:persona-program; npm run test:persona-program; npm run quality:repo",
+      "scope": "final contracts, generated persona artifacts, TypeScript and repository gates",
+      "status": "passed-with-warnings",
+      "result": "Both API clients regenerated; UI/mobile typechecks passed; 26 personas, 78 stories and 17 epics validated with 3 tests; repository quality passed with 8676 formal findings, 0 errors and 307 warnings plus all Node suites green.",
+      "evidence": "docs/persona-testing/execution-report.md#run-023"
+    },
+    {
+      "id": "RUN-024",
+      "command": "hlint src/TDF/API.hs src/TDF/ServerAuth.hs",
+      "scope": "changed Haskell authentication route/handler lint",
+      "status": "failed-baseline",
+      "result": "Exit 1 with 30 pre-existing hints; none targets the changed SessionAPI route or logout handler.",
+      "evidence": "docs/persona-testing/execution-report.md#run-024"
+    },
+    {
+      "id": "RUN-025",
+      "command": "git diff --check; jq parse assertions; traceability line-count assertion; git ls-remote origin refs/heads/main",
+      "scope": "final workspace integrity and latest-main verification",
+      "status": "passed",
+      "result": "No whitespace errors; machine-readable files parsed; traceability contains 78 story rows plus header; remote main still equals baseline 560ac9954b655ba8aa719963a2c890110b74a232.",
+      "evidence": "docs/persona-testing/execution-report.md#run-025"
+    },
+    {
+      "id": "RUN-026",
+      "command": "npm run test:catalog-list-audit; npm run audit:catalog-lists; npx playwright test --project=webkit-critical --repeat-each=3; npm run build --workspace=tdf-hq-ui; npx playwright test; npm run quality:repo",
+      "scope": "draft-PR catalog-governance and WebKit CI regression follow-up",
+      "status": "passed-with-diagnostic-failure",
+      "result": "Catalog discovery passed 1/1 and all 871 candidates were reviewed with no stale decisions. Three repeated WebKit critical runs passed. A disclosed dev-server run had 10 passes, 2 skips and 5 module-compilation timeouts; the production build passed and the clean built-preview rerun passed 15 tests with 2 expected skips and zero retries. Repository quality passed with 0 formal errors and 307 warnings.",
+      "evidence": "docs/persona-testing/execution-report.md#run-026"
+    }
+  ],
+  "storyResults": [
+    {
+      "testId": "E2E-PER-02-PROFILE",
+      "status": "direct-observation",
+      "coverage": "partial-story",
+      "command": "isolated local backend HTTP journey with PostgreSQL state assertions",
+      "findingIds": ["PT-011"],
+      "fixOrIssue": "Implemented locally with backend regression and OpenAPI/client updates; no GitHub issue or PR created without authorization.",
+      "evidence": "docs/persona-testing/execution-report.md#run-020",
+      "reason": "Verified deterministic account/role seeding, successful password login, backend-composed session, logout token revocation and stale-cookie denial. Profile editing, consent preferences, browser/mobile history, expiry and the full UI journey remain unexecuted."
+    },
+    {
+      "testId": "PW-PER-01-AUTH",
+      "status": "verified-automated",
+      "coverage": "partial-story",
+      "command": "npm run test:e2e:web",
+      "findingIds": ["PT-002", "PT-003", "PT-009", "PT-010"],
+      "fixOrIssue": "Implemented locally; no GitHub issue or PR created without authorization.",
+      "evidence": "docs/persona-testing/execution-report.md#pw-per-01-auth",
+      "reason": "Verified protected-intent redirect, rejected login recovery, landmark integrity, serious/critical axe scan, console and request cleanliness. UI registration, verification email, expiry and reset-token lifecycle still require an integrated backend environment."
+    },
+    {
+      "testId": "PW-PER-01-DISCOVERY",
+      "status": "verified-automated",
+      "coverage": "partial-story",
+      "command": "npm run test:e2e:web",
+      "findingIds": ["PT-002", "PT-003", "PT-009", "PT-010"],
+      "fixOrIssue": "Implemented locally; no GitHub issue or PR created without authorization.",
+      "evidence": "docs/persona-testing/execution-report.md#pw-per-01-discovery",
+      "reason": "Verified city search, state preservation, detail navigation, 320 CSS-pixel reflow and automated axe checks with an isolated API. Profession, genre, event and venue terms against a real local database remain unexecuted."
+    },
+    {
+      "testId": "PW-PER-01-TICKET-OFFER",
+      "status": "verified-automated",
+      "coverage": "partial-story",
+      "command": "npm run test:e2e:web",
+      "findingIds": ["PT-003", "PT-009", "PT-010"],
+      "fixOrIssue": "Automated locally; no GitHub issue or PR created without authorization.",
+      "evidence": "docs/persona-testing/execution-report.md#pw-per-01-ticket-offer",
+      "reason": "Verified public tier visibility, versioned-term acceptance, idempotent guest hold request, capability-scoped tracker, authoritative server total and explicit unpaid/unissued state with no provider enabled. Sold-out, stale-capacity and back-navigation edge cases remain unexecuted."
+    },
+    {
+      "testId": "MOB-PER-02-TICKET-IDEMPOTENCY",
+      "status": "verified-automated",
+      "coverage": "component-and-storage-contract",
+      "command": "REQUIRE_MOBILE_WORKSPACE=1 npm run quality:mobile",
+      "findingIds": ["PT-006"],
+      "fixOrIssue": "Existing mobile behavior retained; stable persona test identifier added.",
+      "evidence": "docs/persona-testing/execution-report.md#mob-per-02-ticket-idempotency",
+      "reason": "Verified cancellation release, ambiguous-result pending guidance, idempotency-key reuse/rotation, one-retry bound and privacy of storage keys with mocks. No real or sandbox provider was contacted; verified webhook reconciliation remains an external/integration gate."
+    }
+  ],
+  "humanParticipants": {
+    "count": 0,
+    "testimonyCollected": false,
+    "participantScoresCalculated": false
+  }
+}
