@@ -31,6 +31,8 @@ import { parseArtistJson, parseArtistTextItems } from '../utils/artistProfileCon
 import ArtistFansList from '../components/ArtistFansList';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { formatDateForUser } from '../utils/formatters';
+import { getAnalyticsClient } from '../analytics/posthog';
+import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 
 interface ReleaseCardProps {
   release: ArtistReleaseDTO;
@@ -187,6 +189,7 @@ export default function ArtistPublicPage() {
       void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
       void qc.invalidateQueries({ queryKey: ['public-artist', segment] });
+      if (!isFollowing) captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed');
     },
   });
 

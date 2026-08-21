@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "registryVersion": "2026-08-14",
+  "registryVersion": "2026-08-20",
   "defaultLocale": "es",
   "supportedLocales": ["es", "en"],
   "groups": [
@@ -368,7 +368,7 @@
       "permissions": { "discover": {}, "view": {}, "create": { "rolesAny": ["Admin", "Artist", "Artista"] } },
       "routeAction": "create",
       "mobilePresentation": { "kind": "native", "destination": "/createArtistProfile", "documentedException": null },
-      "accessRequestEligible": false
+      "accessRequestEligible": true
     },
     {
       "id": "marketplace",

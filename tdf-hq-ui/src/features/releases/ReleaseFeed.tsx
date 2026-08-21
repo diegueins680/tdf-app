@@ -205,7 +205,7 @@ function AuthNotices(props: AuthNoticesProps) {
             <Button
               disabled={false}
               component={RouterLink}
-              to="/login?signup=1&roles=Fan&redirect=/fans"
+              to="/login?signup=1&intent=follow_artists&redirect=/fans"
               size="small"
               variant="outlined"
             >

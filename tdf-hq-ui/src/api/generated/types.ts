@@ -6425,6 +6425,12 @@ export interface components {
         GoogleLoginRequest: {
             /** @description Google ID token returned by Google Identity Services */
             idToken: string;
+            /** @description Optional consent to receive TDF product and marketing updates when creating an account. */
+            marketingOptIn?: boolean;
+            /** @description Account terms acceptance when Google is used from signup. */
+            termsAccepted?: boolean;
+            /** @description Version of the account terms accepted during Google signup. */
+            termsVersion?: string;
         };
         SignupRequest: {
             /** @example Diego */
@@ -6443,6 +6449,12 @@ export interface components {
              * @example changeme123
              */
             password: string;
+            /** @description Optional consent to receive TDF product and marketing updates. */
+            marketingOptIn?: boolean;
+            /** @description Account terms acceptance. New first-party clients send true with termsVersion. */
+            termsAccepted?: boolean;
+            /** @description Version of the account terms accepted during signup. */
+            termsVersion?: string;
             /** @description Artist or band ids to follow after account creation; this does not assign a security role. */
             fanArtistIds?: number[];
             /**
@@ -6458,6 +6470,8 @@ export interface components {
             partyId?: number;
             roles?: components["schemas"]["Role"][];
             modules?: string[];
+            /** @description Present on Google authentication to distinguish a newly created account from an existing login. */
+            accountCreated?: boolean;
         };
         SessionResponse: {
             username: string;
