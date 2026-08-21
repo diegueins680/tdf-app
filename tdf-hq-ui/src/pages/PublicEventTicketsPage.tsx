@@ -361,7 +361,7 @@ export default function PublicEventTicketsPage() {
     : '';
 
   return (
-    <Box component="main" id="main-content" sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 4, md: 7 } }}>
+    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 4, md: 7 } }}>
       <Container maxWidth="md">
         <Stack spacing={3}>
           <Button component={RouterLink} to={`/eventos/${eventId}`} sx={{ alignSelf: 'flex-start' }}>

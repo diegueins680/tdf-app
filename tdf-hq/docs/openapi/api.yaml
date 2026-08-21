@@ -376,12 +376,16 @@ paths:
                 nullable: true
   /session/logout:
     post:
-      summary: Clear current session
-      description: Clears the browser session cookie for the current user.
+      summary: Revoke and clear current session
+      description: Revokes every valid bearer token or session cookie presented with the request, then expires the browser session cookie. The operation is idempotent and also succeeds for an anonymous request.
       operationId: logoutSession
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+        - { }
       responses:
         '200':
-          description: Session cleared
+          description: Presented session credentials revoked and browser cookie cleared
           headers:
             Set-Cookie:
               description: Expired session cookie.
@@ -5464,6 +5468,10 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: tdf_session
   parameters:
     PublicEventId:
       name: eventId
