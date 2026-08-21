@@ -6,6 +6,7 @@
 
 module TDF.Server.SocialEventsHandlers (
     publicUpcomingEventsServer,
+    collectMatchingRows,
     socialEventsServer,
     stripeWebhookServer,
     validateRsvpStatus,
@@ -287,9 +288,39 @@ publicUpcomingEventsServer mCity mStartAfter mLimit = do
     let startAfter = fromMaybe now mStartAfter
         limit = min 200 (max 1 (fromMaybe 50 mLimit))
         filters = [SocialEventStartTime >=. startAfter]
-    rows <- liftIO $ runSqlPool (selectVisibleSocialEvents filters (Asc SocialEventStartTime) (limit * 3) 0) envPool
-    events <- liftIO $ runSqlPool (catMaybes <$> mapM (publicUpcomingEventRow mCity) rows) envPool
-    pure (take limit events)
+        pageSize = max 50 (limit * 3)
+    liftIO $
+        runSqlPool
+            ( collectMatchingRows
+                limit
+                pageSize
+                (selectVisibleSocialEvents filters (Asc SocialEventStartTime))
+                (publicUpcomingEventRow mCity)
+            )
+            envPool
+
+collectMatchingRows ::
+    Monad m =>
+    Int ->
+    Int ->
+    (Int -> Int -> m [a]) ->
+    (a -> m (Maybe b)) ->
+    m [b]
+collectMatchingRows requestedLimit requestedPageSize loadPage matchRow
+    | requestedLimit <= 0 = pure []
+    | otherwise = go 0 []
+  where
+    pageSize = max 1 requestedPageSize
+
+    go offset matches
+        | length matches >= requestedLimit = pure (take requestedLimit matches)
+        | otherwise = do
+            rows <- loadPage pageSize offset
+            pageMatches <- catMaybes <$> mapM matchRow rows
+            let nextMatches = matches <> pageMatches
+            if length rows < pageSize
+                then pure (take requestedLimit nextMatches)
+                else go (offset + length rows) nextMatches
 
 publicUpcomingEventRow :: Maybe T.Text -> Entity SocialEvent -> SqlPersistT IO (Maybe PublicUpcomingEventDTO)
 publicUpcomingEventRow mCity (Entity eventKey eventRow) = do
@@ -8603,7 +8634,7 @@ selectVisibleSocialEvents filters dateOrder limit offset = do
             "SELECT ?? FROM "
                 <> eventTable
                 <> combinedFilterClause
-                <> orderClause (Just PrefixTableName) backend [dateOrder]
+                <> orderClause (Just PrefixTableName) backend [dateOrder, Asc SocialEventId]
     query <- getConnLimitOffset (limit, offset) orderedQuery
     rawSql query filterValues
 

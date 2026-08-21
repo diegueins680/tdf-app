@@ -370,6 +370,7 @@ import TDF.Server.SocialSync
       validateSocialSyncPermalink,
       validateSocialSyncMediaUrls )
 import TDF.Server.SocialEventsHandlers (
+    collectMatchingRows,
     normalizeBudgetLineType,
     normalizeFinanceDirection,
     normalizeFinanceEntryStatus,
@@ -756,6 +757,16 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    describe "public upcoming event pagination" $ do
+        it "continues past filtered pages until the requested limit is filled" $ do
+            let candidates = [1 .. 8 :: Int]
+                loadPage pageSize offset =
+                    pure (take pageSize (drop offset candidates))
+                keepEven candidate =
+                    pure (if even candidate then Just candidate else Nothing)
+            result <- collectMatchingRows 3 2 loadPage keepEven
+            result `shouldBe` [2, 4, 6]
+
     describe "DDEX canonical write JSON contracts" $ do
         it "accepts export writes with only a canonical standard-version id" $ do
             let payload = "{\"exportReleaseId\":42,\"exportPartnerId\":7,\"exportStandardVersionId\":\"40000000-0000-4000-8000-000000000001\"}"

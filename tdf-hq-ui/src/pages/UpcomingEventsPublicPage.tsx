@@ -30,10 +30,15 @@ export default function UpcomingEventsPublicPage() {
   useDocumentTitle('Próximos eventos');
   const [city, setCity] = useState('');
   const startAfter = useMemo(() => new Date().toISOString(), []);
+  const cityFilter = city.trim();
 
   const eventsQuery = useQuery({
-    queryKey: ['public-upcoming-events', startAfter],
-    queryFn: () => SocialEventsAPI.listPublicUpcomingEvents({ startAfter, limit: 50 }),
+    queryKey: ['public-upcoming-events', startAfter, cityFilter],
+    queryFn: () => SocialEventsAPI.listPublicUpcomingEvents({
+      city: cityFilter || undefined,
+      startAfter,
+      limit: 50,
+    }),
     staleTime: 60_000,
   });
 
