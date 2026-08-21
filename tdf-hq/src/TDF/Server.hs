@@ -188,6 +188,7 @@ import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
 import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
 import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Server.Directory as DirectoryServer
+import qualified TDF.Server.Reviews as ReviewsServer
 import           TDF.ServerFeedback (feedbackServer)
 import qualified TDF.Contracts.Server as Contracts
 import           TDF.ServerProposals (proposalsServer)
@@ -736,6 +737,7 @@ server env =
   :<|> CatalogServer.publicCatalogServer
   :<|> DirectoryServer.directoryPublicServer
   :<|> publicUpcomingEventsServer
+  :<|> ReviewsServer.reviewsPublicServer
   :<|> protectedServer
   :<|> marketplacePublicServer
   :<|> radioPresencePublicServer
@@ -3793,6 +3795,7 @@ protectedServer user =
   :<|> DirectoryServer.directoryProtectedServer user
   :<|> OperationsServer.operationsServer user
   :<|> CommerceOperationsServer.commerceOperationsServer user
+  :<|> ReviewsServer.reviewsProtectedServer user
 
 navigationPreferencesServer :: AuthedUser -> ServerT NavigationPreferencesAPI AppM
 navigationPreferencesServer user =

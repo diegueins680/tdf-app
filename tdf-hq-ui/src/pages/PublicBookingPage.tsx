@@ -52,6 +52,7 @@ import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore'
 import { env } from '../utils/env';
 import { useSession } from '../session/SessionContext';
 import { resolveRuntimeCurrency } from '../utils/formatters';
+import ExperienceReviews from '../components/reviews/ExperienceReviews';
 
 interface FormState {
   fullName: string;
@@ -2427,6 +2428,15 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
           </Stack>
         </CardContent>
       </Card>
+      {form.serviceOfferingId && (
+        <Box sx={{ mt: 3 }}>
+          <ExperienceReviews
+            targetKind="service_offering"
+            targetId={form.serviceOfferingId}
+            title="Reseñas del servicio"
+          />
+        </Box>
+      )}
       <Snackbar
         open={snackbar.open}
         message={snackbar.message}

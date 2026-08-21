@@ -7014,16 +7014,6 @@
       "reviewed": true
     },
     {
-      "id": "9541c8b51b5a0ba2a5c0",
-      "classification": "security-system-registry",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the migration list could break deployment execution or skip required schema changes.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
-      "reviewed": true
-    },
-    {
       "id": "86d102f7ab4e7888140b",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
@@ -8611,6 +8601,86 @@
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
       "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "9fa6b8a8aff3c73f0707",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the migration list could break deployment execution or skip required schema changes.",
+      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
+      "reviewed": true
+    },
+    {
+      "id": "6e9a4e9296cdc51a7fa3",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Review target kinds are cross-client business data and require one governed source shared by API validation, persistence, and both clients.",
+      "reviewed": true
+    },
+    {
+      "id": "1607a77029a8b28c4e7f",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Verified interaction source kinds are shared business data whose eligibility mapping must remain consistent across the API, persistence, and both clients.",
+      "reviewed": true
+    },
+    {
+      "id": "076e28494a6b4db501b5",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break abuse-control accounting or permit an unknown rate-limit scope.",
+      "justification": "Rate-limit scopes are closed security mechanics validated by the database rather than selectable or displayable business data.",
+      "reviewed": true
+    },
+    {
+      "id": "9debece52815e02a07a9",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The persistence constraint mirrors cross-client review target kinds and must converge on their governed domain model.",
+      "reviewed": true
+    },
+    {
+      "id": "0ad29b3306e823682bf8",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The persistence constraint mirrors verified interaction source kinds and must converge on their governed eligibility model.",
+      "reviewed": true
+    },
+    {
+      "id": "f99ba8fe6f37a8606d3d",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-domain",
+      "risk": "Invalid moderation transitions could expose removed content or hide published reviews without an auditable state model.",
+      "justification": "Review publication and moderation statuses are governed workflow states and should converge on the canonical workflow model.",
+      "reviewed": true
+    },
+    {
+      "id": "ce63e73628f073165d01",
+      "classification": "governed-reference-data",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing identifier parsing modes could accept malformed evidence identifiers or reject valid persisted identifiers.",
+      "justification": "DecimalId and UuidId are closed parser dispatch constructors, not selectable or reportable domain values.",
       "reviewed": true
     }
   ]

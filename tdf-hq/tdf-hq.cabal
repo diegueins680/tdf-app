@@ -46,6 +46,7 @@ executable tdf-hq-exe
     TDF.API.WhatsApp
     TDF.API.DDEX
     TDF.API.Directory
+    TDF.API.Reviews
     TDF.API.Catalog
     TDF.API.ServiceStorefront
     TDF.API.ServiceStorefrontTypes
@@ -123,6 +124,7 @@ executable tdf-hq-exe
     TDF.Server.EventResearch
     TDF.Server.DDEX
     TDF.Server.Directory
+    TDF.Server.Reviews
     TDF.Server.Catalog
     TDF.Server.ServiceStorefront
     TDF.ServerLiveSessions

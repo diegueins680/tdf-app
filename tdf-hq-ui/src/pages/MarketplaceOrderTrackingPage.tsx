@@ -33,6 +33,7 @@ import {
   loadMarketplaceLookupToken,
 } from '../api/marketplace';
 import { getOrderStatusMeta } from '../utils/marketplace';
+import ExperienceReviews from '../components/reviews/ExperienceReviews';
 
 const requestLabels: Record<MarketplaceCustomerRequestType, string> = {
   sale_cancellation: 'Cancelar antes de la entrega',
@@ -442,6 +443,15 @@ export default function MarketplaceOrderTrackingPage() {
                 </Stack>
               </CardContent>
             </Card>
+
+            {Array.from(new Map(order.moItems.map((item) => [item.moiListingId, item])).values()).map((item) => (
+              <ExperienceReviews
+                key={item.moiListingId}
+                targetKind="marketplace_listing"
+                targetId={item.moiListingId}
+                title={`Reseñas de ${item.moiTitle || 'este artículo'}`}
+              />
+            ))}
 
             {fulfillmentTimeline.length > 0 && (
               <Card variant="outlined">

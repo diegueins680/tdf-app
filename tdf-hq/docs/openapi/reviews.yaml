@@ -1,0 +1,140 @@
+openapi: 3.0.0
+info: { title: TDF Verified Reviews API, version: 1.0.0 }
+paths:
+  /reviews/{targetKind}/{targetId}:
+    get:
+      tags: [Verified reviews]
+      operationId: listPublicExperienceReviews
+      summary: List public reviews backed by completed interactions
+      security: []
+      parameters:
+        - { $ref: '#/components/parameters/TargetKind' }
+        - { $ref: '#/components/parameters/TargetId' }
+        - { name: cursor, in: query, schema: { type: string, format: uuid } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+      responses:
+        '200':
+          description: Stable page of published verified reviews and its aggregate
+          content: { application/json: { schema: { $ref: '#/components/schemas/ExperienceReviewPage' } } }
+        '400': { description: Invalid target kind or identifier }
+        '404': { description: Review target not found }
+  /reviews/eligibility:
+    get:
+      tags: [Verified reviews]
+      operationId: listExperienceReviewEligibility
+      summary: List this account's completed, not-yet-reviewed interactions
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: targetKind, in: query, schema: { $ref: '#/components/schemas/ExperienceReviewTargetKind' } }
+        - { name: targetId, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: Private eligibility evidence for the authenticated account
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/ExperienceReviewEligibility' } }
+        '400': { description: Invalid or incomplete target filter }
+        '401': { description: Authentication required }
+  /reviews:
+    post:
+      tags: [Verified reviews]
+      operationId: createExperienceReview
+      summary: Publish one review for an eligible completed interaction
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string, minLength: 8, maxLength: 160 } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/ExperienceReviewCreate' } } }
+      responses:
+        '201':
+          description: Idempotent published verified review
+          content: { application/json: { schema: { $ref: '#/components/schemas/ExperienceReview' } } }
+        '400': { description: Invalid review payload }
+        '401': { description: Authentication required }
+        '409': { description: Interaction is ineligible, already reviewed, or the idempotency key conflicts }
+        '429': { description: Daily review limit exceeded }
+components:
+  parameters:
+    TargetKind:
+      name: targetKind
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/ExperienceReviewTargetKind' }
+    TargetId:
+      name: targetId
+      in: path
+      required: true
+      schema: { type: string }
+  schemas:
+    ExperienceReviewTargetKind:
+      type: string
+      enum: [event, marketplace_listing, service_offering, service_package]
+    ExperienceReviewSourceKind:
+      type: string
+      enum: [event_ticket_order, marketplace_order, service_booking, service_storefront_order]
+    ExperienceReviewAuthor:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: { type: string }
+        avatarUrl: { type: string, format: uri, nullable: true }
+    ExperienceReview:
+      type: object
+      additionalProperties: false
+      required: [id, targetKind, targetId, rating, status, createdAt, verified, sourceKind, author]
+      properties:
+        id: { type: string, format: uuid }
+        targetKind: { $ref: '#/components/schemas/ExperienceReviewTargetKind' }
+        targetId: { type: string }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        body: { type: string, nullable: true }
+        status: { type: string, enum: [published, hidden, removed] }
+        createdAt: { type: string, format: date-time }
+        verified: { type: boolean, enum: [true] }
+        sourceKind: { $ref: '#/components/schemas/ExperienceReviewSourceKind' }
+        author: { $ref: '#/components/schemas/ExperienceReviewAuthor' }
+    PublicExperienceReview:
+      allOf:
+        - { $ref: '#/components/schemas/ExperienceReview' }
+      description: Public projection; the private source identifier is never returned.
+    ExperienceReviewSummary:
+      type: object
+      additionalProperties: false
+      required: [targetKind, targetId, count]
+      properties:
+        targetKind: { $ref: '#/components/schemas/ExperienceReviewTargetKind' }
+        targetId: { type: string }
+        average: { type: number, minimum: 1, maximum: 5, nullable: true }
+        count: { type: integer, format: int64, minimum: 0 }
+    ExperienceReviewPage:
+      type: object
+      additionalProperties: false
+      required: [summary, items]
+      properties:
+        summary: { $ref: '#/components/schemas/ExperienceReviewSummary' }
+        items: { type: array, items: { $ref: '#/components/schemas/PublicExperienceReview' } }
+        nextCursor: { type: string, format: uuid, nullable: true }
+    ExperienceReviewEligibility:
+      type: object
+      additionalProperties: false
+      required: [targetKind, targetId, targetTitle, sourceKind, sourceId, completedAt]
+      properties:
+        targetKind: { $ref: '#/components/schemas/ExperienceReviewTargetKind' }
+        targetId: { type: string }
+        targetTitle: { type: string }
+        sourceKind: { $ref: '#/components/schemas/ExperienceReviewSourceKind' }
+        sourceId: { type: string, description: Private evidence identifier; available only to the eligible account. }
+        completedAt: { type: string, format: date-time }
+    ExperienceReviewCreate:
+      type: object
+      additionalProperties: false
+      required: [targetKind, targetId, sourceKind, sourceId, rating]
+      properties:
+        targetKind: { $ref: '#/components/schemas/ExperienceReviewTargetKind' }
+        targetId: { type: string }
+        sourceKind: { $ref: '#/components/schemas/ExperienceReviewSourceKind' }
+        sourceId: { type: string }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        body: { type: string, minLength: 10, maxLength: 2000, nullable: true }

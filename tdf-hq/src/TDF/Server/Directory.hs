@@ -80,6 +80,7 @@ directoryPublicServer =
   :<|> suggestDirectory
   :<|> directoryTaxonomies
   :<|> publicProfile
+  :<|> publicProfileByParty
   :<|> publicProfileReviews
   :<|> publicClassified
   :<|> publicEvent
@@ -280,6 +281,22 @@ publicProfile slugValue =
    <> "'reputation',jsonb_build_object('completeness',profile.completeness_score,'responseRate',profile.response_rate,'medianResponseMinutes',profile.median_response_minutes,'completed',profile.completed_interactions,'reviewAverage',profile.review_average,'reviewCount',profile.review_count),"
    <> "'canonicalUrl','/directorio/'||profile.slug) FROM directory_public_profile_resolution profile WHERE profile.requested_slug=?" )
     [PersistText (T.toLower (T.strip slugValue))]
+
+-- Artist detail already exposes its Party identifier. This resolver only
+-- returns the same safe public profile projection as the slug route and never
+-- adds the Party identifier to that projection.
+publicProfileByParty :: Int64 -> AppM Value
+publicProfileByParty partyId = do
+  canonicalSlug <- jsonOne err404
+    ( "SELECT to_jsonb(resolved.slug) FROM directory_profile source "
+   <> "JOIN directory_public_profile_resolution resolved "
+   <> "ON resolved.requested_slug=source.slug "
+   <> "WHERE source.subject_party_id=? "
+   <> "ORDER BY (source.id=resolved.id) DESC,source.updated_at DESC,source.id LIMIT 1" )
+    [PersistInt64 partyId]
+  case canonicalSlug of
+    String slugValue -> publicProfile slugValue
+    _ -> throwError err500
 
 publicProfileReviews slugValue mCursor mLimit = do
   let limit = min 50 (max 1 (fromMaybe 20 mLimit))
@@ -1209,8 +1226,9 @@ applyModerationTarget (Object values) action = case (KeyMap.lookup "kind" values
   (Just (String "classified"),Just (String targetId)) | action `elem` ["pause","remove"] -> do
     rawExecute "UPDATE classified SET status=CASE WHEN ?='pause' THEN 'paused' ELSE 'moderated' END,moderation_status=CASE WHEN ?='pause' THEN moderation_status ELSE 'blocked' END,updated_at=now() WHERE id::text=?" [PersistText action,PersistText action,PersistText targetId]
     rawExecute "DELETE FROM directory_search_document WHERE entity_kind='classified' AND entity_id=?" [PersistText targetId]
-  (Just (String "review"),Just (String targetId)) | action `elem` ["pause","remove"] ->
+  (Just (String "review"),Just (String targetId)) | action `elem` ["pause","remove"] -> do
     rawExecute "UPDATE directory_review SET status=CASE WHEN ?='pause' THEN 'hidden' ELSE 'removed' END,updated_at=now() WHERE id::text=?" [PersistText action,PersistText targetId]
+    rawExecute "UPDATE experience_review SET status=CASE WHEN ?='pause' THEN 'hidden' ELSE 'removed' END,updated_at=now() WHERE id::text=?" [PersistText action,PersistText targetId]
   _ -> pure ()
 applyModerationTarget _ _ = pure ()
 

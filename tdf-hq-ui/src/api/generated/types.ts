@@ -4040,6 +4040,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/directory/party-profiles/{partyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resolve an artist's public directory profile without exposing Party data in the response */
+        get: operations["getPublicDirectoryProfileByParty"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/directory/profiles/{slug}/reviews": {
         parameters: {
             query?: never;
@@ -4514,6 +4531,57 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["mergeDirectoryProfiles"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reviews/{targetKind}/{targetId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List public reviews backed by completed interactions */
+        get: operations["listPublicExperienceReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reviews/eligibility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List this account's completed, not-yet-reviewed interactions */
+        get: operations["listExperienceReviewEligibility"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish one review for an eligible completed interaction */
+        post: operations["createExperienceReview"];
         delete?: never;
         options?: never;
         head?: never;
@@ -9129,6 +9197,64 @@ export interface components {
             targetProfileId: string;
             reason: string;
         };
+        /** @enum {string} */
+        ExperienceReviewTargetKind: "event" | "marketplace_listing" | "service_offering" | "service_package";
+        ExperienceReviewSummary: {
+            targetKind: components["schemas"]["ExperienceReviewTargetKind"];
+            targetId: string;
+            average?: number | null;
+            /** Format: int64 */
+            count: number;
+        };
+        /** @enum {string} */
+        ExperienceReviewSourceKind: "event_ticket_order" | "marketplace_order" | "service_booking" | "service_storefront_order";
+        ExperienceReviewAuthor: {
+            name: string;
+            /** Format: uri */
+            avatarUrl?: string | null;
+        };
+        ExperienceReview: {
+            /** Format: uuid */
+            id: string;
+            targetKind: components["schemas"]["ExperienceReviewTargetKind"];
+            targetId: string;
+            rating: number;
+            body?: string | null;
+            /** @enum {string} */
+            status: "published" | "hidden" | "removed";
+            /** Format: date-time */
+            createdAt: string;
+            /** @enum {boolean} */
+            verified: true;
+            sourceKind: components["schemas"]["ExperienceReviewSourceKind"];
+            author: components["schemas"]["ExperienceReviewAuthor"];
+        };
+        /** @description Public projection; the private source identifier is never returned. */
+        PublicExperienceReview: components["schemas"]["ExperienceReview"];
+        ExperienceReviewPage: {
+            summary: components["schemas"]["ExperienceReviewSummary"];
+            items: components["schemas"]["PublicExperienceReview"][];
+            /** Format: uuid */
+            nextCursor?: string | null;
+        };
+        ExperienceReviewEligibility: {
+            targetKind: components["schemas"]["ExperienceReviewTargetKind"];
+            targetId: string;
+            targetTitle: string;
+            sourceKind: components["schemas"]["ExperienceReviewSourceKind"];
+            /** @description Private evidence identifier; available only to the eligible account. */
+            sourceId: string;
+            /** Format: date-time */
+            completedAt: string;
+        };
+        ExperienceReviewCreate: {
+            targetKind: components["schemas"]["ExperienceReviewTargetKind"];
+            targetId: string;
+            sourceKind: components["schemas"]["ExperienceReviewSourceKind"];
+            sourceId: string;
+            rating: number;
+            body?: string | null;
+        };
     };
     responses: {
         /** @description Invalid input */
@@ -9193,6 +9319,8 @@ export interface components {
         ClassifiedId: string;
         TargetKind: components["schemas"]["DirectoryEntityType"];
         TargetId: string;
+        "parameters-TargetKind": components["schemas"]["ExperienceReviewTargetKind"];
+        "parameters-TargetId": string;
     };
     requestBodies: never;
     headers: never;
@@ -17078,6 +17206,29 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    getPublicDirectoryProfileByParty: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Safe public profile projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDirectoryProfile"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
     listPublicDirectoryReviews: {
         parameters: {
             query?: {
@@ -17910,6 +18061,137 @@ export interface operations {
         responses: {
             /** @description Non-destructive */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPublicExperienceReviews: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                targetKind: components["parameters"]["parameters-TargetKind"];
+                targetId: components["parameters"]["parameters-TargetId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stable page of published verified reviews and its aggregate */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperienceReviewPage"];
+                };
+            };
+            /** @description Invalid target kind or identifier */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Review target not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listExperienceReviewEligibility: {
+        parameters: {
+            query?: {
+                targetKind?: components["schemas"]["ExperienceReviewTargetKind"];
+                targetId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private eligibility evidence for the authenticated account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperienceReviewEligibility"][];
+                };
+            };
+            /** @description Invalid or incomplete target filter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createExperienceReview: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExperienceReviewCreate"];
+            };
+        };
+        responses: {
+            /** @description Idempotent published verified review */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperienceReview"];
+                };
+            };
+            /** @description Invalid review payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Interaction is ineligible */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Daily review limit exceeded */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -75,6 +75,10 @@ jest.unstable_mockModule('../api/serviceStorefront', () => ({
   },
 }));
 
+jest.unstable_mockModule('../components/reviews/ExperienceReviews', () => ({
+  default: () => null,
+}));
+
 const { default: MixingMasteringPage } = await import('./MixingMasteringPage');
 
 const renderPage = () => {
