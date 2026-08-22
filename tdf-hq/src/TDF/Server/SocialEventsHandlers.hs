@@ -6,6 +6,7 @@
 
 module TDF.Server.SocialEventsHandlers (
     publicUpcomingEventsServer,
+    collectMatchingRows,
     socialEventsServer,
     stripeWebhookServer,
     validateRsvpStatus,
@@ -286,10 +287,88 @@ publicUpcomingEventsServer mCity mStartAfter mLimit = do
     now <- liftIO getCurrentTime
     let startAfter = fromMaybe now mStartAfter
         limit = min 200 (max 1 (fromMaybe 50 mLimit))
-        filters = [SocialEventStartTime >=. startAfter]
-    rows <- liftIO $ runSqlPool (selectVisibleSocialEvents filters (Asc SocialEventStartTime) (limit * 3) 0) envPool
-    events <- liftIO $ runSqlPool (catMaybes <$> mapM (publicUpcomingEventRow mCity) rows) envPool
-    pure (take limit events)
+    liftIO $
+        runSqlPool
+            ( do
+                rows <- selectPublicUpcomingSocialEvents mCity startAfter limit
+                catMaybes <$> mapM (publicUpcomingEventRow Nothing) rows
+            )
+            envPool
+
+-- Apply every anonymous-listing predicate before LIMIT. In particular, city
+-- and lifecycle eligibility must not be evaluated by recursively loading the
+-- complete future-event table when a city has few or no matches.
+selectPublicUpcomingSocialEvents ::
+    Maybe T.Text ->
+    UTCTime ->
+    Int ->
+    SqlPersistT IO [Entity SocialEvent]
+selectPublicUpcomingSocialEvents mCity startAfter limit = do
+    backend <- ask :: SqlPersistT IO SqlBackend
+    eventTable <- getEscapedRawName "social_event"
+    eventIdField <- getEscapedRawName "id"
+    eventStartField <- getEscapedRawName "start_time"
+    eventMetadataField <- getEscapedRawName "metadata"
+    publicEventView <- getEscapedRawName "directory_public_event"
+    backendName <- T.toCaseFold <$> getRDBMS
+    let eventIdColumn = eventTable <> "." <> eventIdField
+        eventStartColumn = eventTable <> "." <> eventStartField
+        eventMetadataColumn = eventTable <> "." <> eventMetadataField
+        metadataClause = visibleImportedMetadataClause backendName eventMetadataColumn
+        (cityClause, cityValues) = case mCity of
+            Nothing -> ("", [])
+            Just rawCity ->
+                let matchClause
+                        | "postgres" `T.isInfixOf` backendName =
+                            "position(lower(?) in lower(directory_event.city_name))>0"
+                        | "sqlite" `T.isInfixOf` backendName =
+                            "instr(lower(directory_event.city_name),lower(?))>0"
+                        | otherwise = "1=0"
+                 in ( " AND directory_event.city_name IS NOT NULL AND " <> matchClause
+                    , [PersistText (T.strip rawCity)]
+                    )
+        orderedQuery =
+            "SELECT ?? FROM "
+                <> eventTable
+                <> " INNER JOIN "
+                <> publicEventView
+                <> " AS directory_event ON directory_event.id="
+                <> eventIdColumn
+                <> " WHERE "
+                <> eventStartColumn
+                <> ">=? AND "
+                <> metadataClause
+                <> cityClause
+                <> " ORDER BY "
+                <> eventStartColumn
+                <> " ASC,"
+                <> eventIdColumn
+                <> " ASC"
+    query <- getConnLimitOffset (limit, 0) orderedQuery
+    rawSql query (toPersistValue startAfter : cityValues)
+
+collectMatchingRows ::
+    Monad m =>
+    Int ->
+    Int ->
+    (Int -> Int -> m [a]) ->
+    (a -> m (Maybe b)) ->
+    m [b]
+collectMatchingRows requestedLimit requestedPageSize loadPage matchRow
+    | requestedLimit <= 0 = pure []
+    | otherwise = go 0 []
+  where
+    pageSize = max 1 requestedPageSize
+
+    go offset matches
+        | length matches >= requestedLimit = pure (take requestedLimit matches)
+        | otherwise = do
+            rows <- loadPage pageSize offset
+            pageMatches <- catMaybes <$> mapM matchRow rows
+            let nextMatches = matches <> pageMatches
+            if length rows < pageSize
+                then pure (take requestedLimit nextMatches)
+                else go (offset + length rows) nextMatches
 
 publicUpcomingEventRow :: Maybe T.Text -> Entity SocialEvent -> SqlPersistT IO (Maybe PublicUpcomingEventDTO)
 publicUpcomingEventRow mCity (Entity eventKey eventRow) = do
@@ -8603,7 +8682,7 @@ selectVisibleSocialEvents filters dateOrder limit offset = do
             "SELECT ?? FROM "
                 <> eventTable
                 <> combinedFilterClause
-                <> orderClause (Just PrefixTableName) backend [dateOrder]
+                <> orderClause (Just PrefixTableName) backend [dateOrder, Asc SocialEventId]
     query <- getConnLimitOffset (limit, offset) orderedQuery
     rawSql query filterValues
 
