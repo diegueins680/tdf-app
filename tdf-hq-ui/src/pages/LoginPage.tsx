@@ -203,6 +203,9 @@ export default function LoginPage() {
   const signupNameInputRef = useRef<HTMLInputElement | null>(null);
   const signupEmailInputRef = useRef<HTMLInputElement | null>(null);
   const googleInitRef = useRef(false);
+  const googleCredentialHandlerRef = useRef<(response: { credential?: string }) => void | Promise<void>>(
+    () => undefined,
+  );
   const [googleButtonWidth, setGoogleButtonWidth] = useState(320);
   const [googleStatus, setGoogleStatus] = useState<string | null>(null);
   const [googleError, setGoogleError] = useState<string | null>(null);
@@ -468,6 +471,12 @@ export default function LoginPage() {
         }
         return;
       }
+      if (signupDialogOpen && !termsAccepted) {
+        const message = 'Acepta los términos y la política de privacidad para continuar con Google.';
+        setGoogleError(message);
+        setSignupFeedback({ type: 'error', message });
+        return;
+      }
       const credential = credentialResponse?.credential;
       const parsed = credential ? parseGoogleIdToken(credential) : null;
       const fallbackName = parsed?.name ?? parsed?.email ?? 'Cuenta Google';
@@ -501,7 +510,8 @@ export default function LoginPage() {
           partyId: response.partyId,
         });
         if (response.accountCreated === true) markWebSignupCompleted(response.partyId);
-        const targetPath = resolvePostAuthPath(requestedIntent, nextSession.roles, nextSession.modules, redirectPath);
+        const activeIntent = signupDialogOpen ? signupIntent : requestedIntent;
+        const targetPath = resolvePostAuthPath(activeIntent, nextSession.roles, nextSession.modules, redirectPath);
         login(nextSession, { remember: rememberDevice });
         const googleCreatedAccount = response.accountCreated === true;
         captureGrowthEvent(analytics, googleCreatedAccount ? 'signup_completed' : 'login_completed', {
@@ -529,8 +539,12 @@ export default function LoginPage() {
         setGoogleStatus(null);
       }
     },
-    [analytics, buildResolvedSession, googleLoginMutation, login, marketingOptIn, navigate, redirectPath, rememberDevice, requestedIntent, servicePreparing, signupDialogOpen, signupIntent],
+    [analytics, buildResolvedSession, googleLoginMutation, login, marketingOptIn, navigate, redirectPath, rememberDevice, requestedIntent, servicePreparing, signupDialogOpen, signupIntent, termsAccepted],
   );
+
+  useEffect(() => {
+    googleCredentialHandlerRef.current = handleGoogleCredential;
+  }, [handleGoogleCredential]);
 
   useEffect(() => {
     if (serviceStatus === 'ok') {
@@ -575,7 +589,9 @@ export default function LoginPage() {
         if (!googleInitRef.current) {
           google.initialize({
             client_id: googleClientId,
-            callback: handleGoogleCredential,
+            callback: (credentialResponse: { credential?: string }) => {
+              void googleCredentialHandlerRef.current(credentialResponse);
+            },
             ux_mode: 'popup',
             auto_select: false,
           });
@@ -609,7 +625,7 @@ export default function LoginPage() {
     return () => {
       cancelled = true;
     };
-  }, [googleButtonWidth, googleClientId, handleGoogleCredential, isMobile, signupDialogOpen]);
+  }, [googleButtonWidth, googleClientId, handleGoogleCredential, isMobile, signupDialogOpen, termsAccepted]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);

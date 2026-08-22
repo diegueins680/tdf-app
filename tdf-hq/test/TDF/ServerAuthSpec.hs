@@ -393,18 +393,19 @@ signupGoogleIdTokenSpec = describe "validateSignupGoogleIdToken" $ do
 
 signupTermsAcceptanceSpec :: Spec
 signupTermsAcceptanceSpec = describe "validateSignupTermsAcceptance" $ do
-  it "keeps legacy clients compatible while validating versioned first-party consent" $ do
+  it "keeps login-only clients compatible while accepting the supported first-party terms" $ do
     validateSignupTermsAcceptance Nothing Nothing `shouldBe` Right Nothing
     validateSignupTermsAcceptance (Just True) (Just " tdf-account-terms-v1 ")
       `shouldBe` Right (Just "tdf-account-terms-v1")
 
-  it "rejects partial, refused, empty, and oversized consent pairs" $ do
+  it "rejects partial, refused, unknown, empty, and oversized consent pairs" $ do
     let assertInvalid result = case result of
           Left err -> errHTTPCode err `shouldBe` 400
           Right value -> expectationFailure ("Expected invalid terms acceptance, got " <> show value)
     assertInvalid (validateSignupTermsAcceptance (Just False) (Just "tdf-account-terms-v1"))
     assertInvalid (validateSignupTermsAcceptance (Just True) Nothing)
     assertInvalid (validateSignupTermsAcceptance Nothing (Just "tdf-account-terms-v1"))
+    assertInvalid (validateSignupTermsAcceptance (Just True) (Just "unknown-terms-v9"))
     assertInvalid (validateSignupTermsAcceptance (Just True) (Just "   "))
     assertInvalid (validateSignupTermsAcceptance (Just True) (Just (T.replicate 101 "x")))
 
@@ -412,6 +413,7 @@ googleAccountCreationTermsSpec :: Spec
 googleAccountCreationTermsSpec = describe "validateGoogleAccountCreationTerms" $ do
   it "allows provisioning only when the Google request carries accepted versioned terms" $ do
     validateGoogleAccountCreationTerms (Just "tdf-account-terms-v1") `shouldBe` Right ()
+    validateGoogleAccountCreationTerms (Just "unknown-terms-v9") `shouldSatisfy` isLeft
     validateGoogleAccountCreationTerms Nothing `shouldSatisfy` isLeft
 
 signupPhoneSpec :: Spec

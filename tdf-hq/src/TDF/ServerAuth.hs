@@ -390,16 +390,19 @@ validateSignupTermsAcceptance :: Maybe Bool -> Maybe Text -> Either ServerError 
 validateSignupTermsAcceptance Nothing Nothing = Right Nothing
 validateSignupTermsAcceptance (Just True) (Just rawVersion)
   | let version = T.strip rawVersion
-  , not (T.null version)
-  , T.length version <= 100 = Right (Just version)
+  , version == supportedAccountTermsVersion = Right (Just version)
 validateSignupTermsAcceptance _ _ =
   Left err400
-    { errBody = "Terms acceptance and a valid termsVersion must be provided together"
+    { errBody = "Terms acceptance must reference the supported termsVersion"
     }
 
+supportedAccountTermsVersion :: Text
+supportedAccountTermsVersion = "tdf-account-terms-v1"
+
 validateGoogleAccountCreationTerms :: Maybe Text -> Either Text ()
-validateGoogleAccountCreationTerms (Just _) = Right ()
-validateGoogleAccountCreationTerms Nothing =
+validateGoogleAccountCreationTerms (Just version)
+  | version == supportedAccountTermsVersion = Right ()
+validateGoogleAccountCreationTerms _ =
   Left "Accept the terms and privacy policy through the signup flow before creating a Google account"
 
 normalizeAuthPhoneNumber :: Text -> Maybe Text
@@ -755,6 +758,21 @@ recordAuthActivity actionName LoginResponse{partyId = responsePartyId} acceptedT
       liftIO $ LogBuf.addLog LogBuf.LogWarning msg
     Right () -> pure ()
 
+recordAccountCreationConsent :: PartyId -> Text -> Text -> Maybe Bool -> SqlPersistT IO ()
+recordAccountCreationConsent actorId signupMethod acceptedTermsVersion marketingConsent = do
+  let partyIdValue = fromSqlKey actorId :: Int64
+  recordUserActivity
+    (Just actorId)
+    "auth"
+    (T.pack (show partyIdValue))
+    "account_consent_recorded"
+    (Just (object
+      [ "partyId" .= partyIdValue
+      , "signupMethod" .= signupMethod
+      , "termsVersion" .= acceptedTermsVersion
+      , "marketingOptIn" .= marketingConsent
+      ]))
+
 login :: LoginRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
 login rawRequest = do
   LoginRequest{..} <- either throwError pure (validateLoginRequest rawRequest)
@@ -779,7 +797,7 @@ googleLogin GoogleLoginRequest{..} = do
   case verification of
     Left msg -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
     Right profile -> do
-      result <- liftIO $ flip runSqlPool pool (completeGoogleLogin acceptedTermsVersion profile)
+      result <- liftIO $ flip runSqlPool pool (completeGoogleLogin acceptedTermsVersion marketingOptIn profile)
       case result of
         Left err -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
         Right resp -> do
@@ -805,7 +823,10 @@ signup SignupRequest
   emailClean <- maybe (throwBadRequest "Invalid email address") pure (normalizeAuthEmailAddress emailInput)
   either throwError pure (validateSignupGoogleIdToken rawGoogleIdToken)
   passwordClean <- either throwError pure (validateAuthPassword "Password" rawPassword)
-  acceptedTermsVersion <- either throwError pure (validateSignupTermsAcceptance rawTermsAccepted rawTermsVersion)
+  acceptedTermsVersionMaybe <- either throwError pure (validateSignupTermsAcceptance rawTermsAccepted rawTermsVersion)
+  acceptedTermsVersion <- case acceptedTermsVersionMaybe of
+    Just version -> pure version
+    Nothing -> throwBadRequest "Terms acceptance is required to create an account"
   displayNameText <- either throwError pure (validateSignupDisplayName rawFirst rawLast)
   phoneClean <- either throwError pure (validateOptionalSignupPhone rawPhone)
   claimArtistIdClean <- either throwError pure (validateOptionalSignupClaimArtistId rawClaimArtistId)
@@ -824,6 +845,8 @@ signup SignupRequest
       phoneClean
       validatedFanArtistIds
       claimArtistIdClean
+      acceptedTermsVersion
+      requestedMarketingOptIn
       now
   case result of
     Left SignupEmailExists ->
@@ -835,7 +858,7 @@ signup SignupRequest
     Left (SignupSecurityPolicyError policyError) ->
       throwError err503 { errBody = BL.fromStrict (TE.encodeUtf8 policyError) }
     Right resp -> do
-      recordAuthActivity "signup" resp acceptedTermsVersion requestedMarketingOptIn
+      recordAuthActivity "signup" resp (Just acceptedTermsVersion) requestedMarketingOptIn
       welcomeResult <-
         liftIO $
           ((try $
@@ -1307,8 +1330,8 @@ sanitizeGoogleProfileName rawName = do
     then Just name
     else Nothing
 
-completeGoogleLogin :: Maybe Text -> GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
-completeGoogleLogin acceptedTermsVersion GoogleProfile{..} = do
+completeGoogleLogin :: Maybe Text -> Maybe Bool -> GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
+completeGoogleLogin acceptedTermsVersion marketingConsent GoogleProfile{..} = do
   existingResult <- lookupByEmail gpEmail
   case existingResult of
     Left err -> pure (Left err)
@@ -1378,7 +1401,9 @@ completeGoogleLogin acceptedTermsVersion GoogleProfile{..} = do
                     Nothing -> do
                       transactionUndo
                       pure (Left "No pudimos cargar tu perfil.")
-                    Just user -> pure (Right ((toLoginResponse sessionToken user) { accountCreated = Just True }))
+                    Just user -> do
+                      recordAccountCreationConsent pid "google" supportedAccountTermsVersion marketingConsent
+                      pure (Right ((toLoginResponse sessionToken user) { accountCreated = Just True }))
 
 runLogin :: Text -> Text -> SqlPersistT IO (Either Text LoginResponse)
 runLogin identifier pwd = do
@@ -1451,9 +1476,11 @@ runSignupDb
   -> Maybe Text
   -> [Int64]
   -> Maybe Int64
+  -> Text
+  -> Maybe Bool
   -> UTCTime
   -> SqlPersistT IO (Either SignupDbError LoginResponse)
-runSignupDb emailVal passwordVal displayNameText phoneVal fanArtistIdsVal mClaimArtistId nowVal = do
+runSignupDb emailVal passwordVal displayNameText phoneVal fanArtistIdsVal mClaimArtistId acceptedTermsVersion marketingConsent nowVal = do
   existing <- signupEmailExists emailVal
   if existing
     then pure (Left SignupEmailExists)
@@ -1504,7 +1531,9 @@ runSignupDb emailVal passwordVal displayNameText phoneVal fanArtistIdsVal mClaim
                 Nothing -> do
                   transactionUndo
                   pure (Left SignupProfileError)
-                Just user -> pure (Right (toLoginResponse sessionToken user))
+                Just user -> do
+                  recordAccountCreationConsent pid "password" acceptedTermsVersion marketingConsent
+                  pure (Right (toLoginResponse sessionToken user))
 
 resolveParty
   :: Text
