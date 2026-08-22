@@ -3,12 +3,12 @@ public.platform,primary-destination,/tdf,/instagram|/ig|/sobre-tdf,external-web,
 public.commerce,primary-destination,/comercio,/commerce,external-web,https://tdf-app.pages.dev/comercio,,public.platform,public.platform,false,command-palette-or-mobile-explorer,2,false,false
 public.distribution,primary-destination,/distribucion,/distribution,external-web,https://tdf-app.pages.dev/distribucion,,public.commerce,public.platform > public.commerce,false,command-palette-or-mobile-explorer,2,false,false
 home,primary-destination,/inicio,/,external-web,https://tdf-app.pages.dev/inicio,,,,true,global-menu,1,false,false
-directory.search,primary-destination,/buscar,,external-web,https://tdf-app.pages.dev/buscar,,,,true,global-menu,1,false,false
-directory.profile.public,record-detail-contextual-action,/directorio/:slug,,external-web,,,directory.search,directory.search,false,command-palette-or-mobile-explorer,2,true,false
-directory.classified.public,record-detail-contextual-action,/clasificados/:slug,,external-web,,,directory.search,directory.search,false,command-palette-or-mobile-explorer,2,true,false
-directory.event.public,record-detail-contextual-action,/eventos/:eventId,,external-web,,,directory.search,directory.search,false,command-palette-or-mobile-explorer,2,true,false
-directory.venue.public,record-detail-contextual-action,/venues/:venueId,,external-web,,,directory.search,directory.search,false,command-palette-or-mobile-explorer,2,true,false
-directory.classifieds.manage,primary-destination,/mis-clasificados,,external-web,,,directory.search,directory.search,true,global-menu,1,false,false
+directory.search,primary-destination,/buscar,,native,/(tabs)/directory,,,,true,global-menu,1,false,false
+directory.profile.public,record-detail-contextual-action,/directorio/:slug,,native-contextual,/directory/profile/[slug],,directory.search,directory.search,false,command-palette-or-mobile-explorer,2,true,false
+directory.classified.public,record-detail-contextual-action,/clasificados/:slug,,native-contextual,/directory/classified/[slug],,directory.search,directory.search,false,command-palette-or-mobile-explorer,2,true,false
+directory.event.public,record-detail-contextual-action,/eventos/:eventId,,native-contextual,/directory/event/[id],,directory.search,directory.search,false,command-palette-or-mobile-explorer,2,true,false
+directory.venue.public,record-detail-contextual-action,/venues/:venueId,,native-contextual,/directory/venue/[id],,directory.search,directory.search,false,command-palette-or-mobile-explorer,2,true,false
+directory.classifieds.manage,primary-destination,/mis-clasificados,,native,/directory/manage,,directory.search,directory.search,true,global-menu,1,false,false
 directory.admin,primary-destination,/admin/directorio,,web-only,,,directory.search,directory.search,true,global-menu,1,false,false
 community,primary-destination,/fans,,native,/(tabs)/social,,,,true,global-menu,1,false,false
 community.club,record-detail-contextual-action,/fans/clubs/:artistId,,native-contextual,/artistDetail,,community,community,false,command-palette-or-mobile-explorer,2,true,false
