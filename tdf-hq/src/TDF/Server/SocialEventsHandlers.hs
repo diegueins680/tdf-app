@@ -287,17 +287,65 @@ publicUpcomingEventsServer mCity mStartAfter mLimit = do
     now <- liftIO getCurrentTime
     let startAfter = fromMaybe now mStartAfter
         limit = min 200 (max 1 (fromMaybe 50 mLimit))
-        filters = [SocialEventStartTime >=. startAfter]
-        pageSize = max 50 (limit * 3)
     liftIO $
         runSqlPool
-            ( collectMatchingRows
-                limit
-                pageSize
-                (selectVisibleSocialEvents filters (Asc SocialEventStartTime))
-                (publicUpcomingEventRow mCity)
+            ( do
+                rows <- selectPublicUpcomingSocialEvents mCity startAfter limit
+                catMaybes <$> mapM (publicUpcomingEventRow Nothing) rows
             )
             envPool
+
+-- Apply every anonymous-listing predicate before LIMIT. In particular, city
+-- and lifecycle eligibility must not be evaluated by recursively loading the
+-- complete future-event table when a city has few or no matches.
+selectPublicUpcomingSocialEvents ::
+    Maybe T.Text ->
+    UTCTime ->
+    Int ->
+    SqlPersistT IO [Entity SocialEvent]
+selectPublicUpcomingSocialEvents mCity startAfter limit = do
+    backend <- ask :: SqlPersistT IO SqlBackend
+    eventTable <- getEscapedRawName "social_event"
+    eventIdField <- getEscapedRawName "id"
+    eventStartField <- getEscapedRawName "start_time"
+    eventMetadataField <- getEscapedRawName "metadata"
+    publicEventView <- getEscapedRawName "directory_public_event"
+    backendName <- T.toCaseFold <$> getRDBMS
+    let eventIdColumn = eventTable <> "." <> eventIdField
+        eventStartColumn = eventTable <> "." <> eventStartField
+        eventMetadataColumn = eventTable <> "." <> eventMetadataField
+        metadataClause = visibleImportedMetadataClause backendName eventMetadataColumn
+        (cityClause, cityValues) = case mCity of
+            Nothing -> ("", [])
+            Just rawCity ->
+                let matchClause
+                        | "postgres" `T.isInfixOf` backendName =
+                            "position(lower(?) in lower(directory_event.city_name))>0"
+                        | "sqlite" `T.isInfixOf` backendName =
+                            "instr(lower(directory_event.city_name),lower(?))>0"
+                        | otherwise = "1=0"
+                 in ( " AND directory_event.city_name IS NOT NULL AND " <> matchClause
+                    , [PersistText (T.strip rawCity)]
+                    )
+        orderedQuery =
+            "SELECT ?? FROM "
+                <> eventTable
+                <> " INNER JOIN "
+                <> publicEventView
+                <> " AS directory_event ON directory_event.id="
+                <> eventIdColumn
+                <> " WHERE "
+                <> eventStartColumn
+                <> ">=? AND "
+                <> metadataClause
+                <> cityClause
+                <> " ORDER BY "
+                <> eventStartColumn
+                <> " ASC,"
+                <> eventIdColumn
+                <> " ASC"
+    query <- getConnLimitOffset (limit, 0) orderedQuery
+    rawSql query (toPersistValue startAfter : cityValues)
 
 collectMatchingRows ::
     Monad m =>
