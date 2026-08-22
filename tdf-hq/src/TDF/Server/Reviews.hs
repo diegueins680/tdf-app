@@ -116,7 +116,10 @@ publicReviewTargetStatement targetKind = case targetKind of
    <> postgresVisibleImportedMetadataClause "event.metadata"
    <> ")" )
   "marketplace_listing" ->
-    "SELECT to_jsonb(TRUE) FROM marketplace_listing WHERE id::text=? AND active"
+    ( "SELECT to_jsonb(TRUE) FROM marketplace_listing listing WHERE listing.id::text=? AND ("
+   <> "listing.active OR EXISTS (SELECT 1 FROM marketplace_order_item item "
+   <> "JOIN marketplace_sale_order_runtime sale ON sale.order_id=item.order_id "
+   <> "WHERE item.listing_id=listing.id AND sale.fulfillment_status IN ('delivered','closed')))" )
   "service_offering" ->
     ( "SELECT to_jsonb(TRUE) FROM service_offering WHERE id::text=? "
    <> "AND active AND deprecated_at IS NULL" )

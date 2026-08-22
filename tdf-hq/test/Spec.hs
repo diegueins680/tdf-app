@@ -758,9 +758,12 @@ sampleSriScriptRequest =
 main :: IO ()
 main = hspec $ do
     describe "public review target visibility" $ do
-        it "requires marketplace listings and storefront packages to remain active" $ do
-            publicReviewTargetStatement "marketplace_listing"
-                `shouldSatisfy` Data.Text.isInfixOf "AND active"
+        it "keeps delivered marketplace sales visible without exposing withdrawn listings" $ do
+            let statement = publicReviewTargetStatement "marketplace_listing"
+            statement `shouldSatisfy` Data.Text.isInfixOf "listing.active OR EXISTS"
+            statement `shouldSatisfy` Data.Text.isInfixOf "sale.fulfillment_status IN ('delivered','closed')"
+
+        it "requires storefront packages to remain active" $ do
             publicReviewTargetStatement "service_package"
                 `shouldSatisfy` Data.Text.isInfixOf "AND active"
 
