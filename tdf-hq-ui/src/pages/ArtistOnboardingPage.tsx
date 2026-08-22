@@ -7,12 +7,12 @@ import { useMemo } from 'react';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
 import { parsePositiveSafeInt } from '../utils/ids';
+import { accessRequestPath, getFeatureById } from '../features/featureRegistry';
 
 const buildArtistSignupLink = (claimArtistId: number | null) => {
   const params = new URLSearchParams();
-  params.set('redirect', '/mi-artista');
   params.set('signup', '1');
-  params.set('intent', 'artist');
+  params.set('intent', 'artist_profile');
   const normalizedClaimArtistId = parsePositiveSafeInt(claimArtistId);
   if (normalizedClaimArtistId !== null) {
     params.set('claimArtistId', String(normalizedClaimArtistId));
@@ -24,6 +24,11 @@ const buildArtistLoginLink = () => {
   const params = new URLSearchParams();
   params.set('redirect', '/mi-artista');
   return `/login?${params.toString()}`;
+};
+
+const artistAccessRequest = () => {
+  const feature = getFeatureById('artist.onboarding');
+  return feature ? accessRequestPath(feature, 'create') : '/solicitudes-acceso/nueva';
 };
 
 export default function ArtistOnboardingPage() {
@@ -103,15 +108,15 @@ export default function ArtistOnboardingPage() {
                   Ir a mi perfil
                 </Button>
               ) : (
-                <Button color="inherit" size="small" component={RouterLink} to={buildArtistLoginLink()}>
-                  Volver a login
+                <Button color="inherit" size="small" component={RouterLink} to={artistAccessRequest()}>
+                  Solicitar acceso
                 </Button>
               )
             }
           >
             {hasArtistRole
               ? 'Ya tienes una sesión activa. Puedes editar tu perfil de artista ahora.'
-              : 'Tienes una sesión activa, pero tu cuenta no tiene rol de artista. Si creaste la cuenta sin ese rol, contacta soporte.'}
+              : 'Tu cuenta está activa. Para crear un perfil de artista, envía una solicitud revisada o reclama un perfil existente con correo verificable.'}
           </Alert>
         )}
 

@@ -36,6 +36,8 @@ module TDF.ServerAuth
   , validatePasswordResetToken
   , validateSignupDisplayName
   , validateSignupGoogleIdToken
+  , validateGoogleAccountCreationTerms
+  , validateSignupTermsAcceptance
   , validateSignupArtistClaimEmail
   , validateOptionalSignupClaimArtistId
   , validateOptionalSignupPhone
@@ -384,6 +386,25 @@ validateSignupGoogleIdToken (Just rawToken)
               (TE.encodeUtf8 "googleIdToken is not supported on password signup; use Google login")
         }
 
+validateSignupTermsAcceptance :: Maybe Bool -> Maybe Text -> Either ServerError (Maybe Text)
+validateSignupTermsAcceptance Nothing Nothing = Right Nothing
+validateSignupTermsAcceptance (Just True) (Just rawVersion)
+  | let version = T.strip rawVersion
+  , version == supportedAccountTermsVersion = Right (Just version)
+validateSignupTermsAcceptance _ _ =
+  Left err400
+    { errBody = "Terms acceptance must reference the supported termsVersion"
+    }
+
+supportedAccountTermsVersion :: Text
+supportedAccountTermsVersion = "tdf-account-terms-v1"
+
+validateGoogleAccountCreationTerms :: Maybe Text -> Either Text ()
+validateGoogleAccountCreationTerms (Just version)
+  | version == supportedAccountTermsVersion = Right ()
+validateGoogleAccountCreationTerms _ =
+  Left "Accept the terms and privacy policy through the signup flow before creating a Google account"
+
 normalizeAuthPhoneNumber :: Text -> Maybe Text
 normalizeAuthPhoneNumber raw =
   let trimmed = T.strip raw
@@ -708,8 +729,8 @@ withSessionCookie response@LoginResponse{token = sessionToken} = do
   cfg <- asks envConfig
   pure (addHeader (sessionCookieHeader cfg sessionToken) response)
 
-recordAuthActivity :: Text -> LoginResponse -> AppM ()
-recordAuthActivity actionName LoginResponse{partyId = responsePartyId} = do
+recordAuthActivity :: Text -> LoginResponse -> Maybe Text -> Maybe Bool -> AppM ()
+recordAuthActivity actionName LoginResponse{partyId = responsePartyId} acceptedTermsVersion marketingConsent = do
   Env pool _ <- ask
   let actorId = toSqlKey responsePartyId :: PartyId
       entityId = T.pack (show responsePartyId)
@@ -720,7 +741,11 @@ recordAuthActivity actionName LoginResponse{partyId = responsePartyId} = do
         "auth"
         entityId
         actionName
-        (Just (object ["partyId" .= responsePartyId]))
+        (Just (object
+          [ "partyId" .= responsePartyId
+          , "termsVersion" .= acceptedTermsVersion
+          , "marketingOptIn" .= marketingConsent
+          ]))
   case result of
     Left (err :: SomeException) -> do
       let msg =
@@ -733,6 +758,21 @@ recordAuthActivity actionName LoginResponse{partyId = responsePartyId} = do
       liftIO $ LogBuf.addLog LogBuf.LogWarning msg
     Right () -> pure ()
 
+recordAccountCreationConsent :: PartyId -> Text -> Text -> Maybe Bool -> SqlPersistT IO ()
+recordAccountCreationConsent actorId signupMethod acceptedTermsVersion marketingConsent = do
+  let partyIdValue = fromSqlKey actorId :: Int64
+  recordUserActivity
+    (Just actorId)
+    "auth"
+    (T.pack (show partyIdValue))
+    "account_consent_recorded"
+    (Just (object
+      [ "partyId" .= partyIdValue
+      , "signupMethod" .= signupMethod
+      , "termsVersion" .= acceptedTermsVersion
+      , "marketingOptIn" .= marketingConsent
+      ]))
+
 login :: LoginRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
 login rawRequest = do
   LoginRequest{..} <- either throwError pure (validateLoginRequest rawRequest)
@@ -741,12 +781,13 @@ login rawRequest = do
   case result of
     Left msg -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
     Right res -> do
-      recordAuthActivity "login_password" res
+      recordAuthActivity "login_password" res Nothing Nothing
       withSessionCookie res
 
 googleLogin :: GoogleLoginRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
 googleLogin GoogleLoginRequest{..} = do
   tokenClean <- either throwError pure (validateGoogleIdTokenInput idToken)
+  acceptedTermsVersion <- either throwError pure (validateSignupTermsAcceptance termsAccepted termsVersion)
   Env pool cfg <- ask
   let mClientId = googleClientId cfg
   when (isNothing mClientId) $
@@ -756,11 +797,11 @@ googleLogin GoogleLoginRequest{..} = do
   case verification of
     Left msg -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
     Right profile -> do
-      result <- liftIO $ flip runSqlPool pool (completeGoogleLogin profile)
+      result <- liftIO $ flip runSqlPool pool (completeGoogleLogin acceptedTermsVersion marketingOptIn profile)
       case result of
         Left err -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
         Right resp -> do
-          recordAuthActivity "login_google" resp
+          recordAuthActivity "login_google" resp acceptedTermsVersion marketingOptIn
           withSessionCookie resp
 
 signup :: SignupRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
@@ -771,6 +812,9 @@ signup SignupRequest
   , phone = rawPhone
   , password = rawPassword
   , googleIdToken = rawGoogleIdToken
+  , marketingOptIn = requestedMarketingOptIn
+  , termsAccepted = rawTermsAccepted
+  , termsVersion = rawTermsVersion
   , fanArtistIds = requestedFanArtistIds
   , claimArtistId = rawClaimArtistId
   } = do
@@ -779,6 +823,10 @@ signup SignupRequest
   emailClean <- maybe (throwBadRequest "Invalid email address") pure (normalizeAuthEmailAddress emailInput)
   either throwError pure (validateSignupGoogleIdToken rawGoogleIdToken)
   passwordClean <- either throwError pure (validateAuthPassword "Password" rawPassword)
+  acceptedTermsVersionMaybe <- either throwError pure (validateSignupTermsAcceptance rawTermsAccepted rawTermsVersion)
+  acceptedTermsVersion <- case acceptedTermsVersionMaybe of
+    Just version -> pure version
+    Nothing -> throwBadRequest "Terms acceptance is required to create an account"
   displayNameText <- either throwError pure (validateSignupDisplayName rawFirst rawLast)
   phoneClean <- either throwError pure (validateOptionalSignupPhone rawPhone)
   claimArtistIdClean <- either throwError pure (validateOptionalSignupClaimArtistId rawClaimArtistId)
@@ -797,6 +845,8 @@ signup SignupRequest
       phoneClean
       validatedFanArtistIds
       claimArtistIdClean
+      acceptedTermsVersion
+      requestedMarketingOptIn
       now
   case result of
     Left SignupEmailExists ->
@@ -808,7 +858,7 @@ signup SignupRequest
     Left (SignupSecurityPolicyError policyError) ->
       throwError err503 { errBody = BL.fromStrict (TE.encodeUtf8 policyError) }
     Right resp -> do
-      recordAuthActivity "signup" resp
+      recordAuthActivity "signup" resp (Just acceptedTermsVersion) requestedMarketingOptIn
       welcomeResult <-
         liftIO $
           ((try $
@@ -1280,8 +1330,8 @@ sanitizeGoogleProfileName rawName = do
     then Just name
     else Nothing
 
-completeGoogleLogin :: GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
-completeGoogleLogin GoogleProfile{..} = do
+completeGoogleLogin :: Maybe Text -> Maybe Bool -> GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
+completeGoogleLogin acceptedTermsVersion marketingConsent GoogleProfile{..} = do
   existingResult <- lookupByEmail gpEmail
   case existingResult of
     Left err -> pure (Left err)
@@ -1298,57 +1348,62 @@ completeGoogleLogin GoogleProfile{..} = do
               mUser <- loadAuthedUser sessionToken
               case mUser of
                 Nothing -> pure (Left "No pudimos cargar tu perfil.")
-                Just user -> pure (Right (toLoginResponse sessionToken user))
-        Nothing -> do
-          now <- liftIO getCurrentTime
-          let displayName = fromMaybe gpEmail (cleanOptional gpName)
-              partyRecord = Party
-                { partyLegalName = Nothing
-                , partyDisplayName = displayName
-                , partyIsOrg = False
-                , partyTaxId = Nothing
-                , partyPrimaryEmail = Just gpEmail
-                , partyPrimaryPhone = Nothing
-                , partyWhatsapp = Nothing
-                , partyInstagram = Nothing
-                , partyEmergencyContact = Nothing
-                , partyNotes = Nothing
-                , partyStripeCustomerId = Nothing
-                , partyCountryCode = Nothing
-                , partyCountryId = Nothing
-                , partyCreatedAt = now
-                }
-          pid <- insert partyRecord
-          policyResult <- applySecurityRoleAssignmentPolicy
-            "account.google.customer"
-            pid
-            True
-            (Just pid)
-            "google-auth"
-            ("google-account:" <> T.pack (show (fromSqlKey pid)))
-            now
-          case policyResult of
-            Left policyError -> do
-              transactionUndo
-              pure (Left policyError)
-            Right _ -> do
-              ensureFanProfileIfMissing pid displayName now
-              tempPassword <- liftIO generateTemporaryPassword
-              hashed <- liftIO (hashPasswordText tempPassword)
-              _ <- insert UserCredential
-                { userCredentialPartyId = pid
-                , userCredentialUsername = gpEmail
-                , userCredentialPasswordHash = hashed
-                , userCredentialActive = True
-                }
-              sessionToken <-
-                createReusableSessionToken pid (Just ("google-login:" <> gpEmail))
-              mUser <- loadAuthedUser sessionToken
-              case mUser of
-                Nothing -> do
+                Just user -> pure (Right ((toLoginResponse sessionToken user) { accountCreated = Just False }))
+        Nothing ->
+          case validateGoogleAccountCreationTerms acceptedTermsVersion of
+            Left consentError -> pure (Left consentError)
+            Right () -> do
+              now <- liftIO getCurrentTime
+              let displayName = fromMaybe gpEmail (cleanOptional gpName)
+                  partyRecord = Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = displayName
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just gpEmail
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
+                    , partyCreatedAt = now
+                    }
+              pid <- insert partyRecord
+              policyResult <- applySecurityRoleAssignmentPolicy
+                "account.google.customer"
+                pid
+                True
+                (Just pid)
+                "google-auth"
+                ("google-account:" <> T.pack (show (fromSqlKey pid)))
+                now
+              case policyResult of
+                Left policyError -> do
                   transactionUndo
-                  pure (Left "No pudimos cargar tu perfil.")
-                Just user -> pure (Right (toLoginResponse sessionToken user))
+                  pure (Left policyError)
+                Right _ -> do
+                  ensureFanProfileIfMissing pid displayName now
+                  tempPassword <- liftIO generateTemporaryPassword
+                  hashed <- liftIO (hashPasswordText tempPassword)
+                  _ <- insert UserCredential
+                    { userCredentialPartyId = pid
+                    , userCredentialUsername = gpEmail
+                    , userCredentialPasswordHash = hashed
+                    , userCredentialActive = True
+                    }
+                  sessionToken <-
+                    createReusableSessionToken pid (Just ("google-login:" <> gpEmail))
+                  mUser <- loadAuthedUser sessionToken
+                  case mUser of
+                    Nothing -> do
+                      transactionUndo
+                      pure (Left "No pudimos cargar tu perfil.")
+                    Just user -> do
+                      recordAccountCreationConsent pid "google" supportedAccountTermsVersion marketingConsent
+                      pure (Right ((toLoginResponse sessionToken user) { accountCreated = Just True }))
 
 runLogin :: Text -> Text -> SqlPersistT IO (Either Text LoginResponse)
 runLogin identifier pwd = do
@@ -1421,9 +1476,11 @@ runSignupDb
   -> Maybe Text
   -> [Int64]
   -> Maybe Int64
+  -> Text
+  -> Maybe Bool
   -> UTCTime
   -> SqlPersistT IO (Either SignupDbError LoginResponse)
-runSignupDb emailVal passwordVal displayNameText phoneVal fanArtistIdsVal mClaimArtistId nowVal = do
+runSignupDb emailVal passwordVal displayNameText phoneVal fanArtistIdsVal mClaimArtistId acceptedTermsVersion marketingConsent nowVal = do
   existing <- signupEmailExists emailVal
   if existing
     then pure (Left SignupEmailExists)
@@ -1474,7 +1531,9 @@ runSignupDb emailVal passwordVal displayNameText phoneVal fanArtistIdsVal mClaim
                 Nothing -> do
                   transactionUndo
                   pure (Left SignupProfileError)
-                Just user -> pure (Right (toLoginResponse sessionToken user))
+                Just user -> do
+                  recordAccountCreationConsent pid "password" acceptedTermsVersion marketingConsent
+                  pure (Right (toLoginResponse sessionToken user))
 
 resolveParty
   :: Text
@@ -1695,6 +1754,7 @@ toLoginResponse sessionToken AuthedUser{..} = LoginResponse
   , partyId = fromSqlKey auPartyId
   , roles = auRoles
   , modules = map moduleName (Set.toList auModules)
+  , accountCreated = Nothing
   }
 
 ensureFanProfileIfMissing :: PartyId -> Text -> UTCTime -> SqlPersistT IO ()

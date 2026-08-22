@@ -122,13 +122,13 @@ describe('TdfPlatformPage', () => {
 
     expect(screen.getByRole('heading', { name: 'TDF Records' })).not.toBeNull();
     expect(screen.getAllByRole('link', { name: 'Crear cuenta' })[0]?.getAttribute('href')).toBe(
-      '/login?signup=1&redirect=/fans',
+      '/login?signup=1&intent=follow_artists&redirect=/fans',
     );
     expect(screen.getByRole('link', { name: 'Perfil fan' }).getAttribute('href')).toBe(
-      '/login?signup=1&roles=Fan&redirect=/fans',
+      '/login?signup=1&intent=follow_artists&redirect=/fans',
     );
     expect(screen.getByRole('link', { name: 'Perfil artista' }).getAttribute('href')).toBe(
-      '/login?signup=1&intent=artist&redirect=/mi-artista',
+      '/login?signup=1&intent=artist_profile',
     );
 
     await screen.findByText('Artista Mayor');
