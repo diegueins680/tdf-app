@@ -14,9 +14,75 @@ import {
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const targetMigrationId = '2026-08-21_studio_internship_audit';
 const expectedConfirmation = 'BASELINE_CURRENT_SYNTHETIC_SCHEMA_WITHOUT_PRODUCTION_DATA';
+const expectedRuntimeConfirmation = 'REPLAY_CANONICAL_RUNTIME_MIGRATIONS_IN_SYNTHETIC_STAGING';
+const runtimeMigrationStartId = '2026-08-13_unified_checkout_core';
 
 function sqlLiteral(value) {
   return `'${String(value).replaceAll("'", "''")}'`;
+}
+
+export function buildStudioAuditStagingRuntimeSql(entries) {
+  const startIndex = entries.findIndex(({ id }) => id === runtimeMigrationStartId);
+  if (startIndex < 0) {
+    throw new Error(`The staging runtime migration ${runtimeMigrationStartId} is missing.`);
+  }
+  const runtimeEntries = entries.slice(startIndex);
+  for (const entry of runtimeEntries) {
+    if (typeof entry.content !== 'string' || entry.content.trim() === '') {
+      throw new Error(`Expanded SQL is missing for staging runtime migration ${entry.id}.`);
+    }
+  }
+
+  const runtimeSql = runtimeEntries
+    .map(({ id, content }) => {
+      const beginCount = content.match(/^BEGIN;\s*$/gmu)?.length ?? 0;
+      const commitCount = content.match(/^COMMIT;\s*$/gmu)?.length ?? 0;
+      if (beginCount !== 1 || commitCount !== 1) {
+        throw new Error(
+          `Staging runtime migration ${id} must contain exactly one transaction wrapper.`,
+        );
+      }
+      const body = content
+        .replace(/^\\set ON_ERROR_STOP on\s*$/gmu, '')
+        .replace(/^BEGIN;\s*$/mu, '')
+        .replace(/^COMMIT;\s*$/mu, '')
+        .trim();
+      return `-- BEGIN CANONICAL STAGING RUNTIME MIGRATION ${id}\n${body}\n-- END CANONICAL STAGING RUNTIME MIGRATION ${id}`;
+    })
+    .join('\n\n');
+
+  return `\\set ON_ERROR_STOP on
+BEGIN;
+DO $runtime_preflight$
+BEGIN
+  IF current_database() <> 'tdf_studio_audit_staging' THEN
+    RAISE EXCEPTION 'Refusing runtime migration replay outside the isolated studio-audit staging database';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM public.party
+    WHERE primary_email IS NOT NULL
+      AND lower(primary_email) NOT LIKE '%@persona.test'
+  ) THEN
+    RAISE EXCEPTION 'Refusing runtime migration replay against non-synthetic party email addresses';
+  END IF;
+  IF (
+    SELECT count(*) FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name IN (
+        'intern_audit_plan', 'intern_test_case', 'intern_test_execution',
+        'internal_feedback_report', 'internal_feedback_evidence', 'internal_feedback_history'
+      )
+  ) <> 6 THEN
+    RAISE EXCEPTION 'The runtime migration target is not the expected current synthetic application schema';
+  END IF;
+END
+$runtime_preflight$;
+
+-- BEGIN CANONICAL STAGING RUNTIME MIGRATION REPLAY
+${runtimeSql}
+-- END CANONICAL STAGING RUNTIME MIGRATION REPLAY
+COMMIT;
+`;
 }
 
 export function buildStudioAuditStagingBaselineSql(entries, sourceCommit) {
@@ -54,7 +120,9 @@ export function buildStudioAuditStagingBaselineSql(entries, sourceCommit) {
   ];
   const cutoverValues = cutoverCodes.map((code) => `(${sqlLiteral(code)})`).join(',\n    ');
 
-  return `\\set ON_ERROR_STOP on
+  const runtimeSql = buildStudioAuditStagingRuntimeSql(entries);
+
+  return `${runtimeSql}
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS public.tdf_schema_migration (
@@ -146,6 +214,188 @@ ALTER TABLE public.ticket_qr_code
 ALTER TABLE public.event_ticket_order
   DROP CONSTRAINT IF EXISTS event_ticket_order_promo_code_id_fkey,
   ADD CONSTRAINT event_ticket_order_promo_code_id_fkey FOREIGN KEY (promo_code_id) REFERENCES public.promo_code(id);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_event_ticket_order_stripe_payment_intent
+  ON public.event_ticket_order(stripe_payment_intent_id)
+  WHERE stripe_payment_intent_id IS NOT NULL;
+
+-- SQL migrations intentionally use PostgreSQL text/integer types for several
+-- runtime contracts, while Persistent's current-schema bootstrap emits
+-- varchar/bigint for the corresponding Haskell Text/Int fields. Normalize the
+-- synthetic bootstrap without changing application values.
+DO $runtime_type_compatibility$
+DECLARE
+  item RECORD;
+  actual_type TEXT;
+BEGIN
+  FOR item IN
+    SELECT * FROM (VALUES
+      ('external_venue_ref', 'provider', 'text'),
+      ('external_venue_ref', 'external_id', 'text'),
+      ('external_artist_ref', 'provider', 'text'),
+      ('external_artist_ref', 'external_id', 'text'),
+      ('external_event_ref', 'provider', 'text'),
+      ('external_event_ref', 'external_id', 'text'),
+      ('external_event_ref', 'city', 'text'),
+      ('external_event_ref', 'country_code', 'text'),
+      ('external_event_ref', 'source_url', 'text'),
+      ('external_event_ref', 'price_cents', 'integer'),
+      ('external_event_ref', 'currency', 'text'),
+      ('external_event_ref', 'missing_runs', 'integer'),
+      ('external_event_ref', 'source_status', 'text'),
+      ('external_event_discovery_run', 'provider', 'text'),
+      ('external_event_discovery_run', 'status', 'text'),
+      ('external_event_discovery_run', 'cities_count', 'integer'),
+      ('external_event_discovery_run', 'events_seen', 'integer'),
+      ('external_event_discovery_run', 'events_created', 'integer'),
+      ('external_event_discovery_run', 'events_updated', 'integer'),
+      ('external_event_discovery_run', 'venues_created', 'integer'),
+      ('external_event_discovery_run', 'artists_created', 'integer'),
+      ('external_event_discovery_run', 'error_message', 'text'),
+      ('event_city', 'name', 'text'),
+      ('event_city', 'normalized_name', 'text'),
+      ('event_city', 'country_code', 'text'),
+      ('event_city', 'time_zone', 'text'),
+      ('event_city_subscription', 'party_id', 'text'),
+      ('event_discovery_source', 'source_key', 'text'),
+      ('event_discovery_source', 'name', 'text'),
+      ('event_discovery_source', 'source_type', 'text'),
+      ('event_discovery_source', 'feed_url', 'text'),
+      ('event_discovery_source', 'priority', 'integer'),
+      ('event_discovery_source', 'configuration', 'text'),
+      ('event_discovery_source', 'etag', 'text'),
+      ('event_discovery_source', 'last_modified', 'text'),
+      ('event_discovery_source', 'consecutive_failures', 'integer'),
+      ('event_discovery_source', 'last_error', 'text'),
+      ('social_discovery_review', 'status', 'text'),
+      ('artist_research_source', 'supported_fields', 'text'),
+      ('artist_research_source', 'content_hash', 'text'),
+      ('artist_enrichment_suggestion', 'decision_note', 'text'),
+      ('artist_identity_candidate', 'decision_note', 'text'),
+      ('artist_media_asset', 'source_content_hash', 'text'),
+      ('artist_media_asset', 'source_attribution', 'text'),
+      ('artist_media_asset', 'source_width', 'integer'),
+      ('artist_media_asset', 'source_height', 'integer'),
+      ('artist_media_asset', 'source_mime_type', 'text'),
+      ('artist_media_asset', 'drive_file_id', 'text'),
+      ('feature_navigation_preferences', 'feature_id', 'text'),
+      ('feature_navigation_preferences', 'pin_order', 'integer'),
+      ('feature_navigation_preferences', 'use_count', 'integer'),
+      ('ddex_document', 'file_name', 'text'),
+      ('ddex_document', 'private_uri', 'text'),
+      ('ddex_document', 'sha256', 'text'),
+      ('ddex_document', 'family', 'text'),
+      ('ddex_document', 'version', 'text'),
+      ('ddex_document', 'namespace', 'text'),
+      ('ddex_document', 'message_type', 'text'),
+      ('ddex_document', 'status', 'text'),
+      ('ddex_document', 'message_id', 'text'),
+      ('ddex_document', 'sender_id', 'text'),
+      ('ddex_document', 'recipient_id', 'text')
+    ) expected(table_name, column_name, target_type)
+  LOOP
+    SELECT data_type INTO actual_type
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = item.table_name
+      AND column_name = item.column_name;
+    IF actual_type IS NULL THEN
+      RAISE EXCEPTION 'Missing runtime bootstrap column %.%', item.table_name, item.column_name;
+    END IF;
+    IF actual_type <> item.target_type THEN
+      EXECUTE format(
+        'ALTER TABLE public.%I ALTER COLUMN %I TYPE %s USING %I::%s',
+        item.table_name, item.column_name, item.target_type,
+        item.column_name, item.target_type
+      );
+    END IF;
+  END LOOP;
+END
+$runtime_type_compatibility$;
+
+-- DDEX SQL migrations predate the Persistent models and use SERIAL/integer
+-- identifiers. Convert the empty or synthetic bootstrap only after proving all
+-- values fit; dropping the dependent FKs is required by PostgreSQL for the
+-- referenced key type change.
+DO $ddex_integer_range_guard$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM public.ddex_document
+    WHERE id > 2147483647 OR uploaded_by > 2147483647
+  ) OR EXISTS (
+    SELECT 1 FROM public.ddex_message_header WHERE document_id > 2147483647
+  ) OR EXISTS (
+    SELECT 1 FROM public.ddex_validation_run WHERE document_id > 2147483647
+  ) OR EXISTS (
+    SELECT 1 FROM public.ddex_import_plan WHERE document_id > 2147483647
+  ) THEN
+    RAISE EXCEPTION 'DDEX synthetic bootstrap identifiers exceed the canonical integer range';
+  END IF;
+END
+$ddex_integer_range_guard$;
+
+ALTER TABLE public.ddex_message_header
+  DROP CONSTRAINT IF EXISTS ddex_message_header_document_id_fkey;
+ALTER TABLE public.ddex_validation_run
+  DROP CONSTRAINT IF EXISTS ddex_validation_run_document_id_fkey;
+ALTER TABLE public.ddex_import_plan
+  DROP CONSTRAINT IF EXISTS ddex_import_plan_document_id_fkey;
+ALTER TABLE public.ddex_document
+  ALTER COLUMN id TYPE integer USING id::integer,
+  ALTER COLUMN uploaded_by TYPE integer USING uploaded_by::integer;
+ALTER TABLE public.ddex_message_header
+  ALTER COLUMN document_id TYPE integer USING document_id::integer,
+  ADD CONSTRAINT ddex_message_header_document_id_fkey
+    FOREIGN KEY (document_id) REFERENCES public.ddex_document(id) ON DELETE CASCADE;
+ALTER TABLE public.ddex_validation_run
+  ALTER COLUMN document_id TYPE integer USING document_id::integer,
+  ADD CONSTRAINT ddex_validation_run_document_id_fkey
+    FOREIGN KEY (document_id) REFERENCES public.ddex_document(id) ON DELETE CASCADE;
+ALTER TABLE public.ddex_import_plan
+  ALTER COLUMN document_id TYPE integer USING document_id::integer,
+  ADD CONSTRAINT ddex_import_plan_document_id_fkey
+    FOREIGN KEY (document_id) REFERENCES public.ddex_document(id) ON DELETE CASCADE;
+
+ALTER TABLE public.external_venue_ref
+  DROP CONSTRAINT IF EXISTS external_venue_ref_venue_id_fkey,
+  ADD CONSTRAINT external_venue_ref_venue_id_fkey FOREIGN KEY (venue_id) REFERENCES public.venue(id);
+ALTER TABLE public.external_artist_ref
+  DROP CONSTRAINT IF EXISTS external_artist_ref_artist_id_fkey,
+  ADD CONSTRAINT external_artist_ref_artist_id_fkey FOREIGN KEY (artist_id) REFERENCES public.social_artist_profile(id);
+ALTER TABLE public.external_event_ref
+  DROP CONSTRAINT IF EXISTS external_event_ref_event_id_fkey,
+  ADD CONSTRAINT external_event_ref_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.social_event(id);
+CREATE INDEX IF NOT EXISTS idx_external_event_ref_city
+  ON public.external_event_ref(lower(city));
+CREATE INDEX IF NOT EXISTS idx_external_event_ref_event_id
+  ON public.external_event_ref(event_id);
+ALTER TABLE public.event_city_subscription
+  DROP CONSTRAINT IF EXISTS event_city_subscription_city_id_fkey,
+  ADD CONSTRAINT event_city_subscription_city_id_fkey FOREIGN KEY (city_id) REFERENCES public.event_city(id) ON DELETE CASCADE;
+ALTER TABLE public.event_discovery_source
+  DROP CONSTRAINT IF EXISTS event_discovery_source_city_id_fkey,
+  ADD CONSTRAINT event_discovery_source_city_id_fkey FOREIGN KEY (city_id) REFERENCES public.event_city(id);
+ALTER TABLE public.external_event_discovery_run
+  DROP CONSTRAINT IF EXISTS unique_external_event_discovery_slot;
+DROP INDEX IF EXISTS public.unique_external_event_discovery_slot;
+CREATE UNIQUE INDEX unique_external_event_discovery_slot
+  ON public.external_event_discovery_run(provider, scheduled_for)
+  WHERE scheduled_for IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_artist_profile_slug_ci
+  ON public.artist_profile(lower(slug))
+  WHERE slug IS NOT NULL AND btrim(slug) <> '';
+CREATE UNIQUE INDEX IF NOT EXISTS uq_artist_enrichment_active_full_run
+  ON public.artist_enrichment_run((scope))
+  WHERE status = 'running' AND scope = 'full';
+CREATE INDEX IF NOT EXISTS idx_artist_suggestion_queue
+  ON public.artist_enrichment_suggestion(status, confidence DESC, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_artist_field_change_history
+  ON public.artist_field_change(artist_party_id, changed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_artist_media_asset_hash
+  ON public.artist_media_asset(content_hash);
+ALTER TABLE public.artist_inventory_reference
+  DROP CONSTRAINT IF EXISTS fk_artist_inventory_social_artist,
+  ADD CONSTRAINT fk_artist_inventory_social_artist
+    FOREIGN KEY (social_artist_id) REFERENCES public.social_artist_profile(id) ON DELETE SET NULL;
 
 ALTER TABLE public.social_event
   ALTER COLUMN end_time DROP NOT NULL;
@@ -251,21 +501,23 @@ export async function loadStudioAuditStagingBaselineEntries() {
     return {
       id: entry.id,
       checksum: createHash('sha256').update(content).digest('hex'),
+      content,
     };
   }));
 }
 
 async function main() {
-  if (process.env.TDF_STUDIO_AUDIT_STAGING_BASELINE_CONFIRM !== expectedConfirmation) {
+  const runtimeOnly = process.argv.includes('--runtime-only');
+  const expected = runtimeOnly ? expectedRuntimeConfirmation : expectedConfirmation;
+  if (process.env.TDF_STUDIO_AUDIT_STAGING_BASELINE_CONFIRM !== expected) {
     throw new Error(
-      `Set TDF_STUDIO_AUDIT_STAGING_BASELINE_CONFIRM=${expectedConfirmation} to render the baseline SQL.`,
+      `Set TDF_STUDIO_AUDIT_STAGING_BASELINE_CONFIRM=${expected} to render the ${runtimeOnly ? 'runtime migration replay' : 'baseline'} SQL.`,
     );
   }
   const entries = await loadStudioAuditStagingBaselineEntries();
-  process.stdout.write(buildStudioAuditStagingBaselineSql(
-    entries,
-    process.env.SOURCE_COMMIT,
-  ));
+  process.stdout.write(runtimeOnly
+    ? buildStudioAuditStagingRuntimeSql(entries)
+    : buildStudioAuditStagingBaselineSql(entries, process.env.SOURCE_COMMIT));
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

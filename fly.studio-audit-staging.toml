@@ -21,7 +21,7 @@ primary_region = "gru"
   DATAFAST_BASE_URL = "https://test.oppwa.com"
   ALLOWED_ORIGINS = "https://tdf-studio-audit-staging-web.fly.dev"
   CORS_DISABLE_DEFAULTS = "true"
-  HQ_ASSETS_DIR = "/data/assets"
+  HQ_ASSETS_DIR = "/app/assets"
   TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/data/audit-evidence"
   TZ = "America/Guayaquil"
 
