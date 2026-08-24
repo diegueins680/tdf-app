@@ -38,7 +38,7 @@ Use the exact command/result table from `docs/internships/studio-audit/TEST-RESU
 - Supply Stewart Moreira's verified production party ID and email only at approved draft-creation runtime; do not commit those identifiers or create a duplicate account.
 - Review/approve least-privilege module grants and notification recipients.
 - Connect and verify an approved external outbox dispatcher/digest schedule, or explicitly approve in-app-only notifications.
-- Decide the authorized publication path for the regenerated `tdf-mobile` client/feature-registry changes. Because it is a submodule, retaining them requires a separately authorized mobile commit and parent-pointer update before the single parent draft PR can be mergeable.
+- Review the published `TDF-mobile` generated-client commit `dac57203f81c66b2ef6cf015daf00d5773fc304b`; the parent repository points to that exact remote commit.
 - Deploy isolated staging with synthetic data and test transports.
 - Exercise full intern/admin lifecycle and rollback.
 - Create and review inactive TDF App draft.
@@ -50,4 +50,4 @@ Link `docs/internships/studio-audit/DRAFT-PREVIEW.md`, the Spanish guide, invent
 
 ## External actions
 
-This document is only proposed PR text. No branch, stage, commit, push, PR, issue, task activation, or notification is created by this change. Repeat duplicate searches before any approved mutation.
+Branch creation, explicit staging, commits, and pushes were authorized and completed. Draft-PR creation was authorized on 2026-08-23. No issue, deployment, in-app draft, task activation, assignment, or notification is created by this publication. Confirm the remaining gates separately.

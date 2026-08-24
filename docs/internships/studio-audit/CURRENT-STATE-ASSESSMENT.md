@@ -40,6 +40,6 @@ The generated inventory contains 130 entries: 125 executable/applicable, four ex
 
 ## GitHub finding and authorized publication
 
-Read-only exact-title searches found no existing matching issue, pull request, or branch immediately before mutation. Diego authorized branch creation, staging, commit, and push on 2026-08-23. The root feature commit is `d68b794e531501589e18c24dbb60aa00ada0a0f7`; the mobile generated-client commit is `dac57203f2a55d6f38ecf32953e7449747d25f58`. Deployment, draft-PR creation, issue creation, in-app draft creation, activation, and notification remain explicit unexercised gates.
+Read-only exact-title searches found no existing matching issue, pull request, or branch immediately before mutation. Diego authorized branch creation, staging, commit, and push on 2026-08-23. The root feature commit is `d68b794e531501589e18c24dbb60aa00ada0a0f7`; the mobile generated-client commit is `dac57203f2a55d6f38ecf32953e7449747d25f58`. Draft-PR creation was authorized later on 2026-08-23. Deployment, issue creation, in-app draft creation, activation, and notification remain explicit unexercised gates.
 
 Relevant history reviewed includes merged work for public feedback (#138), internship payloads (#143), checkout and Domo booking flows (#149 and #150), persona-based quality work (#195), and packages/invoicing/inventory/analytics (#1), plus the open discoverability issue #128. These items informed the inventory but do not duplicate this project.
