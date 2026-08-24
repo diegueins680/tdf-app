@@ -30,7 +30,7 @@ import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
 import           Data.Time              (UTCTime, addDays, getCurrentTime, utctDay)
 import           Database.Persist
-import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
+import           Database.Persist.Sql   (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey)
 import           Servant
 import           System.Environment      (lookupEnv)
 import           Web.PathPieces         (PathPiece, fromPathPiece, toPathPiece)
@@ -144,11 +144,22 @@ internAuditServer user =
           throwError err400 { errBody = "proposedAssignee must have the Intern role" }
       now <- liftIO getCurrentTime
       entity <- withPool $ do
+        _ <- (rawSql "SELECT id::text FROM intern_project WHERE id = ? FOR UPDATE"
+          [toPersistValue projectKey] :: SqlPersistT IO [Single Text])
+        _ <- (rawSql "SELECT id::text FROM intern_task WHERE id = ? FOR UPDATE"
+          [toPersistValue taskKey] :: SqlPersistT IO [Single Text])
         project <- get projectKey
         task <- get taskKey
         case (project, task) of
-          (Just _, Just taskValue)
-            | ME.internTaskProjectId taskValue == projectKey -> do
+          (Just projectValue, Just taskValue)
+            | ME.internTaskProjectId taskValue == projectKey
+              && ME.internProjectActivationStatus projectValue == "draft"
+              && not (ME.internProjectNotificationsEnabled projectValue)
+              && not (isJust (ME.internProjectActivatedAt projectValue))
+              && ME.internTaskActivationStatus taskValue == "draft"
+              && not (isJust (ME.internTaskAssignedTo taskValue))
+              && ME.internTaskStatus taskValue == "todo"
+              && ME.internTaskProgress taskValue == 0 -> do
                 existing <- getBy (ME.UniqueInternAuditPlanTask taskKey)
                 case existing of
                   Just _ -> pure (Left "An audit plan already exists for this task")
@@ -186,6 +197,9 @@ internAuditServer user =
                       , ME.InternTaskUpdatedAt =. now
                       ]
                     Right <$> getJustEntity planId
+          (Just _, Just taskValue)
+            | ME.internTaskProjectId taskValue == projectKey ->
+                pure (Left "Audit plans require an untouched draft project and task")
           _ -> pure (Left "Project and task must exist and belong together")
       ent <- either (throwError . conflict) pure entity
       audit "intern_audit_plan" (toPathPiece (entityKey ent)) "draft_created"
@@ -432,14 +446,15 @@ internAuditServer user =
       validateExecutionPayload status actualResult blockerReason
       validateStrongEvidence testCase status evidenceSummary
       now <- liftIO getCurrentTime
-      rows <- withPool $ selectList [ME.InternTestExecutionTestCaseId ==. caseKey]
-        [Desc ME.InternTestExecutionExecutionNumber, LimitTo 1]
-      let nextNumber = case rows of
-            Entity _ current : _ -> ME.internTestExecutionExecutionNumber current + 1
-            [] -> 1
-          startedAt = if status == "pending" then Nothing else Just now
+      let startedAt = if status == "pending" then Nothing else Just now
           completedAt = if status `elem` terminalExecutionStatuses then Just now else Nothing
       ent <- withPool $ do
+        lockInternTestExecutionSequence caseKey
+        latest <- selectFirst [ME.InternTestExecutionTestCaseId ==. caseKey]
+          [Desc ME.InternTestExecutionExecutionNumber]
+        let nextNumber = maybe 1
+              ((+ 1) . ME.internTestExecutionExecutionNumber . entityVal)
+              latest
         executionId <- insert ME.InternTestExecution
           { ME.internTestExecutionTestCaseId = caseKey
           , ME.internTestExecutionExecutionNumber = nextNumber
@@ -1030,6 +1045,14 @@ withPool
   => SqlPersistT IO a
   -> m a
 withPool action = asks envPool >>= liftIO . runSqlPool action
+
+lockInternTestExecutionSequence :: ME.InternTestCaseId -> SqlPersistT IO ()
+lockInternTestExecutionSequence caseKey = do
+  _ <- (rawSql
+    "SELECT 1::bigint FROM (SELECT pg_advisory_xact_lock(hashtextextended(?, 0))) locked"
+    [PersistText ("intern-test-execution:" <> toPathPiece caseKey)]
+    :: SqlPersistT IO [Single Int64])
+  pure ()
 
 parseKey
   :: forall record m.

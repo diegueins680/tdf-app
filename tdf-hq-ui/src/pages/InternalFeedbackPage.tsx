@@ -308,6 +308,12 @@ function ReportDetail({ reportId }: { reportId: string }) {
       ifuCategoryId: category?.id,
     }));
   };
+  const saveReporterUpdate = () => {
+    if (summary.ifsState === 'draft') return InternalFeedback.update(reportId, reporterUpdate);
+    const informationUpdate = { ...reporterUpdate };
+    delete informationUpdate.ifuBlocking;
+    return InternalFeedback.update(reportId, informationUpdate);
+  };
 
   return (
     <PageShell title={summary.ifsTitle} subtitle={`${internalReportTypeLabel(catalogs.categories, summary.ifsReportType)} · ${STATE_LABELS[summary.ifsState]}`} maxWidth="lg" actions={<Button component={RouterLink} to="/feedback/interno" startIcon={<ArrowBackIcon />}>Reportes</Button>}>
@@ -345,9 +351,9 @@ function ReportDetail({ reportId }: { reportId: string }) {
             <Grid item xs={12} md={6}><TextField label="Resultado observado" value={reporterUpdate.ifuActualResult ?? ''} onChange={(event) => setReporterField('ifuActualResult', event.target.value || null)} fullWidth multiline minRows={3} /></Grid>
             <Grid item xs={12} md={6}><TextField label="Frecuencia" value={reporterUpdate.ifuFrequency ?? ''} onChange={(event) => setReporterField('ifuFrequency', event.target.value || null)} fullWidth /></Grid>
             <Grid item xs={12} md={6}><TextField label="Enlaces HTTPS de video" value={reporterUpdate.ifuVideoLinks ?? ''} onChange={(event) => setReporterField('ifuVideoLinks', event.target.value || null)} fullWidth /></Grid>
-            <Grid item xs={12} md={6}><TextField select label="¿Bloquea la prueba?" value={reporterUpdate.ifuBlocking ? 'yes' : 'no'} onChange={(event) => setReporterField('ifuBlocking', event.target.value === 'yes')} fullWidth><MenuItem value="no">No</MenuItem><MenuItem value="yes">Sí</MenuItem></TextField></Grid>
+            {summary.ifsState === 'draft' && <Grid item xs={12} md={6}><TextField select label="¿Bloquea la prueba?" value={reporterUpdate.ifuBlocking ? 'yes' : 'no'} onChange={(event) => setReporterField('ifuBlocking', event.target.value === 'yes')} fullWidth><MenuItem value="no">No</MenuItem><MenuItem value="yes">Sí</MenuItem></TextField></Grid>}
           </Grid>
-          <Button variant="contained" onClick={() => action.mutate(() => InternalFeedback.update(reportId, reporterUpdate))}>Guardar cambios</Button>
+          <Button variant="contained" onClick={() => action.mutate(saveReporterUpdate)}>Guardar cambios</Button>
         </Stack></CardContent></Card>}
 
         {report.ifrPotentialDuplicates.length > 0 && <Alert severity="warning"><Typography fontWeight={700}>Posibles reportes similares</Typography>{report.ifrPotentialDuplicates.map((candidate) => <Link key={candidate.ifsId} component={RouterLink} display="block" to={`/feedback/interno/${candidate.ifsId}`}>{candidate.ifsTitle} · {STATE_LABELS[candidate.ifsState]}</Link>)}</Alert>}

@@ -57,6 +57,41 @@ await request('/feedback', { method: 'POST', body: publicFeedback, expected: 200
 const legacyFeedback = await request('/feedback/internal/legacy', { token: admin.token });
 assert.ok(legacyFeedback.some((entry) => entry.lfdTitle === 'E2E — compatibilidad del feedback público'));
 
+const activeProject = await request('/internships/projects', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    ipcTitle: 'E2E — Proyecto que no debe reiniciarse',
+    ipcDescription: 'Fixture para rechazar la conversión destructiva de trabajo activo.',
+    ipcStatus: 'active',
+    ipcActivationStatus: 'draft',
+  },
+});
+const activeTask = await request('/internships/tasks', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    itcProjectId: activeProject.ipId,
+    itcTitle: 'E2E — Tarea activa que conserva su estado',
+    itcDescription: 'No se debe convertir en auditoría ni reiniciar.',
+    itcProposedAssignee: intern.partyId,
+    itcActivationStatus: 'active',
+  },
+});
+await request('/internships/audit-plans', {
+  token: admin.token,
+  method: 'POST',
+  expected: 409,
+  json: {
+    iapcProjectId: activeProject.ipId,
+    iapcTaskId: activeTask.itId,
+    iapcEnvironment: 'staging',
+    iapcProposedAssignee: intern.partyId,
+  },
+});
+
 const project = await request('/internships/projects', {
   token: admin.token,
   method: 'POST',
@@ -185,6 +220,25 @@ await request(`/internships/tasks/${task.itId}`, {
   json: { ituStatus: 'done' },
 });
 
+const concurrentExecutions = await Promise.all([
+  request(`/internships/test-cases/${testCase.itcId}/executions`, {
+    token: intern.token,
+    method: 'POST',
+    expected: 201,
+    json: { itecStatus: 'pending' },
+  }),
+  request(`/internships/test-cases/${testCase.itcId}/executions`, {
+    token: intern.token,
+    method: 'POST',
+    expected: 201,
+    json: { itecStatus: 'pending' },
+  }),
+]);
+assert.deepEqual(
+  concurrentExecutions.map((execution) => execution.itexExecutionNumber).sort((left, right) => left - right),
+  [1, 2],
+);
+
 const failedExecution = await request(`/internships/test-cases/${testCase.itcId}/executions`, {
   token: intern.token,
   method: 'POST',
@@ -287,6 +341,7 @@ const triaged = await request(`/feedback/internal/${reportId}`, {
     ifuAuthoritativeSeverityId: severity.id,
     ifuPriority: 'high',
     ifuAssignedTo: admin.partyId,
+    ifuBlocking: true,
     ifuGithubIssueUrl: 'https://github.com/diegueins680/tdf-app/issues/999999999',
   },
 });
@@ -301,6 +356,13 @@ await request(`/feedback/internal/${reportId}/comments`, {
 });
 const needsInfo = await request(`/feedback/internal/${reportId}`, { token: intern.token });
 assert.equal(needsInfo.ifrSummary.ifsState, 'needs_information');
+assert.equal(needsInfo.ifrSummary.ifsBlocking, true);
+await request(`/feedback/internal/${reportId}`, {
+  token: intern.token,
+  method: 'PATCH',
+  expected: 403,
+  json: { ifuBlocking: false },
+});
 await request(`/feedback/internal/${reportId}`, {
   token: intern.token,
   method: 'PATCH',
@@ -385,7 +447,7 @@ const projectAfterCompletion = projectsAfterCompletion.find((candidate) => candi
 assert.equal(projectAfterCompletion?.ipStatus, 'active');
 
 const executions = await request(`/internships/test-cases/${testCase.itcId}/executions`, { token: admin.token });
-assert.equal(executions.length, 2);
+assert.equal(executions.length, 4);
 assert.equal(executions[0].itexId, recordedRetest.ifrtExecutionId);
 assert.equal(executions[0].itexStatus, 'verified');
 const finalReport = await request(`/feedback/internal/${reportId}`, { token: admin.token });

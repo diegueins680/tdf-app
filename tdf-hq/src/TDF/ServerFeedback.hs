@@ -54,7 +54,7 @@ import           Data.Text                  (Text)
 import qualified Data.Text.Encoding         as TE
 import           Data.Time                  (getCurrentTime)
 import           Database.Persist
-import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
+import           Database.Persist.Sql       (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey)
 import           Servant
 import           Servant.Multipart          (FileData(..), Tmp)
 import           System.Directory           (createDirectoryIfMissing, doesFileExist, getFileSize)
@@ -402,6 +402,8 @@ internalFeedbackServer user =
       unless (isAdminUser || owner) $ throwError err404
       when (not isAdminUser && hasAdminFields) $
         throwError err403 { errBody = "Only administrators may set authoritative severity, priority, assignment, resolution, duplicate, state, or closure" }
+      when (not isAdminUser && isJust ifuBlocking && state /= "draft") $
+        throwError err403 { errBody = "Only administrators may change blocker classification after submission" }
       when (not isAdminUser && hasReporterFields && state `notElem` ["draft", "needs_information"]) $
         throwError err409 { errBody = "Submitted report fields may only be expanded when more information is requested" }
       titleUpdate <- traverse (either throwError pure . validateFeedbackTitle) ifuTitle
@@ -698,6 +700,7 @@ internalFeedbackServer user =
         executionKey <- case executionTarget of
           Left key -> pure key
           Right caseKey -> do
+            lockInternTestExecutionSequence caseKey
             latest <- selectFirst [ME.InternTestExecutionTestCaseId ==. caseKey]
               [Desc ME.InternTestExecutionExecutionNumber]
             let nextNumber = maybe 1
@@ -1356,6 +1359,14 @@ withPool
   => SqlPersistT IO a
   -> m a
 withPool action = asks envPool >>= liftIO . runSqlPool action
+
+lockInternTestExecutionSequence :: ME.InternTestCaseId -> SqlPersistT IO ()
+lockInternTestExecutionSequence caseKey = do
+  _ <- (rawSql
+    "SELECT 1::bigint FROM (SELECT pg_advisory_xact_lock(hashtextextended(?, 0))) locked"
+    [PersistText ("intern-test-execution:" <> toPathPiece caseKey)]
+    :: SqlPersistT IO [Single Int64])
+  pure ()
 
 encodeMetadata :: Aeson.ToJSON a => a -> Text
 encodeMetadata = TE.decodeUtf8 . BL.toStrict . Aeson.encode

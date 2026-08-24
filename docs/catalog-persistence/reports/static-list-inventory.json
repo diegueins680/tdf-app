@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-24T15:08:10.178Z",
+  "generatedAt": "2026-08-24T17:17:52.952Z",
   "repositoryRoot": ".",
-  "filesScanned": 1177,
+  "filesScanned": 1178,
   "candidateCount": 917,
   "byClassification": {
     "dynamic-business-catalog": 570,
@@ -37444,7 +37444,7 @@
       "lines": [
         1027
       ],
-      "consumerCount": 186,
+      "consumerCount": 187,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
@@ -37595,6 +37595,7 @@
         "scripts/test-music-directory-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-phase0-migration.sh",
+        "scripts/test-studio-internship-audit-api-e2e.mjs",
         "scripts/test-studio-internship-audit-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
@@ -41702,7 +41703,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 314,
+      "consumerCount": 315,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/reviews.yaml",
@@ -41872,6 +41873,7 @@
         "scripts/lib/logical-correctness-audit.mjs",
         "scripts/lib/production-release.mjs",
         "scripts/lib/sri-invoice.mjs",
+        "scripts/lib/studio-audit-safety.mjs",
         "scripts/lib/ux-quality-audit.mjs",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/order-catalog-foundation-seed.mjs",
@@ -78849,7 +78851,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "internalReportTypes",
-      "line": 1107,
+      "line": 1110,
       "values": [
         "error",
         "suggestion",
@@ -78863,7 +78865,7 @@
       "valueCount": 8,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        1107
+        1110
       ],
       "consumerCount": 15,
       "backendConsumers": [
@@ -78925,7 +78927,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "internalReportStates",
-      "line": 1128,
+      "line": 1131,
       "values": [
         "draft",
         "submitted",
@@ -78943,7 +78945,7 @@
       "valueCount": 12,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        1128
+        1131
       ],
       "consumerCount": 73,
       "backendConsumers": [
@@ -79076,7 +79078,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "allowedFeedbackAttachmentContentTypes",
-      "line": 1589,
+      "line": 1600,
       "values": [
         "application/csv",
         "application/pdf",
@@ -79090,7 +79092,7 @@
       "valueCount": 8,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1589
+        1600
       ],
       "consumerCount": 29,
       "backendConsumers": [
@@ -81601,7 +81603,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 37,
+      "consumerCount": 38,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
@@ -81616,6 +81618,7 @@
         "tdf-hq/src/TDF/Catalog/Integrity.hs",
         "tdf-hq/src/TDF/Catalog/Models.hs",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
+        "tdf-hq/src/TDF/ServerFeedback.hs",
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
         "tdf-hq/test/TDF/Operations/ModelSpec.hs",
         "tdf-hq/test/TDF/Profiles/ArtistSpec.hs",
