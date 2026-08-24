@@ -497,6 +497,11 @@ const similarDraft = await request('/feedback/internal', {
 });
 assert.notEqual(similarDraft.ifrSummary.ifsId, reportId);
 assert.ok(similarDraft.ifrPotentialDuplicates.some((candidate) => candidate.ifsId === reportId));
+const similarReceived = await request(`/feedback/internal/${similarDraft.ifrSummary.ifsId}/submit`, {
+  token: intern.token,
+  method: 'POST',
+});
+assert.equal(similarReceived.ifrSummary.ifsState, 'received');
 
 const concurrentTransitions = await Promise.all([
   requestStatus(`/feedback/internal/${reportId}`, {
@@ -684,6 +689,15 @@ await request('/feedback/internal', {
   method: 'POST',
   expected: 409,
   json: { ...reportCreate, ifcTitle: 'Administración tampoco crea después del cierre' },
+});
+await request(`/feedback/internal/${similarDraft.ifrSummary.ifsId}/comments`, {
+  token: admin.token,
+  method: 'POST',
+  expected: 409,
+  json: {
+    ifccKind: 'information_request',
+    ifccBody: 'No debe reabrir el reporte después del cierre de la auditoría.',
+  },
 });
 
 const executions = await request(`/internships/test-cases/${testCase.itcId}/executions`, { token: admin.token });

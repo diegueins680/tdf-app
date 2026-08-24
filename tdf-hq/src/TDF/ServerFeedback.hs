@@ -597,42 +597,52 @@ internalFeedbackServer user =
             "information_response" | ME.internalFeedbackReportState report == "needs_information" -> Just "received"
             _ -> Nothing
       entResult <- withPool $ do
-        stateAvailable <- case nextState of
+        planActive <- case nextState of
           Nothing -> pure True
-          Just target -> do
-            changed <- updateWhereCount
-              [ ME.InternalFeedbackReportId ==. reportKey
-              , ME.InternalFeedbackReportVersion ==. ME.internalFeedbackReportVersion report
-              ]
-              [ ME.InternalFeedbackReportState =. target
-              , ME.InternalFeedbackReportVersion +=. 1
-              , ME.InternalFeedbackReportUpdatedAt =. now
-              ]
-            pure (changed == 1)
-        if not stateAvailable
-          then pure Nothing
+          Just _ -> maybe (pure True) lockActiveAuditPlanForTask
+            (ME.internalFeedbackReportInternshipTaskId report)
+        if not planActive
+          then pure (Left ("finalized" :: Text))
           else do
-            commentId <- insert ME.InternalFeedbackComment
-              { ME.internalFeedbackCommentReportId = reportKey
-              , ME.internalFeedbackCommentAuthorPartyId = auPartyId user
-              , ME.internalFeedbackCommentKind = kind
-              , ME.internalFeedbackCommentBody = body
-              , ME.internalFeedbackCommentCreatedAt = now
-              }
-            insert_ ME.InternalFeedbackHistory
-              { ME.internalFeedbackHistoryReportId = reportKey
-              , ME.internalFeedbackHistoryActorPartyId = auPartyId user
-              , ME.internalFeedbackHistoryAction = kind
-              , ME.internalFeedbackHistoryPreviousState = Just (ME.internalFeedbackReportState report)
-              , ME.internalFeedbackHistoryNewState = nextState
-              , ME.internalFeedbackHistoryMetadata = Nothing
-              , ME.internalFeedbackHistoryCreatedAt = now
-              }
-            Just <$> getJustEntity commentId
-      ent <- maybe
-        (throwError err409 { errBody = "Report changed before the comment transition; reload it before retrying" })
-        pure
-        entResult
+            stateAvailable <- case nextState of
+              Nothing -> pure True
+              Just target -> do
+                changed <- updateWhereCount
+                  [ ME.InternalFeedbackReportId ==. reportKey
+                  , ME.InternalFeedbackReportVersion ==. ME.internalFeedbackReportVersion report
+                  ]
+                  [ ME.InternalFeedbackReportState =. target
+                  , ME.InternalFeedbackReportVersion +=. 1
+                  , ME.InternalFeedbackReportUpdatedAt =. now
+                  ]
+                pure (changed == 1)
+            if not stateAvailable
+              then pure (Left "changed")
+              else do
+                commentId <- insert ME.InternalFeedbackComment
+                  { ME.internalFeedbackCommentReportId = reportKey
+                  , ME.internalFeedbackCommentAuthorPartyId = auPartyId user
+                  , ME.internalFeedbackCommentKind = kind
+                  , ME.internalFeedbackCommentBody = body
+                  , ME.internalFeedbackCommentCreatedAt = now
+                  }
+                insert_ ME.InternalFeedbackHistory
+                  { ME.internalFeedbackHistoryReportId = reportKey
+                  , ME.internalFeedbackHistoryActorPartyId = auPartyId user
+                  , ME.internalFeedbackHistoryAction = kind
+                  , ME.internalFeedbackHistoryPreviousState = Just (ME.internalFeedbackReportState report)
+                  , ME.internalFeedbackHistoryNewState = nextState
+                  , ME.internalFeedbackHistoryMetadata = Nothing
+                  , ME.internalFeedbackHistoryCreatedAt = now
+                  }
+                Right <$> getJustEntity commentId
+      ent <- case entResult of
+        Left "finalized" -> throwError err409
+          { errBody = "Finalized audit plans do not accept workflow changes" }
+        Left "changed" -> throwError err409
+          { errBody = "Report changed before the comment transition; reload it before retrying" }
+        Left _ -> throwError err500
+        Right entity -> pure entity
       if kind == "information_request"
         then withPool $ insertReporterNotification report "internal_feedback_needs_information" "Se necesita más información" "Revisa tu reporte y responde la solicitud del equipo."
         else when (kind == "information_response") (enqueueTeamNotification reportEnt "internal_feedback_information_response" "immediate")
