@@ -1,0 +1,24 @@
+FROM node:20.19.4-bookworm-slim AS builder
+WORKDIR /repo
+
+COPY package.json package-lock.json ./
+COPY tdf-hq-ui/package.json tdf-hq-ui/package.json
+RUN npm ci --workspace=tdf-hq-ui --include-workspace-root=false
+
+COPY tdf-hq-ui/index.html tdf-hq-ui/index.html
+COPY tdf-hq-ui/public tdf-hq-ui/public
+COPY tdf-hq-ui/scripts tdf-hq-ui/scripts
+COPY tdf-hq-ui/src tdf-hq-ui/src
+COPY tdf-hq-ui/tsconfig.app.json tdf-hq-ui/tsconfig.app.json
+COPY tdf-hq-ui/tsconfig.json tdf-hq-ui/tsconfig.json
+COPY tdf-hq-ui/vite.config.ts tdf-hq-ui/vite.config.ts
+
+ARG VITE_API_BASE
+RUN test -n "$VITE_API_BASE" && \
+    VITE_API_BASE="$VITE_API_BASE" npm run typecheck --workspace=tdf-hq-ui && \
+    cd tdf-hq-ui && VITE_API_BASE="$VITE_API_BASE" ../node_modules/.bin/vite build
+
+FROM nginx:1.27-alpine
+COPY tdf-hq-ui/nginx.staging.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /repo/tdf-hq-ui/dist /usr/share/nginx/html
+EXPOSE 8080

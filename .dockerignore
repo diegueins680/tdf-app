@@ -79,3 +79,20 @@ db/
 /tdf-hq/dist-newstyle/
 /tdf-hq/dist-newstyle-fno/
 /tdf-hq-ui/node_modules/
+
+# The staging web image needs only reviewed UI source/config. Keep local
+# dependencies, build output, environment files, and unrelated work excluded.
+!/tdf-hq-ui/
+!/tdf-hq-ui/index.html
+!/tdf-hq-ui/package.json
+!/tdf-hq-ui/public/
+!/tdf-hq-ui/public/**
+!/tdf-hq-ui/scripts/
+!/tdf-hq-ui/scripts/**
+!/tdf-hq-ui/src/
+!/tdf-hq-ui/src/**
+!/tdf-hq-ui/tsconfig.app.json
+!/tdf-hq-ui/tsconfig.json
+!/tdf-hq-ui/vite.config.ts
+!/tdf-hq-ui/Dockerfile.staging
+!/tdf-hq-ui/nginx.staging.conf
