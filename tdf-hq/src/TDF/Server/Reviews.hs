@@ -212,12 +212,12 @@ createReview user idempotency request@ExperienceReviewCreateRequest
   when (rating < 1 || rating > 5) $
     throwError err400 {errBody = "rating must be between 1 and 5"}
   validateReviewBody body
-  ensurePublicTarget targetKind targetId
   reviewId <- reserveIdempotency user idempotency request
   prior <- reviewById reviewId
   case prior of
     Just value -> pure value
     Nothing -> do
+      ensurePublicTarget targetKind targetId
       eligible <- runDB
         (rawSql
           "SELECT experience_review_source_is_eligible(?,?,?,?,?)"
