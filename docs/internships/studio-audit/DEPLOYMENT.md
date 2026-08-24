@@ -48,7 +48,7 @@ Secrets and the runtime-only persona password are installed through the staging 
 
 Apply `tdf-hq/sql/2026-08-21_studio_internship_audit.sql` through the repository migration mechanism only after a backup and migration preflight. It is rerunnable. Confirm the new tables, constraints, indexes, triggers, and explicit draft columns. Existing public `feedback` rows are not rewritten.
 
-The migration registry requires an `introducedBy` commit hash. Because commits are not authorized, the registry entry is intentionally pending. Add it only after the approved commit exists; never invent a hash.
+The migration is registered in `scripts/production-migrations.json` with the approved feature commit `d68b794e531501589e18c24dbb60aa00ada0a0f7` as `introducedBy`. The registry entry was added only after that commit existed. Release preflight must still prove that commit is an ancestor of the selected deployment SHA.
 
 ## Draft creation
 

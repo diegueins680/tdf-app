@@ -6,7 +6,7 @@ This file records observed commands and results through 2026-08-23. A failed, bl
 
 | Check | Command | Observed result |
 | --- | --- | --- |
-| Baseline isolation | `git rev-parse HEAD`; `git status --short` in the primary checkout and isolated worktree | Pass: detached worktree at `dac84b099b18b51032fb94f58273120f5375eb85` from `origin/main`; unrelated primary-checkout changes preserved |
+| Baseline isolation | `git rev-parse HEAD`; `git status --short` in the primary checkout and isolated worktree | Pass: work began from `dac84b099b18b51032fb94f58273120f5375eb85`, confirmed as current `origin/main` immediately before branching; unrelated primary-checkout changes remained untouched |
 | Identity search | Production PostgreSQL `BEGIN TRANSACTION READ ONLY` queries with a 10-second statement timeout across exact text matches and the bounded intern population | Pass: the requested “Stuart” resolves uniquely by active profile, recent time activity, and existing named internship project to Stewart Moreira; the spelling difference is recorded, and no production row was changed |
 | GitHub duplicate inspection | Read-only exact-title and related issue/PR searches | No matching current issue or PR at inspection time; repeat immediately before any authorized mutation |
 | Inventory and cases | `npm run generate:studio-internship-audit` | Pass: 130 inventory entries, 125 applicable features, 174 cases, 14 exploratory charters, 107 strong-evidence cases, estimated 23.4 hours |
@@ -55,7 +55,7 @@ This file records observed commands and results through 2026-08-23. A failed, bl
 | Run with Stewart's verified real account in staging | Blocked by staging deployment/configuration approval; production identity must be mapped without importing production credentials or personal data |
 | Real backend-backed Spanish/English and responsive-device smoke in deployed staging | Not authorized; mocked Chromium audit views were exercised in Spanish, while deployment-backed bilingual/device coverage remains a manual staging gate |
 | Draft PR and GitHub issue | Not authorized and not performed |
-| Branch, stage, commit, push | Authorized on 2026-08-23; final branch/commit/push evidence is recorded after publication |
-| Publish regenerated `tdf-mobile` submodule files | Branch/commit/push authorized as part of the requested publication; parent-pointer and remote evidence are recorded after publication |
+| Root branch/stage/commit | `git switch -c codex/studio-internship-audit`; explicit path staging; `git commit -m "feat: add traceable studio internship audit"` | Pass: feature commit `d68b794e531501589e18c24dbb60aa00ada0a0f7`; only assignment files staged; push evidence is reported in the final handoff |
+| Publish regenerated `tdf-mobile` submodule files | Same named mobile branch; explicit two-file staging; `git commit -m "feat: register studio audit mobile fallback"`; tracked push | Pass: remote mobile commit `dac57203f2a55d6f38ecf32953e7449747d25f58`; parent pointer included in the root feature commit |
 
 The API E2E uses an Intern account equivalent in role and permissions to Stewart and an authorized administrative account, but it is deliberately synthetic. It does not satisfy the real-staging deployment gate.

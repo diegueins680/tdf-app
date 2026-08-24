@@ -305,6 +305,11 @@
       "id": "2026-08-20_verified_experience_reviews",
       "path": "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
       "introducedBy": "dad0ca237b737bdeee5ec87970c2bbfe846e1450"
+    },
+    {
+      "id": "2026-08-21_studio_internship_audit",
+      "path": "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
+      "introducedBy": "d68b794e531501589e18c24dbb60aa00ada0a0f7"
     }
   ]
 }

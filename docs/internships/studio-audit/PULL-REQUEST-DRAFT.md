@@ -27,7 +27,7 @@ Intern reports are private by reporter; backend authorization protects reports a
 
 ## Migration and rollback
 
-Apply `2026-08-21_studio_internship_audit.sql`; it is rerunnable and leaves legacy feedback untouched. Roll back with the paired `_rollback.sql` after stopping new writes and exporting any audit records that must be retained. The migration registry hash must be added only after an authorized commit exists.
+Apply `2026-08-21_studio_internship_audit.sql`; it is rerunnable and leaves legacy feedback untouched. Roll back with the paired `_rollback.sql` after stopping new writes and exporting any audit records that must be retained. The production migration registry points to the actual authorized feature commit; release preflight must verify ancestry.
 
 ## Test plan
 
