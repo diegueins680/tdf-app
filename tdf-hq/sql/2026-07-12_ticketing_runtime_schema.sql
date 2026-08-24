@@ -153,29 +153,6 @@ CREATE TABLE IF NOT EXISTS public.ticket_qr_code (
     CONSTRAINT unique_ticket_qr_code UNIQUE (ticket_id)
 );
 
--- Persistent historically generated `unique_ticket_q_r_code` when creating the
--- base schema from the Haskell model. Normalize that equivalent legacy name so
--- this migration can verify both production snapshots and freshly seeded,
--- deterministic staging databases without creating a duplicate unique index.
-DO $compatibility$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_catalog.pg_constraint
-        WHERE conrelid = 'public.ticket_qr_code'::regclass
-          AND conname = 'unique_ticket_qr_code'
-          AND contype = 'u'
-    ) AND EXISTS (
-        SELECT 1 FROM pg_catalog.pg_constraint
-        WHERE conrelid = 'public.ticket_qr_code'::regclass
-          AND conname = 'unique_ticket_q_r_code'
-          AND contype = 'u'
-    ) THEN
-        ALTER TABLE public.ticket_qr_code
-            RENAME CONSTRAINT unique_ticket_q_r_code TO unique_ticket_qr_code;
-    END IF;
-END
-$compatibility$;
-
 ALTER TABLE public.event_ticket_order
     ADD COLUMN IF NOT EXISTS stripe_payment_intent_id VARCHAR,
     ADD COLUMN IF NOT EXISTS promo_code_id BIGINT REFERENCES public.promo_code(id),
