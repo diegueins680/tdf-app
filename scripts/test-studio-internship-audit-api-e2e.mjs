@@ -58,10 +58,10 @@ const ideaCategory = feedbackCategories.find((item) => item.code === 'idea' && i
 const severity = catalogs.catalogs.find((entry) => entry.catalog.code === 'feedback-severities')?.items.find((item) => item.active && item.workflowState === 'published');
 assert.ok(category?.id && ideaCategory?.id && severity?.id, 'Published feedback catalogs are required');
 
-const createAuditCase = (planId, stableId, overrides = {}) => request(`/internships/audit-plans/${planId}/cases`, {
+const createAuditCase = (planId, stableId, overrides = {}, expected = 201) => request(`/internships/audit-plans/${planId}/cases`, {
   token: admin.token,
   method: 'POST',
-  expected: 201,
+  expected,
   json: {
     itccStableId: stableId,
     itccModuleName: 'Prácticas y feedback',
@@ -302,6 +302,7 @@ const siblingTask = await request('/internships/tasks', {
 });
 assert.equal(siblingTask.itStatus, 'todo');
 
+await createAuditCase(plan.iapId, '123-INVALID', {}, 400);
 const testCase = await createAuditCase(plan.iapId, 'STU-E2E-001');
 
 await request(`/internships/tasks/${task.itId}`, {
@@ -380,6 +381,27 @@ assert.deepEqual(
   concurrentExecutions.map((execution) => execution.itexExecutionNumber).sort((left, right) => left - right),
   [1, 2],
 );
+const concurrentExecutionUpdates = await Promise.all([
+  requestStatus(`/internships/test-executions/${concurrentExecutions[0].itexId}`, {
+    token: intern.token,
+    method: 'PATCH',
+    json: {
+      iteuStatus: 'passed',
+      iteuActualResult: 'La ejecución concurrente terminó correctamente.',
+      iteuEvidenceSummary: 'EVIDENCIA-E2E-CONCURRENT-PASS',
+    },
+  }),
+  requestStatus(`/internships/test-executions/${concurrentExecutions[0].itexId}`, {
+    token: intern.token,
+    method: 'PATCH',
+    json: {
+      iteuStatus: 'failed',
+      iteuActualResult: 'La ejecución concurrente observó un fallo sintético.',
+      iteuEvidenceSummary: 'EVIDENCIA-E2E-CONCURRENT-FAIL',
+    },
+  }),
+]);
+assert.deepEqual(concurrentExecutionUpdates.sort((left, right) => left - right), [200, 409]);
 
 const failedExecution = await request(`/internships/test-cases/${testCase.itcId}/executions`, {
   token: intern.token,

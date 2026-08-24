@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-24T20:00:49.142Z",
+  "generatedAt": "2026-08-24T20:41:34.258Z",
   "repositoryRoot": ".",
   "filesScanned": 1181,
   "candidateCount": 917,
@@ -3570,7 +3570,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 543,
+      "consumerCount": 544,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -3858,7 +3858,7 @@
       "lines": [
         695
       ],
-      "consumerCount": 543,
+      "consumerCount": 544,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -4297,7 +4297,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 543,
+      "consumerCount": 544,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -33106,7 +33106,7 @@
       "lines": [
         381
       ],
-      "consumerCount": 544,
+      "consumerCount": 545,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -40267,7 +40267,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 548,
+      "consumerCount": 549,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -50487,7 +50487,7 @@
       "lines": [
         7668
       ],
-      "consumerCount": 543,
+      "consumerCount": 544,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -51046,7 +51046,7 @@
       "lines": [
         7935
       ],
-      "consumerCount": 544,
+      "consumerCount": 545,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -52492,7 +52492,7 @@
         10335,
         10387
       ],
-      "consumerCount": 543,
+      "consumerCount": 544,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -78866,7 +78866,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "internalReportTypes",
-      "line": 1143,
+      "line": 1164,
       "values": [
         "error",
         "suggestion",
@@ -78880,7 +78880,7 @@
       "valueCount": 8,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        1143
+        1164
       ],
       "consumerCount": 15,
       "backendConsumers": [
@@ -78942,7 +78942,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "internalReportStates",
-      "line": 1164,
+      "line": 1185,
       "values": [
         "draft",
         "submitted",
@@ -78960,7 +78960,7 @@
       "valueCount": 12,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        1164
+        1185
       ],
       "consumerCount": 73,
       "backendConsumers": [
@@ -79093,7 +79093,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "allowedFeedbackAttachmentContentTypes",
-      "line": 1633,
+      "line": 1654,
       "values": [
         "application/csv",
         "application/pdf",
@@ -79107,7 +79107,7 @@
       "valueCount": 8,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1633
+        1654
       ],
       "consumerCount": 29,
       "backendConsumers": [
@@ -82752,7 +82752,7 @@
       "lines": [
         1016
       ],
-      "consumerCount": 543,
+      "consumerCount": 544,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",

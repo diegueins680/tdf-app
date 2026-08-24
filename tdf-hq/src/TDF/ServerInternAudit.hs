@@ -472,7 +472,7 @@ internAuditServer user =
 
     createExecutionH rawCaseId IA.InternTestExecutionCreate{..} = do
       ensureInternshipMember
-      (Entity caseKey testCase, planEnt) <- loadCaseAndPlan rawCaseId
+      (Entity caseKey testCase, planEnt@(Entity planKey _)) <- loadCaseAndPlan rawCaseId
       ensurePlanAccess planEnt
       ensureActivePlanMutation planEnt
       status <- either throwError pure (validateExecutionStatus itecStatus)
@@ -486,29 +486,34 @@ internAuditServer user =
       now <- liftIO getCurrentTime
       let startedAt = if status == "pending" then Nothing else Just now
           completedAt = if status `elem` terminalExecutionStatuses then Just now else Nothing
-      ent <- withPool $ do
-        lockInternTestExecutionSequence caseKey
-        latest <- selectFirst [ME.InternTestExecutionTestCaseId ==. caseKey]
-          [Desc ME.InternTestExecutionExecutionNumber]
-        let nextNumber = maybe 1
-              ((+ 1) . ME.internTestExecutionExecutionNumber . entityVal)
-              latest
-        executionId <- insert ME.InternTestExecution
-          { ME.internTestExecutionTestCaseId = caseKey
-          , ME.internTestExecutionExecutionNumber = nextNumber
-          , ME.internTestExecutionExecutorPartyId = auPartyId user
-          , ME.internTestExecutionStatus = status
-          , ME.internTestExecutionActualResult = actualResult
-          , ME.internTestExecutionPersistedStateObserved = persistedState
-          , ME.internTestExecutionSideEffectsObserved = sideEffects
-          , ME.internTestExecutionBlockerReason = blockerReason
-          , ME.internTestExecutionEvidenceSummary = evidenceSummary
-          , ME.internTestExecutionStartedAt = startedAt
-          , ME.internTestExecutionCompletedAt = completedAt
-          , ME.internTestExecutionCreatedAt = now
-          , ME.internTestExecutionUpdatedAt = now
-          }
-        getJustEntity executionId
+      result <- withPool $ do
+        active <- lockActiveAuditPlan planKey
+        if not active
+          then pure Nothing
+          else do
+            lockInternTestExecutionSequence caseKey
+            latest <- selectFirst [ME.InternTestExecutionTestCaseId ==. caseKey]
+              [Desc ME.InternTestExecutionExecutionNumber]
+            let nextNumber = maybe 1
+                  ((+ 1) . ME.internTestExecutionExecutionNumber . entityVal)
+                  latest
+            executionId <- insert ME.InternTestExecution
+              { ME.internTestExecutionTestCaseId = caseKey
+              , ME.internTestExecutionExecutionNumber = nextNumber
+              , ME.internTestExecutionExecutorPartyId = auPartyId user
+              , ME.internTestExecutionStatus = status
+              , ME.internTestExecutionActualResult = actualResult
+              , ME.internTestExecutionPersistedStateObserved = persistedState
+              , ME.internTestExecutionSideEffectsObserved = sideEffects
+              , ME.internTestExecutionBlockerReason = blockerReason
+              , ME.internTestExecutionEvidenceSummary = evidenceSummary
+              , ME.internTestExecutionStartedAt = startedAt
+              , ME.internTestExecutionCompletedAt = completedAt
+              , ME.internTestExecutionCreatedAt = now
+              , ME.internTestExecutionUpdatedAt = now
+              }
+            Just <$> getJustEntity executionId
+      ent <- maybe (throwError finalizedMutationConflict) pure result
       audit "intern_test_execution" (toPathPiece (entityKey ent)) "created"
         (Just $ object ["testCaseId" .= rawCaseId, "status" .= status])
       notifyPlanMilestones planEnt status
@@ -518,7 +523,7 @@ internAuditServer user =
       ensureInternshipMember
       executionKey <- parseKey @ME.InternTestExecution rawExecutionId
       Entity _ execution <- withPool (getEntity executionKey) >>= maybe (throwError err404) pure
-      (Entity _ testCase, planEnt) <- loadCaseAndPlan (toPathPiece (ME.internTestExecutionTestCaseId execution))
+      (Entity _ testCase, planEnt@(Entity planKey _)) <- loadCaseAndPlan (toPathPiece (ME.internTestExecutionTestCaseId execution))
       ensurePlanAccess planEnt
       ensureActivePlanMutation planEnt
       unless (isAdminUser || ME.internTestExecutionExecutorPartyId execution == auPartyId user) $
@@ -550,16 +555,33 @@ internAuditServer user =
             , fmap (ME.InternTestExecutionEvidenceSummary =.) evidenceSummaryUpdate
             ]
           iteuStatusCanonical = if isJust iteuStatus then Just status else Nothing
-      withPool $ update executionKey
-        (updates ++
-          [ ME.InternTestExecutionStartedAt =. startedAt
-          , ME.InternTestExecutionCompletedAt =. completedAt
-          , ME.InternTestExecutionUpdatedAt =. now
-          ])
+      result <- withPool $ do
+        active <- lockActiveAuditPlan planKey
+        if not active
+          then pure (Left ("finalized" :: Text))
+          else do
+            changed <- updateWhereCount
+              [ ME.InternTestExecutionId ==. executionKey
+              , ME.InternTestExecutionStatus ==. ME.internTestExecutionStatus execution
+              , ME.InternTestExecutionUpdatedAt ==. ME.internTestExecutionUpdatedAt execution
+              ]
+              (updates ++
+                [ ME.InternTestExecutionStartedAt =. startedAt
+                , ME.InternTestExecutionCompletedAt =. completedAt
+                , ME.InternTestExecutionUpdatedAt =. now
+                ])
+            if changed == 1
+              then Right <$> getJustEntity executionKey
+              else pure (Left "changed")
+      updated <- case result of
+        Left "finalized" -> throwError finalizedMutationConflict
+        Left "changed" -> throwError err409
+          { errBody = "Execution changed during this update; reload it before retrying" }
+        Left _ -> throwError err500
+        Right ent -> pure ent
       audit "intern_test_execution" rawExecutionId "updated"
         (Just $ object ["previousStatus" .= ME.internTestExecutionStatus execution, "status" .= status])
       notifyPlanMilestones planEnt status
-      updated <- withPool $ getJustEntity executionKey
       pure (toExecutionDTO updated)
 
     dailySummariesByPlanH rawPlanId = listDailySummariesH rawPlanId :<|> createDailySummaryH rawPlanId
@@ -574,7 +596,7 @@ internAuditServer user =
 
     createDailySummaryH rawPlanId IA.InternDailySummaryCreate{..} = do
       ensureInternshipMember
-      planEnt@(Entity _ plan) <- loadPlan rawPlanId
+      planEnt@(Entity planKey plan) <- loadPlan rawPlanId
       ensurePlanAccess planEnt
       ensureActivePlanMutation planEnt
       unless (idscMinutesWorked >= 1 && idscMinutesWorked <= 1440) $
@@ -585,21 +607,26 @@ internAuditServer user =
       when (idscCasesCompleted < 0 || idscReportsCreated < 0) $
         throwError err400 { errBody = "Summary counts must not be negative" }
       now <- liftIO getCurrentTime
-      ent <- withPool $ do
-        summaryId <- insert ME.InternDailySummary
-          { ME.internDailySummaryTaskId = ME.internAuditPlanTaskId plan
-          , ME.internDailySummaryAuthorPartyId = auPartyId user
-          , ME.internDailySummaryWorkDate = idscWorkDate
-          , ME.internDailySummaryMinutesWorked = idscMinutesWorked
-          , ME.internDailySummaryModulesTested = modulesTested
-          , ME.internDailySummaryCasesCompleted = idscCasesCompleted
-          , ME.internDailySummaryReportsCreated = idscReportsCreated
-          , ME.internDailySummaryBlockers = blockers
-          , ME.internDailySummaryNextStep = nextStep
-          , ME.internDailySummaryCreatedAt = now
-          , ME.internDailySummaryUpdatedAt = now
-          }
-        getJustEntity summaryId
+      result <- withPool $ do
+        active <- lockActiveAuditPlan planKey
+        if not active
+          then pure Nothing
+          else do
+            summaryId <- insert ME.InternDailySummary
+              { ME.internDailySummaryTaskId = ME.internAuditPlanTaskId plan
+              , ME.internDailySummaryAuthorPartyId = auPartyId user
+              , ME.internDailySummaryWorkDate = idscWorkDate
+              , ME.internDailySummaryMinutesWorked = idscMinutesWorked
+              , ME.internDailySummaryModulesTested = modulesTested
+              , ME.internDailySummaryCasesCompleted = idscCasesCompleted
+              , ME.internDailySummaryReportsCreated = idscReportsCreated
+              , ME.internDailySummaryBlockers = blockers
+              , ME.internDailySummaryNextStep = nextStep
+              , ME.internDailySummaryCreatedAt = now
+              , ME.internDailySummaryUpdatedAt = now
+              }
+            Just <$> getJustEntity summaryId
+      ent <- maybe (throwError finalizedMutationConflict) pure result
       audit "intern_daily_summary" (toPathPiece (entityKey ent)) "created" Nothing
       pure (toDailySummaryDTO ent)
 
@@ -620,42 +647,58 @@ internAuditServer user =
       now <- liftIO getCurrentTime
       snapshot <- buildFinalSnapshot planEnt
       conclusionsUpdate <- validatedOptional "conclusions" 12000 ifsuConclusions
-      existing <- withPool $ getBy (ME.UniqueInternFinalSummaryPlan planKey)
-      when (not (isJust existing)) $ do
-        task <- withPool (get (ME.internAuditPlanTaskId plan)) >>= maybe (throwError err404) pure
-        unless (ME.internTaskAssignedTo task == Just (auPartyId user)) $
-          throwError err403 { errBody = "Only the assigned intern may prepare the initial final summary" }
-      forM_ existing $ \(Entity _ summary) ->
-        unless (ME.internFinalSummaryAuthorPartyId summary == auPartyId user) $
-          throwError err403 { errBody = "Cannot update another intern's summary" }
-      let effectiveConclusions = conclusionsUpdate <|?> (ME.internFinalSummaryConclusions . entityVal =<< existing)
-      when (ifsuSubmit == Just True && not (hasText effectiveConclusions)) $
-        throwError err400 { errBody = "Conclusions are required before submitting the final summary" }
-      ent <- withPool $ do
-        case existing of
-          Nothing -> do
-            summaryId <- insert ME.InternFinalSummary
-              { ME.internFinalSummaryPlanId = planKey
-              , ME.internFinalSummaryAuthorPartyId = auPartyId user
-              , ME.internFinalSummaryGeneratedSnapshot = snapshot
-              , ME.internFinalSummaryConclusions = conclusionsUpdate
-              , ME.internFinalSummarySubmittedAt = if ifsuSubmit == Just True then Just now else Nothing
-              , ME.internFinalSummaryApprovedBy = Nothing
-              , ME.internFinalSummaryApprovedAt = Nothing
-              , ME.internFinalSummaryCreatedAt = now
-              , ME.internFinalSummaryUpdatedAt = now
-              }
-            getJustEntity summaryId
-          Just (Entity summaryKey _) -> do
-            update summaryKey
-              [ ME.InternFinalSummaryGeneratedSnapshot =. snapshot
-              , ME.InternFinalSummaryConclusions =. effectiveConclusions
-              , ME.InternFinalSummarySubmittedAt =. if ifsuSubmit == Just True then Just now else Nothing
-              , ME.InternFinalSummaryApprovedBy =. Nothing
-              , ME.InternFinalSummaryApprovedAt =. Nothing
-              , ME.InternFinalSummaryUpdatedAt =. now
-              ]
-            getJustEntity summaryKey
+      result <- withPool $ do
+        active <- lockActiveAuditPlan planKey
+        if not active
+          then pure (Left ("finalized" :: Text))
+          else do
+            existing <- getBy (ME.UniqueInternFinalSummaryPlan planKey)
+            authorized <- case existing of
+              Nothing -> do
+                task <- get (ME.internAuditPlanTaskId plan)
+                pure $ case task of
+                  Just taskValue -> ME.internTaskAssignedTo taskValue == Just (auPartyId user)
+                  Nothing -> False
+              Just (Entity _ summary) ->
+                pure (ME.internFinalSummaryAuthorPartyId summary == auPartyId user)
+            let effectiveConclusions =
+                  conclusionsUpdate <|?> (ME.internFinalSummaryConclusions . entityVal =<< existing)
+            if not authorized
+              then pure (Left "forbidden")
+              else if ifsuSubmit == Just True && not (hasText effectiveConclusions)
+                then pure (Left "conclusions")
+                else Right <$> case existing of
+                  Nothing -> do
+                    summaryId <- insert ME.InternFinalSummary
+                      { ME.internFinalSummaryPlanId = planKey
+                      , ME.internFinalSummaryAuthorPartyId = auPartyId user
+                      , ME.internFinalSummaryGeneratedSnapshot = snapshot
+                      , ME.internFinalSummaryConclusions = conclusionsUpdate
+                      , ME.internFinalSummarySubmittedAt = if ifsuSubmit == Just True then Just now else Nothing
+                      , ME.internFinalSummaryApprovedBy = Nothing
+                      , ME.internFinalSummaryApprovedAt = Nothing
+                      , ME.internFinalSummaryCreatedAt = now
+                      , ME.internFinalSummaryUpdatedAt = now
+                      }
+                    getJustEntity summaryId
+                  Just (Entity summaryKey _) -> do
+                    update summaryKey
+                      [ ME.InternFinalSummaryGeneratedSnapshot =. snapshot
+                      , ME.InternFinalSummaryConclusions =. effectiveConclusions
+                      , ME.InternFinalSummarySubmittedAt =. if ifsuSubmit == Just True then Just now else Nothing
+                      , ME.InternFinalSummaryApprovedBy =. Nothing
+                      , ME.InternFinalSummaryApprovedAt =. Nothing
+                      , ME.InternFinalSummaryUpdatedAt =. now
+                      ]
+                    getJustEntity summaryKey
+      ent <- case result of
+        Left "finalized" -> throwError finalizedMutationConflict
+        Left "forbidden" -> throwError err403
+          { errBody = "Only the assigned summary author may save the final summary" }
+        Left "conclusions" -> throwError err400
+          { errBody = "Conclusions are required before submitting the final summary" }
+        Left _ -> throwError err500
+        Right entity -> pure entity
       audit "intern_final_summary" (toPathPiece (entityKey ent))
         (if ifsuSubmit == Just True then "submitted" else "saved") Nothing
       when (ifsuSubmit == Just True) $ enqueueTeamNotification planEnt "internship_final_ready" "immediate"
@@ -1061,10 +1104,14 @@ validateChoice fieldName choices raw =
 validateStableId :: MonadError ServerError m => Text -> m Text
 validateStableId raw =
   let normalized = T.toUpper (T.strip raw)
-      validChar ch = (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '-'
-  in if T.length normalized >= 3 && T.length normalized <= 40 && T.all validChar normalized
+      validFirst ch = ch >= 'A' && ch <= 'Z'
+      validRest ch = validFirst ch || (ch >= '0' && ch <= '9') || ch == '-'
+      validShape = case T.uncons normalized of
+        Just (first, rest) -> validFirst first && T.all validRest rest
+        Nothing -> False
+  in if T.length normalized >= 3 && T.length normalized <= 40 && validShape
        then pure normalized
-       else throwError err400 { errBody = "stableId must contain 3-40 uppercase letters, numbers, or hyphens" }
+       else throwError err400 { errBody = "stableId's first character must be an uppercase letter; use 3-40 uppercase letters, numbers, or hyphens" }
 
 validatePartyId :: MonadError ServerError m => Text -> Int64 -> m Int64
 validatePartyId fieldName value
@@ -1094,6 +1141,20 @@ lockInternTestExecutionSequence caseKey = do
     [PersistText ("intern-test-execution:" <> toPathPiece caseKey)]
     :: SqlPersistT IO [Single Int64])
   pure ()
+
+lockActiveAuditPlan :: ME.InternAuditPlanId -> SqlPersistT IO Bool
+lockActiveAuditPlan planKey = do
+  rows <- (rawSql
+    "SELECT status FROM intern_audit_plan WHERE id = ? FOR UPDATE"
+    [toPersistValue planKey]
+    :: SqlPersistT IO [Single Text])
+  pure $ case rows of
+    [Single "active"] -> True
+    _ -> False
+
+finalizedMutationConflict :: ServerError
+finalizedMutationConflict = err409
+  { errBody = "Finalized audit plans do not accept workflow changes" }
 
 parseKey
   :: forall record m.

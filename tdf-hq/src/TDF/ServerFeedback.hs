@@ -301,71 +301,81 @@ internalFeedbackServer user =
       validateTraceability trace
       now <- liftIO getCurrentTime
       contactEmail <- withPool $ maybe Nothing M.partyPrimaryEmail <$> get (auPartyId user)
-      entities <- withPool $ do
-        feedbackId <- insert Feedback
-          { feedbackTitle = title
-          , feedbackDescription = description
-          , feedbackCategory = Nothing
-          , feedbackSeverity = Nothing
-          , feedbackCategoryId = Just categoryId
-          , feedbackSeverityId = Just proposedSeverityId
-          , feedbackContactEmail = contactEmail
-          , feedbackAttachment = Nothing
-          , feedbackConsent = False
-          , feedbackCreatedBy = Just (auPartyId user)
-          , feedbackCreatedAt = now
-          }
-        reportId <- insert ME.InternalFeedbackReport
-          { ME.internalFeedbackReportFeedbackId = feedbackId
-          , ME.internalFeedbackReportReportType = reportType
-          , ME.internalFeedbackReportState = "draft"
-          , ME.internalFeedbackReportModuleName = moduleName
-          , ME.internalFeedbackReportFeatureName = featureName
-          , ME.internalFeedbackReportEnvironment = environment
-          , ME.internalFeedbackReportUrlOrScreen = urlOrScreen
-          , ME.internalFeedbackReportPlatform = platform
-          , ME.internalFeedbackReportDevice = device
-          , ME.internalFeedbackReportBrowser = browser
-          , ME.internalFeedbackReportLanguage = language
-          , ME.internalFeedbackReportAccountRole = accountRole
-          , ME.internalFeedbackReportReproductionSteps = reproductionSteps
-          , ME.internalFeedbackReportExpectedResult = expectedResult
-          , ME.internalFeedbackReportActualResult = actualResult
-          , ME.internalFeedbackReportFrequency = frequency
-          , ME.internalFeedbackReportProposedSeverityId = Just proposedSeverityId
-          , ME.internalFeedbackReportAuthoritativeSeverityId = Nothing
-          , ME.internalFeedbackReportPriority = Nothing
-          , ME.internalFeedbackReportTestCaseId = traceTestCaseId trace
-          , ME.internalFeedbackReportTestExecutionId = traceExecutionId trace
-          , ME.internalFeedbackReportInternshipProjectId = traceProjectId trace
-          , ME.internalFeedbackReportInternshipTaskId = traceTaskId trace
-          , ME.internalFeedbackReportReporterPartyId = auPartyId user
-          , ME.internalFeedbackReportBlocking = fromMaybe False ifcBlocking
-          , ME.internalFeedbackReportAssignedTo = Nothing
-          , ME.internalFeedbackReportDuplicateOf = Nothing
-          , ME.internalFeedbackReportResolution = Nothing
-          , ME.internalFeedbackReportRetestResult = Nothing
-          , ME.internalFeedbackReportClosureReason = Nothing
-          , ME.internalFeedbackReportGithubIssueUrl = Nothing
-          , ME.internalFeedbackReportVideoLinks = videoLinks
-          , ME.internalFeedbackReportSubmittedAt = Nothing
-          , ME.internalFeedbackReportClosedAt = Nothing
-          , ME.internalFeedbackReportVersion = 1
-          , ME.internalFeedbackReportCreatedAt = now
-          , ME.internalFeedbackReportUpdatedAt = now
-          }
-        insert_ ME.InternalFeedbackHistory
-          { ME.internalFeedbackHistoryReportId = reportId
-          , ME.internalFeedbackHistoryActorPartyId = auPartyId user
-          , ME.internalFeedbackHistoryAction = "draft_created"
-          , ME.internalFeedbackHistoryPreviousState = Nothing
-          , ME.internalFeedbackHistoryNewState = Just "draft"
-          , ME.internalFeedbackHistoryMetadata = Nothing
-          , ME.internalFeedbackHistoryCreatedAt = now
-          }
-        report <- getJustEntity reportId
-        feedback <- getJustEntity feedbackId
-        pure (report, feedback)
+      entitiesResult <- withPool $ do
+        planActive <- if isAdminUser
+          then pure True
+          else maybe (pure True) lockActiveAuditPlanForTask (traceTaskId trace)
+        if not planActive
+          then pure Nothing
+          else Just <$> do
+            feedbackId <- insert Feedback
+              { feedbackTitle = title
+              , feedbackDescription = description
+              , feedbackCategory = Nothing
+              , feedbackSeverity = Nothing
+              , feedbackCategoryId = Just categoryId
+              , feedbackSeverityId = Just proposedSeverityId
+              , feedbackContactEmail = contactEmail
+              , feedbackAttachment = Nothing
+              , feedbackConsent = False
+              , feedbackCreatedBy = Just (auPartyId user)
+              , feedbackCreatedAt = now
+              }
+            reportId <- insert ME.InternalFeedbackReport
+              { ME.internalFeedbackReportFeedbackId = feedbackId
+              , ME.internalFeedbackReportReportType = reportType
+              , ME.internalFeedbackReportState = "draft"
+              , ME.internalFeedbackReportModuleName = moduleName
+              , ME.internalFeedbackReportFeatureName = featureName
+              , ME.internalFeedbackReportEnvironment = environment
+              , ME.internalFeedbackReportUrlOrScreen = urlOrScreen
+              , ME.internalFeedbackReportPlatform = platform
+              , ME.internalFeedbackReportDevice = device
+              , ME.internalFeedbackReportBrowser = browser
+              , ME.internalFeedbackReportLanguage = language
+              , ME.internalFeedbackReportAccountRole = accountRole
+              , ME.internalFeedbackReportReproductionSteps = reproductionSteps
+              , ME.internalFeedbackReportExpectedResult = expectedResult
+              , ME.internalFeedbackReportActualResult = actualResult
+              , ME.internalFeedbackReportFrequency = frequency
+              , ME.internalFeedbackReportProposedSeverityId = Just proposedSeverityId
+              , ME.internalFeedbackReportAuthoritativeSeverityId = Nothing
+              , ME.internalFeedbackReportPriority = Nothing
+              , ME.internalFeedbackReportTestCaseId = traceTestCaseId trace
+              , ME.internalFeedbackReportTestExecutionId = traceExecutionId trace
+              , ME.internalFeedbackReportInternshipProjectId = traceProjectId trace
+              , ME.internalFeedbackReportInternshipTaskId = traceTaskId trace
+              , ME.internalFeedbackReportReporterPartyId = auPartyId user
+              , ME.internalFeedbackReportBlocking = fromMaybe False ifcBlocking
+              , ME.internalFeedbackReportAssignedTo = Nothing
+              , ME.internalFeedbackReportDuplicateOf = Nothing
+              , ME.internalFeedbackReportResolution = Nothing
+              , ME.internalFeedbackReportRetestResult = Nothing
+              , ME.internalFeedbackReportClosureReason = Nothing
+              , ME.internalFeedbackReportGithubIssueUrl = Nothing
+              , ME.internalFeedbackReportVideoLinks = videoLinks
+              , ME.internalFeedbackReportSubmittedAt = Nothing
+              , ME.internalFeedbackReportClosedAt = Nothing
+              , ME.internalFeedbackReportVersion = 1
+              , ME.internalFeedbackReportCreatedAt = now
+              , ME.internalFeedbackReportUpdatedAt = now
+              }
+            insert_ ME.InternalFeedbackHistory
+              { ME.internalFeedbackHistoryReportId = reportId
+              , ME.internalFeedbackHistoryActorPartyId = auPartyId user
+              , ME.internalFeedbackHistoryAction = "draft_created"
+              , ME.internalFeedbackHistoryPreviousState = Nothing
+              , ME.internalFeedbackHistoryNewState = Just "draft"
+              , ME.internalFeedbackHistoryMetadata = Nothing
+              , ME.internalFeedbackHistoryCreatedAt = now
+              }
+            report <- getJustEntity reportId
+            feedback <- getJustEntity feedbackId
+            pure (report, feedback)
+      entities <- maybe
+        (throwError err409 { errBody = "Finalized audit plans do not accept new reports" })
+        pure
+        entitiesResult
       let (reportEnt, feedbackEnt) = entities
       recordAudit reportEnt "draft_created" Nothing
       buildReportDTO reportEnt feedbackEnt
@@ -1138,6 +1148,17 @@ data Traceability = Traceability
   , traceTestCaseId  :: Maybe ME.InternTestCaseId
   , traceExecutionId :: Maybe ME.InternTestExecutionId
   }
+
+lockActiveAuditPlanForTask :: ME.InternTaskId -> SqlPersistT IO Bool
+lockActiveAuditPlanForTask taskKey = do
+  rows <- (rawSql
+    "SELECT status FROM intern_audit_plan WHERE task_id = ? FOR UPDATE"
+    [toPersistValue taskKey]
+    :: SqlPersistT IO [Single Text])
+  pure $ case rows of
+    [] -> True
+    [Single "active"] -> True
+    _ -> False
 
 internalReportTypes :: [Text]
 internalReportTypes =
