@@ -175,6 +175,11 @@ INSERT INTO intern_test_execution(
   (
     '60000000-0000-4000-8000-000000000002','50000000-0000-4000-8000-000000000002',
     1,2,'failed','Duplicate customer accepted','screenshot://STU-CRM-001',NOW(),NOW()
+  ),
+  (
+    '60000000-0000-4000-8000-000000000004','50000000-0000-4000-8000-000000000002',
+    2,2,'passed','A later pass must not hide the unreported failure',
+    'screenshot://STU-CRM-001-later-pass',NOW(),NOW()
   );
 SQL
 
@@ -285,10 +290,10 @@ INSERT INTO intern_test_execution(
   evidence_summary,started_at,completed_at
 ) VALUES (
   '60000000-0000-4000-8000-000000000003','50000000-0000-4000-8000-000000000002',
-  2,2,'verified','Duplicate rejected on retest','screenshot://STU-CRM-001-retest',NOW(),NOW()
+  3,2,'verified','Duplicate rejected on retest','screenshot://STU-CRM-001-retest',NOW(),NOW()
 );
 SQL
-assert_equal "$(psql_exec -Atqc "SELECT count(*) FROM intern_test_execution WHERE test_case_id='50000000-0000-4000-8000-000000000002';")" "2" "retest preserves execution history"
+assert_equal "$(psql_exec -Atqc "SELECT count(*) FROM intern_test_execution WHERE test_case_id='50000000-0000-4000-8000-000000000002';")" "3" "retest preserves execution history"
 
 apply_file tdf-hq/sql/2026-08-21_studio_internship_audit_rollback.sql
 assert_equal "$(psql_exec -Atqc "SELECT count(*) FROM information_schema.tables WHERE table_name='internal_feedback_report';")" "0" "rollback removes normalized internal workflow"
