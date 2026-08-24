@@ -309,12 +309,12 @@
     {
       "id": "2026-08-21_studio_internship_audit",
       "path": "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
-      "introducedBy": "d68b794e531501589e18c24dbb60aa00ada0a0f7"
+      "introducedBy": "173c6ba42308b1d82d2b147cba750de773d597e6"
     },
     {
       "id": "2026-08-24_ticket_qr_constraint_compatibility",
       "path": "tdf-hq/sql/2026-08-24_ticket_qr_constraint_compatibility.sql",
-      "introducedBy": "be0b3a36d9c659a3d343907036a92d0d5c947e96"
+      "introducedBy": "e856bf6a7b9d4ec4a5999c0f5bf14e583c9d8b1f"
     }
   ]
 }

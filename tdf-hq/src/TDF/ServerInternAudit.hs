@@ -420,41 +420,51 @@ internAuditServer user =
       let sortOrder = fromMaybe 0 itccSortOrder
       when (sortOrder < 0) $
         throwError err400 { errBody = "sortOrder must not be negative" }
-      now <- liftIO getCurrentTime
       result <- withPool $ do
-        duplicate <- getBy (ME.UniqueInternTestCaseStableId planKey stableId)
-        case duplicate of
-          Just _ -> pure (Left "Stable test-case identifiers must be unique within the plan")
-          Nothing -> do
-            testCaseId <- insert ME.InternTestCase
-              { ME.internTestCasePlanId = planKey
-              , ME.internTestCaseStableId = stableId
-              , ME.internTestCaseModuleName = moduleName
-              , ME.internTestCaseFeatureName = featureName
-              , ME.internTestCaseUserRole = userRole
-              , ME.internTestCaseObjective = objective
-              , ME.internTestCaseBusinessPurpose = businessPurpose
-              , ME.internTestCasePreconditions = preconditions
-              , ME.internTestCaseRequiredTestData = requiredTestData
-              , ME.internTestCaseEnvironment = environment
-              , ME.internTestCasePlatform = platform
-              , ME.internTestCaseBrowserOrDevice = browserOrDevice
-              , ME.internTestCaseLanguage = language
-              , ME.internTestCaseDetailedSteps = detailedSteps
-              , ME.internTestCaseExpectedResult = expectedResult
-              , ME.internTestCaseExpectedPersistedState = expectedPersistedState
-              , ME.internTestCaseExpectedSideEffects = expectedSideEffects
-              , ME.internTestCaseCleanupInstructions = cleanupInstructions
-              , ME.internTestCaseCriticality = criticality
-              , ME.internTestCaseEvidenceRequirement = evidence
-              , ME.internTestCaseExploratoryCharter = exploratoryCharter
-              , ME.internTestCaseApplicable = fromMaybe True itccApplicable
-              , ME.internTestCaseSortOrder = sortOrder
-              , ME.internTestCaseCreatedAt = now
-              , ME.internTestCaseUpdatedAt = now
-              }
-            Right <$> getJustEntity testCaseId
-      ent <- either (throwError . conflict) pure result
+        draft <- lockDraftAuditPlan planKey
+        if not draft
+          then pure (Left ("not_draft" :: Text))
+          else do
+            duplicate <- getBy (ME.UniqueInternTestCaseStableId planKey stableId)
+            case duplicate of
+              Just _ -> pure (Left "duplicate")
+              Nothing -> do
+                now <- liftIO getCurrentTime
+                testCaseId <- insert ME.InternTestCase
+                  { ME.internTestCasePlanId = planKey
+                  , ME.internTestCaseStableId = stableId
+                  , ME.internTestCaseModuleName = moduleName
+                  , ME.internTestCaseFeatureName = featureName
+                  , ME.internTestCaseUserRole = userRole
+                  , ME.internTestCaseObjective = objective
+                  , ME.internTestCaseBusinessPurpose = businessPurpose
+                  , ME.internTestCasePreconditions = preconditions
+                  , ME.internTestCaseRequiredTestData = requiredTestData
+                  , ME.internTestCaseEnvironment = environment
+                  , ME.internTestCasePlatform = platform
+                  , ME.internTestCaseBrowserOrDevice = browserOrDevice
+                  , ME.internTestCaseLanguage = language
+                  , ME.internTestCaseDetailedSteps = detailedSteps
+                  , ME.internTestCaseExpectedResult = expectedResult
+                  , ME.internTestCaseExpectedPersistedState = expectedPersistedState
+                  , ME.internTestCaseExpectedSideEffects = expectedSideEffects
+                  , ME.internTestCaseCleanupInstructions = cleanupInstructions
+                  , ME.internTestCaseCriticality = criticality
+                  , ME.internTestCaseEvidenceRequirement = evidence
+                  , ME.internTestCaseExploratoryCharter = exploratoryCharter
+                  , ME.internTestCaseApplicable = fromMaybe True itccApplicable
+                  , ME.internTestCaseSortOrder = sortOrder
+                  , ME.internTestCaseCreatedAt = now
+                  , ME.internTestCaseUpdatedAt = now
+                  }
+                Right <$> getJustEntity testCaseId
+      ent <- case result of
+        Left "not_draft" -> throwError err409
+          { errBody = "Test cases can only be added while the plan is a draft" }
+        Left "duplicate" -> throwError $ conflict
+          "Stable test-case identifiers must be unique within the plan"
+        Left _ -> throwError err500
+        Right entity -> pure entity
       audit "intern_test_case" (toPathPiece (entityKey ent)) "created"
         (Just $ object ["planId" .= rawPlanId, "stableId" .= stableId])
       toCaseDTO ent
@@ -644,14 +654,14 @@ internAuditServer user =
       planEnt@(Entity planKey plan) <- loadPlan rawPlanId
       ensurePlanAccess planEnt
       ensureActivePlanMutation planEnt
-      now <- liftIO getCurrentTime
-      snapshot <- buildFinalSnapshot planEnt
       conclusionsUpdate <- validatedOptional "conclusions" 12000 ifsuConclusions
       result <- withPool $ do
         active <- lockActiveAuditPlan planKey
         if not active
           then pure (Left ("finalized" :: Text))
           else do
+            snapshot <- buildFinalSnapshotSql planEnt
+            now <- liftIO getCurrentTime
             existing <- getBy (ME.UniqueInternFinalSummaryPlan planKey)
             authorized <- case existing of
               Nothing -> do
@@ -847,23 +857,25 @@ internAuditServer user =
       , IA.ifsUpdatedAt = ME.internFinalSummaryUpdatedAt summary
       }
 
-    calculatePlanStats (Entity planKey plan) = do
-      cases <- withPool $ selectList [ME.InternTestCasePlanId ==. planKey] []
+    calculatePlanStats planEnt = withPool $ calculatePlanStatsSql planEnt
+
+    calculatePlanStatsSql (Entity planKey plan) = do
+      cases <- selectList [ME.InternTestCasePlanId ==. planKey] []
       executions <- case map entityKey cases of
         [] -> pure []
-        caseKeys -> withPool $ selectList [ME.InternTestExecutionTestCaseId <-. caseKeys] []
+        caseKeys -> selectList [ME.InternTestExecutionTestCaseId <-. caseKeys] []
       latestPairs <- forM cases $ \caseEnt@(Entity caseKey _) -> do
-        latest <- withPool $ selectFirst [ME.InternTestExecutionTestCaseId ==. caseKey]
+        latest <- selectFirst [ME.InternTestExecutionTestCaseId ==. caseKey]
           [Desc ME.InternTestExecutionExecutionNumber]
         pure (caseEnt, latest)
-      reports <- withPool $ selectList
+      reports <- selectList
         [ME.InternalFeedbackReportInternshipTaskId ==. Just (ME.internAuditPlanTaskId plan)] []
       evidence <- case map entityKey reports of
         [] -> pure []
-        reportKeys -> withPool $ selectList
+        reportKeys -> selectList
           [ME.InternalFeedbackEvidenceReportId <-. reportKeys] []
-      daily <- withPool $ selectFirst [ME.InternDailySummaryTaskId ==. ME.internAuditPlanTaskId plan] []
-      final <- withPool $ getBy (ME.UniqueInternFinalSummaryPlan planKey)
+      daily <- selectFirst [ME.InternDailySummaryTaskId ==. ME.internAuditPlanTaskId plan] []
+      final <- getBy (ME.UniqueInternFinalSummaryPlan planKey)
       let applicable = filter (ME.internTestCaseApplicable . entityVal . fst) latestPairs
           latestStatus = fmap (ME.internTestExecutionStatus . entityVal) . snd
           executed = filter (maybe False (`elem` terminalExecutionStatuses) . latestStatus) applicable
@@ -941,15 +953,15 @@ internAuditServer user =
         , psCanComplete = canComplete
         }
 
-    buildFinalSnapshot planEnt = do
-      stats <- calculatePlanStats planEnt
+    buildFinalSnapshotSql planEnt = do
+      stats <- calculatePlanStatsSql planEnt
       Entity planKey plan <- pure planEnt
-      cases <- withPool $ selectList [ME.InternTestCasePlanId ==. planKey] []
+      cases <- selectList [ME.InternTestCasePlanId ==. planKey] []
       statuses <- forM cases $ \(Entity caseKey testCase) -> do
-        latest <- withPool $ selectFirst [ME.InternTestExecutionTestCaseId ==. caseKey]
+        latest <- selectFirst [ME.InternTestExecutionTestCaseId ==. caseKey]
           [Desc ME.InternTestExecutionExecutionNumber]
         pure (ME.internTestCaseModuleName testCase, maybe "pending" (ME.internTestExecutionStatus . entityVal) latest)
-      reports <- withPool $ selectList
+      reports <- selectList
         [ME.InternalFeedbackReportInternshipTaskId ==. Just (ME.internAuditPlanTaskId plan)] []
       let countStatus status = length (filter ((== status) . snd) statuses)
           countReportType reportType = length
@@ -1141,13 +1153,19 @@ lockInternTestExecutionSequence caseKey = do
   pure ()
 
 lockActiveAuditPlan :: ME.InternAuditPlanId -> SqlPersistT IO Bool
-lockActiveAuditPlan planKey = do
+lockActiveAuditPlan planKey = lockAuditPlanInStatus planKey "active"
+
+lockDraftAuditPlan :: ME.InternAuditPlanId -> SqlPersistT IO Bool
+lockDraftAuditPlan planKey = lockAuditPlanInStatus planKey "draft"
+
+lockAuditPlanInStatus :: ME.InternAuditPlanId -> Text -> SqlPersistT IO Bool
+lockAuditPlanInStatus planKey expectedStatus = do
   rows <- (rawSql
     "SELECT status FROM intern_audit_plan WHERE id = ? FOR UPDATE"
     [toPersistValue planKey]
     :: SqlPersistT IO [Single Text])
   pure $ case rows of
-    [Single "active"] -> True
+    [Single status] -> status == expectedStatus
     _ -> False
 
 finalizedMutationConflict :: ServerError

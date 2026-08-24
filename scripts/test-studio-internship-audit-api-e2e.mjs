@@ -323,6 +323,7 @@ const activated = await request(`/internships/audit-plans/${plan.iapId}/activate
   method: 'POST',
 });
 assert.equal(activated.iapStatus, 'active');
+await createAuditCase(plan.iapId, 'STU-E2E-LATE', {}, 409);
 const internPlan = await request(`/internships/audit-plans/${plan.iapId}`, { token: intern.token });
 assert.equal(internPlan.iapProposedAssignee, intern.partyId);
 const internTasks = await request('/internships/tasks', { token: intern.token });
@@ -677,6 +678,12 @@ await request('/feedback/internal', {
   method: 'POST',
   expected: 409,
   json: { ...reportCreate, ifcTitle: 'No crear después del cierre' },
+});
+await request('/feedback/internal', {
+  token: admin.token,
+  method: 'POST',
+  expected: 409,
+  json: { ...reportCreate, ifcTitle: 'Administración tampoco crea después del cierre' },
 });
 
 const executions = await request(`/internships/test-cases/${testCase.itcId}/executions`, { token: admin.token });

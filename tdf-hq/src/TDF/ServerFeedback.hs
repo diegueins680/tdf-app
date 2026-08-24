@@ -302,9 +302,7 @@ internalFeedbackServer user =
       now <- liftIO getCurrentTime
       contactEmail <- withPool $ maybe Nothing M.partyPrimaryEmail <$> get (auPartyId user)
       entitiesResult <- withPool $ do
-        planActive <- if isAdminUser
-          then pure True
-          else maybe (pure True) lockActiveAuditPlanForTask (traceTaskId trace)
+        planActive <- maybe (pure True) lockActiveAuditPlanForTask (traceTaskId trace)
         if not planActive
           then pure Nothing
           else Just <$> do
