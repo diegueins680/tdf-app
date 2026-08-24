@@ -24,6 +24,7 @@ test('staging baseline covers every migration before the studio audit and leaves
   assert.match(sql, /Refusing synthetic cutover markers when non-dry-run history exists/u);
   assert.match(sql, /ddex-operational-cutover-2026-08-12/u);
   assert.match(sql, /"productionData":false/u);
+  assert.doesNotMatch(sql, /^\+\s*\('/mu);
   assert.match(sql, new RegExp(`\\b${sourceCommit}\\b`, 'u'));
 });
 

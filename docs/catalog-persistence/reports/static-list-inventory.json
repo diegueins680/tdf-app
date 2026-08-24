@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-24T20:41:34.258Z",
+  "generatedAt": "2026-08-24T21:41:42.150Z",
   "repositoryRoot": ".",
   "filesScanned": 1181,
   "candidateCount": 917,
@@ -3570,7 +3570,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 544,
+      "consumerCount": 545,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -3744,6 +3744,7 @@
         "scripts/archive/import-nocturna-event.sh",
         "scripts/archive/tdf-backend-migrate-trial-to-lesson.sql",
         "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
@@ -3776,8 +3777,7 @@
         "scripts/sync-concerts-with-apis.py",
         "scripts/sync-country-reference.mjs",
         "scripts/test-catalog-production-cutover.sh",
-        "scripts/test-checkout-event-refund-runtime-migration.sh",
-        "scripts/test-course-checkout-runtime-migration.sh"
+        "scripts/test-checkout-event-refund-runtime-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/refresh-instagram-token.mjs",
@@ -3858,7 +3858,7 @@
       "lines": [
         695
       ],
-      "consumerCount": 544,
+      "consumerCount": 545,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -4032,6 +4032,7 @@
         "scripts/archive/import-nocturna-event.sh",
         "scripts/archive/tdf-backend-migrate-trial-to-lesson.sql",
         "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
@@ -4064,8 +4065,7 @@
         "scripts/sync-concerts-with-apis.py",
         "scripts/sync-country-reference.mjs",
         "scripts/test-catalog-production-cutover.sh",
-        "scripts/test-checkout-event-refund-runtime-migration.sh",
-        "scripts/test-course-checkout-runtime-migration.sh"
+        "scripts/test-checkout-event-refund-runtime-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/refresh-instagram-token.mjs",
@@ -4297,7 +4297,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 544,
+      "consumerCount": 545,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -4471,6 +4471,7 @@
         "scripts/archive/import-nocturna-event.sh",
         "scripts/archive/tdf-backend-migrate-trial-to-lesson.sql",
         "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
@@ -4503,8 +4504,7 @@
         "scripts/sync-concerts-with-apis.py",
         "scripts/sync-country-reference.mjs",
         "scripts/test-catalog-production-cutover.sh",
-        "scripts/test-checkout-event-refund-runtime-migration.sh",
-        "scripts/test-course-checkout-runtime-migration.sh"
+        "scripts/test-checkout-event-refund-runtime-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/refresh-instagram-token.mjs",
@@ -6424,7 +6424,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 174,
+      "consumerCount": 175,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -6569,6 +6569,7 @@
         "scripts/__tests__/production-release.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/audit-feature-registry.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/lib/continuous-improvement-loop.mjs",
@@ -30489,7 +30490,7 @@
         108,
         110
       ],
-      "consumerCount": 144,
+      "consumerCount": 145,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -30609,6 +30610,7 @@
         ".github/workflows/refresh-instagram-token.yml",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/generate-feature-audit-reports.mjs",
@@ -30663,7 +30665,7 @@
       "lines": [
         108
       ],
-      "consumerCount": 199,
+      "consumerCount": 200,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -30802,6 +30804,7 @@
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/continuous-improvement-loop.mjs",
@@ -30871,7 +30874,7 @@
         108,
         110
       ],
-      "consumerCount": 182,
+      "consumerCount": 183,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -31011,6 +31014,7 @@
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/generate-feature-audit-reports.mjs",
@@ -31068,7 +31072,7 @@
       "lines": [
         110
       ],
-      "consumerCount": 150,
+      "consumerCount": 151,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -31198,6 +31202,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/generate-feature-audit-reports.mjs",
@@ -31255,7 +31260,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 138,
+      "consumerCount": 139,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -31377,6 +31382,7 @@
         ".github/workflows/refresh-instagram-token.yml",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/generate-feature-audit-reports.mjs",
@@ -31430,7 +31436,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 134,
+      "consumerCount": 135,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -31548,6 +31554,7 @@
         ".github/workflows/refresh-instagram-token.yml",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/generate-feature-audit-reports.mjs",
@@ -31601,7 +31608,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 135,
+      "consumerCount": 136,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -31719,6 +31726,7 @@
         ".github/workflows/refresh-instagram-token.yml",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/generate-feature-audit-reports.mjs",
@@ -31772,7 +31780,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 134,
+      "consumerCount": 135,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -31890,6 +31898,7 @@
         ".github/workflows/refresh-instagram-token.yml",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/generate-feature-audit-reports.mjs",
@@ -31943,7 +31952,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 134,
+      "consumerCount": 135,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -32061,6 +32070,7 @@
         ".github/workflows/refresh-instagram-token.yml",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/generate-feature-audit-reports.mjs",
@@ -33106,7 +33116,7 @@
       "lines": [
         381
       ],
-      "consumerCount": 545,
+      "consumerCount": 546,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -33281,6 +33291,7 @@
         "scripts/archive/import-nocturna-event.sh",
         "scripts/archive/tdf-backend-migrate-trial-to-lesson.sql",
         "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
@@ -33312,8 +33323,7 @@
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
         "scripts/sync-country-reference.mjs",
-        "scripts/test-catalog-production-cutover.sh",
-        "scripts/test-checkout-event-refund-runtime-migration.sh"
+        "scripts/test-catalog-production-cutover.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/refresh-instagram-token.mjs",
@@ -37949,7 +37959,7 @@
       "lines": [
         118
       ],
-      "consumerCount": 63,
+      "consumerCount": 64,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -38013,6 +38023,7 @@
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/fixtures/production-ticketing-base.sql",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/lib/discovery.mjs",
         "scripts/lib/production-release.mjs",
         "scripts/sync-concerts-with-apis.py",
@@ -40267,7 +40278,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 549,
+      "consumerCount": 550,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -40442,6 +40453,7 @@
         "scripts/archive/import-nocturna-event.sh",
         "scripts/archive/tdf-backend-migrate-trial-to-lesson.sql",
         "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
@@ -40473,8 +40485,7 @@
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
         "scripts/sync-country-reference.mjs",
-        "scripts/test-catalog-production-cutover.sh",
-        "scripts/test-checkout-event-refund-runtime-migration.sh"
+        "scripts/test-catalog-production-cutover.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/refresh-instagram-token.mjs",
@@ -48014,7 +48025,7 @@
       "lines": [
         86
       ],
-      "consumerCount": 179,
+      "consumerCount": 180,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -48151,6 +48162,7 @@
         "scripts/__tests__/fixtures/production-ticketing-base.sql",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/codex-logical-correctness-loop.sh",
         "scripts/continuous-improvement-loop.mjs",
@@ -50487,7 +50499,7 @@
       "lines": [
         7668
       ],
-      "consumerCount": 544,
+      "consumerCount": 545,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -50662,6 +50674,7 @@
         "scripts/archive/import-nocturna-event.sh",
         "scripts/archive/tdf-backend-migrate-trial-to-lesson.sql",
         "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
@@ -50693,8 +50706,7 @@
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
         "scripts/sync-country-reference.mjs",
-        "scripts/test-catalog-production-cutover.sh",
-        "scripts/test-checkout-event-refund-runtime-migration.sh"
+        "scripts/test-catalog-production-cutover.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/refresh-instagram-token.mjs",
@@ -51046,7 +51058,7 @@
       "lines": [
         7935
       ],
-      "consumerCount": 545,
+      "consumerCount": 546,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -51221,6 +51233,7 @@
         "scripts/archive/import-nocturna-event.sh",
         "scripts/archive/tdf-backend-migrate-trial-to-lesson.sql",
         "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
@@ -51252,8 +51265,7 @@
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
         "scripts/sync-country-reference.mjs",
-        "scripts/test-catalog-production-cutover.sh",
-        "scripts/test-checkout-event-refund-runtime-migration.sh"
+        "scripts/test-catalog-production-cutover.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/refresh-instagram-token.mjs",
@@ -52492,7 +52504,7 @@
         10335,
         10387
       ],
-      "consumerCount": 544,
+      "consumerCount": 545,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -52667,6 +52679,7 @@
         "scripts/archive/import-nocturna-event.sh",
         "scripts/archive/tdf-backend-migrate-trial-to-lesson.sql",
         "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
@@ -52698,8 +52711,7 @@
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
         "scripts/sync-country-reference.mjs",
-        "scripts/test-catalog-production-cutover.sh",
-        "scripts/test-checkout-event-refund-runtime-migration.sh"
+        "scripts/test-catalog-production-cutover.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/refresh-instagram-token.mjs",
@@ -81064,7 +81076,7 @@
       "lines": [
         51
       ],
-      "consumerCount": 236,
+      "consumerCount": 237,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -81191,6 +81203,7 @@
         "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
@@ -82752,7 +82765,7 @@
       "lines": [
         1016
       ],
-      "consumerCount": 544,
+      "consumerCount": 545,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -82927,6 +82940,7 @@
         "scripts/archive/import-nocturna-event.sh",
         "scripts/archive/tdf-backend-migrate-trial-to-lesson.sql",
         "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
@@ -82958,8 +82972,7 @@
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
         "scripts/sync-country-reference.mjs",
-        "scripts/test-catalog-production-cutover.sh",
-        "scripts/test-checkout-event-refund-runtime-migration.sh"
+        "scripts/test-catalog-production-cutover.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/refresh-instagram-token.mjs",
@@ -88368,7 +88381,7 @@
       "lines": [
         118
       ],
-      "consumerCount": 179,
+      "consumerCount": 180,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -88504,6 +88517,7 @@
         "scripts/__tests__/fixtures/production-ticketing-base.sql",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/codex-logical-correctness-loop.sh",
         "scripts/continuous-improvement-loop.mjs",

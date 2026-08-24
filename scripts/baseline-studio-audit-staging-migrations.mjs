@@ -52,7 +52,7 @@ export function buildStudioAuditStagingBaselineSql(entries, sourceCommit) {
     'ddex-validation-reference-cutover-2026-08-12',
     'ddex-operational-cutover-2026-08-12',
   ];
-  const cutoverValues = cutoverCodes.map((code) => `(${sqlLiteral(code)})`).join(',\n+    ');
+  const cutoverValues = cutoverCodes.map((code) => `(${sqlLiteral(code)})`).join(',\n    ');
 
   return `\\set ON_ERROR_STOP on
 BEGIN;
