@@ -1,6 +1,6 @@
 # Permission and security matrix
 
-The backend—not route visibility—is the authority. The generated 3,014-row role–module–feature–action–platform matrix is the exhaustive surface artifact; this document defines persona-focused positive and negative checks. `Specified` means the test is designed but was not executed against a running backend. The Haskell backend and its final 2,420-example suite compile and pass locally, including the seed guards and logout revocation regression; a focused session run also passed 2/2. A running disposable PostgreSQL service verified seed role composition and the PER-02 login/logout slice, but the complete direct-API matrix was not executed.
+The backend—not route visibility—is the authority. The generated 3,058-row role–module–feature–action–platform matrix is the exhaustive surface artifact; this document defines persona-focused positive and negative checks. `Specified` means the test is designed but was not executed against a running backend. The Haskell backend and its final 2,420-example suite compile and pass locally, including the seed guards and logout revocation regression; a focused session run also passed 2/2. A running disposable PostgreSQL service verified seed role composition and the PER-02 login/logout slice, but the complete direct-API matrix was not executed.
 
 | Persona / role combination | Authorized capability to prove | Direct URL/API denial to prove | Current evidence |
 |---|---|---|---|

@@ -1,6 +1,6 @@
 # Web/mobile parity assessment
 
-The feature registry is the parity authority. Current treatments are 37 native, 15 native-contextual, 18 explicit external-web, 47 web-only, 10 security-concealed and 10 technical. “Parity” means a truthful, safe treatment—not that every feature must be rebuilt natively.
+The feature registry is the parity authority. Current treatments are 37 native, 15 native-contextual, 20 explicit external-web, 47 web-only, 10 security-concealed and 10 technical. “Parity” means a truthful, safe treatment—not that every feature must be rebuilt natively.
 
 ## Native strengths
 
@@ -36,7 +36,7 @@ PT-001 correctly removed seven false native destinations when their screens did 
 
 Verified locally:
 
-- Feature audit: 137 features, 156 web routes and 44 Expo routes resolve.
+- Feature audit: 139 features, 159 web routes and 44 Expo routes resolve.
 - Mobile lint/typecheck/Jest: pass; generated registry assertions pass.
 - Chromium phone/tablet public discovery preserves filters and reflows at 320 CSS pixels.
 

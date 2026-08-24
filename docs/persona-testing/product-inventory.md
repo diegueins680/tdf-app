@@ -10,7 +10,7 @@
 | Feature/permission model | `tdf-hq/assets/feature-registry.json` with a generated mobile copy; role/module/action matrix | Registry audit, backend action checks and negative direct-API tests |
 | Commerce | Domain-linked checkout, immutable snapshots, provider attempts/events, holds, refunds/reconciliation concepts spread across services, marketplace, courses, tickets and Domo | Verified provider evidence and database ledgers, never browser-return status alone |
 
-The feature registry currently contains 137 records. The router audit resolves 156 web routes and 44 Expo Router routes; 37 product features have a native mobile treatment. The refreshed backend parser expands 548 concrete endpoints: 493 map to features, while 40 require explicit product/security disposition. The current role–module–feature–action–platform matrix contains 3,014 rows for 11 representative role fixtures and 17 actions.
+The feature registry currently contains 139 records. The router audit resolves 159 web routes and 44 Expo Router routes; 37 product features have a native mobile treatment. The refreshed backend parser expands 557 concrete endpoints: 502 map to features, while 40 require explicit product/security disposition. The current role–module–feature–action–platform matrix contains 3,058 rows for 11 representative role fixtures and 17 actions.
 
 ## Implemented product areas
 
@@ -47,7 +47,7 @@ The implemented public route families include home/platform pages, registration/
 
 ## Documentation reconciliation
 
-The 2026-08-06 feature audit was acknowledged rather than treated as fresh discovery. It reported 115 features, 125 web routes, 35 mobile routes, 408 backend endpoints and 2,530 matrix rows, with zero unresolved dispositions. Repository growth and a parser limitation made that packet stale. The refreshed 2026-08-21 packet reports 137 features, 156 actual web routes, 44 mobile routes, 548 expanded endpoints and 3,014 matrix rows. It also refuses to hide 40 newly visible unresolved endpoints.
+The 2026-08-06 feature audit was acknowledged rather than treated as fresh discovery. It reported 115 features, 125 web routes, 35 mobile routes, 408 backend endpoints and 2,530 matrix rows, with zero unresolved dispositions. Repository growth and a parser limitation made that packet stale. The refreshed 2026-08-21 packet reports 139 features, 159 actual web routes, 44 mobile routes, 557 expanded endpoints and 3,058 matrix rows. It also refuses to hide 40 newly visible unresolved endpoints.
 
 The 2026-08-13 revenue architecture audit and ADRs 0100–0114 already identify false-success risks, verified-event authority, versioned money/holds, marketplace custody, course seats, ticket checkout and Domo quote/payment invariants. This program treats those as prior work, uses them in scenario acceptance criteria and does not relabel them as novel findings.
 

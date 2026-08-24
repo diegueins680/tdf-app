@@ -25,7 +25,7 @@ This file records observed commands and results through 2026-08-23. A failed, bl
 | Web full Jest suite | `npm test --workspace=tdf-hq-ui -- --runInBand --silent` | Pass: 163 suites, 1,656 tests, 0 failures |
 | Web E2E and accessibility | Targeted Chromium Playwright run for `e2e/web/studio-internship-audit.spec.mjs` | Pass: 2 scenarios, covering intern trace-linked reporting and admin triage; no serious or critical axe violations in the tested views |
 | OpenAPI clients | `npm run generate:api --workspace=tdf-hq-ui`; `npm --prefix tdf-mobile run generate:api` | Pass with `openapi-typescript 7.13.0` |
-| Feature registry | `npm run generate:features`; `npm run audit:features` | Pass: 139 registered features, 159 web routes, and 38 mobile routes |
+| Feature registry | `npm run generate:features`; `npm run audit:features` | Pass: 139 registered features, 159 web routes, and 44 mobile routes |
 | Mobile type checking | `npm --prefix tdf-mobile run typecheck` | Pass |
 | Mobile lint | `npm --prefix tdf-mobile run lint` | Pass |
 | Mobile registry units | `npm --prefix tdf-mobile test -- --runInBand __tests__/featureRegistry.test.ts` | Pass: 10 tests |
@@ -57,6 +57,6 @@ This file records observed commands and results through 2026-08-23. A failed, bl
 | Draft PR | Authorized on 2026-08-23; the final URL and remote state are reported in the publication handoff |
 | GitHub issue | Not authorized and not performed |
 | Root branch/stage/commit | `git switch -c codex/studio-internship-audit`; explicit path staging; `git commit -m "feat: add traceable studio internship audit"` | Pass: feature commit `d68b794e531501589e18c24dbb60aa00ada0a0f7`; only assignment files staged; push evidence is reported in the final handoff |
-| Publish regenerated `tdf-mobile` submodule files | Same named mobile branch; explicit two-file staging; `git commit -m "feat: register studio audit mobile fallback"`; tracked push | Pass: remote mobile commit `dac57203f2a55d6f38ecf32953e7449747d25f58`; parent pointer included in the root feature commit |
+| Publish regenerated `tdf-mobile` submodule files | Integrated mobile pull request #30; generated API/registry verification; tracked push | Pass: remote mobile main commit `c537c729177f92f50c69a47edba5b5dae46afebd`; parent pointer included in this final integration |
 
 The API E2E uses an Intern account equivalent in role and permissions to Stewart and an authorized administrative account, but it is deliberately synthetic. It does not satisfy the real-staging deployment gate.
