@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-24T18:52:33.725Z",
+  "generatedAt": "2026-08-24T19:17:52.005Z",
   "repositoryRoot": ".",
   "filesScanned": 1178,
   "candidateCount": 917,
@@ -64516,7 +64516,7 @@
       "lines": [
         91
       ],
-      "consumerCount": 42,
+      "consumerCount": 43,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -64565,7 +64565,8 @@
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/build-catalog-decisions.mjs",
-        "scripts/catalog-list-audit.mjs"
+        "scripts/catalog-list-audit.mjs",
+        "scripts/test-studio-internship-audit-api-e2e.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -73839,7 +73840,7 @@
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
         32,
-        159
+        163
       ],
       "consumerCount": 22,
       "backendConsumers": [
@@ -73936,7 +73937,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 73,
+      "line": 77,
       "values": [
         "low",
         "medium",
@@ -73946,7 +73947,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        73
+        77
       ],
       "consumerCount": 42,
       "backendConsumers": [
@@ -74023,7 +74024,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 74,
+      "line": 78,
       "values": [
         "light",
         "strong"
@@ -74031,7 +74032,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        74
+        78
       ],
       "consumerCount": 21,
       "backendConsumers": [
@@ -74085,7 +74086,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 91,
+      "line": 95,
       "values": [
         "pending",
         "in_progress",
@@ -74099,7 +74100,7 @@
       "valueCount": 8,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        91
+        95
       ],
       "consumerCount": 58,
       "backendConsumers": [
@@ -74206,7 +74207,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 108,
+      "line": 112,
       "values": [
         "pending",
         "in_progress",
@@ -74215,7 +74216,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        108
+        112
       ],
       "consumerCount": 31,
       "backendConsumers": [
@@ -74282,7 +74283,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 149,
+      "line": 153,
       "values": [
         "error",
         "suggestion",
@@ -74296,7 +74297,7 @@
       "valueCount": 8,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        149
+        153
       ],
       "consumerCount": 16,
       "backendConsumers": [
@@ -74359,7 +74360,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 153,
+      "line": 157,
       "values": [
         "draft",
         "submitted",
@@ -74377,7 +74378,7 @@
       "valueCount": 12,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        153
+        157
       ],
       "consumerCount": 74,
       "backendConsumers": [
@@ -74511,7 +74512,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 172,
+      "line": 176,
       "values": [
         "low",
         "medium",
@@ -74521,7 +74522,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        172
+        176
       ],
       "consumerCount": 38,
       "backendConsumers": [
@@ -74599,7 +74600,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 230,
+      "line": 234,
       "values": [
         "attachment",
         "external_link",
@@ -74609,7 +74610,7 @@
       "valueCount": 4,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        230
+        234
       ],
       "consumerCount": 14,
       "backendConsumers": [
@@ -74660,7 +74661,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 239,
+      "line": 243,
       "values": [
         "comment",
         "information_request",
@@ -74669,7 +74670,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        239
+        243
       ],
       "consumerCount": 10,
       "backendConsumers": [
@@ -74713,7 +74714,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 266,
+      "line": 270,
       "values": [
         "passed",
         "failed",
@@ -74722,7 +74723,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        266
+        270
       ],
       "consumerCount": 30,
       "backendConsumers": [
@@ -74790,7 +74791,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 281,
+      "line": 285,
       "values": [
         "immediate",
         "digest"
@@ -74798,7 +74799,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        281
+        285
       ],
       "consumerCount": 3,
       "backendConsumers": [
@@ -78858,7 +78859,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "internalReportTypes",
-      "line": 1139,
+      "line": 1143,
       "values": [
         "error",
         "suggestion",
@@ -78872,7 +78873,7 @@
       "valueCount": 8,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        1139
+        1143
       ],
       "consumerCount": 15,
       "backendConsumers": [
@@ -78934,7 +78935,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "internalReportStates",
-      "line": 1160,
+      "line": 1164,
       "values": [
         "draft",
         "submitted",
@@ -78952,7 +78953,7 @@
       "valueCount": 12,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        1160
+        1164
       ],
       "consumerCount": 73,
       "backendConsumers": [
@@ -79085,7 +79086,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "allowedFeedbackAttachmentContentTypes",
-      "line": 1629,
+      "line": 1633,
       "values": [
         "application/csv",
         "application/pdf",
@@ -79099,7 +79100,7 @@
       "valueCount": 8,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1629
+        1633
       ],
       "consumerCount": 29,
       "backendConsumers": [
@@ -88911,7 +88912,7 @@
       "lines": [
         16
       ],
-      "consumerCount": 42,
+      "consumerCount": 43,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -88960,7 +88961,8 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
-        "scripts/build-catalog-decisions.mjs"
+        "scripts/build-catalog-decisions.mjs",
+        "scripts/test-studio-internship-audit-api-e2e.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",

@@ -327,7 +327,11 @@ describe('InternTaskDetailPage', () => {
     const { cleanup } = await renderPage(container, task.itId);
 
     try {
-      await waitForExpectation(() => expect(container.textContent).toContain('Editar tarea'));
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Editar tarea');
+        expect(container.textContent).toContain('Abrir plan de pruebas');
+        expect(container.textContent).not.toContain('Eliminar tarea');
+      });
       await clickButton(getButtonByText(container, 'Editar tarea'));
       await waitForExpectation(() => {
         expect(container.textContent).toContain('El estado y el avance se administran desde el plan de pruebas');

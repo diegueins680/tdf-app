@@ -819,9 +819,13 @@ internalFeedbackServer user =
               throwError err400 { errBody = "The execution does not belong to the referenced test case" }
         _ -> pure ()
       unless isAdminUser $ case (traceTaskId, task) of
-        (Just _, Just (Just taskValue))
+        (Just taskKey, Just (Just taskValue))
           | ME.internTaskActivationStatus taskValue == "active"
-            && ME.internTaskAssignedTo taskValue == Just (auPartyId user) -> pure ()
+            && ME.internTaskAssignedTo taskValue == Just (auPartyId user) -> do
+              auditPlan <- withPool $ getBy (ME.UniqueInternAuditPlanTask taskKey)
+              forM_ auditPlan $ \(Entity _ plan) ->
+                unless (ME.internAuditPlanStatus plan == "active") $
+                  throwError err409 { errBody = "Finalized audit plans do not accept new reports" }
         _ -> throwError err403 { errBody = "Intern reports must link to the reporter's active assigned task" }
 
     validateRetestExecution _ Nothing = pure ()

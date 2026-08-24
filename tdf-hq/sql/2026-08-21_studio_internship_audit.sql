@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS intern_audit_plan (
   proposed_assignee BIGINT REFERENCES party(id) ON DELETE RESTRICT,
   final_review_required BOOLEAN NOT NULL DEFAULT TRUE,
   completion_justification TEXT,
+  completion_exception_approved BOOLEAN NOT NULL DEFAULT FALSE,
   completion_approved_by BIGINT REFERENCES party(id) ON DELETE RESTRICT,
   completion_approved_at TIMESTAMPTZ,
   created_by BIGINT NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
@@ -46,6 +47,9 @@ CREATE TABLE IF NOT EXISTS intern_audit_plan (
   CONSTRAINT intern_audit_plan_hours_check CHECK (expected_hours_max >= expected_hours_min),
   CONSTRAINT intern_audit_plan_task_unique UNIQUE (task_id)
 );
+
+ALTER TABLE intern_audit_plan
+  ADD COLUMN IF NOT EXISTS completion_exception_approved BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE INDEX IF NOT EXISTS intern_audit_plan_project_idx
   ON intern_audit_plan(project_id, status, created_at DESC);
@@ -373,9 +377,7 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  IF target_plan.completion_justification IS NOT NULL
-     AND target_plan.completion_approved_by IS NOT NULL
-     AND target_plan.completion_approved_at IS NOT NULL THEN
+  IF target_plan.completion_exception_approved THEN
     RETURN NEW;
   END IF;
 

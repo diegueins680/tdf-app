@@ -886,6 +886,7 @@ InternAuditPlan
     proposedAssignee     PartyId Maybe
     finalReviewRequired  Bool default=True
     completionJustification Text Maybe
+    completionExceptionApproved Bool default=False
     completionApprovedBy PartyId Maybe
     completionApprovedAt UTCTime Maybe
     createdBy            PartyId

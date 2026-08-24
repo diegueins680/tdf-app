@@ -58,6 +58,36 @@ const ideaCategory = feedbackCategories.find((item) => item.code === 'idea' && i
 const severity = catalogs.catalogs.find((entry) => entry.catalog.code === 'feedback-severities')?.items.find((item) => item.active && item.workflowState === 'published');
 assert.ok(category?.id && ideaCategory?.id && severity?.id, 'Published feedback catalogs are required');
 
+const createAuditCase = (planId, stableId, overrides = {}) => request(`/internships/audit-plans/${planId}/cases`, {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    itccStableId: stableId,
+    itccModuleName: 'Prácticas y feedback',
+    itccFeatureName: 'Trazabilidad de un caso fallido y retest',
+    itccUserRole: 'Intern',
+    itccObjective: 'Verificar el ciclo completo con cuentas sintéticas.',
+    itccBusinessPurpose: 'Evitar pérdida de resultados y exposición entre pasantes.',
+    itccPreconditions: 'API local, base desechable y proveedores deshabilitados.',
+    itccRequiredTestData: 'PER-11, PER-13 y catálogos ficticios.',
+    itccEnvironment: 'staging',
+    itccPlatform: 'web',
+    itccBrowserOrDevice: 'API contract test',
+    itccLanguage: 'es',
+    itccDetailedSteps: 'Activar, fallar, reportar, aclarar, retestear y cerrar.',
+    itccExpectedResult: 'Historial completo y permisos aplicados.',
+    itccExpectedPersistedState: 'Dos ejecuciones y un reporte cerrado.',
+    itccExpectedSideEffects: 'Sólo notificaciones internas y outbox de prueba.',
+    itccCleanupInstructions: 'Eliminar toda la base de datos desechable.',
+    itccCriticality: 'critical',
+    itccEvidenceRequirement: 'strong',
+    itccApplicable: true,
+    itccSortOrder: 1,
+    ...overrides,
+  },
+});
+
 const publicFeedback = new FormData();
 publicFeedback.append('title', 'E2E — compatibilidad del feedback público');
 publicFeedback.append('description', 'Registro sintético para comprobar que el formulario público existente sigue legible.');
@@ -132,11 +162,86 @@ await request(`/internships/audit-plans/${cancellablePlan.iapId}`, {
   method: 'PATCH',
   json: { iapuStatus: 'cancelled' },
 });
+await request(`/internships/audit-plans/${cancellablePlan.iapId}/activate`, {
+  token: admin.token,
+  method: 'POST',
+  expected: 409,
+});
+const tasksAfterRejectedActivation = await request('/internships/tasks', { token: admin.token });
+const taskAfterRejectedActivation = tasksAfterRejectedActivation.find((candidate) => candidate.itId === cancellableTask.itId);
+assert.equal(taskAfterRejectedActivation?.itStatus, 'cancelled');
+assert.equal(taskAfterRejectedActivation?.itActivationStatus, 'draft');
+assert.equal(taskAfterRejectedActivation?.itAssignedTo ?? null, null);
 const projectsAfterCancellation = await request('/internships/projects', { token: admin.token });
 assert.equal(
   projectsAfterCancellation.find((candidate) => candidate.ipId === activeProject.ipId)?.ipStatus,
   'active',
 );
+
+const racingTask = await request('/internships/tasks', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    itcProjectId: activeProject.ipId,
+    itcTitle: 'E2E — Carrera entre activación y cancelación',
+    itcDescription: 'Sólo la transición ganadora puede producir sus efectos laterales.',
+    itcProposedAssignee: intern.partyId,
+    itcActivationStatus: 'draft',
+  },
+});
+const racingPlan = await request('/internships/audit-plans', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    iapcProjectId: activeProject.ipId,
+    iapcTaskId: racingTask.itId,
+    iapcEnvironment: 'staging',
+    iapcProposedAssignee: intern.partyId,
+  },
+});
+await createAuditCase(racingPlan.iapId, 'STU-RACE-001', {
+  itccFeatureName: 'Serialización de activación y cancelación',
+  itccCriticality: 'low',
+  itccEvidenceRequirement: 'light',
+});
+const [cancellationStatus, activationStatus] = await Promise.all([
+  requestStatus(`/internships/audit-plans/${racingPlan.iapId}`, {
+    token: admin.token,
+    method: 'PATCH',
+    json: { iapuStatus: 'cancelled' },
+  }),
+  requestStatus(`/internships/audit-plans/${racingPlan.iapId}/activate`, {
+    token: admin.token,
+    method: 'POST',
+  }),
+]);
+assert.ok([cancellationStatus, activationStatus].includes(200));
+assert.ok([200, 409].includes(cancellationStatus));
+assert.ok([200, 409].includes(activationStatus));
+const racingPlanAfterTransitions = await request(`/internships/audit-plans/${racingPlan.iapId}`, {
+  token: admin.token,
+});
+const tasksAfterRace = await request('/internships/tasks', { token: admin.token });
+const racingTaskAfterTransitions = tasksAfterRace.find((candidate) => candidate.itId === racingTask.itId);
+if (racingPlanAfterTransitions.iapStatus === 'active') {
+  assert.equal(cancellationStatus, 409);
+  assert.equal(activationStatus, 200);
+  assert.equal(racingTaskAfterTransitions?.itActivationStatus, 'active');
+  assert.equal(racingTaskAfterTransitions?.itAssignedTo, intern.partyId);
+} else {
+  assert.equal(racingPlanAfterTransitions.iapStatus, 'cancelled');
+  assert.equal(cancellationStatus, 200);
+  assert.equal(racingTaskAfterTransitions?.itStatus, 'cancelled');
+  if (activationStatus === 409) {
+    assert.equal(racingTaskAfterTransitions?.itActivationStatus, 'draft');
+    assert.equal(racingTaskAfterTransitions?.itAssignedTo ?? null, null);
+  } else {
+    assert.equal(racingTaskAfterTransitions?.itActivationStatus, 'active');
+    assert.equal(racingTaskAfterTransitions?.itAssignedTo, intern.partyId);
+  }
+}
 
 const project = await request('/internships/projects', {
   token: admin.token,
@@ -197,33 +302,12 @@ const siblingTask = await request('/internships/tasks', {
 });
 assert.equal(siblingTask.itStatus, 'todo');
 
-const testCase = await request(`/internships/audit-plans/${plan.iapId}/cases`, {
+const testCase = await createAuditCase(plan.iapId, 'STU-E2E-001');
+
+await request(`/internships/tasks/${task.itId}`, {
   token: admin.token,
-  method: 'POST',
-  expected: 201,
-  json: {
-    itccStableId: 'STU-E2E-001',
-    itccModuleName: 'Prácticas y feedback',
-    itccFeatureName: 'Trazabilidad de un caso fallido y retest',
-    itccUserRole: 'Intern',
-    itccObjective: 'Verificar el ciclo completo con cuentas sintéticas.',
-    itccBusinessPurpose: 'Evitar pérdida de resultados y exposición entre pasantes.',
-    itccPreconditions: 'API local, base desechable y proveedores deshabilitados.',
-    itccRequiredTestData: 'PER-11, PER-13 y catálogos ficticios.',
-    itccEnvironment: 'staging',
-    itccPlatform: 'web',
-    itccBrowserOrDevice: 'API contract test',
-    itccLanguage: 'es',
-    itccDetailedSteps: 'Activar, fallar, reportar, aclarar, retestear y cerrar.',
-    itccExpectedResult: 'Historial completo y permisos aplicados.',
-    itccExpectedPersistedState: 'Dos ejecuciones y un reporte cerrado.',
-    itccExpectedSideEffects: 'Sólo notificaciones internas y outbox de prueba.',
-    itccCleanupInstructions: 'Eliminar toda la base de datos desechable.',
-    itccCriticality: 'critical',
-    itccEvidenceRequirement: 'strong',
-    itccApplicable: true,
-    itccSortOrder: 1,
-  },
+  method: 'DELETE',
+  expected: 409,
 });
 
 await request(`/internships/audit-plans/${plan.iapId}`, { token: intern.token, expected: 404 });
@@ -527,6 +611,43 @@ const projectsAfterCompletion = await request('/internships/projects', { token: 
 const projectAfterCompletion = projectsAfterCompletion.find((candidate) => candidate.ipId === project.ipId);
 assert.equal(projectAfterCompletion?.ipStatus, 'active');
 
+const finalizedInternPlan = await request(`/internships/audit-plans/${plan.iapId}`, { token: intern.token });
+assert.equal(finalizedInternPlan.iapStatus, 'completed');
+const finalizedInternPlans = await request('/internships/audit-plans', { token: intern.token });
+assert.ok(finalizedInternPlans.some((candidate) => candidate.iapId === plan.iapId));
+const finalizedCases = await request(`/internships/audit-plans/${plan.iapId}/cases`, { token: intern.token });
+assert.ok(finalizedCases.some((candidate) => candidate.itcId === testCase.itcId));
+const finalizedDailySummaries = await request(`/internships/audit-plans/${plan.iapId}/daily-summaries`, { token: intern.token });
+assert.equal(finalizedDailySummaries.length, 1);
+const finalizedSummary = await request(`/internships/audit-plans/${plan.iapId}/final-summary`, { token: intern.token });
+assert.equal(finalizedSummary.ifsApprovedBy, admin.partyId);
+await request(`/internships/audit-plans/${plan.iapId}/daily-summaries`, {
+  token: intern.token,
+  method: 'POST',
+  expected: 409,
+  json: {
+    idscWorkDate: new Date().toISOString().slice(0, 10),
+    idscMinutesWorked: 15,
+    idscModulesTested: 'Prácticas',
+    idscCasesCompleted: 0,
+    idscReportsCreated: 0,
+    idscBlockers: null,
+    idscNextStep: 'No debe persistirse después del cierre.',
+  },
+});
+await request(`/internships/audit-plans/${plan.iapId}/final-summary`, {
+  token: intern.token,
+  method: 'PUT',
+  expected: 409,
+  json: { ifsuConclusions: 'No debe cambiar después del cierre.', ifsuSubmit: true },
+});
+await request('/feedback/internal', {
+  token: intern.token,
+  method: 'POST',
+  expected: 409,
+  json: { ...reportCreate, ifcTitle: 'No crear después del cierre' },
+});
+
 const executions = await request(`/internships/test-cases/${testCase.itcId}/executions`, { token: admin.token });
 assert.equal(executions.length, 4);
 assert.equal(executions[0].itexId, recordedRetest.ifrtExecutionId);
@@ -570,6 +691,7 @@ console.log(JSON.stringify({
   result: 'passed',
   personas: { admin: 'PER-13', intern: 'PER-11', otherInternIsolation: Boolean(otherIntern) },
   draftActivation: 'verified',
+  serializedActivationCancellation: `${activationStatus}/${cancellationStatus}`,
   executionHistoryCount: executions.length,
   reportState: finalReport.ifrSummary.ifsState,
   reportHistoryCount: finalReport.ifrHistory.length,

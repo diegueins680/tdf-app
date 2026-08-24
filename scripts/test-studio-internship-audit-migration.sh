@@ -251,6 +251,14 @@ if psql_exec -c "UPDATE intern_task SET status='done' WHERE id='30000000-0000-40
   echo "Completion accepted an unresolved blocking report" >&2
   exit 1
 fi
+psql_exec -c "UPDATE intern_audit_plan SET completion_justification='Explicitly reviewed exception', completion_approved_by=1, completion_approved_at=NOW(), completion_exception_approved=FALSE WHERE id='40000000-0000-4000-8000-000000000001';" >/dev/null
+if psql_exec -c "UPDATE intern_task SET status='done' WHERE id='30000000-0000-4000-8000-000000000001';" >/dev/null 2>&1; then
+  echo "Completion metadata bypassed blockers without an explicit exception approval" >&2
+  exit 1
+fi
+psql_exec -c "UPDATE intern_audit_plan SET completion_exception_approved=TRUE WHERE id='40000000-0000-4000-8000-000000000001'; UPDATE intern_task SET status='done' WHERE id='30000000-0000-4000-8000-000000000001';" >/dev/null
+assert_equal "$(psql_exec -Atqc "SELECT status FROM intern_task WHERE id='30000000-0000-4000-8000-000000000001';")" "done" "explicit completion exception"
+psql_exec -c "UPDATE intern_task SET status='todo' WHERE id='30000000-0000-4000-8000-000000000001'; UPDATE intern_audit_plan SET completion_justification=NULL, completion_exception_approved=FALSE, completion_approved_by=NULL, completion_approved_at=NULL WHERE id='40000000-0000-4000-8000-000000000001';" >/dev/null
 psql_exec -c "UPDATE internal_feedback_report SET state='closed', closure_reason='Verified in retest', closed_at=NOW(), updated_at=NOW() WHERE id='80000000-0000-4000-8000-000000000001'; UPDATE intern_final_summary SET submitted_at=NOW() + INTERVAL '1 second' WHERE id='b0000000-0000-4000-8000-000000000001'; UPDATE intern_task SET status='done' WHERE id='30000000-0000-4000-8000-000000000001';" >/dev/null
 
 psql_exec <<'SQL' >/dev/null

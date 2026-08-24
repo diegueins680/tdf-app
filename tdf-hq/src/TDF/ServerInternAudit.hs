@@ -30,7 +30,7 @@ import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
 import           Data.Time              (UTCTime, addDays, getCurrentTime, utctDay)
 import           Database.Persist
-import           Database.Persist.Sql   (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey)
+import           Database.Persist.Sql   (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey, updateWhereCount)
 import           Servant
 import           System.Environment      (lookupEnv)
 import           Web.PathPieces         (PathPiece, fromPathPiece, toPathPiece)
@@ -176,6 +176,7 @@ internAuditServer user =
                       , ME.internAuditPlanProposedAssignee = fmap toSqlKey proposedAssignee
                       , ME.internAuditPlanFinalReviewRequired = fromMaybe True iapcFinalReviewRequired
                       , ME.internAuditPlanCompletionJustification = Nothing
+                      , ME.internAuditPlanCompletionExceptionApproved = False
                       , ME.internAuditPlanCompletionApprovedBy = Nothing
                       , ME.internAuditPlanCompletionApprovedAt = Nothing
                       , ME.internAuditPlanCreatedBy = auPartyId user
@@ -233,6 +234,8 @@ internAuditServer user =
             Nothing -> ME.internAuditPlanCompletionJustification plan
       when (approvesException && not (isJust effectiveJustification)) $
         throwError err400 { errBody = "A completion justification is required before approval" }
+      when (approvesException && requestedStatus /= Just "completed") $
+        throwError err400 { errBody = "Exception approval is only valid while completing a plan" }
       when (requestedStatus == Just "completed" && not (IA.iapCanComplete currentDto) && not approvesException) $
         throwError err409 { errBody = "The audit plan does not meet completion criteria" }
       let updates = catMaybes
@@ -243,51 +246,62 @@ internAuditServer user =
             if requestedStatus == Just "completed"
               then [ ME.InternAuditPlanCompletionApprovedBy =. Just (auPartyId user)
                    , ME.InternAuditPlanCompletionApprovedAt =. Just now
+                   , ME.InternAuditPlanCompletionExceptionApproved =. approvesException
                    ]
               else []
-      withPool $ do
-        update planKey (updates ++ approvalUpdates ++ [ME.InternAuditPlanUpdatedAt =. now])
-        case requestedStatus of
-          Just "completed" -> do
-            updateWhere
-              [ ME.InternFinalSummaryPlanId ==. planKey
-              , ME.InternFinalSummarySubmittedAt !=. Nothing
-              ]
-              [ ME.InternFinalSummaryApprovedBy =. Just (auPartyId user)
-              , ME.InternFinalSummaryApprovedAt =. Just now
-              , ME.InternFinalSummaryUpdatedAt =. now
-              ]
-            update (ME.internAuditPlanTaskId plan)
-              [ ME.InternTaskStatus =. "done"
-              , ME.InternTaskProgress =. 100
-              , ME.InternTaskUpdatedAt =. now
-              ]
-            remainingTasks <- count
-              [ ME.InternTaskProjectId ==. ME.internAuditPlanProjectId plan
-              , ME.InternTaskId !=. ME.internAuditPlanTaskId plan
-              , ME.InternTaskStatus /<-. ["done", "cancelled"]
-              ]
-            when (shouldCompleteProject remainingTasks) $
-              update (ME.internAuditPlanProjectId plan)
-                [ ME.InternProjectStatus =. "completed"
-                , ME.InternProjectUpdatedAt =. now
-                ]
-          Just "cancelled" -> do
-            update (ME.internAuditPlanTaskId plan)
-              [ ME.InternTaskStatus =. "cancelled"
-              , ME.InternTaskUpdatedAt =. now
-              ]
-            remainingTasks <- count
-              [ ME.InternTaskProjectId ==. ME.internAuditPlanProjectId plan
-              , ME.InternTaskId !=. ME.internAuditPlanTaskId plan
-              , ME.InternTaskStatus /<-. ["done", "cancelled"]
-              ]
-            when (remainingTasks == 0) $
-              update (ME.internAuditPlanProjectId plan)
-                [ ME.InternProjectStatus =. "cancelled"
-                , ME.InternProjectUpdatedAt =. now
-                ]
-          _ -> pure ()
+      transitioned <- withPool $ do
+        changed <- updateWhereCount
+          [ ME.InternAuditPlanId ==. planKey
+          , ME.InternAuditPlanStatus ==. ME.internAuditPlanStatus plan
+          ]
+          (updates ++ approvalUpdates ++ [ME.InternAuditPlanUpdatedAt =. now])
+        if changed /= 1
+          then pure False
+          else do
+            case requestedStatus of
+              Just "completed" -> do
+                updateWhere
+                  [ ME.InternFinalSummaryPlanId ==. planKey
+                  , ME.InternFinalSummarySubmittedAt !=. Nothing
+                  ]
+                  [ ME.InternFinalSummaryApprovedBy =. Just (auPartyId user)
+                  , ME.InternFinalSummaryApprovedAt =. Just now
+                  , ME.InternFinalSummaryUpdatedAt =. now
+                  ]
+                update (ME.internAuditPlanTaskId plan)
+                  [ ME.InternTaskStatus =. "done"
+                  , ME.InternTaskProgress =. 100
+                  , ME.InternTaskUpdatedAt =. now
+                  ]
+                remainingTasks <- count
+                  [ ME.InternTaskProjectId ==. ME.internAuditPlanProjectId plan
+                  , ME.InternTaskId !=. ME.internAuditPlanTaskId plan
+                  , ME.InternTaskStatus /<-. ["done", "cancelled"]
+                  ]
+                when (shouldCompleteProject remainingTasks) $
+                  update (ME.internAuditPlanProjectId plan)
+                    [ ME.InternProjectStatus =. "completed"
+                    , ME.InternProjectUpdatedAt =. now
+                    ]
+              Just "cancelled" -> do
+                update (ME.internAuditPlanTaskId plan)
+                  [ ME.InternTaskStatus =. "cancelled"
+                  , ME.InternTaskUpdatedAt =. now
+                  ]
+                remainingTasks <- count
+                  [ ME.InternTaskProjectId ==. ME.internAuditPlanProjectId plan
+                  , ME.InternTaskId !=. ME.internAuditPlanTaskId plan
+                  , ME.InternTaskStatus /<-. ["done", "cancelled"]
+                  ]
+                when (remainingTasks == 0) $
+                  update (ME.internAuditPlanProjectId plan)
+                    [ ME.InternProjectStatus =. "cancelled"
+                    , ME.InternProjectUpdatedAt =. now
+                    ]
+              _ -> pure ()
+            pure True
+      unless transitioned $
+        throwError err409 { errBody = "Audit plan changed during this update; reload it before retrying" }
       audit "intern_audit_plan" rawPlanId "updated"
         (Just $ object ["status" .= requestedStatus, "exceptionApproved" .= approvesException])
       updated <- withPool $ getJustEntity planKey
@@ -313,49 +327,58 @@ internAuditServer user =
       now <- liftIO getCurrentTime
       let activationDay = utctDay now
           dueDay = addDays (fromIntegral (ME.internAuditPlanDurationDays plan)) activationDay
-      withPool $ do
-        update planKey
+      activated <- withPool $ do
+        changed <- updateWhereCount
+          [ ME.InternAuditPlanId ==. planKey
+          , ME.InternAuditPlanStatus ==. "draft"
+          ]
           [ ME.InternAuditPlanStatus =. "active"
           , ME.InternAuditPlanUpdatedAt =. now
           ]
-        update (ME.internAuditPlanProjectId plan)
-          [ ME.InternProjectActivationStatus =. "active"
-          , ME.InternProjectStatus =. "active"
-          , ME.InternProjectActivatedAt =. Just now
-          , ME.InternProjectNotificationsEnabled =. True
-          , ME.InternProjectStartAt =. Just activationDay
-          , ME.InternProjectDueAt =. Just dueDay
-          , ME.InternProjectUpdatedAt =. now
-          ]
-        update (ME.internAuditPlanTaskId plan)
-          [ ME.InternTaskActivationStatus =. "active"
-          , ME.InternTaskAssignedTo =. Just assignee
-          , ME.InternTaskProposedAssignee =. Just assignee
-          , ME.InternTaskStatus =. "todo"
-          , ME.InternTaskDueAt =. Just dueDay
-          , ME.InternTaskUpdatedAt =. now
-          ]
-        insert_ M.Notification
-          { M.notificationRecipientPartyId = assignee
-          , M.notificationNotifType = "internship_audit_assigned"
-          , M.notificationTitle = "Nueva tarea de prácticas"
-          , M.notificationBody = "Tu auditoría funcional del estudio está lista. Abre Prácticas para comenzar."
-          , M.notificationTargetType = Just "internship_task"
-          , M.notificationTargetId = Nothing
-          , M.notificationIsRead = False
-          , M.notificationCreatedAt = now
-          }
-        insert_ ME.InternAuditNotificationOutbox
-          { ME.internAuditNotificationOutboxRecipientPartyId = assignee
-          , ME.internAuditNotificationOutboxReportId = Nothing
-          , ME.internAuditNotificationOutboxPlanId = Just planKey
-          , ME.internAuditNotificationOutboxTemplateKey = "internship_audit_assigned"
-          , ME.internAuditNotificationOutboxDeliveryMode = "immediate"
-          , ME.internAuditNotificationOutboxTestTransport = testTransport
-          , ME.internAuditNotificationOutboxPayload = notificationPayload testTransport
-          , ME.internAuditNotificationOutboxDispatchedAt = Nothing
-          , ME.internAuditNotificationOutboxCreatedAt = now
-          }
+        if changed /= 1
+          then pure False
+          else do
+            update (ME.internAuditPlanProjectId plan)
+              [ ME.InternProjectActivationStatus =. "active"
+              , ME.InternProjectStatus =. "active"
+              , ME.InternProjectActivatedAt =. Just now
+              , ME.InternProjectNotificationsEnabled =. True
+              , ME.InternProjectStartAt =. Just activationDay
+              , ME.InternProjectDueAt =. Just dueDay
+              , ME.InternProjectUpdatedAt =. now
+              ]
+            update (ME.internAuditPlanTaskId plan)
+              [ ME.InternTaskActivationStatus =. "active"
+              , ME.InternTaskAssignedTo =. Just assignee
+              , ME.InternTaskProposedAssignee =. Just assignee
+              , ME.InternTaskStatus =. "todo"
+              , ME.InternTaskDueAt =. Just dueDay
+              , ME.InternTaskUpdatedAt =. now
+              ]
+            insert_ M.Notification
+              { M.notificationRecipientPartyId = assignee
+              , M.notificationNotifType = "internship_audit_assigned"
+              , M.notificationTitle = "Nueva tarea de prácticas"
+              , M.notificationBody = "Tu auditoría funcional del estudio está lista. Abre Prácticas para comenzar."
+              , M.notificationTargetType = Just "internship_task"
+              , M.notificationTargetId = Nothing
+              , M.notificationIsRead = False
+              , M.notificationCreatedAt = now
+              }
+            insert_ ME.InternAuditNotificationOutbox
+              { ME.internAuditNotificationOutboxRecipientPartyId = assignee
+              , ME.internAuditNotificationOutboxReportId = Nothing
+              , ME.internAuditNotificationOutboxPlanId = Just planKey
+              , ME.internAuditNotificationOutboxTemplateKey = "internship_audit_assigned"
+              , ME.internAuditNotificationOutboxDeliveryMode = "immediate"
+              , ME.internAuditNotificationOutboxTestTransport = testTransport
+              , ME.internAuditNotificationOutboxPayload = notificationPayload testTransport
+              , ME.internAuditNotificationOutboxDispatchedAt = Nothing
+              , ME.internAuditNotificationOutboxCreatedAt = now
+              }
+            pure True
+      unless activated $
+        throwError err409 { errBody = "Audit plan changed before activation; reload it before retrying" }
       audit "intern_audit_plan" rawPlanId "activated" Nothing
       updated <- withPool $ getJustEntity planKey
       toPlanDTO updated
@@ -553,6 +576,7 @@ internAuditServer user =
       ensureInternshipMember
       planEnt@(Entity _ plan) <- loadPlan rawPlanId
       ensurePlanAccess planEnt
+      ensureActivePlanMutation planEnt
       unless (idscMinutesWorked >= 1 && idscMinutesWorked <= 1440) $
         throwError err400 { errBody = "minutesWorked must be between 1 and 1440" }
       modulesTested <- required "modulesTested" 2000 idscModulesTested
@@ -592,6 +616,7 @@ internAuditServer user =
       ensureInternshipMember
       planEnt@(Entity planKey plan) <- loadPlan rawPlanId
       ensurePlanAccess planEnt
+      ensureActivePlanMutation planEnt
       now <- liftIO getCurrentTime
       snapshot <- buildFinalSnapshot planEnt
       conclusionsUpdate <- validatedOptional "conclusions" 12000 ifsuConclusions
@@ -648,8 +673,6 @@ internAuditServer user =
 
     ensurePlanAccess (Entity _ plan)
       | isAdminUser = pure ()
-      | ME.internAuditPlanStatus plan /= "active" =
-          throwError err404 { errBody = "Audit plan not found" }
       | otherwise = do
           task <- withPool $ get (ME.internAuditPlanTaskId plan)
           case task of
@@ -660,7 +683,7 @@ internAuditServer user =
 
     ensureActivePlanMutation (Entity _ plan) =
       unless (ME.internAuditPlanStatus plan == "active") $
-        throwError err409 { errBody = "Finalized audit plans do not accept execution changes" }
+        throwError err409 { errBody = "Finalized audit plans do not accept workflow changes" }
 
     ensurePlanAccessAndReturn ent = ensurePlanAccess ent >> pure ent
 
@@ -670,14 +693,12 @@ internAuditServer user =
       remaining <- filterMPlanAccess rest
       pure (if allowed then ent : remaining else remaining)
 
-    canAccessPlan (Entity _ plan)
-      | ME.internAuditPlanStatus plan /= "active" = pure False
-      | otherwise = do
-          task <- withPool $ get (ME.internAuditPlanTaskId plan)
-          pure $ case task of
-            Just taskValue -> ME.internTaskActivationStatus taskValue == "active"
-              && ME.internTaskAssignedTo taskValue == Just (auPartyId user)
-            Nothing -> False
+    canAccessPlan (Entity _ plan) = do
+      task <- withPool $ get (ME.internAuditPlanTaskId plan)
+      pure $ case task of
+        Just taskValue -> ME.internTaskActivationStatus taskValue == "active"
+          && ME.internTaskAssignedTo taskValue == Just (auPartyId user)
+        Nothing -> False
 
     toPlanDTO ent@(Entity key plan) = do
       stats <- calculatePlanStats ent

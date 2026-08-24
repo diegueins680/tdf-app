@@ -564,7 +564,7 @@ export default function InternTaskDetailPage() {
                   <Button variant="outlined" startIcon={<ContentCopyOutlinedIcon />} onClick={() => void copyTaskLink()}>
                     Copiar enlace
                   </Button>
-                  {isAdmin && (
+                  {isAdmin && auditPlansQuery.isSuccess && !auditPlan && (
                     <Button
                       color="error"
                       variant="outlined"

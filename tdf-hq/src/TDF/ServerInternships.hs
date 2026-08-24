@@ -30,8 +30,8 @@ import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import           Data.Time                  (Day, diffUTCTime, getCurrentTime)
-import           Database.Persist           (Entity(..), Key, SelectOpt(..), delete, getBy, getEntity, getJustEntity, insert, selectList, update, (==.), (=.), (<-.))
-import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
+import           Database.Persist           (Entity(..), Key, SelectOpt(..), delete, getBy, getEntity, getJustEntity, insert, selectList, toPersistValue, update, (==.), (=.), (<-.))
+import           Database.Persist.Sql       (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey)
 import           Servant
 import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPiece)
 
@@ -685,12 +685,22 @@ internshipsServer user =
     deleteTaskH rawId = do
       ensureAdmin
       taskKey <- parseKey @ME.InternTask rawId
-      mEntity <- withPool $ getEntity taskKey
-      case mEntity of
+      result <- withPool $ do
+        locked <- (rawSql "SELECT id::text FROM intern_task WHERE id = ? FOR UPDATE"
+          [toPersistValue taskKey] :: SqlPersistT IO [Single Text])
+        case locked of
+          [] -> pure Nothing
+          _ -> do
+            mAuditPlan <- getBy (ME.UniqueInternAuditPlanTask taskKey)
+            case mAuditPlan of
+              Just _ -> pure (Just False)
+              Nothing -> delete taskKey >> pure (Just True)
+      case result of
         Nothing -> throwError err404
-        Just _ -> do
-          withPool $ delete taskKey
-          pure NoContent
+        Just False -> throwError err409
+          { errBody = "Audit-owned tasks cannot be deleted; cancel the audit plan instead"
+          }
+        Just True -> pure NoContent
 
     listTodosH :: (MonadReader Env m, MonadIO m, MonadError ServerError m) => m [InternTodoDTO]
     listTodosH = do
