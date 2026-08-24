@@ -502,6 +502,13 @@ const similarReceived = await request(`/feedback/internal/${similarDraft.ifrSumm
   method: 'POST',
 });
 assert.equal(similarReceived.ifrSummary.ifsState, 'received');
+const finalizedDraft = await request('/feedback/internal', {
+  token: intern.token,
+  method: 'POST',
+  expected: 201,
+  json: { ...reportCreate, ifcTitle: 'Borrador que debe quedar congelado al cerrar' },
+});
+assert.equal(finalizedDraft.ifrSummary.ifsState, 'draft');
 
 const concurrentTransitions = await Promise.all([
   requestStatus(`/feedback/internal/${reportId}`, {
@@ -697,6 +704,33 @@ await request(`/feedback/internal/${similarDraft.ifrSummary.ifsId}/comments`, {
   json: {
     ifccKind: 'information_request',
     ifccBody: 'No debe reabrir el reporte después del cierre de la auditoría.',
+  },
+});
+await request(`/feedback/internal/${finalizedDraft.ifrSummary.ifsId}/submit`, {
+  token: intern.token,
+  method: 'POST',
+  expected: 409,
+});
+await request(`/feedback/internal/${finalizedDraft.ifrSummary.ifsId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  expected: 409,
+  json: { ifuPriority: 'low' },
+});
+await request(`/feedback/internal/${finalizedDraft.ifrSummary.ifsId}/comments`, {
+  token: intern.token,
+  method: 'POST',
+  expected: 409,
+  json: { ifccKind: 'comment', ifccBody: 'No debe añadirse después del cierre.' },
+});
+await request(`/feedback/internal/${finalizedDraft.ifrSummary.ifsId}/evidence-links`, {
+  token: intern.token,
+  method: 'POST',
+  expected: 409,
+  json: {
+    ifelUrl: 'https://evidence.example.test/finalized',
+    ifelCaption: 'No debe persistirse.',
+    ifelKind: 'external_link',
   },
 });
 

@@ -497,32 +497,40 @@ internalFeedbackServer user =
             Just "closed" -> [ME.InternalFeedbackReportClosedAt =. Just now]
             Just _ | state == "closed" -> [ME.InternalFeedbackReportClosedAt =. Nothing]
             _ -> []
-      updated <- withPool $ do
-        changed <- updateWhereCount
-          [ ME.InternalFeedbackReportId ==. reportKey
-          , ME.InternalFeedbackReportVersion ==. ME.internalFeedbackReportVersion report
-          ]
-          ( reportUpdates ++ closedUpdate ++
-            [ ME.InternalFeedbackReportVersion +=. 1
-            , ME.InternalFeedbackReportUpdatedAt =. now
-            ]
-          )
-        if changed /= 1
-          then pure False
+      updateResult <- withPool $ do
+        planActive <- lockActiveAuditPlanForReport report
+        if not planActive
+          then pure (Left ("finalized" :: Text))
           else do
-            unless (null feedbackUpdates) (update feedbackKey feedbackUpdates)
-            insert_ ME.InternalFeedbackHistory
-              { ME.internalFeedbackHistoryReportId = reportKey
-              , ME.internalFeedbackHistoryActorPartyId = auPartyId user
-              , ME.internalFeedbackHistoryAction = "updated"
-              , ME.internalFeedbackHistoryPreviousState = Just state
-              , ME.internalFeedbackHistoryNewState = stateUpdate
-              , ME.internalFeedbackHistoryMetadata = Just (changedFieldMetadata updateRequest)
-              , ME.internalFeedbackHistoryCreatedAt = now
-              }
-            pure True
-      unless updated $
-        throwError err409 { errBody = "Report changed during this update; reload it before retrying" }
+            changed <- updateWhereCount
+              [ ME.InternalFeedbackReportId ==. reportKey
+              , ME.InternalFeedbackReportVersion ==. ME.internalFeedbackReportVersion report
+              ]
+              ( reportUpdates ++ closedUpdate ++
+                [ ME.InternalFeedbackReportVersion +=. 1
+                , ME.InternalFeedbackReportUpdatedAt =. now
+                ]
+              )
+            if changed /= 1
+              then pure (Left "changed")
+              else do
+                unless (null feedbackUpdates) (update feedbackKey feedbackUpdates)
+                insert_ ME.InternalFeedbackHistory
+                  { ME.internalFeedbackHistoryReportId = reportKey
+                  , ME.internalFeedbackHistoryActorPartyId = auPartyId user
+                  , ME.internalFeedbackHistoryAction = "updated"
+                  , ME.internalFeedbackHistoryPreviousState = Just state
+                  , ME.internalFeedbackHistoryNewState = stateUpdate
+                  , ME.internalFeedbackHistoryMetadata = Just (changedFieldMetadata updateRequest)
+                  , ME.internalFeedbackHistoryCreatedAt = now
+                  }
+                pure (Right ())
+      case updateResult of
+        Left "finalized" -> throwError finalizedReportMutationConflict
+        Left "changed" -> throwError err409
+          { errBody = "Report changed during this update; reload it before retrying" }
+        Left _ -> throwError err500
+        Right () -> pure ()
       recordAudit reportEnt "updated" (Just $ object ["state" .= stateUpdate])
       forM_ stateUpdate $ \newState -> notifyReporterForState reportEnt newState
       refreshedReport <- withPool $ getJustEntity reportKey
@@ -538,42 +546,50 @@ internalFeedbackServer user =
         throwError err409 { errBody = "Only draft reports can be submitted" }
       validateSubmissionCompleteness report feedback
       now <- liftIO getCurrentTime
-      submitted <- withPool $ do
-        changed <- updateWhereCount
-          [ ME.InternalFeedbackReportId ==. reportKey
-          , ME.InternalFeedbackReportVersion ==. ME.internalFeedbackReportVersion report
-          , ME.InternalFeedbackReportState ==. "draft"
-          ]
-          [ ME.InternalFeedbackReportState =. "received"
-          , ME.InternalFeedbackReportSubmittedAt =. Just now
-          , ME.InternalFeedbackReportVersion +=. 1
-          , ME.InternalFeedbackReportUpdatedAt =. now
-          ]
-        if changed /= 1
-          then pure False
+      submissionResult <- withPool $ do
+        planActive <- lockActiveAuditPlanForReport report
+        if not planActive
+          then pure (Left ("finalized" :: Text))
           else do
-            insert_ ME.InternalFeedbackHistory
-              { ME.internalFeedbackHistoryReportId = reportKey
-              , ME.internalFeedbackHistoryActorPartyId = auPartyId user
-              , ME.internalFeedbackHistoryAction = "submitted"
-              , ME.internalFeedbackHistoryPreviousState = Just "draft"
-              , ME.internalFeedbackHistoryNewState = Just "submitted"
-              , ME.internalFeedbackHistoryMetadata = Nothing
-              , ME.internalFeedbackHistoryCreatedAt = now
-              }
-            insert_ ME.InternalFeedbackHistory
-              { ME.internalFeedbackHistoryReportId = reportKey
-              , ME.internalFeedbackHistoryActorPartyId = auPartyId user
-              , ME.internalFeedbackHistoryAction = "received"
-              , ME.internalFeedbackHistoryPreviousState = Just "submitted"
-              , ME.internalFeedbackHistoryNewState = Just "received"
-              , ME.internalFeedbackHistoryMetadata = Nothing
-              , ME.internalFeedbackHistoryCreatedAt = now
-              }
-            insertReporterNotification report "internal_feedback_received" "Reporte recibido" "Tu reporte fue recibido y quedó disponible para revisión."
-            pure True
-      unless submitted $
-        throwError err409 { errBody = "Report changed before submission; reload it before retrying" }
+            changed <- updateWhereCount
+              [ ME.InternalFeedbackReportId ==. reportKey
+              , ME.InternalFeedbackReportVersion ==. ME.internalFeedbackReportVersion report
+              , ME.InternalFeedbackReportState ==. "draft"
+              ]
+              [ ME.InternalFeedbackReportState =. "received"
+              , ME.InternalFeedbackReportSubmittedAt =. Just now
+              , ME.InternalFeedbackReportVersion +=. 1
+              , ME.InternalFeedbackReportUpdatedAt =. now
+              ]
+            if changed /= 1
+              then pure (Left "changed")
+              else do
+                insert_ ME.InternalFeedbackHistory
+                  { ME.internalFeedbackHistoryReportId = reportKey
+                  , ME.internalFeedbackHistoryActorPartyId = auPartyId user
+                  , ME.internalFeedbackHistoryAction = "submitted"
+                  , ME.internalFeedbackHistoryPreviousState = Just "draft"
+                  , ME.internalFeedbackHistoryNewState = Just "submitted"
+                  , ME.internalFeedbackHistoryMetadata = Nothing
+                  , ME.internalFeedbackHistoryCreatedAt = now
+                  }
+                insert_ ME.InternalFeedbackHistory
+                  { ME.internalFeedbackHistoryReportId = reportKey
+                  , ME.internalFeedbackHistoryActorPartyId = auPartyId user
+                  , ME.internalFeedbackHistoryAction = "received"
+                  , ME.internalFeedbackHistoryPreviousState = Just "submitted"
+                  , ME.internalFeedbackHistoryNewState = Just "received"
+                  , ME.internalFeedbackHistoryMetadata = Nothing
+                  , ME.internalFeedbackHistoryCreatedAt = now
+                  }
+                insertReporterNotification report "internal_feedback_received" "Reporte recibido" "Tu reporte fue recibido y quedó disponible para revisión."
+                pure (Right ())
+      case submissionResult of
+        Left "finalized" -> throwError finalizedReportMutationConflict
+        Left "changed" -> throwError err409
+          { errBody = "Report changed before submission; reload it before retrying" }
+        Left _ -> throwError err500
+        Right () -> pure ()
       enqueueTeamForReport reportEnt
       recordAudit reportEnt "submitted" Nothing
       refreshed <- withPool $ getJustEntity reportKey
@@ -597,10 +613,7 @@ internalFeedbackServer user =
             "information_response" | ME.internalFeedbackReportState report == "needs_information" -> Just "received"
             _ -> Nothing
       entResult <- withPool $ do
-        planActive <- case nextState of
-          Nothing -> pure True
-          Just _ -> maybe (pure True) lockActiveAuditPlanForTask
-            (ME.internalFeedbackReportInternshipTaskId report)
+        planActive <- lockActiveAuditPlanForReport report
         if not planActive
           then pure (Left ("finalized" :: Text))
           else do
@@ -637,8 +650,7 @@ internalFeedbackServer user =
                   }
                 Right <$> getJustEntity commentId
       ent <- case entResult of
-        Left "finalized" -> throwError err409
-          { errBody = "Finalized audit plans do not accept workflow changes" }
+        Left "finalized" -> throwError finalizedReportMutationConflict
         Left "changed" -> throwError err409
           { errBody = "Report changed before the comment transition; reload it before retrying" }
         Left _ -> throwError err500
@@ -658,23 +670,28 @@ internalFeedbackServer user =
       either throwError pure (validateFeedbackAttachmentSize size)
       caption <- validateOptionalInternalText "caption" 1000 ifepCaption
       uploadRoot <- liftIO internalFeedbackUploadRoot
-      storedPath <- liftIO $ storeInternalAttachment uploadRoot rawReportId safeName ifepAttachment
       now <- liftIO getCurrentTime
-      ent <- withPool $ do
-        evidenceId <- insert ME.InternalFeedbackEvidence
-          { ME.internalFeedbackEvidenceReportId = reportKey
-          , ME.internalFeedbackEvidenceUploadedBy = auPartyId user
-          , ME.internalFeedbackEvidenceKind = "attachment"
-          , ME.internalFeedbackEvidenceOriginalFileName = Just safeName
-          , ME.internalFeedbackEvidenceStoragePath = Just (T.pack storedPath)
-          , ME.internalFeedbackEvidenceContentType = Just mediaType
-          , ME.internalFeedbackEvidenceSizeBytes = Just (fromIntegral size)
-          , ME.internalFeedbackEvidenceExternalUrl = Nothing
-          , ME.internalFeedbackEvidenceCaption = caption
-          , ME.internalFeedbackEvidenceCreatedAt = now
-          }
-        insertHistory reportKey "evidence_added" Nothing Nothing
-        getJustEntity evidenceId
+      entResult <- withPool $ do
+        planActive <- lockActiveAuditPlanForReport (entityVal reportEnt)
+        if not planActive
+          then pure Nothing
+          else do
+            storedPath <- liftIO $ storeInternalAttachment uploadRoot rawReportId safeName ifepAttachment
+            evidenceId <- insert ME.InternalFeedbackEvidence
+              { ME.internalFeedbackEvidenceReportId = reportKey
+              , ME.internalFeedbackEvidenceUploadedBy = auPartyId user
+              , ME.internalFeedbackEvidenceKind = "attachment"
+              , ME.internalFeedbackEvidenceOriginalFileName = Just safeName
+              , ME.internalFeedbackEvidenceStoragePath = Just (T.pack storedPath)
+              , ME.internalFeedbackEvidenceContentType = Just mediaType
+              , ME.internalFeedbackEvidenceSizeBytes = Just (fromIntegral size)
+              , ME.internalFeedbackEvidenceExternalUrl = Nothing
+              , ME.internalFeedbackEvidenceCaption = caption
+              , ME.internalFeedbackEvidenceCreatedAt = now
+              }
+            insertHistory reportKey "evidence_added" Nothing Nothing
+            Just <$> getJustEntity evidenceId
+      ent <- maybe (throwError finalizedReportMutationConflict) pure entResult
       recordAudit reportEnt "evidence_added" Nothing
       pure (toEvidenceDTO ent)
 
@@ -685,21 +702,26 @@ internalFeedbackServer user =
       kind <- validateChoice "evidence kind" ["external_link", "video_link", "retest"] (fromMaybe "video_link" ifelKind)
       caption <- validateOptionalInternalText "caption" 1000 ifelCaption
       now <- liftIO getCurrentTime
-      ent <- withPool $ do
-        evidenceId <- insert ME.InternalFeedbackEvidence
-          { ME.internalFeedbackEvidenceReportId = reportKey
-          , ME.internalFeedbackEvidenceUploadedBy = auPartyId user
-          , ME.internalFeedbackEvidenceKind = kind
-          , ME.internalFeedbackEvidenceOriginalFileName = Nothing
-          , ME.internalFeedbackEvidenceStoragePath = Nothing
-          , ME.internalFeedbackEvidenceContentType = Nothing
-          , ME.internalFeedbackEvidenceSizeBytes = Nothing
-          , ME.internalFeedbackEvidenceExternalUrl = Just url
-          , ME.internalFeedbackEvidenceCaption = caption
-          , ME.internalFeedbackEvidenceCreatedAt = now
-          }
-        insertHistory reportKey "evidence_link_added" Nothing Nothing
-        getJustEntity evidenceId
+      entResult <- withPool $ do
+        planActive <- lockActiveAuditPlanForReport (entityVal reportEnt)
+        if not planActive
+          then pure Nothing
+          else do
+            evidenceId <- insert ME.InternalFeedbackEvidence
+              { ME.internalFeedbackEvidenceReportId = reportKey
+              , ME.internalFeedbackEvidenceUploadedBy = auPartyId user
+              , ME.internalFeedbackEvidenceKind = kind
+              , ME.internalFeedbackEvidenceOriginalFileName = Nothing
+              , ME.internalFeedbackEvidenceStoragePath = Nothing
+              , ME.internalFeedbackEvidenceContentType = Nothing
+              , ME.internalFeedbackEvidenceSizeBytes = Nothing
+              , ME.internalFeedbackEvidenceExternalUrl = Just url
+              , ME.internalFeedbackEvidenceCaption = caption
+              , ME.internalFeedbackEvidenceCreatedAt = now
+              }
+            insertHistory reportKey "evidence_link_added" Nothing Nothing
+            Just <$> getJustEntity evidenceId
+      ent <- maybe (throwError finalizedReportMutationConflict) pure entResult
       recordAudit reportEnt "evidence_link_added" Nothing
       pure (toEvidenceDTO ent)
 
@@ -734,53 +756,58 @@ internalFeedbackServer user =
         (throwError err400 { errBody = "Retesting requires a linked test case" })
         pure
         (ME.internalFeedbackReportTestCaseId report)
-      ensureRetestPlanActive caseKey
+      taskKey <- ensureRetestPlanActive caseKey
       notes <- validateOptionalInternalText "retestNotes" 5000 ifrcNotes
       evidenceSummary <- validateOptionalInternalText "retestEvidenceSummary" 5000 ifrcEvidenceSummary
       unless (hasMeaningful notes && hasMeaningful evidenceSummary) $
         throwError err400 { errBody = "Retesting requires notes and an evidence summary" }
       now <- liftIO getCurrentTime
-      ent <- withPool $ do
-        lockInternTestExecutionSequence caseKey
-        latest <- selectFirst [ME.InternTestExecutionTestCaseId ==. caseKey]
-          [Desc ME.InternTestExecutionExecutionNumber]
-        let nextNumber = maybe 1
-              ((+ 1) . ME.internTestExecutionExecutionNumber . entityVal)
-              latest
-            executionStatus = case result of
-              "passed" -> "verified"
-              other -> other
-        executionKey <- insert ME.InternTestExecution
-          { ME.internTestExecutionTestCaseId = caseKey
-          , ME.internTestExecutionExecutionNumber = nextNumber
-          , ME.internTestExecutionExecutorPartyId = auPartyId user
-          , ME.internTestExecutionStatus = executionStatus
-          , ME.internTestExecutionActualResult = notes
-          , ME.internTestExecutionPersistedStateObserved = Nothing
-          , ME.internTestExecutionSideEffectsObserved = Nothing
-          , ME.internTestExecutionBlockerReason = if result == "blocked" then notes else Nothing
-          , ME.internTestExecutionEvidenceSummary = evidenceSummary
-          , ME.internTestExecutionStartedAt = Just now
-          , ME.internTestExecutionCompletedAt = Just now
-          , ME.internTestExecutionCreatedAt = now
-          , ME.internTestExecutionUpdatedAt = now
-          }
-        retestId <- insert ME.InternalFeedbackRetest
-          { ME.internalFeedbackRetestReportId = reportKey
-          , ME.internalFeedbackRetestExecutionId = Just executionKey
-          , ME.internalFeedbackRetestTesterPartyId = auPartyId user
-          , ME.internalFeedbackRetestResult = result
-          , ME.internalFeedbackRetestNotes = notes
-          , ME.internalFeedbackRetestEvidenceSummary = evidenceSummary
-          , ME.internalFeedbackRetestCreatedAt = now
-          }
-        update reportKey
-          [ ME.InternalFeedbackReportRetestResult =. Just result
-          , ME.InternalFeedbackReportVersion +=. 1
-          , ME.InternalFeedbackReportUpdatedAt =. now
-          ]
-        insertHistory reportKey "retest_recorded" Nothing (Just result)
-        getJustEntity retestId
+      entResult <- withPool $ do
+        planActive <- lockActiveAuditPlanForTask taskKey
+        if not planActive
+          then pure Nothing
+          else do
+            lockInternTestExecutionSequence caseKey
+            latest <- selectFirst [ME.InternTestExecutionTestCaseId ==. caseKey]
+              [Desc ME.InternTestExecutionExecutionNumber]
+            let nextNumber = maybe 1
+                  ((+ 1) . ME.internTestExecutionExecutionNumber . entityVal)
+                  latest
+                executionStatus = case result of
+                  "passed" -> "verified"
+                  other -> other
+            executionKey <- insert ME.InternTestExecution
+              { ME.internTestExecutionTestCaseId = caseKey
+              , ME.internTestExecutionExecutionNumber = nextNumber
+              , ME.internTestExecutionExecutorPartyId = auPartyId user
+              , ME.internTestExecutionStatus = executionStatus
+              , ME.internTestExecutionActualResult = notes
+              , ME.internTestExecutionPersistedStateObserved = Nothing
+              , ME.internTestExecutionSideEffectsObserved = Nothing
+              , ME.internTestExecutionBlockerReason = if result == "blocked" then notes else Nothing
+              , ME.internTestExecutionEvidenceSummary = evidenceSummary
+              , ME.internTestExecutionStartedAt = Just now
+              , ME.internTestExecutionCompletedAt = Just now
+              , ME.internTestExecutionCreatedAt = now
+              , ME.internTestExecutionUpdatedAt = now
+              }
+            retestId <- insert ME.InternalFeedbackRetest
+              { ME.internalFeedbackRetestReportId = reportKey
+              , ME.internalFeedbackRetestExecutionId = Just executionKey
+              , ME.internalFeedbackRetestTesterPartyId = auPartyId user
+              , ME.internalFeedbackRetestResult = result
+              , ME.internalFeedbackRetestNotes = notes
+              , ME.internalFeedbackRetestEvidenceSummary = evidenceSummary
+              , ME.internalFeedbackRetestCreatedAt = now
+              }
+            update reportKey
+              [ ME.InternalFeedbackReportRetestResult =. Just result
+              , ME.InternalFeedbackReportVersion +=. 1
+              , ME.InternalFeedbackReportUpdatedAt =. now
+              ]
+            insertHistory reportKey "retest_recorded" Nothing (Just result)
+            Just <$> getJustEntity retestId
+      ent <- maybe (throwError finalizedReportMutationConflict) pure entResult
       enqueueTeamNotification reportEnt "internal_feedback_retest_recorded" "immediate"
       recordAudit reportEnt "retest_recorded" (Just $ object ["result" .= result])
       toRetestDTO ent
@@ -858,6 +885,7 @@ internalFeedbackServer user =
       plan <- withPool (get (ME.internTestCasePlanId testCase)) >>= maybe (throwError err400) pure
       unless (ME.internAuditPlanStatus plan == "active") $
         throwError err409 { errBody = "Finalized audit plans do not accept retests" }
+      pure (ME.internAuditPlanTaskId plan)
 
     validateSubmissionCompleteness report feedback = do
       unless (hasMeaningful (Just (feedbackTitle feedback)) && hasMeaningful (Just (feedbackDescription feedback))) $
@@ -1167,6 +1195,15 @@ lockActiveAuditPlanForTask taskKey = do
     [] -> True
     [Single "active"] -> True
     _ -> False
+
+lockActiveAuditPlanForReport :: ME.InternalFeedbackReport -> SqlPersistT IO Bool
+lockActiveAuditPlanForReport report =
+  maybe (pure True) lockActiveAuditPlanForTask
+    (ME.internalFeedbackReportInternshipTaskId report)
+
+finalizedReportMutationConflict :: ServerError
+finalizedReportMutationConflict = err409
+  { errBody = "Finalized audit plans do not accept workflow changes" }
 
 internalReportTypes :: [Text]
 internalReportTypes =
