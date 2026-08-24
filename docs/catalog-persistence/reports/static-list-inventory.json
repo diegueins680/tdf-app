@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-24T21:41:42.150Z",
+  "generatedAt": "2026-08-24T21:50:23.513Z",
   "repositoryRoot": ".",
   "filesScanned": 1181,
   "candidateCount": 917,
@@ -82,7 +82,7 @@
             "f94e6697d61b0ffc069b",
             "131ba25f9b00525ff569",
             "72a24b85d67e9bb8a046",
-            "4484698c4668a03fe858"
+            "7262410f2666d6b88ad3"
           ]
         },
         {
@@ -484,6 +484,8 @@
             "131ba25f9b00525ff569",
             "72b3f01f3fe2f9b212c4",
             "72a24b85d67e9bb8a046",
+            "7262410f2666d6b88ad3",
+            "1cbad9e70697846e8b46",
             "bccf127719992643622e",
             "c3dec4c9887f1d8364c7",
             "6656283da96a8520edae",
@@ -690,7 +692,7 @@
             "607a9332153352a645c4",
             "131ba25f9b00525ff569",
             "72a24b85d67e9bb8a046",
-            "4484698c4668a03fe858",
+            "7262410f2666d6b88ad3",
             "bccf127719992643622e"
           ]
         },
@@ -35036,7 +35038,7 @@
       ]
     },
     {
-      "id": "09cea7a18533d9af1a0c",
+      "id": "f9539298e8794bf190f5",
       "file": "tdf-hq-ui/src/pages/InternshipsPage.tsx",
       "sourceKind": "production",
       "surface": "web",
@@ -35048,9 +35050,10 @@
         "{value=todo, label=Pendiente}",
         "{value=doing, label=En progreso}",
         "{value=blocked, label=Bloqueada}",
-        "{value=done, label=Lista}"
+        "{value=done, label=Lista}",
+        "{value=cancelled, label=Cancelada}"
       ],
-      "valueCount": 4,
+      "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
         43
@@ -35070,30 +35073,31 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "exactDuplicateIds": [
-        "c8d165d8fab345f44035"
+        "b8cb3cd2bc01650795b5"
       ],
       "similarCandidateIds": [
-        "c8d165d8fab345f44035"
+        "b8cb3cd2bc01650795b5"
       ]
     },
     {
-      "id": "82425c03939a9af7ecb6",
+      "id": "60b36a4fd308e5e0deac",
       "file": "tdf-hq-ui/src/pages/InternshipsPage.tsx",
       "sourceKind": "production",
       "surface": "web",
       "domain": "cross-cutting-or-technical",
       "kind": "array",
       "name": "PROJECT_STATUS_OPTIONS",
-      "line": 50,
+      "line": 51,
       "values": [
         "{value=active, label=Activo}",
         "{value=paused, label=En pausa}",
-        "{value=completed, label=Completado}"
+        "{value=completed, label=Completado}",
+        "{value=cancelled, label=Cancelado}"
       ],
-      "valueCount": 3,
+      "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        50
+        51
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -35118,7 +35122,7 @@
       "domain": "security-authorization",
       "kind": "object-registry",
       "name": "PERMISSION_STATUS_LABELS",
-      "line": 56,
+      "line": 58,
       "values": [
         "pending",
         "approved",
@@ -35128,7 +35132,7 @@
       "valueCount": 4,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        56
+        58
       ],
       "consumerCount": 102,
       "backendConsumers": [
@@ -35261,7 +35265,7 @@
       ]
     },
     {
-      "id": "c8d165d8fab345f44035",
+      "id": "b8cb3cd2bc01650795b5",
       "file": "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx",
       "sourceKind": "production",
       "surface": "web",
@@ -35273,9 +35277,10 @@
         "{value=todo, label=Pendiente}",
         "{value=doing, label=En progreso}",
         "{value=blocked, label=Bloqueada}",
-        "{value=done, label=Lista}"
+        "{value=done, label=Lista}",
+        "{value=cancelled, label=Cancelada}"
       ],
-      "valueCount": 4,
+      "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
         39
@@ -35295,10 +35300,10 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "exactDuplicateIds": [
-        "09cea7a18533d9af1a0c"
+        "f9539298e8794bf190f5"
       ],
       "similarCandidateIds": [
-        "09cea7a18533d9af1a0c"
+        "f9539298e8794bf190f5"
       ]
     },
     {
@@ -73945,7 +73950,8 @@
       ],
       "similarCandidateIds": [
         "72a24b85d67e9bb8a046",
-        "ef0e7a153637f0c71705"
+        "ef0e7a153637f0c71705",
+        "7262410f2666d6b88ad3"
       ]
     },
     {
@@ -79507,7 +79513,8 @@
       ],
       "similarCandidateIds": [
         "131ba25f9b00525ff569",
-        "ef0e7a153637f0c71705"
+        "ef0e7a153637f0c71705",
+        "7262410f2666d6b88ad3"
       ]
     },
     {
@@ -79798,7 +79805,7 @@
       ]
     },
     {
-      "id": "4484698c4668a03fe858",
+      "id": "7262410f2666d6b88ad3",
       "file": "tdf-hq/src/TDF/ServerInternships.hs",
       "sourceKind": "production",
       "surface": "backend",
@@ -79809,9 +79816,10 @@
       "values": [
         "active",
         "paused",
-        "completed"
+        "completed",
+        "cancelled"
       ],
-      "valueCount": 3,
+      "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
         48
@@ -79858,10 +79866,13 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "exactDuplicateIds": [],
-      "similarCandidateIds": []
+      "similarCandidateIds": [
+        "131ba25f9b00525ff569",
+        "72a24b85d67e9bb8a046"
+      ]
     },
     {
-      "id": "3281721f6e9ab4d756a0",
+      "id": "1cbad9e70697846e8b46",
       "file": "tdf-hq/src/TDF/ServerInternships.hs",
       "sourceKind": "production",
       "surface": "backend",
@@ -79873,9 +79884,10 @@
         "todo",
         "doing",
         "blocked",
-        "done"
+        "done",
+        "cancelled"
       ],
-      "valueCount": 4,
+      "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
         51

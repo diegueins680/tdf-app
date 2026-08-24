@@ -45,12 +45,14 @@ const TASK_STATUS_OPTIONS = [
   { value: 'doing', label: 'En progreso' },
   { value: 'blocked', label: 'Bloqueada' },
   { value: 'done', label: 'Lista' },
+  { value: 'cancelled', label: 'Cancelada' },
 ];
 
 const PROJECT_STATUS_OPTIONS = [
   { value: 'active', label: 'Activo' },
   { value: 'paused', label: 'En pausa' },
   { value: 'completed', label: 'Completado' },
+  { value: 'cancelled', label: 'Cancelado' },
 ];
 
 const PERMISSION_STATUS_LABELS: Record<string, string> = {

@@ -1124,8 +1124,6 @@ validPlanTransition current next = case (current, next) of
   ("draft", "cancelled") -> True
   ("active", "completed") -> True
   ("active", "cancelled") -> True
-  ("completed", "completed") -> True
-  ("cancelled", "cancelled") -> True
   _ -> False
 
 withPool

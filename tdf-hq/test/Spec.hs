@@ -12977,9 +12977,13 @@ main = hspec $ do
             validateOptionalInternProjectStatusInput Nothing `shouldBe` Right Nothing
             validateOptionalInternProjectStatusInput (Just " paused ")
                 `shouldBe` Right (Just "paused")
+            validateOptionalInternProjectStatusInput (Just " CANCELLED ")
+                `shouldBe` Right (Just "cancelled")
             validateOptionalInternTaskStatusInput Nothing `shouldBe` Right Nothing
             validateOptionalInternTaskStatusInput (Just " DOING ")
                 `shouldBe` Right (Just "doing")
+            validateOptionalInternTaskStatusInput (Just " cancelled ")
+                `shouldBe` Right (Just "cancelled")
             validateOptionalInternPermissionStatusInput Nothing `shouldBe` Right Nothing
             validateOptionalInternPermissionStatusInput (Just " APPROVED ")
                 `shouldBe` Right (Just "approved")
@@ -12993,13 +12997,13 @@ main = hspec $ do
                         expectationFailure ("Expected invalid internship status to be rejected, got " <> show value)
             assertInvalid
                 (validateInternProjectStatusInput (Just "   "))
-                "projectStatus must be one of: active, paused, completed"
+                "projectStatus must be one of: active, paused, completed, cancelled"
             assertInvalid
                 (validateOptionalInternProjectStatusInput (Just "archived"))
-                "projectStatus must be one of: active, paused, completed"
+                "projectStatus must be one of: active, paused, completed, cancelled"
             assertInvalid
                 (validateOptionalInternTaskStatusInput (Just "review"))
-                "taskStatus must be one of: todo, doing, blocked, done"
+                "taskStatus must be one of: todo, doing, blocked, done, cancelled"
             assertInvalid
                 (validateOptionalInternPermissionStatusInput (Just "maybe"))
                 "permissionStatus must be one of: pending, approved, rejected"

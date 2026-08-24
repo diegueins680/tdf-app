@@ -45,10 +45,10 @@ import qualified TDF.ModelsExtra            as ME
 import           TDF.ServerInternAudit      (internAuditServer)
 
 internProjectStatuses :: [Text]
-internProjectStatuses = ["active", "paused", "completed"]
+internProjectStatuses = ["active", "paused", "completed", "cancelled"]
 
 internTaskStatuses :: [Text]
-internTaskStatuses = ["todo", "doing", "blocked", "done"]
+internTaskStatuses = ["todo", "doing", "blocked", "done", "cancelled"]
 
 internPermissionStatuses :: [Text]
 internPermissionStatuses = ["pending", "approved", "rejected"]

@@ -629,6 +629,15 @@ const completed = await request(`/internships/audit-plans/${plan.iapId}`, {
 assert.equal(completed.iapStatus, 'completed');
 assert.equal(completed.iapCompletionApprovedBy, admin.partyId);
 assert.ok(completed.iapCompletionApprovedAt);
+await request(`/internships/audit-plans/${plan.iapId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  expected: 409,
+  json: { iapuStatus: 'completed' },
+});
+const completedAfterRetry = await request(`/internships/audit-plans/${plan.iapId}`, { token: admin.token });
+assert.equal(completedAfterRetry.iapCompletionApprovedBy, completed.iapCompletionApprovedBy);
+assert.equal(completedAfterRetry.iapCompletionApprovedAt, completed.iapCompletionApprovedAt);
 const projectsAfterCompletion = await request('/internships/projects', { token: admin.token });
 const projectAfterCompletion = projectsAfterCompletion.find((candidate) => candidate.ipId === project.ipId);
 assert.equal(projectAfterCompletion?.ipStatus, 'active');

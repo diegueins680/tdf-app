@@ -41,6 +41,7 @@ const TASK_STATUS_OPTIONS = [
   { value: 'doing', label: 'En progreso' },
   { value: 'blocked', label: 'Bloqueada' },
   { value: 'done', label: 'Lista' },
+  { value: 'cancelled', label: 'Cancelada' },
 ] as const;
 
 const TASK_STATUS_LABELS: Record<string, string> = Object.fromEntries(
