@@ -991,29 +991,37 @@ internAuditServer user =
             ]
       pure (TE.decodeUtf8 (BL.toStrict (Aeson.encode value)))
 
-    notifyPlanMilestones planEnt@(Entity planKey plan) executionStatus = do
+    notifyPlanMilestones planEnt@(Entity _ plan) executionStatus = do
       stats <- calculatePlanStats planEnt
-      when (psProgress stats >= ME.internAuditPlanMidpointPercent plan) $ do
-        milestoneExists <- withPool $ selectFirst
-          [ ME.InternAuditNotificationOutboxPlanId ==. Just planKey
-          , ME.InternAuditNotificationOutboxTemplateKey ==. "internship_midpoint_reached"
-          ] []
-        unless (isJust milestoneExists) $
-          enqueueTeamNotification planEnt "internship_midpoint_reached" "immediate"
+      when (psProgress stats >= ME.internAuditPlanMidpointPercent plan) $
+        enqueueTeamNotificationOnce planEnt "internship_midpoint_reached" "immediate"
       when (executionStatus == "blocked") $
         enqueueTeamNotification planEnt "internship_assignment_blocked" "immediate"
 
-    enqueueTeamNotification (Entity planKey _) template deliveryMode = do
+    enqueueTeamNotification planEnt template deliveryMode =
+      withPool $ enqueueTeamNotificationSql planEnt template deliveryMode
+
+    enqueueTeamNotificationOnce planEnt@(Entity planKey _) template deliveryMode =
+      withPool $ do
+        lockInternAuditNotification planKey template
+        existing <- selectFirst
+          [ ME.InternAuditNotificationOutboxPlanId ==. Just planKey
+          , ME.InternAuditNotificationOutboxTemplateKey ==. template
+          ] []
+        unless (isJust existing) $
+          enqueueTeamNotificationSql planEnt template deliveryMode
+
+    enqueueTeamNotificationSql (Entity planKey _) template deliveryMode = do
       now <- liftIO getCurrentTime
       testTransport <- liftIO isTestRuntime
-      partyGroups <- withPool $ mapM selectCanonicalPartyIdsByRole [M.Admin, M.Manager, M.StudioManager]
+      partyGroups <- mapM selectCanonicalPartyIdsByRole [M.Admin, M.Manager, M.StudioManager]
       let recipients = nub (concat partyGroups)
           (notificationTitle, notificationBody) = case template of
             "internship_midpoint_reached" -> ("Auditoría del estudio al 50%", "La auditoría de prácticas alcanzó el punto medio y está lista para revisión.")
             "internship_assignment_blocked" -> ("Auditoría del estudio bloqueada", "Un caso bloqueado requiere revisión del equipo autorizado.")
             "internship_final_ready" -> ("Informe final de auditoría listo", "El informe final de la auditoría está listo para revisión.")
             _ -> ("Actualización de auditoría de prácticas", "Hay una actualización que requiere revisión del equipo.")
-      withPool $ mapM_ (\recipient -> do
+      mapM_ (\recipient -> do
         insert_ ME.InternAuditNotificationOutbox
           { ME.internAuditNotificationOutboxRecipientPartyId = recipient
           , ME.internAuditNotificationOutboxReportId = Nothing
@@ -1149,6 +1157,14 @@ lockInternTestExecutionSequence caseKey = do
   _ <- (rawSql
     "SELECT 1::bigint FROM (SELECT pg_advisory_xact_lock(hashtextextended(?, 0))) locked"
     [PersistText ("intern-test-execution:" <> toPathPiece caseKey)]
+    :: SqlPersistT IO [Single Int64])
+  pure ()
+
+lockInternAuditNotification :: ME.InternAuditPlanId -> Text -> SqlPersistT IO ()
+lockInternAuditNotification planKey template = do
+  _ <- (rawSql
+    "SELECT 1::bigint FROM (SELECT pg_advisory_xact_lock(hashtextextended(?, 0))) locked"
+    [PersistText ("intern-audit-notification:" <> toPathPiece planKey <> ":" <> template)]
     :: SqlPersistT IO [Single Int64])
   pure ()
 

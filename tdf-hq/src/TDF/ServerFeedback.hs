@@ -846,22 +846,43 @@ internalFeedbackServer user =
             ]
       when missingReference $
         throwError err400 { errBody = "One or more traceability references do not exist" }
+      testCasePlan <- loadTracePlan testCase
+      executionCase <- case execution of
+        Just (Just executionValue) ->
+          Just <$> loadTraceEntity
+            "The execution's test case does not exist"
+            (ME.internTestExecutionTestCaseId executionValue)
+        _ -> pure Nothing
+      executionPlan <- loadTracePlan (Just <$> executionCase)
       case (traceProjectId, traceTaskId, task) of
         (Just projectKey, Just _, Just (Just taskValue))
           | ME.internTaskProjectId taskValue /= projectKey ->
               throwError err400 { errBody = "The task does not belong to the referenced project" }
         _ -> pure ()
-      case (traceTestCaseId, testCase, traceTaskId) of
-        (Just _, Just (Just caseValue), Just taskKey) -> do
-          plan <- withPool $ get (ME.internTestCasePlanId caseValue)
-          case plan of
-            Just planValue | ME.internAuditPlanTaskId planValue == taskKey -> pure ()
-            _ -> throwError err400 { errBody = "The test case does not belong to the referenced task" }
+      case (testCasePlan, traceTaskId) of
+        (Just planValue, Just taskKey)
+          | ME.internAuditPlanTaskId planValue /= taskKey ->
+              throwError err400 { errBody = "The test case does not belong to the referenced task" }
+        _ -> pure ()
+      case (testCasePlan, traceProjectId) of
+        (Just planValue, Just projectKey)
+          | ME.internAuditPlanProjectId planValue /= projectKey ->
+              throwError err400 { errBody = "The test case does not belong to the referenced project" }
         _ -> pure ()
       case (traceExecutionId, execution, traceTestCaseId) of
         (Just _, Just (Just executionValue), Just caseKey)
           | ME.internTestExecutionTestCaseId executionValue /= caseKey ->
               throwError err400 { errBody = "The execution does not belong to the referenced test case" }
+        _ -> pure ()
+      case (executionPlan, traceTaskId) of
+        (Just planValue, Just taskKey)
+          | ME.internAuditPlanTaskId planValue /= taskKey ->
+              throwError err400 { errBody = "The execution does not belong to the referenced task" }
+        _ -> pure ()
+      case (executionPlan, traceProjectId) of
+        (Just planValue, Just projectKey)
+          | ME.internAuditPlanProjectId planValue /= projectKey ->
+              throwError err400 { errBody = "The execution does not belong to the referenced project" }
         _ -> pure ()
       unless isAdminUser $ case (traceTaskId, task) of
         (Just taskKey, Just (Just taskValue))
@@ -872,6 +893,18 @@ internalFeedbackServer user =
                 unless (ME.internAuditPlanStatus plan == "active") $
                   throwError err409 { errBody = "Finalized audit plans do not accept new reports" }
         _ -> throwError err403 { errBody = "Intern reports must link to the reporter's active assigned task" }
+      where
+        loadTracePlan Nothing = pure Nothing
+        loadTracePlan (Just Nothing) = pure Nothing
+        loadTracePlan (Just (Just caseValue)) =
+          Just <$> loadTraceEntity
+            "The test case's audit plan does not exist"
+            (ME.internTestCasePlanId caseValue)
+
+        loadTraceEntity errorMessage key =
+          withPool (get key) >>= maybe
+            (throwError err400 { errBody = errorMessage })
+            pure
 
     validateRetestExecution _ Nothing = pure ()
     validateRetestExecution report (Just executionKey) = do

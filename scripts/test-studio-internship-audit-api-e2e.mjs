@@ -304,6 +304,9 @@ assert.equal(siblingTask.itStatus, 'todo');
 
 await createAuditCase(plan.iapId, '123-INVALID', {}, 400);
 const testCase = await createAuditCase(plan.iapId, 'STU-E2E-001');
+const midpointRaceCase = await createAuditCase(plan.iapId, 'STU-E2E-002', {
+  itccObjective: 'Validar la entrega única del aviso de punto medio bajo concurrencia.',
+});
 
 await request(`/internships/tasks/${task.itId}`, {
   token: admin.token,
@@ -364,6 +367,30 @@ await request(`/internships/tasks/${task.itId}`, {
   json: { ituProjectId: activeProject.ipId },
 });
 
+const midpointExecutions = await Promise.all([
+  request(`/internships/test-cases/${testCase.itcId}/executions`, {
+    token: intern.token,
+    method: 'POST',
+    expected: 201,
+    json: {
+      itecStatus: 'passed',
+      itecActualResult: 'El primer caso alcanzó el punto medio correctamente.',
+      itecEvidenceSummary: 'EVIDENCIA-E2E-MIDPOINT-001',
+    },
+  }),
+  request(`/internships/test-cases/${midpointRaceCase.itcId}/executions`, {
+    token: intern.token,
+    method: 'POST',
+    expected: 201,
+    json: {
+      itecStatus: 'passed',
+      itecActualResult: 'El segundo caso alcanzó el punto medio correctamente.',
+      itecEvidenceSummary: 'EVIDENCIA-E2E-MIDPOINT-002',
+    },
+  }),
+]);
+assert.ok(midpointExecutions.every((execution) => execution.itexExecutionNumber === 1));
+
 const concurrentExecutions = await Promise.all([
   request(`/internships/test-cases/${testCase.itcId}/executions`, {
     token: intern.token,
@@ -380,7 +407,7 @@ const concurrentExecutions = await Promise.all([
 ]);
 assert.deepEqual(
   concurrentExecutions.map((execution) => execution.itexExecutionNumber).sort((left, right) => left - right),
-  [1, 2],
+  [2, 3],
 );
 const concurrentExecutionUpdates = await Promise.all([
   requestStatus(`/internships/test-executions/${concurrentExecutions[0].itexId}`, {
@@ -443,6 +470,17 @@ const reportCreate = {
   ifcBlocking: false,
   ifcVideoLinks: 'https://evidence.example.test/studio-audit-e2e',
 };
+await request('/feedback/internal', {
+  token: admin.token,
+  method: 'POST',
+  expected: 400,
+  json: {
+    ...reportCreate,
+    ifcTitle: 'No aceptar una ejecución de otra tarea',
+    ifcTestCaseId: null,
+    ifcInternshipTaskId: siblingTask.itId,
+  },
+});
 await request('/feedback/internal', {
   token: intern.token,
   method: 'POST',
@@ -735,7 +773,7 @@ await request(`/feedback/internal/${finalizedDraft.ifrSummary.ifsId}/evidence-li
 });
 
 const executions = await request(`/internships/test-cases/${testCase.itcId}/executions`, { token: admin.token });
-assert.equal(executions.length, 4);
+assert.equal(executions.length, 5);
 assert.equal(executions[0].itexId, recordedRetest.ifrtExecutionId);
 assert.equal(executions[0].itexStatus, 'verified');
 await request(`/internships/test-cases/${testCase.itcId}/executions`, {

@@ -144,6 +144,13 @@ if [ "$OUTBOX_CHECK" != "t" ]; then
   exit 1
 fi
 
+MIDPOINT_UNIQUENESS_CHECK=$(psql -X -d "$TDF_AUDIT_DATABASE" -Atqc \
+  "SELECT count(*) > 0 AND count(*) = count(DISTINCT (plan_id, recipient_party_id)) FROM intern_audit_notification_outbox WHERE template_key='internship_midpoint_reached'")
+if [ "$MIDPOINT_UNIQUENESS_CHECK" != "t" ]; then
+  echo "Midpoint notifications were not enqueued exactly once per plan and recipient" >&2
+  exit 1
+fi
+
 TEAM_NOTIFICATION_CHECK=$(psql -X -d "$TDF_AUDIT_DATABASE" -Atqc \
   "SELECT count(*) > 0 FROM notification WHERE notif_type IN ('internship_midpoint_reached','internship_assignment_blocked','internship_final_ready','internal_feedback_information_response','internal_feedback_retest_recorded') AND recipient_party_id IN (SELECT party_id FROM party_security_role assignment JOIN security_role role ON role.id=assignment.role_id WHERE assignment.active AND role.code IN ('admin','manager','studio-manager'))")
 if [ "$TEAM_NOTIFICATION_CHECK" != "t" ]; then
