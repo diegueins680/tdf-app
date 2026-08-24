@@ -864,7 +864,7 @@
       "reviewed": true
     },
     {
-      "id": "5a2d64467758f89e1552",
+      "id": "b180210a3602cfc0bf52",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
@@ -8574,7 +8574,7 @@
       "reviewed": true
     },
     {
-      "id": "149cb8b498b0cc858d3d",
+      "id": "b051b77753f7e8edf934",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
@@ -8604,7 +8604,7 @@
       "reviewed": true
     },
     {
-      "id": "9fa6b8a8aff3c73f0707",
+      "id": "37d9988bb2e96ca099c9",
       "classification": "security-system-registry",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -8711,6 +8711,356 @@
       "priority": "P3-retain",
       "risk": "Changing the template could make generated scenario specifications omit required notification and deduplication expectations.",
       "justification": "These sentences are deterministic documentation-template clauses generated for test specifications; they are neither runtime choices nor domain authority.",
+      "reviewed": true
+    },
+    {
+      "id": "3000abd67db1c2642d14",
+      "classification": "governed-reference-data",
+      "disposition": "consumer-update",
+      "specializedModel": "feature_platform_treatment",
+      "priority": "P3-consumer",
+      "risk": "Fixture drift could report an unsupported platform treatment or hide a missing client path.",
+      "justification": "The test vocabulary consumes the reviewed feature-platform contract and does not independently define runtime navigation.",
+      "reviewed": true
+    },
+    {
+      "id": "cf6c464b96517763daca",
+      "classification": "governed-reference-data",
+      "disposition": "consumer-update",
+      "specializedModel": "studio_audit_fixture_contract",
+      "priority": "P3-consumer",
+      "risk": "Changing required fixture keys could silently weaken deterministic audit-artifact validation.",
+      "justification": "These values are closed JSON property names asserted by a repository test, not selectable or reportable business data.",
+      "reviewed": true
+    },
+    {
+      "id": "dd80f4b5c86c5fd22c6a",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P3-consumer",
+      "risk": "Client lifecycle drift could display or submit execution states the backend no longer accepts.",
+      "justification": "The TypeScript union is a generated-contract consumer of the persisted audit execution workflow.",
+      "reviewed": true
+    },
+    {
+      "id": "db1300703b13e38b42ef",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "feedback_category",
+      "priority": "P3-consumer",
+      "risk": "Client category drift could mislabel or reject valid internal reports.",
+      "justification": "Report types are user-selectable feedback categories; the client union must follow the canonical persisted contract.",
+      "reviewed": true
+    },
+    {
+      "id": "d7f671a18c763bcd6bb6",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P3-consumer",
+      "risk": "Client workflow drift could render an impossible report state or omit an authorized transition.",
+      "justification": "The TypeScript state union consumes the backend-authoritative internal-report workflow.",
+      "reviewed": true
+    },
+    {
+      "id": "48ca3537e25aa7ecbed1",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "feedback_category",
+      "priority": "P3-consumer",
+      "risk": "Label drift could present an incorrect category while persisting a different canonical value.",
+      "justification": "These labels are a web consumer of the canonical feedback-category registry.",
+      "reviewed": true
+    },
+    {
+      "id": "c740a83a05cffd350c6c",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P3-consumer",
+      "risk": "Label drift could obscure the authoritative internal-report lifecycle.",
+      "justification": "These labels are presentation mirrors of the backend-authoritative report workflow.",
+      "reviewed": true
+    },
+    {
+      "id": "9f4aa6a01ef44ecef6db",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P3-consumer",
+      "risk": "A stale UI transition list could offer an action the backend denies or conceal an authorized action.",
+      "justification": "The browser transition menu is a consumer; backend authorization and the canonical workflow remain authoritative.",
+      "reviewed": true
+    },
+    {
+      "id": "c535dd2c0cdc265c4aa9",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "feedback_context_option, workflow_state, feedback_priority",
+      "priority": "P1-cross-platform",
+      "risk": "Mixed hard-coded form options can diverge across web, API, fixtures, and reporting.",
+      "justification": "These values are selectable and reportable internal-feedback metadata and require canonical persisted definitions.",
+      "reviewed": true
+    },
+    {
+      "id": "7f70777a9773b01cbe72",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P3-consumer",
+      "risk": "Execution-state label drift could misrepresent test progress.",
+      "justification": "The labels consume the canonical internship-audit execution workflow.",
+      "reviewed": true
+    },
+    {
+      "id": "eb51fdcb58323d0c1357",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P3-consumer",
+      "risk": "A stale visual-state map could present the wrong execution status semantics.",
+      "justification": "Color treatment is a client presentation mirror of canonical execution states.",
+      "reviewed": true
+    },
+    {
+      "id": "3139ae93a8e65442b0cc",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_state_terminal_policy",
+      "priority": "P1-cross-platform",
+      "risk": "Duplicated terminal-state logic can calculate incompatible completion outcomes.",
+      "justification": "Terminal semantics are governed workflow metadata and must have one authoritative policy.",
+      "reviewed": true
+    },
+    {
+      "id": "b6718ffe761cbb47da9a",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P3-consumer",
+      "risk": "OpenAPI lifecycle drift can generate clients that submit or reject invalid report states.",
+      "justification": "The schema enum is a contract consumer of the backend-authoritative internal-report workflow.",
+      "reviewed": true
+    },
+    {
+      "id": "00d58ecf1c8f233cfb08",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "feedback_category",
+      "priority": "P3-consumer",
+      "risk": "OpenAPI category drift can produce incompatible generated clients.",
+      "justification": "The schema enum mirrors canonical user-selectable feedback categories.",
+      "reviewed": true
+    },
+    {
+      "id": "ef0e7a153637f0c71705",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P3-consumer",
+      "risk": "OpenAPI plan-state drift can generate clients incompatible with backend transitions.",
+      "justification": "The schema enum mirrors the canonical internship audit-plan workflow.",
+      "reviewed": true
+    },
+    {
+      "id": "f94e6697d61b0ffc069b",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "String-only project states can drift from the application workflow and historical reporting.",
+      "justification": "Audit-project lifecycle values are reportable business state and require canonical workflow records.",
+      "reviewed": true
+    },
+    {
+      "id": "70467bc5338624a5f704",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "deployment_environment_reference",
+      "priority": "P1-cross-platform",
+      "risk": "Environment labels can drift between plans, reports, policy checks, and UI filters.",
+      "justification": "Audit environments are selectable and reportable governed reference values.",
+      "reviewed": true
+    },
+    {
+      "id": "131ba25f9b00525ff569",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Plan lifecycle strings can drift across activation, completion, reporting, and clients.",
+      "justification": "Internship audit-plan states are persisted and reportable workflow data.",
+      "reviewed": true
+    },
+    {
+      "id": "7321eea87fe44db55441",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "feedback_severity",
+      "priority": "P1-cross-platform",
+      "risk": "Severity vocabularies can diverge across triage, reporting, and access-scoped clients.",
+      "justification": "Severity is governed report metadata and must not be independently defined by schema checks.",
+      "reviewed": true
+    },
+    {
+      "id": "c4c57aff28abe315c9e6",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "studio_audit_automation_level",
+      "priority": "P2-domain",
+      "risk": "Automation-level labels can drift from completion calculations and reporting.",
+      "justification": "Automation strength is persisted audit-case metadata and requires a canonical definition.",
+      "reviewed": true
+    },
+    {
+      "id": "e37271863dfa552c0dba",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Execution states can drift across database constraints, backend rules, and client progress calculations.",
+      "justification": "Test execution status is persisted, selectable, and reportable workflow data.",
+      "reviewed": true
+    },
+    {
+      "id": "ab80b5b51940f714a155",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "A duplicated mutable-state subset can permit or deny inconsistent execution updates.",
+      "justification": "Editable execution states are governed workflow-transition metadata.",
+      "reviewed": true
+    },
+    {
+      "id": "b507df99a59f0dfb394b",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "feedback_category",
+      "priority": "P1-cross-platform",
+      "risk": "Hard-coded report types can diverge across storage, API validation, forms, and analytics.",
+      "justification": "Internal report types are user-selectable feedback categories and require canonical persisted authority.",
+      "reviewed": true
+    },
+    {
+      "id": "7a653e252922d64449a3",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Report lifecycle constraints can drift from backend transition policy and client state.",
+      "justification": "Internal report state is persisted and reportable workflow data.",
+      "reviewed": true
+    },
+    {
+      "id": "cfb223d9c107f9169c4d",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "feedback_priority",
+      "priority": "P1-cross-platform",
+      "risk": "Priority vocabularies can diverge across triage, queues, exports, and notifications.",
+      "justification": "Priority is governed report metadata and requires canonical persisted authority.",
+      "reviewed": true
+    },
+    {
+      "id": "7131dd8d24ef0a860122",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "feedback_evidence_type",
+      "priority": "P2-domain",
+      "risk": "Evidence-type drift can break validation, privacy handling, and audit exports.",
+      "justification": "Evidence kinds are persisted report metadata with distinct storage and security behavior.",
+      "reviewed": true
+    },
+    {
+      "id": "57633457f5d29e99b514",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "feedback_comment_type",
+      "priority": "P2-domain",
+      "risk": "Comment-type drift can corrupt information-request and response history.",
+      "justification": "Discussion event kinds are persisted, reportable workflow metadata.",
+      "reviewed": true
+    },
+    {
+      "id": "da27a85d8c16ba3bd605",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "feedback_retest_outcome",
+      "priority": "P2-domain",
+      "risk": "Retest outcome drift can produce incompatible closure and verification decisions.",
+      "justification": "Retest outcomes are persisted and reportable workflow results.",
+      "reviewed": true
+    },
+    {
+      "id": "aab6dc4eb0f0a01b4412",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "notification_delivery_policy",
+      "priority": "P2-domain",
+      "risk": "Delivery-mode drift can bypass digest expectations or create duplicate notifications.",
+      "justification": "Notification delivery policy is persisted operational configuration and requires canonical authority.",
+      "reviewed": true
+    },
+    {
+      "id": "fb052da892b08e56e3d4",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "feedback_category",
+      "priority": "P1-cross-platform",
+      "risk": "Backend report-type allowlists can diverge from persisted categories and generated clients.",
+      "justification": "The backend list currently validates user-selectable feedback categories and should consume canonical records.",
+      "reviewed": true
+    },
+    {
+      "id": "7482cf0f5144925f137f",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Backend state allowlists can diverge from database constraints and client transitions.",
+      "justification": "Internal report states are persisted, reportable workflow data and require canonical authority.",
+      "reviewed": true
+    },
+    {
+      "id": "72a24b85d67e9bb8a046",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Backend plan-state allowlists can drift from activation and completion rules.",
+      "justification": "Audit-plan status is persisted and reportable workflow data.",
+      "reviewed": true
+    },
+    {
+      "id": "af824d9b86403cce4047",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Backend execution-state allowlists can drift from schema and client progress calculations.",
+      "justification": "Execution status is persisted and reportable workflow data.",
+      "reviewed": true
+    },
+    {
+      "id": "d214b5895a1795085c23",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_state_terminal_policy",
+      "priority": "P1-cross-platform",
+      "risk": "Duplicated terminal-state policy can produce incompatible completion calculations.",
+      "justification": "Terminal execution semantics are governed workflow metadata and require one authority.",
+      "reviewed": true
+    },
+    {
+      "id": "754d42ff06f83b411148",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_completion_policy",
+      "priority": "P1-cross-platform",
+      "risk": "Duplicated critical-completion policy can mark a plan ready despite unresolved blocking outcomes.",
+      "justification": "Critical completion semantics are governed workflow metadata and require one authority.",
       "reviewed": true
     }
   ]
