@@ -3,10 +3,24 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { isAllowedDraftApiBase, parseAdditionalDraftHosts } from '../lib/studio-audit-safety.mjs';
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const fixtureDir = path.join(repo, 'test/internships/studio-audit');
 const readJson = async (name) => JSON.parse(await readFile(path.join(fixtureDir, name), 'utf8'));
+
+test('draft preparation sends credentials only to exact approved API hosts', () => {
+  assert.equal(isAllowedDraftApiBase('http://localhost:3000'), true);
+  assert.equal(isAllowedDraftApiBase('https://tdf-hq-studio-audit-staging.fly.dev'), true);
+  assert.equal(isAllowedDraftApiBase('https://attacker.example/staging'), false);
+  assert.equal(isAllowedDraftApiBase('https://staging.attacker.example'), false);
+  assert.equal(isAllowedDraftApiBase('http://tdf-hq-studio-audit-staging.fly.dev'), false);
+  assert.equal(isAllowedDraftApiBase('https://user:secret@tdf-hq-studio-audit-staging.fly.dev'), false);
+  const additional = parseAdditionalDraftHosts(' audit-api.example.test,second.example.test ');
+  assert.deepEqual(additional, ['audit-api.example.test', 'second.example.test']);
+  assert.equal(isAllowedDraftApiBase('https://audit-api.example.test', additional), true);
+  assert.equal(isAllowedDraftApiBase('https://audit-api.example.test.attacker.example', additional), false);
+});
 
 test('inventory has evidence and an explicit scope/platform decision for every feature', async () => {
   const inventory = await readJson('studio-feature-inventory.json');

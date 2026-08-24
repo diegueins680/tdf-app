@@ -7,6 +7,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 const listTasksMock = jest.fn<() => Promise<unknown[]>>();
 const listInternsMock = jest.fn<() => Promise<unknown[]>>();
 const listProjectsMock = jest.fn<() => Promise<unknown[]>>();
+const listAuditPlansMock = jest.fn<() => Promise<unknown[]>>();
 const updateTaskMock = jest.fn<(taskId: string, payload: unknown) => Promise<unknown>>();
 const deleteTaskMock = jest.fn<(taskId: string) => Promise<unknown>>();
 const useSessionMock = jest.fn<() => { session: { roles: string[]; modules: string[]; partyId?: number } }>();
@@ -24,6 +25,12 @@ jest.unstable_mockModule('../api/internships', () => ({
     listProjects: () => listProjectsMock(),
     updateTask: (taskId: string, payload: unknown) => updateTaskMock(taskId, payload),
     deleteTask: (taskId: string) => deleteTaskMock(taskId),
+  },
+}));
+
+jest.unstable_mockModule('../api/internAudit', () => ({
+  InternAudit: {
+    listPlans: () => listAuditPlansMock(),
   },
 }));
 
@@ -154,6 +161,7 @@ describe('InternTaskDetailPage', () => {
     listTasksMock.mockReset();
     listInternsMock.mockReset();
     listProjectsMock.mockReset();
+    listAuditPlansMock.mockReset();
     updateTaskMock.mockReset();
     deleteTaskMock.mockReset();
     useSessionMock.mockReset();
@@ -166,6 +174,7 @@ describe('InternTaskDetailPage', () => {
       ipCreatedAt: task.itCreatedAt,
       ipUpdatedAt: task.itUpdatedAt,
     }]);
+    listAuditPlansMock.mockResolvedValue([]);
     updateTaskMock.mockResolvedValue(task);
     deleteTaskMock.mockResolvedValue(undefined);
   });
@@ -277,6 +286,68 @@ describe('InternTaskDetailPage', () => {
           ituProgress: 40,
         });
       });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('routes audit-task lifecycle updates through the audit plan', async () => {
+    useSessionMock.mockReturnValue({ session: { roles: ['intern'], modules: ['internships'], partyId: 129 } });
+    listTasksMock.mockResolvedValue([task]);
+    listAuditPlansMock.mockResolvedValue([{
+      iapId: 'audit-plan-id',
+      iapTaskId: task.itId,
+      iapStatus: 'active',
+    }]);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, task.itId);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Abrir plan de pruebas');
+        expect(container.textContent).not.toContain('Actualizar avance');
+        expect(container.textContent).not.toContain('Editar tarea');
+      });
+      expect(updateTaskMock).not.toHaveBeenCalled();
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps audit status and calculated progress out of admin task updates', async () => {
+    listTasksMock.mockResolvedValue([task]);
+    listAuditPlansMock.mockResolvedValue([{
+      iapId: 'audit-plan-id',
+      iapTaskId: task.itId,
+      iapStatus: 'active',
+    }]);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, task.itId);
+
+    try {
+      await waitForExpectation(() => expect(container.textContent).toContain('Editar tarea'));
+      await clickButton(getButtonByText(container, 'Editar tarea'));
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('El estado y el avance se administran desde el plan de pruebas');
+      });
+      const statusControl = container.querySelector('[aria-labelledby="task-status-label"]');
+      expect(statusControl?.getAttribute('aria-disabled')).toBe('true');
+      expect(getInputByLabel(container, 'Avance %').disabled).toBe(true);
+
+      const form = container.querySelector('form');
+      if (!(form instanceof HTMLFormElement)) throw new Error('Task edit form not found');
+      await act(async () => {
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => expect(updateTaskMock).toHaveBeenCalledTimes(1));
+      const payload = updateTaskMock.mock.calls[0]?.[1] as Record<string, unknown>;
+      expect(payload).not.toHaveProperty('ituStatus');
+      expect(payload).not.toHaveProperty('ituProgress');
     } finally {
       await cleanup();
     }

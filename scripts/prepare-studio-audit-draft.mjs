@@ -8,6 +8,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isAllowedDraftApiBase, parseAdditionalDraftHosts } from './lib/studio-audit-safety.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const draft = JSON.parse(await readFile(path.join(root, 'test/internships/studio-audit/draft-project.json'), 'utf8'));
@@ -27,9 +28,8 @@ const expectedEmail = (process.env.TDF_STUDIO_AUDIT_STUART_EMAIL ?? '').trim().t
 const confirmation = process.env.TDF_STUDIO_AUDIT_DRAFT_CONFIRM ?? '';
 
 if (!apiBase || !token) throw new Error('Draft creation requires API base and an authorized runtime-only admin token.');
-const host = new URL(apiBase).hostname.toLowerCase();
-const safeHost = ['localhost', '127.0.0.1', '::1'].includes(host) || host.includes('staging') || host.includes('test');
-if (!safeHost || /prod|production/.test(apiBase.toLowerCase())) {
+const additionalHosts = parseAdditionalDraftHosts(process.env.TDF_STUDIO_AUDIT_ALLOWED_HOSTS ?? '');
+if (!isAllowedDraftApiBase(apiBase, additionalHosts) || /prod|production/.test(apiBase.toLowerCase())) {
   throw new Error('Refusing to create a draft outside an explicit local/test/staging API.');
 }
 if (!Number.isSafeInteger(expectedPartyId) || expectedPartyId <= 0 || !expectedEmail) {

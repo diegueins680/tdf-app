@@ -249,7 +249,11 @@ import TDF.ServerInternships
       validateOptionalInternProjectStatusInput,
       validateOptionalInternTaskStatusInput )
 import TDF.ServerInternAudit
-    ( validateExecutionStatus,
+    ( finalSummarySubmissionIsFresh,
+      reportBlocksCompletion,
+      reportStateCountsForFailure,
+      shouldCompleteProject,
+      validateExecutionStatus,
       validateReportableText )
 import TDF.ServerProposals
     ( ProposalContentSource (..),
@@ -265,7 +269,8 @@ import TDF.ServerProposals
       validateProposalVersionNumber,
       validateTemplateKey )
 import TDF.ServerFeedback
-    ( internalReportTypeForCategoryCode,
+    ( csvField,
+      internalReportTypeForCategoryCode,
       normalizeOptionalFeedbackText,
       sanitizeFeedbackAttachmentFileName,
       validateEnvironment,
@@ -13037,7 +13042,34 @@ main = hspec $ do
                 Left err -> errHTTPCode err `shouldBe` 400
                 Right value -> expectationFailure ("Expected control rejection, got " <> show value)
 
+        it "keeps completion tied to submitted reports, completed retests, and every project task" $ do
+            let submittedAt = UTCTime (fromGregorian 2026 8 23) (secondsToDiffTime 3600)
+            reportStateCountsForFailure "draft" (Just submittedAt) `shouldBe` False
+            reportStateCountsForFailure "submitted" (Just submittedAt) `shouldBe` True
+            reportStateCountsForFailure "received" (Just submittedAt) `shouldBe` True
+            reportStateCountsForFailure "received" Nothing `shouldBe` False
+            reportBlocksCompletion False "ready_for_retest" `shouldBe` True
+            reportBlocksCompletion False "received" `shouldBe` False
+            reportBlocksCompletion True "confirmed" `shouldBe` True
+            reportBlocksCompletion True "closed" `shouldBe` False
+            shouldCompleteProject 0 `shouldBe` True
+            shouldCompleteProject 1 `shouldBe` False
+
+        it "requires final-summary submission to be at least as new as its source data" $ do
+            let submittedAt = UTCTime (fromGregorian 2026 8 23) (secondsToDiffTime 3600)
+            finalSummarySubmissionIsFresh Nothing [] `shouldBe` False
+            finalSummarySubmissionIsFresh (Just submittedAt) [] `shouldBe` True
+            finalSummarySubmissionIsFresh (Just submittedAt) [submittedAt] `shouldBe` True
+            finalSummarySubmissionIsFresh (Just submittedAt) [addUTCTime 1 submittedAt] `shouldBe` False
+
     describe "internal feedback workflow validation" $ do
+        it "neutralizes spreadsheet formulas while preserving quoted CSV data" $ do
+            csvField "ordinary" `shouldBe` "\"ordinary\""
+            csvField "a \"quoted\" value" `shouldBe` "\"a \"\"quoted\"\" value\""
+            csvField "=HYPERLINK(\"https://attacker.invalid\")" `shouldBe`
+                "\"'=HYPERLINK(\"\"https://attacker.invalid\"\")\""
+            csvField "  @SUM(A1:A2)" `shouldBe` "\"'  @SUM(A1:A2)\""
+
         it "distinguishes omitted administrative fields from explicit JSON null when clearing triage values" $ do
             fmap ifuPriority (eitherDecode "{}" :: Either String InternalFeedbackUpdate)
                 `shouldBe` Right Nothing

@@ -630,9 +630,9 @@ internshipsServer user =
         throwError err403 { errBody = "Only admins or assignees can update tasks" }
       either throwError pure (validateInternTaskUpdatePermissions isAdminUser InternTaskUpdate{..})
       mAuditPlan <- withPool $ getBy (ME.UniqueInternAuditPlanTask taskKey)
-      when (isJust mAuditPlan && isJust ituProgress) $
+      when (isJust mAuditPlan && (isJust ituStatus || isJust ituProgress)) $
         throwError err409
-          { errBody = "Audit task progress is calculated from test executions and cannot be edited manually"
+          { errBody = "Audit task status and progress are controlled by its audit plan"
           }
       projectUpdate <-
         if isAdminUser

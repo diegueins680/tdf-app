@@ -191,19 +191,20 @@ export default function InternTaskDetailPage() {
 
     const progressText = taskForm.progress.trim();
     const progress = Number(progressText);
-    if (!auditPlan && (!/^\d+$/.test(progressText) || !Number.isInteger(progress) || progress < 0 || progress > 100)) {
-      setFeedback({ severity: 'error', message: 'El avance debe ser un número entero entre 0 y 100.' });
-      return;
-    }
-    if (!TASK_STATUS_OPTIONS.some((option) => option.value === taskForm.status)) {
-      setFeedback({ severity: 'error', message: 'Selecciona un estado válido.' });
-      return;
+    if (!auditPlan) {
+      if (!/^\d+$/.test(progressText) || !Number.isInteger(progress) || progress < 0 || progress > 100) {
+        setFeedback({ severity: 'error', message: 'El avance debe ser un número entero entre 0 y 100.' });
+        return;
+      }
+      if (!TASK_STATUS_OPTIONS.some((option) => option.value === taskForm.status)) {
+        setFeedback({ severity: 'error', message: 'Selecciona un estado válido.' });
+        return;
+      }
     }
 
-    let payload: InternTaskUpdate = {
-      ituStatus: taskForm.status,
-      ...(!auditPlan ? { ituProgress: progress } : {}),
-    };
+    let payload: InternTaskUpdate = auditPlan
+      ? {}
+      : { ituStatus: taskForm.status, ituProgress: progress };
 
     if (isAdmin) {
       const title = taskForm.title.trim();
@@ -256,7 +257,7 @@ export default function InternTaskDetailPage() {
       maxWidth="md"
       actions={(
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
-          {task && !editing && (
+          {task && !editing && (isAdmin || !auditPlan) && (
             <Button
               variant="contained"
               startIcon={<EditOutlinedIcon />}
@@ -326,6 +327,12 @@ export default function InternTaskDetailPage() {
                   </Typography>
                 </Box>
 
+                {auditPlan && (
+                  <Alert severity="info">
+                    El estado y el avance se administran desde el plan de pruebas para conservar sus criterios de cierre.
+                  </Alert>
+                )}
+
                 {isAdmin && (
                   <>
                     <FormControl fullWidth required>
@@ -379,6 +386,7 @@ export default function InternTaskDetailPage() {
                       labelId="task-status-label"
                       label="Estado"
                       value={taskForm.status}
+                      disabled={Boolean(auditPlan)}
                       onChange={(event) => setTaskForm((current) => current && ({
                         ...current,
                         status: event.target.value,

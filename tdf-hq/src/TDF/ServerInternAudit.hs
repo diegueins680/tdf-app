@@ -7,6 +7,10 @@
 
 module TDF.ServerInternAudit
   ( internAuditServer
+  , finalSummarySubmissionIsFresh
+  , reportBlocksCompletion
+  , reportStateCountsForFailure
+  , shouldCompleteProject
   , validateExecutionStatus
   , validateReportableText
   ) where
@@ -24,7 +28,7 @@ import           Data.Maybe             (catMaybes, fromMaybe, isJust)
 import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
-import           Data.Time              (addDays, getCurrentTime, utctDay)
+import           Data.Time              (UTCTime, addDays, getCurrentTime, utctDay)
 import           Database.Persist
 import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant
@@ -236,10 +240,16 @@ internAuditServer user =
               , ME.InternTaskProgress =. 100
               , ME.InternTaskUpdatedAt =. now
               ]
-            update (ME.internAuditPlanProjectId plan)
-              [ ME.InternProjectStatus =. "completed"
-              , ME.InternProjectUpdatedAt =. now
+            remainingTasks <- count
+              [ ME.InternTaskProjectId ==. ME.internAuditPlanProjectId plan
+              , ME.InternTaskId !=. ME.internAuditPlanTaskId plan
+              , ME.InternTaskStatus /<-. ["done", "cancelled"]
               ]
+            when (shouldCompleteProject remainingTasks) $
+              update (ME.internAuditPlanProjectId plan)
+                [ ME.InternProjectStatus =. "completed"
+                , ME.InternProjectUpdatedAt =. now
+                ]
           Just "cancelled" -> do
             update (ME.internAuditPlanTaskId plan)
               [ ME.InternTaskStatus =. "cancelled"
@@ -549,14 +559,18 @@ internAuditServer user =
 
     upsertFinalSummaryH rawPlanId IA.InternFinalSummaryUpdate{..} = do
       ensureInternshipMember
-      planEnt@(Entity planKey _) <- loadPlan rawPlanId
+      planEnt@(Entity planKey plan) <- loadPlan rawPlanId
       ensurePlanAccess planEnt
       now <- liftIO getCurrentTime
       snapshot <- buildFinalSnapshot planEnt
       conclusionsUpdate <- validatedOptional "conclusions" 12000 ifsuConclusions
       existing <- withPool $ getBy (ME.UniqueInternFinalSummaryPlan planKey)
+      when (not (isJust existing)) $ do
+        task <- withPool (get (ME.internAuditPlanTaskId plan)) >>= maybe (throwError err404) pure
+        unless (ME.internTaskAssignedTo task == Just (auPartyId user)) $
+          throwError err403 { errBody = "Only the assigned intern may prepare the initial final summary" }
       forM_ existing $ \(Entity _ summary) ->
-        unless (isAdminUser || ME.internFinalSummaryAuthorPartyId summary == auPartyId user) $
+        unless (ME.internFinalSummaryAuthorPartyId summary == auPartyId user) $
           throwError err403 { errBody = "Cannot update another intern's summary" }
       let effectiveConclusions = conclusionsUpdate <|?> (ME.internFinalSummaryConclusions . entityVal =<< existing)
       when (ifsuSubmit == Just True && not (hasText effectiveConclusions)) $
@@ -576,11 +590,13 @@ internAuditServer user =
               , ME.internFinalSummaryUpdatedAt = now
               }
             getJustEntity summaryId
-          Just (Entity summaryKey summary) -> do
+          Just (Entity summaryKey _) -> do
             update summaryKey
               [ ME.InternFinalSummaryGeneratedSnapshot =. snapshot
               , ME.InternFinalSummaryConclusions =. effectiveConclusions
-              , ME.InternFinalSummarySubmittedAt =. if ifsuSubmit == Just True then Just now else ME.internFinalSummarySubmittedAt summary
+              , ME.InternFinalSummarySubmittedAt =. if ifsuSubmit == Just True then Just now else Nothing
+              , ME.InternFinalSummaryApprovedBy =. Nothing
+              , ME.InternFinalSummaryApprovedAt =. Nothing
               , ME.InternFinalSummaryUpdatedAt =. now
               ]
             getJustEntity summaryKey
@@ -734,6 +750,9 @@ internAuditServer user =
 
     calculatePlanStats (Entity planKey plan) = do
       cases <- withPool $ selectList [ME.InternTestCasePlanId ==. planKey] []
+      executions <- case map entityKey cases of
+        [] -> pure []
+        caseKeys -> withPool $ selectList [ME.InternTestExecutionTestCaseId <-. caseKeys] []
       latestPairs <- forM cases $ \caseEnt@(Entity caseKey _) -> do
         latest <- withPool $ selectFirst [ME.InternTestExecutionTestCaseId ==. caseKey]
           [Desc ME.InternTestExecutionExecutionNumber]
@@ -754,7 +773,13 @@ internAuditServer user =
               || maybe False
                    (\(Entity executionKey _) -> ME.internalFeedbackReportTestExecutionId report == Just executionKey)
                    latest
-          hasLinkedReport (caseEnt, latest) = any (reportMatches caseEnt latest) reports
+          hasLinkedReport (caseEnt, latest) = any
+            (\reportEnt@(Entity _ report) ->
+              reportMatches caseEnt latest reportEnt
+                && reportStateCountsForFailure
+                     (ME.internalFeedbackReportState report)
+                     (ME.internalFeedbackReportSubmittedAt report))
+            reports
           hasEvidence (caseEnt, latest) =
             maybe False (hasText . ME.internTestExecutionEvidenceSummary . entityVal) latest
               || any
@@ -783,14 +808,26 @@ internAuditServer user =
           openBlockers = length
             [ ()
             | Entity _ report <- reports
-            , ME.internalFeedbackReportBlocking report
-            , ME.internalFeedbackReportState report `notElem` ["verified", "closed", "duplicate", "discarded"]
+            , reportBlocksCompletion
+                (ME.internalFeedbackReportBlocking report)
+                (ME.internalFeedbackReportState report)
             ]
           caseCount = length applicable
           executedCount = length executed
           progress = if caseCount == 0 then 0 else (executedCount * 100) `div` caseCount
+          sourceUpdates =
+            [ ME.internTestExecutionUpdatedAt execution
+            | Entity _ execution <- executions
+            ] ++
+            [ ME.internalFeedbackReportUpdatedAt report
+            | Entity _ report <- reports
+            ]
           finalReady = not (ME.internAuditPlanFinalReviewRequired plan)
-            || maybe False (isJust . ME.internFinalSummarySubmittedAt . entityVal) final
+            || maybe False
+                 (\(Entity _ summary) -> finalSummarySubmissionIsFresh
+                   (ME.internFinalSummarySubmittedAt summary)
+                   sourceUpdates)
+                 final
           canComplete = caseCount > 0 && executedCount == caseCount && criticalRemaining == 0
             && openBlockers == 0 && failedWithoutReport == 0 && evidenceMissing == 0
             && isJust daily && finalReady
@@ -902,6 +939,23 @@ data PlanStats = PlanStats
   , psProgress          :: Int
   , psCanComplete       :: Bool
   }
+
+reportStateCountsForFailure :: Text -> Maybe UTCTime -> Bool
+reportStateCountsForFailure state submittedAt =
+  state /= "draft" && isJust submittedAt
+
+reportBlocksCompletion :: Bool -> Text -> Bool
+reportBlocksCompletion blocking state =
+  state == "ready_for_retest"
+    || (blocking && state `notElem` ["verified", "closed", "duplicate", "discarded"])
+
+finalSummarySubmissionIsFresh :: Maybe UTCTime -> [UTCTime] -> Bool
+finalSummarySubmissionIsFresh Nothing _ = False
+finalSummarySubmissionIsFresh (Just submittedAt) sourceUpdates =
+  all (<= submittedAt) sourceUpdates
+
+shouldCompleteProject :: Int -> Bool
+shouldCompleteProject = (== 0)
 
 validateExecutionPayload :: MonadError ServerError m => Text -> Maybe Text -> Maybe Text -> m ()
 validateExecutionPayload status actualResult blockerReason = do

@@ -103,6 +103,19 @@ const plan = await request('/internships/audit-plans', {
 });
 assert.equal(plan.iapStatus, 'draft');
 
+const siblingTask = await request('/internships/tasks', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    itcProjectId: project.ipId,
+    itcTitle: 'E2E — Trabajo pendiente independiente',
+    itcDescription: 'Esta tarea debe impedir que completar una auditoría cierre todo el proyecto.',
+    itcActivationStatus: 'active',
+  },
+});
+assert.equal(siblingTask.itStatus, 'todo');
+
 const testCase = await request(`/internships/audit-plans/${plan.iapId}/cases`, {
   token: admin.token,
   method: 'POST',
@@ -139,7 +152,6 @@ await request(`/internships/tasks/${task.itId}`, {
   expected: 403,
   json: { ituTitle: 'Cambio no permitido' },
 });
-
 const activated = await request(`/internships/audit-plans/${plan.iapId}/activate`, {
   token: admin.token,
   method: 'POST',
@@ -159,6 +171,18 @@ await request(`/internships/tasks/${task.itId}`, {
   method: 'PATCH',
   expected: 403,
   json: { ituTitle: 'Cambio no permitido' },
+});
+await request(`/internships/tasks/${task.itId}`, {
+  token: intern.token,
+  method: 'PATCH',
+  expected: 409,
+  json: { ituStatus: 'done' },
+});
+await request(`/internships/tasks/${task.itId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  expected: 409,
+  json: { ituStatus: 'done' },
 });
 
 const failedExecution = await request(`/internships/test-cases/${testCase.itcId}/executions`, {
@@ -297,29 +321,17 @@ for (const nextState of ['confirmed', 'in_progress', 'ready_for_retest']) {
   });
 }
 
-const verifiedExecution = await request(`/internships/test-cases/${testCase.itcId}/executions`, {
+const recordedRetest = await request(`/feedback/internal/${reportId}/retests`, {
   token: intern.token,
   method: 'POST',
   expected: 201,
   json: {
-    itecStatus: 'verified',
-    itecActualResult: 'El retest dejó una sola fila ficticia.',
-    itecPersistedStateObserved: 'Una fila ficticia.',
-    itecSideEffectsObserved: 'Sin proveedores externos.',
-    itecEvidenceSummary: 'EVIDENCIA-E2E-RETEST-001',
-  },
-});
-await request(`/feedback/internal/${reportId}/retests`, {
-  token: intern.token,
-  method: 'POST',
-  expected: 201,
-  json: {
-    ifrcExecutionId: verifiedExecution.itexId,
     ifrcResult: 'passed',
     ifrcNotes: 'Repetí los pasos y quedó una sola fila ficticia.',
     ifrcEvidenceSummary: 'EVIDENCIA-E2E-RETEST-001',
   },
 });
+assert.ok(recordedRetest.ifrtExecutionId, 'A UI-style retest must create a linked immutable execution');
 for (const update of [
   { ifuState: 'verified', ifuResolution: 'Corregido y comprobado en base desechable.' },
   { ifuState: 'closed', ifuClosureReason: 'Retest aprobado con evidencia ficticia.' },
@@ -342,6 +354,15 @@ await request(`/internships/audit-plans/${plan.iapId}/daily-summaries`, {
   },
 });
 await request(`/internships/audit-plans/${plan.iapId}/final-summary`, {
+  token: admin.token,
+  method: 'PUT',
+  expected: 403,
+  json: {
+    ifsuConclusions: 'Un administrador revisa, pero no suplanta a la persona asignada.',
+    ifsuSubmit: true,
+  },
+});
+await request(`/internships/audit-plans/${plan.iapId}/final-summary`, {
   token: intern.token,
   method: 'PUT',
   json: {
@@ -359,9 +380,14 @@ const completed = await request(`/internships/audit-plans/${plan.iapId}`, {
   json: { iapuStatus: 'completed' },
 });
 assert.equal(completed.iapStatus, 'completed');
+const projectsAfterCompletion = await request('/internships/projects', { token: admin.token });
+const projectAfterCompletion = projectsAfterCompletion.find((candidate) => candidate.ipId === project.ipId);
+assert.equal(projectAfterCompletion?.ipStatus, 'active');
 
 const executions = await request(`/internships/test-cases/${testCase.itcId}/executions`, { token: admin.token });
 assert.equal(executions.length, 2);
+assert.equal(executions[0].itexId, recordedRetest.ifrtExecutionId);
+assert.equal(executions[0].itexStatus, 'verified');
 const finalReport = await request(`/feedback/internal/${reportId}`, { token: admin.token });
 assert.equal(finalReport.ifrSummary.ifsState, 'closed');
 assert.ok(finalReport.ifrHistory.length >= 10);

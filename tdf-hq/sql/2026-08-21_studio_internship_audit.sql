@@ -208,7 +208,7 @@ CREATE TABLE IF NOT EXISTS internal_feedback_evidence (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   report_id UUID NOT NULL REFERENCES internal_feedback_report(id) ON DELETE CASCADE,
   uploaded_by BIGINT NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
-  kind TEXT NOT NULL DEFAULT 'attachment' CHECK (kind IN ('attachment', 'video_link', 'retest')),
+  kind TEXT NOT NULL DEFAULT 'attachment',
   original_file_name TEXT,
   storage_path TEXT,
   content_type TEXT,
@@ -222,6 +222,12 @@ CREATE TABLE IF NOT EXISTS internal_feedback_evidence (
     OR (storage_path IS NULL AND external_url IS NOT NULL AND length(btrim(external_url)) BETWEEN 8 AND 2048)
   )
 );
+
+ALTER TABLE internal_feedback_evidence
+  DROP CONSTRAINT IF EXISTS internal_feedback_evidence_kind_check;
+ALTER TABLE internal_feedback_evidence
+  ADD CONSTRAINT internal_feedback_evidence_kind_check
+  CHECK (kind IN ('attachment', 'external_link', 'video_link', 'retest'));
 
 CREATE INDEX IF NOT EXISTS internal_feedback_evidence_report_idx
   ON internal_feedback_evidence(report_id, created_at);
@@ -360,7 +366,7 @@ BEGIN
 
   SELECT * INTO target_plan
   FROM intern_audit_plan
-  WHERE task_id = NEW.id AND status IN ('draft', 'active')
+  WHERE task_id = NEW.id AND status IN ('draft', 'active', 'completed')
   LIMIT 1;
 
   IF NOT FOUND THEN
@@ -396,8 +402,10 @@ BEGIN
         AND NOT EXISTS (
           SELECT 1
           FROM internal_feedback_report report
-          WHERE report.test_case_id = test_case.id
-             OR report.test_execution_id = latest.execution_id
+          WHERE (report.test_case_id = test_case.id
+             OR report.test_execution_id = latest.execution_id)
+            AND report.state <> 'draft'
+            AND report.submitted_at IS NOT NULL
         )
     ),
     count(*) FILTER (
@@ -421,17 +429,37 @@ BEGIN
   SELECT count(*) INTO unresolved_blockers
   FROM internal_feedback_report report
   WHERE report.internship_task_id = NEW.id
-    AND report.blocking
-    AND report.state NOT IN ('verified', 'closed', 'duplicate', 'discarded');
+    AND (
+      report.state = 'ready_for_retest'
+      OR (
+        report.blocking
+        AND report.state NOT IN ('verified', 'closed', 'duplicate', 'discarded')
+      )
+    );
 
   SELECT CASE WHEN count(*) = 0 THEN 1 ELSE 0 END INTO missing_daily
   FROM intern_daily_summary summary
   WHERE summary.task_id = NEW.id;
 
-  SELECT CASE WHEN count(*) FILTER (WHERE summary.submitted_at IS NOT NULL) = 0 THEN 1 ELSE 0 END
-  INTO missing_final
-  FROM intern_final_summary summary
-  WHERE summary.plan_id = target_plan.id;
+  SELECT CASE WHEN EXISTS (
+    SELECT 1
+    FROM intern_final_summary summary
+    WHERE summary.plan_id = target_plan.id
+      AND summary.submitted_at IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1
+        FROM intern_test_execution execution
+        JOIN intern_test_case test_case ON test_case.id = execution.test_case_id
+        WHERE test_case.plan_id = target_plan.id
+          AND execution.updated_at > summary.submitted_at
+      )
+      AND NOT EXISTS (
+        SELECT 1
+        FROM internal_feedback_report report
+        WHERE report.internship_task_id = NEW.id
+          AND report.updated_at > summary.submitted_at
+      )
+  ) THEN 0 ELSE 1 END INTO missing_final;
 
   IF missing_cases > 0 OR missing_critical > 0 OR unresolved_blockers > 0
      OR failed_without_report > 0 OR missing_evidence > 0

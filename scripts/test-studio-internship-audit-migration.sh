@@ -191,16 +191,16 @@ INSERT INTO internal_feedback_report(
   internship_project_id,internship_task_id,reporter_party_id,blocking,submitted_at
 ) VALUES (
   '80000000-0000-4000-8000-000000000001','70000000-0000-4000-8000-000000000001',
-  'error','received','CRM','Customer validation','staging','web','es','Intern',
+  'error','draft','CRM','Customer validation','staging','web','es','Intern',
   '10000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000002',
   '60000000-0000-4000-8000-000000000002','20000000-0000-4000-8000-000000000001',
-  '30000000-0000-4000-8000-000000000001',2,FALSE,NOW()
+  '30000000-0000-4000-8000-000000000001',2,FALSE,NULL
 );
 INSERT INTO internal_feedback_evidence(
   id,report_id,uploaded_by,kind,external_url,caption
 ) VALUES (
   '90000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000001',
-  2,'video_link','https://evidence.invalid/STU-CRM-001','Safe fictional evidence'
+  2,'external_link','https://evidence.invalid/STU-CRM-001','Safe fictional evidence'
 );
 INSERT INTO intern_daily_summary(
   id,task_id,author_party_id,work_date,minutes_worked,modules_tested,cases_completed,
@@ -215,13 +215,34 @@ INSERT INTO intern_final_summary(
   'b0000000-0000-4000-8000-000000000001','40000000-0000-4000-8000-000000000001',
   2,'{}','Prioritize duplicate prevention',NOW()
 );
-UPDATE intern_task SET status='done' WHERE id='30000000-0000-4000-8000-000000000001';
 SQL
 
+psql_exec -c "UPDATE intern_audit_plan SET status='completed' WHERE id='40000000-0000-4000-8000-000000000001';" >/dev/null
+if psql_exec -c "UPDATE intern_task SET status='done' WHERE id='30000000-0000-4000-8000-000000000001';" >/dev/null 2>&1; then
+  echo "Completion accepted a linked report that was still a draft" >&2
+  exit 1
+fi
+psql_exec -c "UPDATE internal_feedback_report SET state='received', submitted_at=NOW(), updated_at=NOW() WHERE id='80000000-0000-4000-8000-000000000001'; UPDATE intern_final_summary SET submitted_at=NOW() + INTERVAL '1 second' WHERE id='b0000000-0000-4000-8000-000000000001'; UPDATE intern_task SET status='done' WHERE id='30000000-0000-4000-8000-000000000001';" >/dev/null
+
 assert_equal "$(psql_exec -Atqc "SELECT status FROM intern_task WHERE id='30000000-0000-4000-8000-000000000001';")" "done" "qualified completion"
+assert_equal "$(psql_exec -Atqc "SELECT kind FROM internal_feedback_evidence WHERE id='90000000-0000-4000-8000-000000000001';")" "external_link" "external evidence kind"
 
 psql_exec <<'SQL' >/dev/null
 UPDATE intern_task SET status='todo' WHERE id='30000000-0000-4000-8000-000000000001';
+UPDATE intern_audit_plan SET status='active' WHERE id='40000000-0000-4000-8000-000000000001';
+UPDATE internal_feedback_report
+SET state='ready_for_retest', blocking=FALSE, updated_at=NOW()
+WHERE id='80000000-0000-4000-8000-000000000001';
+UPDATE intern_final_summary
+SET submitted_at=NOW() + INTERVAL '1 second'
+WHERE id='b0000000-0000-4000-8000-000000000001';
+SQL
+if psql_exec -c "UPDATE intern_task SET status='done' WHERE id='30000000-0000-4000-8000-000000000001';" >/dev/null 2>&1; then
+  echo "Completion accepted a pending non-blocking retest" >&2
+  exit 1
+fi
+
+psql_exec <<'SQL' >/dev/null
 UPDATE internal_feedback_report
 SET blocking=TRUE, state='confirmed'
 WHERE id='80000000-0000-4000-8000-000000000001';
@@ -230,7 +251,22 @@ if psql_exec -c "UPDATE intern_task SET status='done' WHERE id='30000000-0000-40
   echo "Completion accepted an unresolved blocking report" >&2
   exit 1
 fi
-psql_exec -c "UPDATE internal_feedback_report SET state='closed', closure_reason='Verified in retest', closed_at=NOW() WHERE id='80000000-0000-4000-8000-000000000001'; UPDATE intern_task SET status='done' WHERE id='30000000-0000-4000-8000-000000000001';" >/dev/null
+psql_exec -c "UPDATE internal_feedback_report SET state='closed', closure_reason='Verified in retest', closed_at=NOW(), updated_at=NOW() WHERE id='80000000-0000-4000-8000-000000000001'; UPDATE intern_final_summary SET submitted_at=NOW() + INTERVAL '1 second' WHERE id='b0000000-0000-4000-8000-000000000001'; UPDATE intern_task SET status='done' WHERE id='30000000-0000-4000-8000-000000000001';" >/dev/null
+
+psql_exec <<'SQL' >/dev/null
+UPDATE intern_task SET status='todo' WHERE id='30000000-0000-4000-8000-000000000001';
+UPDATE intern_final_summary
+SET submitted_at=NOW() - INTERVAL '2 minutes'
+WHERE id='b0000000-0000-4000-8000-000000000001';
+UPDATE intern_test_execution
+SET updated_at=NOW()
+WHERE id='60000000-0000-4000-8000-000000000001';
+SQL
+if psql_exec -c "UPDATE intern_task SET status='done' WHERE id='30000000-0000-4000-8000-000000000001';" >/dev/null 2>&1; then
+  echo "Completion accepted a stale submitted final summary" >&2
+  exit 1
+fi
+psql_exec -c "UPDATE intern_final_summary SET submitted_at=NOW() + INTERVAL '1 second' WHERE id='b0000000-0000-4000-8000-000000000001'; UPDATE intern_task SET status='done' WHERE id='30000000-0000-4000-8000-000000000001';" >/dev/null
 
 psql_exec <<'SQL' >/dev/null
 INSERT INTO intern_test_execution(

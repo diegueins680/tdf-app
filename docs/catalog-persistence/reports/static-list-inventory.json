@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-24T03:41:35.386Z",
+  "generatedAt": "2026-08-24T15:08:10.178Z",
   "repositoryRoot": ".",
   "filesScanned": 1177,
   "candidateCount": 917,
   "byClassification": {
-    "dynamic-business-catalog": 571,
+    "dynamic-business-catalog": 570,
     "genuine-technical-constant": 47,
-    "governed-reference-data": 94,
+    "governed-reference-data": 95,
     "security-system-registry": 205
   },
   "exactDuplicateGroupCount": 127,
@@ -4140,7 +4140,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "array",
       "name": "allowedPlatforms",
-      "line": 13,
+      "line": 27,
       "values": [
         "web_only",
         "native_mobile",
@@ -4151,7 +4151,7 @@
       "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        13
+        27
       ],
       "consumerCount": 7,
       "backendConsumers": [
@@ -4190,7 +4190,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "array",
       "name": "requiredCollections",
-      "line": 84,
+      "line": 98,
       "values": [
         "customers",
         "artists",
@@ -4214,7 +4214,7 @@
       "valueCount": 18,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        84
+        98
       ],
       "consumerCount": 35,
       "backendConsumers": [
@@ -34633,7 +34633,7 @@
       "lines": [
         216
       ],
-      "consumerCount": 26,
+      "consumerCount": 25,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -34664,7 +34664,6 @@
         "scripts/audit-formal-methods.mjs",
         "scripts/continuous-improvement-loop.mjs",
         "scripts/persona-test-program.mjs",
-        "scripts/prepare-studio-audit-draft.mjs",
         "scripts/test-studio-internship-audit-api-e2e.mjs",
         "scripts/test-studio-internship-audit-migration.sh"
       ],
@@ -60251,7 +60250,7 @@
         164,
         288
       ],
-      "consumerCount": 74,
+      "consumerCount": 73,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -60317,7 +60316,6 @@
         "scripts/artist-enrichment.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/lib/production-release.mjs",
-        "scripts/prepare-studio-audit-draft.mjs",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
@@ -63841,7 +63839,7 @@
       "lines": [
         345
       ],
-      "consumerCount": 74,
+      "consumerCount": 73,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -63907,7 +63905,6 @@
         "scripts/artist-enrichment.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/lib/production-release.mjs",
-        "scripts/prepare-studio-audit-draft.mjs",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-course-checkout-runtime-migration.sh",
         "scripts/test-distribution-accounting-migration.sh",
@@ -73835,7 +73832,7 @@
         32,
         159
       ],
-      "consumerCount": 23,
+      "consumerCount": 22,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -73863,7 +73860,6 @@
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/continuous-improvement-loop.mjs",
-        "scripts/prepare-studio-audit-draft.mjs",
         "scripts/test-studio-internship-audit-api-e2e.mjs",
         "scripts/test-studio-internship-audit-migration.sh"
       ],
@@ -74212,7 +74208,7 @@
       "lines": [
         108
       ],
-      "consumerCount": 30,
+      "consumerCount": 31,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -74249,7 +74245,8 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/operations-load-test.mjs",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
-        "scripts/test-studio-internship-audit-api-e2e.mjs"
+        "scripts/test-studio-internship-audit-api-e2e.mjs",
+        "scripts/test-studio-internship-audit-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -74586,23 +74583,24 @@
       ]
     },
     {
-      "id": "7131dd8d24ef0a860122",
+      "id": "51b193ed2e7c42cddc6c",
       "file": "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
       "sourceKind": "migration",
       "surface": "backend",
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 211,
+      "line": 230,
       "values": [
         "attachment",
+        "external_link",
         "video_link",
         "retest"
       ],
-      "valueCount": 3,
-      "recommendedClassification": "dynamic-business-catalog",
+      "valueCount": 4,
+      "recommendedClassification": "governed-reference-data",
       "lines": [
-        211
+        230
       ],
       "consumerCount": 14,
       "backendConsumers": [
@@ -74653,7 +74651,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 233,
+      "line": 239,
       "values": [
         "comment",
         "information_request",
@@ -74662,7 +74660,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        233
+        239
       ],
       "consumerCount": 10,
       "backendConsumers": [
@@ -74706,7 +74704,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 260,
+      "line": 266,
       "values": [
         "passed",
         "failed",
@@ -74715,7 +74713,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        260
+        266
       ],
       "consumerCount": 30,
       "backendConsumers": [
@@ -74783,7 +74781,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 275,
+      "line": 281,
       "values": [
         "immediate",
         "digest"
@@ -74791,7 +74789,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        275
+        281
       ],
       "consumerCount": 3,
       "backendConsumers": [
@@ -78851,7 +78849,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "internalReportTypes",
-      "line": 1075,
+      "line": 1107,
       "values": [
         "error",
         "suggestion",
@@ -78865,7 +78863,7 @@
       "valueCount": 8,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        1075
+        1107
       ],
       "consumerCount": 15,
       "backendConsumers": [
@@ -78927,7 +78925,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "internalReportStates",
-      "line": 1096,
+      "line": 1128,
       "values": [
         "draft",
         "submitted",
@@ -78945,7 +78943,7 @@
       "valueCount": 12,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        1096
+        1128
       ],
       "consumerCount": 73,
       "backendConsumers": [
@@ -79078,7 +79076,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "allowedFeedbackAttachmentContentTypes",
-      "line": 1552,
+      "line": 1589,
       "values": [
         "application/csv",
         "application/pdf",
@@ -79092,7 +79090,7 @@
       "valueCount": 8,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1552
+        1589
       ],
       "consumerCount": 29,
       "backendConsumers": [
@@ -79451,7 +79449,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "planStatuses",
-      "line": 43,
+      "line": 47,
       "values": [
         "draft",
         "active",
@@ -79461,7 +79459,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        43
+        47
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -79491,7 +79489,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "executionStatuses",
-      "line": 46,
+      "line": 50,
       "values": [
         "pending",
         "in_progress",
@@ -79505,7 +79503,7 @@
       "valueCount": 8,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        46
+        50
       ],
       "consumerCount": 57,
       "backendConsumers": [
@@ -79610,7 +79608,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "terminalExecutionStatuses",
-      "line": 58,
+      "line": 62,
       "values": [
         "passed",
         "failed",
@@ -79621,7 +79619,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        58
+        62
       ],
       "consumerCount": 40,
       "backendConsumers": [
@@ -79705,7 +79703,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "criticalCompletionStatuses",
-      "line": 61,
+      "line": 65,
       "values": [
         "passed",
         "not_applicable",
@@ -79714,7 +79712,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        61
+        65
       ],
       "consumerCount": 28,
       "backendConsumers": [
@@ -80338,7 +80336,7 @@
       "domain": "fan-social",
       "kind": "haskell-list",
       "name": "clearWhatsAppProviderCredentialEnv",
-      "line": 639,
+      "line": 644,
       "values": [
         "WA_TOKEN",
         "WHATSAPP_TOKEN",
@@ -80350,7 +80348,7 @@
       "valueCount": 6,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        639
+        644
       ],
       "consumerCount": 3,
       "backendConsumers": [

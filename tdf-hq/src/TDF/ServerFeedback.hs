@@ -26,6 +26,7 @@ module TDF.ServerFeedback
   , validateExternalEvidenceUrl
   , validateGithubIssueUrl
   , validateVideoLinks
+  , csvField
   ) where
 
 import           Control.Exception         (SomeException, displayException, try)
@@ -681,17 +682,48 @@ internalFeedbackServer user =
       unless (ME.internalFeedbackReportState report == "ready_for_retest" || isAdminUser) $
         throwError err409 { errBody = "This report is not ready for retesting" }
       result <- validateChoice "retest result" ["passed", "failed", "blocked"] ifrcResult
-      executionKey <- traverse (parseInternalKey @ME.InternTestExecution) ifrcExecutionId
-      validateRetestExecution report executionKey
+      explicitExecutionKey <- traverse (parseInternalKey @ME.InternTestExecution) ifrcExecutionId
+      validateRetestExecution report explicitExecutionKey
       notes <- validateOptionalInternalText "retestNotes" 5000 ifrcNotes
       evidenceSummary <- validateOptionalInternalText "retestEvidenceSummary" 5000 ifrcEvidenceSummary
       unless (hasMeaningful notes && hasMeaningful evidenceSummary) $
         throwError err400 { errBody = "Retesting requires notes and an evidence summary" }
+      executionTarget <- case (explicitExecutionKey, ME.internalFeedbackReportTestCaseId report) of
+        (Just key, _) -> pure (Left key)
+        (Nothing, Just key) -> pure (Right key)
+        (Nothing, Nothing) ->
+          throwError err400 { errBody = "Retesting without an execution ID requires a linked test case" }
       now <- liftIO getCurrentTime
       ent <- withPool $ do
+        executionKey <- case executionTarget of
+          Left key -> pure key
+          Right caseKey -> do
+            latest <- selectFirst [ME.InternTestExecutionTestCaseId ==. caseKey]
+              [Desc ME.InternTestExecutionExecutionNumber]
+            let nextNumber = maybe 1
+                  ((+ 1) . ME.internTestExecutionExecutionNumber . entityVal)
+                  latest
+                executionStatus = case result of
+                  "passed" -> "verified"
+                  other -> other
+            insert ME.InternTestExecution
+              { ME.internTestExecutionTestCaseId = caseKey
+              , ME.internTestExecutionExecutionNumber = nextNumber
+              , ME.internTestExecutionExecutorPartyId = auPartyId user
+              , ME.internTestExecutionStatus = executionStatus
+              , ME.internTestExecutionActualResult = notes
+              , ME.internTestExecutionPersistedStateObserved = Nothing
+              , ME.internTestExecutionSideEffectsObserved = Nothing
+              , ME.internTestExecutionBlockerReason = if result == "blocked" then notes else Nothing
+              , ME.internTestExecutionEvidenceSummary = evidenceSummary
+              , ME.internTestExecutionStartedAt = Just now
+              , ME.internTestExecutionCompletedAt = Just now
+              , ME.internTestExecutionCreatedAt = now
+              , ME.internTestExecutionUpdatedAt = now
+              }
         retestId <- insert ME.InternalFeedbackRetest
           { ME.internalFeedbackRetestReportId = reportKey
-          , ME.internalFeedbackRetestExecutionId = executionKey
+          , ME.internalFeedbackRetestExecutionId = Just executionKey
           , ME.internalFeedbackRetestTesterPartyId = auPartyId user
           , ME.internalFeedbackRetestResult = result
           , ME.internalFeedbackRetestNotes = notes
@@ -1384,7 +1416,12 @@ jaccardPercent left right =
   in if unionSize == 0 then 0 else (intersectionSize * 100) `div` unionSize
 
 csvField :: Text -> Text
-csvField value = "\"" <> T.replace "\"" "\"\"" value <> "\""
+csvField value = "\"" <> T.replace "\"" "\"\"" safeValue <> "\""
+  where
+    firstVisible = T.uncons (T.dropWhile (`elem` [' ', '\t', '\r', '\n']) value)
+    safeValue = case firstVisible of
+      Just (first, _) | first `elem` ['=', '+', '-', '@'] -> "'" <> value
+      _ -> value
 
 pathSeparator :: Char
 pathSeparator = '/'
