@@ -15,18 +15,66 @@ const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const targetMigrationId = '2026-08-21_studio_internship_audit';
 const expectedConfirmation = 'BASELINE_CURRENT_SYNTHETIC_SCHEMA_WITHOUT_PRODUCTION_DATA';
 const expectedRuntimeConfirmation = 'REPLAY_CANONICAL_RUNTIME_MIGRATIONS_IN_SYNTHETIC_STAGING';
+const runtimePrerequisiteMigrationId = '2026-08-02_ddex_catalog_core';
 const runtimeMigrationStartId = '2026-08-13_unified_checkout_core';
 
 function sqlLiteral(value) {
   return `'${String(value).replaceAll("'", "''")}'`;
 }
 
+const ddexIntegerCompatibilitySql = `-- DDEX SQL migrations predate the Persistent models and use SERIAL/integer
+-- identifiers. Convert the empty or synthetic bootstrap only after proving all
+-- values fit; dropping the dependent FKs is required by PostgreSQL for the
+-- referenced key type change.
+DO $ddex_integer_range_guard$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM public.ddex_document
+    WHERE id > 2147483647 OR uploaded_by > 2147483647
+  ) OR EXISTS (
+    SELECT 1 FROM public.ddex_message_header WHERE document_id > 2147483647
+  ) OR EXISTS (
+    SELECT 1 FROM public.ddex_validation_run WHERE document_id > 2147483647
+  ) OR EXISTS (
+    SELECT 1 FROM public.ddex_import_plan WHERE document_id > 2147483647
+  ) THEN
+    RAISE EXCEPTION 'DDEX synthetic bootstrap identifiers exceed the canonical integer range';
+  END IF;
+END
+$ddex_integer_range_guard$;
+
+ALTER TABLE public.ddex_message_header
+  DROP CONSTRAINT IF EXISTS ddex_message_header_document_id_fkey;
+ALTER TABLE public.ddex_validation_run
+  DROP CONSTRAINT IF EXISTS ddex_validation_run_document_id_fkey;
+ALTER TABLE public.ddex_import_plan
+  DROP CONSTRAINT IF EXISTS ddex_import_plan_document_id_fkey;
+ALTER TABLE public.ddex_document
+  ALTER COLUMN id TYPE integer USING id::integer,
+  ALTER COLUMN uploaded_by TYPE integer USING uploaded_by::integer;
+ALTER TABLE public.ddex_message_header
+  ALTER COLUMN document_id TYPE integer USING document_id::integer,
+  ADD CONSTRAINT ddex_message_header_document_id_fkey
+    FOREIGN KEY (document_id) REFERENCES public.ddex_document(id) ON DELETE CASCADE;
+ALTER TABLE public.ddex_validation_run
+  ALTER COLUMN document_id TYPE integer USING document_id::integer,
+  ADD CONSTRAINT ddex_validation_run_document_id_fkey
+    FOREIGN KEY (document_id) REFERENCES public.ddex_document(id) ON DELETE CASCADE;
+ALTER TABLE public.ddex_import_plan
+  ALTER COLUMN document_id TYPE integer USING document_id::integer,
+  ADD CONSTRAINT ddex_import_plan_document_id_fkey
+    FOREIGN KEY (document_id) REFERENCES public.ddex_document(id) ON DELETE CASCADE;`;
+
 export function buildStudioAuditStagingRuntimeSql(entries) {
   const startIndex = entries.findIndex(({ id }) => id === runtimeMigrationStartId);
   if (startIndex < 0) {
     throw new Error(`The staging runtime migration ${runtimeMigrationStartId} is missing.`);
   }
-  const runtimeEntries = entries.slice(startIndex);
+  const prerequisiteEntry = entries.find(({ id }) => id === runtimePrerequisiteMigrationId);
+  if (!prerequisiteEntry) {
+    throw new Error(`The staging runtime prerequisite ${runtimePrerequisiteMigrationId} is missing.`);
+  }
+  const runtimeEntries = [prerequisiteEntry, ...entries.slice(startIndex)];
   for (const entry of runtimeEntries) {
     if (typeof entry.content !== 'string' || entry.content.trim() === '') {
       throw new Error(`Expanded SQL is missing for staging runtime migration ${entry.id}.`);
@@ -37,9 +85,9 @@ export function buildStudioAuditStagingRuntimeSql(entries) {
     .map(({ id, content }) => {
       const beginCount = content.match(/^BEGIN;\s*$/gmu)?.length ?? 0;
       const commitCount = content.match(/^COMMIT;\s*$/gmu)?.length ?? 0;
-      if (beginCount !== 1 || commitCount !== 1) {
+      if (beginCount !== commitCount || beginCount > 1) {
         throw new Error(
-          `Staging runtime migration ${id} must contain exactly one transaction wrapper.`,
+          `Staging runtime migration ${id} must contain zero or one matching transaction wrapper.`,
         );
       }
       const body = content
@@ -77,6 +125,8 @@ BEGIN
   END IF;
 END
 $runtime_preflight$;
+
+${ddexIntegerCompatibilitySql}
 
 -- BEGIN CANONICAL STAGING RUNTIME MIGRATION REPLAY
 ${runtimeSql}
@@ -311,49 +361,6 @@ BEGIN
   END LOOP;
 END
 $runtime_type_compatibility$;
-
--- DDEX SQL migrations predate the Persistent models and use SERIAL/integer
--- identifiers. Convert the empty or synthetic bootstrap only after proving all
--- values fit; dropping the dependent FKs is required by PostgreSQL for the
--- referenced key type change.
-DO $ddex_integer_range_guard$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM public.ddex_document
-    WHERE id > 2147483647 OR uploaded_by > 2147483647
-  ) OR EXISTS (
-    SELECT 1 FROM public.ddex_message_header WHERE document_id > 2147483647
-  ) OR EXISTS (
-    SELECT 1 FROM public.ddex_validation_run WHERE document_id > 2147483647
-  ) OR EXISTS (
-    SELECT 1 FROM public.ddex_import_plan WHERE document_id > 2147483647
-  ) THEN
-    RAISE EXCEPTION 'DDEX synthetic bootstrap identifiers exceed the canonical integer range';
-  END IF;
-END
-$ddex_integer_range_guard$;
-
-ALTER TABLE public.ddex_message_header
-  DROP CONSTRAINT IF EXISTS ddex_message_header_document_id_fkey;
-ALTER TABLE public.ddex_validation_run
-  DROP CONSTRAINT IF EXISTS ddex_validation_run_document_id_fkey;
-ALTER TABLE public.ddex_import_plan
-  DROP CONSTRAINT IF EXISTS ddex_import_plan_document_id_fkey;
-ALTER TABLE public.ddex_document
-  ALTER COLUMN id TYPE integer USING id::integer,
-  ALTER COLUMN uploaded_by TYPE integer USING uploaded_by::integer;
-ALTER TABLE public.ddex_message_header
-  ALTER COLUMN document_id TYPE integer USING document_id::integer,
-  ADD CONSTRAINT ddex_message_header_document_id_fkey
-    FOREIGN KEY (document_id) REFERENCES public.ddex_document(id) ON DELETE CASCADE;
-ALTER TABLE public.ddex_validation_run
-  ALTER COLUMN document_id TYPE integer USING document_id::integer,
-  ADD CONSTRAINT ddex_validation_run_document_id_fkey
-    FOREIGN KEY (document_id) REFERENCES public.ddex_document(id) ON DELETE CASCADE;
-ALTER TABLE public.ddex_import_plan
-  ALTER COLUMN document_id TYPE integer USING document_id::integer,
-  ADD CONSTRAINT ddex_import_plan_document_id_fkey
-    FOREIGN KEY (document_id) REFERENCES public.ddex_document(id) ON DELETE CASCADE;
 
 ALTER TABLE public.external_venue_ref
   DROP CONSTRAINT IF EXISTS external_venue_ref_venue_id_fkey,

@@ -14,6 +14,8 @@ test('staging baseline covers every migration before the studio audit and leaves
   const sql = buildStudioAuditStagingBaselineSql(entries, sourceCommit);
 
   assert.equal(entries.length, 61);
+  assert.match(sql, /BEGIN CANONICAL STAGING RUNTIME MIGRATION 2026-08-02_ddex_catalog_core/u);
+  assert.match(sql, /CREATE TABLE IF NOT EXISTS catalog_release/u);
   assert.match(sql, /BEGIN CANONICAL STAGING RUNTIME MIGRATION 2026-08-13_unified_checkout_core/u);
   assert.match(sql, /CREATE TABLE IF NOT EXISTS commerce_checkout_session/u);
   assert.match(sql, /BEGIN CANONICAL STAGING RUNTIME MIGRATION 2026-08-18_domo_quote_checkout_runtime/u);
@@ -59,6 +61,8 @@ test('runtime-only staging replay is independently guarded and excludes migratio
 
   assert.match(sql, /current_database\(\) <> 'tdf_studio_audit_staging'/u);
   assert.match(sql, /NOT LIKE '%@persona\.test'/u);
+  assert.match(sql, /BEGIN CANONICAL STAGING RUNTIME MIGRATION 2026-08-02_ddex_catalog_core/u);
+  assert.match(sql, /DDEX synthetic bootstrap identifiers exceed the canonical integer range/u);
   assert.match(sql, /CREATE TABLE IF NOT EXISTS commerce_checkout_session/u);
   assert.equal(sql.match(/^BEGIN;\s*$/gmu)?.length, 1);
   assert.equal(sql.match(/^COMMIT;\s*$/gmu)?.length, 1);
