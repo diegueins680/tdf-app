@@ -18,6 +18,7 @@ module TDF.ServerFeedback
   , validateFeedbackAttachmentMetadata
   , sanitizeFeedbackAttachmentFileName
   , validateReportType
+  , internalReportTypeForCategoryCode
   , validateInternalReportState
   , validateStateTransition
   , validatePriority
@@ -28,6 +29,7 @@ module TDF.ServerFeedback
   ) where
 
 import           Control.Exception         (SomeException, displayException, try)
+import           Control.Applicative       ((<|>))
 import           Control.Monad              (forM, forM_, unless, when)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
@@ -275,6 +277,7 @@ internalFeedbackServer user =
       categoryId <- resolvePublishedFeedbackCategoryFor ifcCategoryId
       proposedSeverityId <- resolvePublishedFeedbackSeverityFor ifcProposedSeverityId
       reportType <- validateReportType ifcReportType
+      validateInternalReportCategoryType categoryId reportType
       moduleName <- validateInternalText "moduleName" 120 ifcModuleName
       environment <- validateEnvironment ifcEnvironment
       platform <- validateInternalText "platform" 80 ifcPlatform
@@ -373,7 +376,7 @@ internalFeedbackServer user =
 
     updateReportH rawReportId updateRequest@InternalFeedbackUpdate{..} = do
       ensureInternalAccess
-      (reportEnt@(Entity reportKey report), Entity feedbackKey _) <- loadAccessibleReport rawReportId
+      (reportEnt@(Entity reportKey report), Entity feedbackKey feedback) <- loadAccessibleReport rawReportId
       let owner = ME.internalFeedbackReportReporterPartyId report == auPartyId user
           state = ME.internalFeedbackReportState report
           hasAdminFields = or
@@ -405,6 +408,11 @@ internalFeedbackServer user =
       categoryUpdate <- traverse resolvePublishedFeedbackCategoryFor ifuCategoryId
       proposedSeverityUpdate <- traverse resolvePublishedFeedbackSeverityFor ifuProposedSeverityId
       reportTypeUpdate <- traverse validateReportType ifuReportType
+      let effectiveCategoryId = categoryUpdate <|> feedbackCategoryId feedback
+          effectiveReportType = fromMaybe (ME.internalFeedbackReportReportType report) reportTypeUpdate
+      when (isJust categoryUpdate || isJust reportTypeUpdate) $ case effectiveCategoryId of
+        Nothing -> throwError err400 { errBody = "Internal reports require a feedback category" }
+        Just categoryId -> validateInternalReportCategoryType categoryId effectiveReportType
       moduleUpdate <- traverse (validateInternalText "moduleName" 120) ifuModuleName
       environmentUpdate <- traverse validateEnvironment ifuEnvironment
       platformUpdate <- traverse (validateInternalText "platform" 80) ifuPlatform
@@ -1069,6 +1077,21 @@ internalReportTypes =
   , "performance", "content_translation"
   ]
 
+-- The feedback-category catalog owns the user-visible report taxonomy. This
+-- closed mapping is only the wire adapter needed to preserve the requested
+-- report-type codes and to reject mismatched category/type submissions.
+internalReportTypeForCategoryCode :: Text -> Maybe Text
+internalReportTypeForCategoryCode rawCode = case T.toLower (T.strip rawCode) of
+  "bug" -> Just "error"
+  "suggestion" -> Just "suggestion"
+  "idea" -> Just "idea"
+  "question" -> Just "question"
+  "accessibility" -> Just "accessibility"
+  "permissions" -> Just "permissions"
+  "performance" -> Just "performance"
+  "content_translation" -> Just "content_translation"
+  _ -> Nothing
+
 internalReportStates :: [Text]
 internalReportStates =
   [ "draft", "submitted", "received", "needs_information", "confirmed", "prioritized"
@@ -1228,6 +1251,20 @@ resolvePublishedFeedbackCategoryFor rawId = do
   valid <- liftIO $ runSqlPool (publishedCategoryExists categoryKey) pool
   unless valid $ throwError err400 { errBody = "categoryId must reference an active published feedback category" }
   pure categoryKey
+
+validateInternalReportCategoryType
+  :: (MonadReader Env m, MonadIO m, MonadError ServerError m)
+  => Catalog.FeedbackCategoryId
+  -> Text
+  -> m ()
+validateInternalReportCategoryType categoryKey reportType = do
+  category <- withPool (get categoryKey) >>= maybe
+    (throwError err400 { errBody = "categoryId must identify a feedback category" })
+    pure
+  case internalReportTypeForCategoryCode (Catalog.feedbackCategoryCode category) of
+    Just expectedType | expectedType == reportType -> pure ()
+    _ -> throwError err400
+      { errBody = "reportType must match an internal-report feedback category" }
 
 resolvePublishedFeedbackSeverityFor
   :: (MonadReader Env m, MonadIO m, MonadError ServerError m)

@@ -911,6 +911,12 @@ seedFeedbackCatalogs = do
       , ("31000000-0000-4000-8000-000000000002", "idea", "Idea", "Idea")
       , ("31000000-0000-4000-8000-000000000003", "ux", "UX", "UX")
       , ("31000000-0000-4000-8000-000000000004", "datos", "Datos", "Data")
+      , ("31000000-0000-4000-8000-000000000005", "suggestion", "Sugerencia", "Suggestion")
+      , ("31000000-0000-4000-8000-000000000006", "question", "Pregunta", "Question")
+      , ("31000000-0000-4000-8000-000000000007", "accessibility", "Accesibilidad", "Accessibility")
+      , ("31000000-0000-4000-8000-000000000008", "permissions", "Permisos", "Permissions")
+      , ("31000000-0000-4000-8000-000000000009", "performance", "Rendimiento", "Performance")
+      , ("31000000-0000-4000-8000-000000000010", "content_translation", "Contenido o traducción", "Content or translation")
       ]
     severities =
       [ ("32000000-0000-4000-8000-000000000001", "p1", "P1 - Crítico", "P1 - Critical")

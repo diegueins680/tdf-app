@@ -6,14 +6,14 @@ No step below implies approval. The required order is:
 
 1. Revalidate the already-resolved Stewart Moreira identity as exactly one active party/email with the `Intern` role; keep the exact identifiers runtime-only.
 2. Review code, inventory, cases, Spanish instructions, authorization, notification recipients, and data controls.
-3. Obtain explicit authorization for branch creation, then separately for staging, commit, push, and draft PR actions as requested by the repository workflow. Branch, commit, and push authorization was received on 2026-08-23; deployment and PR creation remain unapproved.
+3. Obtain explicit authorization for branch creation, then separately for staging, commit, push, and draft PR actions as requested by the repository workflow. Branch, commit, push, draft-PR creation, and isolated staging preparation were authorized on 2026-08-23. Production deployment, issue creation, activation, assignment, and real notification remain unapproved.
 4. Deploy to an isolated staging tenant/database with test transports.
 5. Run migration, backend/web/mobile checks, E2E as both synthetic intern and administrator, accessibility, provider-contract, and rollback rehearsal.
 6. Use the preparation script in `preview` mode. With approval, use `create` only to create an inactive draft.
 7. Present the in-app draft preview to Diego.
 8. Activate and notify only after Diego gives a later, explicit approval.
 
-The regenerated mobile OpenAPI client and feature registry currently live as uncommitted changes inside the `tdf-mobile` submodule. They cannot be represented by the parent repository alone. Before staging/commit, choose and authorize either a corresponding `tdf-mobile` commit plus parent submodule-pointer update, or omission of those generated native files while retaining the documented responsive web fallback. Do not publish an orphaned submodule reference.
+The regenerated mobile OpenAPI client and feature registry were committed to the matching `tdf-mobile` feature branch, and the parent repository records that submodule revision. A staging or production release must preserve that pairing and must not publish an orphaned submodule reference.
 
 CI regenerates and diff-checks the audit artifacts in repository quality, rehearses the new migration and rollback in migration quality, exercises the mocked Chromium journey through the existing Playwright job, and checks OpenAPI client drift through the existing contract job. The disposable backend API lifecycle script remains a required pre-deployment command because the current backend CI container topology does not expose the local database lifecycle expected by that script.
 

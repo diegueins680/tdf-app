@@ -57,4 +57,4 @@ Every applicable case must have a recorded result; failures require linked repor
 
 ## Approval decision still needed
 
-Identity is resolved. Diego must still approve the full preview and the runtime association before an inactive TDF App draft is created. Activation and notification require a separate explicit instruction. Branch, stage, commit, push, and draft-PR creation were authorized on 2026-08-23; creating issues remains a separate authorization gate.
+Identity is resolved. Diego authorized isolated staging and creation of an inactive, non-notifying draft on 2026-08-23. Activation, assignment, production deployment, and notification still require a separate explicit instruction; creating issues remains a separate authorization gate.

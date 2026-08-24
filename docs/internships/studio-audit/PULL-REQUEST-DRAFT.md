@@ -50,4 +50,4 @@ Link `docs/internships/studio-audit/DRAFT-PREVIEW.md`, the Spanish guide, invent
 
 ## External actions
 
-Branch creation, explicit staging, commits, and pushes were authorized and completed. Draft-PR creation was authorized on 2026-08-23. No issue, deployment, in-app draft, task activation, assignment, or notification is created by this publication. Confirm the remaining gates separately.
+Branch creation, commits, pushes, draft-PR creation, isolated staging, and inactive in-app draft preparation were authorized on 2026-08-23. No issue, production deployment, task activation, assignment, or real notification is authorized. Confirm those remaining gates separately.

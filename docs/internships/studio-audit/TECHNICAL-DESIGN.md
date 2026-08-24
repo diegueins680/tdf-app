@@ -18,6 +18,8 @@ The implementation extends the existing internships, `Feedback`, catalog, audit,
 
 Foreign keys, enumerated checks, unique constraints, and indexes are defined in the reversible SQL migration. Existing feedback rows remain valid and are exposed read-only to administrators through the legacy view endpoint.
 
+The existing `feedback-categories` and `feedback-severities` catalogs remain authoritative. The internal-report UI derives its Spanish/English type choices and labels from published category rows. The backend maintains a closed adapter from the published category code (`bug`, `suggestion`, `idea`, `question`, `accessibility`, `permissions`, `performance`, or `content_translation`) to the requested report-type wire code and rejects any mismatched category/type pair. This preserves the public feedback contract without creating a second independently selectable taxonomy.
+
 ## APIs
 
 Internship endpoints add draft audit plans, cases, executions, daily summaries, final summaries, and an explicit activation action. Internal feedback endpoints support private/admin lists, filters, search, CSV/JSON export, legacy reads, draft create/update/submit, comments, file/link evidence, authorized download, history in detail responses, duplicate candidates, and retests.

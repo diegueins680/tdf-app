@@ -11,6 +11,17 @@ const SECURITY_PATTERN = /(?:action|capabilit|grant|module|permission|role|secur
 const GOVERNED_PATTERN = /(?:countr|currenc|ddex|external|identifier|iso|language|locale|payment|platform|provider|subdivision|tax|territor)/i;
 const WORKFLOW_PATTERN = /(?:stage|state|status|transition)/i;
 
+const INTERNAL_FEEDBACK_REPORT_TYPES = [
+  'error',
+  'suggestion',
+  'idea',
+  'question',
+  'accessibility',
+  'permissions',
+  'performance',
+  'content_translation',
+];
+
 function parseArgs(argv) {
   const options = { input: DEFAULT_INPUT, output: DEFAULT_OUTPUT };
   for (let index = 0; index < argv.length; index += 1) {
@@ -60,6 +71,14 @@ function isServiceStorefrontOrderStatus(candidate) {
   return candidate.file.endsWith('/ServiceOrderTrackingPage.tsx')
     && candidate.kind === 'switch-cases'
     && candidate.name === 'status';
+}
+
+function isInternalFeedbackReportType(candidate) {
+  return candidate.name === 'REPORT_TYPE_BY_CATEGORY_CODE'
+    || (
+      candidate.values.length === INTERNAL_FEEDBACK_REPORT_TYPES.length
+      && INTERNAL_FEEDBACK_REPORT_TYPES.every((value) => candidate.values.includes(value))
+    );
 }
 
 function isMarketplaceRuntimeDiscriminant(candidate) {
@@ -219,6 +238,9 @@ function technicalRule(candidate) {
 }
 
 function classificationFor(candidate, technicalJustification) {
+  // "permissions" is one user-visible report type, not a grant registry. Keep
+  // this taxonomy under the existing persisted feedback-category authority.
+  if (isInternalFeedbackReportType(candidate)) return 'dynamic-business-catalog';
   if (isAppearanceEmergencyBootstrap(candidate)) return 'dynamic-business-catalog';
   if (isServiceResourceSelectionModeMirror(candidate)) return 'dynamic-business-catalog';
   if (isSocialEventStateParserMirror(candidate)) return 'dynamic-business-catalog';
@@ -240,6 +262,7 @@ function classificationFor(candidate, technicalJustification) {
 
 function specializedModel(candidate, classification) {
   const value = context(candidate);
+  if (isInternalFeedbackReportType(candidate)) return 'feedback_category';
   if (isAppearanceEmergencyBootstrap(candidate)) {
     return 'appearance_mode_option, catalog_scoped_default';
   }
@@ -298,6 +321,9 @@ function dispositionFor(candidate, classification) {
   if (candidate.sourceKind === 'test') return 'consumer-update';
   if (candidate.sourceKind === 'generated-client') return 'regenerate-from-openapi';
   if (candidate.sourceKind === 'migration') return 'historical-evidence-replaced-by-forward-migration';
+  if (isInternalFeedbackReportType(candidate)) {
+    return 'persisted-registry-with-parser-adapter-mirror';
+  }
   if (isServiceResourceSelectionModeMirror(candidate)) {
     return 'persisted-registry-with-exhaustive-execution-mirror';
   }
@@ -350,6 +376,9 @@ function justificationFor(candidate, classification, disposition, technicalJusti
   }
   if (candidate.sourceKind === 'generated-client') {
     return 'Generated code is never authoritative and will be regenerated from the canonical OpenAPI contract.';
+  }
+  if (isInternalFeedbackReportType(candidate)) {
+    return 'Published feedback_category rows own selectable types, localized labels, ordering, and availability. Code and OpenAPI retain only stable wire adapters, and the backend rejects mismatched category/type pairs.';
   }
   if (isServiceResourceSelectionModeMirror(candidate)) {
     return 'Database rows own selection, labels, ordering, lifecycle, and administration. Code/OpenAPI retain only the closed discriminants required to execute each persisted resource-allocation policy; startup rejects missing or unknown active rows.';

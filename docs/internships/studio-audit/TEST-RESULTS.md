@@ -17,8 +17,10 @@ This file records observed commands and results through 2026-08-23. A failed, bl
 | Reversible migration | `sh scripts/test-studio-internship-audit-migration.sh` using its disposable local PostgreSQL mode | Pass: apply/reapply, legacy compatibility, progress and traceability triggers, completion/blocker/history checks, rollback, and disposable cleanup |
 | Backend compile | `TMPDIR=/private/tmp/tdf-studio-audit-ghc stack test --fast --no-run-tests --jobs 1` in `tdf-hq` | Pass |
 | Backend targeted validation | Targeted Hspec execution-status and internal-feedback validation matches | Pass: 2 execution-validation and 4 feedback-validation examples |
+| Catalog authority audit | `npm run audit:catalog-lists`; `npm run test:catalog-list-audit` | Pass: 908 reviewed candidates, 0 unreviewed candidates, 0 stale decisions, and 1 audit unit test; internal report types are mapped to the persisted `feedback_category` authority |
+| Feedback category/type adapter | Direct targeted Hspec execution of `internal feedback workflow validation` | Pass: 5 examples, including persisted category-code mapping and mismatch rejection |
 | Backend full suite | `TMPDIR=/private/tmp/tdf-studio-audit-ghc stack test --fast --jobs 1` in `tdf-hq` | Pass: 2,426 examples, 0 failures |
-| API lifecycle E2E | `TDF_AUDIT_E2E_BACKEND_EXE=<compiled-test-binary> TDF_AUDIT_E2E_PASSWORD=synthetic-audit-e2e-20260821 sh scripts/test-studio-internship-audit-api-e2e.sh` | Pass in disposable local PostgreSQL: synthetic Manager, assigned Intern, and unrelated Intern; inactive draft visibility and activation; protected fields; execution/evidence/history; private report CRUD; duplicate warning; admin triage/info/retest/close; daily/final/calculated completion; export; reporter and immediate team in-app notifications; undispatched test outbox; public feedback; legacy feedback readability; cleanup |
+| API lifecycle E2E | `TDF_AUDIT_E2E_BACKEND_EXE=<compiled-test-binary> TDF_AUDIT_E2E_PASSWORD=<runtime-only> sh scripts/test-studio-internship-audit-api-e2e.sh` | Pass again after catalog hardening in disposable local PostgreSQL: synthetic Manager, assigned Intern, and unrelated Intern; inactive draft visibility and activation; protected fields; category/type mismatch rejection; execution/evidence/history; private report CRUD; duplicate warning; admin triage/info/retest/close; daily/final/calculated completion; export; reporter and immediate team in-app notifications; undispatched test outbox; public feedback; legacy feedback readability; cleanup |
 | Web type checking | `npm run typecheck --workspace=tdf-hq-ui` | Pass |
 | Web audit API units | `npm test --workspace=tdf-hq-ui -- --runInBand src/api/studioAudit.test.ts` | Pass: 4 tests |
 | Existing task-detail regression | `npm test --workspace=tdf-hq-ui -- --runInBand src/pages/InternTaskDetailPage.test.tsx` | Pass: 5 tests after extending the session mock for the new authenticated API client |
@@ -48,15 +50,15 @@ This file records observed commands and results through 2026-08-23. A failed, bl
 
 | Check | Status |
 | --- | --- |
-| Deploy to a dedicated staging tenant with private evidence storage and provider test transports | Not authorized; manual external gate |
+| Deploy to a dedicated staging tenant with private evidence storage and provider test transports | Authorized on 2026-08-23; preparation is in progress and is not represented as passing until verified |
 | Exercise real Datafast/PayPal sandbox credentials and email/WhatsApp/calendar/social sinks | Credentials/configuration not supplied; contract isolation is implemented, but provider verification remains a manual gate |
 | Validate the asynchronous external outbox dispatcher/digest schedule | No dispatcher for the new outbox exists in the inspected baseline; reporter/immediate-team in-app notifications and outbox creation are tested, while grouped digest/external delivery remains a deployment task |
-| Create an inactive in-app draft associated with Stewart | Identity resolved; blocked by undeployed schema/API plus explicit in-app draft-creation approval and an authorized runtime token |
-| Run with Stewart's verified real account in staging | Blocked by staging deployment/configuration approval; production identity must be mapped without importing production credentials or personal data |
-| Real backend-backed Spanish/English and responsive-device smoke in deployed staging | Not authorized; mocked Chromium audit views were exercised in Spanish, while deployment-backed bilingual/device coverage remains a manual staging gate |
-| Draft PR | Authorized on 2026-08-23; the final URL and remote state are reported in the publication handoff |
+| Create an inactive in-app draft associated with Stewart | Authorized on 2026-08-23; pending verified staging deployment and runtime-only identity mapping |
+| Run with Stewart-equivalent access in staging | Authorized; pending isolated staging deployment. Production credentials and personal data will not be imported |
+| Real backend-backed Spanish/English and responsive-device smoke in deployed staging | Authorized; pending isolated staging deployment |
+| Draft PR | Pass: [PR #200](https://github.com/diegueins680/tdf-app/pull/200) is open as a draft |
 | GitHub issue | Not authorized and not performed |
 | Root branch/stage/commit | `git switch -c codex/studio-internship-audit`; explicit path staging; `git commit -m "feat: add traceable studio internship audit"` | Pass: feature commit `d68b794e531501589e18c24dbb60aa00ada0a0f7`; only assignment files staged; push evidence is reported in the final handoff |
-| Publish regenerated `tdf-mobile` submodule files | Same named mobile branch; explicit two-file staging; `git commit -m "feat: register studio audit mobile fallback"`; tracked push | Pass: remote mobile commit `dac57203f2a55d6f38ecf32953e7449747d25f58`; parent pointer included in the root feature commit |
+| Publish regenerated `tdf-mobile` submodule files | Same named mobile branch; explicit two-file staging; `git commit -m "feat: register studio audit mobile fallback"`; tracked push | Pass: remote mobile commit `dac57203f81c66b2ef6cf015daf00d5773fc304b`; parent pointer included in the root feature commit |
 
 The API E2E uses an Intern account equivalent in role and permissions to Stewart and an authorized administrative account, but it is deliberately synthetic. It does not satisfy the real-staging deployment gate.
