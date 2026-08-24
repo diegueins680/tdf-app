@@ -40,11 +40,11 @@
 
 ### RUN-008
 
-`npm run generate:features && npm run audit:features` — passed after PT-001 fix: 137 features, 156 actual web routes and 38 mobile routes.
+`npm run generate:features && npm run audit:features` — passed after the reviewed directory-native restoration: 137 features, 156 actual web routes and 44 mobile routes. Home remains an explicit web continuation; the six directory search/detail/management families now resolve to implemented Expo routes.
 
 ### RUN-009
 
-`ALLOW_PENDING_FEATURE_DISPOSITIONS=1 npm run generate:feature-audit-reports` — evidence generation passed: 137 features; 44 primary, 57 submodule, 26 contextual and 10 technical records; 35 native features; 11 role fixtures; 3,014 matrix rows; 548 expanded endpoints, 493 mapped and 40 pending explicit disposition. The normal command intentionally fails while those pending rows remain, so this is `passed-with-gate`, not full audit success.
+`ALLOW_PENDING_FEATURE_DISPOSITIONS=1 npm run generate:feature-audit-reports` — evidence generation passed: 137 features; 44 primary, 57 submodule, 26 contextual and 10 technical records; 37 native features; 11 role fixtures; 3,014 matrix rows; 548 expanded endpoints, 493 mapped and 40 pending explicit disposition. The normal command intentionally fails while those pending rows remain, so this is `passed-with-gate`, not full audit success. Native-contextual destinations are classified as available when their Expo route exists, and the generated role/action matrix was refreshed against mobile commit `fcb10deaa3fcbbb2bb55b5f3e11b6d9bc8de040c`. Focused mobile verification passed 11 directory/registry tests plus full typecheck and lint, including `create=classified` opening the native classified form.
 
 ### RUN-010
 

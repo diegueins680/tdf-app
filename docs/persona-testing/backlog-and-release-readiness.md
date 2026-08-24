@@ -4,7 +4,7 @@
 
 | Finding | Repository-side improvement | Regression evidence | Rollback consideration |
 |---|---|---|---|
-| PT-001 | Replaced seven nonexistent native destinations with truthful responsive-web fallbacks; regenerated the mobile registry | Feature audit and mobile registry/Jest pass | Revert registry/generated copy together; never restore false native routes without real Expo screens |
+| PT-001 | Replaced seven nonexistent destinations with truthful fallbacks, then restored six directory families only after their Expo screens were completed; home remains web | Feature audit and mobile registry/Jest pass with 44 routes | Revert registry/generated copy together; never declare a native route without its real Expo screen |
 | PT-002 | Normalize malformed catalog responses in theme and locale providers | Theme unit test and both Playwright stories | Guard is fallback-only; rollback would restore blank-shell risk |
 | PT-003 | Mode-aware accessible primary/secondary contrast and contained-button overrides | Axe serious/critical checks across representative viewports/browsers | Theme-only; visual review recommended, but contrast must remain compliant |
 | PT-005 | Date-configurable audit packets and parameterized Servant alias expansion | Current packet generated; 40 unresolved rows remain a deliberate gate | Historical packet is preserved; remove new packet only with replacement evidence |
@@ -40,7 +40,7 @@ No schema migration was necessary. The seed uses existing models and functions. 
 
 - Complete private DDEX storage, conflict-safe imports, partner-profiled delivery/acknowledgements and rights/royalty boundaries before exposing distribution success.
 - Create a reusable disposable backend test environment with PostgreSQL, local inbox/outbox and fake adapters for payments, OAuth, messaging, WhatsApp, ticket delivery and distribution.
-- Decide which web fallbacks justify native investment using demand and task criticality, prioritizing messaging, directory discovery, high-frequency operational work and state-safe commerce continuation.
+- Decide which remaining web fallbacks justify native investment using demand and task criticality, prioritizing messaging, high-frequency operational work and state-safe commerce continuation.
 - Consolidate human-readable cross-domain order/payment/refund/reconciliation timelines without merging domain ownership or treating browser callbacks as authority.
 
 ## Future experiments and human research
