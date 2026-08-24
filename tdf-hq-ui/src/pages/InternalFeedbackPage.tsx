@@ -423,7 +423,7 @@ function ReportsList() {
   const modules = useMemo(() => [...new Set((query.data ?? []).map((item) => item.ifsModuleName))].sort(), [query.data]);
 
   return (
-    <PageShell title={isAdmin ? 'Reportes internos de pruebas' : 'Mis reportes'} subtitle="Seguimiento desde borrador hasta verificación y cierre" maxWidth="lg" actions={<Button component={RouterLink} to="/feedback/interno/nuevo" variant="contained" startIcon={<AddIcon />}>Crear reporte</Button>}>
+    <PageShell title={isAdmin ? 'Reportes internos de pruebas' : 'Mis reportes'} subtitle="Seguimiento desde borrador hasta verificación y cierre" maxWidth="lg" actions={isAdmin ? <Button component={RouterLink} to="/feedback/interno/nuevo" variant="contained" startIcon={<AddIcon />}>Crear reporte</Button> : undefined}>
       <Stack spacing={2}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
           <TextField label="Buscar" value={search} onChange={(event) => setSearch(event.target.value)} />
@@ -434,7 +434,7 @@ function ReportsList() {
         </Stack>
         {query.isLoading && <LinearProgress />}
         {query.error && <Alert severity="error">{errorMessage(query.error, 'No se pudieron cargar los reportes.')}</Alert>}
-        {!query.isLoading && !query.data?.length && <EmptyState title="No hay reportes" description="Los borradores y reportes enviados aparecerán aquí." actionLabel="Crear reporte" actionHref="/feedback/interno/nuevo" />}
+        {!query.isLoading && !query.data?.length && <EmptyState title="No hay reportes" description={isAdmin ? 'Los borradores y reportes enviados aparecerán aquí.' : 'Crea reportes desde un caso de tu plan de auditoría activo para conservar su trazabilidad.'} actionLabel={isAdmin ? 'Crear reporte' : undefined} actionHref={isAdmin ? '/feedback/interno/nuevo' : undefined} />}
         <Grid container spacing={2}>{query.data?.map((report) => <Grid item xs={12} md={6} key={report.ifsId}><Card variant="outlined"><CardContent><Stack spacing={1}><Stack direction="row" justifyContent="space-between" gap={1}><Typography variant="h6">{report.ifsTitle}</Typography><Chip size="small" label={STATE_LABELS[report.ifsState]} color={report.ifsBlocking ? 'error' : 'default'} /></Stack><Typography variant="body2">{internalReportTypeLabel(catalogs.categories, report.ifsReportType)} · {report.ifsModuleName}{report.ifsFeatureName ? ` / ${report.ifsFeatureName}` : ''}</Typography>{isAdmin && <Typography variant="caption">Reportó: {report.ifsReporterName}</Typography>}<Button component={RouterLink} to={`/feedback/interno/${report.ifsId}`} variant="outlined">Abrir seguimiento</Button></Stack></CardContent></Card></Grid>)}</Grid>
         {isAdmin && Boolean(legacyQuery.data?.length) && <Card variant="outlined"><CardContent><Stack spacing={1}><Typography variant="h6">Feedback público anterior</Typography><Typography variant="body2">Estos {legacyQuery.data?.length} registros continúan legibles para administradores y no se convirtieron silenciosamente en reportes internos.</Typography>{legacyQuery.data?.slice(0, 10).map((item) => <Box key={item.lfdId}><Typography fontWeight={700}>{item.lfdTitle}</Typography><Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{item.lfdDescription}</Typography><Typography variant="caption">{new Date(item.lfdCreatedAt).toLocaleString()} · consentimiento: {item.lfdConsent ? 'sí' : 'no'} · adjunto: {item.lfdHasAttachment ? 'sí' : 'no'}</Typography></Box>)}</Stack></CardContent></Card>}
       </Stack>

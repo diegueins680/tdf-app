@@ -27,6 +27,18 @@ async function request(path, { token, method = 'GET', json, body, expected = 200
   return contentType.includes('json') ? JSON.parse(raw) : raw;
 }
 
+async function requestStatus(path, { token, method = 'GET', json } = {}) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (json !== undefined) headers['Content-Type'] = 'application/json';
+  const response = await fetch(`${apiBase}${path}`, {
+    method,
+    headers,
+    body: json === undefined ? undefined : JSON.stringify(json),
+  });
+  return response.status;
+}
+
 async function login(email) {
   const response = await request('/login', { method: 'POST', json: { username: email, password } });
   assert.ok(response.token, `Login did not return a token for ${email}`);
@@ -378,6 +390,25 @@ const similarDraft = await request('/feedback/internal', {
 });
 assert.notEqual(similarDraft.ifrSummary.ifsId, reportId);
 assert.ok(similarDraft.ifrPotentialDuplicates.some((candidate) => candidate.ifsId === reportId));
+
+const concurrentTransitions = await Promise.all([
+  requestStatus(`/feedback/internal/${reportId}`, {
+    token: admin.token,
+    method: 'PATCH',
+    json: { ifuState: 'duplicate', ifuDuplicateOf: similarDraft.ifrSummary.ifsId },
+  }),
+  requestStatus(`/feedback/internal/${reportId}`, {
+    token: admin.token,
+    method: 'PATCH',
+    json: { ifuState: 'discarded' },
+  }),
+]);
+assert.deepEqual(concurrentTransitions.sort((left, right) => left - right), [200, 409]);
+await request(`/feedback/internal/${reportId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  json: { ifuState: 'received' },
+});
 
 const triaged = await request(`/feedback/internal/${reportId}`, {
   token: admin.token,

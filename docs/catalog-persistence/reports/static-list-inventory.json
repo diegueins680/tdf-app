@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-24T18:28:30.063Z",
+  "generatedAt": "2026-08-24T18:52:33.725Z",
   "repositoryRoot": ".",
   "filesScanned": 1178,
   "candidateCount": 917,
@@ -11728,7 +11728,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 50,
+      "consumerCount": 51,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -11785,6 +11785,7 @@
         "scripts/build-catalog-decisions.mjs",
         "scripts/test-event-research-ingestion-migration.sh",
         "scripts/test-music-directory-contract.mjs",
+        "scripts/test-studio-internship-audit-api-e2e.mjs",
         "scripts/test-verified-experience-reviews-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
@@ -69952,7 +69953,7 @@
       "lines": [
         51
       ],
-      "consumerCount": 51,
+      "consumerCount": 52,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -70010,6 +70011,7 @@
         "scripts/catalog-list-audit.mjs",
         "scripts/test-event-research-ingestion-migration.sh",
         "scripts/test-music-directory-contract.mjs",
+        "scripts/test-studio-internship-audit-api-e2e.mjs",
         "scripts/test-verified-experience-reviews-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
@@ -78856,7 +78858,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "internalReportTypes",
-      "line": 1113,
+      "line": 1139,
       "values": [
         "error",
         "suggestion",
@@ -78870,7 +78872,7 @@
       "valueCount": 8,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        1113
+        1139
       ],
       "consumerCount": 15,
       "backendConsumers": [
@@ -78932,7 +78934,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "internalReportStates",
-      "line": 1134,
+      "line": 1160,
       "values": [
         "draft",
         "submitted",
@@ -78950,7 +78952,7 @@
       "valueCount": 12,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        1134
+        1160
       ],
       "consumerCount": 73,
       "backendConsumers": [
@@ -79083,7 +79085,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "allowedFeedbackAttachmentContentTypes",
-      "line": 1603,
+      "line": 1629,
       "values": [
         "application/csv",
         "application/pdf",
@@ -79097,7 +79099,7 @@
       "valueCount": 8,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1603
+        1629
       ],
       "consumerCount": 29,
       "backendConsumers": [

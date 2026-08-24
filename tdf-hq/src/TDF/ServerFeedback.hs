@@ -54,7 +54,7 @@ import           Data.Text                  (Text)
 import qualified Data.Text.Encoding         as TE
 import           Data.Time                  (getCurrentTime)
 import           Database.Persist
-import           Database.Persist.Sql       (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey)
+import           Database.Persist.Sql       (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey, updateWhereCount)
 import           Servant
 import           Servant.Multipart          (FileData(..), Tmp)
 import           System.Directory           (createDirectoryIfMissing, doesFileExist, getFileSize)
@@ -489,24 +489,32 @@ internalFeedbackServer user =
             Just "closed" -> [ME.InternalFeedbackReportClosedAt =. Just now]
             Just _ | state == "closed" -> [ME.InternalFeedbackReportClosedAt =. Nothing]
             _ -> []
-      withPool $ do
-        unless (null feedbackUpdates) (update feedbackKey feedbackUpdates)
-        unless (null reportUpdates && null closedUpdate) $
-          update reportKey
-            ( reportUpdates ++ closedUpdate ++
-              [ ME.InternalFeedbackReportVersion +=. 1
-              , ME.InternalFeedbackReportUpdatedAt =. now
-              ]
-            )
-        insert_ ME.InternalFeedbackHistory
-          { ME.internalFeedbackHistoryReportId = reportKey
-          , ME.internalFeedbackHistoryActorPartyId = auPartyId user
-          , ME.internalFeedbackHistoryAction = "updated"
-          , ME.internalFeedbackHistoryPreviousState = Just state
-          , ME.internalFeedbackHistoryNewState = stateUpdate
-          , ME.internalFeedbackHistoryMetadata = Just (changedFieldMetadata updateRequest)
-          , ME.internalFeedbackHistoryCreatedAt = now
-          }
+      updated <- withPool $ do
+        changed <- updateWhereCount
+          [ ME.InternalFeedbackReportId ==. reportKey
+          , ME.InternalFeedbackReportVersion ==. ME.internalFeedbackReportVersion report
+          ]
+          ( reportUpdates ++ closedUpdate ++
+            [ ME.InternalFeedbackReportVersion +=. 1
+            , ME.InternalFeedbackReportUpdatedAt =. now
+            ]
+          )
+        if changed /= 1
+          then pure False
+          else do
+            unless (null feedbackUpdates) (update feedbackKey feedbackUpdates)
+            insert_ ME.InternalFeedbackHistory
+              { ME.internalFeedbackHistoryReportId = reportKey
+              , ME.internalFeedbackHistoryActorPartyId = auPartyId user
+              , ME.internalFeedbackHistoryAction = "updated"
+              , ME.internalFeedbackHistoryPreviousState = Just state
+              , ME.internalFeedbackHistoryNewState = stateUpdate
+              , ME.internalFeedbackHistoryMetadata = Just (changedFieldMetadata updateRequest)
+              , ME.internalFeedbackHistoryCreatedAt = now
+              }
+            pure True
+      unless updated $
+        throwError err409 { errBody = "Report changed during this update; reload it before retrying" }
       recordAudit reportEnt "updated" (Just $ object ["state" .= stateUpdate])
       forM_ stateUpdate $ \newState -> notifyReporterForState reportEnt newState
       refreshedReport <- withPool $ getJustEntity reportKey
@@ -522,32 +530,42 @@ internalFeedbackServer user =
         throwError err409 { errBody = "Only draft reports can be submitted" }
       validateSubmissionCompleteness report feedback
       now <- liftIO getCurrentTime
-      withPool $ do
-        update reportKey
+      submitted <- withPool $ do
+        changed <- updateWhereCount
+          [ ME.InternalFeedbackReportId ==. reportKey
+          , ME.InternalFeedbackReportVersion ==. ME.internalFeedbackReportVersion report
+          , ME.InternalFeedbackReportState ==. "draft"
+          ]
           [ ME.InternalFeedbackReportState =. "received"
           , ME.InternalFeedbackReportSubmittedAt =. Just now
           , ME.InternalFeedbackReportVersion +=. 1
           , ME.InternalFeedbackReportUpdatedAt =. now
           ]
-        insert_ ME.InternalFeedbackHistory
-          { ME.internalFeedbackHistoryReportId = reportKey
-          , ME.internalFeedbackHistoryActorPartyId = auPartyId user
-          , ME.internalFeedbackHistoryAction = "submitted"
-          , ME.internalFeedbackHistoryPreviousState = Just "draft"
-          , ME.internalFeedbackHistoryNewState = Just "submitted"
-          , ME.internalFeedbackHistoryMetadata = Nothing
-          , ME.internalFeedbackHistoryCreatedAt = now
-          }
-        insert_ ME.InternalFeedbackHistory
-          { ME.internalFeedbackHistoryReportId = reportKey
-          , ME.internalFeedbackHistoryActorPartyId = auPartyId user
-          , ME.internalFeedbackHistoryAction = "received"
-          , ME.internalFeedbackHistoryPreviousState = Just "submitted"
-          , ME.internalFeedbackHistoryNewState = Just "received"
-          , ME.internalFeedbackHistoryMetadata = Nothing
-          , ME.internalFeedbackHistoryCreatedAt = now
-          }
-        insertReporterNotification report "internal_feedback_received" "Reporte recibido" "Tu reporte fue recibido y quedó disponible para revisión."
+        if changed /= 1
+          then pure False
+          else do
+            insert_ ME.InternalFeedbackHistory
+              { ME.internalFeedbackHistoryReportId = reportKey
+              , ME.internalFeedbackHistoryActorPartyId = auPartyId user
+              , ME.internalFeedbackHistoryAction = "submitted"
+              , ME.internalFeedbackHistoryPreviousState = Just "draft"
+              , ME.internalFeedbackHistoryNewState = Just "submitted"
+              , ME.internalFeedbackHistoryMetadata = Nothing
+              , ME.internalFeedbackHistoryCreatedAt = now
+              }
+            insert_ ME.InternalFeedbackHistory
+              { ME.internalFeedbackHistoryReportId = reportKey
+              , ME.internalFeedbackHistoryActorPartyId = auPartyId user
+              , ME.internalFeedbackHistoryAction = "received"
+              , ME.internalFeedbackHistoryPreviousState = Just "submitted"
+              , ME.internalFeedbackHistoryNewState = Just "received"
+              , ME.internalFeedbackHistoryMetadata = Nothing
+              , ME.internalFeedbackHistoryCreatedAt = now
+              }
+            insertReporterNotification report "internal_feedback_received" "Reporte recibido" "Tu reporte fue recibido y quedó disponible para revisión."
+            pure True
+      unless submitted $
+        throwError err409 { errBody = "Report changed before submission; reload it before retrying" }
       enqueueTeamForReport reportEnt
       recordAudit reportEnt "submitted" Nothing
       refreshed <- withPool $ getJustEntity reportKey
@@ -566,39 +584,47 @@ internalFeedbackServer user =
       when (kind == "information_response" && ME.internalFeedbackReportReporterPartyId report /= auPartyId user) $
         throwError err403 { errBody = "Only the reporter may answer an information request" }
       now <- liftIO getCurrentTime
-      ent <- withPool $ do
-        commentId <- insert ME.InternalFeedbackComment
-          { ME.internalFeedbackCommentReportId = reportKey
-          , ME.internalFeedbackCommentAuthorPartyId = auPartyId user
-          , ME.internalFeedbackCommentKind = kind
-          , ME.internalFeedbackCommentBody = body
-          , ME.internalFeedbackCommentCreatedAt = now
-          }
-        when (kind == "information_request") $
-          update reportKey
-            [ ME.InternalFeedbackReportState =. "needs_information"
-            , ME.InternalFeedbackReportVersion +=. 1
-            , ME.InternalFeedbackReportUpdatedAt =. now
-            ]
-        when (kind == "information_response" && ME.internalFeedbackReportState report == "needs_information") $
-          update reportKey
-            [ ME.InternalFeedbackReportState =. "received"
-            , ME.InternalFeedbackReportVersion +=. 1
-            , ME.InternalFeedbackReportUpdatedAt =. now
-            ]
-        insert_ ME.InternalFeedbackHistory
-          { ME.internalFeedbackHistoryReportId = reportKey
-          , ME.internalFeedbackHistoryActorPartyId = auPartyId user
-          , ME.internalFeedbackHistoryAction = kind
-          , ME.internalFeedbackHistoryPreviousState = Just (ME.internalFeedbackReportState report)
-          , ME.internalFeedbackHistoryNewState = case kind of
-              "information_request" -> Just "needs_information"
-              "information_response" | ME.internalFeedbackReportState report == "needs_information" -> Just "received"
-              _ -> Nothing
-          , ME.internalFeedbackHistoryMetadata = Nothing
-          , ME.internalFeedbackHistoryCreatedAt = now
-          }
-        getJustEntity commentId
+      let nextState = case kind of
+            "information_request" -> Just "needs_information"
+            "information_response" | ME.internalFeedbackReportState report == "needs_information" -> Just "received"
+            _ -> Nothing
+      entResult <- withPool $ do
+        stateAvailable <- case nextState of
+          Nothing -> pure True
+          Just target -> do
+            changed <- updateWhereCount
+              [ ME.InternalFeedbackReportId ==. reportKey
+              , ME.InternalFeedbackReportVersion ==. ME.internalFeedbackReportVersion report
+              ]
+              [ ME.InternalFeedbackReportState =. target
+              , ME.InternalFeedbackReportVersion +=. 1
+              , ME.InternalFeedbackReportUpdatedAt =. now
+              ]
+            pure (changed == 1)
+        if not stateAvailable
+          then pure Nothing
+          else do
+            commentId <- insert ME.InternalFeedbackComment
+              { ME.internalFeedbackCommentReportId = reportKey
+              , ME.internalFeedbackCommentAuthorPartyId = auPartyId user
+              , ME.internalFeedbackCommentKind = kind
+              , ME.internalFeedbackCommentBody = body
+              , ME.internalFeedbackCommentCreatedAt = now
+              }
+            insert_ ME.InternalFeedbackHistory
+              { ME.internalFeedbackHistoryReportId = reportKey
+              , ME.internalFeedbackHistoryActorPartyId = auPartyId user
+              , ME.internalFeedbackHistoryAction = kind
+              , ME.internalFeedbackHistoryPreviousState = Just (ME.internalFeedbackReportState report)
+              , ME.internalFeedbackHistoryNewState = nextState
+              , ME.internalFeedbackHistoryMetadata = Nothing
+              , ME.internalFeedbackHistoryCreatedAt = now
+              }
+            Just <$> getJustEntity commentId
+      ent <- maybe
+        (throwError err409 { errBody = "Report changed before the comment transition; reload it before retrying" })
+        pure
+        entResult
       if kind == "information_request"
         then withPool $ insertReporterNotification report "internal_feedback_needs_information" "Se necesita más información" "Revisa tu reporte y responde la solicitud del equipo."
         else when (kind == "information_response") (enqueueTeamNotification reportEnt "internal_feedback_information_response" "immediate")
