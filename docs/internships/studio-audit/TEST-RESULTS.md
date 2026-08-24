@@ -59,6 +59,6 @@ This file records observed commands and results through 2026-08-24. A failed, bl
 | Pull request | Pass: [PR #200](https://github.com/diegueins680/tdf-app/pull/200) is open and ready for review |
 | GitHub issue | Not authorized and not performed |
 | Root branch/stage/commit | `git switch -c codex/studio-internship-audit`; explicit path staging; `git commit -m "feat: add traceable studio internship audit"` | Pass: feature commit `d68b794e531501589e18c24dbb60aa00ada0a0f7`; only assignment files staged; push evidence is reported in the final handoff |
-| Publish regenerated `tdf-mobile` submodule files | Integrated mobile pull request #30; generated API/registry verification; tracked push | Pass: remote mobile main commit `c537c729177f92f50c69a47edba5b5dae46afebd`; parent pointer included in this final integration |
+| Publish regenerated `tdf-mobile` submodule files | Integrated mobile pull requests #30 and #31; generated API/registry verification; tracked push | Pass: remote mobile main commit `0c9aeb2d594a46109282f1a82afb7a33a043be80`; parent pointer included in this final integration, including required signup-consent fields |
 
 The API E2E uses an Intern account equivalent in role and permissions to Stewart and an authorized administrative account, but it is deliberately synthetic. It does not satisfy the real-staging deployment gate.

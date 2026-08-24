@@ -38,7 +38,7 @@ Use the exact command/result table from `docs/internships/studio-audit/TEST-RESU
 - Supply Stewart Moreira's verified production party ID and email only at approved draft-creation runtime; do not commit those identifiers or create a duplicate account.
 - Review/approve least-privilege module grants and notification recipients.
 - Connect and verify an approved external outbox dispatcher/digest schedule, or explicitly approve in-app-only notifications.
-- Review the integrated `TDF-mobile` generated-client commit `c537c729177f92f50c69a47edba5b5dae46afebd` (mobile PR #30); the parent repository points to that exact remote commit.
+- Review the integrated `TDF-mobile` generated-client commit `0c9aeb2d594a46109282f1a82afb7a33a043be80` (mobile PRs #30 and #31); the parent repository points to that exact remote commit.
 - Deploy isolated staging with synthetic data and test transports.
 - Exercise full intern/admin lifecycle and rollback.
 - Create and review inactive TDF App draft.

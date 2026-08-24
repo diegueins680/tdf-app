@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-24T19:27:19.969Z",
+  "generatedAt": "2026-08-24T19:52:01.086Z",
   "repositoryRoot": ".",
-  "filesScanned": 1178,
+  "filesScanned": 1179,
   "candidateCount": 917,
   "byClassification": {
     "dynamic-business-catalog": 570,
@@ -9531,7 +9531,7 @@
       "similarCandidateIds": []
     },
     {
-      "id": "37d9988bb2e96ca099c9",
+      "id": "7e0512ca023025d69362",
       "file": "scripts/production-migrations.json",
       "sourceKind": "production",
       "surface": "automation",
@@ -9601,9 +9601,10 @@
         "{id=2026-08-18_music_directory_profile_images}",
         "{id=2026-08-18_music_directory_profile_image_host_compatibility}",
         "{id=2026-08-20_verified_experience_reviews}",
-        "{id=2026-08-21_studio_internship_audit}"
+        "{id=2026-08-21_studio_internship_audit}",
+        "{id=2026-08-24_ticket_qr_constraint_compatibility}"
       ],
-      "valueCount": 62,
+      "valueCount": 63,
       "recommendedClassification": "security-system-registry",
       "lines": [
         3
@@ -26706,7 +26707,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 393,
+      "consumerCount": 394,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -33553,7 +33554,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 393,
+      "consumerCount": 394,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -39361,7 +39362,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 393,
+      "consumerCount": 394,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -39648,7 +39649,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 393,
+      "consumerCount": 394,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -40836,7 +40837,7 @@
       "lines": [
         138
       ],
-      "consumerCount": 393,
+      "consumerCount": 394,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -48789,7 +48790,7 @@
         807,
         909
       ],
-      "consumerCount": 148,
+      "consumerCount": 149,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -48831,6 +48832,7 @@
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-16_catalog_locale_preference_resume.sql",
         "tdf-hq/sql/2026-08-18_ddex_partner_legacy_compatibility.sql",
+        "tdf-hq/sql/2026-08-24_ticket_qr_constraint_compatibility.sql",
         "tdf-hq/sql/preflight_security_emergency_readiness.sql",
         "tdf-hq/src/TDF/API/Catalog.hs",
         "tdf-hq/src/TDF/App/Boot.hs",
@@ -48839,8 +48841,7 @@
         "tdf-hq/src/TDF/Catalog/Models.hs",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Cron.hs",
-        "tdf-hq/src/TDF/DDEX/DB.hs",
-        "tdf-hq/src/TDF/DDEX/Models.hs"
+        "tdf-hq/src/TDF/DDEX/DB.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/auth.ts",
@@ -49199,7 +49200,7 @@
       "lines": [
         5139
       ],
-      "consumerCount": 178,
+      "consumerCount": 179,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -50763,7 +50764,7 @@
       "domain": "security-authorization",
       "kind": "openapi-enum",
       "name": "Role",
-      "line": 7878,
+      "line": 7879,
       "values": [
         "Admin",
         "Manager",
@@ -50799,7 +50800,7 @@
       "valueCount": 30,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        7878
+        7879
       ],
       "consumerCount": 217,
       "backendConsumers": [
@@ -51030,7 +51031,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "status",
-      "line": 7934,
+      "line": 7935,
       "values": [
         "Active",
         "Inactive"
@@ -51038,7 +51039,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        7934
+        7935
       ],
       "consumerCount": 544,
       "backendConsumers": [
@@ -51322,7 +51323,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "sdrSelectionMode",
-      "line": 8669,
+      "line": 8670,
       "values": [
         "all",
         "first-available"
@@ -51330,7 +51331,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        8669
+        8670
       ],
       "consumerCount": 16,
       "backendConsumers": [
@@ -51379,7 +51380,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "kind",
-      "line": 8888,
+      "line": 8889,
       "values": [
         "artist",
         "group",
@@ -51389,7 +51390,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        8888
+        8889
       ],
       "consumerCount": 186,
       "backendConsumers": [
@@ -51584,7 +51585,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "kind",
-      "line": 8903,
+      "line": 8904,
       "values": [
         "audio-track",
         "video",
@@ -51594,7 +51595,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        8903
+        8904
       ],
       "consumerCount": 174,
       "backendConsumers": [
@@ -51779,7 +51780,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "kind",
-      "line": 8935,
+      "line": 8936,
       "values": [
         "release",
         "recording",
@@ -51788,7 +51789,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        8935
+        8936
       ],
       "consumerCount": 176,
       "backendConsumers": [
@@ -51971,7 +51972,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "approvalMode",
-      "line": 9149,
+      "line": 9150,
       "values": [
         "normal",
         "emergency",
@@ -51981,7 +51982,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9149
+        9150
       ],
       "consumerCount": 45,
       "backendConsumers": [
@@ -52060,7 +52061,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "changeKind",
-      "line": 9244,
+      "line": 9245,
       "values": [
         "party-role",
         "role-permission"
@@ -52068,7 +52069,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        9244
+        9245
       ],
       "consumerCount": 10,
       "backendConsumers": [
@@ -52109,7 +52110,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "apReviewStatus",
-      "line": 9785,
+      "line": 9786,
       "values": [
         "unverified",
         "pending",
@@ -52120,7 +52121,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9785
+        9786
       ],
       "consumerCount": 99,
       "backendConsumers": [
@@ -52256,7 +52257,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "aerrMode",
-      "line": 9799,
+      "line": 9800,
       "values": [
         "dry_run",
         "production"
@@ -52264,7 +52265,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9799
+        9800
       ],
       "consumerCount": 70,
       "backendConsumers": [
@@ -52375,7 +52376,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "aeruStatus",
-      "line": 9809,
+      "line": 9810,
       "values": [
         "running",
         "completed",
@@ -52386,7 +52387,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9809
+        9810
       ],
       "consumerCount": 43,
       "backendConsumers": [
@@ -52474,7 +52475,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "status",
-      "line": 10334,
+      "line": 10335,
       "values": [
         "pending_payment",
         "paid",
@@ -52483,8 +52484,8 @@
       "valueCount": 3,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        10334,
-        10386
+        10335,
+        10387
       ],
       "consumerCount": 543,
       "backendConsumers": [
@@ -52764,7 +52765,7 @@
       "domain": "payments-finance",
       "kind": "openapi-enum",
       "name": "paymentStatus",
-      "line": 10358,
+      "line": 10359,
       "values": [
         "not_started",
         "awaiting_payment",
@@ -52781,7 +52782,7 @@
       "valueCount": 11,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        10358
+        10359
       ],
       "consumerCount": 97,
       "backendConsumers": [
@@ -52918,7 +52919,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "fulfillmentStatus",
-      "line": 10361,
+      "line": 10362,
       "values": [
         "lead_received",
         "seat_held",
@@ -52933,7 +52934,7 @@
       "valueCount": 9,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        10361
+        10362
       ],
       "consumerCount": 34,
       "backendConsumers": [
@@ -53001,7 +53002,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "InternalReportState",
-      "line": 10424,
+      "line": 10425,
       "values": [
         "draft",
         "submitted",
@@ -53019,7 +53020,7 @@
       "valueCount": 12,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        10424
+        10425
       ],
       "consumerCount": 75,
       "backendConsumers": [
@@ -53155,7 +53156,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "InternalReportType",
-      "line": 10427,
+      "line": 10428,
       "values": [
         "error",
         "suggestion",
@@ -53169,7 +53170,7 @@
       "valueCount": 8,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        10427
+        10428
       ],
       "consumerCount": 17,
       "backendConsumers": [
@@ -53234,7 +53235,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "iapuStatus",
-      "line": 10652,
+      "line": 10653,
       "values": [
         "draft",
         "completed",
@@ -53243,7 +53244,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        10652
+        10653
       ],
       "consumerCount": 7,
       "backendConsumers": [
@@ -53288,7 +53289,7 @@
       "domain": "product-navigation",
       "kind": "openapi-enum",
       "name": "FeatureAccessRequestStatus",
-      "line": 11247,
+      "line": 11248,
       "values": [
         "pending",
         "approved",
@@ -53299,7 +53300,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        11247
+        11248
       ],
       "consumerCount": 116,
       "backendConsumers": [
@@ -53449,7 +53450,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "decision",
-      "line": 11362,
+      "line": 11363,
       "values": [
         "approved",
         "rejected"
@@ -53457,7 +53458,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        11362
+        11363
       ],
       "consumerCount": 145,
       "backendConsumers": [
@@ -53642,7 +53643,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "OperationsStatus",
-      "line": 11414,
+      "line": 11415,
       "values": [
         "new",
         "seen",
@@ -53655,7 +53656,7 @@
       "valueCount": 7,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        11414
+        11415
       ],
       "consumerCount": 55,
       "backendConsumers": [
@@ -53760,7 +53761,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "OperationsPriority",
-      "line": 11417,
+      "line": 11418,
       "values": [
         "urgent",
         "high",
@@ -53770,7 +53771,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        11417
+        11418
       ],
       "consumerCount": 39,
       "backendConsumers": [
@@ -53855,7 +53856,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "OperationsSlaState",
-      "line": 11420,
+      "line": 11421,
       "values": [
         "on_track",
         "at_risk",
@@ -53866,7 +53867,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        11420
+        11421
       ],
       "consumerCount": 25,
       "backendConsumers": [
@@ -81331,7 +81332,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 393,
+      "consumerCount": 394,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
