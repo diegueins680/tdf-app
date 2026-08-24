@@ -7702,7 +7702,7 @@ components:
     SignupRequest:
       type: object
       additionalProperties: false
-      required: [firstName, lastName, email, password]
+      required: [firstName, lastName, email, password, termsAccepted, termsVersion]
       properties:
         firstName:
           type: string
@@ -7727,7 +7727,8 @@ components:
           description: Optional consent to receive TDF product and marketing updates.
         termsAccepted:
           type: boolean
-          description: Account terms acceptance. New first-party clients send true with termsVersion.
+          enum: [true]
+          description: Required account terms acceptance paired with termsVersion.
         termsVersion:
           type: string
           maxLength: 100

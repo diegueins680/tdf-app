@@ -6786,10 +6786,13 @@ export interface components {
             password: string;
             /** @description Optional consent to receive TDF product and marketing updates. */
             marketingOptIn?: boolean;
-            /** @description Account terms acceptance. New first-party clients send true with termsVersion. */
-            termsAccepted?: boolean;
+            /**
+             * @description Required account terms acceptance paired with termsVersion.
+             * @enum {boolean}
+             */
+            termsAccepted: true;
             /** @description Version of the account terms accepted during signup. */
-            termsVersion?: string;
+            termsVersion: string;
             /** @description Artist or band ids to follow after account creation; this does not assign a security role. */
             fanArtistIds?: number[];
             /**

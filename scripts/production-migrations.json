@@ -310,6 +310,11 @@
       "id": "2026-08-21_studio_internship_audit",
       "path": "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
       "introducedBy": "d68b794e531501589e18c24dbb60aa00ada0a0f7"
+    },
+    {
+      "id": "2026-08-24_ticket_qr_constraint_compatibility",
+      "path": "tdf-hq/sql/2026-08-24_ticket_qr_constraint_compatibility.sql",
+      "introducedBy": "be0b3a36d9c659a3d343907036a92d0d5c947e96"
     }
   ]
 }
