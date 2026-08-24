@@ -131,6 +131,13 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 
     let res: Response;
     const controller = new AbortController();
+    const callerSignal = init.signal;
+    const abortForCaller = () => controller.abort();
+    if (callerSignal?.aborted) {
+      controller.abort();
+    } else {
+      callerSignal?.addEventListener('abort', abortForCaller, { once: true });
+    }
     const timeoutId = setTimeout(() => controller.abort(), 30_000);
 
     try {
@@ -141,7 +148,10 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
         signal: controller.signal,
       });
     } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') {
+      if (callerSignal?.aborted) {
+        throw err;
+      }
+      if (controller.signal.aborted || (err instanceof DOMException && err.name === 'AbortError')) {
         throw new ApiError(
           'La solicitud tardó demasiado. Verifica tu conexión e inténtalo de nuevo.',
           HTTP_STATUS_REQUEST_TIMEOUT,
@@ -150,6 +160,7 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
       throw normalizeNetworkError(err);
     } finally {
       clearTimeout(timeoutId);
+      callerSignal?.removeEventListener('abort', abortForCaller);
     }
 
     if (!res.ok) {

@@ -454,10 +454,11 @@ export interface TicketWithQRDTO {
 }
 
 type RequestWithoutBody = (path: string) => Promise<unknown>;
+type GetRequest = (path: string, init?: RequestInit) => Promise<unknown>;
 type RequestWithBody = (path: string, body: unknown) => Promise<unknown>;
 type FormRequest = (path: string, form: FormData) => Promise<unknown>;
 
-const getUnknown: RequestWithoutBody = get;
+const getUnknown: GetRequest = get;
 const delUnknown: RequestWithoutBody = del;
 const postUnknown: RequestWithBody = post;
 const putUnknown: RequestWithBody = put;
@@ -501,9 +502,10 @@ const buildQuery = (params: QueryParams) => {
 };
 
 export const SocialEventsAPI = {
-  listPublicUpcomingEvents: async (opts?: { city?: string; startAfter?: string; limit?: number }) => {
+  listPublicUpcomingEvents: async (opts?: { city?: string; startAfter?: string; limit?: number; signal?: AbortSignal }) => {
     const qs = buildQuery({ city: opts?.city, startAfter: opts?.startAfter, limit: opts?.limit });
-    return await getUnknown(`/social-events/upcoming${qs}`) as PublicUpcomingEventDTO[];
+    const path = `/social-events/upcoming${qs}`;
+    return await (opts?.signal ? getUnknown(path, { signal: opts.signal }) : getUnknown(path)) as PublicUpcomingEventDTO[];
   },
   listEvents: async (opts?: { city?: string; startAfter?: string; eventTypeId?: string; workflowStateId?: string; artistId?: string; venueId?: string }) => {
     const qs = buildQuery({

@@ -129,6 +129,21 @@ describe('api client', () => {
     expect(getPendingApiRequestCount()).toBe(0);
   });
 
+  it('propagates caller cancellation without converting it into a timeout', async () => {
+    fetchMock.mockImplementationOnce((_path, init) => new Promise<Response>((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => {
+        reject(new DOMException('Request cancelled', 'AbortError'));
+      }, { once: true });
+    }));
+    const controller = new AbortController();
+
+    const request = get('/superseded-search', { signal: controller.signal });
+    controller.abort();
+
+    await expect(request).rejects.toMatchObject({ name: 'AbortError' });
+    expect(getPendingApiRequestCount()).toBe(0);
+  });
+
   it('parses JSON when successful responses include a payload', async () => {
     fetchMock.mockResolvedValueOnce(buildResponse({ body: '{"ok":true,"version":"1.0"}' }));
 
