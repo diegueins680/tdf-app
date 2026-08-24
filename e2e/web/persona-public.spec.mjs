@@ -103,6 +103,7 @@ function observeRuntime(page) {
       reason === 'net::ERR_ABORTED'
       || reason === 'cancelled'
       || reason === 'Load request cancelled'
+      || reason === 'NS_BINDING_ABORTED'
     ) return;
     failedRequests.push(`${request.method()} ${new URL(request.url()).pathname}: ${reason}`);
   });
