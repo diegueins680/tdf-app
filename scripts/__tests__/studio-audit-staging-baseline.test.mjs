@@ -19,6 +19,11 @@ test('staging baseline covers every migration before the studio audit and leaves
   assert.doesNotMatch(sql, /\('2026-08-21_studio_internship_audit', '[0-9a-f]{64}',/u);
   assert.doesNotMatch(sql, /\('2026-08-24_ticket_qr_constraint_compatibility', '[0-9a-f]{64}',/u);
   assert.match(sql, /ON CONFLICT \(migration_id\) DO NOTHING/u);
+  assert.match(sql, /RENAME CONSTRAINT unique_ticket_q_r_code TO unique_ticket_qr_code/u);
+  assert.match(sql, /social_event_time_order/u);
+  assert.match(sql, /Refusing synthetic cutover markers when non-dry-run history exists/u);
+  assert.match(sql, /ddex-operational-cutover-2026-08-12/u);
+  assert.match(sql, /"productionData":false/u);
   assert.match(sql, new RegExp(`\\b${sourceCommit}\\b`, 'u'));
 });
 
