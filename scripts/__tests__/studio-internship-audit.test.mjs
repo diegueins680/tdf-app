@@ -3,7 +3,11 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { isAllowedDraftApiBase, parseAdditionalDraftHosts } from '../lib/studio-audit-safety.mjs';
+import {
+  assertReusableAuditDraft,
+  isAllowedDraftApiBase,
+  parseAdditionalDraftHosts,
+} from '../lib/studio-audit-safety.mjs';
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const fixtureDir = path.join(repo, 'test/internships/studio-audit');
@@ -20,6 +24,63 @@ test('draft preparation sends credentials only to exact approved API hosts', () 
   assert.deepEqual(additional, ['audit-api.example.test', 'second.example.test']);
   assert.equal(isAllowedDraftApiBase('https://audit-api.example.test', additional), true);
   assert.equal(isAllowedDraftApiBase('https://audit-api.example.test.attacker.example', additional), false);
+});
+
+test('draft preparation reuses only the exact approved assignee and plan configuration', () => {
+  const draft = {
+    environment: 'staging',
+    durationDaysFromActivation: 14,
+    expectedEffortHours: { minimum: 20, maximum: 30 },
+    midpointPercent: 50,
+    finalReviewAndDemonstrationRequired: true,
+  };
+  const task = {
+    itId: 'task-1',
+    itProjectId: 'project-1',
+    itProposedAssignee: 129,
+  };
+  const plan = {
+    iapProjectId: 'project-1',
+    iapTaskId: 'task-1',
+    iapEnvironment: 'staging',
+    iapDurationDays: 14,
+    iapExpectedHoursMin: 20,
+    iapExpectedHoursMax: 30,
+    iapMidpointPercent: 50,
+    iapProposedAssignee: 129,
+    iapFinalReviewRequired: true,
+  };
+  assert.doesNotThrow(() => assertReusableAuditDraft({ task, plan, expectedPartyId: 129, draft }));
+  assert.throws(
+    () => assertReusableAuditDraft({
+      task,
+      plan: { ...plan, iapProposedAssignee: 130 },
+      expectedPartyId: 129,
+      draft,
+    }),
+    /plan proposed assignee/,
+  );
+  assert.throws(
+    () => assertReusableAuditDraft({
+      task,
+      plan: { ...plan, iapMidpointPercent: 75 },
+      expectedPartyId: 129,
+      draft,
+    }),
+    /midpoint/,
+  );
+});
+
+test('web signup links the recorded account-policy version to account-specific documents', async () => {
+  const loginPage = await readFile(path.join(repo, 'tdf-hq-ui/src/pages/LoginPage.tsx'), 'utf8');
+  const terms = await readFile(path.join(repo, 'tdf-hq-ui/public/account/terms.html'), 'utf8');
+  const privacy = await readFile(path.join(repo, 'tdf-hq-ui/public/account/privacy.html'), 'utf8');
+  assert.match(loginPage, /href="\/account\/terms\.html"/);
+  assert.match(loginPage, /href="\/account\/privacy\.html"/);
+  assert.match(terms, /tdf-account-terms-v1/);
+  assert.match(terms, /TDF Records Account Terms/);
+  assert.match(privacy, /tdf-account-terms-v1/);
+  assert.match(privacy, /TDF Records Account Privacy Notice/);
 });
 
 test('inventory has evidence and an explicit scope/platform decision for every feature', async () => {

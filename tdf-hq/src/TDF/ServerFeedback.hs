@@ -502,31 +502,45 @@ internalFeedbackServer user =
         if not planActive
           then pure (Left ("finalized" :: Text))
           else do
-            changed <- updateWhereCount
-              [ ME.InternalFeedbackReportId ==. reportKey
-              , ME.InternalFeedbackReportVersion ==. ME.internalFeedbackReportVersion report
-              ]
-              ( reportUpdates ++ closedUpdate ++
-                [ ME.InternalFeedbackReportVersion +=. 1
-                , ME.InternalFeedbackReportUpdatedAt =. now
-                ]
-              )
-            if changed /= 1
-              then pure (Left "changed")
+            retestPassed <- if stateUpdate == Just "verified"
+              then do
+                latestRetest <- selectFirst
+                  [ME.InternalFeedbackRetestReportId ==. reportKey]
+                  [Desc ME.InternalFeedbackRetestCreatedAt]
+                pure $ maybe False
+                  ((== "passed") . ME.internalFeedbackRetestResult . entityVal)
+                  latestRetest
+              else pure True
+            if not retestPassed
+              then pure (Left "retest_required")
               else do
-                unless (null feedbackUpdates) (update feedbackKey feedbackUpdates)
-                insert_ ME.InternalFeedbackHistory
-                  { ME.internalFeedbackHistoryReportId = reportKey
-                  , ME.internalFeedbackHistoryActorPartyId = auPartyId user
-                  , ME.internalFeedbackHistoryAction = "updated"
-                  , ME.internalFeedbackHistoryPreviousState = Just state
-                  , ME.internalFeedbackHistoryNewState = stateUpdate
-                  , ME.internalFeedbackHistoryMetadata = Just (changedFieldMetadata updateRequest)
-                  , ME.internalFeedbackHistoryCreatedAt = now
-                  }
-                pure (Right ())
+                changed <- updateWhereCount
+                  [ ME.InternalFeedbackReportId ==. reportKey
+                  , ME.InternalFeedbackReportVersion ==. ME.internalFeedbackReportVersion report
+                  ]
+                  ( reportUpdates ++ closedUpdate ++
+                    [ ME.InternalFeedbackReportVersion +=. 1
+                    , ME.InternalFeedbackReportUpdatedAt =. now
+                    ]
+                  )
+                if changed /= 1
+                  then pure (Left "changed")
+                  else do
+                    unless (null feedbackUpdates) (update feedbackKey feedbackUpdates)
+                    insert_ ME.InternalFeedbackHistory
+                      { ME.internalFeedbackHistoryReportId = reportKey
+                      , ME.internalFeedbackHistoryActorPartyId = auPartyId user
+                      , ME.internalFeedbackHistoryAction = "updated"
+                      , ME.internalFeedbackHistoryPreviousState = Just state
+                      , ME.internalFeedbackHistoryNewState = stateUpdate
+                      , ME.internalFeedbackHistoryMetadata = Just (changedFieldMetadata updateRequest)
+                      , ME.internalFeedbackHistoryCreatedAt = now
+                      }
+                    pure (Right ())
       case updateResult of
         Left "finalized" -> throwError finalizedReportMutationConflict
+        Left "retest_required" -> throwError err409
+          { errBody = "Verification requires the latest recorded retest to have passed" }
         Left "changed" -> throwError err409
           { errBody = "Report changed during this update; reload it before retrying" }
         Left _ -> throwError err500

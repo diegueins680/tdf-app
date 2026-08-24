@@ -8,7 +8,11 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { isAllowedDraftApiBase, parseAdditionalDraftHosts } from './lib/studio-audit-safety.mjs';
+import {
+  assertReusableAuditDraft,
+  isAllowedDraftApiBase,
+  parseAdditionalDraftHosts,
+} from './lib/studio-audit-safety.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const draft = JSON.parse(await readFile(path.join(root, 'test/internships/studio-audit/draft-project.json'), 'utf8'));
@@ -99,6 +103,7 @@ let plan = plans.find((item) => item.iapTaskId === task.itId);
 if (plan && plan.iapStatus !== 'draft') {
   throw new Error('A matching non-draft audit plan already exists; refusing to modify it.');
 }
+if (plan) assertReusableAuditDraft({ task, plan, expectedPartyId, draft });
 if (!plan) {
   plan = await request('/internships/audit-plans', {
     method: 'POST',

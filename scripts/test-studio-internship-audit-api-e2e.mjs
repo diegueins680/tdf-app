@@ -243,6 +243,36 @@ if (racingPlanAfterTransitions.iapStatus === 'active') {
   }
 }
 
+const nonApplicableTask = await request('/internships/tasks', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    itcProjectId: activeProject.ipId,
+    itcTitle: 'E2E — Plan sin casos aplicables',
+    itcDescription: 'Un plan con sólo casos no aplicables debe permanecer en borrador.',
+    itcProposedAssignee: intern.partyId,
+    itcActivationStatus: 'draft',
+  },
+});
+const nonApplicablePlan = await request('/internships/audit-plans', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    iapcProjectId: activeProject.ipId,
+    iapcTaskId: nonApplicableTask.itId,
+    iapcEnvironment: 'staging',
+    iapcProposedAssignee: intern.partyId,
+  },
+});
+await createAuditCase(nonApplicablePlan.iapId, 'STU-NAPP-001', { itccApplicable: false });
+await request(`/internships/audit-plans/${nonApplicablePlan.iapId}/activate`, {
+  token: admin.token,
+  method: 'POST',
+  expected: 409,
+});
+
 const project = await request('/internships/projects', {
   token: admin.token,
   method: 'POST',
@@ -443,6 +473,20 @@ const failedExecution = await request(`/internships/test-cases/${testCase.itcId}
     itecEvidenceSummary: 'EVIDENCIA-E2E-FAILED-001',
   },
 });
+await request(`/internships/test-cases/${testCase.itcId}/executions`, {
+  token: intern.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    itecStatus: 'passed',
+    itecActualResult: 'Una ejecución posterior pasó, pero no debe ocultar el fallo sin reporte.',
+    itecEvidenceSummary: 'EVIDENCIA-E2E-AFTER-UNREPORTED-FAILURE',
+  },
+});
+const planWithHistoricalFailure = await request(`/internships/audit-plans/${plan.iapId}`, {
+  token: admin.token,
+});
+assert.equal(planWithHistoricalFailure.iapFailedWithoutReport, 1);
 
 const reportCreate = {
   ifcTitle: 'El guardado duplica el registro ficticio',
@@ -523,6 +567,10 @@ assert.equal(evidenceBody, 'EVIDENCIA FICTICIA E2E');
 
 const receivedReport = await request(`/feedback/internal/${reportId}/submit`, { token: intern.token, method: 'POST' });
 assert.equal(receivedReport.ifrSummary.ifsState, 'received');
+const planWithReportedFailure = await request(`/internships/audit-plans/${plan.iapId}`, {
+  token: admin.token,
+});
+assert.equal(planWithReportedFailure.iapFailedWithoutReport, 0);
 if (otherIntern) {
   await request(`/feedback/internal/${reportId}`, { token: otherIntern.token, expected: 404 });
 }
@@ -616,6 +664,29 @@ for (const nextState of ['confirmed', 'in_progress', 'ready_for_retest']) {
     json: { ifuState: nextState },
   });
 }
+
+await request(`/feedback/internal/${reportId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  expected: 409,
+  json: { ifuState: 'verified' },
+});
+await request(`/feedback/internal/${reportId}/retests`, {
+  token: intern.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    ifrcResult: 'failed',
+    ifrcNotes: 'El primer retest siguió mostrando dos filas ficticias.',
+    ifrcEvidenceSummary: 'EVIDENCIA-E2E-RETEST-FAILED',
+  },
+});
+await request(`/feedback/internal/${reportId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  expected: 409,
+  json: { ifuState: 'verified' },
+});
 
 const recordedRetest = await request(`/feedback/internal/${reportId}/retests`, {
   token: intern.token,
@@ -773,7 +844,7 @@ await request(`/feedback/internal/${finalizedDraft.ifrSummary.ifsId}/evidence-li
 });
 
 const executions = await request(`/internships/test-cases/${testCase.itcId}/executions`, { token: admin.token });
-assert.equal(executions.length, 5);
+assert.equal(executions.length, 7);
 assert.equal(executions[0].itexId, recordedRetest.ifrtExecutionId);
 assert.equal(executions[0].itexStatus, 'verified');
 await request(`/internships/test-cases/${testCase.itcId}/executions`, {
@@ -805,7 +876,7 @@ assert.ok(approvedSummary.ifsApprovedAt);
 const finalReport = await request(`/feedback/internal/${reportId}`, { token: admin.token });
 assert.equal(finalReport.ifrSummary.ifsState, 'closed');
 assert.ok(finalReport.ifrHistory.length >= 10);
-assert.equal(finalReport.ifrRetests.length, 1);
+assert.equal(finalReport.ifrRetests.length, 2);
 const csv = await request('/feedback/internal/export.csv', { token: admin.token });
 assert.match(csv, /El guardado duplica el registro ficticio/);
 const exported = await request('/feedback/internal/export.json', { token: admin.token });

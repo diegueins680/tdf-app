@@ -1344,9 +1344,9 @@ export default function LoginPage() {
               label={(
                 <Typography variant="body2">
                   Acepto los{' '}
-                  <Link href="/terms.html" target="_blank" rel="noreferrer">términos de servicio</Link>
+                  <Link href="/account/terms.html" target="_blank" rel="noreferrer">términos de la cuenta</Link>
                   {' '}y la{' '}
-                  <Link href="/privacy.html" target="_blank" rel="noreferrer">política de privacidad</Link>.
+                  <Link href="/account/privacy.html" target="_blank" rel="noreferrer">política de privacidad de la cuenta</Link>.
                 </Typography>
               )}
             />

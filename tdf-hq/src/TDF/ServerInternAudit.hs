@@ -320,9 +320,12 @@ internAuditServer user =
       roles <- either (throwError . serverFailure) pure rolesResult
       unless (M.Intern `elem` roles) $
         throwError err409 { errBody = "The proposed assignee does not have the Intern role" }
-      caseCount <- withPool $ count [ME.InternTestCasePlanId ==. planKey]
+      caseCount <- withPool $ count
+        [ ME.InternTestCasePlanId ==. planKey
+        , ME.InternTestCaseApplicable ==. True
+        ]
       when (caseCount == 0) $
-        throwError err409 { errBody = "At least one test case is required before activation" }
+        throwError err409 { errBody = "At least one applicable test case is required before activation" }
       testTransport <- liftIO isTestRuntime
       now <- liftIO getCurrentTime
       let activationDay = utctDay now
@@ -877,6 +880,7 @@ internAuditServer user =
       daily <- selectFirst [ME.InternDailySummaryTaskId ==. ME.internAuditPlanTaskId plan] []
       final <- getBy (ME.UniqueInternFinalSummaryPlan planKey)
       let applicable = filter (ME.internTestCaseApplicable . entityVal . fst) latestPairs
+          applicableCaseKeys = map (entityKey . fst) applicable
           latestStatus = fmap (ME.internTestExecutionStatus . entityVal) . snd
           executed = filter (maybe False (`elem` terminalExecutionStatuses) . latestStatus) applicable
           reportMatches (Entity caseKey _) latest (Entity _ report) =
@@ -884,9 +888,12 @@ internAuditServer user =
               || maybe False
                    (\(Entity executionKey _) -> ME.internalFeedbackReportTestExecutionId report == Just executionKey)
                    latest
-          hasLinkedReport (caseEnt, latest) = any
-            (\reportEnt@(Entity _ report) ->
-              reportMatches caseEnt latest reportEnt
+          executionHasLinkedReport (Entity executionKey execution) = any
+            (\(Entity _ report) ->
+              ( ME.internalFeedbackReportTestExecutionId report == Just executionKey
+                || ME.internalFeedbackReportTestCaseId report
+                     == Just (ME.internTestExecutionTestCaseId execution)
+              )
                 && reportStateCountsForFailure
                      (ME.internalFeedbackReportState report)
                      (ME.internalFeedbackReportSubmittedAt report))
@@ -906,9 +913,10 @@ internAuditServer user =
             ]
           failedWithoutReport = length
             [ ()
-            | pair <- applicable
-            , latestStatus pair == Just "failed"
-            , not (hasLinkedReport pair)
+            | executionEnt@(Entity _ execution) <- executions
+            , ME.internTestExecutionTestCaseId execution `elem` applicableCaseKeys
+            , ME.internTestExecutionStatus execution `elem` ["failed", "blocked"]
+            , not (executionHasLinkedReport executionEnt)
             ]
           evidenceMissing = length
             [ ()
