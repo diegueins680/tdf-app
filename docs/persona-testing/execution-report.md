@@ -44,7 +44,7 @@
 
 ### RUN-009
 
-`ALLOW_PENDING_FEATURE_DISPOSITIONS=1 npm run generate:feature-audit-reports` — evidence generation passed: 137 features; 44 primary, 57 submodule, 26 contextual and 10 technical records; 37 native features; 11 role fixtures; 3,014 matrix rows; 548 expanded endpoints, 493 mapped and 40 pending explicit disposition. The normal command intentionally fails while those pending rows remain, so this is `passed-with-gate`, not full audit success. The generated feature inventory, route/mobile mapping and role/action matrix were refreshed against mobile commit `69df80490c994f9277d2e543d3f19a90f5d55ada`.
+`ALLOW_PENDING_FEATURE_DISPOSITIONS=1 npm run generate:feature-audit-reports` — evidence generation passed: 137 features; 44 primary, 57 submodule, 26 contextual and 10 technical records; 37 native features; 11 role fixtures; 3,014 matrix rows; 548 expanded endpoints, 493 mapped and 40 pending explicit disposition. The normal command intentionally fails while those pending rows remain, so this is `passed-with-gate`, not full audit success. Native-contextual destinations are classified as available when their Expo route exists, and the generated role/action matrix was refreshed against mobile commit `fcb10deaa3fcbbb2bb55b5f3e11b6d9bc8de040c`. Focused mobile verification passed 11 directory/registry tests plus full typecheck and lint, including `create=classified` opening the native classified form.
 
 ### RUN-010
 
