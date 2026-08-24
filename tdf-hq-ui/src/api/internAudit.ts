@@ -15,6 +15,11 @@ export const InternAudit = {
     get<InternAuditPlanDTO>(`/internships/audit-plans/${encodeURIComponent(planId)}`),
   activatePlan: (planId: string) =>
     postEmpty<InternAuditPlanDTO>(`/internships/audit-plans/${encodeURIComponent(planId)}/activate`),
+  completePlan: (planId: string) =>
+    patch<InternAuditPlanDTO>(
+      `/internships/audit-plans/${encodeURIComponent(planId)}`,
+      { iapuStatus: 'completed' },
+    ),
   listCases: (planId: string) =>
     get<InternTestCaseDTO[]>(`/internships/audit-plans/${encodeURIComponent(planId)}/cases`),
   listExecutions: (testCaseId: string) =>

@@ -240,7 +240,7 @@ internAuditServer user =
             , fmap (ME.InternAuditPlanStatus =.) requestedStatus
             ]
           approvalUpdates =
-            if approvesException
+            if requestedStatus == Just "completed"
               then [ ME.InternAuditPlanCompletionApprovedBy =. Just (auPartyId user)
                    , ME.InternAuditPlanCompletionApprovedAt =. Just now
                    ]
@@ -249,6 +249,14 @@ internAuditServer user =
         update planKey (updates ++ approvalUpdates ++ [ME.InternAuditPlanUpdatedAt =. now])
         case requestedStatus of
           Just "completed" -> do
+            updateWhere
+              [ ME.InternFinalSummaryPlanId ==. planKey
+              , ME.InternFinalSummarySubmittedAt !=. Nothing
+              ]
+              [ ME.InternFinalSummaryApprovedBy =. Just (auPartyId user)
+              , ME.InternFinalSummaryApprovedAt =. Just now
+              , ME.InternFinalSummaryUpdatedAt =. now
+              ]
             update (ME.internAuditPlanTaskId plan)
               [ ME.InternTaskStatus =. "done"
               , ME.InternTaskProgress =. 100
@@ -269,10 +277,16 @@ internAuditServer user =
               [ ME.InternTaskStatus =. "cancelled"
               , ME.InternTaskUpdatedAt =. now
               ]
-            update (ME.internAuditPlanProjectId plan)
-              [ ME.InternProjectStatus =. "cancelled"
-              , ME.InternProjectUpdatedAt =. now
+            remainingTasks <- count
+              [ ME.InternTaskProjectId ==. ME.internAuditPlanProjectId plan
+              , ME.InternTaskId !=. ME.internAuditPlanTaskId plan
+              , ME.InternTaskStatus /<-. ["done", "cancelled"]
               ]
+            when (remainingTasks == 0) $
+              update (ME.internAuditPlanProjectId plan)
+                [ ME.InternProjectStatus =. "cancelled"
+                , ME.InternProjectUpdatedAt =. now
+                ]
           _ -> pure ()
       audit "intern_audit_plan" rawPlanId "updated"
         (Just $ object ["status" .= requestedStatus, "exceptionApproved" .= approvesException])
@@ -437,6 +451,7 @@ internAuditServer user =
       ensureInternshipMember
       (Entity caseKey testCase, planEnt) <- loadCaseAndPlan rawCaseId
       ensurePlanAccess planEnt
+      ensureActivePlanMutation planEnt
       status <- either throwError pure (validateExecutionStatus itecStatus)
       actualResult <- validatedOptional "actualResult" 5000 itecActualResult
       persistedState <- validatedOptional "persistedStateObserved" 5000 itecPersistedStateObserved
@@ -482,6 +497,7 @@ internAuditServer user =
       Entity _ execution <- withPool (getEntity executionKey) >>= maybe (throwError err404) pure
       (Entity _ testCase, planEnt) <- loadCaseAndPlan (toPathPiece (ME.internTestExecutionTestCaseId execution))
       ensurePlanAccess planEnt
+      ensureActivePlanMutation planEnt
       unless (isAdminUser || ME.internTestExecutionExecutorPartyId execution == auPartyId user) $
         throwError err403 { errBody = "Only the execution owner or an administrator may update it" }
       when (ME.internTestExecutionStatus execution `elem` terminalExecutionStatuses && not isAdminUser) $
@@ -641,6 +657,10 @@ internAuditServer user =
               | ME.internTaskActivationStatus taskValue == "active"
                 && ME.internTaskAssignedTo taskValue == Just (auPartyId user) -> pure ()
             _ -> throwError err404 { errBody = "Audit plan not found" }
+
+    ensureActivePlanMutation (Entity _ plan) =
+      unless (ME.internAuditPlanStatus plan == "active") $
+        throwError err409 { errBody = "Finalized audit plans do not accept execution changes" }
 
     ensurePlanAccessAndReturn ent = ensurePlanAccess ent >> pure ent
 

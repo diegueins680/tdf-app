@@ -187,6 +187,19 @@ export default function InternAuditPlanPage() {
     onError: (error) => setFeedback({ severity: 'error', text: errorMessage(error, 'No se pudo activar el plan.') }),
   });
 
+  const completePlan = useMutation({
+    mutationFn: () => InternAudit.completePlan(planId),
+    onSuccess: async (completedPlan) => {
+      queryClient.setQueryData(['intern-audit', 'plan', planId], completedPlan);
+      setFeedback({ severity: 'success', text: 'La revisión administrativa quedó aprobada y la auditoría se completó.' });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['intern-audit', 'final', planId] }),
+        queryClient.invalidateQueries({ queryKey: ['internships', 'tasks'] }),
+      ]);
+    },
+    onError: (error) => setFeedback({ severity: 'error', text: errorMessage(error, 'No se pudo completar la auditoría.') }),
+  });
+
   const saveDaily = useMutation({
     mutationFn: () => InternAudit.createDailySummary(planId, daily),
     onSuccess: async () => {
@@ -277,6 +290,18 @@ export default function InternAuditPlanPage() {
                     Activar plan aprobado
                   </Button>
                 )}
+                {isAdmin && plan.iapStatus === 'active' && plan.iapCanComplete && (
+                  <Button
+                    variant="contained"
+                    color="success"
+                    onClick={() => {
+                      if (window.confirm('Aprobar la revisión final y completar esta auditoría. ¿Continuar?')) completePlan.mutate();
+                    }}
+                    disabled={completePlan.isPending}
+                  >
+                    Aprobar y completar auditoría
+                  </Button>
+                )}
               </Stack>
             </CardContent>
           </Card>
@@ -323,7 +348,7 @@ export default function InternAuditPlanPage() {
                       {testCase.itcExploratoryCharter && <Alert severity="success"><strong>Exploración:</strong> {testCase.itcExploratoryCharter}</Alert>}
                       <Typography variant="body2"><strong>Evidencia:</strong> {testCase.itcEvidenceRequirement === 'strong' ? 'fuerte (captura, video externo seguro o referencia verificable)' : 'confirmación breve'}.</Typography>
                       <Divider />
-                      <Box component="form" onSubmit={(event) => submitExecution(event, testCase)}>
+                      {plan.iapStatus === 'active' ? <Box component="form" onSubmit={(event) => submitExecution(event, testCase)}>
                         <Stack spacing={2}>
                           <Typography variant="h6">Registrar nueva ejecución</Typography>
                           <TextField select label="Resultado" value={executionForm.itecStatus} onChange={(event) => setExecutionForm((current) => ({ ...current, itecStatus: event.target.value as InternExecutionStatus }))} required>
@@ -339,7 +364,7 @@ export default function InternAuditPlanPage() {
                             <Button component={RouterLink} to={reportHref(testCase, plan)} startIcon={<BugReportOutlinedIcon />} variant="outlined">Crear reporte vinculado</Button>
                           </Stack>
                         </Stack>
-                      </Box>
+                      </Box> : <Alert severity="info">La auditoría finalizada conserva el historial en modo de solo lectura.</Alert>}
                       <Divider />
                       <Typography variant="h6">Historial preservado</Typography>
                       <ExecutionHistory testCaseId={testCase.itcId} />
@@ -364,7 +389,7 @@ export default function InternAuditPlanPage() {
                 <TextField label="Módulos probados" value={daily.idscModulesTested} onChange={(event) => setDaily((current) => ({ ...current, idscModulesTested: event.target.value }))} required multiline />
                 <TextField label="Bloqueos" value={daily.idscBlockers ?? ''} onChange={(event) => setDaily((current) => ({ ...current, idscBlockers: event.target.value }))} multiline />
                 <TextField label="Próximo paso" value={daily.idscNextStep} onChange={(event) => setDaily((current) => ({ ...current, idscNextStep: event.target.value }))} required multiline />
-                <Button variant="contained" onClick={() => saveDaily.mutate()} disabled={saveDaily.isPending || !daily.idscModulesTested.trim() || !daily.idscNextStep.trim()}>Guardar resumen</Button>
+                <Button variant="contained" onClick={() => saveDaily.mutate()} disabled={plan.iapStatus !== 'active' || saveDaily.isPending || !daily.idscModulesTested.trim() || !daily.idscNextStep.trim()}>Guardar resumen</Button>
                 <Typography variant="body2">Jornadas registradas: {dailyQuery.data?.length ?? 0}</Typography>
               </Stack>
             </CardContent>
@@ -379,8 +404,8 @@ export default function InternAuditPlanPage() {
                 )}
                 <TextField label="Conclusiones y tres recomendaciones prioritarias" value={conclusions || finalQuery.data?.ifsConclusions || ''} onChange={(event) => setConclusions(event.target.value)} multiline minRows={8} helperText="Incluye diferencias web/móvil, accesibilidad, riesgos restantes y lo que no pudiste encontrar o entender." />
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                  <Button variant="outlined" onClick={() => saveFinal.mutate(false)} disabled={saveFinal.isPending}>Guardar borrador</Button>
-                  <Button variant="contained" onClick={() => saveFinal.mutate(true)} disabled={saveFinal.isPending || !(conclusions || finalQuery.data?.ifsConclusions || '').trim()}>Enviar a revisión final</Button>
+                  <Button variant="outlined" onClick={() => saveFinal.mutate(false)} disabled={plan.iapStatus !== 'active' || saveFinal.isPending}>Guardar borrador</Button>
+                  <Button variant="contained" onClick={() => saveFinal.mutate(true)} disabled={plan.iapStatus !== 'active' || saveFinal.isPending || !(conclusions || finalQuery.data?.ifsConclusions || '').trim()}>Enviar a revisión final</Button>
                 </Stack>
               </Stack>
             </CardContent>

@@ -35,6 +35,7 @@ describe('studio internship audit API', () => {
     putMock.mockResolvedValue({});
 
     await InternAudit.listCases('plan/one');
+    await InternAudit.completePlan('plan/one');
     await InternAudit.createExecution('case/one', { itecStatus: 'failed', itecActualResult: 'Falla visible' });
     await InternAudit.updateExecution('execution/one', { itecStatus: 'in_progress', itecEvidenceSummary: 'Captura segura' });
     await InternAudit.createDailySummary('plan/one', {
@@ -48,6 +49,10 @@ describe('studio internship audit API', () => {
     await InternAudit.saveFinalSummary('plan/one', 'Conclusiones', true);
 
     expect(getMock).toHaveBeenCalledWith('/internships/audit-plans/plan%2Fone/cases');
+    expect(patchMock).toHaveBeenCalledWith(
+      '/internships/audit-plans/plan%2Fone',
+      { iapuStatus: 'completed' },
+    );
     expect(postMock).toHaveBeenCalledWith(
       '/internships/test-cases/case%2Fone/executions',
       expect.objectContaining({ itecStatus: 'failed' }),

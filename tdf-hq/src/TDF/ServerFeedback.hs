@@ -686,44 +686,41 @@ internalFeedbackServer user =
       result <- validateChoice "retest result" ["passed", "failed", "blocked"] ifrcResult
       explicitExecutionKey <- traverse (parseInternalKey @ME.InternTestExecution) ifrcExecutionId
       validateRetestExecution report explicitExecutionKey
+      caseKey <- maybe
+        (throwError err400 { errBody = "Retesting requires a linked test case" })
+        pure
+        (ME.internalFeedbackReportTestCaseId report)
+      ensureRetestPlanActive caseKey
       notes <- validateOptionalInternalText "retestNotes" 5000 ifrcNotes
       evidenceSummary <- validateOptionalInternalText "retestEvidenceSummary" 5000 ifrcEvidenceSummary
       unless (hasMeaningful notes && hasMeaningful evidenceSummary) $
         throwError err400 { errBody = "Retesting requires notes and an evidence summary" }
-      executionTarget <- case (explicitExecutionKey, ME.internalFeedbackReportTestCaseId report) of
-        (Just key, _) -> pure (Left key)
-        (Nothing, Just key) -> pure (Right key)
-        (Nothing, Nothing) ->
-          throwError err400 { errBody = "Retesting without an execution ID requires a linked test case" }
       now <- liftIO getCurrentTime
       ent <- withPool $ do
-        executionKey <- case executionTarget of
-          Left key -> pure key
-          Right caseKey -> do
-            lockInternTestExecutionSequence caseKey
-            latest <- selectFirst [ME.InternTestExecutionTestCaseId ==. caseKey]
-              [Desc ME.InternTestExecutionExecutionNumber]
-            let nextNumber = maybe 1
-                  ((+ 1) . ME.internTestExecutionExecutionNumber . entityVal)
-                  latest
-                executionStatus = case result of
-                  "passed" -> "verified"
-                  other -> other
-            insert ME.InternTestExecution
-              { ME.internTestExecutionTestCaseId = caseKey
-              , ME.internTestExecutionExecutionNumber = nextNumber
-              , ME.internTestExecutionExecutorPartyId = auPartyId user
-              , ME.internTestExecutionStatus = executionStatus
-              , ME.internTestExecutionActualResult = notes
-              , ME.internTestExecutionPersistedStateObserved = Nothing
-              , ME.internTestExecutionSideEffectsObserved = Nothing
-              , ME.internTestExecutionBlockerReason = if result == "blocked" then notes else Nothing
-              , ME.internTestExecutionEvidenceSummary = evidenceSummary
-              , ME.internTestExecutionStartedAt = Just now
-              , ME.internTestExecutionCompletedAt = Just now
-              , ME.internTestExecutionCreatedAt = now
-              , ME.internTestExecutionUpdatedAt = now
-              }
+        lockInternTestExecutionSequence caseKey
+        latest <- selectFirst [ME.InternTestExecutionTestCaseId ==. caseKey]
+          [Desc ME.InternTestExecutionExecutionNumber]
+        let nextNumber = maybe 1
+              ((+ 1) . ME.internTestExecutionExecutionNumber . entityVal)
+              latest
+            executionStatus = case result of
+              "passed" -> "verified"
+              other -> other
+        executionKey <- insert ME.InternTestExecution
+          { ME.internTestExecutionTestCaseId = caseKey
+          , ME.internTestExecutionExecutionNumber = nextNumber
+          , ME.internTestExecutionExecutorPartyId = auPartyId user
+          , ME.internTestExecutionStatus = executionStatus
+          , ME.internTestExecutionActualResult = notes
+          , ME.internTestExecutionPersistedStateObserved = Nothing
+          , ME.internTestExecutionSideEffectsObserved = Nothing
+          , ME.internTestExecutionBlockerReason = if result == "blocked" then notes else Nothing
+          , ME.internTestExecutionEvidenceSummary = evidenceSummary
+          , ME.internTestExecutionStartedAt = Just now
+          , ME.internTestExecutionCompletedAt = Just now
+          , ME.internTestExecutionCreatedAt = now
+          , ME.internTestExecutionUpdatedAt = now
+          }
         retestId <- insert ME.InternalFeedbackRetest
           { ME.internalFeedbackRetestReportId = reportKey
           , ME.internalFeedbackRetestExecutionId = Just executionKey
@@ -807,6 +804,12 @@ internalFeedbackServer user =
       case ME.internalFeedbackReportTestCaseId report of
         Just caseKey | ME.internTestExecutionTestCaseId execution == caseKey -> pure ()
         _ -> throwError err400 { errBody = "Retest execution must belong to the report's test case" }
+
+    ensureRetestPlanActive caseKey = do
+      testCase <- withPool (get caseKey) >>= maybe (throwError err400) pure
+      plan <- withPool (get (ME.internTestCasePlanId testCase)) >>= maybe (throwError err400) pure
+      unless (ME.internAuditPlanStatus plan == "active") $
+        throwError err409 { errBody = "Finalized audit plans do not accept retests" }
 
     validateSubmissionCompleteness report feedback = do
       unless (hasMeaningful (Just (feedbackTitle feedback)) && hasMeaningful (Just (feedbackDescription feedback))) $

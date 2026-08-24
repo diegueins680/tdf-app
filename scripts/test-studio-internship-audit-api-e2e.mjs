@@ -92,6 +92,40 @@ await request('/internships/audit-plans', {
   },
 });
 
+const cancellableTask = await request('/internships/tasks', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    itcProjectId: activeProject.ipId,
+    itcTitle: 'E2E — Auditoría cancelable con trabajo hermano activo',
+    itcDescription: 'Cancelar esta auditoría no debe cancelar el proyecto compartido.',
+    itcProposedAssignee: intern.partyId,
+    itcActivationStatus: 'draft',
+  },
+});
+const cancellablePlan = await request('/internships/audit-plans', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    iapcProjectId: activeProject.ipId,
+    iapcTaskId: cancellableTask.itId,
+    iapcEnvironment: 'staging',
+    iapcProposedAssignee: intern.partyId,
+  },
+});
+await request(`/internships/audit-plans/${cancellablePlan.iapId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  json: { iapuStatus: 'cancelled' },
+});
+const projectsAfterCancellation = await request('/internships/projects', { token: admin.token });
+assert.equal(
+  projectsAfterCancellation.find((candidate) => candidate.ipId === activeProject.ipId)?.ipStatus,
+  'active',
+);
+
 const project = await request('/internships/projects', {
   token: admin.token,
   method: 'POST',
@@ -218,6 +252,18 @@ await request(`/internships/tasks/${task.itId}`, {
   method: 'PATCH',
   expected: 409,
   json: { ituStatus: 'done' },
+});
+await request(`/internships/tasks/${task.itId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  expected: 409,
+  json: { ituAssignedTo: admin.partyId },
+});
+await request(`/internships/tasks/${task.itId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  expected: 409,
+  json: { ituProjectId: activeProject.ipId },
 });
 
 const concurrentExecutions = await Promise.all([
@@ -388,12 +434,14 @@ const recordedRetest = await request(`/feedback/internal/${reportId}/retests`, {
   method: 'POST',
   expected: 201,
   json: {
+    ifrcExecutionId: failedExecution.itexId,
     ifrcResult: 'passed',
     ifrcNotes: 'Repetí los pasos y quedó una sola fila ficticia.',
     ifrcEvidenceSummary: 'EVIDENCIA-E2E-RETEST-001',
   },
 });
 assert.ok(recordedRetest.ifrtExecutionId, 'A UI-style retest must create a linked immutable execution');
+assert.notEqual(recordedRetest.ifrtExecutionId, failedExecution.itexId, 'A supplied stale execution must never be reused');
 for (const update of [
   { ifuState: 'verified', ifuResolution: 'Corregido y comprobado en base desechable.' },
   { ifuState: 'closed', ifuClosureReason: 'Retest aprobado con evidencia ficticia.' },
@@ -442,6 +490,8 @@ const completed = await request(`/internships/audit-plans/${plan.iapId}`, {
   json: { iapuStatus: 'completed' },
 });
 assert.equal(completed.iapStatus, 'completed');
+assert.equal(completed.iapCompletionApprovedBy, admin.partyId);
+assert.ok(completed.iapCompletionApprovedAt);
 const projectsAfterCompletion = await request('/internships/projects', { token: admin.token });
 const projectAfterCompletion = projectsAfterCompletion.find((candidate) => candidate.ipId === project.ipId);
 assert.equal(projectAfterCompletion?.ipStatus, 'active');
@@ -450,6 +500,32 @@ const executions = await request(`/internships/test-cases/${testCase.itcId}/exec
 assert.equal(executions.length, 4);
 assert.equal(executions[0].itexId, recordedRetest.ifrtExecutionId);
 assert.equal(executions[0].itexStatus, 'verified');
+await request(`/internships/test-cases/${testCase.itcId}/executions`, {
+  token: admin.token,
+  method: 'POST',
+  expected: 409,
+  json: { itecStatus: 'pending' },
+});
+await request(`/internships/test-executions/${concurrentExecutions[0].itexId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  expected: 409,
+  json: { iteuStatus: 'in_progress' },
+});
+await request(`/feedback/internal/${reportId}/retests`, {
+  token: admin.token,
+  method: 'POST',
+  expected: 409,
+  json: {
+    ifrcExecutionId: failedExecution.itexId,
+    ifrcResult: 'passed',
+    ifrcNotes: 'No se debe registrar después del cierre.',
+    ifrcEvidenceSummary: 'EVIDENCIA-E2E-RETEST-POST-CIERRE',
+  },
+});
+const approvedSummary = await request(`/internships/audit-plans/${plan.iapId}/final-summary`, { token: admin.token });
+assert.equal(approvedSummary.ifsApprovedBy, admin.partyId);
+assert.ok(approvedSummary.ifsApprovedAt);
 const finalReport = await request(`/feedback/internal/${reportId}`, { token: admin.token });
 assert.equal(finalReport.ifrSummary.ifsState, 'closed');
 assert.ok(finalReport.ifrHistory.length >= 10);

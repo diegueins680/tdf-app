@@ -208,7 +208,7 @@ export default function InternTaskDetailPage() {
 
     if (isAdmin) {
       const title = taskForm.title.trim();
-      if (taskForm.projectId.trim() === '') {
+      if (!auditPlan && taskForm.projectId.trim() === '') {
         setFeedback({ severity: 'error', message: 'Selecciona el proyecto de la tarea.' });
         return;
       }
@@ -218,11 +218,13 @@ export default function InternTaskDetailPage() {
       }
       payload = {
         ...payload,
-        ituProjectId: taskForm.projectId,
         ituTitle: title,
         ituDescription: taskForm.description.trim() || null,
-        ituAssignedTo: taskForm.assignedTo === '' ? null : Number(taskForm.assignedTo),
         ituDueAt: taskForm.dueAt || null,
+        ...(!auditPlan ? {
+          ituProjectId: taskForm.projectId,
+          ituAssignedTo: taskForm.assignedTo === '' ? null : Number(taskForm.assignedTo),
+        } : {}),
       };
     }
 
@@ -330,6 +332,7 @@ export default function InternTaskDetailPage() {
                 {auditPlan && (
                   <Alert severity="info">
                     El estado y el avance se administran desde el plan de pruebas para conservar sus criterios de cierre.
+                    El proyecto y el responsable también quedan fijados durante la auditoría.
                   </Alert>
                 )}
 
@@ -341,6 +344,7 @@ export default function InternTaskDetailPage() {
                         labelId="task-project-label"
                         label="Proyecto"
                         value={taskForm.projectId}
+                        disabled={Boolean(auditPlan)}
                         onChange={(event) => setTaskForm((current) => current && ({
                           ...current,
                           projectId: event.target.value,
@@ -421,6 +425,7 @@ export default function InternTaskDetailPage() {
                         labelId="task-assignee-label"
                         label="Responsable"
                         value={taskForm.assignedTo}
+                        disabled={Boolean(auditPlan)}
                         onChange={(event) => setTaskForm((current) => current && ({
                           ...current,
                           assignedTo: event.target.value,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-24T17:17:52.952Z",
+  "generatedAt": "2026-08-24T18:28:30.063Z",
   "repositoryRoot": ".",
   "filesScanned": 1178,
   "candidateCount": 917,
@@ -5436,7 +5436,7 @@
       "lines": [
         57
       ],
-      "consumerCount": 93,
+      "consumerCount": 94,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
@@ -5494,6 +5494,7 @@
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/FeedbackCatalogPage.tsx",
         "tdf-hq-ui/src/pages/FeedbackPage.test.ts",
+        "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
         "tdf-hq-ui/src/pages/InternTaskDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx",
         "tdf-hq-ui/src/pages/InternshipsPage.test.tsx",
@@ -5516,8 +5517,7 @@
         "tdf-hq-ui/src/pages/bookingsPageLogic.test.ts",
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
-        "tdf-hq-ui/src/session/SessionContext.test.ts",
-        "tdf-hq-ui/src/utils/__tests__/roles.test.ts"
+        "tdf-hq-ui/src/session/SessionContext.test.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/auth.tsx",
@@ -47787,7 +47787,7 @@
       "lines": [
         17
       ],
-      "consumerCount": 53,
+      "consumerCount": 54,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-07-30_event_city_subscriptions.sql",
@@ -47821,6 +47821,7 @@
         "tdf-hq-ui/src/i18n/paymentLocales.test.ts",
         "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx",
         "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
+        "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
         "tdf-hq-ui/src/pages/InternTaskDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx",
         "tdf-hq-ui/src/pages/InternshipsPage.test.tsx",
@@ -53243,13 +53244,15 @@
       "lines": [
         10652
       ],
-      "consumerCount": 5,
+      "consumerCount": 7,
       "backendConsumers": [
         "tdf-hq/src/TDF/API/InternAudit.hs",
         "tdf-hq/src/TDF/ServerInternAudit.hs"
       ],
       "webConsumers": [
-        "tdf-hq-ui/src/api/generated/types.ts"
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/internAudit.ts",
+        "tdf-hq-ui/src/api/studioAudit.test.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/src/api/generated/types.ts"
@@ -53259,6 +53262,8 @@
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/internAudit.ts",
+        "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq/src/TDF/API/InternAudit.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -78851,7 +78856,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "internalReportTypes",
-      "line": 1110,
+      "line": 1113,
       "values": [
         "error",
         "suggestion",
@@ -78865,7 +78870,7 @@
       "valueCount": 8,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        1110
+        1113
       ],
       "consumerCount": 15,
       "backendConsumers": [
@@ -78927,7 +78932,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "internalReportStates",
-      "line": 1131,
+      "line": 1134,
       "values": [
         "draft",
         "submitted",
@@ -78945,7 +78950,7 @@
       "valueCount": 12,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        1131
+        1134
       ],
       "consumerCount": 73,
       "backendConsumers": [
@@ -79078,7 +79083,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "allowedFeedbackAttachmentContentTypes",
-      "line": 1600,
+      "line": 1603,
       "values": [
         "application/csv",
         "application/pdf",
@@ -79092,7 +79097,7 @@
       "valueCount": 8,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1600
+        1603
       ],
       "consumerCount": 29,
       "backendConsumers": [
@@ -88206,7 +88211,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 53,
+      "consumerCount": 54,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-07-30_event_city_subscriptions.sql",
@@ -88240,6 +88245,7 @@
         "tdf-hq-ui/src/i18n/paymentLocales.test.ts",
         "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx",
         "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
+        "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
         "tdf-hq-ui/src/pages/InternTaskDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx",
         "tdf-hq-ui/src/pages/InternshipsPage.test.tsx",

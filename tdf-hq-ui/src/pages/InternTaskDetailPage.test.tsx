@@ -335,6 +335,10 @@ describe('InternTaskDetailPage', () => {
       const statusControl = container.querySelector('[aria-labelledby="task-status-label"]');
       expect(statusControl?.getAttribute('aria-disabled')).toBe('true');
       expect(getInputByLabel(container, 'Avance %').disabled).toBe(true);
+      const projectControl = container.querySelector('[aria-labelledby="task-project-label"]');
+      const assigneeControl = container.querySelector('[aria-labelledby="task-assignee-label"]');
+      expect(projectControl?.getAttribute('aria-disabled')).toBe('true');
+      expect(assigneeControl?.getAttribute('aria-disabled')).toBe('true');
 
       const form = container.querySelector('form');
       if (!(form instanceof HTMLFormElement)) throw new Error('Task edit form not found');
@@ -348,6 +352,8 @@ describe('InternTaskDetailPage', () => {
       const payload = updateTaskMock.mock.calls[0]?.[1] as Record<string, unknown>;
       expect(payload).not.toHaveProperty('ituStatus');
       expect(payload).not.toHaveProperty('ituProgress');
+      expect(payload).not.toHaveProperty('ituProjectId');
+      expect(payload).not.toHaveProperty('ituAssignedTo');
     } finally {
       await cleanup();
     }
