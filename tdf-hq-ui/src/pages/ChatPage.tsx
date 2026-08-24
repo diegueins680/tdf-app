@@ -245,7 +245,7 @@ export default function ChatPage() {
   }, [friendsQuery.data, partiesQuery.data]);
 
   useEffect(() => {
-    const first = threads.at(0);
+    const first = threads[0];
     if (!first) return;
     if (selectedThreadId && threads.some((t) => t.ctThreadId === selectedThreadId)) return;
     setSelectedThreadId(first.ctThreadId);
@@ -280,7 +280,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (!selectedThreadId) return;
     if (!messagesQuery.data) return;
-    const lastMessageAt = messages.at(-1)?.cmCreatedAt ?? selectedThread?.ctLastMessageAt ?? selectedThread?.ctUpdatedAt;
+    const lastMessageAt = messages[messages.length - 1]?.cmCreatedAt ?? selectedThread?.ctLastMessageAt ?? selectedThread?.ctUpdatedAt;
     if (!lastMessageAt) return;
     markThreadSeen(selectedThreadId, lastMessageAt);
   }, [messages, messagesQuery.data, selectedThread?.ctLastMessageAt, selectedThread?.ctUpdatedAt, selectedThreadId]);

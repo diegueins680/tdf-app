@@ -42,6 +42,7 @@ import           TDF.Catalog.Security       (loadCanonicalPartyRoleMap, selectCa
 import           TDF.DB                     (Env(..))
 import qualified TDF.Models                 as M
 import qualified TDF.ModelsExtra            as ME
+import           TDF.ServerInternAudit      (internAuditServer)
 
 internProjectStatuses :: [Text]
 internProjectStatuses = ["active", "paused", "completed"]
@@ -347,6 +348,10 @@ validateInternStatusValue fieldName allowedStatuses rawStatus
       BL.fromStrict . TE.encodeUtf8 $
         fieldName <> " must be one of: " <> T.intercalate ", " allowedStatuses
 
+validateInternActivationStatus :: Text -> Either ServerError Text
+validateInternActivationStatus =
+  validateInternStatusValue "activationStatus" ["draft", "active"]
+
 internshipsServer
   :: ( MonadReader Env m
      , MonadIO m
@@ -367,6 +372,7 @@ internshipsServer user =
   :<|> clockInH
   :<|> clockOutH
   :<|> (listPermissionsH :<|> createPermissionH :<|> updatePermissionH)
+  :<|> internAuditServer user
   where
     ensureAdmin :: MonadError ServerError m => m ()
     ensureAdmin = unless (isAdmin user) $
@@ -490,11 +496,17 @@ internshipsServer user =
       projects <- if isAdmin user
         then withPool $ selectList [] [Desc ME.InternProjectCreatedAt]
         else do
-          tasks <- withPool $ selectList [ME.InternTaskAssignedTo ==. Just (auPartyId user)] []
+          tasks <- withPool $ selectList
+            [ ME.InternTaskAssignedTo ==. Just (auPartyId user)
+            , ME.InternTaskActivationStatus ==. "active"
+            ] []
           let projectIds = nub (map (ME.internTaskProjectId . entityVal) tasks)
           if null projectIds
             then pure []
-            else withPool $ selectList [ME.InternProjectId <-. projectIds] [Desc ME.InternProjectCreatedAt]
+            else withPool $ selectList
+              [ ME.InternProjectId <-. projectIds
+              , ME.InternProjectActivationStatus ==. "active"
+              ] [Desc ME.InternProjectCreatedAt]
       pure (map toProjectDTO projects)
 
     createProjectH :: (MonadReader Env m, MonadIO m, MonadError ServerError m) => InternProjectCreate -> m InternProjectDTO
@@ -503,12 +515,17 @@ internshipsServer user =
       now <- liftIO getCurrentTime
       titleVal <- either throwError pure (validateInternProjectTitle ipcTitle)
       statusVal <- either throwError pure (validateInternProjectStatusInput ipcStatus)
+      activationStatus <- either throwError pure $
+        traverse validateInternActivationStatus ipcActivationStatus
       either throwError pure (validateInternProjectDateRange ipcStartAt ipcDueAt)
       ent <- withPool $ do
         newId <- insert ME.InternProject
           { ME.internProjectTitle       = titleVal
           , ME.internProjectDescription = ipcDescription
           , ME.internProjectStatus      = statusVal
+          , ME.internProjectActivationStatus = fromMaybe "active" activationStatus
+          , ME.internProjectActivatedAt = if activationStatus == Just "draft" then Nothing else Just now
+          , ME.internProjectNotificationsEnabled = False
           , ME.internProjectStartAt     = ipcStartAt
           , ME.internProjectDueAt       = ipcDueAt
           , ME.internProjectCreatedBy   = auPartyId user
@@ -551,7 +568,10 @@ internshipsServer user =
       ensureInternAccess
       let baseFilters = if isAdmin user
             then []
-            else [ME.InternTaskAssignedTo ==. Just (auPartyId user)]
+            else
+              [ ME.InternTaskAssignedTo ==. Just (auPartyId user)
+              , ME.InternTaskActivationStatus ==. "active"
+              ]
       tasks <- withPool $ selectList baseFilters [Desc ME.InternTaskUpdatedAt]
       let projectIds = nub (map (ME.internTaskProjectId . entityVal) tasks)
       projectMap <- loadProjectMap projectIds
@@ -566,17 +586,25 @@ internshipsServer user =
       now <- liftIO getCurrentTime
       titleVal <- either throwError pure (validateInternTaskTitle itcTitle)
       assignedTo <- either throwError pure (validateOptionalInternPartyIdInput "assignedTo" itcAssignedTo)
+      proposedAssignee <- either throwError pure (validateOptionalInternPartyIdInput "proposedAssignee" itcProposedAssignee)
+      activationStatus <- either throwError pure $
+        traverse validateInternActivationStatus itcActivationStatus
+      when (activationStatus == Just "draft" && isJust assignedTo) $
+        throwError err400 { errBody = "Draft tasks must use proposedAssignee instead of assignedTo" }
       mProject <- withPool $ getEntity projectKey
       _ <- maybe (throwError err404) pure mProject
       let assignedKey = fmap toSqlKey assignedTo
+          proposedKey = fmap toSqlKey (proposedAssignee <|> assignedTo)
       ent <- withPool $ do
         newId <- insert ME.InternTask
           { ME.internTaskProjectId   = projectKey
           , ME.internTaskTitle       = titleVal
           , ME.internTaskDescription = itcDescription
           , ME.internTaskStatus      = "todo"
+          , ME.internTaskActivationStatus = fromMaybe "active" activationStatus
           , ME.internTaskProgress    = 0
           , ME.internTaskAssignedTo  = assignedKey
+          , ME.internTaskProposedAssignee = proposedKey
           , ME.internTaskDueAt       = itcDueAt
           , ME.internTaskCreatedBy   = auPartyId user
           , ME.internTaskCreatedAt   = now
@@ -601,6 +629,11 @@ internshipsServer user =
       unless (isAdminUser || isOwner) $
         throwError err403 { errBody = "Only admins or assignees can update tasks" }
       either throwError pure (validateInternTaskUpdatePermissions isAdminUser InternTaskUpdate{..})
+      mAuditPlan <- withPool $ getBy (ME.UniqueInternAuditPlanTask taskKey)
+      when (isJust mAuditPlan && isJust ituProgress) $
+        throwError err409
+          { errBody = "Audit task progress is calculated from test executions and cannot be edited manually"
+          }
       projectUpdate <-
         if isAdminUser
           then case ituProjectId of
@@ -858,6 +891,7 @@ internshipsServer user =
       , ipTitle       = ME.internProjectTitle project
       , ipDescription = ME.internProjectDescription project
       , ipStatus      = ME.internProjectStatus project
+      , ipActivationStatus = ME.internProjectActivationStatus project
       , ipStartAt     = ME.internProjectStartAt project
       , ipDueAt       = ME.internProjectDueAt project
       , ipCreatedAt   = ME.internProjectCreatedAt project
@@ -876,9 +910,11 @@ internshipsServer user =
       , itTitle        = ME.internTaskTitle task
       , itDescription  = ME.internTaskDescription task
       , itStatus       = ME.internTaskStatus task
+      , itActivationStatus = ME.internTaskActivationStatus task
       , itProgress     = ME.internTaskProgress task
       , itAssignedTo   = fmap fromSqlKey (ME.internTaskAssignedTo task)
       , itAssignedName = ME.internTaskAssignedTo task >>= (`Map.lookup` partyMap)
+      , itProposedAssignee = fmap fromSqlKey (ME.internTaskProposedAssignee task)
       , itDueAt        = ME.internTaskDueAt task
       , itCreatedAt    = ME.internTaskCreatedAt task
       , itUpdatedAt    = ME.internTaskUpdatedAt task

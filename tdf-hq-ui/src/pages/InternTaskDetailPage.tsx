@@ -28,6 +28,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { Internships } from '../api/internships';
+import { InternAudit } from '../api/internAudit';
 import type { InternProjectDTO, InternTaskDTO, InternTaskUpdate } from '../api/types';
 import PageShell, { EmptyState } from '../components/PageShell';
 import { useSession } from '../session/SessionContext';
@@ -117,6 +118,12 @@ export default function InternTaskDetailPage() {
     queryFn: Internships.listProjects,
     enabled: isAdmin && editing,
   });
+  const auditPlansQuery = useQuery({
+    queryKey: ['intern-audit', 'plans'],
+    queryFn: InternAudit.listPlans,
+    enabled: Boolean(task),
+  });
+  const auditPlan = auditPlansQuery.data?.find((candidate) => candidate.iapTaskId === taskId);
 
   useEffect(() => {
     if (!task || editing) return;
@@ -184,7 +191,7 @@ export default function InternTaskDetailPage() {
 
     const progressText = taskForm.progress.trim();
     const progress = Number(progressText);
-    if (!/^\d+$/.test(progressText) || !Number.isInteger(progress) || progress < 0 || progress > 100) {
+    if (!auditPlan && (!/^\d+$/.test(progressText) || !Number.isInteger(progress) || progress < 0 || progress > 100)) {
       setFeedback({ severity: 'error', message: 'El avance debe ser un número entero entre 0 y 100.' });
       return;
     }
@@ -195,7 +202,7 @@ export default function InternTaskDetailPage() {
 
     let payload: InternTaskUpdate = {
       ituStatus: taskForm.status,
-      ituProgress: progress,
+      ...(!auditPlan ? { ituProgress: progress } : {}),
     };
 
     if (isAdmin) {
@@ -257,6 +264,21 @@ export default function InternTaskDetailPage() {
               sx={{ minHeight: 44 }}
             >
               {isAdmin ? 'Editar tarea' : 'Actualizar avance'}
+            </Button>
+          )}
+          {auditPlan && !editing && (
+            <Button
+              component={RouterLink}
+              to={`/practicas/auditorias/${encodeURIComponent(auditPlan.iapId)}`}
+              variant="outlined"
+              sx={{ minHeight: 44 }}
+            >
+              Abrir plan de pruebas
+            </Button>
+          )}
+          {task && !editing && (
+            <Button component={RouterLink} to="/feedback/interno" variant="text" sx={{ minHeight: 44 }}>
+              Ver reportes
             </Button>
           )}
           <Link
@@ -370,7 +392,7 @@ export default function InternTaskDetailPage() {
                   <TextField
                     label="Avance %"
                     type="number"
-                    required
+                    required={!auditPlan}
                     fullWidth
                     value={taskForm.progress}
                     onChange={(event) => setTaskForm((current) => current && ({
@@ -378,6 +400,8 @@ export default function InternTaskDetailPage() {
                       progress: event.target.value,
                     }))}
                     inputProps={{ min: 0, max: 100, step: 1 }}
+                    disabled={Boolean(auditPlan)}
+                    helperText={auditPlan ? 'Se calcula automáticamente con los casos ejecutados.' : undefined}
                   />
                 </Stack>
 

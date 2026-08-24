@@ -1,0 +1,111 @@
+{
+  "fixtureSet": "AUDIT-2026-v1",
+  "fictional": true,
+  "target": "dedicated-staging-tenant-only",
+  "reservedEmailDomain": "persona.test",
+  "setup": {
+    "baseSeed": "tdf-hq/src/TDF/Seed.hs",
+    "personas": "test/personas/personas.json",
+    "idempotencyKey": "AUDIT-2026-v1",
+    "cleanupBoundary": "destroy-and-recreate-dedicated-database-or-tenant"
+  },
+  "accounts": [
+    { "code": "INT-STUART-EQUIV-01", "personaId": "PER-11", "role": "Intern", "purpose": "synthetic intern E2E only; never substitute for Stuart identity" },
+    { "code": "INT-OTHER-01", "email": "audit.other-intern@persona.test", "role": "Intern", "purpose": "private-report and task isolation" },
+    { "code": "RECEPTION-01", "personaId": "PER-12", "role": "Reception" },
+    { "code": "STUDIO-MANAGER-01", "personaId": "PER-13", "role": "StudioManager" },
+    { "code": "FINANCE-01", "personaId": "PER-22", "role": "Accounting" },
+    { "code": "ENGINEER-01", "email": "audit.engineer@persona.test", "role": "Engineer" },
+    { "code": "ARTIST-01", "email": "audit.artist@persona.test", "role": "Artist" },
+    { "code": "CUSTOMER-01", "email": "audit.customer@persona.test", "role": "Customer" }
+  ],
+  "customers": [
+    { "code": "AUDIT-CUSTOMER-01", "name": "Cliente Ficticio Aurora", "email": "aurora.customer@persona.test", "phone": "+593000000001" },
+    { "code": "AUDIT-CUSTOMER-02", "name": "Cliente Ficticio Bruma", "email": "bruma.customer@persona.test", "phone": "+593000000002" }
+  ],
+  "artists": [
+    { "code": "AUDIT-ARTIST-01", "name": "Banda Ficticia Horizonte", "email": "horizonte.artist@persona.test" },
+    { "code": "AUDIT-ARTIST-02", "name": "Solista Ficticia Nébula", "email": "nebula.artist@persona.test" }
+  ],
+  "engineers": [
+    { "code": "AUDIT-ENGINEER-01", "name": "Ingeniera Ficticia Ada", "email": "ada.engineer@persona.test" },
+    { "code": "AUDIT-ENGINEER-02", "name": "Ingeniero Ficticio Bruno", "email": "bruno.engineer@persona.test" }
+  ],
+  "rooms": [
+    { "code": "AUDIT-ROOM-LIVE", "seedName": "Live Room", "timezone": "America/Guayaquil" },
+    { "code": "AUDIT-ROOM-CONTROL", "seedName": "Control Room", "timezone": "America/Guayaquil" },
+    { "code": "AUDIT-ROOM-STUDIO-A", "seedName": "Studio A", "timezone": "America/Guayaquil" },
+    { "code": "AUDIT-ROOM-CLASS", "seedName": "Classroom", "timezone": "America/Guayaquil", "sharedWithSchool": true }
+  ],
+  "resources": [
+    { "code": "AUDIT-RESOURCE-PIANO", "name": "Piano de pruebas AUDIT-2026", "kind": "instrument" },
+    { "code": "AUDIT-RESOURCE-BOOTH", "name": "Booth móvil de pruebas AUDIT-2026", "kind": "room-resource" }
+  ],
+  "services": [
+    { "code": "AUDIT-SERVICE-BAND", "seedOfferingCode": "band-recording", "name": "Grabación de banda ficticia" },
+    { "code": "AUDIT-SERVICE-VOICE", "seedOfferingCode": "voice-recording", "name": "Grabación de voz ficticia" },
+    { "code": "AUDIT-SERVICE-MIX", "seedOfferingCode": "mixing", "name": "Mezcla ficticia" }
+  ],
+  "availability": [
+    { "code": "AUDIT-AVAIL-OPEN", "roomCode": "AUDIT-ROOM-STUDIO-A", "offsetDays": 3, "startLocal": "09:00", "endLocal": "13:00", "state": "available" },
+    { "code": "AUDIT-AVAIL-CONFLICT", "roomCode": "AUDIT-ROOM-LIVE", "offsetDays": 4, "startLocal": "14:00", "endLocal": "18:00", "state": "partially-held" }
+  ],
+  "bookings": [
+    { "code": "AUDIT-BOOKING-CONFIRMED", "customerCode": "AUDIT-CUSTOMER-01", "roomCode": "AUDIT-ROOM-STUDIO-A", "serviceCode": "AUDIT-SERVICE-VOICE", "state": "confirmed" },
+    { "code": "AUDIT-BOOKING-HOLD", "customerCode": "AUDIT-CUSTOMER-02", "roomCode": "AUDIT-ROOM-LIVE", "serviceCode": "AUDIT-SERVICE-BAND", "state": "hold" },
+    { "code": "AUDIT-BOOKING-CANCELLED", "customerCode": "AUDIT-CUSTOMER-02", "roomCode": "AUDIT-ROOM-CONTROL", "serviceCode": "AUDIT-SERVICE-MIX", "state": "cancelled" }
+  ],
+  "sessions": [
+    { "code": "AUDIT-SESSION-01", "bookingCode": "AUDIT-BOOKING-CONFIRMED", "artistCode": "AUDIT-ARTIST-02", "engineerCode": "AUDIT-ENGINEER-01", "state": "scheduled", "inputList": "AUDIT-INPUT-01" },
+    { "code": "AUDIT-SESSION-CLOSED", "artistCode": "AUDIT-ARTIST-01", "engineerCode": "AUDIT-ENGINEER-02", "state": "closed", "inputList": "AUDIT-INPUT-02" }
+  ],
+  "packages": [
+    { "code": "AUDIT-PACKAGE-10H", "customerCode": "AUDIT-CUSTOMER-01", "purchasedMinutes": 600, "remainingMinutes": 420 },
+    { "code": "AUDIT-PACKAGE-ZERO", "customerCode": "AUDIT-CUSTOMER-02", "purchasedMinutes": 120, "remainingMinutes": 0 }
+  ],
+  "quotations": [
+    { "code": "AUDIT-QUOTE-DRAFT", "customerCode": "AUDIT-CUSTOMER-01", "state": "draft", "amountMinor": 25000, "currency": "USD" },
+    { "code": "AUDIT-QUOTE-ACCEPTED", "customerCode": "AUDIT-CUSTOMER-02", "state": "accepted", "amountMinor": 48000, "currency": "USD" }
+  ],
+  "orders": [
+    { "code": "AUDIT-ORDER-PENDING", "quoteCode": "AUDIT-QUOTE-DRAFT", "state": "pending" },
+    { "code": "AUDIT-ORDER-CONFIRMED", "quoteCode": "AUDIT-QUOTE-ACCEPTED", "state": "confirmed" }
+  ],
+  "invoices": [
+    { "code": "AUDIT-INVOICE-OPEN", "orderCode": "AUDIT-ORDER-CONFIRMED", "state": "open", "amountMinor": 48000, "currency": "USD" },
+    { "code": "AUDIT-INVOICE-PAID", "orderCode": "AUDIT-ORDER-CONFIRMED", "state": "paid", "amountMinor": 10000, "currency": "USD" }
+  ],
+  "payments": [
+    { "code": "AUDIT-PAYMENT-MANUAL", "provider": "manual", "state": "confirmed", "amountMinor": 10000, "currency": "USD" },
+    { "code": "AUDIT-PAYMENT-DATAFAST-FAILED", "provider": "datafast-sandbox", "state": "failed", "amountMinor": 25000, "currency": "USD" },
+    { "code": "AUDIT-PAYMENT-PAYPAL-ABANDONED", "provider": "paypal-sandbox", "state": "abandoned", "amountMinor": 48000, "currency": "USD" },
+    { "code": "AUDIT-PAYMENT-LATE", "provider": "mock", "state": "needs-reconciliation", "amountMinor": 25000, "currency": "USD" }
+  ],
+  "inventory": [
+    { "code": "AUDIT-ASSET-MIC-01", "name": "Micrófono ficticio A", "state": "available", "scanTokenState": "valid" },
+    { "code": "AUDIT-ASSET-MIC-02", "name": "Micrófono ficticio B", "state": "reserved" },
+    { "code": "AUDIT-ASSET-CABLE-01", "name": "Cable ficticio dañado", "state": "maintenance" }
+  ],
+  "equipmentReservations": [
+    { "code": "AUDIT-EQUIP-RES-01", "assetCode": "AUDIT-ASSET-MIC-02", "sessionCode": "AUDIT-SESSION-01", "state": "reserved" },
+    { "code": "AUDIT-EQUIP-RETURN-01", "assetCode": "AUDIT-ASSET-CABLE-01", "state": "returned-damaged" }
+  ],
+  "notifications": [
+    { "code": "AUDIT-NOTIF-BOOKING", "recipient": "aurora.customer@persona.test", "transport": "sink", "state": "captured" },
+    { "code": "AUDIT-NOTIF-FAIL", "recipient": "bruma.customer@persona.test", "transport": "sink", "state": "simulated-failure" }
+  ],
+  "relatedScenarios": [
+    { "code": "AUDIT-DOMO-01", "kind": "domo", "sharedObjects": ["resource", "quotation", "booking", "paypal-sandbox"] },
+    { "code": "AUDIT-SCHOOL-01", "kind": "school", "sharedObjects": ["room", "calendar", "instructor", "booking", "payment-mock"] },
+    { "code": "AUDIT-DDEX-01", "kind": "ddex", "sharedObjects": ["session", "participant", "instrument", "equipment", "recording", "asset", "rights-metadata"], "delivery": "local-validation-only" }
+  ],
+  "externalAdapters": {
+    "email": "sink",
+    "whatsapp": "fake",
+    "calendar": "fake",
+    "social": "fake",
+    "datafast": "sandbox-or-contract-mock",
+    "paypal": "sandbox-or-contract-mock",
+    "ddexDelivery": "disabled-local-validation-only"
+  }
+}

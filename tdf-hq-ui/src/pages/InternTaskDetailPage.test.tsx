@@ -28,6 +28,7 @@ jest.unstable_mockModule('../api/internships', () => ({
 }));
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
+  getStoredSessionToken: () => 'test-session-token',
   useSession: () => useSessionMock(),
 }));
 

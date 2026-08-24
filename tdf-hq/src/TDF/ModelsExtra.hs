@@ -813,6 +813,9 @@ InternProject
     title       Text
     description Text Maybe
     status      Text default='active'
+    activationStatus Text default='active'
+    activatedAt UTCTime Maybe
+    notificationsEnabled Bool default=False
     startAt     Day Maybe
     dueAt       Day Maybe
     createdBy   PartyId
@@ -826,8 +829,10 @@ InternTask
     title       Text
     description Text Maybe
     status      Text default='todo'
+    activationStatus Text default='active'
     progress    Int default=0
     assignedTo  PartyId Maybe
+    proposedAssignee PartyId Maybe
     dueAt       Day Maybe
     createdBy   PartyId
     createdAt   UTCTime default=now()
@@ -866,6 +871,204 @@ InternPermissionRequest
     decisionNotes Text Maybe
     createdAt     UTCTime default=now()
     updatedAt     UTCTime default=now()
+    deriving Show Generic
+
+InternAuditPlan
+    Id                   UUID default=gen_random_uuid()
+    projectId            InternProjectId
+    taskId               InternTaskId
+    environment          Text
+    status               Text default='draft'
+    durationDays         Int default=14
+    expectedHoursMin     Int default=20
+    expectedHoursMax     Int default=30
+    midpointPercent      Int default=50
+    proposedAssignee     PartyId Maybe
+    finalReviewRequired  Bool default=True
+    completionJustification Text Maybe
+    completionApprovedBy PartyId Maybe
+    completionApprovedAt UTCTime Maybe
+    createdBy            PartyId
+    createdAt            UTCTime default=now()
+    updatedAt            UTCTime default=now()
+    UniqueInternAuditPlanTask taskId
+    deriving Show Generic
+
+InternTestCase
+    Id                   UUID default=gen_random_uuid()
+    planId               InternAuditPlanId
+    stableId             Text
+    moduleName           Text
+    featureName          Text
+    userRole             Text
+    objective            Text
+    businessPurpose      Text
+    preconditions        Text
+    requiredTestData     Text
+    environment          Text
+    platform             Text
+    browserOrDevice      Text
+    language             Text
+    detailedSteps        Text
+    expectedResult       Text
+    expectedPersistedState Text
+    expectedSideEffects  Text
+    cleanupInstructions  Text
+    criticality          Text
+    evidenceRequirement  Text
+    exploratoryCharter   Text Maybe
+    applicable           Bool default=True
+    sortOrder            Int default=0
+    createdAt            UTCTime default=now()
+    updatedAt            UTCTime default=now()
+    UniqueInternTestCaseStableId planId stableId
+    deriving Show Generic
+
+InternTestExecution
+    Id                   UUID default=gen_random_uuid()
+    testCaseId           InternTestCaseId
+    executionNumber      Int
+    executorPartyId      PartyId
+    status               Text default='pending'
+    actualResult         Text Maybe
+    persistedStateObserved Text Maybe
+    sideEffectsObserved  Text Maybe
+    blockerReason        Text Maybe
+    evidenceSummary      Text Maybe
+    startedAt            UTCTime Maybe
+    completedAt          UTCTime Maybe
+    createdAt            UTCTime default=now()
+    updatedAt            UTCTime default=now()
+    UniqueInternTestExecutionNumber testCaseId executionNumber
+    deriving Show Generic
+
+InternDailySummary
+    Id                   UUID default=gen_random_uuid()
+    taskId               InternTaskId
+    authorPartyId        PartyId
+    workDate             Day
+    minutesWorked        Int
+    modulesTested        Text
+    casesCompleted       Int
+    reportsCreated       Int
+    blockers             Text Maybe
+    nextStep             Text
+    createdAt            UTCTime default=now()
+    updatedAt            UTCTime default=now()
+    deriving Show Generic
+
+InternFinalSummary
+    Id                   UUID default=gen_random_uuid()
+    planId               InternAuditPlanId
+    authorPartyId        PartyId
+    generatedSnapshot    Text
+    conclusions          Text Maybe
+    submittedAt          UTCTime Maybe
+    approvedBy           PartyId Maybe
+    approvedAt           UTCTime Maybe
+    createdAt            UTCTime default=now()
+    updatedAt            UTCTime default=now()
+    UniqueInternFinalSummaryPlan planId
+    deriving Show Generic
+
+InternalFeedbackReport
+    Id                   UUID default=gen_random_uuid()
+    feedbackId           FeedbackId
+    reportType           Text
+    state                Text default='draft'
+    moduleName           Text
+    featureName          Text Maybe
+    environment          Text
+    urlOrScreen          Text Maybe
+    platform             Text
+    device               Text Maybe
+    browser              Text Maybe
+    language             Text
+    accountRole          Text
+    reproductionSteps    Text Maybe
+    expectedResult       Text Maybe
+    actualResult         Text Maybe
+    frequency            Text Maybe
+    proposedSeverityId   FeedbackSeverityId Maybe
+    authoritativeSeverityId FeedbackSeverityId Maybe
+    priority             Text Maybe
+    testCaseId           InternTestCaseId Maybe
+    testExecutionId      InternTestExecutionId Maybe
+    internshipProjectId  InternProjectId Maybe
+    internshipTaskId     InternTaskId Maybe
+    reporterPartyId      PartyId
+    blocking             Bool default=False
+    assignedTo           PartyId Maybe
+    duplicateOf          FeedbackId Maybe
+    resolution           Text Maybe
+    retestResult         Text Maybe
+    closureReason        Text Maybe
+    githubIssueUrl       Text Maybe
+    videoLinks           Text Maybe
+    submittedAt          UTCTime Maybe
+    closedAt             UTCTime Maybe
+    version              Int default=1
+    createdAt            UTCTime default=now()
+    updatedAt            UTCTime default=now()
+    UniqueInternalFeedbackReport feedbackId
+    deriving Show Generic
+
+InternalFeedbackEvidence
+    Id                   UUID default=gen_random_uuid()
+    reportId             InternalFeedbackReportId
+    uploadedBy           PartyId
+    kind                 Text default='attachment'
+    originalFileName     Text Maybe
+    storagePath          Text Maybe
+    contentType          Text Maybe
+    sizeBytes            Int Maybe
+    externalUrl          Text Maybe
+    caption              Text Maybe
+    createdAt            UTCTime default=now()
+    deriving Show Generic
+
+InternalFeedbackComment
+    Id                   UUID default=gen_random_uuid()
+    reportId             InternalFeedbackReportId
+    authorPartyId        PartyId
+    kind                 Text default='comment'
+    body                 Text
+    createdAt            UTCTime default=now()
+    deriving Show Generic
+
+InternalFeedbackHistory
+    Id                   UUID default=gen_random_uuid()
+    reportId             InternalFeedbackReportId
+    actorPartyId         PartyId
+    action               Text
+    previousState        Text Maybe
+    newState             Text Maybe
+    metadata             Text Maybe
+    createdAt            UTCTime default=now()
+    deriving Show Generic
+
+InternalFeedbackRetest
+    Id                   UUID default=gen_random_uuid()
+    reportId             InternalFeedbackReportId
+    executionId          InternTestExecutionId Maybe
+    testerPartyId        PartyId
+    result               Text
+    notes                Text Maybe
+    evidenceSummary      Text Maybe
+    createdAt            UTCTime default=now()
+    deriving Show Generic
+
+InternAuditNotificationOutbox
+    Id                   UUID default=gen_random_uuid()
+    recipientPartyId     PartyId
+    reportId             InternalFeedbackReportId Maybe
+    planId               InternAuditPlanId Maybe
+    templateKey          Text
+    deliveryMode         Text
+    testTransport        Bool default=True
+    payload              Text
+    dispatchedAt         UTCTime Maybe
+    createdAt            UTCTime default=now()
     deriving Show Generic
 
 ArtistTip

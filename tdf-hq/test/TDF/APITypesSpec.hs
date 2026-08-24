@@ -2102,11 +2102,13 @@ spec = do
                 "{\"itcProjectId\":\"42\",\"itcTitle\":\"Inventory cables\",\"itcDescription\":\"Label and count\",\"itcAssignedTo\":7,\"itcDueAt\":\"2026-04-30\"}" of
                 Left err ->
                     expectationFailure ("Expected intern task create payload to decode, got: " <> err)
-                Right (InternTaskCreate projectIdVal titleVal descriptionVal assignedToVal dueAtVal) -> do
+                Right (InternTaskCreate projectIdVal titleVal descriptionVal assignedToVal proposedAssigneeVal activationStatusVal dueAtVal) -> do
                     projectIdVal `shouldBe` "42"
                     titleVal `shouldBe` "Inventory cables"
                     descriptionVal `shouldBe` Just "Label and count"
                     assignedToVal `shouldBe` Just 7
+                    proposedAssigneeVal `shouldBe` Nothing
+                    activationStatusVal `shouldBe` Nothing
                     dueAtVal `shouldBe` Just (fromGregorian 2026 4 30)
 
         it "rejects unexpected task create keys instead of silently ignoring admin intent" $
@@ -2172,10 +2174,11 @@ spec = do
                 "{\"ipcTitle\":\"Studio onboarding\",\"ipcDescription\":\"Prepare checklist\",\"ipcStatus\":\"paused\",\"ipcStartAt\":\"2026-04-20\",\"ipcDueAt\":\"2026-04-30\"}" of
                 Left err ->
                     expectationFailure ("Expected intern project create payload to decode, got: " <> err)
-                Right (InternProjectCreate titleVal descriptionVal statusVal startAtVal dueAtVal) -> do
+                Right (InternProjectCreate titleVal descriptionVal statusVal activationStatusVal startAtVal dueAtVal) -> do
                     titleVal `shouldBe` "Studio onboarding"
                     descriptionVal `shouldBe` Just "Prepare checklist"
                     statusVal `shouldBe` Just "paused"
+                    activationStatusVal `shouldBe` Nothing
                     startAtVal `shouldBe` Just (fromGregorian 2026 4 20)
                     dueAtVal `shouldBe` Just (fromGregorian 2026 4 30)
 

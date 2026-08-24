@@ -1,0 +1,3373 @@
+[
+  {
+    "featureId": "auth.login",
+    "module": "Acceso, cuenta y experiencia transversal",
+    "feature": "Inicio de sesión válido e inválido",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "security",
+    "route": "/login",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "auth.session",
+    "module": "Acceso, cuenta y experiencia transversal",
+    "feature": "Persistencia y vencimiento de sesión",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "security",
+    "route": "/inicio",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "auth.logout",
+    "module": "Acceso, cuenta y experiencia transversal",
+    "feature": "Cierre de sesión y bloqueo de retroceso",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "security",
+    "route": "/inicio",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "account.state",
+    "module": "Acceso, cuenta y experiencia transversal",
+    "feature": "Cuenta activa, suspendida o incompleta",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Admin de pruebas",
+    "mode": "security",
+    "route": "/inicio",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "navigation.discovery",
+    "module": "Acceso, cuenta y experiencia transversal",
+    "feature": "Menú, buscador y descubrimiento de funciones",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "read",
+    "route": "/inicio",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "navigation.direct-url",
+    "module": "Acceso, cuenta y experiencia transversal",
+    "feature": "Acceso por URL directa y recarga",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "security",
+    "route": "/estudio/calendario",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "localization.es-en",
+    "module": "Acceso, cuenta y experiencia transversal",
+    "feature": "Consistencia entre español e inglés",
+    "scopeClassification": "shared_with_another_tdf_business_area",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "read",
+    "route": "/inicio",
+    "criticality": "medium",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "responsive.layout",
+    "module": "Acceso, cuenta y experiencia transversal",
+    "feature": "Diseño adaptable y web móvil",
+    "scopeClassification": "shared_with_another_tdf_business_area",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "read",
+    "route": "/estudio/calendario",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "accessibility.baseline",
+    "module": "Acceso, cuenta y experiencia transversal",
+    "feature": "Teclado, foco, etiquetas, contraste y escala de texto",
+    "scopeClassification": "shared_with_another_tdf_business_area",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "read",
+    "route": "/inicio",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "crm.customers",
+    "module": "CRM, contactos y oportunidades",
+    "feature": "Crear, editar y consultar clientes ficticios",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "mutation",
+    "route": "/crm/contactos",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PartiesPage.tsx",
+      "tdf-hq-ui/src/pages/LeadsPage.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "crm.customer-search",
+    "module": "CRM, contactos y oportunidades",
+    "feature": "Buscar, filtrar y exportar contactos",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "read",
+    "route": "/crm/contactos",
+    "criticality": "medium",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PartiesPage.tsx",
+      "tdf-hq-ui/src/pages/LeadsPage.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "crm.customer-duplicates",
+    "module": "CRM, contactos y oportunidades",
+    "feature": "Prevenir o identificar clientes duplicados",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "mutation",
+    "route": "/crm/contactos",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PartiesPage.tsx",
+      "tdf-hq-ui/src/pages/LeadsPage.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "crm.companies",
+    "module": "CRM, contactos y oportunidades",
+    "feature": "Empresas y personas de contacto",
+    "scopeClassification": "shared_with_another_tdf_business_area",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "mutation",
+    "route": "/crm/empresas",
+    "criticality": "medium",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PartiesPage.tsx",
+      "tdf-hq-ui/src/pages/LeadsPage.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "crm.leads",
+    "module": "CRM, contactos y oportunidades",
+    "feature": "Crear y calificar leads para servicios de estudio",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "StudioManager",
+    "mode": "mutation",
+    "route": "/crm/leads",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PartiesPage.tsx",
+      "tdf-hq-ui/src/pages/LeadsPage.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "crm.opportunities",
+    "module": "CRM, contactos y oportunidades",
+    "feature": "Oportunidades y siguiente acción comercial",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "StudioManager",
+    "mode": "workflow",
+    "route": "/crm/leads",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PartiesPage.tsx",
+      "tdf-hq-ui/src/pages/LeadsPage.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "crm.pipeline",
+    "module": "CRM, contactos y oportunidades",
+    "feature": "Mover oportunidades por el pipeline",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "StudioManager",
+    "mode": "workflow",
+    "route": "/estudio/pipelines",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PartiesPage.tsx",
+      "tdf-hq-ui/src/pages/LeadsPage.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.calendar",
+    "module": "Calendario, salas, recursos y reservas",
+    "feature": "Calendario del estudio",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "read",
+    "route": "/estudio/calendario",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/BookingsPage.tsx",
+      "tdf-hq-ui/src/pages/RoomsPage.tsx",
+      "tdf-hq/src/TDF/API/Rooms.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.rooms",
+    "module": "Calendario, salas, recursos y reservas",
+    "feature": "Crear y mantener salas",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "StudioManager",
+    "mode": "mutation",
+    "route": "/estudio/salas",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/BookingsPage.tsx",
+      "tdf-hq-ui/src/pages/RoomsPage.tsx",
+      "tdf-hq/src/TDF/API/Rooms.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.resources",
+    "module": "Calendario, salas, recursos y reservas",
+    "feature": "Recursos asociados a salas",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "StudioManager",
+    "mode": "mutation",
+    "route": "/estudio/salas",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/BookingsPage.tsx",
+      "tdf-hq-ui/src/pages/RoomsPage.tsx",
+      "tdf-hq/src/TDF/API/Rooms.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.availability",
+    "module": "Calendario, salas, recursos y reservas",
+    "feature": "Disponibilidad de salas y recursos",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "workflow",
+    "route": "/estudio/calendario",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/BookingsPage.tsx",
+      "tdf-hq-ui/src/pages/RoomsPage.tsx",
+      "tdf-hq/src/TDF/API/Rooms.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.service-types",
+    "module": "Calendario, salas, recursos y reservas",
+    "feature": "Tipos y definiciones de servicio",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "StudioManager",
+    "mode": "mutation",
+    "route": "/estudio/servicios",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/BookingsPage.tsx",
+      "tdf-hq-ui/src/pages/RoomsPage.tsx",
+      "tdf-hq/src/TDF/API/Rooms.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.internal-booking",
+    "module": "Calendario, salas, recursos y reservas",
+    "feature": "Crear una reserva interna",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "mutation",
+    "route": "/estudio/calendario",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/BookingsPage.tsx",
+      "tdf-hq-ui/src/pages/RoomsPage.tsx",
+      "tdf-hq/src/TDF/API/Rooms.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.booking-edit",
+    "module": "Calendario, salas, recursos y reservas",
+    "feature": "Editar horario, sala, cliente y servicio",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "mutation",
+    "route": "/estudio/calendario",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/BookingsPage.tsx",
+      "tdf-hq-ui/src/pages/RoomsPage.tsx",
+      "tdf-hq/src/TDF/API/Rooms.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.booking-cancel",
+    "module": "Calendario, salas, recursos y reservas",
+    "feature": "Cancelar una reserva sin borrar el historial",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "workflow",
+    "route": "/estudio/calendario",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/BookingsPage.tsx",
+      "tdf-hq-ui/src/pages/RoomsPage.tsx",
+      "tdf-hq/src/TDF/API/Rooms.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.booking-conflict-room",
+    "module": "Calendario, salas, recursos y reservas",
+    "feature": "Conflicto simultáneo de sala",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "conflict",
+    "route": "/estudio/calendario",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/BookingsPage.tsx",
+      "tdf-hq-ui/src/pages/RoomsPage.tsx",
+      "tdf-hq/src/TDF/API/Rooms.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.booking-conflict-resource",
+    "module": "Calendario, salas, recursos y reservas",
+    "feature": "Conflicto simultáneo de recurso",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "conflict",
+    "route": "/estudio/calendario",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/BookingsPage.tsx",
+      "tdf-hq-ui/src/pages/RoomsPage.tsx",
+      "tdf-hq/src/TDF/API/Rooms.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.booking-concurrency",
+    "module": "Calendario, salas, recursos y reservas",
+    "feature": "Dos usuarios reservando al mismo tiempo",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_not_documented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implemented_but_not_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "conflict",
+    "route": "/estudio/calendario",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/BookingsPage.tsx",
+      "tdf-hq-ui/src/pages/RoomsPage.tsx",
+      "tdf-hq/src/TDF/API/Rooms.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.public-booking",
+    "module": "Calendario, salas, recursos y reservas",
+    "feature": "Reserva pública de estudio",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Visitante",
+    "mode": "public",
+    "route": "/reservar",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/BookingsPage.tsx",
+      "tdf-hq-ui/src/pages/RoomsPage.tsx",
+      "tdf-hq/src/TDF/API/Rooms.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.public-tracking",
+    "module": "Calendario, salas, recursos y reservas",
+    "feature": "Seguimiento público seguro de la reserva",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Visitante",
+    "mode": "public",
+    "route": "/reservas/orden/:bookingId",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/BookingsPage.tsx",
+      "tdf-hq-ui/src/pages/RoomsPage.tsx",
+      "tdf-hq/src/TDF/API/Rooms.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.public-invalid-token",
+    "module": "Calendario, salas, recursos y reservas",
+    "feature": "Token inválido o de otra reserva",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Visitante",
+    "mode": "security",
+    "route": "/reservas/orden/:bookingId",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/BookingsPage.tsx",
+      "tdf-hq-ui/src/pages/RoomsPage.tsx",
+      "tdf-hq/src/TDF/API/Rooms.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.dj-booth",
+    "module": "Calendario, salas, recursos y reservas",
+    "feature": "Reserva de DJ booth",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Visitante",
+    "mode": "public",
+    "route": "/dj-booth",
+    "criticality": "medium",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/BookingsPage.tsx",
+      "tdf-hq-ui/src/pages/RoomsPage.tsx",
+      "tdf-hq/src/TDF/API/Rooms.hs",
+      "tdf-hq/src/TDF/Server.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.orders",
+    "module": "Órdenes y sesiones de grabación",
+    "feature": "Crear y editar orden de estudio",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Reception",
+    "mode": "mutation",
+    "route": "/estudio/ordenes",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/OrdersPage.tsx",
+      "tdf-hq/src/TDF/API/Sessions.hs",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.order-status",
+    "module": "Órdenes y sesiones de grabación",
+    "feature": "Aprobar y cambiar estado de orden",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "StudioManager",
+    "mode": "workflow",
+    "route": "/estudio/ordenes",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/OrdersPage.tsx",
+      "tdf-hq/src/TDF/API/Sessions.hs",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.recording-session",
+    "module": "Órdenes y sesiones de grabación",
+    "feature": "Crear sesión de grabación desde reserva u orden",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Engineer",
+    "mode": "workflow",
+    "route": "/estudio/ordenes",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/OrdersPage.tsx",
+      "tdf-hq/src/TDF/API/Sessions.hs",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.session-status",
+    "module": "Órdenes y sesiones de grabación",
+    "feature": "Preparación, ejecución y cierre de sesión",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Engineer",
+    "mode": "workflow",
+    "route": "/estudio/ordenes",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/OrdersPage.tsx",
+      "tdf-hq/src/TDF/API/Sessions.hs",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.session-input-list",
+    "module": "Órdenes y sesiones de grabación",
+    "feature": "Lista de entradas, canales y microfonía",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Engineer",
+    "mode": "mutation",
+    "route": "/input-list/:id",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/OrdersPage.tsx",
+      "tdf-hq/src/TDF/API/Sessions.hs",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.session-artists",
+    "module": "Órdenes y sesiones de grabación",
+    "feature": "Artistas asociados a la sesión",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Engineer",
+    "mode": "mutation",
+    "route": "/estudio/ordenes",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/OrdersPage.tsx",
+      "tdf-hq/src/TDF/API/Sessions.hs",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.session-musicians",
+    "module": "Órdenes y sesiones de grabación",
+    "feature": "Músicos, instrumentos y roles",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Engineer",
+    "mode": "mutation",
+    "route": "/estudio/ordenes",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/OrdersPage.tsx",
+      "tdf-hq/src/TDF/API/Sessions.hs",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.session-engineers",
+    "module": "Órdenes y sesiones de grabación",
+    "feature": "Ingeniero y asistente de sesión",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "StudioManager",
+    "mode": "mutation",
+    "route": "/estudio/ordenes",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/OrdersPage.tsx",
+      "tdf-hq/src/TDF/API/Sessions.hs",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.session-files",
+    "module": "Órdenes y sesiones de grabación",
+    "feature": "Carpeta, grabaciones y entregables de sesión",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Engineer",
+    "mode": "workflow",
+    "route": "/estudio/ordenes",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/OrdersPage.tsx",
+      "tdf-hq/src/TDF/API/Sessions.hs",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "studio.session-reopen",
+    "module": "Órdenes y sesiones de grabación",
+    "feature": "Reabrir una sesión cerrada con autorización",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "StudioManager",
+    "mode": "security",
+    "route": "/estudio/ordenes",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/OrdersPage.tsx",
+      "tdf-hq/src/TDF/API/Sessions.hs",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "commerce.packages",
+    "module": "Cotizaciones, facturación y pagos",
+    "feature": "Paquetes y horas prepagadas",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "StudioManager",
+    "mode": "mutation",
+    "route": "/estudio/servicios",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/src/TDF/API/Payments.hs",
+      "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "commerce.package-balance",
+    "module": "Cotizaciones, facturación y pagos",
+    "feature": "Consumo y saldo de horas",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "workflow",
+    "route": "/estudio/ordenes",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/src/TDF/API/Payments.hs",
+      "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "commerce.quotations",
+    "module": "Cotizaciones, facturación y pagos",
+    "feature": "Cotización de servicios de estudio",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "StudioManager",
+    "mode": "workflow",
+    "route": "/propuestas",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/src/TDF/API/Payments.hs",
+      "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "commerce.quote-acceptance",
+    "module": "Cotizaciones, facturación y pagos",
+    "feature": "Aceptación o rechazo de cotización",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Customer de pruebas",
+    "mode": "workflow",
+    "route": "/propuestas",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/src/TDF/API/Payments.hs",
+      "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "commerce.invoices",
+    "module": "Cotizaciones, facturación y pagos",
+    "feature": "Generar y consultar factura",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Finance",
+    "mode": "workflow",
+    "route": "/finanzas/pagos",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/src/TDF/API/Payments.hs",
+      "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "commerce.manual-payment",
+    "module": "Cotizaciones, facturación y pagos",
+    "feature": "Registrar pago manual",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Finance",
+    "mode": "mutation",
+    "route": "/finanzas/pagos",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/src/TDF/API/Payments.hs",
+      "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "commerce.datafast",
+    "module": "Cotizaciones, facturación y pagos",
+    "feature": "Checkout Datafast sandbox",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Customer de pruebas",
+    "mode": "integration",
+    "route": "/reservar",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/src/TDF/API/Payments.hs",
+      "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "commerce.paypal",
+    "module": "Cotizaciones, facturación y pagos",
+    "feature": "Checkout PayPal sandbox",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Customer de pruebas",
+    "mode": "integration",
+    "route": "/reservar",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/src/TDF/API/Payments.hs",
+      "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "commerce.payment-confirmation",
+    "module": "Cotizaciones, facturación y pagos",
+    "feature": "Confirmación verificable del pago",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Finance",
+    "mode": "integration",
+    "route": "/finanzas/pagos",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/src/TDF/API/Payments.hs",
+      "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "commerce.payment-failure",
+    "module": "Cotizaciones, facturación y pagos",
+    "feature": "Pago rechazado o proveedor no disponible",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Customer de pruebas",
+    "mode": "integration",
+    "route": "/reservar",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/src/TDF/API/Payments.hs",
+      "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "commerce.abandoned-checkout",
+    "module": "Cotizaciones, facturación y pagos",
+    "feature": "Checkout abandonado sin cobro ni reserva falsa",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Customer de pruebas",
+    "mode": "integration",
+    "route": "/reservar",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/src/TDF/API/Payments.hs",
+      "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "commerce.payment-idempotency",
+    "module": "Cotizaciones, facturación y pagos",
+    "feature": "Doble clic, reintento e idempotencia",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_not_documented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implemented_but_not_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Customer de pruebas",
+    "mode": "integration",
+    "route": "/reservar",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/src/TDF/API/Payments.hs",
+      "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "commerce.refunds",
+    "module": "Cotizaciones, facturación y pagos",
+    "feature": "Reembolso total o parcial en sandbox",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Finance",
+    "mode": "integration",
+    "route": "/finanzas/pagos",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/src/TDF/API/Payments.hs",
+      "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "commerce.reconciliation",
+    "module": "Cotizaciones, facturación y pagos",
+    "feature": "Conciliación con eventos del proveedor",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_not_documented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implemented_but_not_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Admin de pruebas",
+    "mode": "integration",
+    "route": "/admin/commerce/provider-events",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/src/TDF/API/Payments.hs",
+      "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "commerce.failed-events",
+    "module": "Cotizaciones, facturación y pagos",
+    "feature": "Eventos fallidos, reintento y dead letters",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Admin de pruebas",
+    "mode": "integration",
+    "route": "/admin/commerce/provider-events",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/src/TDF/API/Payments.hs",
+      "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "inventory.assets",
+    "module": "Inventario, equipos y mantenimiento",
+    "feature": "Crear, editar y consultar equipos",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "StudioManager",
+    "mode": "mutation",
+    "route": "/operacion/inventario",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InventoryPage.tsx",
+      "tdf-hq-ui/src/pages/ReservasEquipoPage.tsx",
+      "tdf-hq/src/TDF/API/Inventory.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "inventory.availability",
+    "module": "Inventario, equipos y mantenimiento",
+    "feature": "Disponibilidad de equipo para una reserva",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "workflow",
+    "route": "/operacion/inventario",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InventoryPage.tsx",
+      "tdf-hq-ui/src/pages/ReservasEquipoPage.tsx",
+      "tdf-hq/src/TDF/API/Inventory.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "inventory.reservations",
+    "module": "Inventario, equipos y mantenimiento",
+    "feature": "Reservar equipo para sesión",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "mutation",
+    "route": "/operacion/reservas-equipo",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InventoryPage.tsx",
+      "tdf-hq-ui/src/pages/ReservasEquipoPage.tsx",
+      "tdf-hq/src/TDF/API/Inventory.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "inventory.checkout-return",
+    "module": "Inventario, equipos y mantenimiento",
+    "feature": "Entrega y devolución con condición",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "workflow",
+    "route": "/operacion/reservas-equipo",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InventoryPage.tsx",
+      "tdf-hq-ui/src/pages/ReservasEquipoPage.tsx",
+      "tdf-hq/src/TDF/API/Inventory.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "inventory.rentals",
+    "module": "Inventario, equipos y mantenimiento",
+    "feature": "Alquiler de equipo y relación con orden",
+    "scopeClassification": "shared_with_another_tdf_business_area",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "StudioManager",
+    "mode": "workflow",
+    "route": "/marketplace/orders",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InventoryPage.tsx",
+      "tdf-hq-ui/src/pages/ReservasEquipoPage.tsx",
+      "tdf-hq/src/TDF/API/Inventory.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "inventory.scan",
+    "module": "Inventario, equipos y mantenimiento",
+    "feature": "Escaneo con token firmado",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "security",
+    "route": "/inventario/scan/:token",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InventoryPage.tsx",
+      "tdf-hq-ui/src/pages/ReservasEquipoPage.tsx",
+      "tdf-hq/src/TDF/API/Inventory.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "inventory.maintenance",
+    "module": "Inventario, equipos y mantenimiento",
+    "feature": "Abrir, actualizar y cerrar mantenimiento",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Maintenance",
+    "mode": "workflow",
+    "route": "/operacion/inventario",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InventoryPage.tsx",
+      "tdf-hq-ui/src/pages/ReservasEquipoPage.tsx",
+      "tdf-hq/src/TDF/API/Inventory.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "inventory.unavailable",
+    "module": "Inventario, equipos y mantenimiento",
+    "feature": "Equipo en mantenimiento no reservable",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "conflict",
+    "route": "/operacion/reservas-equipo",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InventoryPage.tsx",
+      "tdf-hq-ui/src/pages/ReservasEquipoPage.tsx",
+      "tdf-hq/src/TDF/API/Inventory.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "inventory.audit",
+    "module": "Inventario, equipos y mantenimiento",
+    "feature": "Movimientos y auditoría de activos",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_not_documented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implemented_but_not_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "StudioManager",
+    "mode": "read",
+    "route": "/operacion/inventario",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InventoryPage.tsx",
+      "tdf-hq-ui/src/pages/ReservasEquipoPage.tsx",
+      "tdf-hq/src/TDF/API/Inventory.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "operations.dashboard",
+    "module": "Operación, recepción y reportes",
+    "feature": "Panel de operación del estudio",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "StudioManager",
+    "mode": "read",
+    "route": "/dashboard/operations",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/ReportsPage.tsx",
+      "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "operations.reception",
+    "module": "Operación, recepción y reportes",
+    "feature": "Flujo de recepción: llegada, sala, saldo y entrega",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Reception",
+    "mode": "workflow",
+    "route": "/dashboard/operations",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/ReportsPage.tsx",
+      "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "operations.engineer",
+    "module": "Operación, recepción y reportes",
+    "feature": "Flujo del ingeniero antes, durante y después",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Engineer",
+    "mode": "workflow",
+    "route": "/estudio/ordenes",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/ReportsPage.tsx",
+      "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "reports.operational",
+    "module": "Operación, recepción y reportes",
+    "feature": "Reportes operativos del estudio",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "StudioManager",
+    "mode": "read",
+    "route": "/estudio/reportes",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/ReportsPage.tsx",
+      "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "reports.financial",
+    "module": "Operación, recepción y reportes",
+    "feature": "Reportes financieros relacionados con estudio",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Finance",
+    "mode": "read",
+    "route": "/finanzas/creador-reporte-cuenta",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/ReportsPage.tsx",
+      "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "reports.export",
+    "module": "Operación, recepción y reportes",
+    "feature": "Exportación y consistencia de totales",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "StudioManager",
+    "mode": "read",
+    "route": "/estudio/reportes",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/ReportsPage.tsx",
+      "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
+      "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "live.public-registration",
+    "module": "TDF Live Sessions",
+    "feature": "Registro público para TDF Live Sessions",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Artist de pruebas",
+    "mode": "public",
+    "route": "/live-sessions/registro",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
+      "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx",
+      "tdf-hq/src/TDF/ServerLiveSessions.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "live.intake-admin",
+    "module": "TDF Live Sessions",
+    "feature": "Revisión del intake de Live Sessions",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "StudioManager",
+    "mode": "workflow",
+    "route": "/estudio/live-sessions",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
+      "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx",
+      "tdf-hq/src/TDF/ServerLiveSessions.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "live.musicians-songs",
+    "module": "TDF Live Sessions",
+    "feature": "Músicos, instrumentos y canciones del intake",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "StudioManager",
+    "mode": "mutation",
+    "route": "/estudio/live-sessions",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
+      "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx",
+      "tdf-hq/src/TDF/ServerLiveSessions.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "live.files-consent",
+    "module": "TDF Live Sessions",
+    "feature": "Archivos, consentimiento y límites de carga",
+    "scopeClassification": "directly_within_studio_management_scope",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Artist de pruebas",
+    "mode": "security",
+    "route": "/live-sessions/registro",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
+      "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx",
+      "tdf-hq/src/TDF/ServerLiveSessions.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "live.domo-campaign",
+    "module": "TDF Live Sessions",
+    "feature": "Campaña de TDF Sessions en Domo",
+    "scopeClassification": "shared_with_another_tdf_business_area",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "StudioManager",
+    "mode": "workflow",
+    "route": "/estudio/campanas/tdf-sessions-domo",
+    "criticality": "medium",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
+      "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx",
+      "tdf-hq/src/TDF/ServerLiveSessions.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "notifications.booking-email",
+    "module": "Notificaciones e integraciones",
+    "feature": "Confirmación de reserva por email de pruebas",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "not_available_on_mobile"
+    ],
+    "role": "Sistema",
+    "mode": "integration",
+    "route": "/reservar",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq/src/TDF/Email/Service.hs",
+      "tdf-hq/src/TDF/WhatsApp/Service.hs",
+      "tdf-hq-ui/src/pages/CalendarSyncPage.tsx",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "notifications.whatsapp",
+    "module": "Notificaciones e integraciones",
+    "feature": "WhatsApp con transporte simulado",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "not_available_on_mobile"
+    ],
+    "role": "Sistema",
+    "mode": "integration",
+    "route": "/whatsapp/ok",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq/src/TDF/Email/Service.hs",
+      "tdf-hq/src/TDF/WhatsApp/Service.hs",
+      "tdf-hq-ui/src/pages/CalendarSyncPage.tsx",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "notifications.calendar",
+    "module": "Notificaciones e integraciones",
+    "feature": "Sincronización de calendario en sandbox",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Admin de pruebas",
+    "mode": "integration",
+    "route": "/configuracion/integraciones/calendario",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq/src/TDF/Email/Service.hs",
+      "tdf-hq/src/TDF/WhatsApp/Service.hs",
+      "tdf-hq-ui/src/pages/CalendarSyncPage.tsx",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "notifications.failure",
+    "module": "Notificaciones e integraciones",
+    "feature": "Fallo de notificación sin perder la operación",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_not_documented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implemented_but_not_documented",
+    "platformClassifications": [
+      "not_available_on_mobile"
+    ],
+    "role": "Sistema",
+    "mode": "integration",
+    "route": "/reservar",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq/src/TDF/Email/Service.hs",
+      "tdf-hq/src/TDF/WhatsApp/Service.hs",
+      "tdf-hq-ui/src/pages/CalendarSyncPage.tsx",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "notifications.no-real-recipient",
+    "module": "Notificaciones e integraciones",
+    "feature": "Bloqueo de destinatarios y secretos reales",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_not_documented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implemented_but_not_documented",
+    "platformClassifications": [
+      "not_available_on_mobile"
+    ],
+    "role": "Admin de pruebas",
+    "mode": "security",
+    "route": "/configuracion/preferencias",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq/src/TDF/Email/Service.hs",
+      "tdf-hq/src/TDF/WhatsApp/Service.hs",
+      "tdf-hq-ui/src/pages/CalendarSyncPage.tsx",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "domo.shared-resources",
+    "module": "Dependencias compartidas con Domo",
+    "feature": "Recursos y fechas compartidos con el estudio",
+    "scopeClassification": "shared_with_another_tdf_business_area",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "StudioManager",
+    "mode": "conflict",
+    "route": "/domo-del-pululahua",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/TdfDomoCampaignPage.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/docs/openapi/api.yaml",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "domo.quotations",
+    "module": "Dependencias compartidas con Domo",
+    "feature": "Cotización Domo vinculada a reserva",
+    "scopeClassification": "shared_with_another_tdf_business_area",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Customer de pruebas",
+    "mode": "public",
+    "route": "/domo-del-pululahua",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/TdfDomoCampaignPage.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/docs/openapi/api.yaml",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "domo.deposit",
+    "module": "Dependencias compartidas con Domo",
+    "feature": "Depósito PayPal sandbox de Domo",
+    "scopeClassification": "shared_with_another_tdf_business_area",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Customer de pruebas",
+    "mode": "integration",
+    "route": "/domo-del-pululahua",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/TdfDomoCampaignPage.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/docs/openapi/api.yaml",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "domo.hold-expiry",
+    "module": "Dependencias compartidas con Domo",
+    "feature": "Vencimiento de hold sin bloquear estudio",
+    "scopeClassification": "shared_with_another_tdf_business_area",
+    "implementationClassifications": [
+      "implemented_but_not_documented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implemented_but_not_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Customer de pruebas",
+    "mode": "conflict",
+    "route": "/domo-del-pululahua",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/TdfDomoCampaignPage.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/docs/openapi/api.yaml",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "domo.operations",
+    "module": "Dependencias compartidas con Domo",
+    "feature": "Visibilidad operativa de la reserva Domo",
+    "scopeClassification": "shared_with_another_tdf_business_area",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "StudioManager",
+    "mode": "workflow",
+    "route": "/estudio/calendario",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/TdfDomoCampaignPage.tsx",
+      "tdf-hq/src/TDF/API.hs",
+      "tdf-hq/docs/openapi/api.yaml",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "school.shared-rooms",
+    "module": "Dependencias compartidas con Escuela",
+    "feature": "Salas compartidas con clases",
+    "scopeClassification": "shared_with_another_tdf_business_area",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Reception",
+    "mode": "conflict",
+    "route": "/escuela/clases",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/ClassesPage.tsx",
+      "tdf-hq-ui/src/pages/TrialLessonsPage.tsx",
+      "tdf-hq/src/TDF/Trials/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "school.calendar",
+    "module": "Dependencias compartidas con Escuela",
+    "feature": "Clases visibles en calendario compartido",
+    "scopeClassification": "shared_with_another_tdf_business_area",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Reception",
+    "mode": "workflow",
+    "route": "/escuela/clases",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/ClassesPage.tsx",
+      "tdf-hq-ui/src/pages/TrialLessonsPage.tsx",
+      "tdf-hq/src/TDF/Trials/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "school.instructors",
+    "module": "Dependencias compartidas con Escuela",
+    "feature": "Instructor y disponibilidad",
+    "scopeClassification": "shared_with_another_tdf_business_area",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Reception",
+    "mode": "workflow",
+    "route": "/escuela/profesores",
+    "criticality": "medium",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/ClassesPage.tsx",
+      "tdf-hq-ui/src/pages/TrialLessonsPage.tsx",
+      "tdf-hq/src/TDF/Trials/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "school.trial-reservation",
+    "module": "Dependencias compartidas con Escuela",
+    "feature": "Reserva de clase de prueba",
+    "scopeClassification": "shared_with_another_tdf_business_area",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Reception",
+    "mode": "workflow",
+    "route": "/escuela/trial-lessons",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/ClassesPage.tsx",
+      "tdf-hq-ui/src/pages/TrialLessonsPage.tsx",
+      "tdf-hq/src/TDF/Trials/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "school.payment",
+    "module": "Dependencias compartidas con Escuela",
+    "feature": "Pago de clase que comparte finanzas",
+    "scopeClassification": "shared_with_another_tdf_business_area",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Finance",
+    "mode": "integration",
+    "route": "/finanzas/pagos",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/ClassesPage.tsx",
+      "tdf-hq-ui/src/pages/TrialLessonsPage.tsx",
+      "tdf-hq/src/TDF/Trials/API.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "ddex.session-origin",
+    "module": "Datos de estudio relacionados con DDEX",
+    "feature": "Origen de grabación y sesión",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "LabelRep de pruebas",
+    "mode": "read",
+    "route": "/label/ddex",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq/src/TDF/API/DDEX.hs",
+      "tdf-hq/src/TDF/Server/DDEX.hs",
+      "tdf-hq/src/TDF/DDEX/Validation.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "ddex.participants",
+    "module": "Datos de estudio relacionados con DDEX",
+    "feature": "Participantes, roles e instrumentos",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "LabelRep de pruebas",
+    "mode": "read",
+    "route": "/label/ddex/documents/:id",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq/src/TDF/API/DDEX.hs",
+      "tdf-hq/src/TDF/Server/DDEX.hs",
+      "tdf-hq/src/TDF/DDEX/Validation.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "ddex.equipment",
+    "module": "Datos de estudio relacionados con DDEX",
+    "feature": "Equipo y detalles técnicos pertinentes",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "LabelRep de pruebas",
+    "mode": "read",
+    "route": "/label/ddex/documents/:id",
+    "criticality": "medium",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq/src/TDF/API/DDEX.hs",
+      "tdf-hq/src/TDF/Server/DDEX.hs",
+      "tdf-hq/src/TDF/DDEX/Validation.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "ddex.recordings-assets",
+    "module": "Datos de estudio relacionados con DDEX",
+    "feature": "Grabaciones y activos originados en estudio",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "LabelRep de pruebas",
+    "mode": "read",
+    "route": "/label/ddex/documents/:id",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq/src/TDF/API/DDEX.hs",
+      "tdf-hq/src/TDF/Server/DDEX.hs",
+      "tdf-hq/src/TDF/DDEX/Validation.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "ddex.rights-metadata",
+    "module": "Datos de estudio relacionados con DDEX",
+    "feature": "Metadatos de derechos vinculados a la grabación",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "LabelRep de pruebas",
+    "mode": "read",
+    "route": "/label/ddex/documents/:id",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq/src/TDF/API/DDEX.hs",
+      "tdf-hq/src/TDF/Server/DDEX.hs",
+      "tdf-hq/src/TDF/DDEX/Validation.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "ddex.validation",
+    "module": "Datos de estudio relacionados con DDEX",
+    "feature": "Validación y mensajes de error DDEX",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "LabelRep de pruebas",
+    "mode": "workflow",
+    "route": "/label/ddex/documents/:id",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq/src/TDF/API/DDEX.hs",
+      "tdf-hq/src/TDF/Server/DDEX.hs",
+      "tdf-hq/src/TDF/DDEX/Validation.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "ddex.import",
+    "module": "Datos de estudio relacionados con DDEX",
+    "feature": "Importación y resolución de conflictos DDEX",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "documented_but_not_implemented"
+    ],
+    "intendedInternAccess": "not_executable_documented_limitation",
+    "documentationClassification": "documented_but_not_implemented",
+    "platformClassifications": [
+      "not_available_on_mobile"
+    ],
+    "role": "LabelRep de pruebas",
+    "mode": "read",
+    "route": "/label/ddex/documents/:id/import",
+    "criticality": "medium",
+    "applicable": false,
+    "evidence": [
+      "tdf-hq/src/TDF/API/DDEX.hs",
+      "tdf-hq/src/TDF/Server/DDEX.hs",
+      "tdf-hq/src/TDF/DDEX/Validation.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "roles.reception",
+    "module": "Roles, permisos y acceso directo",
+    "feature": "Permisos mínimos de Reception",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Reception",
+    "mode": "security",
+    "route": "/estudio/calendario",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq/assets/feature-registry.json",
+      "tdf-hq/src/TDF/Catalog/Security.hs",
+      "docs/feature-discoverability-audit/2026-08-21/role-module-feature-action-platform-matrix.csv",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "roles.engineer",
+    "module": "Roles, permisos y acceso directo",
+    "feature": "Permisos mínimos de Engineer",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Engineer",
+    "mode": "security",
+    "route": "/estudio/ordenes",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq/assets/feature-registry.json",
+      "tdf-hq/src/TDF/Catalog/Security.hs",
+      "docs/feature-discoverability-audit/2026-08-21/role-module-feature-action-platform-matrix.csv",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "roles.studio-manager",
+    "module": "Roles, permisos y acceso directo",
+    "feature": "Permisos de Studio Manager",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "StudioManager",
+    "mode": "security",
+    "route": "/estudio/calendario",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq/assets/feature-registry.json",
+      "tdf-hq/src/TDF/Catalog/Security.hs",
+      "docs/feature-discoverability-audit/2026-08-21/role-module-feature-action-platform-matrix.csv",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "roles.intern",
+    "module": "Roles, permisos y acceso directo",
+    "feature": "Intern no puede ampliar sus propios permisos",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "security",
+    "route": "/practicas",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq/assets/feature-registry.json",
+      "tdf-hq/src/TDF/Catalog/Security.hs",
+      "docs/feature-discoverability-audit/2026-08-21/role-module-feature-action-platform-matrix.csv",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "roles.direct-api",
+    "module": "Roles, permisos y acceso directo",
+    "feature": "La API rechaza operaciones sin permiso",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "not_available_on_mobile"
+    ],
+    "role": "Intern",
+    "mode": "security",
+    "route": "/api",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq/assets/feature-registry.json",
+      "tdf-hq/src/TDF/Catalog/Security.hs",
+      "docs/feature-discoverability-audit/2026-08-21/role-module-feature-action-platform-matrix.csv",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "roles.temporary-access",
+    "module": "Roles, permisos y acceso directo",
+    "feature": "Solicitud y aprobación temporal de permiso",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Intern",
+    "mode": "workflow",
+    "route": "/practicas",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq/assets/feature-registry.json",
+      "tdf-hq/src/TDF/Catalog/Security.hs",
+      "docs/feature-discoverability-audit/2026-08-21/role-module-feature-action-platform-matrix.csv",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "roles.expiry",
+    "module": "Roles, permisos y acceso directo",
+    "feature": "Vencimiento del permiso temporal",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "partially_implemented"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "web_only",
+      "not_available_on_mobile"
+    ],
+    "role": "Intern",
+    "mode": "security",
+    "route": "/practicas",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq/assets/feature-registry.json",
+      "tdf-hq/src/TDF/Catalog/Security.hs",
+      "docs/feature-discoverability-audit/2026-08-21/role-module-feature-action-platform-matrix.csv",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "intern.clock",
+    "module": "Prácticas y reportes internos",
+    "feature": "Registrar entrada y salida",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "workflow",
+    "route": "/practicas",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "intern.task-privacy",
+    "module": "Prácticas y reportes internos",
+    "feature": "Sólo el pasante correcto ve la tarea",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "security",
+    "route": "/practicas",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "intern.protected-fields",
+    "module": "Prácticas y reportes internos",
+    "feature": "Intern no edita campos protegidos",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "security",
+    "route": "/practicas/tareas/:taskId",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "intern.audit-cases",
+    "module": "Prácticas y reportes internos",
+    "feature": "Lista estructurada de casos",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "workflow",
+    "route": "/practicas/auditorias/:planId",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "intern.executions",
+    "module": "Prácticas y reportes internos",
+    "feature": "Ejecuciones e historial de retest",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "workflow",
+    "route": "/practicas/auditorias/:planId",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "intern.auto-progress",
+    "module": "Prácticas y reportes internos",
+    "feature": "Avance calculado automáticamente",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "workflow",
+    "route": "/practicas/auditorias/:planId",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "intern.completion-gate",
+    "module": "Prácticas y reportes internos",
+    "feature": "Bloqueo de finalización incompleta",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "security",
+    "route": "/practicas/auditorias/:planId",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "intern.daily-summary",
+    "module": "Prácticas y reportes internos",
+    "feature": "Resumen de cada jornada",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "workflow",
+    "route": "/practicas/auditorias/:planId",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "intern.final-summary",
+    "module": "Prácticas y reportes internos",
+    "feature": "Resumen final generado y conclusiones",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "workflow",
+    "route": "/practicas/auditorias/:planId",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "feedback.public-compatibility",
+    "module": "Prácticas y reportes internos",
+    "feature": "Formulario público existente",
+    "scopeClassification": "shared_with_another_tdf_business_area",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "native_mobile",
+      "mobile_web_fallback"
+    ],
+    "role": "Visitante",
+    "mode": "public",
+    "route": "/feedback",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "feedback.internal-draft",
+    "module": "Prácticas y reportes internos",
+    "feature": "Crear y editar borrador interno",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "mutation",
+    "route": "/feedback/interno/nuevo",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "feedback.internal-submit",
+    "module": "Prácticas y reportes internos",
+    "feature": "Enviar y seguir reporte interno",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "workflow",
+    "route": "/feedback/interno",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "feedback.private-scope",
+    "module": "Prácticas y reportes internos",
+    "feature": "Privacidad entre reporteros",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "security",
+    "route": "/feedback/interno",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "feedback.admin-triage",
+    "module": "Prácticas y reportes internos",
+    "feature": "Confirmar, priorizar, asignar y resolver",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Manager",
+    "mode": "workflow",
+    "route": "/feedback/interno",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "feedback.comments-info",
+    "module": "Prácticas y reportes internos",
+    "feature": "Comentarios y solicitud de información",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "workflow",
+    "route": "/feedback/interno/:reportId",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "feedback.evidence",
+    "module": "Prácticas y reportes internos",
+    "feature": "Múltiples evidencias y enlaces de video",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "security",
+    "route": "/feedback/interno/:reportId",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "feedback.duplicates",
+    "module": "Prácticas y reportes internos",
+    "feature": "Advertencia y consolidación de duplicados",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Manager",
+    "mode": "workflow",
+    "route": "/feedback/interno/:reportId",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "feedback.retest",
+    "module": "Prácticas y reportes internos",
+    "feature": "Solicitud y registro de retest",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Intern",
+    "mode": "workflow",
+    "route": "/feedback/interno/:reportId",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "feedback.audit-history",
+    "module": "Prácticas y reportes internos",
+    "feature": "Historial auditable de cambios",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_and_accessible"
+    ],
+    "intendedInternAccess": "available_with_intern_or_public_test_identity",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Manager",
+    "mode": "read",
+    "route": "/feedback/interno/:reportId",
+    "criticality": "critical",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "feedback.export",
+    "module": "Prácticas y reportes internos",
+    "feature": "Búsqueda, filtros y exportación CSV/JSON",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Manager",
+    "mode": "read",
+    "route": "/feedback/interno",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "feedback.github-promotion",
+    "module": "Prácticas y reportes internos",
+    "feature": "Enlace administrativo a issue de GitHub",
+    "scopeClassification": "required_dependency_of_studio_workflow",
+    "implementationClassifications": [
+      "implemented_but_inaccessible_to_intended_role"
+    ],
+    "intendedInternAccess": "requires_approved_temporary_permission_or_scoped_staging_persona",
+    "documentationClassification": "implementation_and_route_evidence_documented",
+    "platformClassifications": [
+      "mobile_web_fallback"
+    ],
+    "role": "Manager",
+    "mode": "security",
+    "route": "/feedback/interno/:reportId",
+    "criticality": "high",
+    "applicable": true,
+    "evidence": [
+      "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+      "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
+      "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "tdf-hq/src/TDF/ServerInternAudit.hs",
+      "tdf-hq/src/TDF/ServerFeedback.hs",
+      "tdf-hq/assets/feature-registry.json"
+    ]
+  },
+  {
+    "featureId": "out.distribution-publishing",
+    "module": "Scope exclusions",
+    "feature": "Publicar o distribuir música real",
+    "scopeClassification": "out_of_scope",
+    "implementationClassifications": [
+      "implemented_and_accessible_to_authorized_label_roles"
+    ],
+    "intendedInternAccess": "prohibited",
+    "documentationClassification": "documented_scope_exclusion",
+    "platformClassifications": [
+      "web_only",
+      "native_mobile"
+    ],
+    "role": "LabelRep",
+    "mode": "prohibited",
+    "route": "/label/releases",
+    "criticality": "critical",
+    "applicable": false,
+    "evidence": [
+      "tdf-hq/assets/feature-registry.json",
+      "docs/persona-testing/README.md"
+    ]
+  },
+  {
+    "featureId": "out.production-mutations",
+    "module": "Scope exclusions",
+    "feature": "Modificar datos de producción",
+    "scopeClassification": "out_of_scope",
+    "implementationClassifications": [
+      "prohibited_for_assignment"
+    ],
+    "intendedInternAccess": "prohibited",
+    "documentationClassification": "documented_scope_exclusion",
+    "platformClassifications": [
+      "not_applicable"
+    ],
+    "role": "Intern",
+    "mode": "prohibited",
+    "route": null,
+    "criticality": "critical",
+    "applicable": false,
+    "evidence": [
+      "docs/internships/studio-audit/STUART-GUIDE.es.md"
+    ]
+  },
+  {
+    "featureId": "out.real-communications",
+    "module": "Scope exclusions",
+    "feature": "Contactar clientes o destinatarios reales",
+    "scopeClassification": "out_of_scope",
+    "implementationClassifications": [
+      "prohibited_for_assignment"
+    ],
+    "intendedInternAccess": "prohibited",
+    "documentationClassification": "documented_scope_exclusion",
+    "platformClassifications": [
+      "not_applicable"
+    ],
+    "role": "Intern",
+    "mode": "prohibited",
+    "route": null,
+    "criticality": "critical",
+    "applicable": false,
+    "evidence": [
+      "docs/internships/studio-audit/SECURITY-PRIVACY.md"
+    ]
+  },
+  {
+    "featureId": "out.real-payments",
+    "module": "Scope exclusions",
+    "feature": "Cobrar o reembolsar dinero real",
+    "scopeClassification": "out_of_scope",
+    "implementationClassifications": [
+      "prohibited_for_assignment"
+    ],
+    "intendedInternAccess": "prohibited",
+    "documentationClassification": "documented_scope_exclusion",
+    "platformClassifications": [
+      "not_applicable"
+    ],
+    "role": "Intern",
+    "mode": "prohibited",
+    "route": null,
+    "criticality": "critical",
+    "applicable": false,
+    "evidence": [
+      "docs/internships/studio-audit/SECURITY-PRIVACY.md"
+    ]
+  }
+]

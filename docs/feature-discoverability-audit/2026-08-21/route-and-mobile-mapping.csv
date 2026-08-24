@@ -55,6 +55,7 @@ school.classes,primary-destination,/escuela/clases,,web-only,,,school.teacher-po
 school.trial-lessons,important-submodule,/escuela/trial-lessons,,web-only,,,school.teacher-portal,school.teacher-portal,true,global-menu,1,false,false
 school.trial-queue,important-submodule,/escuela/trial-queue,,web-only,,,school.trial-lessons,school.teacher-portal > school.trial-lessons,true,global-menu,1,false,false
 internships,primary-destination,/practicas,/practicas/tareas/:taskId,web-only,,,,,true,global-menu,1,false,false
+internships.studio-audit,important-submodule,/practicas/auditorias/:planId,,external-web,https://tdf-app.pages.dev/practicas/auditorias/:planId,,internships,internships,false,command-palette-or-mobile-explorer,2,false,false
 label.artists,primary-destination,/label/artistas,/label,native,/(tabs)/events,,,,true,global-menu,1,false,false
 label.projects,primary-destination,/label/proyectos,,web-only,,,label.artists,label.artists,true,global-menu,1,false,false
 label.releases,primary-destination,/label/releases,,external-web,,,label.artists,label.artists,true,global-menu,1,false,false
@@ -106,6 +107,7 @@ help.docs,important-submodule,/docs,,native,/about,,help.manual,help.manual,true
 help.about,important-submodule,/acerca,,native,/about,/(tabs)/about,help.manual,help.manual,true,global-menu,1,false,false
 help.security,important-submodule,/seguridad,,native,/about,,help.manual,help.manual,true,global-menu,1,false,false
 help.feedback,important-submodule,/feedback,,native,/about,,help.manual,help.manual,true,global-menu,1,false,false
+help.feedback.internal,important-submodule,/feedback/interno,/feedback/interno/:reportId,external-web,https://tdf-app.pages.dev/feedback/interno,,help.feedback,help.manual > help.feedback,true,global-menu,1,false,false
 navigation.quick-create,important-submodule,,,native,/(tabs)/create,,home,home,false,module-landing-context,2,false,false
 navigation.explore,important-submodule,,,native,/(tabs)/more,,home,home,false,module-landing-context,2,false,false
 profile.self,primary-destination,,,native,/(tabs)/profile,,community,community,false,command-palette-or-mobile-explorer,2,false,false

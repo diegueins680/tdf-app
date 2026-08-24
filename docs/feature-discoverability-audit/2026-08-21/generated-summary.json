@@ -1,18 +1,18 @@
 {
   "generatedAt": "2026-08-21",
   "registryVersion": "2026-08-14",
-  "featureCount": 137,
+  "featureCount": 139,
   "primaryDestinations": 44,
-  "importantSubmodules": 57,
+  "importantSubmodules": 59,
   "contextualRoutes": 26,
   "technicalRoutes": 10,
-  "webRoutes": 122,
+  "webRoutes": 124,
   "nativeMobileFeatures": 35,
   "roleFixtures": 11,
-  "matrixRows": 3014,
+  "matrixRows": 3058,
   "authorizedPrimaryDiscoveryAssertions": 536,
-  "backendEndpoints": 548,
-  "backendEndpointsMappedToFeatures": 493,
+  "backendEndpoints": 557,
+  "backendEndpointsMappedToFeatures": 502,
   "backendEndpointsPendingDisposition": 40,
   "backendEndpointDispositions": {
     "API-only pending explicit product/security disposition": 40,
@@ -20,6 +20,6 @@
     "security-sensitive concealed capability; interface decision documented": 3,
     "technical/API-only; never display": 11,
     "technical/static/API-only; never display": 4,
-    "user/admin interface mapped": 458
+    "user/admin interface mapped": 467
   }
 }

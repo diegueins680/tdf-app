@@ -861,6 +861,7 @@ export interface InternProjectDTO {
   ipTitle: string;
   ipDescription?: string | null;
   ipStatus: string;
+  ipActivationStatus?: string;
   ipStartAt?: string | null;
   ipDueAt?: string | null;
   ipCreatedAt: string;
@@ -871,6 +872,7 @@ export interface InternProjectCreate {
   ipcTitle: string;
   ipcDescription?: string;
   ipcStatus?: string;
+  ipcActivationStatus?: string;
   ipcStartAt?: string;
   ipcDueAt?: string;
 }
@@ -890,9 +892,11 @@ export interface InternTaskDTO {
   itTitle: string;
   itDescription?: string | null;
   itStatus: string;
+  itActivationStatus?: string;
   itProgress: number;
   itAssignedTo?: number | null;
   itAssignedName?: string | null;
+  itProposedAssignee?: number | null;
   itDueAt?: string | null;
   itCreatedAt: string;
   itUpdatedAt: string;
@@ -903,6 +907,8 @@ export interface InternTaskCreate {
   itcTitle: string;
   itcDescription?: string;
   itcAssignedTo?: number;
+  itcProposedAssignee?: number;
+  itcActivationStatus?: string;
   itcDueAt?: string;
 }
 
@@ -978,6 +984,266 @@ export interface InternPermissionCreate {
 export interface InternPermissionUpdate {
   ipuStatus?: string | null;
   ipuDecisionNotes?: string | null;
+}
+
+export type InternExecutionStatus =
+  | 'pending'
+  | 'in_progress'
+  | 'passed'
+  | 'failed'
+  | 'blocked'
+  | 'not_applicable'
+  | 'ready_for_retest'
+  | 'verified';
+
+export interface InternAuditPlanDTO {
+  iapId: string;
+  iapProjectId: string;
+  iapTaskId: string;
+  iapEnvironment: string;
+  iapStatus: 'draft' | 'active' | 'completed' | 'cancelled';
+  iapDurationDays: number;
+  iapExpectedHoursMin: number;
+  iapExpectedHoursMax: number;
+  iapMidpointPercent: number;
+  iapProposedAssignee?: number | null;
+  iapFinalReviewRequired: boolean;
+  iapCompletionJustification?: string | null;
+  iapCompletionApprovedBy?: number | null;
+  iapCompletionApprovedAt?: string | null;
+  iapCaseCount: number;
+  iapExecutedCaseCount: number;
+  iapCriticalRemaining: number;
+  iapOpenBlockerCount: number;
+  iapFailedWithoutReport: number;
+  iapEvidenceMissing: number;
+  iapCalculatedProgress: number;
+  iapCanComplete: boolean;
+  iapCreatedAt: string;
+  iapUpdatedAt: string;
+}
+
+export interface InternTestExecutionDTO {
+  itexId: string;
+  itexTestCaseId: string;
+  itexExecutionNumber: number;
+  itexExecutorPartyId: number;
+  itexStatus: InternExecutionStatus;
+  itexActualResult?: string | null;
+  itexPersistedStateObserved?: string | null;
+  itexSideEffectsObserved?: string | null;
+  itexBlockerReason?: string | null;
+  itexEvidenceSummary?: string | null;
+  itexStartedAt?: string | null;
+  itexCompletedAt?: string | null;
+  itexCreatedAt: string;
+  itexUpdatedAt: string;
+}
+
+export interface InternTestCaseDTO {
+  itcId: string;
+  itcPlanId: string;
+  itcStableId: string;
+  itcModuleName: string;
+  itcFeatureName: string;
+  itcUserRole: string;
+  itcObjective: string;
+  itcBusinessPurpose: string;
+  itcPreconditions: string;
+  itcRequiredTestData: string;
+  itcEnvironment: string;
+  itcPlatform: string;
+  itcBrowserOrDevice: string;
+  itcLanguage: string;
+  itcDetailedSteps: string;
+  itcExpectedResult: string;
+  itcExpectedPersistedState: string;
+  itcExpectedSideEffects: string;
+  itcCleanupInstructions: string;
+  itcCriticality: 'low' | 'medium' | 'high' | 'critical';
+  itcEvidenceRequirement: 'light' | 'strong';
+  itcExploratoryCharter?: string | null;
+  itcApplicable: boolean;
+  itcSortOrder: number;
+  itcLatestExecution?: InternTestExecutionDTO | null;
+}
+
+export interface InternTestExecutionCreate {
+  itecStatus: InternExecutionStatus;
+  itecActualResult?: string | null;
+  itecPersistedStateObserved?: string | null;
+  itecSideEffectsObserved?: string | null;
+  itecBlockerReason?: string | null;
+  itecEvidenceSummary?: string | null;
+}
+
+export interface InternDailySummaryDTO {
+  idsId: string;
+  idsTaskId: string;
+  idsAuthorPartyId: number;
+  idsWorkDate: string;
+  idsMinutesWorked: number;
+  idsModulesTested: string;
+  idsCasesCompleted: number;
+  idsReportsCreated: number;
+  idsBlockers?: string | null;
+  idsNextStep: string;
+  idsCreatedAt: string;
+}
+
+export interface InternDailySummaryCreate {
+  idscWorkDate: string;
+  idscMinutesWorked: number;
+  idscModulesTested: string;
+  idscCasesCompleted: number;
+  idscReportsCreated: number;
+  idscBlockers?: string | null;
+  idscNextStep: string;
+}
+
+export interface InternFinalSummaryDTO {
+  ifsId: string;
+  ifsPlanId: string;
+  ifsAuthorPartyId: number;
+  ifsGeneratedSnapshot: string;
+  ifsConclusions?: string | null;
+  ifsSubmittedAt?: string | null;
+  ifsApprovedBy?: number | null;
+  ifsApprovedAt?: string | null;
+  ifsCreatedAt: string;
+  ifsUpdatedAt: string;
+}
+
+export type InternalReportType =
+  | 'error'
+  | 'suggestion'
+  | 'idea'
+  | 'question'
+  | 'accessibility'
+  | 'permissions'
+  | 'performance'
+  | 'content_translation';
+
+export type InternalReportState =
+  | 'draft'
+  | 'submitted'
+  | 'received'
+  | 'needs_information'
+  | 'confirmed'
+  | 'prioritized'
+  | 'in_progress'
+  | 'ready_for_retest'
+  | 'verified'
+  | 'closed'
+  | 'duplicate'
+  | 'discarded';
+
+export interface InternalFeedbackSummaryDTO {
+  ifsId: string;
+  ifsTitle: string;
+  ifsReportType: InternalReportType;
+  ifsState: InternalReportState;
+  ifsModuleName: string;
+  ifsFeatureName?: string | null;
+  ifsEnvironment: string;
+  ifsPlatform: string;
+  ifsProposedSeverityId?: string | null;
+  ifsAuthoritativeSeverityId?: string | null;
+  ifsPriority?: string | null;
+  ifsBlocking: boolean;
+  ifsReporterPartyId: number;
+  ifsReporterName: string;
+  ifsInternshipProjectId?: string | null;
+  ifsInternshipTaskId?: string | null;
+  ifsTestCaseId?: string | null;
+  ifsTestExecutionId?: string | null;
+  ifsDuplicateOf?: string | null;
+  ifsCreatedAt: string;
+  ifsUpdatedAt: string;
+}
+
+export interface InternalFeedbackEvidenceDTO {
+  ifeId: string;
+  ifeKind: string;
+  ifeOriginalFileName?: string | null;
+  ifeContentType?: string | null;
+  ifeSizeBytes?: number | null;
+  ifeExternalUrl?: string | null;
+  ifeCaption?: string | null;
+  ifeUploadedBy: number;
+  ifeCreatedAt: string;
+}
+
+export interface InternalFeedbackCommentDTO {
+  ifcmId: string;
+  ifcmAuthorPartyId: number;
+  ifcmAuthorName: string;
+  ifcmKind: string;
+  ifcmBody: string;
+  ifcmCreatedAt: string;
+}
+
+export interface InternalFeedbackHistoryDTO {
+  ifhId: string;
+  ifhActorPartyId: number;
+  ifhActorName: string;
+  ifhAction: string;
+  ifhPreviousState?: string | null;
+  ifhNewState?: string | null;
+  ifhMetadata?: string | null;
+  ifhCreatedAt: string;
+}
+
+export interface InternalFeedbackRetestDTO {
+  ifrtId: string;
+  ifrtExecutionId?: string | null;
+  ifrtTesterPartyId: number;
+  ifrtTesterName: string;
+  ifrtResult: 'passed' | 'failed' | 'blocked';
+  ifrtNotes?: string | null;
+  ifrtEvidenceSummary?: string | null;
+  ifrtCreatedAt: string;
+}
+
+export interface InternalFeedbackDTO {
+  ifrSummary: InternalFeedbackSummaryDTO;
+  ifrDescription: string;
+  ifrCategoryId?: string | null;
+  ifrUrlOrScreen?: string | null;
+  ifrDevice?: string | null;
+  ifrBrowser?: string | null;
+  ifrLanguage: string;
+  ifrAccountRole: string;
+  ifrReproductionSteps?: string | null;
+  ifrExpectedResult?: string | null;
+  ifrActualResult?: string | null;
+  ifrFrequency?: string | null;
+  ifrAssignedTo?: number | null;
+  ifrResolution?: string | null;
+  ifrRetestResult?: string | null;
+  ifrClosureReason?: string | null;
+  ifrGithubIssueUrl?: string | null;
+  ifrVideoLinks?: string | null;
+  ifrSubmittedAt?: string | null;
+  ifrClosedAt?: string | null;
+  ifrEvidence: InternalFeedbackEvidenceDTO[];
+  ifrComments: InternalFeedbackCommentDTO[];
+  ifrHistory: InternalFeedbackHistoryDTO[];
+  ifrRetests: InternalFeedbackRetestDTO[];
+  ifrPotentialDuplicates: InternalFeedbackSummaryDTO[];
+}
+
+export interface LegacyFeedbackDTO {
+  lfdId: string;
+  lfdTitle: string;
+  lfdDescription: string;
+  lfdCategoryId?: string | null;
+  lfdSeverityId?: string | null;
+  lfdContactEmail?: string | null;
+  lfdConsent: boolean;
+  lfdCreatedBy?: number | null;
+  lfdHasAttachment: boolean;
+  lfdCreatedAt: string;
 }
 
 export interface FanClubDTO {

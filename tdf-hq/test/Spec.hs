@@ -45,7 +45,7 @@ import qualified Test.QuickCheck as QC
 import Web.PathPieces (toPathPiece)
 
 import TDF.API (CmsContentIn (..), WhatsAppConsentRequest (..), WhatsAppOptOutRequest (..))
-import TDF.API.Feedback (FeedbackPayload (..))
+import TDF.API.Feedback (FeedbackPayload (..), InternalFeedbackUpdate (..))
 import TDF.API.DDEX (DdexExportRequest, DdexPartnerCreateRequest)
 import TDF.API.Admin (AdminEmailBroadcastRequest)
 import qualified TDF.API.Calendar as CalAPI
@@ -248,6 +248,9 @@ import TDF.ServerInternships
       validateInternTaskProgressUpdate,
       validateOptionalInternProjectStatusInput,
       validateOptionalInternTaskStatusInput )
+import TDF.ServerInternAudit
+    ( validateExecutionStatus,
+      validateReportableText )
 import TDF.ServerProposals
     ( ProposalContentSource (..),
       validateOptionalProposalClientPartyId,
@@ -264,6 +267,8 @@ import TDF.ServerProposals
 import TDF.ServerFeedback
     ( normalizeOptionalFeedbackText,
       sanitizeFeedbackAttachmentFileName,
+      validateEnvironment,
+      validateExternalEvidenceUrl,
       validateFeedbackDescription,
       validateFeedbackAttachmentSize,
       validateFeedbackAttachmentContentType,
@@ -271,7 +276,13 @@ import TDF.ServerFeedback
       validateFeedbackAttachmentMetadata,
       validateFeedbackTitle,
       validateFeedbackConsent,
-      validateOptionalFeedbackContactEmail )
+      validateGithubIssueUrl,
+      validateInternalReportState,
+      validateOptionalFeedbackContactEmail,
+      validatePriority,
+      validateReportType,
+      validateStateTransition,
+      validateVideoLinks )
 import TDF.ServerInstagramOAuth
     ( FacebookAccessToken (..),
       FacebookPage (..),
@@ -12970,6 +12981,84 @@ main = hspec $ do
                         expectationFailure ("Expected invalid internship task progress to be rejected, got " <> show value)
             assertInvalid (validateInternTaskProgressUpdate (Just (-1)))
             assertInvalid (validateInternTaskProgressUpdate (Just 101))
+
+    describe "studio internship audit execution validation" $ do
+        it "normalizes every supported execution status used by the Spanish workflow" $ do
+            validateExecutionStatus " PENDING " `shouldBe` Right "pending"
+            validateExecutionStatus "in_progress" `shouldBe` Right "in_progress"
+            validateExecutionStatus "passed" `shouldBe` Right "passed"
+            validateExecutionStatus "failed" `shouldBe` Right "failed"
+            validateExecutionStatus "blocked" `shouldBe` Right "blocked"
+            validateExecutionStatus "not_applicable" `shouldBe` Right "not_applicable"
+            validateExecutionStatus "ready_for_retest" `shouldBe` Right "ready_for_retest"
+            validateExecutionStatus "verified" `shouldBe` Right "verified"
+
+        it "rejects unknown execution states and unsafe reportable text" $ do
+            case validateExecutionStatus "done" of
+                Left err -> errHTTPCode err `shouldBe` 400
+                Right value -> expectationFailure ("Expected status rejection, got " <> show value)
+            validateReportableText "actualResult" 20 "  Resultado claro  "
+                `shouldBe` Right "Resultado claro"
+            case validateReportableText "actualResult" 20 "fallo\NULoculto" of
+                Left err -> errHTTPCode err `shouldBe` 400
+                Right value -> expectationFailure ("Expected control rejection, got " <> show value)
+
+    describe "internal feedback workflow validation" $ do
+        it "distinguishes omitted administrative fields from explicit JSON null when clearing triage values" $ do
+            fmap ifuPriority (eitherDecode "{}" :: Either String InternalFeedbackUpdate)
+                `shouldBe` Right Nothing
+            fmap ifuPriority (eitherDecode "{\"ifuPriority\":null}" :: Either String InternalFeedbackUpdate)
+                `shouldBe` Right (Just Nothing)
+            fmap ifuAssignedTo (eitherDecode "{\"ifuAssignedTo\":42}" :: Either String InternalFeedbackUpdate)
+                `shouldBe` Right (Just (Just 42))
+
+        it "accepts the requested report taxonomy without granting authoritative triage" $ do
+            (validateReportType " ACCEssibility " :: Either ServerError Text)
+                `shouldBe` Right "accessibility"
+            (validateReportType "content_translation" :: Either ServerError Text)
+                `shouldBe` Right "content_translation"
+            case (validateReportType "incident" :: Either ServerError Text) of
+                Left err -> errHTTPCode err `shouldBe` 400
+                Right value -> expectationFailure ("Expected type rejection, got " <> show value)
+            (validatePriority " URGENT " :: Either ServerError Text)
+                `shouldBe` Right "urgent"
+            (validateEnvironment " staging " :: Either ServerError Text)
+                `shouldBe` Right "staging"
+
+        it "enforces explicit triage transitions including clarification, retest, closure, and reopening" $ do
+            (validateStateTransition "received" "needs_information" :: Either ServerError Text)
+                `shouldBe` Right "needs_information"
+            (validateStateTransition "in_progress" "ready_for_retest" :: Either ServerError Text)
+                `shouldBe` Right "ready_for_retest"
+            (validateStateTransition "ready_for_retest" "verified" :: Either ServerError Text)
+                `shouldBe` Right "verified"
+            (validateStateTransition "verified" "closed" :: Either ServerError Text)
+                `shouldBe` Right "closed"
+            (validateStateTransition "closed" "received" :: Either ServerError Text)
+                `shouldBe` Right "received"
+            case (validateStateTransition "received" "closed" :: Either ServerError Text) of
+                Left err -> errHTTPCode err `shouldBe` 409
+                Right value -> expectationFailure ("Expected transition rejection, got " <> show value)
+
+        it "requires known states and public HTTPS evidence links" $ do
+            (validateInternalReportState "state" "ready_for_retest" :: Either ServerError Text)
+                `shouldBe` Right "ready_for_retest"
+            (validateExternalEvidenceUrl " https://evidence.example.test/video/123 " :: Either ServerError Text)
+                `shouldBe` Right "https://evidence.example.test/video/123"
+            forM_ ["http://evidence.example.test/a", "https://localhost/a", "https://127.0.0.1/a", "https://10.0.0.1/a", "https://192.168.1.2/a", "https://169.254.169.254/latest", "https://172.16.0.2/a", "file:///tmp/a"] $ \url ->
+                case (validateExternalEvidenceUrl url :: Either ServerError Text) of
+                    Left err -> errHTTPCode err `shouldBe` 400
+                    Right value -> expectationFailure ("Expected unsafe URL rejection, got " <> show value)
+            (validateVideoLinks (Just "https://evidence.example.test/a\nhttps://evidence.example.test/b") :: Either ServerError (Maybe Text))
+                `shouldBe` Right (Just "https://evidence.example.test/a\nhttps://evidence.example.test/b")
+            (validateGithubIssueUrl "https://github.com/diegueins680/tdf-app/issues/123" :: Either ServerError Text)
+                `shouldBe` Right "https://github.com/diegueins680/tdf-app/issues/123"
+            case (validateGithubIssueUrl "https://github.com/diegueins680/tdf-app/pull/123" :: Either ServerError Text) of
+                Left err -> errHTTPCode err `shouldBe` 400
+                Right value -> expectationFailure ("Expected non-issue GitHub URL rejection, got " <> show value)
+            case (validateGithubIssueUrl "https://github.com/diegueins680/tdf-app/issues/123oops" :: Either ServerError Text) of
+                Left err -> errHTTPCode err `shouldBe` 400
+                Right value -> expectationFailure ("Expected malformed GitHub issue URL rejection, got " <> show value)
 
     describe "internship project title validation" $ do
         it "trims project titles while preserving omitted update payloads" $ do

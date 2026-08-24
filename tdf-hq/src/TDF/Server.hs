@@ -189,7 +189,7 @@ import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
 import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Server.Directory as DirectoryServer
 import qualified TDF.Server.Reviews as ReviewsServer
-import           TDF.ServerFeedback (feedbackServer)
+import           TDF.ServerFeedback (feedbackServer, internalFeedbackServer)
 import qualified TDF.Contracts.Server as Contracts
 import           TDF.ServerProposals (proposalsServer)
 import           TDF.ServerFanClub (fanClubPublicGetClub, fanClubPublicGetEvents, fanClubSecureListMyClubs, fanClubSecureArtistHandlers, buildFanClubPostReactionSummary)
@@ -3779,6 +3779,7 @@ protectedServer user =
   :<|> socialEventsServer user
   :<|> contractsServer user
   :<|> internshipsServer user
+  :<|> internalFeedbackServer user
   :<|> adsAdminServer user
   :<|> coursesAdminServer user
   :<|> labelServer user
