@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import type { PublicUpcomingEventDTO } from '../api/socialEvents';
 
 const listPublicUpcomingEventsMock = jest.fn<
-  (opts?: { city?: string; startAfter?: string; limit?: number }) => Promise<PublicUpcomingEventDTO[]>
+  (opts?: { city?: string; startAfter?: string; limit?: number; signal?: AbortSignal }) => Promise<PublicUpcomingEventDTO[]>
 >();
 
 jest.unstable_mockModule('../api/socialEvents', () => ({

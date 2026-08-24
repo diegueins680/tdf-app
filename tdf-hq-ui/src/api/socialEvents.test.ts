@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 
-const getMock = jest.fn<(path: string) => Promise<unknown>>();
+const getMock = jest.fn<(path: string, init?: RequestInit) => Promise<unknown>>();
 const postMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
 const postFormMock = jest.fn<(path: string, body: FormData) => Promise<unknown>>();
 const putMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
@@ -70,6 +70,22 @@ describe('SocialEventsAPI', () => {
     });
 
     expect(getMock).toHaveBeenCalledWith('/social-events/events?city=Quito&event_type_id=31000000-0000-4000-8000-000000000001&workflow_state_id=00000000-0000-4000-8000-000000000233&artistId=42');
+  });
+
+  it('forwards cancellation for public upcoming event searches', async () => {
+    const controller = new AbortController();
+
+    await SocialEventsAPI.listPublicUpcomingEvents({
+      city: ' Guayaquil ',
+      startAfter: '2030-01-01T00:00:00.000Z',
+      limit: 50,
+      signal: controller.signal,
+    });
+
+    expect(getMock).toHaveBeenLastCalledWith(
+      '/social-events/upcoming?city=Guayaquil&startAfter=2030-01-01T00%3A00%3A00.000Z&limit=50',
+      { signal: controller.signal },
+    );
   });
 
   it('removes waitlist entries through the shared API client', async () => {

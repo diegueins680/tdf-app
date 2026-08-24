@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import SearchIcon from '@mui/icons-material/Search';
@@ -29,25 +29,31 @@ const eventPath = (event: PublicUpcomingEventDTO) => `/eventos/${encodeURICompon
 export default function UpcomingEventsPublicPage() {
   useDocumentTitle('Próximos eventos');
   const [city, setCity] = useState('');
+  const [cityFilter, setCityFilter] = useState('');
   const startAfter = useMemo(() => new Date().toISOString(), []);
-  const cityFilter = city.trim();
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setCityFilter(city.trim()), 350);
+    return () => window.clearTimeout(timeoutId);
+  }, [city]);
 
   const eventsQuery = useQuery({
     queryKey: ['public-upcoming-events', startAfter, cityFilter],
-    queryFn: () => SocialEventsAPI.listPublicUpcomingEvents({
+    queryFn: ({ signal }) => SocialEventsAPI.listPublicUpcomingEvents({
       city: cityFilter || undefined,
       startAfter,
       limit: 50,
+      signal,
     }),
     staleTime: 60_000,
   });
 
   const events = useMemo(() => {
-    const needle = city.trim().toLocaleLowerCase();
+    const needle = cityFilter.toLocaleLowerCase();
     return (eventsQuery.data ?? [])
       .filter((event) => !needle || (event.publicUpcomingEventCity ?? '').toLocaleLowerCase().includes(needle))
       .sort((a, b) => a.publicUpcomingEventStart.localeCompare(b.publicUpcomingEventStart));
-  }, [city, eventsQuery.data]);
+  }, [cityFilter, eventsQuery.data]);
 
   return (
     <Box component="main" id="main-content" sx={{ maxWidth: 1100, mx: 'auto', px: { xs: 2, md: 4 }, py: { xs: 4, md: 7 } }}>
