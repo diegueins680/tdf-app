@@ -17,6 +17,7 @@ test('staging baseline covers every migration before the studio audit and leaves
   assert.match(sql, /NOT LIKE '%@persona\.test'/u);
   assert.match(sql, /The studio-audit migration must remain pending/u);
   assert.doesNotMatch(sql, /\('2026-08-21_studio_internship_audit', '[0-9a-f]{64}',/u);
+  assert.doesNotMatch(sql, /\('2026-08-24_ticket_qr_constraint_compatibility', '[0-9a-f]{64}',/u);
   assert.match(sql, /ON CONFLICT \(migration_id\) DO NOTHING/u);
   assert.match(sql, new RegExp(`\\b${sourceCommit}\\b`, 'u'));
 });

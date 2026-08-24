@@ -114,8 +114,8 @@ export async function loadStudioAuditStagingBaselineEntries() {
     'utf8',
   ));
   const targetIndex = manifest.migrations.findIndex(({ id }) => id === targetMigrationId);
-  if (targetIndex < 1 || targetIndex !== manifest.migrations.length - 1) {
-    throw new Error('The studio-audit migration must exist and remain the final registered migration.');
+  if (targetIndex < 1) {
+    throw new Error('The studio-audit migration must exist after at least one baseline migration.');
   }
 
   return Promise.all(manifest.migrations.slice(0, targetIndex).map(async (entry) => {
