@@ -242,7 +242,7 @@
       "permissions": { "discover": {}, "view": { "recordScope": "explicit-manager" }, "create": { "recordScope": "authenticated-adult-or-guardian-approved" }, "edit": { "recordScope": "explicit-manager" }, "submit": { "recordScope": "authenticated-adult-or-guardian-approved" } },
       "recordScope": "explicit-manager",
       "globalMenu": true,
-      "quickCreate": { "action": "create", "label": { "es": "Nuevo clasificado", "en": "New classified" }, "webDestination": "/mis-clasificados?crear=clasificado", "mobileDestination": null },
+      "quickCreate": { "action": "create", "label": { "es": "Nuevo clasificado", "en": "New classified" }, "webDestination": "/mis-clasificados?crear=clasificado", "mobileDestination": "/directory/manage?create=classified" },
       "mobilePresentation": { "kind": "native", "destination": "/directory/manage", "documentedException": null },
       "accessRequestEligible": false,
       "apiScopes": [{ "pathPrefix": "/directory", "methods": { "GET": "view", "POST": "create", "PUT": "edit", "PATCH": "edit" } }]

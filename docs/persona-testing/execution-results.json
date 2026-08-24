@@ -81,7 +81,7 @@
       "command": "npm run generate:features && npm run audit:features",
       "scope": "web/mobile feature registry parity",
       "status": "passed",
-      "result": "137 features, 156 web routes, and 38 mobile routes validated after replacing seven false native destinations with truthful web fallbacks.",
+      "result": "137 features, 156 web routes, and 44 mobile routes validated after retaining home as a truthful web continuation and restoring six completed directory search/detail/management families to native routes.",
       "evidence": "docs/persona-testing/execution-report.md#run-008"
     },
     {
