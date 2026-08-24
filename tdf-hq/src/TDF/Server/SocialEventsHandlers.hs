@@ -291,7 +291,12 @@ publicUpcomingEventsServer mCity mStartAfter mLimit = do
         runSqlPool
             ( do
                 rows <- selectPublicUpcomingSocialEvents mCity startAfter limit
-                catMaybes <$> mapM (publicUpcomingEventRow Nothing) rows
+                catMaybes
+                    <$> mapM
+                        (\(eventEntity, Single canonicalCity) ->
+                            publicUpcomingEventRow canonicalCity eventEntity
+                        )
+                        rows
             )
             envPool
 
@@ -302,7 +307,7 @@ selectPublicUpcomingSocialEvents ::
     Maybe T.Text ->
     UTCTime ->
     Int ->
-    SqlPersistT IO [Entity SocialEvent]
+    SqlPersistT IO [(Entity SocialEvent, Single (Maybe T.Text))]
 selectPublicUpcomingSocialEvents mCity startAfter limit = do
     backend <- ask :: SqlPersistT IO SqlBackend
     eventTable <- getEscapedRawName "social_event"
@@ -328,7 +333,7 @@ selectPublicUpcomingSocialEvents mCity startAfter limit = do
                     , [PersistText (T.strip rawCity)]
                     )
         orderedQuery =
-            "SELECT ?? FROM "
+            "SELECT ??,directory_event.city_name FROM "
                 <> eventTable
                 <> " INNER JOIN "
                 <> publicEventView
@@ -371,17 +376,16 @@ collectMatchingRows requestedLimit requestedPageSize loadPage matchRow
                 else go (offset + length rows) nextMatches
 
 publicUpcomingEventRow :: Maybe T.Text -> Entity SocialEvent -> SqlPersistT IO (Maybe PublicUpcomingEventDTO)
-publicUpcomingEventRow mCity (Entity eventKey eventRow) = do
+publicUpcomingEventRow canonicalCity (Entity eventKey eventRow) = do
     metadataResult <- pure (decodeStoredEventMetadata (socialEventMetadata eventRow))
     venue <- maybe (pure Nothing) get (socialEventVenueId eventRow)
     case (metadataResult, socialEventWorkflowStateId eventRow) of
         (Right metadata, Just workflowStateId) -> do
             workflow <- EventLifecycle.loadActiveSocialEventState workflowStateId
             publicListable <- EventLifecycle.socialEventStateHasCapability workflowStateId "public-listable"
-            let city = venue >>= SM.venueCity
-                cityMatches = maybe True (\needle -> maybe False (T.isInfixOf (T.toCaseFold (T.strip needle)) . T.toCaseFold) city) mCity
+            let city = canonicalCity
             pure $
-                if publicListable && emIsPublic metadata /= Just False && cityMatches
+                if publicListable && emIsPublic metadata /= Just False
                     then do
                         (stateCode, _, _) <- workflow
                         Just PublicUpcomingEventDTO
