@@ -315,6 +315,11 @@
       "id": "2026-08-24_ticket_qr_constraint_compatibility",
       "path": "tdf-hq/sql/2026-08-24_ticket_qr_constraint_compatibility.sql",
       "introducedBy": "e856bf6a7b9d4ec4a5999c0f5bf14e583c9d8b1f"
+    },
+    {
+      "id": "2026-08-24_studio_audit_completion_exception",
+      "path": "tdf-hq/sql/2026-08-24_studio_audit_completion_exception.sql",
+      "introducedBy": "73c24f9e2a935930d1e7e6dd643c698cde803a72"
     }
   ]
 }

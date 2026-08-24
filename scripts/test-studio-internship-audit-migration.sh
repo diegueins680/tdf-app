@@ -115,9 +115,12 @@ SQL
 
 apply_file tdf-hq/sql/2026-08-21_studio_internship_audit.sql
 apply_file tdf-hq/sql/2026-08-21_studio_internship_audit.sql
+apply_file tdf-hq/sql/2026-08-24_studio_audit_completion_exception.sql
+apply_file tdf-hq/sql/2026-08-24_studio_audit_completion_exception.sql
 
 assert_equal "$(psql_exec -Atqc "SELECT count(*) FROM information_schema.tables WHERE table_name IN ('intern_audit_plan','intern_test_case','intern_test_execution','internal_feedback_report','internal_feedback_evidence','internal_feedback_history');")" "6" "normalized workflow tables"
 assert_equal "$(psql_exec -Atqc "SELECT count(*) FROM information_schema.columns WHERE table_name='intern_task' AND column_name IN ('activation_status','proposed_assignee');")" "2" "draft task columns"
+assert_equal "$(psql_exec -Atqc "SELECT count(*) FROM information_schema.columns WHERE table_name='intern_audit_plan' AND column_name='completion_exception_approved';")" "1" "explicit completion exception column"
 
 psql_exec <<'SQL' >/dev/null
 INSERT INTO party(id,display_name,primary_email) VALUES

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-24T21:50:23.513Z",
+  "generatedAt": "2026-08-24T23:42:32.886Z",
   "repositoryRoot": ".",
   "filesScanned": 1181,
   "candidateCount": 917,
@@ -3572,7 +3572,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 545,
+      "consumerCount": 546,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -3738,6 +3738,7 @@
         "scripts/__tests__/persona-test-program.test.mjs",
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/archive/change-venue-to-domo.py",
@@ -3778,8 +3779,7 @@
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
         "scripts/sync-country-reference.mjs",
-        "scripts/test-catalog-production-cutover.sh",
-        "scripts/test-checkout-event-refund-runtime-migration.sh"
+        "scripts/test-catalog-production-cutover.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/refresh-instagram-token.mjs",
@@ -3860,7 +3860,7 @@
       "lines": [
         695
       ],
-      "consumerCount": 545,
+      "consumerCount": 546,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -4026,6 +4026,7 @@
         "scripts/__tests__/persona-test-program.test.mjs",
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/archive/change-venue-to-domo.py",
@@ -4066,8 +4067,7 @@
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
         "scripts/sync-country-reference.mjs",
-        "scripts/test-catalog-production-cutover.sh",
-        "scripts/test-checkout-event-refund-runtime-migration.sh"
+        "scripts/test-catalog-production-cutover.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/refresh-instagram-token.mjs",
@@ -4299,7 +4299,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 545,
+      "consumerCount": 546,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -4466,6 +4466,7 @@
         "scripts/__tests__/persona-test-program.test.mjs",
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/archive/change-venue-to-domo.py",
         "scripts/archive/create-manual-shows.py",
@@ -4505,8 +4506,7 @@
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
         "scripts/sync-country-reference.mjs",
-        "scripts/test-catalog-production-cutover.sh",
-        "scripts/test-checkout-event-refund-runtime-migration.sh"
+        "scripts/test-catalog-production-cutover.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/refresh-instagram-token.mjs",
@@ -5954,7 +5954,7 @@
       "lines": [
         101
       ],
-      "consumerCount": 62,
+      "consumerCount": 63,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -6020,6 +6020,7 @@
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/archive/create-manual-shows.py",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/lib/production-release.mjs",
         "scripts/sync-concerts-with-apis.py",
         "scripts/test-music-directory-contract.mjs",
@@ -8891,7 +8892,7 @@
       "lines": [
         214
       ],
-      "consumerCount": 121,
+      "consumerCount": 123,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -8997,7 +8998,9 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/continuous-improvement-loop-forever.mjs",
@@ -9534,7 +9537,7 @@
       "similarCandidateIds": []
     },
     {
-      "id": "7e0512ca023025d69362",
+      "id": "1e3eb9553fe54fb2e9d2",
       "file": "scripts/production-migrations.json",
       "sourceKind": "production",
       "surface": "automation",
@@ -9605,9 +9608,10 @@
         "{id=2026-08-18_music_directory_profile_image_host_compatibility}",
         "{id=2026-08-20_verified_experience_reviews}",
         "{id=2026-08-21_studio_internship_audit}",
-        "{id=2026-08-24_ticket_qr_constraint_compatibility}"
+        "{id=2026-08-24_ticket_qr_constraint_compatibility}",
+        "{id=2026-08-24_studio_audit_completion_exception}"
       ],
-      "valueCount": 63,
+      "valueCount": 64,
       "recommendedClassification": "security-system-registry",
       "lines": [
         3
@@ -11369,7 +11373,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 60,
+      "consumerCount": 62,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
@@ -11433,6 +11437,8 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/lib/production-release.mjs",
         "scripts/test-ddex-partner-legacy-compatibility.sh",
@@ -11838,7 +11844,7 @@
       "lines": [
         5
       ],
-      "consumerCount": 25,
+      "consumerCount": 26,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -11867,6 +11873,7 @@
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/continuous-improvement-loop-forever.mjs",
         "scripts/continuous-improvement-loop-supervisor.sh",
         "scripts/continuous-improvement-loop.mjs",
@@ -15095,7 +15102,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 295,
+      "consumerCount": 296,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -15223,6 +15230,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/archive/change-venue-to-domo.py",
         "scripts/archive/create-manual-shows.py",
@@ -16923,7 +16931,7 @@
       "lines": [
         77
       ],
-      "consumerCount": 205,
+      "consumerCount": 206,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -17084,6 +17092,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -17525,7 +17534,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 295,
+      "consumerCount": 296,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -17653,6 +17662,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/archive/change-venue-to-domo.py",
         "scripts/archive/create-manual-shows.py",
@@ -20802,7 +20812,7 @@
       "lines": [
         70
       ],
-      "consumerCount": 289,
+      "consumerCount": 290,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -20930,6 +20940,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/archive/shows-data.json",
@@ -21568,7 +21579,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 113,
+      "consumerCount": 114,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -21665,6 +21676,7 @@
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/archive/create-manual-shows.py",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/lib/openclaw-cdp.mjs",
@@ -28815,7 +28827,7 @@
       "lines": [
         55
       ],
-      "consumerCount": 137,
+      "consumerCount": 139,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -28924,7 +28936,9 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/continuous-improvement-loop-forever.mjs",
@@ -30221,7 +30235,7 @@
       "lines": [
         4441
       ],
-      "consumerCount": 137,
+      "consumerCount": 139,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -30330,7 +30344,9 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/continuous-improvement-loop-forever.mjs",
@@ -33118,7 +33134,7 @@
       "lines": [
         381
       ],
-      "consumerCount": 546,
+      "consumerCount": 547,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -33285,6 +33301,7 @@
         "scripts/__tests__/persona-test-program.test.mjs",
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/archive/change-venue-to-domo.py",
@@ -33324,8 +33341,7 @@
         "scripts/sync-artist-drive.js",
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
-        "scripts/sync-country-reference.mjs",
-        "scripts/test-catalog-production-cutover.sh"
+        "scripts/sync-country-reference.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/refresh-instagram-token.mjs",
@@ -40283,7 +40299,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 550,
+      "consumerCount": 551,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -40450,6 +40466,7 @@
         "scripts/__tests__/persona-test-program.test.mjs",
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/archive/change-venue-to-domo.py",
@@ -40489,8 +40506,7 @@
         "scripts/sync-artist-drive.js",
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
-        "scripts/sync-country-reference.mjs",
-        "scripts/test-catalog-production-cutover.sh"
+        "scripts/sync-country-reference.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/refresh-instagram-token.mjs",
@@ -43674,7 +43690,7 @@
       "lines": [
         43
       ],
-      "consumerCount": 113,
+      "consumerCount": 114,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -43771,6 +43787,7 @@
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/archive/create-manual-shows.py",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/lib/openclaw-cdp.mjs",
@@ -43937,7 +43954,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 295,
+      "consumerCount": 296,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -44065,6 +44082,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/archive/change-venue-to-domo.py",
         "scripts/archive/create-manual-shows.py",
@@ -48030,7 +48048,7 @@
       "lines": [
         86
       ],
-      "consumerCount": 180,
+      "consumerCount": 181,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -48166,6 +48184,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/fixtures/production-ticketing-base.sql",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
@@ -48810,7 +48829,7 @@
         807,
         909
       ],
-      "consumerCount": 150,
+      "consumerCount": 151,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -48926,6 +48945,7 @@
         "scripts/__tests__/fixtures/production-ticketing-base.sql",
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/archive/tdf-backend-migrate-trial-to-lesson.sql",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -49221,7 +49241,7 @@
       "lines": [
         5139
       ],
-      "consumerCount": 180,
+      "consumerCount": 181,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -49342,6 +49362,7 @@
         "scripts/__tests__/fixtures/production-ticketing-base.sql",
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/archive/tdf-backend-migrate-trial-to-lesson.sql",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -50504,7 +50525,7 @@
       "lines": [
         7668
       ],
-      "consumerCount": 545,
+      "consumerCount": 546,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -50671,6 +50692,7 @@
         "scripts/__tests__/persona-test-program.test.mjs",
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/archive/change-venue-to-domo.py",
@@ -50710,8 +50732,7 @@
         "scripts/sync-artist-drive.js",
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
-        "scripts/sync-country-reference.mjs",
-        "scripts/test-catalog-production-cutover.sh"
+        "scripts/sync-country-reference.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/refresh-instagram-token.mjs",
@@ -51063,7 +51084,7 @@
       "lines": [
         7935
       ],
-      "consumerCount": 546,
+      "consumerCount": 547,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -51230,6 +51251,7 @@
         "scripts/__tests__/persona-test-program.test.mjs",
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/archive/change-venue-to-domo.py",
@@ -51269,8 +51291,7 @@
         "scripts/sync-artist-drive.js",
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
-        "scripts/sync-country-reference.mjs",
-        "scripts/test-catalog-production-cutover.sh"
+        "scripts/sync-country-reference.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/refresh-instagram-token.mjs",
@@ -52411,7 +52432,7 @@
       "lines": [
         9810
       ],
-      "consumerCount": 43,
+      "consumerCount": 44,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -52456,6 +52477,7 @@
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/codex-logical-correctness-loop.sh",
         "scripts/continuous-improvement-loop-forever.mjs",
         "scripts/continuous-improvement-loop-supervisor.sh",
@@ -52509,7 +52531,7 @@
         10335,
         10387
       ],
-      "consumerCount": 545,
+      "consumerCount": 546,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -52676,6 +52698,7 @@
         "scripts/__tests__/persona-test-program.test.mjs",
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/archive/change-venue-to-domo.py",
@@ -52715,8 +52738,7 @@
         "scripts/sync-artist-drive.js",
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
-        "scripts/sync-country-reference.mjs",
-        "scripts/test-catalog-production-cutover.sh"
+        "scripts/sync-country-reference.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/refresh-instagram-token.mjs",
@@ -53482,7 +53504,7 @@
       "lines": [
         11363
       ],
-      "consumerCount": 145,
+      "consumerCount": 146,
       "backendConsumers": [
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -53601,6 +53623,7 @@
         ".github/workflows/catalog-list-audit.yml",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/studio-internship-audit.test.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -57754,7 +57777,7 @@
       "lines": [
         182
       ],
-      "consumerCount": 42,
+      "consumerCount": 43,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -57797,6 +57820,7 @@
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/codex-logical-correctness-loop.sh",
         "scripts/continuous-improvement-loop-forever.mjs",
@@ -59658,7 +59682,7 @@
       "lines": [
         480
       ],
-      "consumerCount": 26,
+      "consumerCount": 27,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -59687,6 +59711,7 @@
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/continuous-improvement-loop-forever.mjs",
         "scripts/continuous-improvement-loop-supervisor.sh",
@@ -64462,7 +64487,7 @@
       "lines": [
         32
       ],
-      "consumerCount": 37,
+      "consumerCount": 38,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_content_reaction_cutover_apply.sql",
@@ -64503,6 +64528,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/lib/production-release.mjs",
         "scripts/operations-load-test.mjs",
@@ -65632,7 +65658,7 @@
       "lines": [
         320
       ],
-      "consumerCount": 29,
+      "consumerCount": 30,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -65664,6 +65690,7 @@
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/continuous-improvement-loop-forever.mjs",
         "scripts/continuous-improvement-loop-supervisor.sh",
@@ -69446,7 +69473,7 @@
       "lines": [
         135
       ],
-      "consumerCount": 62,
+      "consumerCount": 63,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -69509,6 +69536,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -69730,7 +69758,7 @@
       "lines": [
         54
       ],
-      "consumerCount": 62,
+      "consumerCount": 63,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -69793,6 +69821,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -69902,7 +69931,7 @@
       "lines": [
         31
       ],
-      "consumerCount": 26,
+      "consumerCount": 27,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -69931,6 +69960,7 @@
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/artist-enrichment.mjs",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/continuous-improvement-loop-forever.mjs",
         "scripts/continuous-improvement-loop-supervisor.sh",
@@ -71100,7 +71130,7 @@
       "lines": [
         133
       ],
-      "consumerCount": 62,
+      "consumerCount": 63,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -71163,6 +71193,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -71760,7 +71791,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 62,
+      "consumerCount": 63,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -71823,6 +71854,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -72854,7 +72886,7 @@
       "lines": [
         109
       ],
-      "consumerCount": 62,
+      "consumerCount": 63,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -72917,6 +72949,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -73333,7 +73366,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 62,
+      "consumerCount": 63,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -73396,6 +73429,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -73864,7 +73898,7 @@
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
         32,
-        163
+        159
       ],
       "consumerCount": 22,
       "backendConsumers": [
@@ -73962,7 +73996,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 77,
+      "line": 73,
       "values": [
         "low",
         "medium",
@@ -73972,7 +74006,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        77
+        73
       ],
       "consumerCount": 42,
       "backendConsumers": [
@@ -74049,7 +74083,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 78,
+      "line": 74,
       "values": [
         "light",
         "strong"
@@ -74057,7 +74091,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        78
+        74
       ],
       "consumerCount": 21,
       "backendConsumers": [
@@ -74111,7 +74145,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 95,
+      "line": 91,
       "values": [
         "pending",
         "in_progress",
@@ -74125,7 +74159,7 @@
       "valueCount": 8,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        95
+        91
       ],
       "consumerCount": 58,
       "backendConsumers": [
@@ -74232,7 +74266,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 112,
+      "line": 108,
       "values": [
         "pending",
         "in_progress",
@@ -74241,7 +74275,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        112
+        108
       ],
       "consumerCount": 31,
       "backendConsumers": [
@@ -74308,7 +74342,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 153,
+      "line": 149,
       "values": [
         "error",
         "suggestion",
@@ -74322,7 +74356,7 @@
       "valueCount": 8,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        153
+        149
       ],
       "consumerCount": 16,
       "backendConsumers": [
@@ -74385,7 +74419,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 157,
+      "line": 153,
       "values": [
         "draft",
         "submitted",
@@ -74403,7 +74437,7 @@
       "valueCount": 12,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        157
+        153
       ],
       "consumerCount": 74,
       "backendConsumers": [
@@ -74537,7 +74571,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 176,
+      "line": 172,
       "values": [
         "low",
         "medium",
@@ -74547,7 +74581,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        176
+        172
       ],
       "consumerCount": 38,
       "backendConsumers": [
@@ -74625,7 +74659,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 234,
+      "line": 230,
       "values": [
         "attachment",
         "external_link",
@@ -74635,7 +74669,7 @@
       "valueCount": 4,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        234
+        230
       ],
       "consumerCount": 14,
       "backendConsumers": [
@@ -74686,7 +74720,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 243,
+      "line": 239,
       "values": [
         "comment",
         "information_request",
@@ -74695,7 +74729,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        243
+        239
       ],
       "consumerCount": 10,
       "backendConsumers": [
@@ -74739,7 +74773,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 270,
+      "line": 266,
       "values": [
         "passed",
         "failed",
@@ -74748,7 +74782,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        270
+        266
       ],
       "consumerCount": 30,
       "backendConsumers": [
@@ -74816,7 +74850,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "sql-check-values",
       "name": "CHECK IN",
-      "line": 285,
+      "line": 281,
       "values": [
         "immediate",
         "digest"
@@ -74824,7 +74858,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        285
+        281
       ],
       "consumerCount": 3,
       "backendConsumers": [
@@ -78692,7 +78726,7 @@
       "lines": [
         1550
       ],
-      "consumerCount": 40,
+      "consumerCount": 41,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -78738,6 +78772,7 @@
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/archive/create-manual-shows.py",
+        "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/lib/production-release.mjs",
         "scripts/sync-concerts-with-apis.py"
       ],
@@ -78884,7 +78919,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "internalReportTypes",
-      "line": 1164,
+      "line": 1162,
       "values": [
         "error",
         "suggestion",
@@ -78898,7 +78933,7 @@
       "valueCount": 8,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        1164
+        1162
       ],
       "consumerCount": 15,
       "backendConsumers": [
@@ -78960,7 +78995,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "internalReportStates",
-      "line": 1185,
+      "line": 1183,
       "values": [
         "draft",
         "submitted",
@@ -78978,7 +79013,7 @@
       "valueCount": 12,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        1185
+        1183
       ],
       "consumerCount": 73,
       "backendConsumers": [
@@ -79111,7 +79146,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "allowedFeedbackAttachmentContentTypes",
-      "line": 1654,
+      "line": 1652,
       "values": [
         "application/csv",
         "application/pdf",
@@ -79125,7 +79160,7 @@
       "valueCount": 8,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1654
+        1652
       ],
       "consumerCount": 29,
       "backendConsumers": [
@@ -82777,7 +82812,7 @@
       "lines": [
         1016
       ],
-      "consumerCount": 545,
+      "consumerCount": 546,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -82944,6 +82979,7 @@
         "scripts/__tests__/persona-test-program.test.mjs",
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/archive/change-venue-to-domo.py",
@@ -82983,8 +83019,7 @@
         "scripts/sync-artist-drive.js",
         "scripts/sync-artist-shows-to-social-events.py",
         "scripts/sync-concerts-with-apis.py",
-        "scripts/sync-country-reference.mjs",
-        "scripts/test-catalog-production-cutover.sh"
+        "scripts/sync-country-reference.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/refresh-instagram-token.mjs",
@@ -88393,7 +88428,7 @@
       "lines": [
         118
       ],
-      "consumerCount": 180,
+      "consumerCount": 181,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -88528,6 +88563,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/fixtures/production-ticketing-base.sql",
         "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/ai-workflow-doctor.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/capture-feature-audit-visuals.mjs",
