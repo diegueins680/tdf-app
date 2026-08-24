@@ -7683,11 +7683,22 @@ components:
           format: password
     GoogleLoginRequest:
       type: object
+      additionalProperties: false
       required: [idToken]
       properties:
         idToken:
           type: string
           description: Google ID token returned by Google Identity Services
+        marketingOptIn:
+          type: boolean
+          description: Optional consent to receive TDF product and marketing updates when creating an account.
+        termsAccepted:
+          type: boolean
+          description: Account terms acceptance when Google is used from signup.
+        termsVersion:
+          type: string
+          maxLength: 100
+          description: Version of the account terms accepted during Google signup.
     SignupRequest:
       type: object
       additionalProperties: false
@@ -7711,6 +7722,16 @@ components:
           type: string
           format: password
           example: changeme123
+        marketingOptIn:
+          type: boolean
+          description: Optional consent to receive TDF product and marketing updates.
+        termsAccepted:
+          type: boolean
+          description: Account terms acceptance. New first-party clients send true with termsVersion.
+        termsVersion:
+          type: string
+          maxLength: 100
+          description: Version of the account terms accepted during signup.
         fanArtistIds:
           type: array
           items:
@@ -7740,6 +7761,9 @@ components:
           items:
             type: string
             description: Enabled modules for the user.
+        accountCreated:
+          type: boolean
+          description: Present on Google authentication to distinguish a newly created account from an existing login.
     SessionResponse:
       type: object
       required: [username, displayName, partyId, roles, modules, featureFlags, preferences]

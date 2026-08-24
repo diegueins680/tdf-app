@@ -66,6 +66,8 @@ import { ProfileSectionCard } from '../features/fans/ProfileSectionCard';
 import { useFanProfile } from '../features/fans/useFanProfile';
 import { FanClubPreview } from '../features/fanclubs/FanClubPreview';
 import { Catalogs, type CatalogItem } from '../api/catalogs';
+import { getAnalyticsClient } from '../analytics/posthog';
+import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
 const ARTIST_CATALOG_INITIAL_ROWS_PER_PAGE: number = 3 * 4;
@@ -397,6 +399,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
+      captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed');
     },
   });
 
@@ -1227,7 +1230,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                       <Button
                         component={RouterLink}
-                        to="/login?signup=1&roles=Fan&redirect=/fans"
+                        to="/login?signup=1&intent=follow_artists&redirect=/fans"
                         variant="outlined"
                         sx={{ textTransform: 'none' }}
                       >

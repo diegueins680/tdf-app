@@ -4947,7 +4947,7 @@ spec = describe "TDF.Server helpers" $ do
                 "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\",\"password\":\"supersecret\",\"fanArtistIds\":[7,11],\"claimArtistId\":42}" of
                 Left decodeErr ->
                     expectationFailure ("Expected canonical signup payload to decode, got: " <> decodeErr)
-                Right (DTO.SignupRequest firstNameValue lastNameValue emailValue phoneValue _ _ _ fanArtistIdsValue claimArtistIdValue) -> do
+                Right (DTO.SignupRequest firstNameValue lastNameValue emailValue phoneValue _ _ _ _ _ fanArtistIdsValue claimArtistIdValue) -> do
                     firstNameValue `shouldBe` "Ada"
                     lastNameValue `shouldBe` "Lovelace"
                     emailValue `shouldBe` "ada@example.com"
@@ -4980,7 +4980,7 @@ spec = describe "TDF.Server helpers" $ do
             case decodeGoogleLoginRequest "{\"idToken\":\"google-id-token\"}" of
                 Left decodeErr ->
                     expectationFailure ("Expected canonical Google login payload to decode, got: " <> decodeErr)
-                Right (DTO.GoogleLoginRequest idTokenValue) ->
+                Right (DTO.GoogleLoginRequest idTokenValue _ _ _) ->
                     idTokenValue `shouldBe` "google-id-token"
 
             case decodeChangePasswordRequest
