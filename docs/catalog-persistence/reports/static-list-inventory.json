@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-24T03:26:27.046Z",
+  "generatedAt": "2026-08-24T03:41:35.386Z",
   "repositoryRoot": ".",
   "filesScanned": 1177,
-  "candidateCount": 915,
+  "candidateCount": 917,
   "byClassification": {
     "dynamic-business-catalog": 571,
     "genuine-technical-constant": 47,
     "governed-reference-data": 94,
-    "security-system-registry": 203
+    "security-system-registry": 205
   },
   "exactDuplicateGroupCount": 127,
   "normalizedVariantGroupCount": 130,
@@ -1170,6 +1170,7 @@
         {
           "value": "error",
           "candidateIds": [
+            "c930b16683c4f1d12bbd",
             "db1300703b13e38b42ef",
             "64e8632941f203cb08f8",
             "be69e78eb7afe0a110eb",
@@ -4940,6 +4941,76 @@
       ]
     },
     {
+      "id": "c930b16683c4f1d12bbd",
+      "file": "scripts/build-catalog-decisions.mjs",
+      "sourceKind": "production",
+      "surface": "automation",
+      "domain": "music-catalog-cms",
+      "kind": "array",
+      "name": "INTERNAL_FEEDBACK_REPORT_TYPES",
+      "line": 14,
+      "values": [
+        "error",
+        "suggestion",
+        "idea",
+        "question",
+        "accessibility",
+        "permissions",
+        "performance",
+        "content_translation"
+      ],
+      "valueCount": 8,
+      "recommendedClassification": "security-system-registry",
+      "lines": [
+        14
+      ],
+      "consumerCount": 15,
+      "backendConsumers": [
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql",
+        "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
+        "tdf-hq/src/TDF/API/Internships.hs",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
+        "tdf-hq/src/TDF/FeatureRegistry.hs",
+        "tdf-hq/src/TDF/ServerFeedback.hs",
+        "tdf-hq/src/TDF/ServerInternAudit.hs",
+        "tdf-hq/test/Spec.hs"
+      ],
+      "webConsumers": [
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+        "tdf-hq-ui/src/pages/InternshipsPage.tsx"
+      ],
+      "mobileConsumers": [
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+      ],
+      "automationConsumers": [
+        "scripts/persona-test-program.mjs"
+      ],
+      "apiAndIntegrationConsumers": [
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq/src/TDF/API/Internships.hs",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+      ],
+      "decision": "dynamic-business-catalog",
+      "disposition": "persisted-registry-with-parser-adapter-mirror",
+      "specializedModel": "feedback_category",
+      "priority": "P0-cutover",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Published feedback_category rows own selectable types, localized labels, ordering, and availability. Code and OpenAPI retain only stable wire adapters, and the backend rejects mismatched category/type pairs.",
+      "exactDuplicateIds": [
+        "db1300703b13e38b42ef",
+        "48ca3537e25aa7ecbed1",
+        "00d58ecf1c8f233cfb08",
+        "b507df99a59f0dfb394b",
+        "fb052da892b08e56e3d4"
+      ],
+      "similarCandidateIds": []
+    },
+    {
       "id": "466aa6b7847efbc61fda",
       "file": "scripts/build-catalog-decisions.mjs",
       "sourceKind": "production",
@@ -4947,7 +5018,7 @@
       "domain": "music-catalog-cms",
       "kind": "object-registry",
       "name": "options",
-      "line": 15,
+      "line": 26,
       "values": [
         "input",
         "output"
@@ -4955,7 +5026,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        15
+        26
       ],
       "consumerCount": 147,
       "backendConsumers": [
@@ -13628,12 +13699,13 @@
       "lines": [
         1117
       ],
-      "consumerCount": 15,
+      "consumerCount": 17,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
         "tdf-hq/src/TDF/API/Internships.hs",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/ServerFeedback.hs",
         "tdf-hq/src/TDF/ServerInternAudit.hs",
@@ -13650,6 +13722,7 @@
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "automationConsumers": [
+        "scripts/build-catalog-decisions.mjs",
         "scripts/persona-test-program.mjs"
       ],
       "apiAndIntegrationConsumers": [
@@ -13661,12 +13734,13 @@
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "decision": "dynamic-business-catalog",
-      "disposition": "consumer-update",
+      "disposition": "persisted-registry-with-parser-adapter-mirror",
       "specializedModel": "feedback_category",
-      "priority": "P3-consumer",
-      "risk": "Client category drift could mislabel or reject valid internal reports.",
-      "justification": "Report types are user-selectable feedback categories; the client union must follow the canonical persisted contract.",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Published feedback_category rows own selectable types, localized labels, ordering, and availability. Code and OpenAPI retain only stable wire adapters, and the backend rejects mismatched category/type pairs.",
       "exactDuplicateIds": [
+        "c930b16683c4f1d12bbd",
         "48ca3537e25aa7ecbed1",
         "00d58ecf1c8f233cfb08",
         "b507df99a59f0dfb394b",
@@ -13676,7 +13750,8 @@
         "48ca3537e25aa7ecbed1",
         "00d58ecf1c8f233cfb08",
         "b507df99a59f0dfb394b",
-        "fb052da892b08e56e3d4"
+        "fb052da892b08e56e3d4",
+        "38f859757dcf76849ac1"
       ]
     },
     {
@@ -34105,11 +34180,12 @@
       "lines": [
         38
       ],
-      "consumerCount": 13,
+      "consumerCount": 15,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
         "tdf-hq/src/TDF/API/Internships.hs",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/ServerFeedback.hs",
         "tdf-hq/src/TDF/ServerInternAudit.hs",
@@ -34125,6 +34201,7 @@
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "automationConsumers": [
+        "scripts/build-catalog-decisions.mjs",
         "scripts/persona-test-program.mjs"
       ],
       "apiAndIntegrationConsumers": [
@@ -34135,17 +34212,87 @@
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "decision": "dynamic-business-catalog",
-      "disposition": "consumer-update",
+      "disposition": "persisted-registry-with-parser-adapter-mirror",
       "specializedModel": "feedback_category",
-      "priority": "P3-consumer",
-      "risk": "Label drift could present an incorrect category while persisting a different canonical value.",
-      "justification": "These labels are a web consumer of the canonical feedback-category registry.",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Published feedback_category rows own selectable types, localized labels, ordering, and availability. Code and OpenAPI retain only stable wire adapters, and the backend rejects mismatched category/type pairs.",
       "exactDuplicateIds": [
+        "c930b16683c4f1d12bbd",
         "db1300703b13e38b42ef",
         "00d58ecf1c8f233cfb08",
         "b507df99a59f0dfb394b",
         "fb052da892b08e56e3d4"
       ],
+      "similarCandidateIds": [
+        "db1300703b13e38b42ef",
+        "00d58ecf1c8f233cfb08",
+        "b507df99a59f0dfb394b",
+        "fb052da892b08e56e3d4"
+      ]
+    },
+    {
+      "id": "38f859757dcf76849ac1",
+      "file": "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+      "sourceKind": "production",
+      "surface": "web",
+      "domain": "cross-cutting-or-technical",
+      "kind": "object-registry",
+      "name": "REPORT_TYPE_BY_CATEGORY_CODE",
+      "line": 49,
+      "values": [
+        "bug",
+        "suggestion",
+        "idea",
+        "question",
+        "accessibility",
+        "permissions",
+        "performance",
+        "content_translation"
+      ],
+      "valueCount": 8,
+      "recommendedClassification": "security-system-registry",
+      "lines": [
+        49
+      ],
+      "consumerCount": 15,
+      "backendConsumers": [
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql",
+        "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
+        "tdf-hq/src/TDF/API/Internships.hs",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
+        "tdf-hq/src/TDF/FeatureRegistry.hs",
+        "tdf-hq/src/TDF/ServerFeedback.hs",
+        "tdf-hq/src/TDF/ServerInternAudit.hs",
+        "tdf-hq/test/Spec.hs"
+      ],
+      "webConsumers": [
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/pages/InternshipsPage.tsx"
+      ],
+      "mobileConsumers": [
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+      ],
+      "automationConsumers": [
+        "scripts/build-catalog-decisions.mjs",
+        "scripts/persona-test-program.mjs"
+      ],
+      "apiAndIntegrationConsumers": [
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq/src/TDF/API/Internships.hs",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+      ],
+      "decision": "dynamic-business-catalog",
+      "disposition": "persisted-registry-with-parser-adapter-mirror",
+      "specializedModel": "feedback_category",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Published feedback_category rows own selectable types, localized labels, ordering, and availability. Code and OpenAPI retain only stable wire adapters, and the backend rejects mismatched category/type pairs.",
+      "exactDuplicateIds": [],
       "similarCandidateIds": [
         "db1300703b13e38b42ef",
         "00d58ecf1c8f233cfb08",
@@ -34161,7 +34308,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "object-registry",
       "name": "STATE_LABELS",
-      "line": 49,
+      "line": 60,
       "values": [
         "draft",
         "submitted",
@@ -34179,7 +34326,7 @@
       "valueCount": 12,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        49
+        60
       ],
       "consumerCount": 73,
       "backendConsumers": [
@@ -34311,7 +34458,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "object-registry",
       "name": "ADMIN_TRANSITIONS",
-      "line": 64,
+      "line": 75,
       "values": [
         "draft",
         "submitted",
@@ -34329,7 +34476,7 @@
       "valueCount": 12,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        64
+        75
       ],
       "consumerCount": 73,
       "backendConsumers": [
@@ -34461,7 +34608,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 184,
+      "line": 216,
       "values": [
         "staging",
         "test",
@@ -34484,7 +34631,7 @@
       "valueCount": 17,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        184
+        216
       ],
       "consumerCount": 26,
       "backendConsumers": [
@@ -53021,11 +53168,12 @@
       "lines": [
         10427
       ],
-      "consumerCount": 15,
+      "consumerCount": 17,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
         "tdf-hq/src/TDF/API/Internships.hs",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/ServerFeedback.hs",
         "tdf-hq/src/TDF/ServerInternAudit.hs",
@@ -53043,6 +53191,7 @@
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "automationConsumers": [
+        "scripts/build-catalog-decisions.mjs",
         "scripts/persona-test-program.mjs"
       ],
       "apiAndIntegrationConsumers": [
@@ -53054,12 +53203,13 @@
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "decision": "dynamic-business-catalog",
-      "disposition": "consumer-update",
+      "disposition": "persisted-registry-with-parser-adapter-mirror",
       "specializedModel": "feedback_category",
-      "priority": "P3-consumer",
-      "risk": "OpenAPI category drift can produce incompatible generated clients.",
-      "justification": "The schema enum mirrors canonical user-selectable feedback categories.",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Published feedback_category rows own selectable types, localized labels, ordering, and availability. Code and OpenAPI retain only stable wire adapters, and the backend rejects mismatched category/type pairs.",
       "exactDuplicateIds": [
+        "c930b16683c4f1d12bbd",
         "db1300703b13e38b42ef",
         "48ca3537e25aa7ecbed1",
         "b507df99a59f0dfb394b",
@@ -53069,7 +53219,8 @@
         "db1300703b13e38b42ef",
         "48ca3537e25aa7ecbed1",
         "b507df99a59f0dfb394b",
-        "fb052da892b08e56e3d4"
+        "fb052da892b08e56e3d4",
+        "38f859757dcf76849ac1"
       ]
     },
     {
@@ -74141,10 +74292,11 @@
       "lines": [
         149
       ],
-      "consumerCount": 13,
+      "consumerCount": 16,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/src/TDF/API/Internships.hs",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/ServerFeedback.hs",
         "tdf-hq/src/TDF/ServerInternAudit.hs",
@@ -74153,6 +74305,7 @@
       "webConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
         "tdf-hq-ui/src/pages/InternshipsPage.tsx"
       ],
       "mobileConsumers": [
@@ -74160,6 +74313,7 @@
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "automationConsumers": [
+        "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/persona-test-program.mjs"
       ],
@@ -74177,6 +74331,7 @@
       "risk": "Hard-coded report types can diverge across storage, API validation, forms, and analytics.",
       "justification": "Internal report types are user-selectable feedback categories and require canonical persisted authority.",
       "exactDuplicateIds": [
+        "c930b16683c4f1d12bbd",
         "db1300703b13e38b42ef",
         "48ca3537e25aa7ecbed1",
         "00d58ecf1c8f233cfb08",
@@ -74186,7 +74341,8 @@
         "db1300703b13e38b42ef",
         "48ca3537e25aa7ecbed1",
         "00d58ecf1c8f233cfb08",
-        "fb052da892b08e56e3d4"
+        "fb052da892b08e56e3d4",
+        "38f859757dcf76849ac1"
       ]
     },
     {
@@ -78695,7 +78851,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "internalReportTypes",
-      "line": 1067,
+      "line": 1075,
       "values": [
         "error",
         "suggestion",
@@ -78709,13 +78865,14 @@
       "valueCount": 8,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        1067
+        1075
       ],
-      "consumerCount": 12,
+      "consumerCount": 15,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
         "tdf-hq/src/TDF/API/Internships.hs",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/ServerInternAudit.hs",
         "tdf-hq/test/Spec.hs"
@@ -78723,6 +78880,7 @@
       "webConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
         "tdf-hq-ui/src/pages/InternshipsPage.tsx"
       ],
       "mobileConsumers": [
@@ -78730,6 +78888,7 @@
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "automationConsumers": [
+        "scripts/build-catalog-decisions.mjs",
         "scripts/persona-test-program.mjs"
       ],
       "apiAndIntegrationConsumers": [
@@ -78740,12 +78899,13 @@
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "decision": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
+      "disposition": "persisted-registry-with-parser-adapter-mirror",
       "specializedModel": "feedback_category",
       "priority": "P1-cross-platform",
-      "risk": "Backend report-type allowlists can diverge from persisted categories and generated clients.",
-      "justification": "The backend list currently validates user-selectable feedback categories and should consume canonical records.",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Published feedback_category rows own selectable types, localized labels, ordering, and availability. Code and OpenAPI retain only stable wire adapters, and the backend rejects mismatched category/type pairs.",
       "exactDuplicateIds": [
+        "c930b16683c4f1d12bbd",
         "db1300703b13e38b42ef",
         "48ca3537e25aa7ecbed1",
         "00d58ecf1c8f233cfb08",
@@ -78755,7 +78915,8 @@
         "db1300703b13e38b42ef",
         "48ca3537e25aa7ecbed1",
         "00d58ecf1c8f233cfb08",
-        "b507df99a59f0dfb394b"
+        "b507df99a59f0dfb394b",
+        "38f859757dcf76849ac1"
       ]
     },
     {
@@ -78766,7 +78927,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "internalReportStates",
-      "line": 1073,
+      "line": 1096,
       "values": [
         "draft",
         "submitted",
@@ -78784,7 +78945,7 @@
       "valueCount": 12,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        1073
+        1096
       ],
       "consumerCount": 73,
       "backendConsumers": [
@@ -78917,7 +79078,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "allowedFeedbackAttachmentContentTypes",
-      "line": 1515,
+      "line": 1552,
       "values": [
         "application/csv",
         "application/pdf",
@@ -78931,7 +79092,7 @@
       "valueCount": 8,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1515
+        1552
       ],
       "consumerCount": 29,
       "backendConsumers": [
@@ -80177,7 +80338,7 @@
       "domain": "fan-social",
       "kind": "haskell-list",
       "name": "clearWhatsAppProviderCredentialEnv",
-      "line": 638,
+      "line": 639,
       "values": [
         "WA_TOKEN",
         "WHATSAPP_TOKEN",
@@ -80189,7 +80350,7 @@
       "valueCount": 6,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        638
+        639
       ],
       "consumerCount": 3,
       "backendConsumers": [

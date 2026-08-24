@@ -46,6 +46,17 @@ const TYPE_LABELS: Record<InternalReportType, string> = {
   content_translation: 'Contenido o traducción',
 };
 
+const REPORT_TYPE_BY_CATEGORY_CODE: Record<string, InternalReportType> = {
+  bug: 'error',
+  suggestion: 'suggestion',
+  idea: 'idea',
+  question: 'question',
+  accessibility: 'accessibility',
+  permissions: 'permissions',
+  performance: 'performance',
+  content_translation: 'content_translation',
+};
+
 const STATE_LABELS: Record<InternalReportState, string> = {
   draft: 'Borrador',
   submitted: 'Enviado',
@@ -82,6 +93,17 @@ const publishedItems = (page?: CatalogPage): CatalogItem[] =>
 const defaultId = (page: CatalogPage | undefined, scopeKind: string) =>
   page?.defaults.find((item) => item.scopeKind === scopeKind && item.scopeId === 'global' && !item.localeId)?.entityId ?? '';
 
+const internalReportTypeOptions = (categories: CatalogItem[]) => categories.flatMap((category) => {
+  const reportType = REPORT_TYPE_BY_CATEGORY_CODE[category.code];
+  return reportType ? [{ category, reportType }] : [];
+});
+
+const internalReportCategory = (categories: CatalogItem[], reportType: InternalReportType) =>
+  internalReportTypeOptions(categories).find((option) => option.reportType === reportType)?.category;
+
+const internalReportTypeLabel = (categories: CatalogItem[], reportType: InternalReportType) =>
+  internalReportCategory(categories, reportType)?.name ?? TYPE_LABELS[reportType];
+
 const errorMessage = (error: unknown, fallback: string) =>
   error instanceof Error && error.message.trim() ? error.message : fallback;
 
@@ -116,6 +138,7 @@ function NewInternalReport() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const catalogs = useFeedbackCatalogs();
+  const typeOptions = internalReportTypeOptions(catalogs.categories);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [form, setForm] = useState<InternalFeedbackCreate>({
     ifcTitle: '',
@@ -145,13 +168,14 @@ function NewInternalReport() {
   });
 
   useEffect(() => {
-    if (!form.ifcCategoryId && catalogs.defaultCategoryId) {
-      setForm((current) => ({ ...current, ifcCategoryId: catalogs.defaultCategoryId }));
+    if (!form.ifcCategoryId) {
+      const category = internalReportCategory(catalogs.categories, form.ifcReportType);
+      if (category) setForm((current) => ({ ...current, ifcCategoryId: category.id }));
     }
     if (!form.ifcProposedSeverityId && catalogs.defaultSeverityId) {
       setForm((current) => ({ ...current, ifcProposedSeverityId: catalogs.defaultSeverityId }));
     }
-  }, [catalogs.defaultCategoryId, catalogs.defaultSeverityId, form.ifcCategoryId, form.ifcProposedSeverityId]);
+  }, [catalogs.categories, catalogs.defaultSeverityId, form.ifcCategoryId, form.ifcProposedSeverityId, form.ifcReportType]);
 
   const mutation = useMutation({
     mutationFn: () => InternalFeedback.create(form),
@@ -161,6 +185,15 @@ function NewInternalReport() {
 
   const update = <K extends keyof InternalFeedbackCreate>(key: K, value: InternalFeedbackCreate[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
+
+  const updateReportType = (reportType: InternalReportType) => {
+    const category = internalReportCategory(catalogs.categories, reportType);
+    setForm((current) => ({
+      ...current,
+      ifcReportType: reportType,
+      ifcCategoryId: category?.id ?? '',
+    }));
+  };
 
   const errorRequired = form.ifcReportType === 'error';
   const canSave = form.ifcTitle.trim() && form.ifcDescription.trim() && form.ifcCategoryId
@@ -175,9 +208,8 @@ function NewInternalReport() {
         <Card variant="outlined"><CardContent>
           <Grid container spacing={2}>
             <Grid item xs={12} md={8}><TextField label="Título claro" value={form.ifcTitle} onChange={(event) => update('ifcTitle', event.target.value)} required fullWidth /></Grid>
-            <Grid item xs={12} md={4}><TextField select label="Tipo" value={form.ifcReportType} onChange={(event) => update('ifcReportType', event.target.value as InternalReportType)} fullWidth>{Object.entries(TYPE_LABELS).map(([value, label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}</TextField></Grid>
+            <Grid item xs={12} md={4}><TextField select label="Tipo de reporte" value={form.ifcReportType} onChange={(event) => updateReportType(event.target.value as InternalReportType)} disabled={!typeOptions.length} fullWidth>{typeOptions.map(({ category, reportType }) => <MenuItem key={category.id} value={reportType}>{category.name}</MenuItem>)}</TextField></Grid>
             <Grid item xs={12}><TextField label="Qué estabas intentando hacer y qué observaste" value={form.ifcDescription} onChange={(event) => update('ifcDescription', event.target.value)} required fullWidth multiline minRows={4} /></Grid>
-            <Grid item xs={12} md={6}><TextField select label="Categoría" value={form.ifcCategoryId} onChange={(event) => update('ifcCategoryId', event.target.value)} fullWidth disabled={!catalogs.categories.length}>{catalogs.categories.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField></Grid>
             <Grid item xs={12} md={6}><TextField select label="Gravedad propuesta" value={form.ifcProposedSeverityId} onChange={(event) => update('ifcProposedSeverityId', event.target.value)} fullWidth disabled={!catalogs.severities.length}>{catalogs.severities.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField></Grid>
             <Grid item xs={12} md={6}><TextField label="Módulo" value={form.ifcModuleName} onChange={(event) => update('ifcModuleName', event.target.value)} required fullWidth /></Grid>
             <Grid item xs={12} md={6}><TextField label="Función" value={form.ifcFeatureName ?? ''} onChange={(event) => update('ifcFeatureName', event.target.value)} fullWidth /></Grid>
@@ -268,9 +300,17 @@ function ReportDetail({ reportId }: { reportId: string }) {
     && (summary.ifsState === 'draft' || summary.ifsState === 'needs_information');
   const setReporterField = <K extends keyof InternalFeedbackUpdate>(key: K, value: InternalFeedbackUpdate[K]) =>
     setReporterUpdate((current) => ({ ...current, [key]: value }));
+  const setReporterReportType = (reportType: InternalReportType) => {
+    const category = internalReportCategory(catalogs.categories, reportType);
+    setReporterUpdate((current) => ({
+      ...current,
+      ifuReportType: reportType,
+      ifuCategoryId: category?.id,
+    }));
+  };
 
   return (
-    <PageShell title={summary.ifsTitle} subtitle={`${TYPE_LABELS[summary.ifsReportType]} · ${STATE_LABELS[summary.ifsState]}`} maxWidth="lg" actions={<Button component={RouterLink} to="/feedback/interno" startIcon={<ArrowBackIcon />}>Reportes</Button>}>
+    <PageShell title={summary.ifsTitle} subtitle={`${internalReportTypeLabel(catalogs.categories, summary.ifsReportType)} · ${STATE_LABELS[summary.ifsState]}`} maxWidth="lg" actions={<Button component={RouterLink} to="/feedback/interno" startIcon={<ArrowBackIcon />}>Reportes</Button>}>
       <Stack spacing={2.5}>
         {message && <Alert severity={message.severity}>{message.text}</Alert>}
         <Stack direction="row" spacing={1} flexWrap="wrap">
@@ -295,9 +335,8 @@ function ReportDetail({ reportId }: { reportId: string }) {
           <Alert severity="info">Guarda los cambios antes de enviar. El historial registra qué campos cambiaron.</Alert>
           <Grid container spacing={2}>
             <Grid item xs={12} md={8}><TextField label="Título" value={reporterUpdate.ifuTitle ?? ''} onChange={(event) => setReporterField('ifuTitle', event.target.value)} required fullWidth /></Grid>
-            <Grid item xs={12} md={4}><TextField select label="Tipo" value={reporterUpdate.ifuReportType ?? 'error'} onChange={(event) => setReporterField('ifuReportType', event.target.value as InternalReportType)} fullWidth>{Object.entries(TYPE_LABELS).map(([value, label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}</TextField></Grid>
+            <Grid item xs={12} md={4}><TextField select label="Tipo de reporte" value={reporterUpdate.ifuReportType ?? 'error'} onChange={(event) => setReporterReportType(event.target.value as InternalReportType)} disabled={!catalogs.categories.length} fullWidth>{internalReportTypeOptions(catalogs.categories).map(({ category, reportType }) => <MenuItem key={category.id} value={reportType}>{category.name}</MenuItem>)}</TextField></Grid>
             <Grid item xs={12}><TextField label="Descripción" value={reporterUpdate.ifuDescription ?? ''} onChange={(event) => setReporterField('ifuDescription', event.target.value)} required fullWidth multiline minRows={4} /></Grid>
-            <Grid item xs={12} md={6}><TextField select label="Categoría" value={reporterUpdate.ifuCategoryId ?? ''} onChange={(event) => setReporterField('ifuCategoryId', event.target.value)} fullWidth>{catalogs.categories.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField></Grid>
             <Grid item xs={12} md={6}><TextField select label="Gravedad propuesta" value={reporterUpdate.ifuProposedSeverityId ?? ''} onChange={(event) => setReporterField('ifuProposedSeverityId', event.target.value)} fullWidth>{catalogs.severities.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField></Grid>
             <Grid item xs={12} md={6}><TextField label="Módulo" value={reporterUpdate.ifuModuleName ?? ''} onChange={(event) => setReporterField('ifuModuleName', event.target.value)} required fullWidth /></Grid>
             <Grid item xs={12} md={6}><TextField label="Función" value={reporterUpdate.ifuFeatureName ?? ''} onChange={(event) => setReporterField('ifuFeatureName', event.target.value || null)} fullWidth /></Grid>
@@ -361,6 +400,7 @@ function ReportDetail({ reportId }: { reportId: string }) {
 
 function ReportsList() {
   const { session } = useSession();
+  const catalogs = useFeedbackCatalogs();
   const isAdmin = hasInternshipsAdminAccess(session?.roles, session?.modules);
   const [state, setState] = useState('');
   const [moduleName, setModuleName] = useState('');
@@ -389,7 +429,7 @@ function ReportsList() {
         {query.isLoading && <LinearProgress />}
         {query.error && <Alert severity="error">{errorMessage(query.error, 'No se pudieron cargar los reportes.')}</Alert>}
         {!query.isLoading && !query.data?.length && <EmptyState title="No hay reportes" description="Los borradores y reportes enviados aparecerán aquí." actionLabel="Crear reporte" actionHref="/feedback/interno/nuevo" />}
-        <Grid container spacing={2}>{query.data?.map((report) => <Grid item xs={12} md={6} key={report.ifsId}><Card variant="outlined"><CardContent><Stack spacing={1}><Stack direction="row" justifyContent="space-between" gap={1}><Typography variant="h6">{report.ifsTitle}</Typography><Chip size="small" label={STATE_LABELS[report.ifsState]} color={report.ifsBlocking ? 'error' : 'default'} /></Stack><Typography variant="body2">{TYPE_LABELS[report.ifsReportType]} · {report.ifsModuleName}{report.ifsFeatureName ? ` / ${report.ifsFeatureName}` : ''}</Typography>{isAdmin && <Typography variant="caption">Reportó: {report.ifsReporterName}</Typography>}<Button component={RouterLink} to={`/feedback/interno/${report.ifsId}`} variant="outlined">Abrir seguimiento</Button></Stack></CardContent></Card></Grid>)}</Grid>
+        <Grid container spacing={2}>{query.data?.map((report) => <Grid item xs={12} md={6} key={report.ifsId}><Card variant="outlined"><CardContent><Stack spacing={1}><Stack direction="row" justifyContent="space-between" gap={1}><Typography variant="h6">{report.ifsTitle}</Typography><Chip size="small" label={STATE_LABELS[report.ifsState]} color={report.ifsBlocking ? 'error' : 'default'} /></Stack><Typography variant="body2">{internalReportTypeLabel(catalogs.categories, report.ifsReportType)} · {report.ifsModuleName}{report.ifsFeatureName ? ` / ${report.ifsFeatureName}` : ''}</Typography>{isAdmin && <Typography variant="caption">Reportó: {report.ifsReporterName}</Typography>}<Button component={RouterLink} to={`/feedback/interno/${report.ifsId}`} variant="outlined">Abrir seguimiento</Button></Stack></CardContent></Card></Grid>)}</Grid>
         {isAdmin && Boolean(legacyQuery.data?.length) && <Card variant="outlined"><CardContent><Stack spacing={1}><Typography variant="h6">Feedback público anterior</Typography><Typography variant="body2">Estos {legacyQuery.data?.length} registros continúan legibles para administradores y no se convirtieron silenciosamente en reportes internos.</Typography>{legacyQuery.data?.slice(0, 10).map((item) => <Box key={item.lfdId}><Typography fontWeight={700}>{item.lfdTitle}</Typography><Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{item.lfdDescription}</Typography><Typography variant="caption">{new Date(item.lfdCreatedAt).toLocaleString()} · consentimiento: {item.lfdConsent ? 'sí' : 'no'} · adjunto: {item.lfdHasAttachment ? 'sí' : 'no'}</Typography></Box>)}</Stack></CardContent></Card>}
       </Stack>
     </PageShell>

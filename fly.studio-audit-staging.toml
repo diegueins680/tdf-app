@@ -1,0 +1,60 @@
+app = "tdf-hq-studio-audit-staging"
+primary_region = "gru"
+
+[build]
+  dockerfile = "tdf-hq/Dockerfile"
+
+[env]
+  APP_ENV = "staging"
+  APP_PORT = "8080"
+  DEFAULT_LOCALE = "es"
+  RUN_MIGRATIONS = "false"
+  AUTO_APPLY_PRODUCTION_MIGRATIONS = "true"
+  RESET_DB = "false"
+  SEED_DB = "false"
+  EVENT_DISCOVERY_ENABLED = "false"
+  ARTIST_ENRICHMENT_ENABLED = "false"
+  EVENT_LOGISTICS_RECHECK_ENABLED = "false"
+  PAYPAL_ENV = "sandbox"
+  COMMERCE_CHECKOUT_ENV = "sandbox"
+  DATAFAST_ENV = "sandbox"
+  DATAFAST_BASE_URL = "https://test.oppwa.com"
+  HQ_ASSETS_DIR = "/data/assets"
+  TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/data/audit-evidence"
+  TZ = "America/Guayaquil"
+
+[[mounts]]
+  source = "tdf_studio_audit_staging_data"
+  destination = "/data"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8080
+  auto_start_machines = true
+  auto_stop_machines = true
+  min_machines_running = 0
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [[services.http_checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "45s"
+    method = "get"
+    path = "/health"
+    protocol = "http"
+
+[deploy]
+  strategy = "rolling"
+  max_unavailable = 1

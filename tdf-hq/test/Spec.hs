@@ -265,7 +265,8 @@ import TDF.ServerProposals
       validateProposalVersionNumber,
       validateTemplateKey )
 import TDF.ServerFeedback
-    ( normalizeOptionalFeedbackText,
+    ( internalReportTypeForCategoryCode,
+      normalizeOptionalFeedbackText,
       sanitizeFeedbackAttachmentFileName,
       validateEnvironment,
       validateExternalEvidenceUrl,
@@ -13057,6 +13058,12 @@ main = hspec $ do
                 `shouldBe` Right "urgent"
             (validateEnvironment " staging " :: Either ServerError Text)
                 `shouldBe` Right "staging"
+
+        it "maps internal report types from the persisted feedback-category codes" $ do
+            internalReportTypeForCategoryCode "bug" `shouldBe` Just "error"
+            internalReportTypeForCategoryCode " accessibility " `shouldBe` Just "accessibility"
+            internalReportTypeForCategoryCode "permissions" `shouldBe` Just "permissions"
+            internalReportTypeForCategoryCode "ux" `shouldBe` Nothing
 
         it "enforces explicit triage transitions including clarification, retest, closure, and reopening" $ do
             (validateStateTransition "received" "needs_information" :: Either ServerError Text)

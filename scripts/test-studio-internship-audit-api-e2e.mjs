@@ -40,9 +40,11 @@ assert.ok(admin.roles.includes('Studio Manager'));
 assert.ok(intern.roles.includes('Intern'));
 
 const catalogs = await request('/catalogs/batch?code=feedback-categories&code=feedback-severities&locale=es&page=1&pageSize=100');
-const category = catalogs.catalogs.find((entry) => entry.catalog.code === 'feedback-categories')?.items.find((item) => item.active && item.workflowState === 'published');
+const feedbackCategories = catalogs.catalogs.find((entry) => entry.catalog.code === 'feedback-categories')?.items ?? [];
+const category = feedbackCategories.find((item) => item.code === 'bug' && item.active && item.workflowState === 'published');
+const ideaCategory = feedbackCategories.find((item) => item.code === 'idea' && item.active && item.workflowState === 'published');
 const severity = catalogs.catalogs.find((entry) => entry.catalog.code === 'feedback-severities')?.items.find((item) => item.active && item.workflowState === 'published');
-assert.ok(category?.id && severity?.id, 'Published feedback catalogs are required');
+assert.ok(category?.id && ideaCategory?.id && severity?.id, 'Published feedback catalogs are required');
 
 const publicFeedback = new FormData();
 publicFeedback.append('title', 'E2E — compatibilidad del feedback público');
@@ -198,6 +200,12 @@ const reportCreate = {
   ifcBlocking: false,
   ifcVideoLinks: 'https://evidence.example.test/studio-audit-e2e',
 };
+await request('/feedback/internal', {
+  token: intern.token,
+  method: 'POST',
+  expected: 400,
+  json: { ...reportCreate, ifcCategoryId: ideaCategory.id },
+});
 const draftReport = await request('/feedback/internal', {
   token: intern.token,
   method: 'POST',
