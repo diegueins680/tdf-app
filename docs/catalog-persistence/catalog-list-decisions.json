@@ -9172,6 +9172,16 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Published feedback_category rows own selectable types, localized labels, ordering, and availability. Code and OpenAPI retain only stable wire adapters, and the backend rejects mismatched category/type pairs.",
       "reviewed": true
+    },
+    {
+      "id": "249a1e4671d31741032a",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the fixture fields could stop the safety test from detecting drift in the draft-reuse API contract.",
+      "justification": "These are immutable API DTO field names in a negative safety fixture, not selectable or reportable business values.",
+      "reviewed": true
     }
   ]
 }
