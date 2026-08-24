@@ -349,6 +349,7 @@ import TDF.Server
       extractApiErrorMessage,
       chatKitSessionErrorMessage,
       shouldRetryWithFallbackModel )
+import TDF.Server.Reviews (eligibilitySql, publicReviewTargetStatement)
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
       LiveSessionMusicianLookup (..),
@@ -782,6 +783,27 @@ main = hspec $ do
                     pure (if even candidate then Just candidate else Nothing)
             result <- collectMatchingRows 3 2 loadPage keepEven
             result `shouldBe` [2, 4, 6]
+
+    describe "public review target visibility" $ do
+        it "keeps delivered marketplace sales visible without exposing withdrawn listings" $ do
+            let statement = publicReviewTargetStatement "marketplace_listing"
+            statement `shouldSatisfy` Data.Text.isInfixOf "listing.active OR EXISTS"
+            statement `shouldSatisfy` Data.Text.isInfixOf "delivered.to_status='delivered'"
+            statement `shouldSatisfy` Data.Text.isInfixOf "delivered.created_at=listing.updated_at"
+
+        it "requires storefront packages to remain active" $ do
+            publicReviewTargetStatement "service_package"
+                `shouldSatisfy` Data.Text.isInfixOf "AND active"
+
+        it "rejects inactive or deprecated service offerings" $ do
+            let statement = publicReviewTargetStatement "service_offering"
+            statement `shouldSatisfy` Data.Text.isInfixOf "AND active"
+            statement `shouldSatisfy` Data.Text.isInfixOf "deprecated_at IS NULL"
+
+        it "does not offer review creation for hidden targets" $ do
+            eligibilitySql `shouldSatisfy` Data.Text.isInfixOf "offering.active AND offering.deprecated_at IS NULL"
+            eligibilitySql `shouldSatisfy` Data.Text.isInfixOf "WHERE package.active"
+            eligibilitySql `shouldSatisfy` Data.Text.isInfixOf "delivered.created_at=listing.updated_at"
 
     describe "DDEX canonical write JSON contracts" $ do
         it "accepts export writes with only a canonical standard-version id" $ do
