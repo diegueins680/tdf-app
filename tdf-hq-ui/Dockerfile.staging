@@ -3,12 +3,13 @@ WORKDIR /repo
 
 COPY package.json package-lock.json ./
 COPY tdf-hq-ui/package.json tdf-hq-ui/package.json
-RUN npm ci --workspace=tdf-hq-ui --include-workspace-root=false
+RUN npm ci --workspace=tdf-hq-ui --include-workspace-root=false --legacy-peer-deps
 
 COPY tdf-hq-ui/index.html tdf-hq-ui/index.html
 COPY tdf-hq-ui/public tdf-hq-ui/public
 COPY tdf-hq-ui/scripts tdf-hq-ui/scripts
 COPY tdf-hq-ui/src tdf-hq-ui/src
+COPY tdf-hq/assets/feature-registry.json tdf-hq/assets/feature-registry.json
 COPY tdf-hq-ui/tsconfig.app.json tdf-hq-ui/tsconfig.app.json
 COPY tdf-hq-ui/tsconfig.json tdf-hq-ui/tsconfig.json
 COPY tdf-hq-ui/vite.config.ts tdf-hq-ui/vite.config.ts

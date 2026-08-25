@@ -6,7 +6,7 @@ No step below implies approval. The required order is:
 
 1. Revalidate the already-resolved Stewart Moreira identity as exactly one active party/email with the `Intern` role; keep the exact identifiers runtime-only.
 2. Review code, inventory, cases, Spanish instructions, authorization, notification recipients, and data controls.
-3. Obtain explicit authorization for branch creation, then separately for staging, commit, push, and PR actions as requested by the repository workflow. Branch, commit, push, and PR creation were authorized on 2026-08-23. The isolated staging configuration is committed for review, but deployment, issue creation, in-app draft creation, activation, assignment, and real notification remain unapproved.
+3. Obtain explicit authorization for branch creation, then separately for staging, commit, push, and PR actions as requested by the repository workflow. Branch, commit, push, PR creation, isolated staging deployment, and inactive in-app draft creation were authorized on 2026-08-23 and 2026-08-24. Production deployment, issue creation, activation, assignment, and real notification remain unapproved.
 4. Deploy to an isolated staging tenant/database with test transports.
 5. Run migration, backend/web/mobile checks, E2E as both synthetic intern and administrator, accessibility, provider-contract, and rollback rehearsal.
 6. Use the preparation script in `preview` mode. With approval, use `create` only to create an inactive draft.
@@ -21,9 +21,27 @@ CI regenerates and diff-checks the audit artifacts in repository quality, rehear
 
 Use the production architecture versions but a dedicated database/tenant, private evidence storage prefix, isolated provider configuration, and synthetic identities. Never seed a shared or production database. `TDF.Seed` already refuses hosted/production marker combinations; retain those controls.
 
-The reviewed Fly configurations are `fly.studio-audit-staging.toml` for the API and `fly.studio-audit-staging-web.toml` for the web client. They name only isolated staging apps. The API uses an app-scoped one-gigabyte data volume, disables production research workers, keeps payment providers in sandbox mode, stores evidence outside the served asset directory, and accepts browser requests only from the staging web origin. The web image compiles `VITE_API_BASE` to that staging API and serves the SPA with a dedicated health check. Both machines may stop when idle. The database is a separate minimum-size staging cluster and must never be forked from production.
+The reviewed Fly configurations are `fly.studio-audit-staging.toml` for the API and `fly.studio-audit-staging-web.toml` for the web client. They name only isolated staging apps. The API uses an app-scoped one-gigabyte data volume, disables production research workers, keeps payment providers in sandbox mode, stores evidence outside the served asset directory, and accepts browser requests only from the staging web origin. The web image compiles `VITE_API_BASE` to that staging API and serves the SPA with a dedicated health check. The web machine may stop when idle. The single API machine remains running because every cold start deliberately verifies the complete reviewed migration bundle; an auto-stopped API produced multi-minute startup latency that is unsuitable for supervised testing. The database is a separate minimum-size staging cluster and must never be forked from production.
 
 The deterministic data contract is `test/internships/studio-audit/staging-fixtures.json`. The existing idempotent base seed supplies service catalog, rooms/resources, availability, parties, inventory, and sample sessions. The reserved persona seed supplies synthetic roles. Scenario setup uses the `AUDIT-2026` identifiers. Cleanup is destroying and recreating the dedicated database/tenant and clearing its private storage, test inbox/outbox, browser state, and provider mocks; broad row deletion in shared staging is prohibited.
+
+### Observed isolated staging deployment
+
+The authorized deployment uses only the following isolated applications:
+
+- API: `https://tdf-hq-studio-audit-staging.fly.dev`
+- Web: `https://tdf-studio-audit-staging-web.fly.dev`
+- Database: `tdf-hq-studio-audit-staging-db`, with a dedicated application database and least-privilege application user
+
+The database was initialized from the reviewed migration manifest and deterministic synthetic seeds. It contains no production clone or provider credentials. The application secret inventory contains only the dedicated `DATABASE_URL`; email, WhatsApp, calendar, social, Datafast, and PayPal credentials are absent. All 65 reviewed migrations are recorded, including the base audit migration, completion-exception control, and historical-failure completion gate. Spanish is the default locale and `de`, `en`, `es`, `fr`, and `pt` remain enabled.
+
+The web staging image was built with `npm ci --legacy-peer-deps` because the repository lockfile's root peer resolution otherwise selects React 19 while this workspace supports React 18. It also copies the canonical backend feature registry required by web type checking. These are image-build reproducibility fixes; the deployed bundle still resolves its API base to the isolated staging API.
+
+The observed API release is Fly release 6 at source commit `aa86367560b98399115a1aa75b6dddd2def22547`, image digest `sha256:687b487665fa2ec838f74915a2fa06e3abf315cfcc45987e672bb4ede5c0b74b`. Its health response is `{"db":"ok","status":"ok"}` and `/version` reports that exact commit. The observed web release is Fly release 1, image digest `sha256:7c1400dbc4fad5d6bba0b5658e5aea9edae98a5779b3552ad51aaf63de453632`, with HTTP 200 from its health endpoint. CORS accepts the exact staging web origin and rejects an unrelated origin.
+
+The original 256 MB Postgres machine exhibited internal monitor/proxy timeouts under PostgreSQL 18. The API was stopped, the encrypted database volume was preserved, and only the isolated database VM was resized to 512 MB. All three database checks and the API health check then passed. Keep 512 MB as the reviewed minimum for this staging topology.
+
+The authorized staging draft was created idempotently after the synthetic Manager resolved exactly one active synthetic Intern. It contains one draft project, one draft principal task, one draft plan, and 174 unique cases. The task has no assigned party or due date; only the proposed synthetic assignee is stored. The plan retains 14 days from future activation, 20–30 expected hours, and a 50% midpoint. The proposed and unrelated synthetic Intern accounts cannot see the inactive task or plan. Both the notification outbox and the assignment-notification count remained zero. The real production Stewart identity is not stored in staging or source control.
 
 Required safe configuration:
 
@@ -83,8 +101,10 @@ Activation is a separate administrator endpoint and UI confirmation. It assigns 
 
 1. Disable activation UI/routes at deployment/config level and stop new internal audit writes.
 2. Export internal report/test data if retention is required.
-3. Apply `tdf-hq/sql/2026-08-21_studio_internship_audit_rollback.sql` in staging first.
-4. Verify legacy `feedback`, internships, catalogs, audit logs, and public feedback remain readable.
-5. Roll back application code and generated clients.
+3. Apply `tdf-hq/sql/2026-08-24_studio_audit_historical_failure_gate_rollback.sql` in staging first.
+4. Apply `tdf-hq/sql/2026-08-24_studio_audit_completion_exception_rollback.sql` only after its guard confirms no completion depends on an exception marker.
+5. Apply `tdf-hq/sql/2026-08-21_studio_internship_audit_rollback.sql`.
+6. Verify legacy `feedback`, internships, catalogs, audit logs, and public feedback remain readable.
+7. Roll back application code and generated clients.
 
 The rollback drops only the new normalized audit/report structures and draft columns. It intentionally preserves the existing `feedback` table and all legacy rows. Any already-created GitHub issue is external state and requires a separate authorized disposition.

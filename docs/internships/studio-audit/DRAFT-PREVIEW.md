@@ -57,4 +57,6 @@ Every applicable case must have a recorded result; failures require linked repor
 
 ## Approval decision still needed
 
-Identity is resolved. The isolated staging configuration is prepared for review, but staging deployment and creation of an inactive in-app draft remain unexercised authorization gates. Activation, assignment, production deployment, notification, and issue creation each require separate explicit approval.
+Identity is resolved. The isolated staging API, web app, database, and synthetic personas are deployed and healthy. An inactive in-app staging draft with 174 cases was created using the role-equivalent synthetic Intern; it is hidden, unassigned, has no due date, and produced no notification or outbox row. This gives Diego a safe system preview without storing Stewart's production identifiers in staging.
+
+Activation, assignment to Stewart, production deployment, real notification, external-provider credentials, and issue creation remain separate approval gates. The next approval decision is whether the reviewed implementation and preview may proceed toward production deployment and a production-side inactive association with Stewart; it is not approval to activate or notify him.

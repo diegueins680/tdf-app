@@ -116,6 +116,7 @@ test('test plan is complete, stable, Spanish-visible, and fits the effort window
   for (const item of cases) {
     for (const field of required) assert.notEqual(item[field], undefined, `${item.stableId}: ${field}`);
     assert.equal(item.environment, 'staging');
+    assert.ok(['es', 'en'].includes(item.language), `${item.stableId}: unsupported language code`);
     assert.match(item.stableId, /^STU-[A-Z]{3}-\d{3}$/);
   }
 });

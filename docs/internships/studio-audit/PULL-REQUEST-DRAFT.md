@@ -27,11 +27,11 @@ Intern reports are private by reporter; backend authorization protects reports a
 
 ## Migration and rollback
 
-Apply `2026-08-21_studio_internship_audit.sql`; it is rerunnable and leaves legacy feedback untouched. Roll back with the paired `_rollback.sql` after stopping new writes and exporting any audit records that must be retained. The production migration registry points to the actual authorized feature commit; release preflight must verify ancestry.
+Apply the registered base migration `2026-08-21_studio_internship_audit.sql`, completion-exception control, and historical-failure gate in manifest order; they are rerunnable and leave legacy feedback untouched. After stopping new writes and exporting retained audit records, roll back the historical gate, then the guarded completion-exception migration, then the paired base rollback. Release preflight must verify manifest checksums and ancestry.
 
 ## Test plan
 
-Use the exact command/result table from `docs/internships/studio-audit/TEST-RESULTS.md`. Backend, API lifecycle, targeted web E2E/accessibility, OpenAPI, registry, type checking, migration, and mobile checks pass. The global web bundle budget, global lint baseline, and feature-audit pending-disposition gate do not pass and must remain visible. Do not convert external staging/provider checks into passes.
+Use the exact command/result table from `docs/internships/studio-audit/TEST-RESULTS.md`. Backend, API lifecycle, targeted web E2E/accessibility, OpenAPI, registry, type checking, migration, mobile, isolated staging health/CORS, and inactive-draft authorization checks pass. The global web bundle budget, global lint baseline, feature-audit pending-disposition gate, and missing provider credentials/dispatcher remain visible.
 
 ## Deployment gates
 
@@ -39,9 +39,8 @@ Use the exact command/result table from `docs/internships/studio-audit/TEST-RESU
 - Review/approve least-privilege module grants and notification recipients.
 - Connect and verify an approved external outbox dispatcher/digest schedule, or explicitly approve in-app-only notifications.
 - Review the integrated `TDF-mobile` generated-client commit `0c9aeb2d594a46109282f1a82afb7a33a043be80` (mobile PRs #30 and #31); the parent repository points to that exact remote commit.
-- Deploy isolated staging with synthetic data and test transports.
-- Exercise full intern/admin lifecycle and rollback.
-- Create and review inactive TDF App draft.
+- Review the deployed isolated staging topology, synthetic data, and test transports.
+- Review the staging inactive draft; the complete intern/admin lifecycle and rollback have disposable local automation, while physical-device and external-provider staging checks remain manual.
 - Obtain separate approval for activation/notification.
 
 ## Draft-task preview
@@ -50,4 +49,4 @@ Link `docs/internships/studio-audit/DRAFT-PREVIEW.md`, the Spanish guide, invent
 
 ## External actions
 
-Branch creation, commits, pushes, and PR creation were authorized on 2026-08-23. The isolated staging configuration is prepared in-repository only. No staging or production deployment, in-app draft creation, issue, task activation, assignment, or real notification is authorized. Confirm each remaining gate separately.
+Branch creation, commits, pushes, PR creation, isolated staging deployment, and inactive staging draft creation were authorized. The API/web/database are deployed and the staging draft remains hidden and unassigned with zero assignment notifications. No production deployment, GitHub issue, task activation, assignment to Stewart, or real notification is authorized. Confirm each remaining gate separately.
