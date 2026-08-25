@@ -32,6 +32,7 @@ import type {
 import PageShell, { EmptyState } from '../components/PageShell';
 import { useSession } from '../session/SessionContext';
 import { hasInternshipsAdminAccess } from '../utils/accessControl';
+import { executionEvidenceRequired } from './internAuditPlanLogic';
 
 const STATUS_LABELS: Record<InternExecutionStatus, string> = {
   pending: 'Pendiente',
@@ -358,7 +359,7 @@ export default function InternAuditPlanPage() {
                           <TextField label="Estado guardado que comprobaste" value={executionForm.itecPersistedStateObserved ?? ''} onChange={(event) => setExecutionForm((current) => ({ ...current, itecPersistedStateObserved: event.target.value }))} multiline minRows={2} />
                           <TextField label="Notificaciones o efectos observados" value={executionForm.itecSideEffectsObserved ?? ''} onChange={(event) => setExecutionForm((current) => ({ ...current, itecSideEffectsObserved: event.target.value }))} multiline minRows={2} />
                           {executionForm.itecStatus === 'blocked' && <TextField label="Motivo del bloqueo" value={executionForm.itecBlockerReason ?? ''} onChange={(event) => setExecutionForm((current) => ({ ...current, itecBlockerReason: event.target.value }))} required multiline minRows={2} />}
-                          <TextField label="Resumen o enlace de evidencia" value={executionForm.itecEvidenceSummary ?? ''} onChange={(event) => setExecutionForm((current) => ({ ...current, itecEvidenceSummary: event.target.value }))} required={testCase.itcEvidenceRequirement === 'strong'} helperText="No incluyas contraseñas ni datos personales. Los videos pesados deben enlazarse desde un servicio externo autorizado." />
+                          <TextField label="Resumen o enlace de evidencia" value={executionForm.itecEvidenceSummary ?? ''} onChange={(event) => setExecutionForm((current) => ({ ...current, itecEvidenceSummary: event.target.value }))} required={executionEvidenceRequired(testCase.itcEvidenceRequirement, executionForm.itecStatus)} helperText="No incluyas contraseñas ni datos personales. Los videos pesados deben enlazarse desde un servicio externo autorizado." />
                           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                             <Button type="submit" variant="contained" disabled={saveExecution.isPending}>Guardar resultado</Button>
                             <Button component={RouterLink} to={reportHref(testCase, plan)} startIcon={<BugReportOutlinedIcon />} variant="outlined">Crear reporte vinculado</Button>

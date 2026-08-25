@@ -17,6 +17,7 @@ import qualified TDF.API.Catalog as Catalog
 import qualified TDF.API.Facebook as Facebook
 import qualified TDF.API.Instagram as Instagram
 import qualified TDF.API.InstagramOAuth as InstagramOAuth
+import qualified TDF.API.InternAudit as InternAudit
 import qualified TDF.API.Proposals as Proposals
 import TDF.API.Types (
     ArtistTipRequest (..),
@@ -62,6 +63,38 @@ import TDF.Trials.DTO (TrialRequestIn (..))
 
 spec :: Spec
 spec = do
+    describe "Intern audit update FromJSON" $ do
+        it "distinguishes omitted plan justification from an explicit clear" $ do
+            case eitherDecode "{}" :: Either String InternAudit.InternAuditPlanUpdate of
+                Left err -> expectationFailure ("Expected empty plan patch to decode, got: " <> err)
+                Right payload -> do
+                    InternAudit.iapuCompletionJustification payload `shouldBe` Nothing
+                    InternAudit.iapuApproveException payload `shouldBe` Nothing
+                    InternAudit.iapuStatus payload `shouldBe` Nothing
+
+            case eitherDecode "{\"iapuCompletionJustification\":null}" :: Either String InternAudit.InternAuditPlanUpdate of
+                Left err -> expectationFailure ("Expected plan justification clear to decode, got: " <> err)
+                Right payload ->
+                    InternAudit.iapuCompletionJustification payload `shouldBe` Just Nothing
+
+            case eitherDecode "{\"iapuCompletionJustification\":\"Approved exception\"}" :: Either String InternAudit.InternAuditPlanUpdate of
+                Left err -> expectationFailure ("Expected plan justification update to decode, got: " <> err)
+                Right payload ->
+                    InternAudit.iapuCompletionJustification payload `shouldBe` Just (Just "Approved exception")
+
+        it "preserves explicit clears for every nullable execution field" $
+            case eitherDecode
+                "{\"iteuActualResult\":null,\"iteuPersistedStateObserved\":null,\"iteuSideEffectsObserved\":null,\"iteuBlockerReason\":null,\"iteuEvidenceSummary\":null}"
+                :: Either String InternAudit.InternTestExecutionUpdate of
+                Left err -> expectationFailure ("Expected execution clears to decode, got: " <> err)
+                Right payload -> do
+                    InternAudit.iteuStatus payload `shouldBe` Nothing
+                    InternAudit.iteuActualResult payload `shouldBe` Just Nothing
+                    InternAudit.iteuPersistedStateObserved payload `shouldBe` Just Nothing
+                    InternAudit.iteuSideEffectsObserved payload `shouldBe` Just Nothing
+                    InternAudit.iteuBlockerReason payload `shouldBe` Just Nothing
+                    InternAudit.iteuEvidenceSummary payload `shouldBe` Just Nothing
+
     describe "verifyMetaWebhookSignature" $ do
         it "requires Meta's sha256-prefixed HMAC header before trusting webhook bodies" $ do
             let body = BL8.pack "{}"

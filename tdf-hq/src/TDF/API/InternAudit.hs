@@ -1,14 +1,18 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 
 module TDF.API.InternAudit where
 
+import           Data.Aeson (FromJSON(..), Object, ToJSON, withObject, (.:?))
+import qualified Data.Aeson.Key as AesonKey
+import qualified Data.Aeson.KeyMap as AesonKeyMap
+import           Data.Aeson.Types (Parser)
 import           Data.Int   (Int64)
 import           Data.Text  (Text)
 import           Data.Time  (Day, UTCTime)
 import           GHC.Generics (Generic)
-import           Data.Aeson (FromJSON, ToJSON)
 import           Servant
 
 type InternAuditAPI =
@@ -90,7 +94,11 @@ data InternAuditPlanUpdate = InternAuditPlanUpdate
   , iapuStatus                  :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON InternAuditPlanUpdate
-instance FromJSON InternAuditPlanUpdate
+instance FromJSON InternAuditPlanUpdate where
+  parseJSON = withObject "InternAuditPlanUpdate" $ \value -> InternAuditPlanUpdate
+    <$> nestedOptional value "iapuCompletionJustification"
+    <*> value .:? "iapuApproveException"
+    <*> value .:? "iapuStatus"
 
 data InternTestCaseDTO = InternTestCaseDTO
   { itcId                    :: Text
@@ -188,7 +196,19 @@ data InternTestExecutionUpdate = InternTestExecutionUpdate
   , iteuEvidenceSummary        :: Maybe (Maybe Text)
   } deriving (Show, Generic)
 instance ToJSON InternTestExecutionUpdate
-instance FromJSON InternTestExecutionUpdate
+instance FromJSON InternTestExecutionUpdate where
+  parseJSON = withObject "InternTestExecutionUpdate" $ \value -> InternTestExecutionUpdate
+    <$> value .:? "iteuStatus"
+    <*> nestedOptional value "iteuActualResult"
+    <*> nestedOptional value "iteuPersistedStateObserved"
+    <*> nestedOptional value "iteuSideEffectsObserved"
+    <*> nestedOptional value "iteuBlockerReason"
+    <*> nestedOptional value "iteuEvidenceSummary"
+
+nestedOptional :: FromJSON a => Object -> AesonKey.Key -> Parser (Maybe (Maybe a))
+nestedOptional value key
+  | AesonKeyMap.member key value = Just <$> value .:? key
+  | otherwise = pure Nothing
 
 data InternDailySummaryDTO = InternDailySummaryDTO
   { idsId              :: Text
