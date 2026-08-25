@@ -3,6 +3,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
+import { canonicalizeLegacySocialEventsPath } from '../utils/socialEventRoutes';
 
 const session = {
   username: 'admin',
@@ -48,7 +49,7 @@ jest.unstable_mockModule('./RouteLoadingFallback', () => ({
   default: () => <div data-testid="route-loading" />,
 }));
 
-const { Shell, canonicalizeLegacySocialEventsPath } = await import('./AppShell');
+const { Shell } = await import('./AppShell');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 

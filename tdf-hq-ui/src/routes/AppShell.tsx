@@ -20,23 +20,9 @@ import UpcomingEventsPublicPage from '../pages/UpcomingEventsPublicPage';
 import { evaluatePathAccess } from '../features/featureRegistry';
 import { useNavigationPreferences } from '../hooks/useNavigationPreferences';
 import { getAnalyticsClient } from '../analytics/posthog';
+import { canonicalizeLegacySocialEventsPath } from '../utils/socialEventRoutes';
 
 const DESKTOP_NAV_MIN_WIDTH = 1024;
-const LEGACY_SOCIAL_EVENTS_PATH = '/social/events';
-
-export function canonicalizeLegacySocialEventsPath(
-  pathname: string,
-  search = '',
-  hash = '',
-) {
-  const isLegacyEventsPath =
-    pathname === LEGACY_SOCIAL_EVENTS_PATH
-    || pathname.startsWith(`${LEGACY_SOCIAL_EVENTS_PATH}/`);
-  if (!isLegacyEventsPath) return null;
-
-  const suffix = pathname.slice(LEGACY_SOCIAL_EVENTS_PATH.length);
-  return `/social/eventos${suffix}${search}${hash}`;
-}
 
 export function Shell() {
   const theme = useTheme();
