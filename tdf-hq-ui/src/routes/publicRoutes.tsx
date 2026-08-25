@@ -1,7 +1,8 @@
 import { lazyWithReload as lazy } from '../utils/lazyWithReload';
-import { Navigate, Route } from 'react-router-dom';
+import { Navigate, Route, useLocation } from 'react-router-dom';
 
 import PublicBranding from '../components/PublicBranding';
+import { canonicalizeLegacySocialEventsPath } from '../utils/socialEventRoutes';
 
 const ArtistOnboardingPage = lazy(() => import('../pages/ArtistOnboardingPage'));
 const ArtistPublicPage = lazy(() => import('../pages/ArtistPublicPage'));
@@ -39,6 +40,16 @@ const RecordsPublicPage = lazy(() => import('../pages/RecordsPublicPage'));
 const ResetPasswordPage = lazy(() => import('../pages/ResetPasswordPage'));
 const TrialsPage = lazy(() => import('../pages/TrialsPage'));
 const TdfPlatformPage = lazy(() => import('../pages/TdfPlatformPage'));
+
+export function LegacySocialEventsRedirect() {
+  const location = useLocation();
+  const target = canonicalizeLegacySocialEventsPath(
+    location.pathname,
+    location.search,
+    location.hash,
+  );
+  return <Navigate to={target ?? '/social/eventos'} replace />;
+}
 
 export function renderPublicRoutes() {
   return (
@@ -86,6 +97,7 @@ export function renderPublicRoutes() {
       <Route path="/whatsapp/consentimiento" element={<PublicBranding><PublicWhatsAppConsentPage /></PublicBranding>} />
       <Route path="/whatsapp/ok" element={<PublicBranding><PublicWhatsAppConsentSuccessPage /></PublicBranding>} />
       <Route path="/records" element={<PublicBranding><RecordsPublicPage /></PublicBranding>} />
+      <Route path="/social/events/*" element={<LegacySocialEventsRedirect />} />
       <Route path="/inventario/scan/:token" element={<PublicBranding><InventoryScanPage /></PublicBranding>} />
       <Route path="/donar" element={<PublicBranding><DonationPage /></PublicBranding>} />
       <Route path="/reservar" element={<PublicBranding><PublicBookingPage /></PublicBranding>} />
