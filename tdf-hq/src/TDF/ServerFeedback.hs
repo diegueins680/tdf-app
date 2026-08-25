@@ -39,7 +39,7 @@ import           Control.Monad.Reader       (MonadReader, ask, asks)
 import qualified Data.Aeson                  as Aeson
 import           Data.Aeson                  (object, (.=))
 import           Data.Int                    (Int64)
-import           Data.List                   (nub, sortOn)
+import           Data.List                   (find, nub, sortOn)
 import           Data.Maybe                  (catMaybes, fromMaybe, isJust)
 import qualified Data.Set                    as Set
 import           Data.Char                  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
@@ -450,16 +450,25 @@ internalFeedbackServer user =
         partyExists <- isJust <$> withPool (get partyKey)
         unless partyExists $
           throwError err400 { errBody = "assignedTo must identify an existing party" }
-      duplicateUpdate <- traverse (traverse (resolveDuplicateTarget reportKey)) ifuDuplicateOf
+      duplicateTargetUpdate <- traverse (traverse (parseInternalKey @ME.InternalFeedbackReport)) ifuDuplicateOf
+      forM_ duplicateTargetUpdate $ mapM_ $ \targetKey ->
+        when (targetKey == reportKey) $
+          throwError err400 { errBody = "A report cannot be a duplicate of itself" }
       videoLinksUpdate <- traverse validateVideoLinks ifuVideoLinks
       githubIssueUpdate <- traverse (traverse validateGithubIssueUrl) ifuGithubIssueUrl
       let effectiveClosureReason = case ifuClosureReason of
             Nothing -> ME.internalFeedbackReportClosureReason report
             Just _ -> fromMaybe Nothing closureReasonUpdate
+          effectiveState = fromMaybe state stateUpdate
+          effectiveDuplicatePresent = case duplicateTargetUpdate of
+            Nothing -> isJust (ME.internalFeedbackReportDuplicateOf report)
+            Just target -> isJust target
       when (stateUpdate == Just "closed" && not (hasMeaningful effectiveClosureReason)) $
         throwError err400 { errBody = "Closing a report requires a closure reason" }
-      when (stateUpdate == Just "duplicate" && fromMaybe (ME.internalFeedbackReportDuplicateOf report) duplicateUpdate == Nothing) $
+      when (effectiveState == "duplicate" && not effectiveDuplicatePresent) $
         throwError err400 { errBody = "A duplicate report must link to its canonical report" }
+      when (effectiveState /= "duplicate" && maybe False isJust duplicateTargetUpdate) $
+        throwError err400 { errBody = "duplicateOf may only be set while report state is duplicate" }
       let feedbackUpdates = catMaybes
             [ fmap (ME.FeedbackTitle =.) titleUpdate
             , fmap (ME.FeedbackDescription =.) descriptionUpdate
@@ -487,71 +496,111 @@ internalFeedbackServer user =
             , fmap (ME.InternalFeedbackReportAuthoritativeSeverityId =.) authoritativeSeverityUpdate
             , fmap (ME.InternalFeedbackReportPriority =.) priorityUpdate
             , fmap (ME.InternalFeedbackReportAssignedTo =.) (fmap (fmap toSqlKey) assignedToUpdate)
-            , fmap (ME.InternalFeedbackReportDuplicateOf =.) duplicateUpdate
             , fmap (ME.InternalFeedbackReportResolution =.) resolutionUpdate
             , fmap (ME.InternalFeedbackReportRetestResult =.) retestResultUpdate
             , fmap (ME.InternalFeedbackReportClosureReason =.) closureReasonUpdate
             , fmap (ME.InternalFeedbackReportGithubIssueUrl =.) githubIssueUpdate
             ]
+          targetKeyForLock = case duplicateTargetUpdate of
+            Just (Just targetKey) -> targetKey
+            _ -> reportKey
       updateResult <- withPool $ do
-        planActive <- lockActiveAuditPlanForReport report
-        if not planActive
-          then pure (Left ("finalized" :: Text))
-          else do
-            now <- liftIO getCurrentTime
-            let closedUpdate = case stateUpdate of
-                  Just "closed" -> [ME.InternalFeedbackReportClosedAt =. Just now]
-                  Just _ | state == "closed" -> [ME.InternalFeedbackReportClosedAt =. Nothing]
-                  _ -> []
-            retestPassed <- if stateUpdate == Just "verified"
-              then do
-                latestReadyCycle <- selectFirst
-                  [ ME.InternalFeedbackHistoryReportId ==. reportKey
-                  , ME.InternalFeedbackHistoryNewState ==. Just "ready_for_retest"
-                  ]
-                  [Desc ME.InternalFeedbackHistoryCreatedAt]
-                latestRetest <- selectFirst
-                  [ME.InternalFeedbackRetestReportId ==. reportKey]
-                  [Desc ME.InternalFeedbackRetestCreatedAt]
-                pure $ case (latestReadyCycle, latestRetest) of
-                  (Just (Entity _ readyCycle), Just (Entity _ retest)) ->
-                    ME.internalFeedbackRetestResult retest == "passed"
-                      && ME.internalFeedbackRetestCreatedAt retest
-                        >= ME.internalFeedbackHistoryCreatedAt readyCycle
-                  _ -> False
-              else pure True
-            if not retestPassed
-              then pure (Left "retest_required")
-              else do
-                changed <- updateWhereCount
-                  [ ME.InternalFeedbackReportId ==. reportKey
-                  , ME.InternalFeedbackReportVersion ==. ME.internalFeedbackReportVersion report
-                  ]
-                  ( reportUpdates ++ closedUpdate ++
-                    [ ME.InternalFeedbackReportVersion +=. 1
-                    , ME.InternalFeedbackReportUpdatedAt =. now
-                    ]
-                  )
-                if changed /= 1
-                  then pure (Left "changed")
-                  else do
-                    unless (null feedbackUpdates) (update feedbackKey feedbackUpdates)
-                    insert_ ME.InternalFeedbackHistory
-                      { ME.internalFeedbackHistoryReportId = reportKey
-                      , ME.internalFeedbackHistoryActorPartyId = auPartyId user
-                      , ME.internalFeedbackHistoryAction = "updated"
-                      , ME.internalFeedbackHistoryPreviousState = Just state
-                      , ME.internalFeedbackHistoryNewState = stateUpdate
-                      , ME.internalFeedbackHistoryMetadata = Just (changedFieldMetadata updateRequest)
-                      , ME.internalFeedbackHistoryCreatedAt = now
-                      }
-                    pure (Right ())
+        lockedReports <- lockInternalFeedbackReportsForUpdate reportKey targetKeyForLock
+        case find ((== reportKey) . entityKey) lockedReports of
+          Nothing -> pure (Left ("changed" :: Text))
+          Just (Entity _ lockedReport)
+            | ME.internalFeedbackReportVersion lockedReport /= ME.internalFeedbackReportVersion report ->
+                pure (Left "changed")
+            | otherwise -> do
+              planActive <- lockActiveAuditPlanForReport lockedReport
+              if not planActive
+                then pure (Left "finalized")
+                else do
+                  duplicateResolution <- case duplicateTargetUpdate of
+                    Nothing
+                      | state == "duplicate" && effectiveState /= "duplicate" ->
+                          pure (Right (Just Nothing))
+                      | otherwise -> pure (Right Nothing)
+                    Just Nothing -> pure (Right (Just Nothing))
+                    Just (Just targetKey) -> pure $ case find ((== targetKey) . entityKey) lockedReports of
+                      Just (Entity _ target)
+                        | ME.internalFeedbackReportState target /= "draft"
+                        , isJust (ME.internalFeedbackReportSubmittedAt target)
+                        , ME.internalFeedbackReportState target /= "duplicate"
+                        , not (isJust (ME.internalFeedbackReportDuplicateOf target)) ->
+                            Right (Just (Just (ME.internalFeedbackReportFeedbackId target)))
+                      _ -> Left "duplicate_target_invalid"
+                  canonicalUseCount <- if effectiveState == "duplicate"
+                    then count
+                      [ ME.InternalFeedbackReportDuplicateOf ==.
+                          Just (ME.internalFeedbackReportFeedbackId lockedReport)
+                      ]
+                    else pure 0
+                  case duplicateResolution of
+                    Left duplicateError -> pure (Left duplicateError)
+                    Right _ | canonicalUseCount > 0 -> pure (Left "canonical_in_use")
+                    Right resolvedDuplicateUpdate -> do
+                      now <- liftIO getCurrentTime
+                      let closedUpdate = case stateUpdate of
+                            Just "closed" -> [ME.InternalFeedbackReportClosedAt =. Just now]
+                            Just _ | state == "closed" -> [ME.InternalFeedbackReportClosedAt =. Nothing]
+                            _ -> []
+                          duplicateUpdates = maybe []
+                            (\value -> [ME.InternalFeedbackReportDuplicateOf =. value])
+                            resolvedDuplicateUpdate
+                      retestPassed <- if stateUpdate == Just "verified"
+                        then do
+                          latestReadyCycle <- selectFirst
+                            [ ME.InternalFeedbackHistoryReportId ==. reportKey
+                            , ME.InternalFeedbackHistoryNewState ==. Just "ready_for_retest"
+                            ]
+                            [Desc ME.InternalFeedbackHistoryCreatedAt]
+                          latestRetest <- selectFirst
+                            [ME.InternalFeedbackRetestReportId ==. reportKey]
+                            [Desc ME.InternalFeedbackRetestCreatedAt]
+                          pure $ case (latestReadyCycle, latestRetest) of
+                            (Just (Entity _ readyCycle), Just (Entity _ retest)) ->
+                              ME.internalFeedbackRetestResult retest == "passed"
+                                && ME.internalFeedbackRetestCreatedAt retest
+                                  >= ME.internalFeedbackHistoryCreatedAt readyCycle
+                            _ -> False
+                        else pure True
+                      if not retestPassed
+                        then pure (Left "retest_required")
+                        else do
+                          changed <- updateWhereCount
+                            [ ME.InternalFeedbackReportId ==. reportKey
+                            , ME.InternalFeedbackReportVersion ==. ME.internalFeedbackReportVersion report
+                            ]
+                            ( reportUpdates ++ duplicateUpdates ++ closedUpdate ++
+                              [ ME.InternalFeedbackReportVersion +=. 1
+                              , ME.InternalFeedbackReportUpdatedAt =. now
+                              ]
+                            )
+                          if changed /= 1
+                            then pure (Left "changed")
+                            else do
+                              unless (null feedbackUpdates) (update feedbackKey feedbackUpdates)
+                              insert_ ME.InternalFeedbackHistory
+                                { ME.internalFeedbackHistoryReportId = reportKey
+                                , ME.internalFeedbackHistoryActorPartyId = auPartyId user
+                                , ME.internalFeedbackHistoryAction = "updated"
+                                , ME.internalFeedbackHistoryPreviousState = Just state
+                                , ME.internalFeedbackHistoryNewState = stateUpdate
+                                , ME.internalFeedbackHistoryMetadata = Just (changedFieldMetadata updateRequest)
+                                , ME.internalFeedbackHistoryCreatedAt = now
+                                }
+                              pure (Right ())
       case updateResult of
         Left "finalized" -> throwError finalizedReportMutationConflict
         Left "retest_required" -> throwError err409
           { errBody = "Verification requires a passing retest from the current ready-for-retest cycle" }
         Left "changed" -> throwError err409
           { errBody = "Report changed during this update; reload it before retrying" }
+        Left "duplicate_target_invalid" -> throwError err400
+          { errBody = "Canonical duplicate target must be a submitted, non-duplicate report" }
+        Left "canonical_in_use" -> throwError err409
+          { errBody = "A canonical report cannot itself be marked as duplicate" }
         Left _ -> throwError err500
         Right () -> pure ()
       recordAudit reportEnt "updated" (Just $ object ["state" .= stateUpdate])
@@ -1216,13 +1265,6 @@ internalFeedbackServer user =
         (recordUserActivity (Just (auPartyId user)) "internal_feedback_report" (toPathPiece reportKey) action metadata)
         pool
 
-    resolveDuplicateTarget currentReportKey rawTarget = do
-      targetKey <- parseInternalKey @ME.InternalFeedbackReport rawTarget
-      when (targetKey == currentReportKey) $
-        throwError err400 { errBody = "A report cannot be a duplicate of itself" }
-      target <- withPool (get targetKey) >>= maybe (throwError err400) pure
-      pure (ME.internalFeedbackReportFeedbackId target)
-
     summaryCsv summary = T.intercalate ","
       [ csvField (ifsId summary)
       , csvField (ifsTitle summary)
@@ -1526,6 +1568,15 @@ withPool
   => SqlPersistT IO a
   -> m a
 withPool action = asks envPool >>= liftIO . runSqlPool action
+
+lockInternalFeedbackReportsForUpdate
+  :: ME.InternalFeedbackReportId
+  -> ME.InternalFeedbackReportId
+  -> SqlPersistT IO [Entity ME.InternalFeedbackReport]
+lockInternalFeedbackReportsForUpdate firstKey secondKey =
+  rawSql
+    "SELECT ?? FROM internal_feedback_report WHERE id = ? OR id = ? ORDER BY id FOR UPDATE"
+    [toPersistValue firstKey, toPersistValue secondKey]
 
 lockInternTestExecutionSequence :: ME.InternTestCaseId -> SqlPersistT IO ()
 lockInternTestExecutionSequence caseKey = do

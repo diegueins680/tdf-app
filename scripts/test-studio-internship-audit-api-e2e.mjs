@@ -965,6 +965,12 @@ const finalizedDraft = await request('/feedback/internal', {
   json: { ...reportCreate, ifcTitle: 'Borrador que debe quedar congelado al cerrar' },
 });
 assert.equal(finalizedDraft.ifrSummary.ifsState, 'draft');
+await request(`/feedback/internal/${reportId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  expected: 400,
+  json: { ifuState: 'duplicate', ifuDuplicateOf: finalizedDraft.ifrSummary.ifsId },
+});
 
 const concurrentTransitions = await Promise.all([
   requestStatus(`/feedback/internal/${reportId}`, {
@@ -983,6 +989,39 @@ await request(`/feedback/internal/${reportId}`, {
   token: admin.token,
   method: 'PATCH',
   json: { ifuState: 'received' },
+});
+
+const duplicateSourceDraft = await request('/feedback/internal', {
+  token: intern.token,
+  method: 'POST',
+  expected: 201,
+  json: { ...reportCreate, ifcTitle: 'Reporte duplicado con destino canónico' },
+});
+const duplicateSourceReceived = await request(
+  `/feedback/internal/${duplicateSourceDraft.ifrSummary.ifsId}/submit`,
+  { token: intern.token, method: 'POST' },
+);
+const duplicateSource = await request(
+  `/feedback/internal/${duplicateSourceReceived.ifrSummary.ifsId}`,
+  {
+    token: admin.token,
+    method: 'PATCH',
+    json: { ifuState: 'duplicate', ifuDuplicateOf: similarReceived.ifrSummary.ifsId },
+  },
+);
+assert.equal(duplicateSource.ifrSummary.ifsState, 'duplicate');
+assert.equal(duplicateSource.ifrSummary.ifsDuplicateOf, similarReceived.ifrSummary.ifsId);
+await request(`/feedback/internal/${reportId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  expected: 400,
+  json: { ifuState: 'duplicate', ifuDuplicateOf: duplicateSource.ifrSummary.ifsId },
+});
+await request(`/feedback/internal/${similarReceived.ifrSummary.ifsId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  expected: 409,
+  json: { ifuState: 'duplicate', ifuDuplicateOf: reportId },
 });
 
 const triaged = await request(`/feedback/internal/${reportId}`, {
