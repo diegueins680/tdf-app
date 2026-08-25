@@ -305,12 +305,23 @@ if (racingPlanAfterTransitions.iapStatus === 'active') {
   }
 }
 
+const nonApplicableProject = await request('/internships/projects', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    ipcTitle: 'E2E — Proyecto sin casos aplicables',
+    ipcDescription: 'Fixture aislado del resultado de la carrera de activación y cancelación.',
+    ipcStatus: 'active',
+    ipcActivationStatus: 'draft',
+  },
+});
 const nonApplicableTask = await request('/internships/tasks', {
   token: admin.token,
   method: 'POST',
   expected: 201,
   json: {
-    itcProjectId: activeProject.ipId,
+    itcProjectId: nonApplicableProject.ipId,
     itcTitle: 'E2E — Plan sin casos aplicables',
     itcDescription: 'Un plan con sólo casos no aplicables debe permanecer en borrador.',
     itcProposedAssignee: intern.partyId,
@@ -322,7 +333,7 @@ const nonApplicablePlan = await request('/internships/audit-plans', {
   method: 'POST',
   expected: 201,
   json: {
-    iapcProjectId: activeProject.ipId,
+    iapcProjectId: nonApplicableProject.ipId,
     iapcTaskId: nonApplicableTask.itId,
     iapcEnvironment: 'staging',
     iapcProposedAssignee: intern.partyId,
@@ -601,6 +612,7 @@ const draftReport = await request('/feedback/internal', {
 });
 const reportId = draftReport.ifrSummary.ifsId;
 assert.equal(draftReport.ifrSummary.ifsState, 'draft');
+assert.equal(draftReport.ifrAuditPlanMutable, true);
 
 const editedReport = await request(`/feedback/internal/${reportId}`, {
   token: intern.token,
@@ -633,6 +645,52 @@ const planWithReportedFailure = await request(`/internships/audit-plans/${plan.i
   token: admin.token,
 });
 assert.equal(planWithReportedFailure.iapFailedWithoutReport, 0);
+
+const secondFailedExecution = await request(`/internships/test-cases/${testCase.itcId}/executions`, {
+  token: intern.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    itecStatus: 'blocked',
+    itecActualResult: 'Una segunda ejecución quedó bloqueada después del primer reporte.',
+    itecBlockerReason: 'El dato ficticio requerido no estuvo disponible.',
+    itecEvidenceSummary: 'EVIDENCIA-E2E-BLOCKED-002',
+  },
+});
+await request(`/internships/test-cases/${testCase.itcId}/executions`, {
+  token: intern.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    itecStatus: 'passed',
+    itecActualResult: 'El pase posterior no debe reutilizar el reporte de la primera falla.',
+    itecEvidenceSummary: 'EVIDENCIA-E2E-AFTER-SECOND-FAILURE',
+  },
+});
+const planWithSecondHistoricalFailure = await request(`/internships/audit-plans/${plan.iapId}`, {
+  token: admin.token,
+});
+assert.equal(planWithSecondHistoricalFailure.iapFailedWithoutReport, 1);
+const secondFailureDraft = await request('/feedback/internal', {
+  token: intern.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    ...reportCreate,
+    ifcTitle: 'La segunda ejecución quedó bloqueada sin datos ficticios',
+    ifcDescription: 'La ejecución bloqueada necesita su propio reporte trazable.',
+    ifcActualResult: 'No se pudo completar la segunda ejecución.',
+    ifcTestExecutionId: secondFailedExecution.itexId,
+  },
+});
+await request(`/feedback/internal/${secondFailureDraft.ifrSummary.ifsId}/submit`, {
+  token: intern.token,
+  method: 'POST',
+});
+const planWithBothFailuresReported = await request(`/internships/audit-plans/${plan.iapId}`, {
+  token: admin.token,
+});
+assert.equal(planWithBothFailuresReported.iapFailedWithoutReport, 0);
 if (otherIntern) {
   await request(`/feedback/internal/${reportId}`, { token: otherIntern.token, expected: 404 });
 }
@@ -771,6 +829,20 @@ for (const update of [
 }
 
 await request(`/internships/audit-plans/${plan.iapId}/daily-summaries`, {
+  token: admin.token,
+  method: 'POST',
+  expected: 403,
+  json: {
+    idscWorkDate: new Date().toISOString().slice(0, 10),
+    idscMinutesWorked: 90,
+    idscModulesTested: 'Prácticas y feedback',
+    idscCasesCompleted: 1,
+    idscReportsCreated: 2,
+    idscBlockers: null,
+    idscNextStep: 'La administración no debe suplir el registro diario de la persona asignada.',
+  },
+});
+await request(`/internships/audit-plans/${plan.iapId}/daily-summaries`, {
   token: intern.token,
   method: 'POST',
   expected: 201,
@@ -906,9 +978,14 @@ await request(`/feedback/internal/${finalizedDraft.ifrSummary.ifsId}/evidence-li
 });
 
 const executions = await request(`/internships/test-cases/${testCase.itcId}/executions`, { token: admin.token });
-assert.equal(executions.length, 7);
+assert.deepEqual(
+  executions.map((execution) => execution.itexExecutionNumber),
+  [9, 8, 7, 6, 5, 4, 3, 2, 1],
+);
 assert.equal(executions[0].itexId, recordedRetest.ifrtExecutionId);
 assert.equal(executions[0].itexStatus, 'verified');
+assert.ok(executions.some((execution) => execution.itexId === failedExecution.itexId));
+assert.ok(executions.some((execution) => execution.itexId === secondFailedExecution.itexId));
 await request(`/internships/test-cases/${testCase.itcId}/executions`, {
   token: admin.token,
   method: 'POST',
@@ -937,6 +1014,7 @@ assert.equal(approvedSummary.ifsApprovedBy, admin.partyId);
 assert.ok(approvedSummary.ifsApprovedAt);
 const finalReport = await request(`/feedback/internal/${reportId}`, { token: admin.token });
 assert.equal(finalReport.ifrSummary.ifsState, 'closed');
+assert.equal(finalReport.ifrAuditPlanMutable, false);
 assert.ok(finalReport.ifrHistory.length >= 10);
 assert.equal(finalReport.ifrRetests.length, 2);
 const csv = await request('/feedback/internal/export.csv', { token: admin.token });

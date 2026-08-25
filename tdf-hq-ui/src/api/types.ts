@@ -1226,6 +1226,7 @@ export interface InternalFeedbackDTO {
   ifrVideoLinks?: string | null;
   ifrSubmittedAt?: string | null;
   ifrClosedAt?: string | null;
+  ifrAuditPlanMutable: boolean;
   ifrEvidence: InternalFeedbackEvidenceDTO[];
   ifrComments: InternalFeedbackCommentDTO[];
   ifrHistory: InternalFeedbackHistoryDTO[];

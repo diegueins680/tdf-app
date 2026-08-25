@@ -324,7 +324,7 @@
     {
       "id": "2026-08-24_studio_audit_historical_failure_gate",
       "path": "tdf-hq/sql/2026-08-24_studio_audit_historical_failure_gate.sql",
-      "introducedBy": "ec2aca1df88d949fe24d99e24e7f599ecf650380"
+      "introducedBy": "dac84b099b18b51032fb94f58273120f5375eb85"
     }
   ]
 }

@@ -602,6 +602,10 @@ internAuditServer user =
       planEnt@(Entity planKey plan) <- loadPlan rawPlanId
       ensurePlanAccess planEnt
       ensureActivePlanMutation planEnt
+      task <- withPool (get (ME.internAuditPlanTaskId plan)) >>= maybe (throwError err404) pure
+      unless (ME.internTaskAssignedTo task == Just (auPartyId user)) $
+        throwError err403
+          { errBody = "Only the assigned intern may create daily summaries" }
       unless (idscMinutesWorked >= 1 && idscMinutesWorked <= 1440) $
         throwError err400 { errBody = "minutesWorked must be between 1 and 1440" }
       modulesTested <- required "modulesTested" 2000 idscModulesTested
@@ -863,6 +867,9 @@ internAuditServer user =
         pure (caseEnt, latest)
       reports <- selectList
         [ME.InternalFeedbackReportInternshipTaskId ==. Just (ME.internAuditPlanTaskId plan)] []
+      retests <- case map entityKey reports of
+        [] -> pure []
+        reportKeys -> selectList [ME.InternalFeedbackRetestReportId <-. reportKeys] []
       evidence <- case map entityKey reports of
         [] -> pure []
         reportKeys -> selectList
@@ -878,11 +885,14 @@ internAuditServer user =
               || maybe False
                    (\(Entity executionKey _) -> ME.internalFeedbackReportTestExecutionId report == Just executionKey)
                    latest
-          executionHasLinkedReport (Entity executionKey execution) = any
-            (\(Entity _ report) ->
+          executionHasLinkedReport (Entity executionKey _) = any
+            (\(Entity reportKey report) ->
               ( ME.internalFeedbackReportTestExecutionId report == Just executionKey
-                || ME.internalFeedbackReportTestCaseId report
-                     == Just (ME.internTestExecutionTestCaseId execution)
+                || any
+                     (\(Entity _ retest) ->
+                       ME.internalFeedbackRetestReportId retest == reportKey
+                         && ME.internalFeedbackRetestExecutionId retest == Just executionKey)
+                     retests
               )
                 && reportStateCountsForFailure
                      (ME.internalFeedbackReportState report)

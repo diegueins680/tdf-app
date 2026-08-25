@@ -10587,7 +10587,7 @@ components:
         ifrtCreatedAt: { type: string, format: date-time }
     InternalFeedback:
       type: object
-      required: [ifrSummary, ifrDescription, ifrLanguage, ifrAccountRole, ifrEvidence, ifrComments, ifrHistory, ifrRetests, ifrPotentialDuplicates]
+      required: [ifrSummary, ifrDescription, ifrLanguage, ifrAccountRole, ifrAuditPlanMutable, ifrEvidence, ifrComments, ifrHistory, ifrRetests, ifrPotentialDuplicates]
       properties:
         ifrSummary: { $ref: '#/components/schemas/InternalFeedbackSummary' }
         ifrDescription: { type: string }
@@ -10609,6 +10609,7 @@ components:
         ifrVideoLinks: { type: string, nullable: true }
         ifrSubmittedAt: { type: string, format: date-time, nullable: true }
         ifrClosedAt: { type: string, format: date-time, nullable: true }
+        ifrAuditPlanMutable: { type: boolean, description: False when the owning internship audit is completed or cancelled and the report is read-only. }
         ifrEvidence: { type: array, items: { $ref: '#/components/schemas/InternalFeedbackEvidence' } }
         ifrComments: { type: array, items: { $ref: '#/components/schemas/InternalFeedbackComment' } }
         ifrHistory: { type: array, items: { $ref: '#/components/schemas/InternalFeedbackHistory' } }

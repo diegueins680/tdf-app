@@ -27,6 +27,7 @@ module TDF.ServerFeedback
   , validateGithubIssueUrl
   , validateVideoLinks
   , csvField
+  , filterInternalReportSummaries
   ) where
 
 import           Control.Exception         (SomeException, displayException, try)
@@ -238,9 +239,9 @@ internalFeedbackServer user =
     listReportsH mState mModule mQuery mMine = do
       ensureInternalAccess
       stateFilter <- traverse (validateInternalReportState "state") mState
-      reports <- selectVisibleReports mMine
+      reports <- selectVisibleReports mMine stateFilter
       summaries <- mapM toSummaryDTO reports
-      pure $ filter (matchesSummary stateFilter mModule mQuery) summaries
+      pure $ filterInternalReportSummaries stateFilter mModule mQuery summaries
 
     exportJsonH mState mModule = listReportsH mState mModule Nothing Nothing
 
@@ -826,12 +827,13 @@ internalFeedbackServer user =
       recordAudit reportEnt "retest_recorded" (Just $ object ["result" .= result])
       toRetestDTO ent
 
-    selectVisibleReports mMine = do
+    selectVisibleReports mMine stateFilter = do
       let ownerFilter =
             if isAdminUser && mMine /= Just True
               then []
               else [ME.InternalFeedbackReportReporterPartyId ==. auPartyId user]
-      withPool $ selectList ownerFilter [Desc ME.InternalFeedbackReportUpdatedAt, LimitTo 1000]
+          requestedStateFilter = maybe [] (\state -> [ME.InternalFeedbackReportState ==. state]) stateFilter
+      withPool $ selectList (ownerFilter ++ requestedStateFilter) [Desc ME.InternalFeedbackReportUpdatedAt]
 
     loadAccessibleReport rawReportId = do
       reportKey <- parseInternalKey @ME.InternalFeedbackReport rawReportId
@@ -949,6 +951,7 @@ internalFeedbackServer user =
 
     buildReportDTO reportEnt@(Entity reportKey report) feedbackEnt@(Entity _ feedback) = do
       summary <- toSummaryDTO reportEnt
+      auditPlanMutable <- reportAuditPlanMutable report
       evidence <- withPool $ selectList [ME.InternalFeedbackEvidenceReportId ==. reportKey]
         [Asc ME.InternalFeedbackEvidenceCreatedAt]
       comments <- withPool $ selectList [ME.InternalFeedbackCommentReportId ==. reportKey]
@@ -982,12 +985,21 @@ internalFeedbackServer user =
         , ifrVideoLinks = ME.internalFeedbackReportVideoLinks report
         , ifrSubmittedAt = ME.internalFeedbackReportSubmittedAt report
         , ifrClosedAt = ME.internalFeedbackReportClosedAt report
+        , ifrAuditPlanMutable = auditPlanMutable
         , ifrEvidence = map toEvidenceDTO evidence
         , ifrComments = commentDtos
         , ifrHistory = historyDtos
         , ifrRetests = retestDtos
         , ifrPotentialDuplicates = duplicates
         }
+
+    reportAuditPlanMutable report = case ME.internalFeedbackReportInternshipTaskId report of
+      Nothing -> pure True
+      Just taskKey -> do
+        plan <- withPool $ getBy (ME.UniqueInternAuditPlanTask taskKey)
+        pure $ case plan of
+          Nothing -> True
+          Just (Entity _ auditPlan) -> ME.internAuditPlanStatus auditPlan == "active"
 
     toSummaryDTO (Entity reportKey report) = do
       feedback <- withPool $ get (ME.internalFeedbackReportFeedbackId report)
@@ -1185,22 +1197,6 @@ internalFeedbackServer user =
         throwError err400 { errBody = "A report cannot be a duplicate of itself" }
       target <- withPool (get targetKey) >>= maybe (throwError err400) pure
       pure (ME.internalFeedbackReportFeedbackId target)
-
-    matchesSummary stateFilter mModule mQuery summary =
-      maybe True (== ifsState summary) stateFilter
-        && maybe True (normalizedEqual (ifsModuleName summary)) mModule
-        && maybe True (summaryContains summary) (normalizeInternalOptional 200 mQuery)
-
-    summaryContains summary query =
-      let needle = normalizeWords query
-          haystack = normalizeWords $ T.intercalate " "
-            [ ifsTitle summary
-            , ifsModuleName summary
-            , fromMaybe "" (ifsFeatureName summary)
-            , ifsReportType summary
-            , ifsState summary
-            ]
-      in needle `T.isInfixOf` haystack
 
     summaryCsv summary = T.intercalate ","
       [ csvField (ifsId summary)
@@ -1560,6 +1556,31 @@ normalizeWords = T.unwords . T.words . T.toCaseFold . T.map normalizeChar
   where
     normalizeChar ch | isAlphaNum ch = ch
                      | otherwise = ' '
+
+filterInternalReportSummaries
+  :: Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> [InternalFeedbackSummaryDTO]
+  -> [InternalFeedbackSummaryDTO]
+filterInternalReportSummaries stateFilter moduleFilter queryFilter =
+  take 1000 . filter matchesSummary
+  where
+    matchesSummary summary =
+      maybe True (== ifsState summary) stateFilter
+        && maybe True (normalizedEqual (ifsModuleName summary)) moduleFilter
+        && maybe True (summaryContains summary) (normalizeInternalOptional 200 queryFilter)
+
+    summaryContains summary query =
+      let needle = normalizeWords query
+          haystack = normalizeWords $ T.intercalate " "
+            [ ifsTitle summary
+            , ifsModuleName summary
+            , fromMaybe "" (ifsFeatureName summary)
+            , ifsReportType summary
+            , ifsState summary
+            ]
+      in needle `T.isInfixOf` haystack
 
 normalizedEqual :: Text -> Text -> Bool
 normalizedEqual left right = normalizeWords left == normalizeWords right

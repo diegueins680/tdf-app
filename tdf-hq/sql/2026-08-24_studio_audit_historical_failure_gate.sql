@@ -33,8 +33,13 @@ BEGIN
     AND NOT EXISTS (
       SELECT 1
       FROM internal_feedback_report report
-      WHERE (report.test_case_id = test_case.id
-         OR report.test_execution_id = execution.id)
+      WHERE (report.test_execution_id = execution.id
+        OR EXISTS (
+          SELECT 1
+          FROM internal_feedback_retest retest
+          WHERE retest.report_id = report.id
+            AND retest.execution_id = execution.id
+        ))
         AND report.state <> 'draft'
         AND report.submitted_at IS NOT NULL
     );

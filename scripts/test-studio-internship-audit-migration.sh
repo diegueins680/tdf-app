@@ -241,6 +241,53 @@ assert_equal "$(psql_exec -Atqc "SELECT kind FROM internal_feedback_evidence WHE
 psql_exec <<'SQL' >/dev/null
 UPDATE intern_task SET status='todo' WHERE id='30000000-0000-4000-8000-000000000001';
 UPDATE intern_audit_plan SET status='active' WHERE id='40000000-0000-4000-8000-000000000001';
+INSERT INTO intern_test_execution(
+  id,test_case_id,execution_number,executor_party_id,status,actual_result,
+  evidence_summary,started_at,completed_at
+) VALUES
+  (
+    '60000000-0000-4000-8000-000000000005','50000000-0000-4000-8000-000000000002',
+    3,2,'failed','A second failure needs its own report',
+    'screenshot://STU-CRM-001-second-failure',NOW(),NOW()
+  ),
+  (
+    '60000000-0000-4000-8000-000000000006','50000000-0000-4000-8000-000000000002',
+    4,2,'passed','A later pass cannot reuse the first failure report',
+    'screenshot://STU-CRM-001-second-pass',NOW(),NOW()
+  );
+UPDATE intern_final_summary
+SET submitted_at=NOW() + INTERVAL '1 second'
+WHERE id='b0000000-0000-4000-8000-000000000001';
+SQL
+if psql_exec -c "UPDATE intern_task SET status='done' WHERE id='30000000-0000-4000-8000-000000000001';" >/dev/null 2>&1; then
+  echo "Completion reused a different execution's report for a later failure" >&2
+  exit 1
+fi
+
+psql_exec <<'SQL' >/dev/null
+INSERT INTO feedback(id,title,description,created_by)
+VALUES ('70000000-0000-4000-8000-000000000002','Second duplicate customer failure','Second failure evidence',2);
+INSERT INTO internal_feedback_report(
+  id,feedback_id,report_type,state,module_name,feature_name,environment,platform,
+  language,account_role,proposed_severity_id,test_case_id,test_execution_id,
+  internship_project_id,internship_task_id,reporter_party_id,blocking,submitted_at
+) VALUES (
+  '80000000-0000-4000-8000-000000000002','70000000-0000-4000-8000-000000000002',
+  'error','received','CRM','Customer validation','staging','web','es','Intern',
+  '10000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000002',
+  '60000000-0000-4000-8000-000000000005','20000000-0000-4000-8000-000000000001',
+  '30000000-0000-4000-8000-000000000001',2,FALSE,NOW()
+);
+UPDATE intern_final_summary
+SET submitted_at=NOW() + INTERVAL '1 second'
+WHERE id='b0000000-0000-4000-8000-000000000001';
+UPDATE intern_task SET status='done' WHERE id='30000000-0000-4000-8000-000000000001';
+SQL
+assert_equal "$(psql_exec -Atqc "SELECT status FROM intern_task WHERE id='30000000-0000-4000-8000-000000000001';")" "done" "execution-specific historical failure report"
+
+psql_exec <<'SQL' >/dev/null
+UPDATE intern_task SET status='todo' WHERE id='30000000-0000-4000-8000-000000000001';
+UPDATE intern_audit_plan SET status='active' WHERE id='40000000-0000-4000-8000-000000000001';
 UPDATE internal_feedback_report
 SET state='ready_for_retest', blocking=FALSE, updated_at=NOW()
 WHERE id='80000000-0000-4000-8000-000000000001';

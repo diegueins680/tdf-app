@@ -8459,6 +8459,8 @@ export interface components {
             ifrSubmittedAt?: string | null;
             /** Format: date-time */
             ifrClosedAt?: string | null;
+            /** @description False when the owning internship audit is completed or cancelled and the report is read-only. */
+            ifrAuditPlanMutable: boolean;
             ifrEvidence: components["schemas"]["InternalFeedbackEvidence"][];
             ifrComments: components["schemas"]["InternalFeedbackComment"][];
             ifrHistory: components["schemas"]["InternalFeedbackHistory"][];

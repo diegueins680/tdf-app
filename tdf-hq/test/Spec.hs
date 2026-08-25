@@ -45,7 +45,10 @@ import qualified Test.QuickCheck as QC
 import Web.PathPieces (toPathPiece)
 
 import TDF.API (CmsContentIn (..), WhatsAppConsentRequest (..), WhatsAppOptOutRequest (..))
-import TDF.API.Feedback (FeedbackPayload (..), InternalFeedbackUpdate (..))
+import TDF.API.Feedback
+    ( FeedbackPayload (..),
+      InternalFeedbackSummaryDTO (..),
+      InternalFeedbackUpdate (..) )
 import TDF.API.DDEX (DdexExportRequest, DdexPartnerCreateRequest)
 import TDF.API.Admin (AdminEmailBroadcastRequest)
 import qualified TDF.API.Calendar as CalAPI
@@ -270,6 +273,7 @@ import TDF.ServerProposals
       validateTemplateKey )
 import TDF.ServerFeedback
     ( csvField,
+      filterInternalReportSummaries,
       internalReportTypeForCategoryCode,
       normalizeOptionalFeedbackText,
       sanitizeFeedbackAttachmentFileName,
@@ -13073,6 +13077,42 @@ main = hspec $ do
             finalSummarySubmissionIsFresh (Just submittedAt) [addUTCTime 1 submittedAt] `shouldBe` False
 
     describe "internal feedback workflow validation" $ do
+        it "filters the complete visible report set before applying the export cap" $ do
+            let now = UTCTime (fromGregorian 2026 8 24) (secondsToDiffTime 3600)
+                baseSummary = InternalFeedbackSummaryDTO
+                    { ifsId = "target"
+                    , ifsTitle = "Needle report"
+                    , ifsReportType = "error"
+                    , ifsState = "received"
+                    , ifsModuleName = "Scheduling"
+                    , ifsFeatureName = Just "Booking"
+                    , ifsEnvironment = "staging"
+                    , ifsPlatform = "web"
+                    , ifsProposedSeverityId = Nothing
+                    , ifsAuthoritativeSeverityId = Nothing
+                    , ifsPriority = Nothing
+                    , ifsBlocking = False
+                    , ifsReporterPartyId = 1
+                    , ifsReporterName = "Intern"
+                    , ifsInternshipProjectId = Nothing
+                    , ifsInternshipTaskId = Nothing
+                    , ifsTestCaseId = Nothing
+                    , ifsTestExecutionId = Nothing
+                    , ifsDuplicateOf = Nothing
+                    , ifsCreatedAt = now
+                    , ifsUpdatedAt = now
+                    }
+                newerNonMatches =
+                    [ baseSummary
+                        { ifsId = Data.Text.pack (show index)
+                        , ifsTitle = "Unrelated report"
+                        }
+                    | index <- [1 .. 1000 :: Int]
+                    ]
+                filtered = filterInternalReportSummaries
+                    Nothing Nothing (Just "needle") (newerNonMatches ++ [baseSummary])
+            map ifsId filtered `shouldBe` ["target"]
+
         it "neutralizes spreadsheet formulas while preserving quoted CSV data" $ do
             csvField "ordinary" `shouldBe` "\"ordinary\""
             csvField "a \"quoted\" value" `shouldBe` "\"a \"\"quoted\"\" value\""

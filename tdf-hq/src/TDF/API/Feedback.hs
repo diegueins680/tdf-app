@@ -227,6 +227,7 @@ data InternalFeedbackDTO = InternalFeedbackDTO
   , ifrVideoLinks           :: Maybe Text
   , ifrSubmittedAt          :: Maybe UTCTime
   , ifrClosedAt             :: Maybe UTCTime
+  , ifrAuditPlanMutable     :: Bool
   , ifrEvidence             :: [InternalFeedbackEvidenceDTO]
   , ifrComments             :: [InternalFeedbackCommentDTO]
   , ifrHistory              :: [InternalFeedbackHistoryDTO]

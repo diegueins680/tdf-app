@@ -31,6 +31,7 @@ import type { InternalReportState, InternalReportType } from '../api/types';
 import PageShell, { EmptyState } from '../components/PageShell';
 import { useSession } from '../session/SessionContext';
 import { hasInternshipsAdminAccess } from '../utils/accessControl';
+import { internalReportMutationsAllowed } from './internalFeedbackLogic';
 
 const CATEGORY_CATALOG = 'feedback-categories';
 const SEVERITY_CATALOG = 'feedback-severities';
@@ -295,8 +296,9 @@ function ReportDetail({ reportId }: { reportId: string }) {
   if (reportQuery.isLoading) return <LinearProgress aria-label="Cargando reporte" />;
   if (!report) return <EmptyState title="Reporte no disponible" description="No existe o no tienes permiso para verlo." />;
   const summary = report.ifrSummary;
+  const reportIsMutable = internalReportMutationsAllowed(report.ifrAuditPlanMutable);
   const commentKind = summary.ifsState === 'needs_information' && !isAdmin ? 'information_response' : 'comment';
-  const mayEditReporterFields = summary.ifsReporterPartyId === session?.partyId
+  const mayEditReporterFields = reportIsMutable && summary.ifsReporterPartyId === session?.partyId
     && (summary.ifsState === 'draft' || summary.ifsState === 'needs_information');
   const setReporterField = <K extends keyof InternalFeedbackUpdate>(key: K, value: InternalFeedbackUpdate[K]) =>
     setReporterUpdate((current) => ({ ...current, [key]: value }));
@@ -319,6 +321,7 @@ function ReportDetail({ reportId }: { reportId: string }) {
     <PageShell title={summary.ifsTitle} subtitle={`${internalReportTypeLabel(catalogs.categories, summary.ifsReportType)} · ${STATE_LABELS[summary.ifsState]}`} maxWidth="lg" actions={<Button component={RouterLink} to="/feedback/interno" startIcon={<ArrowBackIcon />}>Reportes</Button>}>
       <Stack spacing={2.5}>
         {message && <Alert severity={message.severity}>{message.text}</Alert>}
+        {!reportIsMutable && <Alert severity="info">La auditoría terminó. Este reporte y su evidencia permanecen disponibles en modo de sólo lectura.</Alert>}
         <Stack direction="row" spacing={1} flexWrap="wrap">
           <Chip label={STATE_LABELS[summary.ifsState]} color={summary.ifsBlocking ? 'error' : 'default'} />
           <Chip label={summary.ifsModuleName} variant="outlined" />
@@ -333,7 +336,7 @@ function ReportDetail({ reportId }: { reportId: string }) {
           {report.ifrExpectedResult && <Typography sx={{ whiteSpace: 'pre-wrap' }}><strong>Esperado:</strong>{'\n'}{report.ifrExpectedResult}</Typography>}
           {report.ifrActualResult && <Typography sx={{ whiteSpace: 'pre-wrap' }}><strong>Ocurrió:</strong>{'\n'}{report.ifrActualResult}</Typography>}
           {summary.ifsDuplicateOf && <Alert severity="info">Este reporte es duplicado de <Link component={RouterLink} to={`/feedback/interno/${summary.ifsDuplicateOf}`}>{summary.ifsDuplicateOf}</Link>.</Alert>}
-          {summary.ifsState === 'draft' && <Button variant="contained" onClick={() => action.mutate(() => InternalFeedback.submit(reportId))}>Enviar reporte</Button>}
+          {reportIsMutable && summary.ifsState === 'draft' && <Button variant="contained" onClick={() => action.mutate(() => InternalFeedback.submit(reportId))}>Enviar reporte</Button>}
         </Stack></CardContent></Card>
 
         {mayEditReporterFields && <Card variant="outlined"><CardContent><Stack spacing={2}>
@@ -362,28 +365,32 @@ function ReportDetail({ reportId }: { reportId: string }) {
           <Grid item xs={12} md={6}><Card variant="outlined"><CardContent><Stack spacing={2}>
             <Typography variant="h6">Evidencia</Typography>
             {report.ifrEvidence.map((item) => <Box key={item.ifeId}>{item.ifeExternalUrl ? <Link href={item.ifeExternalUrl} target="_blank" rel="noreferrer">{item.ifeCaption || item.ifeExternalUrl}</Link> : <Button size="small" startIcon={<DownloadIcon />} onClick={() => action.mutate(async () => { const blob = await InternalFeedback.downloadEvidence(reportId, item.ifeId); saveBlob(blob, item.ifeOriginalFileName || 'evidencia', item.ifeContentType || 'application/octet-stream'); })}>{item.ifeOriginalFileName}</Button>}</Box>)}
-            <Button component="label" startIcon={<UploadFileIcon />} variant="outlined">{attachment?.name || 'Elegir captura o documento'}<input hidden type="file" accept="image/png,image/jpeg,image/webp,application/pdf,text/plain" onChange={(event) => setAttachment(event.target.files?.[0] || null)} /></Button>
-            <Button disabled={!attachment} onClick={() => attachment && action.mutate(() => InternalFeedback.uploadEvidence(reportId, attachment))}>Adjuntar archivo</Button>
-            <TextField label="Enlace HTTPS de video" value={evidenceUrl} onChange={(event) => setEvidenceUrl(event.target.value)} />
-            <Button disabled={!evidenceUrl.trim()} onClick={() => action.mutate(() => InternalFeedback.linkEvidence(reportId, evidenceUrl))}>Agregar enlace</Button>
+            {reportIsMutable && <>
+              <Button component="label" startIcon={<UploadFileIcon />} variant="outlined">{attachment?.name || 'Elegir captura o documento'}<input hidden type="file" accept="image/png,image/jpeg,image/webp,application/pdf,text/plain" onChange={(event) => setAttachment(event.target.files?.[0] || null)} /></Button>
+              <Button disabled={!attachment} onClick={() => attachment && action.mutate(() => InternalFeedback.uploadEvidence(reportId, attachment))}>Adjuntar archivo</Button>
+              <TextField label="Enlace HTTPS de video" value={evidenceUrl} onChange={(event) => setEvidenceUrl(event.target.value)} />
+              <Button disabled={!evidenceUrl.trim()} onClick={() => action.mutate(() => InternalFeedback.linkEvidence(reportId, evidenceUrl))}>Agregar enlace</Button>
+            </>}
           </Stack></CardContent></Card></Grid>
           <Grid item xs={12} md={6}><Card variant="outlined"><CardContent><Stack spacing={2}>
             <Typography variant="h6">Conversación</Typography>
             {report.ifrComments.map((item) => <Box key={item.ifcmId} sx={{ borderLeft: 3, borderColor: item.ifcmKind === 'information_request' ? 'warning.main' : 'divider', pl: 1.5 }}><Typography variant="caption">{item.ifcmAuthorName} · {item.ifcmKind}</Typography><Typography sx={{ whiteSpace: 'pre-wrap' }}>{item.ifcmBody}</Typography></Box>)}
-            <TextField label={commentKind === 'information_response' ? 'Información solicitada' : 'Comentario'} value={comment} onChange={(event) => setComment(event.target.value)} multiline minRows={3} />
-            <Button disabled={!comment.trim()} onClick={() => action.mutate(async () => { await InternalFeedback.comment(reportId, comment, commentKind); setComment(''); })}>Agregar comentario</Button>
-            {isAdmin && <Button color="warning" disabled={!comment.trim()} onClick={() => action.mutate(async () => { await InternalFeedback.comment(reportId, comment, 'information_request'); setComment(''); })}>Solicitar información</Button>}
+            {reportIsMutable && <>
+              <TextField label={commentKind === 'information_response' ? 'Información solicitada' : 'Comentario'} value={comment} onChange={(event) => setComment(event.target.value)} multiline minRows={3} />
+              <Button disabled={!comment.trim()} onClick={() => action.mutate(async () => { await InternalFeedback.comment(reportId, comment, commentKind); setComment(''); })}>Agregar comentario</Button>
+              {isAdmin && <Button color="warning" disabled={!comment.trim()} onClick={() => action.mutate(async () => { await InternalFeedback.comment(reportId, comment, 'information_request'); setComment(''); })}>Solicitar información</Button>}
+            </>}
           </Stack></CardContent></Card></Grid>
         </Grid>
 
-        {summary.ifsState === 'ready_for_retest' && <Card variant="outlined"><CardContent><Stack spacing={2}>
+        {reportIsMutable && summary.ifsState === 'ready_for_retest' && <Card variant="outlined"><CardContent><Stack spacing={2}>
           <Typography variant="h6">Registrar retest</Typography>
           <TextField select label="Resultado" value={retestResult} onChange={(event) => setRetestResult(event.target.value)}><MenuItem value="passed">Aprobado</MenuItem><MenuItem value="failed">Fallido</MenuItem><MenuItem value="blocked">Bloqueado</MenuItem></TextField>
           <TextField label="Qué comprobaste y evidencia" value={retestNotes} onChange={(event) => setRetestNotes(event.target.value)} multiline minRows={3} />
           <Button variant="contained" disabled={!retestNotes.trim()} onClick={() => action.mutate(() => InternalFeedback.retest(reportId, { ifrcResult: retestResult, ifrcNotes: retestNotes, ifrcEvidenceSummary: retestNotes }))}>Guardar retest</Button>
         </Stack></CardContent></Card>}
 
-        {isAdmin && <Card variant="outlined"><CardContent><Stack spacing={2}>
+        {isAdmin && reportIsMutable && <Card variant="outlined"><CardContent><Stack spacing={2}>
           <Typography variant="h6">Triage administrativo</Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}><TextField select label="Nuevo estado" value={adminUpdate.ifuState ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuState: event.target.value as InternalReportState }))} fullWidth><MenuItem value="">Sin cambio</MenuItem>{ADMIN_TRANSITIONS[summary.ifsState].map((state) => <MenuItem key={state} value={state}>{STATE_LABELS[state]}</MenuItem>)}</TextField></Grid>
