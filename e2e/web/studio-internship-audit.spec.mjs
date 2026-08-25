@@ -161,6 +161,7 @@ test('@critical synthetic administrator can see all-report controls and prepare 
       ifrExpectedResult: 'Una confirmación.', ifrActualResult: 'Dos confirmaciones.', ifrFrequency: 'Siempre',
       ifrAssignedTo: null, ifrResolution: null, ifrRetestResult: null, ifrClosureReason: null,
       ifrGithubIssueUrl: null, ifrVideoLinks: null, ifrSubmittedAt: '2026-08-21T13:00:00Z', ifrClosedAt: null,
+      ifrAuditPlanMutable: true,
       ifrEvidence: [], ifrComments: [], ifrHistory: [], ifrRetests: [], ifrPotentialDuplicates: [],
     } });
   });
