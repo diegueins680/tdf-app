@@ -30,6 +30,7 @@ import {
   type FeatureAccessRequestStatus,
 } from '../api/accessRequests';
 import { getAnalyticsClient } from '../analytics/posthog';
+import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import {
   evaluateFeatureAccess,
   featureLabel,
@@ -276,10 +277,12 @@ export function NewAccessRequestPage() {
       justification: justification.trim() || null,
     }),
     onSuccess: (request) => {
-      getAnalyticsClient().capture('feature_access_request_submitted', {
+      const analytics = getAnalyticsClient();
+      analytics.capture('feature_access_request_submitted', {
         feature_id: request.featureId,
         feature_action: request.action,
       });
+      captureFirstValueOnce(analytics, session?.partyId, 'access_requested');
       navigate('/solicitudes-acceso', { replace: true });
     },
   });

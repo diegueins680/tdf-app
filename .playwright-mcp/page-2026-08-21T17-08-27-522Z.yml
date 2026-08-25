@@ -1,0 +1,292 @@
+- generic [ref=e9]:
+  - generic [ref=e12]:
+    - link [ref=e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=e22]
+    - generic [ref=e25]:
+      - link [ref=e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=e35]
+      - link [ref=e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=e45]
+      - link [ref=e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=e57]
+      - link [ref=e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=e67]
+      - link [ref=e217] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=e222]
+      - link [ref=e85] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=e90]
+      - link [ref=e95] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=e100]
+      - link [ref=e107] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=e112]:
+          - img "tdf.records.label's profile picture" [ref=e113]
+    - generic [ref=e114]:
+      - link [ref=e117] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=e122]
+      - link [ref=e125] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=e130]
+  - main [ref=e134]:
+    - generic [ref=e228]:
+      - navigation "Thread list" [ref=e229]:
+        - generic [ref=e230]:
+          - generic [ref=e231]:
+            - button [ref=e232] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=e234]
+              - img "Down chevron icon" [ref=e237]
+            - button [ref=e241] [cursor=pointer]:
+              - img "New message" [ref=e243]
+          - tablist [ref=e248]:
+            - tab "Primary" [selected] [ref=e249] [cursor=pointer]
+            - tab "General" [ref=e252] [cursor=pointer]
+            - tab "From ads" [ref=e255] [cursor=pointer]
+            - tab "Requests" [ref=e259] [cursor=pointer]
+          - generic [ref=e1692]:
+            - img "Search" [ref=e1872]
+            - textbox "Search" [ref=e1875]
+          - generic [ref=e1876]:
+            - generic [ref=e1878]:
+              - list [ref=e1880]:
+                - listitem [ref=e1881]
+                - listitem [ref=e1882]:
+                  - button "First note in a while... Your note" [ref=e1884] [cursor=pointer]:
+                    - generic [ref=e1885]:
+                      - generic [ref=e1886]: First note in a while...
+                      - generic [ref=e1892]:
+                        - link [ref=e1894]
+                        - generic [ref=e1895]: Your note
+                - listitem [ref=e1897]:
+                  - button "Note unavailable. Use the latest version of the Instagram app to see this note. _seereendipia_'s profile picture Julieta 💫" [ref=e1900] [cursor=pointer]:
+                    - generic [ref=e1901]:
+                      - generic [ref=e1902]: Note unavailable. Use the latest version of the Instagram app to see this note.
+                      - generic [ref=e1909]:
+                        - link [ref=e1911]:
+                          - img "_seereendipia_'s profile picture" [ref=e1912]
+                        - generic [ref=e1913]: Julieta 💫
+                - listitem [ref=e1916]:
+                  - button "FUERAS MI NOVIA Y YO TU PRÍNCIPEEE🗣️🗣️🗣️ anajusegovia's profile picture Ana Julia/ DJ JU🫧" [ref=e1919] [cursor=pointer]:
+                    - generic [ref=e1920]:
+                      - generic [ref=e1921]: FUERAS MI NOVIA Y YO TU PRÍNCIPEEE🗣️🗣️🗣️
+                      - generic [ref=e1928]:
+                        - link [ref=e1930]:
+                          - img "anajusegovia's profile picture" [ref=e1931]
+                        - generic [ref=e1932]: Ana Julia/ DJ JU🫧
+                - listitem [ref=e1935]:
+                  - button "Tengo ganas de algo pero no sé qué 🙃 danyrivadeneira7's profile picture Dany Rivadeneira López" [ref=e1938] [cursor=pointer]:
+                    - generic [ref=e1939]:
+                      - generic [ref=e1940]: Tengo ganas de algo pero no sé qué 🙃
+                      - generic [ref=e1947]:
+                        - link [ref=e1949]:
+                          - img "danyrivadeneira7's profile picture" [ref=e1950]
+                        - generic [ref=e1951]: Dany Rivadeneira López
+                - listitem [ref=e1954]:
+                  - button "Persuadir es un arte. Usarlo para cambiar lo que ya es justo, otra cosa. fede.idrovo's profile picture Fede Ib" [ref=e1957] [cursor=pointer]:
+                    - generic [ref=e1958]:
+                      - generic [ref=e1959]: Persuadir es un arte. Usarlo para cambiar lo que ya es justo, otra cosa.
+                      - generic [ref=e1966]:
+                        - link [ref=e1968]:
+                          - img "fede.idrovo's profile picture" [ref=e1969]
+                        - generic [ref=e1970]: Fede Ib
+                - listitem [ref=e1973]:
+                  - button "No abandonen a quienes les han dado tantas alegrías, fuerza escena electrónica 🔥 strange_soul.col's profile picture Strange Soul Dj" [ref=e1976] [cursor=pointer]:
+                    - generic [ref=e1977]:
+                      - generic [ref=e1978]: No abandonen a quienes les han dado tantas alegrías, fuerza escena electrónica 🔥
+                      - generic [ref=e1985]:
+                        - link [ref=e1987]:
+                          - img "strange_soul.col's profile picture" [ref=e1988]
+                        - generic [ref=e1989]: Strange Soul Dj
+                - listitem [ref=e1992]:
+                  - button "nunca confiarle a alguien más que gestione el viaje dimeabiluuu____'s profile picture ✹ emilia ✹" [ref=e1995] [cursor=pointer]:
+                    - generic [ref=e1996]:
+                      - generic [ref=e1997]: nunca confiarle a alguien más que gestione el viaje
+                      - generic [ref=e2004]:
+                        - link [ref=e2006]:
+                          - img "dimeabiluuu____'s profile picture" [ref=e2007]
+                        - generic [ref=e2008]: ✹ emilia ✹
+                - listitem [ref=e2011]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Smile Groundation, Apple Gabriel, Don Carlos rakelovsky's profile picture Rakelovsky" [ref=e2014] [cursor=pointer]:
+                    - generic [ref=e2015]:
+                      - generic [ref=e2021]:
+                        - generic [ref=e2022]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e2024]
+                          - generic [ref=e2028]: Smile
+                        - generic [ref=e2029]: Groundation, Apple Gabriel, Don Carlos
+                      - generic [ref=e2030]:
+                        - link [ref=e2032]:
+                          - img "rakelovsky's profile picture" [ref=e2033]
+                        - generic [ref=e2034]: Rakelovsky
+                - listitem [ref=e2037]:
+                  - button "Si saben de una batalla de farmeo de aura, me avisan 🤑 isaac_erazo20's profile picture Isaac André" [ref=e2040] [cursor=pointer]:
+                    - generic [ref=e2041]:
+                      - generic [ref=e2042]: Si saben de una batalla de farmeo de aura, me avisan 🤑
+                      - generic [ref=e2049]:
+                        - link [ref=e2051]:
+                          - img "isaac_erazo20's profile picture" [ref=e2052]
+                        - generic [ref=e2053]: Isaac André
+              - button "Next" [ref=e2056] [cursor=pointer]
+            - generic [ref=e2061]:
+              - 'button "user-profile-picture Edmundo You: Sí, no hay problema 6 hours ago More options" [ref=e2065] [cursor=pointer]':
+                - generic [ref=e2067]:
+                  - img "user-profile-picture" [ref=e2071]
+                  - generic [ref=e2074]:
+                    - generic [ref=e2075]: Edmundo
+                    - generic [ref=e2081]:
+                      - generic [ref=e2082]: "You: Sí, no hay problema"
+                      - generic [ref=e2084]:
+                        - generic [ref=e2085]: ·
+                        - generic "6 hours ago" [ref=e2090]: 6h
+                  - button [ref=e2093]:
+                    - img "More options" [ref=e2096]
+              - button "user-profile-picture Oldboy Liked a message 11 hours ago" [ref=e2103] [cursor=pointer]:
+                - generic [ref=e2105]:
+                  - img "user-profile-picture" [ref=e2109]
+                  - generic [ref=e2112]:
+                    - generic [ref=e2113]: Oldboy
+                    - generic [ref=e2119]:
+                      - generic [ref=e2120]: Liked a message
+                      - generic [ref=e2122]:
+                        - generic [ref=e2123]: ·
+                        - generic "11 hours ago" [ref=e2128]: 11h
+              - button "user-profile-picture EL DOMO Pululahua EL sent an attachment. 22 hours ago" [ref=e2132] [cursor=pointer]:
+                - generic [ref=e2134]:
+                  - img "user-profile-picture" [ref=e2138]
+                  - generic [ref=e2141]:
+                    - generic [ref=e2142]: EL DOMO Pululahua
+                    - generic [ref=e2148]:
+                      - generic [ref=e2149]: EL sent an attachment.
+                      - generic [ref=e2151]:
+                        - generic [ref=e2152]: ·
+                        - generic "22 hours ago" [ref=e2157]: 22h
+              - 'button "user-profile-picture Fabro Alomìa Torres You: ¡Hola, Fabro! Gracias por compartir la captura 🙌 Parece que el registro está siendo bloqueado temporalmente por un límite de actividad asociado a ese correo. No nos envíes contraseñas ni códigos. Evita repetir muchos intentos seguidos y prueba nuevamente más tarde; si el aviso sigue apareciendo, cuéntanos si sale al crear la cuenta o al iniciar sesión y te ayudamos con el siguiente paso. 22 hours ago" [ref=e2161] [cursor=pointer]':
+                - generic [ref=e2163]:
+                  - img "user-profile-picture" [ref=e2167]
+                  - generic [ref=e2170]:
+                    - generic [ref=e2171]: Fabro Alomìa Torres
+                    - generic [ref=e2177]:
+                      - generic [ref=e2178]: "You: ¡Hola, Fabro! Gracias por compartir la captura 🙌 Parece que el registro está siendo bloqueado temporalmente por un límite de actividad asociado a ese correo. No nos envíes contraseñas ni códigos. Evita repetir muchos intentos seguidos y prueba nuevamente más tarde; si el aviso sigue apareciendo, cuéntanos si sale al crear la cuenta o al iniciar sesión y te ayudamos con el siguiente paso."
+                      - generic [ref=e2180]:
+                        - generic [ref=e2181]: ·
+                        - generic "22 hours ago" [ref=e2186]: 22h
+              - button "user-profile-picture Carlos Pabón Recalde Carlos sent an attachment. 22 hours ago" [ref=e2190] [cursor=pointer]:
+                - generic [ref=e2192]:
+                  - img "user-profile-picture" [ref=e2196]
+                  - generic [ref=e2199]:
+                    - generic [ref=e2200]: Carlos Pabón Recalde
+                    - generic [ref=e2206]:
+                      - generic [ref=e2207]: Carlos sent an attachment.
+                      - generic [ref=e2209]:
+                        - generic [ref=e2210]: ·
+                        - generic "22 hours ago" [ref=e2215]: 22h
+              - button "user-profile-picture Diego Saa Diego sent an attachment. a day ago" [ref=e2219] [cursor=pointer]:
+                - generic [ref=e2221]:
+                  - img "user-profile-picture" [ref=e2225]
+                  - generic [ref=e2228]:
+                    - generic [ref=e2229]: Diego Saa
+                    - generic [ref=e2235]:
+                      - generic [ref=e2236]: Diego sent an attachment.
+                      - generic [ref=e2238]:
+                        - generic [ref=e2239]: ·
+                        - generic "a day ago" [ref=e2244]: 1d
+              - 'button "user-profile-picture Emanuele Pilo-Pais L. You: Increíble a day ago" [ref=e2248] [cursor=pointer]':
+                - generic [ref=e2250]:
+                  - img "user-profile-picture" [ref=e2254]
+                  - generic [ref=e2257]:
+                    - generic [ref=e2258]: Emanuele Pilo-Pais L.
+                    - generic [ref=e2264]:
+                      - generic [ref=e2265]: "You: Increíble"
+                      - generic [ref=e2267]:
+                        - generic [ref=e2268]: ·
+                        - generic "a day ago" [ref=e2273]: 1d
+              - button "user-profile-picture reemus Liked a message a day ago" [ref=e2277] [cursor=pointer]:
+                - generic [ref=e2279]:
+                  - img "user-profile-picture" [ref=e2283]
+                  - generic [ref=e2286]:
+                    - generic [ref=e2287]: reemus
+                    - generic [ref=e2293]:
+                      - generic [ref=e2294]: Liked a message
+                      - generic [ref=e2296]:
+                        - generic [ref=e2297]: ·
+                        - generic "a day ago" [ref=e2302]: 1d
+              - button [ref=e2325] [cursor=pointer]:
+                - generic [ref=e2327]:
+                  - status "Loading..." [ref=e2330]
+                  - generic [ref=e2333]:
+                    - status "Loading..." [ref=e2335]
+                    - status "Loading..." [ref=e2337]
+      - generic [ref=e2340]:
+        - generic [ref=e2344]:
+          - link "Open the profile page of backroom_session" [ref=e2345] [cursor=pointer]:
+            - /url: /backroom_session/
+            - generic [ref=e2346]:
+              - img "user-profile-picture" [ref=e2350]
+              - generic [ref=e2351]:
+                - heading "BACKROOM SESSIONS" [level=2] [ref=e2353]
+                - generic [ref=e2355]: backroom_session
+          - generic [ref=e2359]:
+            - button [ref=e2360] [cursor=pointer]:
+              - img "Audio call" [ref=e2362]
+            - button [ref=e2364] [cursor=pointer]:
+              - img "Video call" [ref=e2366]
+            - button [ref=e2369] [cursor=pointer]:
+              - img "Conversation information" [ref=e2371]
+        - generic [ref=e2375]:
+          - generic [ref=e2379]:
+            - generic [ref=e2380]:
+              - img "user-profile-picture" [ref=e2384]
+              - generic [ref=e2385]:
+                - heading "BACKROOM SESSIONS" [level=2] [ref=e2388]
+                - generic [ref=e2390]: backroom_session · Instagram
+                - link "View profile" [ref=e2393] [cursor=pointer]:
+                  - /url: /backroom_session/
+            - generic [ref=e2394]:
+              - generic [ref=e2401]:
+                - generic [ref=e2402]: Aug 13, 2026, 11:45 AM
+                - group [ref=e2405]:
+                  - generic [ref=e2410]:
+                    - generic [ref=e2413]:
+                      - text: ¡Genial! Nos alegra mucho saber que la propuesta conecta con lo que están construyendo
+                      - img "🙌" [ref=e2415]
+                      - text: "Nos encantaría invitarlos a conocer el Domo del Pululahua:"
+                      - link "https://www.instagram.com/domo.pululahua" [ref=e2417] [cursor=pointer]:
+                        - /url: https://www.instagram.com/domo.pululahua
+                      - text: y explorar juntos una primera Backroom Session piloto. Es un espacio singular, ubicado al borde del cráter, que creemos que puede encajar muy bien con su concepto, curaduría y propuesta audiovisual. Si la experiencia funciona bien, podríamos convertirla en una temporada periódica. Desde TDF también impulsamos sesiones electrónicas y producción audiovisual. Podemos aportar el venue y coordinar una producción integral —sonido, iluminación, grabación multipista, video, difusión, boletería, barra y equipo técnico— adaptada a las necesidades y posibilidades de cada fecha.
+                    - generic [ref=e2419]:
+                      - link "domo.pululahua" [ref=e2421] [cursor=pointer]:
+                        - /url: /domo.pululahua/
+                      - generic [ref=e2424]: EL DOMO Pululahua
+                    - link [ref=e2427] [cursor=pointer]:
+                      - /url: /domo.pululahua
+                      - list [ref=e2429]:
+                        - listitem [ref=e2430]
+                        - listitem [ref=e2432]
+                        - listitem [ref=e2434]
+                        - listitem [ref=e2436]
+                        - listitem [ref=e2438]
+                        - listitem [ref=e2440]
+              - group [ref=e2445]:
+                - generic [ref=e2446]: "La idea sería diseñar juntos un modelo de coproducción viable: Backroom Sessions aportaría su identidad, curaduría, comunidad y visión de contenidos; TDF, el espacio, la infraestructura y el soporte de producción. También nos interesa conversar sobre otras formas de colaboración entre ambos proyectos. ¿Les gustaría visitar el Domo y tener una reunión breve para conversar sobre el piloto y una posible serie recurrente? Pueden proponernos una fecha que les funcione y, si les parece, compartirnos un número de WhatsApp para coordinar con mayor facilidad."
+            - generic [ref=e2452]: Seen yesterday
+          - generic [ref=e2463]:
+            - button [ref=e2466] [cursor=pointer]:
+              - img "Choose an emoji" [ref=e2468]
+            - generic [ref=e2470]:
+              - textbox [active] [ref=e2471]:
+                - paragraph [ref=e2472]
+              - generic: Message...
+            - generic [ref=e2473]:
+              - button [ref=e2474] [cursor=pointer]:
+                - img "Voice Clip" [ref=e2476]
+              - button [ref=e2479] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=e2481]
+              - button [ref=e2486] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=e2488]

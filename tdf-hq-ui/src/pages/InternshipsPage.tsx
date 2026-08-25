@@ -606,7 +606,7 @@ export default function InternshipsPage() {
   const showHoursEmptyState = !showFirstRunAdminHoursEmptyState && entries.length === 0;
   const hoursEmptyStateMessage = isAdmin ? emptyAdminHoursMessage : emptySelfHoursMessage;
 
-  const signupPath = '/login?signup=1&roles=Intern&redirect=/practicas';
+  const signupPath = '/login?signup=1&intent=internships';
   const signupUrl = typeof window !== 'undefined' ? `${window.location.origin}${signupPath}` : signupPath;
 
   const handleCopySignup = async () => {

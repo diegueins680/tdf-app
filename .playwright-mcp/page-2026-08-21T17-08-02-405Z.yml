@@ -1,0 +1,314 @@
+- generic [ref=e9]:
+  - generic [ref=e12]:
+    - link [ref=e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=e22]
+    - generic [ref=e25]:
+      - link [ref=e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=e35]
+      - link [ref=e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=e45]
+      - link [ref=e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=e57]
+      - link [ref=e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=e67]
+      - link [ref=e217] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=e222]
+      - link [ref=e85] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=e90]
+      - link [ref=e95] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=e100]
+      - link [ref=e107] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=e112]:
+          - img "tdf.records.label's profile picture" [ref=e113]
+    - generic [ref=e114]:
+      - link [ref=e117] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=e122]
+      - link [ref=e125] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=e130]
+  - main [ref=e134]:
+    - generic [ref=e228]:
+      - navigation "Thread list" [ref=e229]:
+        - generic [ref=e230]:
+          - generic [ref=e231]:
+            - button [ref=e232] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=e234]
+              - img "Down chevron icon" [ref=e237]
+            - button [ref=e241] [cursor=pointer]:
+              - img "New message" [ref=e243]
+          - tablist [ref=e248]:
+            - tab "Primary" [selected] [ref=e249] [cursor=pointer]
+            - tab "General" [ref=e252] [cursor=pointer]
+            - tab "From ads" [ref=e255] [cursor=pointer]
+            - tab "Requests" [ref=e259] [cursor=pointer]
+          - generic [ref=e965]:
+            - img "Search" [ref=e988]
+            - textbox "Search" [ref=e991]
+          - generic [ref=e992]:
+            - generic [ref=e994]:
+              - list [ref=e996]:
+                - listitem [ref=e997]
+                - listitem [ref=e998]:
+                  - button "Your turn... Your note" [ref=e1000] [cursor=pointer]:
+                    - generic [ref=e1001]:
+                      - generic [ref=e1002]: Your turn...
+                      - generic [ref=e1008]:
+                        - link [ref=e1010]
+                        - generic [ref=e1011]: Your note
+                - listitem [ref=e1013]:
+                  - button "Note unavailable. Use the latest version of the Instagram app to see this note. _seereendipia_'s profile picture Julieta 💫" [ref=e1016] [cursor=pointer]:
+                    - generic [ref=e1017]:
+                      - generic [ref=e1018]: Note unavailable. Use the latest version of the Instagram app to see this note.
+                      - generic [ref=e1025]:
+                        - link [ref=e1027]:
+                          - img "_seereendipia_'s profile picture" [ref=e1028]
+                        - generic [ref=e1029]: Julieta 💫
+                - listitem [ref=e1032]:
+                  - button "FUERAS MI NOVIA Y YO TU PRÍNCIPEEE🗣️🗣️🗣️ anajusegovia's profile picture Ana Julia/ DJ JU🫧" [ref=e1035] [cursor=pointer]:
+                    - generic [ref=e1036]:
+                      - generic [ref=e1037]: FUERAS MI NOVIA Y YO TU PRÍNCIPEEE🗣️🗣️🗣️
+                      - generic [ref=e1044]:
+                        - link [ref=e1046]:
+                          - img "anajusegovia's profile picture" [ref=e1047]
+                        - generic [ref=e1048]: Ana Julia/ DJ JU🫧
+                - listitem [ref=e1051]:
+                  - button "Tengo ganas de algo pero no sé qué 🙃 danyrivadeneira7's profile picture Dany Rivadeneira López" [ref=e1054] [cursor=pointer]:
+                    - generic [ref=e1055]:
+                      - generic [ref=e1056]: Tengo ganas de algo pero no sé qué 🙃
+                      - generic [ref=e1063]:
+                        - link [ref=e1065]:
+                          - img "danyrivadeneira7's profile picture" [ref=e1066]
+                        - generic [ref=e1067]: Dany Rivadeneira López
+                - listitem [ref=e1070]:
+                  - button "Persuadir es un arte. Usarlo para cambiar lo que ya es justo, otra cosa. fede.idrovo's profile picture Fede Ib" [ref=e1073] [cursor=pointer]:
+                    - generic [ref=e1074]:
+                      - generic [ref=e1075]: Persuadir es un arte. Usarlo para cambiar lo que ya es justo, otra cosa.
+                      - generic [ref=e1082]:
+                        - link [ref=e1084]:
+                          - img "fede.idrovo's profile picture" [ref=e1085]
+                        - generic [ref=e1086]: Fede Ib
+                - listitem [ref=e1089]:
+                  - button "No abandonen a quienes les han dado tantas alegrías, fuerza escena electrónica 🔥 strange_soul.col's profile picture Strange Soul Dj" [ref=e1092] [cursor=pointer]:
+                    - generic [ref=e1093]:
+                      - generic [ref=e1094]: No abandonen a quienes les han dado tantas alegrías, fuerza escena electrónica 🔥
+                      - generic [ref=e1101]:
+                        - link [ref=e1103]:
+                          - img "strange_soul.col's profile picture" [ref=e1104]
+                        - generic [ref=e1105]: Strange Soul Dj
+                - listitem [ref=e1108]:
+                  - button "nunca confiarle a alguien más que gestione el viaje dimeabiluuu____'s profile picture ✹ emilia ✹" [ref=e1111] [cursor=pointer]:
+                    - generic [ref=e1112]:
+                      - generic [ref=e1113]: nunca confiarle a alguien más que gestione el viaje
+                      - generic [ref=e1120]:
+                        - link [ref=e1122]:
+                          - img "dimeabiluuu____'s profile picture" [ref=e1123]
+                        - generic [ref=e1124]: ✹ emilia ✹
+                - listitem [ref=e1127]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Smile Groundation, Apple Gabriel, Don Carlos rakelovsky's profile picture Rakelovsky" [ref=e1130] [cursor=pointer]:
+                    - generic [ref=e1131]:
+                      - generic [ref=e1137]:
+                        - generic [ref=e1138]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e1140]
+                          - generic [ref=e1144]: Smile
+                        - generic [ref=e1145]: Groundation, Apple Gabriel, Don Carlos
+                      - generic [ref=e1146]:
+                        - link [ref=e1148]:
+                          - img "rakelovsky's profile picture" [ref=e1149]
+                        - generic [ref=e1150]: Rakelovsky
+                - listitem [ref=e1153]:
+                  - button "Si saben de una batalla de farmeo de aura, me avisan 🤑 isaac_erazo20's profile picture Isaac André" [ref=e1156] [cursor=pointer]:
+                    - generic [ref=e1157]:
+                      - generic [ref=e1158]: Si saben de una batalla de farmeo de aura, me avisan 🤑
+                      - generic [ref=e1165]:
+                        - link [ref=e1167]:
+                          - img "isaac_erazo20's profile picture" [ref=e1168]
+                        - generic [ref=e1169]: Isaac André
+              - button "Next" [ref=e1172] [cursor=pointer]
+            - generic [ref=e1177]:
+              - 'button "user-profile-picture Edmundo You: Sí, no hay problema 6 hours ago" [ref=e1181] [cursor=pointer]':
+                - generic [ref=e1183]:
+                  - img "user-profile-picture" [ref=e1187]
+                  - generic [ref=e1190]:
+                    - generic [ref=e1191]: Edmundo
+                    - generic [ref=e1197]:
+                      - generic [ref=e1198]: "You: Sí, no hay problema"
+                      - generic [ref=e1200]:
+                        - generic [ref=e1201]: ·
+                        - generic "6 hours ago" [ref=e1206]: 6h
+              - button "user-profile-picture Oldboy Liked a message 11 hours ago" [ref=e1210] [cursor=pointer]:
+                - generic [ref=e1212]:
+                  - img "user-profile-picture" [ref=e1216]
+                  - generic [ref=e1219]:
+                    - generic [ref=e1220]: Oldboy
+                    - generic [ref=e1226]:
+                      - generic [ref=e1227]: Liked a message
+                      - generic [ref=e1229]:
+                        - generic [ref=e1230]: ·
+                        - generic "11 hours ago" [ref=e1235]: 11h
+              - button "user-profile-picture EL DOMO Pululahua EL sent an attachment. 22 hours ago" [ref=e1239] [cursor=pointer]:
+                - generic [ref=e1241]:
+                  - img "user-profile-picture" [ref=e1245]
+                  - generic [ref=e1248]:
+                    - generic [ref=e1249]: EL DOMO Pululahua
+                    - generic [ref=e1255]:
+                      - generic [ref=e1256]: EL sent an attachment.
+                      - generic [ref=e1258]:
+                        - generic [ref=e1259]: ·
+                        - generic "22 hours ago" [ref=e1264]: 22h
+              - 'button "user-profile-picture Fabro Alomìa Torres You: ¡Hola, Fabro! Gracias por compartir la captura 🙌 Parece que el registro está siendo bloqueado temporalmente por un límite de actividad asociado a ese correo. No nos envíes contraseñas ni códigos. Evita repetir muchos intentos seguidos y prueba nuevamente más tarde; si el aviso sigue apareciendo, cuéntanos si sale al crear la cuenta o al iniciar sesión y te ayudamos con el siguiente paso. 22 hours ago" [ref=e1268] [cursor=pointer]':
+                - generic [ref=e1270]:
+                  - img "user-profile-picture" [ref=e1274]
+                  - generic [ref=e1277]:
+                    - generic [ref=e1278]: Fabro Alomìa Torres
+                    - generic [ref=e1284]:
+                      - generic [ref=e1285]: "You: ¡Hola, Fabro! Gracias por compartir la captura 🙌 Parece que el registro está siendo bloqueado temporalmente por un límite de actividad asociado a ese correo. No nos envíes contraseñas ni códigos. Evita repetir muchos intentos seguidos y prueba nuevamente más tarde; si el aviso sigue apareciendo, cuéntanos si sale al crear la cuenta o al iniciar sesión y te ayudamos con el siguiente paso."
+                      - generic [ref=e1287]:
+                        - generic [ref=e1288]: ·
+                        - generic "22 hours ago" [ref=e1293]: 22h
+              - button "user-profile-picture Carlos Pabón Recalde Carlos sent an attachment. 22 hours ago" [ref=e1297] [cursor=pointer]:
+                - generic [ref=e1299]:
+                  - img "user-profile-picture" [ref=e1303]
+                  - generic [ref=e1306]:
+                    - generic [ref=e1307]: Carlos Pabón Recalde
+                    - generic [ref=e1313]:
+                      - generic [ref=e1314]: Carlos sent an attachment.
+                      - generic [ref=e1316]:
+                        - generic [ref=e1317]: ·
+                        - generic "22 hours ago" [ref=e1322]: 22h
+              - button "user-profile-picture Diego Saa Diego sent an attachment. a day ago" [ref=e1326] [cursor=pointer]:
+                - generic [ref=e1328]:
+                  - img "user-profile-picture" [ref=e1332]
+                  - generic [ref=e1335]:
+                    - generic [ref=e1336]: Diego Saa
+                    - generic [ref=e1342]:
+                      - generic [ref=e1343]: Diego sent an attachment.
+                      - generic [ref=e1345]:
+                        - generic [ref=e1346]: ·
+                        - generic "a day ago" [ref=e1351]: 1d
+              - 'button "user-profile-picture Emanuele Pilo-Pais L. You: Increíble a day ago" [ref=e1355] [cursor=pointer]':
+                - generic [ref=e1357]:
+                  - img "user-profile-picture" [ref=e1361]
+                  - generic [ref=e1364]:
+                    - generic [ref=e1365]: Emanuele Pilo-Pais L.
+                    - generic [ref=e1371]:
+                      - generic [ref=e1372]: "You: Increíble"
+                      - generic [ref=e1374]:
+                        - generic [ref=e1375]: ·
+                        - generic "a day ago" [ref=e1380]: 1d
+              - button "user-profile-picture reemus Liked a message a day ago" [ref=e1384] [cursor=pointer]:
+                - generic [ref=e1386]:
+                  - img "user-profile-picture" [ref=e1390]
+                  - generic [ref=e1393]:
+                    - generic [ref=e1394]: reemus
+                    - generic [ref=e1400]:
+                      - generic [ref=e1401]: Liked a message
+                      - generic [ref=e1403]:
+                        - generic [ref=e1404]: ·
+                        - generic "a day ago" [ref=e1409]: 1d
+              - button [ref=e1432] [cursor=pointer]:
+                - generic [ref=e1434]:
+                  - status "Loading..." [ref=e1437]
+                  - generic [ref=e1440]:
+                    - status "Loading..." [ref=e1442]
+                    - status "Loading..." [ref=e1444]
+      - generic [ref=e1447]:
+        - generic [ref=e1451]:
+          - link "Open the profile page of oximoron_tu_tentaculo" [ref=e1452] [cursor=pointer]:
+            - /url: /oximoron_tu_tentaculo/
+            - generic [ref=e1453]:
+              - img "user-profile-picture" [ref=e1457]
+              - generic [ref=e1458]:
+                - heading "Tentáculos" [level=2] [ref=e1460]
+                - generic [ref=e1462]: oximoron_tu_tentaculo
+          - generic [ref=e1466]:
+            - button [ref=e1467] [cursor=pointer]:
+              - img "Audio call" [ref=e1469]
+            - button [ref=e1471] [cursor=pointer]:
+              - img "Video call" [ref=e1473]
+            - button [ref=e1476] [cursor=pointer]:
+              - img "Conversation information" [ref=e1478]
+        - generic [ref=e1482]:
+          - generic [ref=e1486]:
+            - generic [ref=e1487]:
+              - img "user-profile-picture" [ref=e1491]
+              - generic [ref=e1492]:
+                - heading "Tentáculos" [level=2] [ref=e1495]
+                - generic [ref=e1497]: oximoron_tu_tentaculo · Instagram
+                - link "View profile" [ref=e1500] [cursor=pointer]:
+                  - /url: /oximoron_tu_tentaculo/
+            - generic [ref=e1501]:
+              - generic [ref=e1520]:
+                - generic [ref=e1521]: Sun 12:21 PM
+                - group [ref=e1524]:
+                  - generic [ref=e1530]:
+                    - text: ¡Qué buena propuesta!
+                    - img "🙌" [ref=e1532]
+                    - text: Nos interesa conocer mejor el espacio y ver cómo podría conectarse con la comunidad y las actividades de TDF. Sin compartir la dirección exacta por aquí, ¿en qué sector está, qué capacidad aproximada tiene y con qué equipos o condiciones cuenta para las prácticas? Si les parece, podemos coordinar una visita o una llamada breve para conversar sobre posibles colaboraciones. Compártannos un número de WhatsApp o una fecha y horario que les funcione.
+              - group [ref=e1536]:
+                - generic [ref=e1537]: 0989282202. Es mi lugar de ensayo
+              - group [ref=e1547]:
+                - generic [ref=e1549]:
+                  - link "Open the profile page of oximoron_tu_tentaculo" [ref=e1552] [cursor=pointer]:
+                    - /url: /oximoron_tu_tentaculo
+                    - img "user-profile-picture" [ref=e1555]
+                  - generic [ref=e1559]:
+                    - generic [ref=e1561]:
+                      - link "Phone number" [disabled] [ref=e1563]
+                      - generic [ref=e1566]: 098 928 2202
+                    - generic [ref=e1571]:
+                      - link "WhatsApp message" [ref=e1572] [cursor=pointer]:
+                        - /url: https://api.whatsapp.com/send?phone=593989282202&token=eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyNSJ9.eyJleHAiOjE3ODY5ODczODcsInBob25lIjoiKzU5Mzk4OTI4MjIwMiIsInRleHQiOiIiLCJhcHAiOiJpbnN0YWdyYW0ifQ.Kf0B2le7_vP3joJADIkPXxFh1wXcwoPklQKE25HC71pmqJoODLgZj4Yj8ZNVp6kA6J00NOdbKUt_hSLNmqr3mw&utm_campaign=wa_phone_number_xma_not_in_test&source_surface=49&utm_source=igweb
+                      - link "WhatsApp call" [ref=e1573] [cursor=pointer]:
+                        - /url: https://api.whatsapp.com/calluser/?utm_source=igweb&utm_campaign=wa_phone_number_xma_not_in_test&source_surface=49&phone=593989282202
+              - group [ref=e1577]:
+                - generic [ref=e1583]:
+                  - text: ¡Gracias!
+                  - img "🙌" [ref=e1585]
+                  - text: Recibimos el contacto. Para cuidar tu privacidad, no compartas aquí la dirección exacta. ¿Nos confirmas únicamente en qué sector está el lugar y su capacidad aproximada? Con eso podemos coordinar por WhatsApp una llamada breve o una visita para conocer el espacio y conversar sobre una posible colaboración.
+              - group [ref=e1589]:
+                - generic [ref=e1591]:
+                  - link "Open the profile page of oximoron_tu_tentaculo" [ref=e1594] [cursor=pointer]:
+                    - /url: /oximoron_tu_tentaculo
+                    - img "user-profile-picture" [ref=e1597]
+                  - generic [ref=e1598]: Soy un baterista y polifuncional. Toco desde muy temprano. Hago mis propias canciones. Si quisiera evaluar la propuesta y dejar que venga alguien para comunicar desde el Bosque en la occidental más posibilidades de ensayo. Como propuesta. Coexistir en el ámbito de producción musical.
+              - group [ref=e1606]:
+                - generic [ref=e1612]:
+                  - text: Perfecto, gracias por el contexto
+                  - img "🙌" [ref=e1614]
+                  - text: El sector de El Bosque/occidental y el enfoque de ensayo y producción suenan interesantes. Para coordinar una primera visita, ¿qué días y horarios te funcionan esta semana y cuántas personas caben cómodamente en el espacio? Con eso te escribimos por WhatsApp para cerrar el encuentro.
+              - group [ref=e1618]:
+                - generic [ref=e1620]:
+                  - link "Open the profile page of oximoron_tu_tentaculo" [ref=e1623] [cursor=pointer]:
+                    - /url: /oximoron_tu_tentaculo
+                    - img "user-profile-picture" [ref=e1626]
+                  - generic [ref=e1627]: Espero su llamada en Whatssss gracias TDF records
+              - group [ref=e1635]:
+                - generic [ref=e1641]:
+                  - text: ¡Gracias a ti!
+                  - img "🙌" [ref=e1643]
+                  - text: Te escribiremos por WhatsApp para acordar primero una hora; no llamaremos sin coordinar. Cuando puedas, envíanos dos opciones de día y horario y la capacidad aproximada del espacio.
+            - generic [ref=e1644]: Seen
+          - generic [ref=e1655]:
+            - button [ref=e1658] [cursor=pointer]:
+              - img "Choose an emoji" [ref=e1660]
+            - generic [ref=e1662]:
+              - textbox [active] [ref=e1663]:
+                - paragraph [ref=e1664]
+              - generic: Message...
+            - generic [ref=e1665]:
+              - button [ref=e1666] [cursor=pointer]:
+                - img "Voice Clip" [ref=e1668]
+              - button [ref=e1671] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=e1673]
+              - button [ref=e1678] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=e1680]
