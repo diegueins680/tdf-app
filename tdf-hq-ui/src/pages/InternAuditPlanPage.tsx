@@ -195,10 +195,15 @@ export default function InternAuditPlanPage() {
 
   const completePlan = useMutation({
     mutationFn: (exceptionJustification?: string) => InternAudit.completePlan(planId, exceptionJustification),
-    onSuccess: async (completedPlan) => {
+    onSuccess: async (completedPlan, exceptionJustification) => {
       queryClient.setQueryData(['intern-audit', 'plan', planId], completedPlan);
       setCompletionExceptionJustification('');
-      setFeedback({ severity: 'success', text: 'La revisión administrativa quedó aprobada y la auditoría se completó.' });
+      setFeedback({
+        severity: 'success',
+        text: exceptionJustification
+          ? 'La excepción quedó justificada, aprobada y registrada; la auditoría se completó.'
+          : 'La revisión administrativa quedó aprobada y la auditoría se completó.',
+      });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['intern-audit', 'final', planId] }),
         queryClient.invalidateQueries({ queryKey: ['internships', 'tasks'] }),

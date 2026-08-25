@@ -2,7 +2,7 @@
 set -eu
 
 TDF_AUDIT_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-TDF_AUDIT_DATABASE="tdf_studio_intern_audit_api_e2e"
+TDF_AUDIT_DATABASE=${TDF_AUDIT_E2E_DATABASE:-tdf_studio_intern_audit_api_e2e}
 TDF_AUDIT_PORT=${TDF_AUDIT_E2E_PORT:-18089}
 TDF_AUDIT_BACKEND_EXE=${TDF_AUDIT_E2E_BACKEND_EXE:-}
 TDF_AUDIT_PASSWORD=${TDF_AUDIT_E2E_PASSWORD:-}
@@ -35,6 +35,9 @@ if [ "${#TDF_AUDIT_PASSWORD}" -lt 16 ]; then
 fi
 case "$TDF_AUDIT_PORT" in
   ''|*[!0-9]*) echo "TDF_AUDIT_E2E_PORT must be numeric" >&2; exit 1 ;;
+esac
+case "$TDF_AUDIT_DATABASE" in
+  ''|*[!a-z0-9_]*) echo "TDF_AUDIT_E2E_DATABASE must contain only lowercase letters, digits, and underscores" >&2; exit 1 ;;
 esac
 if curl -fsS "http://127.0.0.1:$TDF_AUDIT_PORT/health" >/dev/null 2>&1; then
   echo "Refusing to reuse an occupied E2E port: $TDF_AUDIT_PORT" >&2

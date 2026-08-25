@@ -18,13 +18,13 @@ export const InternAudit = {
   completePlan: (planId: string, exceptionJustification?: string) =>
     patch<InternAuditPlanDTO>(
       `/internships/audit-plans/${encodeURIComponent(planId)}`,
-      exceptionJustification
-        ? {
+      exceptionJustification === undefined
+        ? { iapuStatus: 'completed' }
+        : {
             iapuCompletionJustification: exceptionJustification,
             iapuApproveException: true,
             iapuStatus: 'completed',
-          }
-        : { iapuStatus: 'completed' },
+          },
     ),
   listCases: (planId: string) =>
     get<InternTestCaseDTO[]>(`/internships/audit-plans/${encodeURIComponent(planId)}/cases`),

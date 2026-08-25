@@ -138,7 +138,25 @@ test('@critical synthetic intern records a failed case and reaches a trace-linke
 
 test('@critical synthetic administrator can see all-report controls and prepare triage without activation', async ({ page }) => {
   await mockShell(page, 'StudioManager', 913);
-  await page.route(`**/internships/audit-plans/${planId}`, (route) => route.fulfill({ json: plan }));
+  await page.route(`**/internships/audit-plans/${planId}`, (route) => {
+    if (route.request().method() === 'PATCH') {
+      expect(route.request().postDataJSON()).toEqual({
+        iapuStatus: 'completed',
+        iapuCompletionJustification: 'Autorización ficticia para omitir el caso pendiente sin afectar producción.',
+        iapuApproveException: true,
+      });
+      return route.fulfill({
+        json: {
+          ...plan,
+          iapStatus: 'completed',
+          iapCompletionJustification: 'Autorización ficticia para omitir el caso pendiente sin afectar producción.',
+          iapCompletionApprovedBy: 913,
+          iapCompletionApprovedAt: '2026-08-21T14:00:00Z',
+        },
+      });
+    }
+    return route.fulfill({ json: plan });
+  });
   await page.route(`**/internships/audit-plans/${planId}/cases`, (route) => route.fulfill({ json: [testCase] }));
   await page.route(`**/internships/audit-plans/${planId}/daily-summaries`, (route) => route.fulfill({ json: [] }));
   await page.route(`**/internships/audit-plans/${planId}/final-summary`, (route) => route.fulfill({ status: 404, json: { error: 'not submitted' } }));
@@ -146,6 +164,13 @@ test('@critical synthetic administrator can see all-report controls and prepare 
   await page.goto(`/practicas/auditorias/${planId}`);
   await expect(page.getByText('Sólo la persona asignada puede registrar el resumen mientras la auditoría está activa.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Guardar resumen' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Aprobar y completar auditoría' })).toHaveCount(0);
+  await page.getByLabel('Justificación de la excepción').fill(
+    'Autorización ficticia para omitir el caso pendiente sin afectar producción.',
+  );
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: 'Completar con excepción documentada' }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'La excepción quedó justificada, aprobada y registrada' })).toBeVisible();
   const report = {
     ifsId: reportId, ifsTitle: 'Conflicto de sala no bloqueado', ifsReportType: 'error', ifsState: 'received',
     ifsModuleName: 'Calendario', ifsFeatureName: 'Conflicto de sala', ifsEnvironment: 'staging', ifsPlatform: 'web',
