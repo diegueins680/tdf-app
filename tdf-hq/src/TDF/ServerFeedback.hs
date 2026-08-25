@@ -21,6 +21,7 @@ module TDF.ServerFeedback
   , internalReportTypeForCategoryCode
   , validateInternalReportState
   , validateStateTransition
+  , validateReportStateTransition
   , validatePriority
   , validateEnvironment
   , validateExternalEvidenceUrl
@@ -449,7 +450,9 @@ internalFeedbackServer user =
       resolutionUpdate <- validateNestedInternalText "resolution" 10000 ifuResolution
       retestResultUpdate <- validateNestedInternalText "retestResult" 5000 ifuRetestResult
       closureReasonUpdate <- validateNestedInternalText "closureReason" 5000 ifuClosureReason
-      stateUpdate <- traverse (validateStateTransition state) ifuState
+      stateUpdate <- traverse
+        (validateReportStateTransition (isJust (ME.internalFeedbackReportTestCaseId report)) state)
+        ifuState
       authoritativeSeverityUpdate <- traverse (traverse resolvePublishedFeedbackSeverityFor) ifuAuthoritativeSeverityId
       priorityUpdate <- traverse (traverse validatePriority) ifuPriority
       assignedToUpdate <- traverse (traverse (validatePositiveParty "assignedTo")) ifuAssignedTo
@@ -1445,6 +1448,13 @@ validateStateTransition previous rawNext = do
   if next == previous || next `elem` allowed
     then pure next
     else throwError err409 { errBody = "Unsupported report state transition" }
+
+validateReportStateTransition :: MonadError ServerError m => Bool -> Text -> Text -> m Text
+validateReportStateTransition hasTestCase previous rawNext = do
+  next <- validateStateTransition previous rawNext
+  when (next == "ready_for_retest" && not hasTestCase) $
+    throwError err409 { errBody = "Ready-for-retest reports require a linked test case" }
+  pure next
 
 validatePriority :: MonadError ServerError m => Text -> m Text
 validatePriority = validateChoice "priority" ["low", "medium", "high", "urgent"]

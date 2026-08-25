@@ -290,6 +290,7 @@ import TDF.ServerFeedback
       validateInternalReportState,
       validateOptionalFeedbackContactEmail,
       validatePriority,
+      validateReportStateTransition,
       validateReportType,
       validateStateTransition,
       validateVideoLinks )
@@ -13169,6 +13170,17 @@ main = hspec $ do
             case (validateStateTransition "received" "closed" :: Either ServerError Text) of
                 Left err -> errHTTPCode err `shouldBe` 409
                 Right value -> expectationFailure ("Expected transition rejection, got " <> show value)
+
+        it "keeps standalone reports out of the retest-only state" $ do
+            (validateReportStateTransition True "in_progress" "ready_for_retest" :: Either ServerError Text)
+                `shouldBe` Right "ready_for_retest"
+            case (validateReportStateTransition False "in_progress" "ready_for_retest" :: Either ServerError Text) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 409
+                    BL.unpack (errBody err) `shouldContain` "linked test case"
+                Right value -> expectationFailure ("Expected unlinked transition rejection, got " <> show value)
+            (validateReportStateTransition False "in_progress" "discarded" :: Either ServerError Text)
+                `shouldBe` Right "discarded"
 
         it "requires known states and public HTTPS evidence links" $ do
             (validateInternalReportState "state" "ready_for_retest" :: Either ServerError Text)
