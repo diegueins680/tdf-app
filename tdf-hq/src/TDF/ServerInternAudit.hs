@@ -143,10 +143,10 @@ internAuditServer user =
         unless (M.Intern `elem` roles) $
           throwError err400 { errBody = "proposedAssignee must have the Intern role" }
       entity <- withPool $ do
-        _ <- (rawSql "SELECT id::text FROM intern_project WHERE id = ? FOR UPDATE"
-          [toPersistValue projectKey] :: SqlPersistT IO [Single Text])
         _ <- (rawSql "SELECT id::text FROM intern_task WHERE id = ? FOR UPDATE"
           [toPersistValue taskKey] :: SqlPersistT IO [Single Text])
+        _ <- (rawSql "SELECT id::text FROM intern_project WHERE id = ? FOR UPDATE"
+          [toPersistValue projectKey] :: SqlPersistT IO [Single Text])
         now <- liftIO getCurrentTime
         project <- get projectKey
         task <- get taskKey

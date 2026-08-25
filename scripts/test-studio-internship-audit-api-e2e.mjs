@@ -134,6 +134,62 @@ await request('/internships/audit-plans', {
   },
 });
 
+const ownershipRaceProject = await request('/internships/projects', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    ipcTitle: 'E2E — Serialización de propiedad de tarea de auditoría',
+    ipcDescription: 'Crear el plan y cambiar la tarea no pueden aprobarse sobre estados distintos.',
+    ipcStatus: 'active',
+    ipcActivationStatus: 'draft',
+  },
+});
+const ownershipRaceTask = await request('/internships/tasks', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    itcProjectId: ownershipRaceProject.ipId,
+    itcTitle: 'E2E — Carrera entre creación del plan y cambio de tarea',
+    itcDescription: 'La misma fila de tarea serializa ambas escrituras.',
+    itcProposedAssignee: intern.partyId,
+    itcActivationStatus: 'draft',
+  },
+});
+const [ownershipPlanStatus, ownershipTaskUpdateStatus] = await Promise.all([
+  requestStatus('/internships/audit-plans', {
+    token: admin.token,
+    method: 'POST',
+    json: {
+      iapcProjectId: ownershipRaceProject.ipId,
+      iapcTaskId: ownershipRaceTask.itId,
+      iapcEnvironment: 'staging',
+      iapcProposedAssignee: intern.partyId,
+    },
+  }),
+  requestStatus(`/internships/tasks/${ownershipRaceTask.itId}`, {
+    token: admin.token,
+    method: 'PATCH',
+    json: { ituProgress: 1 },
+  }),
+]);
+assert.equal([ownershipPlanStatus, ownershipTaskUpdateStatus].filter((status) => status === 409).length, 1);
+const ownershipRaceTasks = await request('/internships/tasks', { token: admin.token });
+const ownershipRaceTaskAfter = ownershipRaceTasks.find((candidate) => candidate.itId === ownershipRaceTask.itId);
+const ownershipRacePlans = await request('/internships/audit-plans', { token: admin.token });
+const ownershipRacePlanAfter = ownershipRacePlans.find((candidate) => candidate.iapTaskId === ownershipRaceTask.itId);
+if (ownershipPlanStatus === 201) {
+  assert.equal(ownershipTaskUpdateStatus, 409);
+  assert.equal(ownershipRaceTaskAfter?.itProgress, 0);
+  assert.ok(ownershipRacePlanAfter);
+} else {
+  assert.equal(ownershipPlanStatus, 409);
+  assert.equal(ownershipTaskUpdateStatus, 200);
+  assert.equal(ownershipRaceTaskAfter?.itProgress, 1);
+  assert.equal(ownershipRacePlanAfter, undefined);
+}
+
 const cancellableTask = await request('/internships/tasks', {
   token: admin.token,
   method: 'POST',

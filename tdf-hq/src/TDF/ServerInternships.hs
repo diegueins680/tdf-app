@@ -619,25 +619,12 @@ internshipsServer user =
     updateTaskH rawId InternTaskUpdate{..} = do
       ensureInternAccess
       taskKey <- parseKey @ME.InternTask rawId
-      now <- liftIO getCurrentTime
-      mEntity <- withPool $ getEntity taskKey
-      ent <- maybe (throwError err404) pure mEntity
-      let task = entityVal ent
-          assignedKey = ME.internTaskAssignedTo task
-          isOwner = assignedKey == Just (auPartyId user)
-          isAdminUser = isAdmin user
-      unless (isAdminUser || isOwner) $
-        throwError err403 { errBody = "Only admins or assignees can update tasks" }
+      let isAdminUser = isAdmin user
+          auditControlledUpdate = isJust ituStatus
+            || isJust ituProgress
+            || isJust ituAssignedTo
+            || isJust ituProjectId
       either throwError pure (validateInternTaskUpdatePermissions isAdminUser InternTaskUpdate{..})
-      mAuditPlan <- withPool $ getBy (ME.UniqueInternAuditPlanTask taskKey)
-      when (isJust mAuditPlan
-        && (isJust ituStatus
-          || isJust ituProgress
-          || isJust ituAssignedTo
-          || isJust ituProjectId)) $
-        throwError err409
-          { errBody = "Audit task project, assignee, status, and progress are controlled by its audit plan"
-          }
       projectUpdate <-
         if isAdminUser
           then case ituProjectId of
@@ -672,9 +659,29 @@ internshipsServer user =
               then catMaybes (adminUpdates ++ commonUpdates)
               else catMaybes commonUpdates
       result <- withPool $ do
-        unless (null updates) (update taskKey (updates ++ [ME.InternTaskUpdatedAt =. now]))
-        getEntity taskKey
-      entUpdated <- maybe (throwError err404) pure result
+        locked <- (rawSql "SELECT id::text FROM intern_task WHERE id = ? FOR UPDATE"
+          [toPersistValue taskKey] :: SqlPersistT IO [Single Text])
+        case locked of
+          [] -> pure (Right Nothing)
+          _ -> do
+            lockedTask <- getJustEntity taskKey
+            let isOwner = ME.internTaskAssignedTo (entityVal lockedTask) == Just (auPartyId user)
+            if not (isAdminUser || isOwner)
+              then pure (Left err403
+                { errBody = "Only admins or assignees can update tasks"
+                })
+              else do
+                mAuditPlan <- getBy (ME.UniqueInternAuditPlanTask taskKey)
+                if isJust mAuditPlan && auditControlledUpdate
+                  then pure (Left err409
+                    { errBody = "Audit task project, assignee, status, and progress are controlled by its audit plan"
+                    })
+                  else do
+                    now <- liftIO getCurrentTime
+                    unless (null updates) (update taskKey (updates ++ [ME.InternTaskUpdatedAt =. now]))
+                    Right <$> getEntity taskKey
+      mUpdated <- either throwError pure result
+      entUpdated <- maybe (throwError err404) pure mUpdated
       let projectKey = ME.internTaskProjectId (entityVal entUpdated)
           assigned = ME.internTaskAssignedTo (entityVal entUpdated)
       projectMap <- loadProjectMap [projectKey]
