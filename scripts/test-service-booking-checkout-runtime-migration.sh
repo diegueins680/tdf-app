@@ -97,6 +97,7 @@ create_base_schema() {
 
 create_base_schema
 apply_file tdf-hq/sql/2026-08-13_unified_checkout_core.sql
+apply_file tdf-hq/sql/2026-08-25_commerce_trigger_row_binding_compatibility.sql
 apply_file tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql
 apply_file tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql
 apply_file tdf-hq/sql/2026-08-17_service_booking_provider_actions.sql
@@ -374,6 +375,7 @@ fi
 psql_exec -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;' >/dev/null
 create_base_schema
 apply_file tdf-hq/sql/2026-08-13_unified_checkout_core.sql
+apply_file tdf-hq/sql/2026-08-25_commerce_trigger_row_binding_compatibility.sql
 apply_file tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql
 apply_file tdf-hq/sql/2026-08-17_service_booking_provider_actions.sql
 apply_file tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql

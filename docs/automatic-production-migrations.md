@@ -36,6 +36,12 @@ serving Machine while the candidate starts.
 
 ## Adding a migration
 
+Applied migration files are byte-for-byte immutable. Never edit an applied SQL
+file to repair a function, trigger, constraint, or data correction. Restore the
+recorded content and add a new idempotent forward migration instead. The release
+runner compares every applied checksum before executing any pending SQL and
+fails closed on drift.
+
 1. Add an idempotent SQL file under `tdf-hq/sql/` with a transaction and
    explicit safety checks.
 2. Add it to `scripts/production-migrations.json` with an immutable
@@ -53,6 +59,14 @@ serving Machine while the candidate starts.
 The PostgreSQL integration test restores the production-shaped fixture, starts
 the real entrypoint, verifies the complete ledger and schema, starts it again,
 and requires an identical schema fingerprint after the second run.
+
+The 2026-08-25 commerce and distribution row-binding compatibility migrations
+are the forward repair for trigger definitions that had previously been edited
+inside applied 2026-08-13 files. Their rollback files restore the historical
+definitions and must be used only after freezing the corresponding writes and
+rolling back the application. The music-directory profile-image migration is
+also restored to its recorded bytes; its already-registered host-compatibility
+migration remains the forward correction.
 
 ## Rollout and rollback
 

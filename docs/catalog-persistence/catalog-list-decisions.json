@@ -8634,7 +8634,7 @@
       "reviewed": true
     },
     {
-      "id": "5154d49e12163cdd677a",
+      "id": "73c8da224b1e9419bfef",
       "classification": "security-system-registry",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",

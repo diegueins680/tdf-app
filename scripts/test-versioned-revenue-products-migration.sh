@@ -27,6 +27,7 @@ psql_exec() {
 
 psql_exec -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto;' >/dev/null
 apply_file "$TDF_PRODUCT_ROOT/tdf-hq/sql/2026-08-13_unified_checkout_core.sql"
+apply_file "$TDF_PRODUCT_ROOT/tdf-hq/sql/2026-08-25_commerce_trigger_row_binding_compatibility.sql"
 apply_file "$TDF_PRODUCT_ROOT/tdf-hq/sql/2026-08-13_versioned_revenue_products.sql"
 
 active_count=$(psql_exec -Atc "SELECT count(*) FROM commerce_product_version WHERE domain_type='domo' AND status='active';")

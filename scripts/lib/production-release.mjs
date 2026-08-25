@@ -1543,6 +1543,25 @@ BEGIN
     END IF;
   END LOOP;
 
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('commerce_validate_payment_attempt()', 'checkout_environment'),
+      ('commerce_validate_provider_binding()', 'attempt_provider'),
+      ('distribution_validate_submission_gate()', 'checkout_status'),
+      ('distribution_validate_delivery()', 'package_release_version_id'),
+      ('distribution_validate_status_evidence()', 'delivery_environment'),
+      ('distribution_validate_recipient_status()', 'evidence_delivery_attempt_id'),
+      ('distribution_validate_payout_gate()', 'statement_net_minor')
+    ) AS expected(signature, marker)
+    LEFT JOIN pg_proc AS actual
+      ON actual.oid = to_regprocedure('public.' || expected.signature)
+    WHERE actual.oid IS NULL
+       OR strpos(pg_get_functiondef(actual.oid), expected.marker) = 0
+  ) THEN
+    RAISE EXCEPTION 'Commerce or distribution trigger row-binding compatibility is missing';
+  END IF;
+
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public'

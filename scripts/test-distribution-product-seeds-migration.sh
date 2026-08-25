@@ -28,7 +28,9 @@ psql_exec() {
 psql_exec -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto;' >/dev/null
 apply_file "$TDF_PRICING_ROOT/tdf-hq/sql/2026-08-02_ddex_catalog_core.sql"
 apply_file "$TDF_PRICING_ROOT/tdf-hq/sql/2026-08-13_unified_checkout_core.sql"
+apply_file "$TDF_PRICING_ROOT/tdf-hq/sql/2026-08-25_commerce_trigger_row_binding_compatibility.sql"
 apply_file "$TDF_PRICING_ROOT/tdf-hq/sql/2026-08-13_distribution_accounting_core.sql"
+apply_file "$TDF_PRICING_ROOT/tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility.sql"
 apply_file "$TDF_PRICING_ROOT/tdf-hq/sql/2026-08-13_distribution_product_seeds.sql"
 
 test "$(psql_exec -Atc "SELECT count(*) FROM distribution_product_version WHERE status='pending_approval';")" = "14"
